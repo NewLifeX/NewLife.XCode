@@ -18,11 +18,9 @@ jobs:
         include-prerelease: true
     - name: Restore
       run: |
-        dotnet restore NewLife.Core/NewLife.Core.csproj
         dotnet restore XCode/XCode.csproj
     - name: Build
       run: |
-        dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d-beta%H%M") -c Release -o out NewLife.Core/NewLife.Core.csproj
         dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d-beta%H%M") -c Release -o out XCode/XCode.csproj
     - name: Publish
       run: |

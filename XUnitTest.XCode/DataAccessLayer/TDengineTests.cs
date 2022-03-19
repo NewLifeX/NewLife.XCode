@@ -6,6 +6,7 @@ using NewLife;
 using NewLife.Log;
 using NewLife.Security;
 using NewLife.Serialization;
+using NewLife.UnitTest;
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.TDengine;
@@ -14,6 +15,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer
 {
+    [TestCaseOrderer("NewLife.UnitTest.TestOrderer", "NewLife.UnitTest")]
     public class TDengineTests
     {
         private static String _ConnStr = "Server=gz01.newlifex.com;Port=6030;Database=db;user=root;password=taosdata";
@@ -27,6 +29,7 @@ namespace XUnitTest.XCode.DataAccessLayer
                 File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
         }
 
+        [TestOrder(0)]
         [Fact]
         public void InitTest()
         {
@@ -49,6 +52,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.NotNull(dp);
         }
 
+        [TestOrder(10)]
         [Fact]
         public void ConnectTest()
         {
@@ -66,6 +70,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             XTrace.WriteLine("ServerVersion={0}", conn.ServerVersion);
         }
 
+        [TestOrder(20)]
         [Fact]
         public void DALTest()
         {
@@ -83,6 +88,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.NotEmpty(ver);
         }
 
+        [TestOrder(30)]
         [Fact]
         public void CreateDatabase()
         {
@@ -93,6 +99,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.Equal(0, rs);
         }
 
+        [TestOrder(32)]
         [Fact]
         public void CreateDatabase2()
         {
@@ -106,6 +113,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.Equal(0, rs);
         }
 
+        [TestOrder(34)]
         [Fact]
         public void CreateTable()
         {
@@ -117,6 +125,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.Equal(0, rs);
         }
 
+        [TestOrder(36)]
         [Fact]
         public void CreateSuperTable()
         {
@@ -138,6 +147,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             }
         }
 
+        [TestOrder(40)]
         [Fact]
         public void QueryTest()
         {
@@ -151,6 +161,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             //Assert.Equal("[{\"ts\":\"2019-07-15 00:00:00\",\"speed\":10},{\"ts\":\"2019-07-15 01:00:00\",\"speed\":20}]", dt.ToJson());
         }
 
+        [TestOrder(50)]
         [Fact]
         public void InsertTest()
         {
@@ -179,6 +190,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             //}
         }
 
+        [TestOrder(60)]
         [Fact]
         public void MetaTest()
         {
@@ -230,6 +242,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             return split;
         }
 
+        [TestOrder(70)]
         [Fact]
         public void BatchInsert()
         {
@@ -252,6 +265,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.Contains(list2, e => e.Speed == 111);
         }
 
+        [TestOrder(80)]
         [Fact]
         public void PositiveAndNegative()
         {

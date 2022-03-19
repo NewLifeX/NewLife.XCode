@@ -1,18 +1,17 @@
-﻿using System.IO;
-using System.Text;
+﻿using System;
+using System.IO;
 using System.Linq;
-using System.Net.Http;
-using NewLife.Http;
+using System.Text;
+using NewLife;
 using NewLife.Log;
+using NewLife.UnitTest;
 using XCode.Membership;
 using Xunit;
 using static XCode.Membership.Area;
-using System;
-using System.Threading;
-using NewLife;
 
 namespace XUnitTest.XCode.Membership
 {
+    [TestCaseOrderer("NewLife.UnitTest.TestOrderer", "NewLife.UnitTest")]
     public class AreaTests
     {
         static AreaTests()
@@ -20,6 +19,7 @@ namespace XUnitTest.XCode.Membership
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
+        [TestOrder(20)]
         [Fact]
         public void QueryTest()
         {
@@ -65,6 +65,7 @@ namespace XUnitTest.XCode.Membership
             Assert.Equal("广西", rs2[0].Parent.Name);
         }
 
+        [TestOrder(30)]
         [Fact]
         public void FindByNamesTest()
         {
@@ -99,6 +100,7 @@ namespace XUnitTest.XCode.Membership
             Assert.Equal("湖北/神农架", r.Path);
         }
 
+        [TestOrder(40)]
         [Fact]
         public void VirtualTest()
         {
@@ -227,6 +229,7 @@ namespace XUnitTest.XCode.Membership
         //    Area.Meta.Session.Dal.Db.ShowSQL = true;
         //}
 
+        [TestOrder(0)]
         [Fact]
         public void Import()
         {
@@ -248,6 +251,7 @@ namespace XUnitTest.XCode.Membership
             Area.Meta.Session.Dal.Db.ShowSQL = true;
         }
 
+        [TestOrder(10)]
         [Fact]
         public void Export()
         {
@@ -261,6 +265,7 @@ namespace XUnitTest.XCode.Membership
             //File.Delete(file.GetFullPath());
         }
 
+        [TestOrder(50)]
         [Theory]
         [InlineData(0, "北京", 1, 110000)]
         [InlineData(0, "北京市", 1, 110000)]
@@ -284,6 +289,7 @@ namespace XUnitTest.XCode.Membership
             }
         }
 
+        [TestOrder(60)]
         [Theory]
         [InlineData(310104, "虹梅街道", 10, 310104012, "虹梅路")]
         [InlineData(310104, "康健街道", 10, 310104013, "康健新村")]
@@ -305,6 +311,7 @@ namespace XUnitTest.XCode.Membership
             }
         }
 
+        [TestOrder(70)]
         [Theory]
         [InlineData("上海市虹梅路2588弄", 310104012, "上海/徐汇/虹梅路")]
         [InlineData("上海市华新中学", 310118107, "上海/青浦/华新")]
@@ -324,6 +331,7 @@ namespace XUnitTest.XCode.Membership
             }
         }
 
+        [TestOrder(80)]
         [Theory]
         [InlineData("182.90.206.131", 450000)]
         [InlineData("116.234.90.174", 310000)]
@@ -337,6 +345,7 @@ namespace XUnitTest.XCode.Membership
             Assert.Equal(areaId, list[list.Count - 1].ID);
         }
 
+        [TestOrder(80)]
         [Theory]
         [InlineData("182.90.206.131", 450400)]
         [InlineData("116.234.90.174", 310113)]
@@ -350,6 +359,7 @@ namespace XUnitTest.XCode.Membership
             Assert.Equal(areaId, list[list.Count - 1].ID);
         }
 
+        [TestOrder(80)]
         [Theory]
         [InlineData("182.90.206.131", 450400)]
         [InlineData("116.234.90.174", 310113)]
@@ -363,6 +373,7 @@ namespace XUnitTest.XCode.Membership
             Assert.Equal(areaId, list[list.Count - 1].ID);
         }
 
+        [TestOrder(90)]
         [Theory]
         [InlineData("116.136.7.43", 150400)]
         public void SearchIP自治区(String ip, Int32 areaId)

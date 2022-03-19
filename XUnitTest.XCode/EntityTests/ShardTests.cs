@@ -5,6 +5,7 @@ using System.Linq;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Security;
+using NewLife.UnitTest;
 using XCode.DataAccessLayer;
 using XCode.Shards;
 using Xunit;
@@ -12,6 +13,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.EntityTests
 {
+    [TestCaseOrderer("NewLife.UnitTest.TestOrderer", "NewLife.UnitTest")]
     public class ShardTests
     {
         public ShardTests()
@@ -53,6 +55,7 @@ namespace XUnitTest.XCode.EntityTests
         //    User2.Meta.ShardTableName = null;
         //}
 
+        [TestOrder(10)]
         [Fact]
         public void ShardTestSQLite()
         {
@@ -91,6 +94,7 @@ namespace XUnitTest.XCode.EntityTests
             User2.Meta.ShardPolicy = null;
         }
 
+        [TestOrder(20)]
         [Fact]
         public void ShardTestSQLite2()
         {

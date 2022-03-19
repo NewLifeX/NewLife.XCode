@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using NewLife.Data;
 using NewLife.Security;
+using NewLife.UnitTest;
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
@@ -12,6 +13,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.EntityTests
 {
+    [TestCaseOrderer("NewLife.UnitTest.TestOrderer", "NewLife.UnitTest")]
     public class SqlTests
     {
         public SqlTests()
@@ -20,6 +22,7 @@ namespace XUnitTest.XCode.EntityTests
             DAL.AddConnStr("mysql_underline", "Server=.;Port=3306;Database=membership_underline;Uid=root;Pwd=root;NameFormat=underline", null, "mysql");
         }
 
+        [TestOrder(10)]
         [Fact]
         public void InsertTestSQLite()
         {
@@ -40,6 +43,7 @@ namespace XUnitTest.XCode.EntityTests
             Assert.Equal(@"Insert Into User(Name,DisplayName,Sex,AreaId,RoleID,DepartmentID,Online,Enable,Age,Logins,RegisterTime,OnlineTime,Ex1,Ex2,Ex3,UpdateUserID,UpdateTime) Values('Stone','大石头',0,0,0,0,0,1,0,0,'2020-08-22 00:00:00',0,0,0,0,0,'2020-09-01 00:00:00')", sql);
         }
 
+        [TestOrder(10)]
         [Fact]
         public void InsertTestMySqlUnderline()
         {
@@ -62,6 +66,7 @@ namespace XUnitTest.XCode.EntityTests
             Assert.Equal(@"Insert Into `user`(name,display_name,sex,area_id,role_id,department_id,online,enable,age,logins,register_time,online_time,ex1,ex2,ex3,update_user_id,update_time) Values('Stone','大石头',0,0,0,0,0,1,0,0,'2020-08-22 00:00:00',0,0,0,0,0,'2020-09-01 00:00:00')", sql);
         }
 
+        [TestOrder(20)]
         [Fact]
         public void UpdateTestSQLite()
         {
@@ -83,6 +88,7 @@ namespace XUnitTest.XCode.EntityTests
             Assert.Equal(@"Update User Set Name='Stone',DisplayName='大石头',Enable=1,RegisterTime='2020-08-22 00:00:00',UpdateTime='2020-09-01 00:00:00' Where ID=2", sql);
         }
 
+        [TestOrder(20)]
         [Fact]
         public void UpdateTestMySqlUnderline()
         {
@@ -106,6 +112,7 @@ namespace XUnitTest.XCode.EntityTests
             Assert.Equal(@"Update `user` Set name='Stone',display_name='大石头',enable=1,register_time='2020-08-22 00:00:00',update_time='2020-09-01 00:00:00' Where id=2", sql);
         }
 
+        [TestOrder(30)]
         [Fact]
         public void DeleteTestSQLite()
         {
@@ -121,6 +128,7 @@ namespace XUnitTest.XCode.EntityTests
             Assert.Equal(@"Delete From User Where ID=2", sql);
         }
 
+        [TestOrder(30)]
         [Fact]
         public void DeleteTestMySqlUnderline()
         {
@@ -138,6 +146,7 @@ namespace XUnitTest.XCode.EntityTests
             Assert.Equal(@"Delete From `user` Where id=2", sql);
         }
 
+        [TestOrder(40)]
         [Fact]
         public void SelectTestSQLite()
         {
@@ -147,6 +156,7 @@ namespace XUnitTest.XCode.EntityTests
             Assert.Equal(@"Select * From User Where Name='Stone' And DisplayName='大石头' And Logins>0 And RegisterTime<'2020-09-01 00:00:00' Order By UpdateUserID Desc", sql);
         }
 
+        [TestOrder(40)]
         [Fact]
         public void SelectTestMySqlUnderline()
         {
@@ -191,6 +201,7 @@ namespace XUnitTest.XCode.EntityTests
         //    User2.Meta.ShardTableName = null;
         //}
 
+        [TestOrder(50)]
         [Fact]
         public void ShardTestSQLite()
         {
@@ -229,6 +240,7 @@ namespace XUnitTest.XCode.EntityTests
             User2.Meta.ShardPolicy = null;
         }
 
+        [TestOrder(52)]
         [Fact]
         public void ShardTestSQLite2()
         {
@@ -272,6 +284,7 @@ namespace XUnitTest.XCode.EntityTests
             Log2.Meta.ShardPolicy = null;
         }
 
+        [TestOrder(54)]
         [Fact]
         public void ShardTestSQLite3()
         {

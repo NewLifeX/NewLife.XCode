@@ -12,6 +12,7 @@ using System.Xml.Serialization;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Data;
+using NewLife.Http;
 using NewLife.Log;
 using NewLife.Threading;
 using XCode.Transform;

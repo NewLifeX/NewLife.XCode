@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Data;
+using NewLife.UnitTest;
 using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
@@ -15,6 +16,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.Configuration
 {
+    [TestCaseOrderer("NewLife.UnitTest.TestOrderer", "NewLife.UnitTest")]
     public class SqlTemplateTests
     {
         private static String _mysql_ConnStr = "Server=.;Port=3306;Database=sys;Uid=root;Pwd=root";
@@ -28,6 +30,7 @@ namespace XUnitTest.XCode.Configuration
                 File.WriteAllText(f, _mysql_ConnStr);
         }
 
+        [TestOrder(10)]
         [Fact]
         public void ParseString()
         {
@@ -42,6 +45,7 @@ namespace XUnitTest.XCode.Configuration
             Assert.Empty(st.Sqls);
         }
 
+        [TestOrder(10)]
         [Fact]
         public void ParseString2()
         {
@@ -78,6 +82,7 @@ select * from userx where id=@id
             Assert.Equal("select * from userx where id=@id", sql);
         }
 
+        [TestOrder(20)]
         [Fact]
         public void ParseStream()
         {
@@ -114,6 +119,7 @@ select * from userx where id=@id
             Assert.Equal("select * from userx where id=@id", sql);
         }
 
+        [TestOrder(30)]
         [Fact]
         public void ParseEmbedded()
         {
@@ -137,6 +143,7 @@ select * from userx where id=@id
             Assert.Equal("select * from area where enable=1", st.Sql);
         }
 
+        [TestOrder(40)]
         [Fact]
         public void EntityTest()
         {
@@ -156,6 +163,7 @@ select * from userx where id=@id
             Assert.Equal("select * from menu2 where 'visible'=2", sql);
         }
 
+        [TestOrder(50)]
         [Fact]
         public void EntityTest2()
         {
@@ -168,6 +176,7 @@ select * from userx where id=@id
             Assert.Equal(0, st.Sqls.Count);
         }
 
+        [TestOrder(60)]
         [Fact]
         public void EntityTestWithSqlite()
         {
@@ -191,6 +200,7 @@ select * from userx where id=@id
             Assert.Equal("[test] Select * From (select * from menu2 where 'visible'=2) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') Order By ID Desc limit 30, 30", sql);
         }
 
+        [TestOrder(70)]
         [Fact]
         public void EntityTestWithMySql()
         {

@@ -39,6 +39,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="NewLife.Core" Version="9.0.2022.319-beta0418" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />
@@ -106,9 +107,6 @@
   <ItemGroup>
     <EmbeddedResource Include="Readme.MD" />
     <EmbeddedResource Include="UpdateInfo.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\NewLife.Core\NewLife.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Membership\Build.log">

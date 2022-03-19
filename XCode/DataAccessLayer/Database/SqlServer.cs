@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1013,6 +1014,28 @@ namespace XCode.DataAccessLayer
         #endregion
 
         #region 数据定义
+        public override Object SetSchema(DDLSchema schema, params Object[] values)
+        {
+            switch (schema)
+            {
+                case DDLSchema.BackupDatabase:
+                    var dbname = "";
+                    var file = "";
+                    if (values != null)
+                    {
+                        if (values.Length > 0) 
+                            dbname = values[0] as String;
+                        if (values.Length > 1) 
+                            file = values[1] as String;
+                    } 
+                    return Backup(dbname, file, false);
+
+                default:
+                    break;
+            }
+            return base.SetSchema(schema, values);
+        }
+
         public override String CreateDatabaseSQL(String dbname, String file)
         {
             var dp = (Database as SqlServer).DataPath;
@@ -1095,6 +1118,66 @@ namespace XCode.DataAccessLayer
         //    catch (Exception ex) { XTrace.WriteException(ex); }
         //    return session.Execute(String.Format("Drop Database {0}", FormatName(databaseName))) > 0;
         //}
+
+        /// <summary>备份文件到目标文件</summary>
+        /// <param name="dbname"></param>
+        /// <param name="bakfile"></param>
+        /// <param name="compressed"></param>
+        public override String Backup(String dbname, String bakfile, Boolean compressed)
+        {
+ 
+            var name = dbname;
+            if (name.IsNullOrEmpty())
+            {
+                name = Database.DatabaseName;
+            }
+
+            var bf = bakfile;
+            if (bf.IsNullOrEmpty())
+            {
+                var ext = Path.GetExtension(bakfile);
+                if (ext.IsNullOrEmpty()) ext = ".bak";
+
+                if (compressed)
+                    bf = $"{name}{ext}";
+                else
+                    bf = $"{name}_{DateTime.Now:yyyyMMddHHmmss}{ext}";
+            }
+            if (!Path.IsPathRooted(bf)) bf = NewLife.Setting.Current.BackupPath.CombinePath(bf).GetBasePath();
+
+            bf = bf.EnsureDirectory(true);
+
+            WriteLog("{0}备份SqlServer数据库 {1} 到 {2}", Database.ConnName, name, bf);
+
+            var sw = Stopwatch.StartNew();
+
+            // 删除已有文件
+            if (File.Exists(bf)) File.Delete(bf);
+
+            base.Database.CreateSession().Execute($"USE master;BACKUP DATABASE {name} TO disk = '{bf}'");
+
+            // 压缩
+            WriteLog("备份文件大小：{0:n0}字节", bf.AsFile().Length);
+            if (compressed)
+            {
+                var zipfile = Path.ChangeExtension(bf, "zip");
+                if (bakfile.IsNullOrEmpty()) zipfile = zipfile.TrimEnd(".zip") + $"_{DateTime.Now:yyyyMMddHHmmss}.zip";
+
+                var fi = bf.AsFile();
+                fi.Compress(zipfile);
+                WriteLog("压缩后大小：{0:n0}字节，{1}", zipfile.AsFile().Length, zipfile);
+
+                // 删除未备份
+                File.Delete(bf);
+
+                bf = zipfile;
+            }
+
+            sw.Stop();
+            WriteLog("备份完成，耗时{0:n0}ms", sw.ElapsedMilliseconds);
+
+            return bf;
+        }
 
         public override String TableExistSQL(IDataTable table) => $"select * from sysobjects where xtype='U' and name='{table.TableName}'";
 
@@ -1275,6 +1358,7 @@ namespace XCode.DataAccessLayer
             sb.AppendFormat("Drop Database {0}", Database.FormatName(dbname));
             return sb.ToString();
         }
+
         #endregion
 
         /// <summary>数据类型映射</summary>

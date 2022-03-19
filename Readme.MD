@@ -9,6 +9,13 @@
 数据中间件，支持MySQL、SQLite、SqlServer、Oracle、Postgresql、TDengine、达梦，重点在缓存、性能、分表、自动建表。  
 
 XCode教程：[https://www.yuque.com/smartstone/xcode](https://www.yuque.com/smartstone/xcode)  
+
+## 大数据中间件
+主要特点：  
+1，超高性能，极致的缓存设计，批量操作优化，插入速度最高77万tps，查询速度最高18亿qps。[飞仙](http://feixian.newlifex.com)  
+2，反向工程，根据实体类主动建立数据库表结构并初始化数据，支持多种数据库  
+3，自动分表分库，支持任意数据库，无需修改业务代码  
+
 ## XCode ORM是什么?
 XCode是一个超越了ORM范围的数据中间件，除了对象到关系数据库的映射外，还有到网络和其它二进制形式等的映射，所以称之为数据映射组件。
 

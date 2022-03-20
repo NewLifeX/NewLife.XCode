@@ -318,5 +318,53 @@ namespace XUnitTest.XCode.DataAccessLayer
             XTrace.WriteLine("tableNames: {0}", tableNames.Join());
             Assert.DoesNotContain(table.TableName, tableNames);
         }
+
+        [Fact]
+        public void Backup()
+        {
+            DAL.AddConnStr("bakSqlServer", "Data Source=.;Initial Catalog=Test2;user id=sa;password=1", null, "SqlServer");
+            var dal = DAL.Create("bakSqlServer");
+            var meta = dal.Db.CreateMetaData();
+
+            var file1 = meta.SetSchema(DDLSchema.BackupDatabase) as String;
+            Assert.NotEmpty(file1);
+            Assert.True(File.Exists(file1));
+            File.Delete(file1);
+
+            var dbname = "AO_Test";
+            var file2 = meta.SetSchema(DDLSchema.BackupDatabase, dbname) as String;
+            Assert.NotEmpty(file2);
+            Assert.Contains(dbname, file2);
+            Assert.True(File.Exists(file2));
+            File.Delete(file2);
+
+            var file = $"bak_{Rand.NextString(8)}.bak";
+            var file4 = meta.SetSchema(DDLSchema.BackupDatabase, dbname, file) as String;
+            Assert.NotEmpty(file4);
+            Assert.Equal(file, Path.GetFileName(file4));
+            Assert.True(File.Exists(file4));
+            File.Delete(file4);
+        }
+
+        [Fact]
+        public void Restore()
+        {
+            DAL.AddConnStr("restoreSqlServer", "Data Source=.;Initial Catalog=master;user id=sa;password=1", null, "SqlServer");
+            var dal = DAL.Create("restoreSqlServer");
+            var meta = dal.Db.CreateMetaData();
+
+            var result = meta.SetSchema(DDLSchema.RestoreDatabase) as String;
+            Assert.Empty(result);
+
+            var result2 = meta.SetSchema(DDLSchema.RestoreDatabase, "C:\\bak_bvi93mq5.bak") as String;
+            Assert.NotEmpty(result2);
+            Assert.Equal("ok", result2);
+
+
+            var result3 = meta.SetSchema(DDLSchema.RestoreDatabase, "C:\\bak_bvi93mq5.bak", "D:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL10_50.MSSQLSERVER\\MSSQL\\DATA") as String;
+            Assert.NotEmpty(result3);
+            Assert.Equal("ok", result3);
+
+        }
     }
 }

@@ -345,5 +345,26 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.True(File.Exists(file4));
             File.Delete(file4);
         }
+
+        [Fact]
+        public void Restore()
+        {
+            DAL.AddConnStr("restoreSqlServer", "Data Source=.;Initial Catalog=master;user id=sa;password=1", null, "SqlServer");
+            var dal = DAL.Create("restoreSqlServer");
+            var meta = dal.Db.CreateMetaData();
+
+            var result = meta.SetSchema(DDLSchema.RestoreDatabase) as String;
+            Assert.Empty(result);
+
+            var result2 = meta.SetSchema(DDLSchema.RestoreDatabase, "C:\\bak_bvi93mq5.bak") as String;
+            Assert.NotEmpty(result2);
+            Assert.Equal("ok", result2);
+
+
+            var result3 = meta.SetSchema(DDLSchema.RestoreDatabase, "C:\\bak_bvi93mq5.bak", "D:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL10_50.MSSQLSERVER\\MSSQL\\DATA") as String;
+            Assert.NotEmpty(result3);
+            Assert.Equal("ok", result3);
+
+        }
     }
 }

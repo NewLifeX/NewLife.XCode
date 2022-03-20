@@ -1016,11 +1016,12 @@ namespace XCode.DataAccessLayer
         #region 数据定义
         public override Object SetSchema(DDLSchema schema, params Object[] values)
         {
+            var dbname = "";
+            var file = "";
+            var recoverDir = "";
             switch (schema)
             {
                 case DDLSchema.BackupDatabase:
-                    var dbname = "";
-                    var file = "";
                     if (values != null)
                     {
                         if (values.Length > 0) 
@@ -1029,7 +1030,15 @@ namespace XCode.DataAccessLayer
                             file = values[1] as String;
                     } 
                     return Backup(dbname, file, false);
-
+                case DDLSchema.RestoreDatabase:
+                    if (values != null)
+                    {
+                        if (values.Length > 0)
+                            file = values[0] as String;
+                        if (values.Length > 1)
+                            recoverDir = values[1] as String;
+                    }
+                    return Restore(file, recoverDir, true);
                 default:
                     break;
             }
@@ -1177,6 +1186,72 @@ namespace XCode.DataAccessLayer
             WriteLog("备份完成，耗时{0:n0}ms", sw.ElapsedMilliseconds);
 
             return bf;
+        }
+
+        /// <summary>还原备份文件到目标数据库</summary>
+        /// <param name="bakfile"></param>
+        /// <param name="recoverDir"></param>
+        /// <param name="replace"></param>
+        /// <param name="compressed"></param>
+        public String Restore(String bakfile,string recoverDir, Boolean replace = true, Boolean compressed = false)
+        {
+            var session = base.Database.CreateSession();
+            var result = "";
+            if (compressed)
+            {
+                return result;
+            }
+            if (bakfile.IsNullOrEmpty())
+            {
+                return result;
+            }
+
+            if (recoverDir.IsNullOrEmpty())
+            {
+                var sql = "select filename from sysfiles";
+                var dt = session.Query(sql).Tables[0];
+                if (dt.Rows.Count < 1)
+                {
+                    return result;
+                }
+                else
+                {
+                    recoverDir = Path.GetDirectoryName(dt.Rows[0][0].ToString());
+                }
+            }
+
+
+            WriteLog("{0}还原SqlServer数据库 备份文件为{1}", Database.ConnName, bakfile);
+
+            var sw = Stopwatch.StartNew();
+            
+
+            var headInfo = session.Query($"RESTORE HEADERONLY FROM DISK = '{bakfile}'").Tables[0];
+            var fileInfo = session.Query($"RESTORE FILELISTONLY from disk= N'{bakfile}'").Tables[0];
+            if (headInfo.Rows.Count < 1)
+            {
+                return result;
+            }
+            else
+            {
+                var databaseName = headInfo.Rows[0]["DatabaseName"];
+                var dataName = fileInfo.Rows[0]["LogicalName"];
+                var logName = fileInfo.Rows[1]["LogicalName"];
+                var stopConnect = $"ALTER DATABASE {databaseName} SET OFFLINE WITH ROLLBACK IMMEDIATE";
+                var restorSql = $@"RESTORE DATABASE {databaseName} from disk= N'{bakfile}' 
+                WITH NOUNLOAD,
+                {(replace ? "REPLACE," : "")}
+                    MOVE '{dataName}' TO '{Path.Combine(recoverDir, string.Concat(databaseName, ".mdf"))}',
+                    MOVE '{logName}' TO '{Path.Combine(recoverDir, string.Concat(databaseName, ".ldf"))}';";
+                session.Execute(stopConnect);
+                session.Execute(restorSql);
+                result = "ok";
+            }
+            
+            sw.Stop();
+            WriteLog("还原完成，耗时{0:n0}ms", sw.ElapsedMilliseconds);
+
+            return result;
         }
 
         public override String TableExistSQL(IDataTable table) => $"select * from sysobjects where xtype='U' and name='{table.TableName}'";

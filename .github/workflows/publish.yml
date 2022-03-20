@@ -22,8 +22,8 @@ jobs:
         dotnet restore XCodeTool/XCodeTool.csproj
     - name: Build
       run: |
-        dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d") -c Release -o out XCode/XCode.csproj
-        dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d") -c Release -o out XCodeTool/XCodeTool.csproj
+        dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d") -c Release --include-symbols --include-source -o out XCode/XCode.csproj
+        dotnet pack --no-restore --version-suffix $(date "+%Y.%m%d") -c Release --include-symbols --include-source -o out XCodeTool/XCodeTool.csproj
     - name: Publish
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}

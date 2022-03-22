@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -180,11 +181,11 @@ namespace XCode.DataAccessLayer
             LoadAppSettings("appsettings.json", cs, ts);
             //读取环境变量:ASPNETCORE_ENVIRONMENT=Development
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            if (String.IsNullOrWhiteSpace(env))
-            {
-                env = "Production";
-            }
+            if (String.IsNullOrWhiteSpace(env)) env = "Production";
             LoadAppSettings($"appsettings.{env.Trim()}.json", cs, ts);
+
+            // 从环境变量加载连接字符串，优先级最高
+            LoadEnvironmentVariable(cs, ts);
 
             ConnStrs = cs;
             _connTypes = ts;
@@ -270,6 +271,28 @@ namespace XCode.DataAccessLayer
                         cs[name] = connstr;
                         ts[name] = type;
                     }
+                }
+            }
+        }
+
+        private static void LoadEnvironmentVariable(IDictionary<String, String> cs, IDictionary<String, Type> ts)
+        {
+            foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
+            {
+                if (item.Key is String key && item.Value is String value && key.StartsWithIgnoreCase("XCode_Conn_"))
+                {
+                    var connName = key["XCode_Conn_".Length..];
+
+                    var type = DbFactory.GetProviderType(value, null);
+                    if (type == null)
+                    {
+                        WriteLog("环境变量[{0}]设置连接[{1}]时，未通过provider指定数据库类型，使用默认类型SQLite", key, connName);
+                        type = DbFactory.Create(DatabaseType.SQLite).GetType();
+                    }
+                    ts[connName] = type;
+
+                    // 允许后来者覆盖前面设置过了的
+                    cs[connName] = value;
                 }
             }
         }
@@ -384,7 +407,7 @@ namespace XCode.DataAccessLayer
             }
         }
 
-        class MyDAL : IConfigMapping
+        private class MyDAL : IConfigMapping
         {
             public void MapConfig(IConfigProvider provider, IConfigSection section)
             {
@@ -667,7 +690,7 @@ namespace XCode.DataAccessLayer
             }
         }
 
-        void FixIndexName(IDataTable table)
+        private void FixIndexName(IDataTable table)
         {
             // 修改一下索引名，否则，可能因为同一个表里面不同的索引冲突
             if (table.Indexes != null)

@@ -11,7 +11,7 @@ namespace XUnitTest.XCode.DataAccessLayer
         {
             for (var i = 0; i < 10; i++)
             {
-                Environment.SetEnvironmentVariable($"XCode_Conn_test{i}", $"DataSource=data\\test{i}.db;provider=sqlite");
+                Environment.SetEnvironmentVariable($"XCode_test{i}", $"DataSource=data\\test{i}.db;provider=sqlite");
             }
 
             var cs = DAL.ConnStrs;

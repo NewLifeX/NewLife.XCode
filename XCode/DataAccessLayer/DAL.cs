@@ -279,9 +279,9 @@ namespace XCode.DataAccessLayer
         {
             foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
             {
-                if (item.Key is String key && item.Value is String value && key.StartsWithIgnoreCase("XCode_Conn_"))
+                if (item.Key is String key && item.Value is String value && key.StartsWithIgnoreCase("XCode_"))
                 {
-                    var connName = key["XCode_Conn_".Length..];
+                    var connName = key["XCode_".Length..];
 
                     var type = DbFactory.GetProviderType(value, null);
                     if (type == null)

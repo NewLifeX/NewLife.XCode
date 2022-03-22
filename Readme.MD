@@ -177,7 +177,7 @@ void Test()
 
 ## 容器化部署
 XCode 支持从环境变量中获取数据库连接字符串，用于容器化部署。  
-连接字符串的环境变量命名规范为 `XCode_Conn_{ConnName}`，连接字符串中需要使用provider指定数据库类型。  
+连接字符串的环境变量命名规范为 `XCode_{ConnName}`，不区分大小写，连接字符串中需要使用provider指定数据库类型。  
 
 ## 新生命项目矩阵
 各项目默认支持net6.0/netstandard2.1，旧版（2021.1225）支持net5.0/netstandard2.0/net4.5/net4.0/net2.0  

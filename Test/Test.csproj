@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
-    <OutputPath>..\..\Test\</OutputPath>
+    <OutputPath>..\Bin\Test\</OutputPath>
     <LangVersion>latest</LangVersion>
     <Version>1.0.0.1130</Version>
     <FileVersion>1.0.0.1130</FileVersion>

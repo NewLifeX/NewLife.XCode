@@ -14,12 +14,16 @@ namespace XCode.Configuration
         #region 属性
         /// <summary>属性元数据</summary>
         private readonly PropertyInfo _Property;
+        /// <summary>属性元数据</summary>
+        public PropertyInfo Property => _Property;
 
-        /// <summary>绑定列特性</summary>
         private readonly BindColumnAttribute _Column;
+        /// <summary>绑定列特性</summary>
+        public BindColumnAttribute Column => _Column;
 
-        /// <summary>数据字段特性</summary>
         private readonly DataObjectFieldAttribute _DataObjectField;
+        /// <summary>数据字段特性</summary>
+        public DataObjectFieldAttribute DataObject => _DataObjectField;
 
         private readonly DescriptionAttribute _Description;
 
@@ -39,7 +43,7 @@ namespace XCode.Configuration
                 var name = Description;
                 if (name.IsNullOrEmpty()) return Name;
 
-                var p = name.IndexOf("。");
+                var p = name.IndexOfAny(new[] { '。', '，' });
                 if (p > 0) name = name[..p];
 
                 return name;

@@ -14,6 +14,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer
 {
+    [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
     public class SqlServerTests
     {
         private static String _ConnStr = "Server=127.0.0.1;Database=sys;Uid=root;Pwd=root;Connection Timeout=2";
@@ -322,7 +323,7 @@ namespace XUnitTest.XCode.DataAccessLayer
         [Fact]
         public void Backup()
         {
-            DAL.AddConnStr("bakSqlServer", "Data Source=.;Initial Catalog=Test2;user id=sa;password=1", null, "SqlServer");
+            DAL.AddConnStr("bakSqlServer", _ConnStr, null, "SqlServer");
             var dal = DAL.Create("bakSqlServer");
             var meta = dal.Db.CreateMetaData();
 
@@ -349,7 +350,7 @@ namespace XUnitTest.XCode.DataAccessLayer
         [Fact]
         public void Restore()
         {
-            DAL.AddConnStr("restoreSqlServer", "Data Source=.;Initial Catalog=master;user id=sa;password=1", null, "SqlServer");
+            DAL.AddConnStr("restoreSqlServer", _ConnStr, null, "SqlServer");
             var dal = DAL.Create("restoreSqlServer");
             var meta = dal.Db.CreateMetaData();
 

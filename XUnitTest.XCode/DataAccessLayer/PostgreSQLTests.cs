@@ -12,6 +12,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer
 {
+    [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
     public class PostgreSQLTests
     {
         private static String _ConnStr = "Server=.;Database=postgres;Uid=postgres;Pwd=postgres";

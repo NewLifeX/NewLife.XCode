@@ -239,7 +239,7 @@ namespace XCode.Membership
         /// <returns></returns>
         protected static FieldItem[] GetIPFieldNames(Type entityType)
         {
-            return _ipFieldNames.GetOrAdd(entityType, t => GetFields(t)?.Where(e => e.Name.EndsWith("IP")).ToArray());
+            return _ipFieldNames.GetOrAdd(entityType, t => GetFields(t)?.Where(e => e.Name.EqualIgnoreCase("CreateIP") || e.Name.EqualIgnoreCase("UpdateIP")).ToArray());
         }
     }
 }

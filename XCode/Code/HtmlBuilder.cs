@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using NewLife;
 using NewLife.Log;
 using XCode.DataAccessLayer;
@@ -12,6 +11,44 @@ namespace XCode.Code
     /// <summary>Html数据字典生成器</summary>
     public class HtmlBuilder : ClassBuilder
     {
+        #region 属性
+        /// <summary>样式</summary>
+        public String Style { get; set; } = @"table {
+        border-collapse: collapse;
+        border: 1px solid;
+        border-color: rgb(211, 202, 221);
+    }
+
+    table thead,
+    table tr {
+        border-top-width: 1px;
+        border-top-style: solid;
+        border-top-color: rgb(211, 202, 221);
+    }
+
+    table {
+        border-bottom-width: 1px;
+        border-bottom-style: solid;
+        border-bottom-color: rgb(211, 202, 221);
+    }
+
+    table td,
+    table th {
+        padding: 5px 10px;
+        font-size: 14px;
+        font-family: Verdana;
+        color: rgb(95, 74, 121);
+    }
+
+    table tr:nth-child(even) {
+        background: rgb(223, 216, 232)
+    }
+
+    table tr:nth-child(odd) {
+        background: #FFF
+    }";
+        #endregion
+
         #region 静态
         /// <summary>生成数据字典</summary>
         /// <param name="tables">表集合</param>
@@ -33,6 +70,18 @@ namespace XCode.Code
 
             var count = 0;
             var writer = new StringWriter();
+
+            // 样式
+            {
+                var builder = new HtmlBuilder { Writer = writer };
+                if (!builder.Style.IsNullOrEmpty())
+                {
+                    builder.WriteLine("<style>");
+                    builder.WriteLine(builder.Style);
+                    builder.WriteLine("</style>");
+                }
+            }
+
             foreach (var item in tables)
             {
                 // 跳过排除项
@@ -72,9 +121,9 @@ namespace XCode.Code
             else
                 WriteLine("<h3>{0}（{1}）</h3>", Table.DisplayName, Table.TableName);
 
-            WriteLine("<table border=\"1\">");
+            WriteLine("<table>");
             {
-                WriteLine("<theader>");
+                WriteLine("<thead>");
                 WriteLine("<tr>");
                 WriteLine("<th>名称</th>");
                 WriteLine("<th>显示名</th>");
@@ -85,7 +134,7 @@ namespace XCode.Code
                 WriteLine("<th>允许空</th>");
                 WriteLine("<th>备注</th>");
                 WriteLine("</tr>");
-                WriteLine("</theader>");
+                WriteLine("</thead>");
             }
             WriteLine("<tbody>");
         }

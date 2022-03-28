@@ -136,6 +136,9 @@ namespace XCodeTool
                     ClassBuilder.BuildInterfaces(ts, option);
                 }
             }
+
+            // 生成数据字典
+            HtmlBuilder.BuildDataDictionary(tables, option);
         }
     }
 }

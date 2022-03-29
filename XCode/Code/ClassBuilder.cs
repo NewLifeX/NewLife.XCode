@@ -207,7 +207,7 @@ namespace XCode.Code
             }
             WriteLog("生成 {0} {1} {2}", Table.Name, Table.DisplayName, new { option.ClassNameTemplate, option.BaseClass, option.ModelNameForCopy, option.Namespace }.ToJson(false, false, false));
 
-            Clear();
+            //Clear();
             if (Writer == null) Writer = new StringWriter();
 
             OnExecuting();

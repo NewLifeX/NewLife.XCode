@@ -13,6 +13,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer
 {
+    [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
     public class MySqlTests
     {
         private static String _ConnStr = "Server=.;Port=3306;Database=sys;Uid=root;Pwd=root";

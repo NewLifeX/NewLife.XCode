@@ -64,6 +64,8 @@ namespace XCode.DataAccessLayer
                     if (!ConnName.IsNullOrEmpty()) db.ConnName = ConnName;
                     if (!ConnStr.IsNullOrEmpty()) db.ConnectionString = DecodeConnStr(ConnStr);
 
+                    if (_infos.TryGetValue(ConnName, out var info)) db.Provider = info.Provider;
+
                     _Db = db;
 
                     return _Db;
@@ -75,7 +77,7 @@ namespace XCode.DataAccessLayer
         public IDbSession Session => Db.CreateSession();
 
         private String _mapTo;
-        private ICache _cache = new MemoryCache();
+        private readonly ICache _cache = new MemoryCache();
         #endregion
 
         #region 创建函数
@@ -113,10 +115,10 @@ namespace XCode.DataAccessLayer
                 var vs = ConnStr.SplitAsDictionary("=", ",", true);
                 if (vs.TryGetValue("MapTo", out var map) && !map.IsNullOrEmpty()) _mapTo = map;
 
-                if (_connTypes.TryGetValue(connName, out var t))
+                if (_infos.TryGetValue(connName, out var t))
                 {
-                    ProviderType = t;
-                    DbType = DbFactory.GetDefault(t)?.Type ?? DatabaseType.None;
+                    ProviderType = t.Type;
+                    DbType = DbFactory.GetDefault(t.Type)?.Type ?? DatabaseType.None;
                 }
 
                 // 读写分离
@@ -168,27 +170,32 @@ namespace XCode.DataAccessLayer
             Init();
         }
 
-        private static ConcurrentDictionary<String, Type> _connTypes;
+        private static ConcurrentDictionary<String, DbInfo> _infos;
         private static void InitConnections()
         {
-            var cs = new ConcurrentDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
-            var ts = new ConcurrentDictionary<String, Type>(StringComparer.OrdinalIgnoreCase);
+            var ds = new ConcurrentDictionary<String, DbInfo>(StringComparer.OrdinalIgnoreCase);
 
-            LoadConfig(cs, ts);
+            LoadConfig(ds);
             //LoadAppSettings(cs, ts);
 
             // 联合使用 appsettings.json
-            LoadAppSettings("appsettings.json", cs, ts);
-            //读取环境变量:ASPNETCORE_ENVIRONMENT=Development
+            LoadAppSettings("appsettings.json", ds);
+            // 读取环境变量:ASPNETCORE_ENVIRONMENT=Development
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             if (String.IsNullOrWhiteSpace(env)) env = "Production";
-            LoadAppSettings($"appsettings.{env.Trim()}.json", cs, ts);
+            LoadAppSettings($"appsettings.{env.Trim()}.json", ds);
 
             // 从环境变量加载连接字符串，优先级最高
-            LoadEnvironmentVariable(cs, ts);
+            LoadEnvironmentVariable(ds);
+
+            var cs = new ConcurrentDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in ds)
+            {
+                cs.TryAdd(item.Key, item.Value.ConnectionString);
+            }
 
             ConnStrs = cs;
-            _connTypes = ts;
+            _infos = ds;
         }
 
         /// <summary>链接字符串集合</summary>
@@ -198,7 +205,7 @@ namespace XCode.DataAccessLayer
         /// </remarks>
         public static ConcurrentDictionary<String, String> ConnStrs { get; private set; }
 
-        private static void LoadConfig(IDictionary<String, String> cs, IDictionary<String, Type> ts)
+        private static void LoadConfig(IDictionary<String, DbInfo> ds)
         {
             var file = "web.config".GetFullPath();
             var fname = AppDomain.CurrentDomain.FriendlyName;
@@ -232,14 +239,19 @@ namespace XCode.DataAccessLayer
                         var type = DbFactory.GetProviderType(connstr, provider);
                         if (type == null) XTrace.WriteLine("无法识别{0}的提供者{1}！", name, provider);
 
-                        cs[name] = connstr;
-                        ts[name] = type;
+                        ds[name] = new DbInfo
+                        {
+                            Name = name,
+                            ConnectionString = connstr,
+                            Type = type,
+                            Provider = provider,
+                        };
                     }
                 }
             }
         }
 
-        private static void LoadAppSettings(String fileName, IDictionary<String, String> cs, IDictionary<String, Type> ts)
+        private static void LoadAppSettings(String fileName, IDictionary<String, DbInfo> ds)
         {
             // Asp.Net Core的Debug模式下配置文件位于项目目录而不是输出目录
             var file = fileName.GetBasePath();
@@ -259,23 +271,28 @@ namespace XCode.DataAccessLayer
                     foreach (var item in dic)
                     {
                         var name = item.Key;
-                        if (name.IsNullOrEmpty() || item.Value is not IDictionary<String, Object> ds) continue;
+                        if (name.IsNullOrEmpty() || item.Value is not IDictionary<String, Object> cfgs) continue;
 
-                        var connstr = ds["connectionString"] + "";
-                        var provider = ds["providerName"] + "";
+                        var connstr = cfgs["connectionString"] + "";
+                        var provider = cfgs["providerName"] + "";
                         if (connstr.IsNullOrWhiteSpace()) continue;
 
                         var type = DbFactory.GetProviderType(connstr, provider);
                         if (type == null) XTrace.WriteLine("无法识别{0}的提供者{1}！", name, provider);
 
-                        cs[name] = connstr;
-                        ts[name] = type;
+                        ds[name] = new DbInfo
+                        {
+                            Name = name,
+                            ConnectionString = connstr,
+                            Type = type,
+                            Provider = provider,
+                        };
                     }
                 }
             }
         }
 
-        private static void LoadEnvironmentVariable(IDictionary<String, String> cs, IDictionary<String, Type> ts)
+        private static void LoadEnvironmentVariable(IDictionary<String, DbInfo> ds)
         {
             foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
             {
@@ -289,10 +306,18 @@ namespace XCode.DataAccessLayer
                         WriteLog("环境变量[{0}]设置连接[{1}]时，未通过provider指定数据库类型，使用默认类型SQLite", key, connName);
                         type = DbFactory.Create(DatabaseType.SQLite).GetType();
                     }
-                    ts[connName] = type;
+
+                    var dic = value.SplitAsDictionary("=", ";");
+                    var provider = dic["provider"];
 
                     // 允许后来者覆盖前面设置过了的
-                    cs[connName] = value;
+                    ds[connName] = new DbInfo
+                    {
+                        Name = connName,
+                        ConnectionString = value,
+                        Type = type,
+                        Provider = provider,
+                    };
                 }
             }
         }
@@ -308,16 +333,29 @@ namespace XCode.DataAccessLayer
             if (connStr.IsNullOrEmpty()) return;
 
             //2016.01.04 @宁波-小董，加锁解决大量分表分库多线程带来的提供者无法识别错误
-            lock (_connTypes)
+            lock (_infos)
             {
                 if (!ConnStrs.TryGetValue(connName, out var oldConnStr)) oldConnStr = null;
 
+                // 从连接字符串中取得提供者
+                if (provider.IsNullOrEmpty())
+                {
+                    var dic = connStr.SplitAsDictionary("=", ";");
+                    provider = dic["provider"];
+                }
+
                 if (type == null) type = DbFactory.GetProviderType(connStr, provider);
+                if (type == null) throw new XCodeException("无法识别{0}的提供者{1}！", connName, provider);
 
                 // 允许后来者覆盖前面设置过了的
                 //var set = new ConnectionStringSettings(connName, connStr, provider);
                 ConnStrs[connName] = connStr;
-                _connTypes[connName] = type ?? throw new XCodeException("无法识别{0}的提供者{1}！", connName, provider);
+
+                var inf = _infos.GetOrAdd(connName, k => new DbInfo { Name = k });
+                inf.Name = connName;
+                inf.ConnectionString = connStr;
+                inf.Type = type;
+                if (provider.IsNullOrEmpty()) inf.Provider = provider;
 
                 // 如果连接字符串改变，则重置所有
                 if (!oldConnStr.IsNullOrEmpty() && !oldConnStr.EqualIgnoreCase(connStr))

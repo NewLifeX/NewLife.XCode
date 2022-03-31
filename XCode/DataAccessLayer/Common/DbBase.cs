@@ -124,6 +124,9 @@ namespace XCode.DataAccessLayer
             }
         }
 
+        /// <summary>数据库提供者。用于选择驱动</summary>
+        public String Provider { get; set; }
+
         protected void CheckConnStr()
         {
             if (ConnectionString.IsNullOrWhiteSpace())

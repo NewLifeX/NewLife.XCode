@@ -22,37 +22,18 @@ namespace XCode.DataAccessLayer
         /// <summary>返回数据库类型。</summary>
         public override DatabaseType Type => DatabaseType.SQLite;
 
-        private static DbProviderFactory _Factory;
-        /// <summary>工厂</summary>
-        public override DbProviderFactory Factory
+        /// <summary>创建工厂</summary>
+        /// <returns></returns>
+        protected override DbProviderFactory CreateFactory()
         {
-            get
-            {
-                if (_Factory == null)
-                {
-                    lock (typeof(SQLite))
-                    {
-                        if (_Factory == null)
-                        {
-                            // Mono有自己的驱动，因为SQLite是混合编译，里面的C++代码与平台相关，不能通用;注意大小写问题
-                            if (Runtime.Mono)
-                                _Factory = GetProviderFactory("Mono.Data.Sqlite.dll", "System.Data.SqliteFactory");
-                            else
-                            {
-                                //_Factory = GetProviderFactory(null, "System.Data.SQLite.SQLiteFactory", true);
-                                _Factory = GetProviderFactory(null, "System.Data.SQLite.SQLiteFactory", true, true) ??
-                                    GetProviderFactory("Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true) ??
-                                    GetProviderFactory("System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false);
-                            }
+            // Mono有自己的驱动，因为SQLite是混合编译，里面的C++代码与平台相关，不能通用;注意大小写问题
+            if (Runtime.Mono)
+                return GetProviderFactory("Mono.Data.Sqlite.dll", "System.Data.SqliteFactory");
 
-                            //// 设置线程安全模式
-                            //if (_Factory != null) SetThreadSafe();
-                        }
-                    }
-                }
-
-                return _Factory;
-            }
+            //_Factory = GetProviderFactory(null, "System.Data.SQLite.SQLiteFactory", true);
+            return GetProviderFactory(null, "System.Data.SQLite.SQLiteFactory", true, true) ??
+                GetProviderFactory("Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true) ??
+                GetProviderFactory("System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false);
         }
 
         /// <summary>是否内存数据库</summary>
@@ -136,12 +117,12 @@ namespace XCode.DataAccessLayer
             base.Dispose(disposing);
 
             // 不用Factory属性，为了避免触发加载SQLite驱动
-            if (_Factory != null)
+            if (_providerFactory != null)
             {
                 try
                 {
                     // 清空连接池
-                    var type = _Factory.CreateConnection().GetType();
+                    var type = _providerFactory.CreateConnection().GetType();
                     type.Invoke("ClearAllPools");
                 }
                 catch (ObjectDisposedException) { }
@@ -161,7 +142,7 @@ namespace XCode.DataAccessLayer
 
         private void SetThreadSafe()
         {
-            var asm = _Factory?.GetType().Assembly;
+            var asm = _providerFactory?.GetType().Assembly;
             if (asm == null) return;
 
             var type = asm.GetTypes().FirstOrDefault(e => e.Name == "UnsafeNativeMethods");

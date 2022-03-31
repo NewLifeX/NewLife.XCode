@@ -21,24 +21,9 @@ namespace XCode.DataAccessLayer
         /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
         public override DatabaseType Type => DatabaseType.Oracle;
 
-        private static DbProviderFactory _Factory;
-        /// <summary>工厂</summary>
-        public override DbProviderFactory Factory
-        {
-            get
-            {
-                if (_Factory == null)
-                {
-                    lock (typeof(Oracle))
-                    {
-                        //_Factory = GetProviderFactory("System.Data.OracleClient.dll", "System.Data.OracleClient.OracleClientFactory");
-                        _Factory = GetProviderFactory("Oracle.ManagedDataAccess.dll", "Oracle.ManagedDataAccess.Client.OracleClientFactory");
-                    }
-                }
-
-                return _Factory;
-            }
-        }
+        /// <summary>创建工厂</summary>
+        /// <returns></returns>
+        protected override DbProviderFactory CreateFactory() => GetProviderFactory("Oracle.ManagedDataAccess.dll", "Oracle.ManagedDataAccess.Client.OracleClientFactory");
 
         protected override void OnSetConnectionString(ConnectionStringBuilder builder)
         {

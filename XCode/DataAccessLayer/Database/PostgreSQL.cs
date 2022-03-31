@@ -18,23 +18,9 @@ namespace XCode.DataAccessLayer
         /// <summary>返回数据库类型。</summary>
         public override DatabaseType Type => DatabaseType.PostgreSQL;
 
-        private static DbProviderFactory _Factory;
-        /// <summary>工厂</summary>
-        public override DbProviderFactory Factory
-        {
-            get
-            {
-                if (_Factory == null)
-                {
-                    lock (typeof(PostgreSQL))
-                    {
-                        if (_Factory == null) _Factory = GetProviderFactory("Npgsql.dll", "Npgsql.NpgsqlFactory");
-                    }
-                }
-
-                return _Factory;
-            }
-        }
+        /// <summary>创建工厂</summary>
+        /// <returns></returns>
+        protected override DbProviderFactory CreateFactory() => GetProviderFactory("Npgsql.dll", "Npgsql.NpgsqlFactory");
 
         const String Server_Key = "Server";
         protected override void OnSetConnectionString(ConnectionStringBuilder builder)

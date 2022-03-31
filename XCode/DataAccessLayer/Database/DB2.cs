@@ -21,24 +21,9 @@ namespace XCode.DataAccessLayer
         /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
         public override DatabaseType Type => DatabaseType.DB2;
 
-        private static DbProviderFactory _Factory;
-        /// <summary>工厂</summary>
-        public override DbProviderFactory Factory
-        {
-            get
-            {
-                if (_Factory == null)
-                {
-                    lock (typeof(DB2))
-                    {
-                        _Factory = GetProviderFactory("IBM.Data.DB2.Core.dll", "IBM.Data.DB2.Core.DB2Factory");
-                        //_Factory = GetProviderFactory("IBM.Data.DB2.dll", "IBM.Data.DB2.DB2Factory");
-                    }
-                }
-
-                return _Factory;
-            }
-        }
+        /// <summary>创建工厂</summary>
+        /// <returns></returns>
+        protected override DbProviderFactory CreateFactory() => GetProviderFactory("IBM.Data.DB2.Core.dll", "IBM.Data.DB2.Core.DB2Factory");
 
         protected override void OnSetConnectionString(ConnectionStringBuilder builder)
         {

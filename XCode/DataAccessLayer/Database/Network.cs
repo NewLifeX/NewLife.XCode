@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq;
-using NewLife;
 using NewLife.Data;
 using XCode.Service;
 
 namespace XCode.DataAccessLayer
 {
     /// <summary>网络数据库</summary>
-    class Network : DbBase
+    internal class Network : DbBase
     {
         #region 属性
         /// <summary>返回数据库类型。</summary>
@@ -22,8 +21,9 @@ namespace XCode.DataAccessLayer
         /// <summary>原始数据库类型。</summary>
         public DatabaseType RawType { get; private set; }
 
-        /// <summary>工厂</summary>
-        public override DbProviderFactory Factory => Server.Factory;
+        /// <summary>创建工厂</summary>
+        /// <returns></returns>
+        protected override DbProviderFactory CreateFactory() => Server.Factory;
 
         protected override void OnSetConnectionString(ConnectionStringBuilder builder)
         {
@@ -150,7 +150,7 @@ namespace XCode.DataAccessLayer
     }
 
     /// <summary>网络数据库会话</summary>
-    class NetworkSession : DbSession
+    internal class NetworkSession : DbSession
     {
         #region 构造函数
         public NetworkSession(IDatabase db) : base(db) { }
@@ -225,7 +225,7 @@ namespace XCode.DataAccessLayer
     }
 
     /// <summary>网络数据库元数据</summary>
-    class NetworkMetaData : DbMetaData
+    internal class NetworkMetaData : DbMetaData
     {
         protected override void OnSetTables(IDataTable[] tables, Migration mode) { }
     }

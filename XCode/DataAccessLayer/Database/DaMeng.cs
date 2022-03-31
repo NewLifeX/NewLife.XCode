@@ -21,23 +21,9 @@ namespace XCode.DataAccessLayer
         /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
         public override DatabaseType Type => DatabaseType.DaMeng;
 
-        private static DbProviderFactory _Factory;
-        /// <summary>工厂</summary>
-        public override DbProviderFactory Factory
-        {
-            get
-            {
-                if (_Factory == null)
-                {
-                    lock (typeof(DaMeng))
-                    {
-                        if (_Factory == null) _Factory = GetProviderFactory("DmProvider.dll", "Dm.DmClientFactory");
-                    }
-                }
-
-                return _Factory;
-            }
-        }
+        /// <summary>创建工厂</summary>
+        /// <returns></returns>
+        protected override DbProviderFactory CreateFactory() => GetProviderFactory("DmProvider.dll", "Dm.DmClientFactory");
 
         const String Server_Key = "Server";
         protected override void OnSetConnectionString(ConnectionStringBuilder builder)

@@ -17,26 +17,15 @@ namespace XCode.DataAccessLayer
         /// <summary>返回数据库类型。</summary>
         public override DatabaseType Type => DatabaseType.MySql;
 
-        private static DbProviderFactory _Factory;
-        /// <summary>工厂</summary>
-        public override DbProviderFactory Factory
+        /// <summary>创建工厂</summary>
+        /// <returns></returns>
+        protected override DbProviderFactory CreateFactory()
         {
-            get
-            {
-                if (_Factory == null)
-                {
-                    lock (typeof(MySql))
-                    {
-                        //_Factory = GetProviderFactory("NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory") ??
-                        //           GetProviderFactory("MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
-                        // MewLife.MySql 在开发过程中，数据驱动下载站点没有它的包，暂时不支持下载
-                        _Factory = GetProviderFactory(null, "NewLife.MySql.MySqlClientFactory", true, true) ??
-                                  GetProviderFactory("MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
-                    }
-                }
-
-                return _Factory;
-            }
+            //_Factory = GetProviderFactory("NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory") ??
+            //           GetProviderFactory("MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
+            // MewLife.MySql 在开发过程中，数据驱动下载站点没有它的包，暂时不支持下载
+            return GetProviderFactory(null, "NewLife.MySql.MySqlClientFactory", true, true) ??
+                GetProviderFactory("MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
         }
 
         private const String Server_Key = "Server";

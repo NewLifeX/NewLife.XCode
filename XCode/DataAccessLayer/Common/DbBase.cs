@@ -90,8 +90,29 @@ namespace XCode.DataAccessLayer
         /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
         public virtual DatabaseType Type => DatabaseType.None;
 
-        /// <summary>工厂</summary>
-        public abstract DbProviderFactory Factory { get; }
+        /// <summary>提供者工厂</summary>
+        protected DbProviderFactory _providerFactory;
+        /// <summary>提供者工厂</summary>
+        public DbProviderFactory Factory
+        {
+            get
+            {
+                if (_providerFactory != null) return _providerFactory;
+                lock (this)
+                {
+                    if (_providerFactory != null) return _providerFactory;
+
+                    _providerFactory = CreateFactory();
+                }
+
+                return _providerFactory;
+            }
+            set => _providerFactory = value;
+        }
+
+        /// <summary>创建工厂</summary>
+        /// <returns></returns>
+        protected virtual DbProviderFactory CreateFactory() => null;
 
         /// <summary>连接名</summary>
         public String ConnName { get; set; }

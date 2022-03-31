@@ -22,25 +22,16 @@ namespace XCode.DataAccessLayer
         /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
         public override DatabaseType Type => DatabaseType.SqlServer;
 
-        private static DbProviderFactory _Factory;
-        /// <summary>工厂</summary>
-        public override DbProviderFactory Factory
+        /// <summary>创建工厂</summary>
+        /// <returns></returns>
+        protected override DbProviderFactory CreateFactory()
         {
-            get
-            {
-                if (_Factory == null)
-                {
-                    lock (typeof(SqlServer))
-                    {
-                        // Microsoft 是最新的跨平台版本，优先使用
-                        //if (_Factory == null) _Factory = GetProviderFactory("Microsoft.Data.SqlClient.dll", "Microsoft.Data.SqlClient.SqlClientFactory", false, true);
-                        if (_Factory == null) _Factory = GetProviderFactory(null, "Microsoft.Data.SqlClient.SqlClientFactory", false, true);
-                        if (_Factory == null) _Factory = GetProviderFactory("System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
-                    }
-                }
+            // Microsoft 是最新的跨平台版本，优先使用
+            //if (_Factory == null) _Factory = GetProviderFactory("Microsoft.Data.SqlClient.dll", "Microsoft.Data.SqlClient.SqlClientFactory", false, true);
+            var factory = GetProviderFactory(null, "Microsoft.Data.SqlClient.SqlClientFactory", false, true);
+            if (factory == null) factory = GetProviderFactory("System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
 
-                return _Factory;
-            }
+            return factory;
         }
 
         /// <summary>是否SQL2012及以上</summary>
@@ -1024,11 +1015,11 @@ namespace XCode.DataAccessLayer
                 case DDLSchema.BackupDatabase:
                     if (values != null)
                     {
-                        if (values.Length > 0) 
+                        if (values.Length > 0)
                             dbname = values[0] as String;
-                        if (values.Length > 1) 
+                        if (values.Length > 1)
                             file = values[1] as String;
-                    } 
+                    }
                     return Backup(dbname, file, false);
                 case DDLSchema.RestoreDatabase:
                     if (values != null)
@@ -1134,7 +1125,7 @@ namespace XCode.DataAccessLayer
         /// <param name="compressed"></param>
         public override String Backup(String dbname, String bakfile, Boolean compressed)
         {
- 
+
             var name = dbname;
             if (name.IsNullOrEmpty())
             {
@@ -1193,7 +1184,7 @@ namespace XCode.DataAccessLayer
         /// <param name="recoverDir"></param>
         /// <param name="replace"></param>
         /// <param name="compressed"></param>
-        public String Restore(String bakfile,string recoverDir, Boolean replace = true, Boolean compressed = false)
+        public String Restore(String bakfile, string recoverDir, Boolean replace = true, Boolean compressed = false)
         {
             var session = base.Database.CreateSession();
             var result = "";
@@ -1224,7 +1215,7 @@ namespace XCode.DataAccessLayer
             WriteLog("{0}还原SqlServer数据库 备份文件为{1}", Database.ConnName, bakfile);
 
             var sw = Stopwatch.StartNew();
-            
+
 
             var headInfo = session.Query($"RESTORE HEADERONLY FROM DISK = '{bakfile}'").Tables[0];
             var fileInfo = session.Query($"RESTORE FILELISTONLY from disk= N'{bakfile}'").Tables[0];
@@ -1247,7 +1238,7 @@ namespace XCode.DataAccessLayer
                 session.Execute(restorSql);
                 result = "ok";
             }
-            
+
             sw.Stop();
             WriteLog("还原完成，耗时{0:n0}ms", sw.ElapsedMilliseconds);
 

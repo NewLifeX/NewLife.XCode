@@ -51,7 +51,7 @@ namespace XCode.DataAccessLayer
         DatabaseType Type { get; }
 
         /// <summary>数据库提供者工厂</summary>
-        DbProviderFactory Factory { get; }
+        DbProviderFactory Factory { get; set; }
 
         /// <summary>链接名</summary>
         String ConnName { get; set; }

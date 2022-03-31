@@ -137,13 +137,13 @@ namespace XCode.DataAccessLayer
                     {
                         if (maximumRows < 1) return sql;
 
-                        var sql_ = FormatSqlserver2012SQL(sql);
-                        return $"{sql_} offset 1 rows fetch next {maximumRows} rows only ";
+                        //sql = FormatSqlserver2012SQL(sql);
+                        return $"{sql} offset 1 rows fetch next {maximumRows} rows only ";
                     }
                     if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
 
-                    var sql__ = FormatSqlserver2012SQL(sql);
-                    return $"{sql__} offset {startRowIndex} rows fetch next {maximumRows} rows only ";
+                    //sql = FormatSqlserver2012SQL(sql);
+                    return $"{sql} offset {startRowIndex} rows fetch next {maximumRows} rows only ";
                 }
 
                 // 指定了起始行，并且是SQL2005及以上版本，使用RowNumber算法

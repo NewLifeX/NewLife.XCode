@@ -28,7 +28,13 @@ namespace XCode.DataAccessLayer
         {
             // Microsoft 是最新的跨平台版本，优先使用
             //if (_Factory == null) _Factory = GetProviderFactory("Microsoft.Data.SqlClient.dll", "Microsoft.Data.SqlClient.SqlClientFactory", false, true);
-            var factory = GetProviderFactory(null, "Microsoft.Data.SqlClient.SqlClientFactory", false, true);
+
+            // 根据提供者加载已有驱动
+            var factory = Provider.Contains("Microsoft") ?
+                GetProviderFactory(null, "Microsoft.Data.SqlClient.SqlClientFactory", false, true) :
+                GetProviderFactory(null, "System.Data.SqlClient.SqlClientFactory", false, true);
+
+            // 找不到驱动时，再到线上下载
             if (factory == null) factory = GetProviderFactory("System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
 
             return factory;

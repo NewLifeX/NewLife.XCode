@@ -92,7 +92,7 @@ namespace XCode.DataAccessLayer
 
         /// <summary>提供者工厂</summary>
         protected DbProviderFactory _providerFactory;
-        /// <summary>提供者工厂</summary>
+        /// <summary>数据库提供者工厂。支持外部修改</summary>
         public DbProviderFactory Factory
         {
             get

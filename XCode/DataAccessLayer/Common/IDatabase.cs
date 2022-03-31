@@ -50,7 +50,7 @@ namespace XCode.DataAccessLayer
         /// <summary>数据库类型</summary>
         DatabaseType Type { get; }
 
-        /// <summary>数据库提供者工厂</summary>
+        /// <summary>数据库提供者工厂。支持外部修改</summary>
         DbProviderFactory Factory { get; set; }
 
         /// <summary>链接名</summary>

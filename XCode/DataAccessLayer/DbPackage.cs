@@ -144,36 +144,38 @@ namespace XCode.DataAccessLayer
             return true;
         }
 
-        /// <summary>获取数据抽取器。优先自增，默认分页</summary>
+        /// <summary>获取数据抽取器。主键->自增ID->索引->默认分页</summary>
         /// <param name="table"></param>
         /// <returns></returns>
         protected virtual IExtracter<DbTable> GetExtracter(IDataTable table)
         {
-            // 自增
-            var id = table.Columns.FirstOrDefault(e => e.Identity);
-            if (id == null)
-            {
-                var pks = table.PrimaryKeys;
-                if (pks != null && pks.Length == 1 && pks[0].DataType.IsInt()) id = pks[0];
-            }
 
             var tableName = Dal.Db.FormatName(table);
-            IExtracter<DbTable> extracer;
+            //主键分页功能
             var pk = table.Columns.FirstOrDefault(e => e.PrimaryKey);
-            // 兼容SqlServer2008R2分页功能
-            if (pk == null || Dal.DbType == DatabaseType.SqlServer)
-            {
-                var dc = table.Columns.FirstOrDefault();
-                extracer = new PagingExtracter(Dal, tableName, dc.ColumnName);
-            }
-            else
-            {
-                extracer = new PagingExtracter(Dal, tableName);
-            }
-            if (id != null)
-                extracer = new IdExtracter(Dal, tableName, id.ColumnName);
+            if (pk != null)
+                return new PagingExtracter(Dal, tableName, pk.ColumnName);
 
-            return extracer;
+            //自增ID分页功能
+            var id = table.Columns.FirstOrDefault(e => e.Identity);
+            if (id != null)
+                return new IdExtracter(Dal, tableName, id.ColumnName);
+
+            //索引分页功能
+            var index = table.Indexes.FirstOrDefault();
+            if (index != null)
+            {
+                var i_dc = index.Columns.FirstOrDefault();
+                if (i_dc != null)
+                    return new PagingExtracter(Dal, tableName, i_dc);
+            }
+
+            //默认第一个字段
+            var dc = table.Columns.FirstOrDefault();
+            if (dc != null)
+                return new PagingExtracter(Dal, tableName, dc.ColumnName);
+
+            return new PagingExtracter(Dal, tableName);
         }
 
         /// <summary>备份单表数据到文件</summary>

@@ -78,6 +78,12 @@ namespace XCode.DataAccessLayer
         {
             if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
+            // 查询总行数
+            if (page.RetrieveTotalCount)
+            {
+                page.TotalCount = SelectCount(sql, CommandType.Text);
+            }
+
             var start = (page.PageIndex - 1) * page.PageSize;
             var max = page.PageSize;
 

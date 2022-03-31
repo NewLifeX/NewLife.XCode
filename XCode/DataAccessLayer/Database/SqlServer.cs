@@ -44,14 +44,28 @@ namespace XCode.DataAccessLayer
         public Boolean IsSQL2012 => Version.Major > 11;
 
         private Version _Version;
-        /// <summary>是否SQL2005及以上</summary>
+        /// <summary>数据库版本</summary>
         public Version Version
         {
             get
             {
                 if (_Version == null)
                 {
-                    _Version = new Version(ServerVersion);
+                    //_Version = new Version(ServerVersion);
+                    if (Version.TryParse(ServerVersion, out var v))
+                        _Version = v;
+                    else
+                    {
+                        var ns = ServerVersion.SplitAsInt(".");
+                        if (ns.Length >= 4)
+                            _Version = new Version(ns[0], ns[1], ns[2], ns[3]);
+                        else if (ns.Length >= 3)
+                            _Version = new Version(ns[0], ns[1], ns[2]);
+                        else if (ns.Length >= 2)
+                            _Version = new Version(ns[0], ns[1]);
+                        else
+                            _Version = new Version();
+                    }
                 }
                 return _Version;
             }

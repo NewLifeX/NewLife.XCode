@@ -26,7 +26,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>优化自动分表</PackageReleaseNotes>
+    <PackageReleaseNotes>重点调整Insert逻辑，没有脏数据的字段不参与</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <IncludeSources>true</IncludeSources>
@@ -37,7 +37,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NewLife.Core" Version="9.0.2022.329-beta1058" />
+    <PackageReference Include="NewLife.Core" Version="9.0.2022.401" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

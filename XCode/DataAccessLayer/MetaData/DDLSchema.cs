@@ -58,7 +58,7 @@ namespace XCode.DataAccessLayer
         /// <summary>备份数据库</summary>
         BackupDatabase,
 
-        ///// <summary>还原数据库</summary>
+        /// <summary>还原数据库</summary>
         RestoreDatabase,
 
         /// <summary>收缩数据库</summary>

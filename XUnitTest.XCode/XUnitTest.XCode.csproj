@@ -91,6 +91,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.0.0-preview2.22096.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
     <PackageReference Include="NewLife.UnitTest" Version="1.0.2022.324-beta0150" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />

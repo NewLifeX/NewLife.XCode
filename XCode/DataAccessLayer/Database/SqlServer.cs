@@ -608,7 +608,7 @@ namespace XCode.DataAccessLayer
                 //var conn = Database.Pool.Get();
 
                 // 准备
-                var mBatcher = new SqlBatcher();
+                var mBatcher = new SqlBatcher(Database.Factory);
                 mBatcher.StartBatch(conn);
 
                 // 创建并添加Command
@@ -692,11 +692,12 @@ namespace XCode.DataAccessLayer
         private class SqlBatcher
         {
             private DataAdapter mAdapter;
-            private static readonly DbProviderFactory _Factory;
-            static SqlBatcher() => _Factory = new SqlServer().Factory;
+            private readonly DbProviderFactory _factory;
 
             /// <summary>获得批处理是否正在批处理状态。</summary>
             public Boolean IsStarted { get; private set; }
+
+            public SqlBatcher(DbProviderFactory factory) => _factory = factory;
 
             /// <summary>开始批处理</summary>
             /// <param name="connection">连接。</param>
@@ -704,10 +705,10 @@ namespace XCode.DataAccessLayer
             {
                 if (IsStarted) return;
 
-                var cmd = _Factory.CreateCommand();
+                var cmd = _factory.CreateCommand();
                 cmd.Connection = connection;
 
-                var adapter = _Factory.CreateDataAdapter();
+                var adapter = _factory.CreateDataAdapter();
                 adapter.InsertCommand = cmd;
                 adapter.Invoke("InitializeBatching");
 
@@ -1205,7 +1206,7 @@ namespace XCode.DataAccessLayer
         /// <param name="recoverDir"></param>
         /// <param name="replace"></param>
         /// <param name="compressed"></param>
-        public String Restore(String bakfile, string recoverDir, Boolean replace = true, Boolean compressed = false)
+        public String Restore(String bakfile, String recoverDir, Boolean replace = true, Boolean compressed = false)
         {
             var session = base.Database.CreateSession();
             var result = "";
@@ -1253,8 +1254,8 @@ namespace XCode.DataAccessLayer
                 var restorSql = $@"RESTORE DATABASE {databaseName} from disk= N'{bakfile}' 
                 WITH NOUNLOAD,
                 {(replace ? "REPLACE," : "")}
-                    MOVE '{dataName}' TO '{Path.Combine(recoverDir, string.Concat(databaseName, ".mdf"))}',
-                    MOVE '{logName}' TO '{Path.Combine(recoverDir, string.Concat(databaseName, ".ldf"))}';";
+                    MOVE '{dataName}' TO '{Path.Combine(recoverDir, String.Concat(databaseName, ".mdf"))}',
+                    MOVE '{logName}' TO '{Path.Combine(recoverDir, String.Concat(databaseName, ".ldf"))}';";
                 session.Execute(stopConnect);
                 session.Execute(restorSql);
                 result = "ok";

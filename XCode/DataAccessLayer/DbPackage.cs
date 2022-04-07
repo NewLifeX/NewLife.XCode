@@ -30,6 +30,9 @@ namespace XCode.DataAccessLayer
         /// <summary>数据页事件</summary>
         public event EventHandler<PageEventArgs> OnPage;
 
+        /// <summary>批大小。用于批量操作数据，默认5000</summary>
+        public Int32 BatchSize { get; set; }
+
         /// <summary>批量处理时，忽略单表错误，继续处理下一个。默认true</summary>
         public Boolean IgnoreError { get; set; } = true;
 
@@ -336,7 +339,7 @@ namespace XCode.DataAccessLayer
                 WriteLog("类型[{0}]：{1}", ts.Length, ts.Join(",", e => e?.Name));
 
                 var row = 0;
-                var pageSize = Dal.Db.BatchSize;
+                var pageSize = BatchSize > 0 ? BatchSize : Dal.Db.BatchSize;
                 while (true)
                 {
                     //修复总行数是pageSize的倍数无法退出循环的情况
@@ -749,20 +752,15 @@ namespace XCode.DataAccessLayer
 
                 // 批量插入
                 using var span = Tracer?.NewSpan($"db:WriteDb", Table.TableName);
-                if (IgnorePageError)
-                {
-                    try
-                    {
-                        Dal.Session.Insert(Table, _Columns, dt.Cast<IExtend>());
-                    }
-                    catch (Exception ex)
-                    {
-                        span?.SetError(ex, dt.Rows?.Count);
-                    }
-                }
-                else
+                try
                 {
                     Dal.Session.Insert(Table, _Columns, dt.Cast<IExtend>());
+                }
+                catch (Exception ex)
+                {
+                    span?.SetError(ex, dt.Rows?.Count);
+
+                    if (!IgnorePageError) throw;
                 }
 
                 return Task.CompletedTask;

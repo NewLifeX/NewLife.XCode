@@ -30,7 +30,7 @@ namespace XCode.DataAccessLayer
             //if (_Factory == null) _Factory = GetProviderFactory("Microsoft.Data.SqlClient.dll", "Microsoft.Data.SqlClient.SqlClientFactory", false, true);
 
             // 根据提供者加载已有驱动
-            var factory = Provider.Contains("Microsoft") ?
+            var factory = !Provider.IsNullOrEmpty() && Provider.Contains("Microsoft") ?
                 GetProviderFactory(null, "Microsoft.Data.SqlClient.SqlClientFactory", false, true) :
                 GetProviderFactory(null, "System.Data.SqlClient.SqlClientFactory", false, true);
 

@@ -128,6 +128,7 @@ namespace XCode.Code
                 builder.Execute();
                 builder.Save(null, true, chineseFileName);
 
+                builder.Clear();
                 builder.Business = true;
                 builder.Execute();
                 builder.Save(null, false, chineseFileName);

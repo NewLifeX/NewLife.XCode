@@ -56,6 +56,7 @@ namespace XUnitTest.XCode.Code
             Assert.Equal(target, rs);
 
             // 业务类
+            builder.Clear();
             builder.Business = true;
             builder.Execute();
 
@@ -96,6 +97,7 @@ namespace XUnitTest.XCode.Code
             Assert.Equal(target, rs);
 
             // 业务类
+            builder.Clear();
             builder.Business = true;
             builder.Execute();
 

@@ -9,6 +9,7 @@ using Xunit;
 
 namespace XUnitTest.XCode.Caching
 {
+    [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
     public class EntityCacheTests
     {
         static EntityCacheTests()

@@ -290,7 +290,7 @@ namespace XCode.Code
         {
             if (Business)
             {
-                WriteLine("/// <summary>{0}</summary>", Table.Description);
+                //WriteLine("/// <summary>{0}</summary>", Table.Description);
                 return;
             }
 

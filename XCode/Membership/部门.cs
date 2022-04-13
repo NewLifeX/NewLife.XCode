@@ -15,7 +15,7 @@ namespace XCode.Membership
     [DataObject]
     [Description("部门。组织机构，多级树状结构")]
     [BindIndex("IX_Department_Name", false, "Name")]
-    [BindIndex("IU_Department_ParentID_Name", true, "ParentID,Name")]
+    [BindIndex("IX_Department_ParentID_Name", false, "ParentID,Name")]
     [BindIndex("IX_Department_Code", false, "Code")]
     [BindIndex("IX_Department_UpdateTime", false, "UpdateTime")]
     [BindTable("Department", Description = "部门。组织机构，多级树状结构", ConnName = "Membership", DbType = DatabaseType.None)]

@@ -137,11 +137,11 @@ namespace XCode.DataAccessLayer
 
             if (value.IndexOfAny(_likeKeys) >= 0)
                 value = value
-                    .Replace("\\\\", "\\\\\\\\")
-                    .Replace("'", "\\\\'")
-                    .Replace("\"", "\\\\\"")
-                    .Replace("%", "\\\\%")
-                    .Replace("_", "\\\\_");
+                    .Replace("\\", "\\\\")
+                    .Replace("'", "''")
+                    .Replace("\"", "\\\"")
+                    .Replace("%", "\\%")
+                    .Replace("_", "\\_");
 
             return base.FormatLike(column, format, value);
         }

@@ -55,7 +55,7 @@ namespace XCode.DataAccessLayer
         /// <returns></returns>
         public virtual Int32 Backup(IDataTable table, Stream stream)
         {
-            using var span = Tracer?.NewSpan("db:Backup", table.Name);
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:Backup", table.Name);
 
             // 并行写入文件，提升吞吐
             var writeFile = new WriteFileActor
@@ -221,7 +221,7 @@ namespace XCode.DataAccessLayer
         {
             if (tables == null) throw new ArgumentNullException(nameof(tables));
 
-            using var span = Tracer?.NewSpan("db:BackupAll", file);
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:BackupAll", file);
 
             // 过滤不存在的表
             var ts = Dal.Tables.Select(e => e.TableName).ToArray();
@@ -289,7 +289,7 @@ namespace XCode.DataAccessLayer
             if (stream == null) throw new ArgumentNullException(nameof(stream));
             if (table == null) throw new ArgumentNullException(nameof(table));
 
-            using var span = Tracer?.NewSpan("db:Restore", table.Name);
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:Restore", table.Name);
 
             var writeDb = new WriteDbActor
             {
@@ -418,7 +418,7 @@ namespace XCode.DataAccessLayer
             var file2 = file.GetFullPath();
             if (!File.Exists(file2)) return null;
 
-            using var span = Tracer?.NewSpan("db:RestoreAll", file);
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:RestoreAll", file);
 
             using var fs = new FileStream(file2, FileMode.Open);
             using var zip = new ZipArchive(fs, ZipArchiveMode.Read, true, Encoding.UTF8);
@@ -483,7 +483,7 @@ namespace XCode.DataAccessLayer
             if (connName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(connName));
             if (table == null) throw new ArgumentNullException(nameof(table));
 
-            using var span = Tracer?.NewSpan("db:Sync", $"{table.Name}->{connName}");
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:Sync", $"{table.Name}->{connName}");
 
             var dal = DAL.Create(connName);
 
@@ -563,7 +563,7 @@ namespace XCode.DataAccessLayer
             if (connName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(connName));
             if (tables == null) throw new ArgumentNullException(nameof(tables));
 
-            using var span = Tracer?.NewSpan("db:SyncAll", connName);
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:SyncAll", connName);
 
             var dic = new Dictionary<String, Int32>();
 
@@ -649,7 +649,7 @@ namespace XCode.DataAccessLayer
                 var bn = _Binary;
                 Int32[] fields = null;
 
-                using var span = Tracer?.NewSpan($"db:WriteStream", (Stream as FileStream)?.Name);
+                //using var span = Tracer?.NewSpan($"db:WriteStream", (Stream as FileStream)?.Name);
 
                 // 写头部结构。没有数据时可以备份结构
                 if (!_writeHeader)
@@ -751,7 +751,7 @@ namespace XCode.DataAccessLayer
                 }
 
                 // 批量插入
-                using var span = Tracer?.NewSpan($"db:WriteDb", Table.TableName);
+                using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:WriteDb", Table.TableName);
                 try
                 {
                     Dal.Session.Insert(Table, _Columns, dt.Cast<IExtend>());

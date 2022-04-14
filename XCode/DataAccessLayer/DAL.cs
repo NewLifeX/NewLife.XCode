@@ -528,7 +528,7 @@ namespace XCode.DataAccessLayer
             if (Db is DbBase db2 && !db2.SupportSchema) return new List<IDataTable>();
 
             var tracer = Tracer ?? GlobalTracer;
-            using var span = tracer?.NewSpan("db:GetTables", ConnName);
+            using var span = tracer?.NewSpan($"db:{ConnName}:GetTables", ConnName);
             try
             {
                 //CheckDatabase();
@@ -553,7 +553,7 @@ namespace XCode.DataAccessLayer
         public IList<String> GetTableNames()
         {
             var tracer = Tracer ?? GlobalTracer;
-            using var span = tracer?.NewSpan("db:GetTableNames", ConnName);
+            using var span = tracer?.NewSpan($"db:{ConnName}:GetTableNames", ConnName);
             try
             {
                 return Db.CreateMetaData().GetTableNames();
@@ -701,7 +701,7 @@ namespace XCode.DataAccessLayer
             if (Db is DbBase db2 && !db2.SupportSchema) return;
 
             var tracer = Tracer ?? GlobalTracer;
-            using var span = tracer?.NewSpan("db:SetTables", tables.Join());
+            using var span = tracer?.NewSpan($"db:{ConnName}:SetTables", tables.Join());
             try
             {
                 //// 构建DataTable时也要注意表前缀，避免反向工程用错

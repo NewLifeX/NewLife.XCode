@@ -53,9 +53,9 @@ namespace XCode.Code
             var xmlContent = File.ReadAllText(xmlFile);
             atts = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase)
             {
-                ["xmlns"] = "http://www.newlifex.com/Model2022.xsd",
+                ["xmlns"] = "http://newlifex.com/Model2022.xsd",
                 ["xmlns:xs"] = "http://www.w3.org/2001/XMLSchema-instance",
-                ["xs:schemaLocation"] = "http://www.newlifex.com http://www.newlifex.com/Model2022.xsd"
+                ["xs:schemaLocation"] = "http://newlifex.com http://newlifex.com/Model2022.xsd"
             };
 
             if (Debug) XTrace.WriteLine("导入模型：{0}", xmlFile);

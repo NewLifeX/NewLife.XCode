@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema id="Model2022"
-    targetNamespace="http://www.newlifex.com/Model2022.xsd"
+    targetNamespace="http://newlifex.com/Model2022.xsd"
     elementFormDefault="qualified"
-    xmlns="http://www.newlifex.com/Model2022.xsd"
-    xmlns:mstns="http://www.newlifex.com/Model2022.xsd"
+    xmlns="http://newlifex.com/Model2022.xsd"
+    xmlns:mstns="http://newlifex.com/Model2022.xsd"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
 >
   <xs:annotation>

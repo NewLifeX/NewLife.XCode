@@ -8,7 +8,7 @@
 
 数据中间件，支持MySQL、SQLite、SqlServer、Oracle、Postgresql、TDengine、达梦，重点在缓存、性能、分表、自动建表。  
 
-XCode教程：[https://www.yuque.com/smartstone/xcode](https://www.yuque.com/smartstone/xcode)  
+XCode教程：[https://newlifex.com/xcode](https://newlifex.com/xcode)  
 
 ## 大数据中间件
 主要特点：  
@@ -208,7 +208,7 @@ XCode 支持从环境变量中获取数据库连接字符串，用于容器化�
 |                          NewLife.UWB                          | 2020  |  商用  |    √    | 厘米级高精度室内定位，软硬件一体化，与其它系统联动，大型展厅项目验证                 |
 
 ## 新生命开发团队
-![XCode](https://www.newlifex.com/logo.png)  
+![XCode](https://newlifex.com/logo.png)  
 
 新生命团队（NewLife）成立于2002年，是新时代物联网行业解决方案提供者，致力于提供软硬件应用方案咨询、系统架构规划与开发服务。  
 团队主导的开源NewLife系列组件已被广泛应用于各行业，Nuget累计下载量高达60余万次。  
@@ -217,10 +217,8 @@ XCode 支持从环境变量中获取数据库连接字符串，用于容器化�
 我们将不断通过服务的持续改进，成为客户长期信赖的合作伙伴，通过不断的创新和发展，成为国内优秀的IT服务供应商。  
 
 `新生命团队始于2002年，部分开源项目具有20年以上漫长历史，源码库保留有2010年以来所有修改记录`  
-网站：https://www.NewLifeX.com  
-开源：https://github.com/NewLifeX  
-教程：https://www.yuque.com/smartstone  
-博客：https://nnhy.cnblogs.com  
+网站：https://newlifex.com  
+开源：https://github.com/newlifex  
 QQ群：1600800/1600838  
 微信公众号：  
-![智能大石头](https://www.newlifex.com/stone.jpg)  
+![智能大石头](https://newlifex.com/stone.jpg)  

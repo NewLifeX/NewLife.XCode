@@ -75,7 +75,7 @@ namespace XCode.Code
             // 版本和教程
             var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
             if (!atts.ContainsKey("Version")) atts["Version"] = asm.FileVersion + "";
-            if (!atts.ContainsKey("Document")) atts["Document"] = "https://www.yuque.com/smartstone/xcode/model";
+            if (!atts.ContainsKey("Document")) atts["Document"] = "https://newlifex.com/xcode/model";
 
             // 保存模型文件
             var xmlContent = File.ReadAllText(xmlFile);

@@ -21,7 +21,7 @@
   <PropertyGroup>
     <PackageId>NewLife.XCode</PackageId>
     <Authors>$(Company)</Authors>
-    <PackageProjectUrl>https://www.yuque.com/smartstone/xcode</PackageProjectUrl>
+    <PackageProjectUrl>https://newlifex.com/xcode</PackageProjectUrl>
     <PackageIcon>leaf.png</PackageIcon>
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

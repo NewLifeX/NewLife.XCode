@@ -31,7 +31,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.NotNull(type);
         }
 
-        [Fact(Skip = "跳过")]
+        [Fact]
         public void InitTest()
         {
             var db = DbFactory.Create(DatabaseType.DB2);

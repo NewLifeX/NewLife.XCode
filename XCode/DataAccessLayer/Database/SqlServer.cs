@@ -13,6 +13,7 @@ using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
+using NewLife.Web;
 
 namespace XCode.DataAccessLayer
 {
@@ -30,14 +31,19 @@ namespace XCode.DataAccessLayer
             //if (_Factory == null) _Factory = GetProviderFactory("Microsoft.Data.SqlClient.dll", "Microsoft.Data.SqlClient.SqlClientFactory", false, true);
 
             // 根据提供者加载已有驱动
-            var factory = !Provider.IsNullOrEmpty() && Provider.Contains("Microsoft") ?
-                GetProviderFactory(null, "Microsoft.Data.SqlClient.SqlClientFactory", false, true) :
-                GetProviderFactory(null, "System.Data.SqlClient.SqlClientFactory", false, true);
+            if (!Provider.IsNullOrEmpty() && Provider.Contains("Microsoft"))
+            {
+                var type = PluginHelper.LoadPlugin("Microsoft.Data.SqlClient.SqlClientFactory", null, "Microsoft.Data.SqlClient.dll", null);
+                var factory = GetProviderFactory(type);
+                if (factory != null) return factory;
+            }
 
             // 找不到驱动时，再到线上下载
-            if (factory == null) factory = GetProviderFactory("System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
+            {
+                var factory = GetProviderFactory("System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
 
-            return factory;
+                return factory;
+            }
         }
 
         /// <summary>是否SQL2012及以上</summary>

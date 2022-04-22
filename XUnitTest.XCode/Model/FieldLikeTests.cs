@@ -104,9 +104,9 @@ namespace XUnitTest.XCode.Model
             var fi = User._.Name;
             var exp = fi.StartsWith("dmi/'[]()%&_end");
             var where = exp.GetString(_dbUser, null);
-            Assert.Equal("Name Like 'dmi//''/[/]/(/)/%/&/_end%'", where);
+            Assert.Equal("Name Like 'dmi/''[]()\\%&\\_end%'", where);
 
-            Assert.Equal("Name Like 'dmi//''/[/]/(/)/%/&/_end%'", exp);
+            Assert.Equal("Name Like 'dmi/''[]()\\%&\\_end%'", exp);
         }
 
         [Fact]

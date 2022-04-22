@@ -13,6 +13,7 @@ using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
+using NewLife.Web;
 
 namespace XCode.DataAccessLayer
 {
@@ -30,8 +31,11 @@ namespace XCode.DataAccessLayer
             if (Runtime.Mono)
                 return GetProviderFactory("Mono.Data.Sqlite.dll", "System.Data.SqliteFactory");
 
-            //_Factory = GetProviderFactory(null, "System.Data.SQLite.SQLiteFactory", true);
-            return GetProviderFactory(null, "System.Data.SQLite.SQLiteFactory", true, true) ??
+            var type =
+                PluginHelper.LoadPlugin("Microsoft.Data.Sqlite.SqliteFactory", null, "Microsoft.Data.Sqlite.dll", null) ??
+                PluginHelper.LoadPlugin("System.Data.SQLite.SQLiteFactory", null, "System.Data.SQLite.dll", null);
+
+            return GetProviderFactory(type) ??
                 GetProviderFactory("Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true) ??
                 GetProviderFactory("System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false);
         }

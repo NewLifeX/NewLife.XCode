@@ -66,8 +66,8 @@ namespace XCode.DataAccessLayer
         {
             base.OnSetConnectionString(builder);
 
-            var flag = Factory != null && Factory.GetType().FullName.StartsWith("System.Data");
-            if (flag)
+            var provider = _providerFactory?.GetType().FullName ?? Provider;
+            if (provider.StartsWithIgnoreCase("System.Data"))
             {
                 //// 正常情况下INSERT, UPDATE和DELETE语句不返回数据。 当开启count-changes，以上语句返回一行含一个整数值的数据——该语句插入，修改或删除的行数。
                 //if (!builder.ContainsKey("count_changes")) builder["count_changes"] = "1";
@@ -143,6 +143,14 @@ namespace XCode.DataAccessLayer
         /// <summary>创建元数据对象</summary>
         /// <returns></returns>
         protected override IMetaData OnCreateMetaData() => new SQLiteMetaData();
+
+        public override Boolean Support(String providerName)
+        {
+            providerName = providerName.ToLower();
+            if (providerName.Contains("sqlite")) return true;
+
+            return false;
+        }
 
         private void SetThreadSafe()
         {
@@ -465,13 +473,13 @@ namespace XCode.DataAccessLayer
 
             //return GetTables(rows, names);
 
+            var list = new List<IDataTable>();
             var ss = Database.CreateSession();
 
             var sql = "select * from sqlite_master";
             var ds = ss.Query(sql, null);
-            if (ds.Rows.Count == 0) return null;
+            if (ds.Rows.Count == 0) return list;
 
-            var list = new List<IDataTable>();
             var hs = new HashSet<String>(names ?? new String[0], StringComparer.OrdinalIgnoreCase);
 
             var dts = Select(ds, "type", "table");

@@ -26,6 +26,7 @@ using System.Net.WebSockets;
 using XCode;
 using XCode.Cache;
 using Stardust;
+using Microsoft.Data.Sqlite;
 
 namespace Test
 {
@@ -95,16 +96,19 @@ namespace Test
 
         private static void Test35()
         {
-            //DAL.AddConnStr("xxgk", "user id=ORCL;password=1;data source=//127.0.0.1/ORCL;Pooling=true;Max Pool Size=5", null, "System.Data.OracleClient");
-            DAL.AddConnStr("xxgk", "Data Source=.;Initial Catalog=Test2;user id=sa;password=1", null, "System.Data.SqlClient");
-            DAL.AddConnStr("xxgk2", "Data Source=.;Initial Catalog=Test;user id=sa;password=1", null, "System.Data.SqlClient");
-            var dal = DAL.Create("xxgk");
-            var dal2 = DAL.Create("xxgk2");
-            var tables = dal.Tables.ToArray();
-            dal.BackupAll(tables, "财政数据库", ignoreError: false);
-            var tt = dal2.RestoreAll("财政数据库", ignoreError: false);
-            //dal.Sync(tables[1], "xxgk");
-            int i = 0;
+            // 加载数据库驱动
+            var factory = SqliteFactory.Instance;
+            var dal = User.Meta.Session.Dal;
+            dal.Db.Factory = factory;
+
+            var ver = dal.Db.ServerVersion;
+            XTrace.WriteLine("SQLite版本：{0}", ver);
+
+            var list = Role.FindAll();
+            foreach (var item in list)
+            {
+                XTrace.WriteLine(item.Name);
+            }
         }
 
         private static void Test1()

@@ -445,7 +445,7 @@ namespace XCode.Code
                             try
                             {
                                 // 特殊支持枚举
-                                var type2 = type.GetTypeEx(false);
+                                var type2 = type.GetTypeEx();
                                 if (type2 != null && type2.IsEnum)
                                     WriteLine("case \"{0}\": {0} = ({1})value.ToInt(); break;", column.Name, type);
                                 else

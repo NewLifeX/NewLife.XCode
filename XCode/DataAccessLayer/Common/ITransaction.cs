@@ -86,9 +86,8 @@ namespace XCode.DataAccessLayer
             Tran = null;
             _Session = null;
 
-            //var conn = Conn;
+            Conn?.Close();
             Conn = null;
-            //conn?.Close();
         }
         #endregion
 
@@ -140,7 +139,6 @@ namespace XCode.DataAccessLayer
             if (n == 1)
             {
                 // 打开事务后，由事务管理连接
-                //Conn = _Session.Database.Pool.Get();
                 Conn = _Session.Database.OpenConnection();
             }
 
@@ -168,11 +166,8 @@ namespace XCode.DataAccessLayer
                 {
                     Tran = null;
 
-                    //// 把连接归还给对象池
-                    //_Session.Database.Pool.Put(Conn);
-                    //var conn = Conn;
+                    Conn?.Close();
                     Conn = null;
-                    //conn?.Close();
                 }
             }
 
@@ -200,11 +195,8 @@ namespace XCode.DataAccessLayer
                 {
                     Tran = null;
 
-                    //// 把连接归还给对象池
-                    //_Session.Database.Pool.Put(Conn);
-                    //var conn = Conn;
+                    Conn?.Close();
                     Conn = null;
-                    //conn?.Close();
                 }
             }
 

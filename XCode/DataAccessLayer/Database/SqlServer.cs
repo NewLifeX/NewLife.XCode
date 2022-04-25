@@ -440,38 +440,9 @@ namespace XCode.DataAccessLayer
         {
             tableName = tableName.Trim().Trim('[', ']').Trim();
 
-            //var n = 0L;
-            //if (QueryIndex().TryGetValue(tableName, out n)) return n;
-
             var sql = $"select rows from sysindexes where id = object_id('{tableName}') and indid in (0,1)";
             return ExecuteScalar<Int64>(sql);
         }
-
-        //Dictionary<String, Int64> _index;
-        //DateTime _next;
-
-        //Dictionary<String, Int64> QueryIndex()
-        //{
-        //    // 检查更新
-        //    if (_index == null || _next < DateTime.Now)
-        //    {
-        //        _index = QueryIndex_();
-        //        _next = DateTime.Now.AddSeconds(10);
-        //    }
-
-        //    return _index;
-        //}
-
-        //Dictionary<String, Int64> QueryIndex_()
-        //{
-        //    var ds = Query("select object_name(id) as objname,rows from sysindexes where indid in (0,1) and status in (0,2066)");
-        //    var dic = new Dictionary<String, Int64>(StringComparer.OrdinalIgnoreCase);
-        //    foreach (DataRow dr in ds.Tables[0].Rows)
-        //    {
-        //        dic.Add(dr[0] + "", (Int32)dr[1]);
-        //    }
-        //    return dic;
-        //}
 
         /// <summary>执行插入语句并返回新增行的自动编号</summary>
         /// <param name="sql">SQL语句</param>

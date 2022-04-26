@@ -230,7 +230,6 @@ namespace XCode
         /// <returns></returns>
         public override Int32 Save()
         {
-
             // 来自数据库直接Update
             if (IsFromDatabase) return Update();
 
@@ -253,6 +252,7 @@ namespace XCode
             {
                 Valid(isnew);
                 if (!Meta.Modules.Valid(this, isnew)) return -1;
+
                 // 自动分库分表
                 using var split = Meta.CreateShard(this as TEntity);
                 return this.Upsert(null, null, null, Meta.Session);

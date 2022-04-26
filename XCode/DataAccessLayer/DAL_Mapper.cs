@@ -223,6 +223,40 @@ namespace XCode.DataAccessLayer
             return ExecuteByCache(sql, "", dps, (s, t, p) => Session.Execute(s, CommandType.Text, p));
         }
 
+        /// <summary>插入数据表。多行数据循环插入，非批量</summary>
+        /// <param name="table">表定义</param>
+        /// <param name="columns">字段列表，为空表示所有字段</param>
+        /// <param name="data">数据对象</param>
+        /// <param name="mode">保存模式，默认Insert</param>
+        /// <returns></returns>
+        public Int32 Insert(DbTable data, IDataTable table, IDataColumn[] columns = null, SaveModes mode = SaveModes.Insert)
+        {
+            var rs = 0;
+            foreach (var row in data)
+            {
+                rs += Insert(row, table, columns, mode);
+            }
+            return rs;
+        }
+
+        /// <summary>插入数据行</summary>
+        /// <param name="table">表定义</param>
+        /// <param name="columns">字段列表，为空表示所有字段</param>
+        /// <param name="data">数据对象</param>
+        /// <param name="mode">保存模式，默认Insert</param>
+        /// <returns></returns>
+        public Int32 Insert(IExtend data, IDataTable table, IDataColumn[] columns = null, SaveModes mode = SaveModes.Insert)
+        {
+            var builder = new InsertBuilder
+            {
+                Mode = mode,
+                UseParameter = true
+            };
+            var sql = builder.GetSql(Db, table, columns, data);
+
+            return ExecuteByCache(sql, "", builder.Parameters, (s, t, p) => Session.Execute(s, CommandType.Text, p));
+        }
+
         /// <summary>更新数据。不支持自动识别主键</summary>
         /// <param name="data">实体对象</param>
         /// <param name="where">查询条件。默认使用Id字段</param>

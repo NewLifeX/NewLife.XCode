@@ -39,6 +39,12 @@ namespace XCode.DataAccessLayer
         /// <summary>批量处理时，忽略单页错误，继续处理下一个。默认false</summary>
         public Boolean IgnorePageError { get; set; }
 
+        /// <summary>批量插入，提供最好吞吐，默认true。为false时关闭批量，采用逐行插入并忽略单行错误</summary>
+        public Boolean BatchInsert { get; set; } = true;
+
+        /// <summary>数据保存模式。默认Insert</summary>
+        public SaveModes Mode { get; set; } = SaveModes.Insert;
+
         /// <summary>写文件Actor的创建回调，支持外部自定义</summary>
         public Func<WriteFileActor> WriteFileCallback { get; set; }
 
@@ -294,12 +300,9 @@ namespace XCode.DataAccessLayer
             using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:Restore", table.Name);
 
             var writeDb = WriteDbCallback?.Invoke() ?? new WriteDbActor { BoundedCapacity = 4 };
+            writeDb.Host = this;
             writeDb.Table = table;
-            writeDb.Dal = Dal;
-            writeDb.IgnorePageError = IgnorePageError;
             writeDb.TracerParent = span;
-            writeDb.Tracer = Tracer;
-            writeDb.Log = Log;
 
             var connName = Dal.ConnName;
 
@@ -487,11 +490,8 @@ namespace XCode.DataAccessLayer
 
             var writeDb = WriteDbCallback?.Invoke() ?? new WriteDbActor { BoundedCapacity = 4 };
             writeDb.Table = table;
-            writeDb.Dal = Dal;
-            writeDb.IgnorePageError = IgnorePageError;
+            writeDb.Host = this;
             writeDb.TracerParent = span;
-            writeDb.Tracer = Tracer;
-            writeDb.Log = Log;
 
             var extracer = GetExtracter(table);
 
@@ -688,23 +688,13 @@ namespace XCode.DataAccessLayer
         /// </summary>
         public class WriteDbActor : Actor
         {
-            /// <summary>
-            /// 数据库连接
-            /// </summary>
-            public DAL Dal { get; set; }
+            /// <summary>父级对象</summary>
+            public DbPackage Host { get; set; }
 
             /// <summary>
             /// 数据表
             /// </summary>
             public IDataTable Table { get; set; }
-
-            /// <summary>批量处理时，忽略单页错误，继续处理下一个。默认false</summary>
-            public Boolean IgnorePageError { get; set; }
-
-            /// <summary>
-            /// 日志
-            /// </summary>
-            public ILog Log { get; set; }
 
             private IDataColumn[] _Columns;
 
@@ -717,10 +707,12 @@ namespace XCode.DataAccessLayer
             {
                 if (context.Message is not DbTable dt) return Task.CompletedTask;
 
+                var dal = Host.Dal;
+
                 // 匹配要写入的列
                 if (_Columns == null)
                 {
-                    //_Columns = Table.GetColumns(dt.Columns);
+                    Tracer = Host.Tracer;
 
                     var columns = new List<IDataColumn>();
                     foreach (var item in dt.Columns)
@@ -739,21 +731,38 @@ namespace XCode.DataAccessLayer
                     _Columns = columns.ToArray();
 
                     // 这里的匹配列是目标表字段名，而DbTable数据取值是Name，两者可能不同
-                    Log?.Info("数据表：{0}/{1}", Table.Name, Table);
-                    Log?.Info("匹配列：{0}", _Columns.Join(",", e => e.ColumnName));
+                    Host.Log?.Info("数据表：{0}/{1}", Table.Name, Table);
+                    Host.Log?.Info("匹配列：{0}", _Columns.Join(",", e => e.ColumnName));
                 }
 
                 // 批量插入
-                using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:WriteDb", Table.TableName);
+                using var span = Tracer?.NewSpan($"db:{dal.ConnName}:WriteDb", Table.TableName);
                 try
                 {
-                    Dal.Session.Insert(Table, _Columns, dt.Cast<IExtend>());
+                    if (Host.BatchInsert)
+                    {
+                        dal.Session.Insert(Table, _Columns, dt.Cast<IExtend>());
+                    }
+                    else
+                    {
+                        foreach (var row in dt)
+                        {
+                            try
+                            {
+                                dal.Insert(row, Table, _Columns, Host.Mode);
+                            }
+                            catch (Exception ex)
+                            {
+                                span?.SetError(ex, row);
+                            }
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
                     span?.SetError(ex, dt.Rows?.Count);
 
-                    if (!IgnorePageError) throw;
+                    if (!Host.IgnorePageError) throw;
                 }
 
                 return Task.CompletedTask;

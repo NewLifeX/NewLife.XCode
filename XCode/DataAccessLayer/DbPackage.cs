@@ -39,6 +39,12 @@ namespace XCode.DataAccessLayer
         /// <summary>批量处理时，忽略单页错误，继续处理下一个。默认false</summary>
         public Boolean IgnorePageError { get; set; }
 
+        /// <summary>写文件Actor的创建回调，支持外部自定义</summary>
+        public Func<WriteFileActor> WriteFileCallback { get; set; }
+
+        /// <summary>写数据库Actor的创建回调，支持外部自定义</summary>
+        public Func<WriteDbActor> WriteDbCallback { get; set; }
+
         /// <summary>
         /// 性能追踪器
         /// </summary>
@@ -58,16 +64,12 @@ namespace XCode.DataAccessLayer
             using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:Backup", table.Name);
 
             // 并行写入文件，提升吞吐
-            var writeFile = new WriteFileActor
-            {
-                Stream = stream,
+            var writeFile = WriteFileCallback?.Invoke() ?? new WriteFileActor { BoundedCapacity = 4, };
 
-                // 最多同时堆积数
-                BoundedCapacity = 4,
-                TracerParent = span,
-                Tracer = Tracer,
-                Log = Log,
-            };
+            writeFile.Stream = stream;
+            writeFile.TracerParent = span;
+            writeFile.Tracer = Tracer;
+            writeFile.Log = Log;
 
             var tableName = Dal.Db.FormatName(table);
             var sb = new SelectBuilder { Table = tableName };
@@ -291,18 +293,14 @@ namespace XCode.DataAccessLayer
 
             using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:Restore", table.Name);
 
-            var writeDb = new WriteDbActor
-            {
-                Table = table,
-                Dal = Dal,
-                IgnorePageError = IgnorePageError,
-                Log = Log,
-                Tracer = Tracer,
+            var writeDb = WriteDbCallback?.Invoke() ?? new WriteDbActor { BoundedCapacity = 4 };
+            writeDb.Table = table;
+            writeDb.Dal = Dal;
+            writeDb.IgnorePageError = IgnorePageError;
+            writeDb.TracerParent = span;
+            writeDb.Tracer = Tracer;
+            writeDb.Log = Log;
 
-                // 最多同时堆积数页
-                BoundedCapacity = 4,
-                TracerParent = span,
-            };
             var connName = Dal.ConnName;
 
             // 临时关闭日志
@@ -487,18 +485,13 @@ namespace XCode.DataAccessLayer
 
             var dal = DAL.Create(connName);
 
-            var writeDb = new WriteDbActor
-            {
-                Table = table,
-                Dal = dal,
-                IgnorePageError = IgnorePageError,
-                Log = Log,
-                Tracer = Tracer,
-
-                // 最多同时堆积数页
-                BoundedCapacity = 4,
-                TracerParent = span,
-            };
+            var writeDb = WriteDbCallback?.Invoke() ?? new WriteDbActor { BoundedCapacity = 4 };
+            writeDb.Table = table;
+            writeDb.Dal = Dal;
+            writeDb.IgnorePageError = IgnorePageError;
+            writeDb.TracerParent = span;
+            writeDb.Tracer = Tracer;
+            writeDb.Log = Log;
 
             var extracer = GetExtracter(table);
 

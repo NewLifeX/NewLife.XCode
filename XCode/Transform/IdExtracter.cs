@@ -59,7 +59,7 @@ namespace XCode.Transform
                 // 分割数据页，自增
                 var sb = Builder.Clone();
                 if (!sb.Where.IsNullOrEmpty()) sb.Where += " And ";
-                sb.Where += $"{IdField}>={Row}";
+                sb.Where += $"{IdField}>{Row}";
 
                 // 查询数据
                 var dt = Dal.Query(sb, 0, BatchSize);
@@ -72,7 +72,7 @@ namespace XCode.Transform
                 yield return dt;
 
                 // 自增分割时，取最后一行
-                Row = dt.Get<Int64>(count - 1, IdField) + 1;
+                Row = dt.Get<Int64>(count - 1, IdField);
 
                 // 下一页
                 TotalCount += count;

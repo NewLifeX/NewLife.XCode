@@ -155,24 +155,34 @@ namespace XCode.DataAccessLayer
             return true;
         }
 
-        /// <summary>获取数据抽取器。主键->自增ID->索引->默认分页</summary>
+        /// <summary>获取数据抽取器。自增/数字主键->时间索引->主键分页->索引分页->默认分页</summary>
         /// <param name="table"></param>
         /// <returns></returns>
         protected virtual IExtracter<DbTable> GetExtracter(IDataTable table)
         {
-
             var tableName = Dal.Db.FormatName(table);
-            //主键分页功能
+
+            // 自增抽取，或数字主键
+            var id = table.Columns.FirstOrDefault(e => e.Identity);
+            if (id == null)
+            {
+                var pks = table.Columns.Where(e => e.PrimaryKey).ToList();
+                if (pks.Count == 1 && pks[0].DataType.IsInt()) id = pks[0];
+            }
+            if (id != null)
+                return new IdExtracter(Dal, tableName, id.ColumnName);
+
+            // 时间索引抽取
+            var time = table.Indexes.FirstOrDefault(e => table.GetColumn(e.Columns[0]).DataType == typeof(DateTime));
+            if (time != null)
+                return new TimeExtracter(Dal, tableName, table.GetColumn(time.Columns[0]).ColumnName);
+
+            // 主键分页功能
             var pk = table.Columns.FirstOrDefault(e => e.PrimaryKey);
             if (pk != null)
                 return new PagingExtracter(Dal, tableName, pk.ColumnName);
 
-            //自增ID分页功能
-            var id = table.Columns.FirstOrDefault(e => e.Identity);
-            if (id != null)
-                return new IdExtracter(Dal, tableName, id.ColumnName);
-
-            //索引分页功能
+            // 索引分页功能
             var index = table.Indexes.FirstOrDefault();
             if (index != null)
             {
@@ -181,7 +191,7 @@ namespace XCode.DataAccessLayer
                     return new PagingExtracter(Dal, tableName, i_dc);
             }
 
-            //默认第一个字段
+            // 默认第一个字段
             var dc = table.Columns.FirstOrDefault();
             if (dc != null)
                 return new PagingExtracter(Dal, tableName, dc.ColumnName);

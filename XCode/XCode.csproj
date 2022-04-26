@@ -81,7 +81,6 @@
     <Compile Remove="Transform\ETL.cs" />
     <Compile Remove="Transform\IdentityExtracter.cs" />
     <Compile Remove="Transform\Sync.cs" />
-    <Compile Remove="Transform\TimeExtracter.cs" />
     <Compile Remove="Transform\TimeSpanExtracter.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -50,10 +50,7 @@ namespace XCode.Transform
 
         #region 构造
         /// <summary>实例化时基抽取算法</summary>
-        public ExtracterBase()
-        {
-            Name = GetType().Name.TrimEnd("Extracter");
-        }
+        public ExtracterBase() => Name = GetType().Name.TrimEnd("Extracter");
         #endregion
 
         #region 方法
@@ -75,10 +72,7 @@ namespace XCode.Transform
         /// <summary>写日志</summary>
         /// <param name="format"></param>
         /// <param name="args"></param>
-        public void WriteLog(String format, params Object[] args)
-        {
-            Log?.Info(format, args);
-        }
+        public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
         #endregion
     }
 }

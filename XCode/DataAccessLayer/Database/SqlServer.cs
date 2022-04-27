@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -674,7 +675,29 @@ namespace XCode.DataAccessLayer
             /// <summary>获得批处理是否正在批处理状态。</summary>
             public Boolean IsStarted { get; private set; }
 
-            public SqlBatcher(DbProviderFactory factory) => _factory = factory;
+            static MethodInfo _init;
+            static MethodInfo _add;
+            static MethodInfo _exe;
+            static MethodInfo _clear;
+            Func<IDbCommand, Int32> _addToBatch;
+            Func<Int32> _executeBatch;
+            Action _clearBatch;
+
+            public SqlBatcher(DbProviderFactory factory)
+            {
+                _factory = factory;
+
+                if (_init == null)
+                {
+                    using var adapter = factory.CreateDataAdapter();
+                    var type = adapter.GetType();
+
+                    _add = type.GetMethodEx("AddToBatch");
+                    _exe = type.GetMethodEx("ExecuteBatch");
+                    _clear = type.GetMethodEx("ClearBatch");
+                    _init = type.GetMethodEx("InitializeBatching");
+                }
+            }
 
             /// <summary>开始批处理</summary>
             /// <param name="connection">连接。</param>
@@ -687,7 +710,12 @@ namespace XCode.DataAccessLayer
 
                 var adapter = _factory.CreateDataAdapter();
                 adapter.InsertCommand = cmd;
-                adapter.Invoke("InitializeBatching");
+                //adapter.Invoke("InitializeBatching");
+                _init.As<Action>(adapter)();
+
+                _addToBatch = _add.As<Func<IDbCommand, Int32>>(adapter);
+                _executeBatch = _exe.As<Func<Int32>>(adapter);
+                _clearBatch = _clear.As<Action>(adapter);
 
                 mAdapter = adapter;
 
@@ -702,7 +730,8 @@ namespace XCode.DataAccessLayer
             {
                 if (!IsStarted) throw new InvalidOperationException();
 
-                mAdapter.Invoke("AddToBatch", new Object[] { command });
+                //mAdapter.Invoke("AddToBatch", new Object[] { command });
+                _addToBatch(command);
             }
 
             /// <summary>
@@ -713,7 +742,8 @@ namespace XCode.DataAccessLayer
             {
                 if (!IsStarted) throw new InvalidOperationException();
 
-                return (Int32)mAdapter.Invoke("ExecuteBatch");
+                //return (Int32)mAdapter.Invoke("ExecuteBatch");
+                return _executeBatch();
             }
 
             /// <summary>
@@ -737,7 +767,8 @@ namespace XCode.DataAccessLayer
             {
                 if (!IsStarted) throw new InvalidOperationException();
 
-                mAdapter.Invoke("ClearBatch");
+                //mAdapter.Invoke("ClearBatch");
+                _clearBatch();
             }
         }
         #endregion

@@ -170,12 +170,12 @@ namespace XCode.DataAccessLayer
                 if (pks.Count == 1 && pks[0].DataType.IsInt()) id = pks[0];
             }
             if (id != null)
-                return new IdExtracter(Dal, tableName, id.ColumnName);
+                return new IdExtracter(Dal, tableName, id);
 
             // 时间索引抽取
             var time = table.Indexes.FirstOrDefault(e => table.GetColumn(e.Columns[0]).DataType == typeof(DateTime));
             if (time != null)
-                return new TimeExtracter(Dal, tableName, table.GetColumn(time.Columns[0]).ColumnName);
+                return new TimeExtracter(Dal, tableName, table.GetColumn(time.Columns[0]));
 
             // 主键分页功能
             var pk = table.Columns.FirstOrDefault(e => e.PrimaryKey);

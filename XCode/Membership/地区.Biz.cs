@@ -1024,7 +1024,7 @@ namespace XCode.Membership
         public static Int32 Export(String csvFile, Int32 level = 4)
         {
             // Id抽取器
-            var extracter = new IdExtracter(Meta.Session.Dal, Meta.TableName, nameof(ID));
+            var extracter = new IdExtracter(Meta.Session.Dal, Meta.TableName, _.ID.Field);
             extracter.Builder.Where = _.Level <= level;
 
             // 得到数据迭代

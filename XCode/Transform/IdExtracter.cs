@@ -20,7 +20,7 @@ namespace XCode.Transform
         public SelectBuilder Builder { get; set; }
 
         /// <summary>Id字段</summary>
-        public String IdField { get; set; }
+        public IDataColumn Field { get; set; }
 
         /// <summary>开始行。默认0</summary>
         public Int64 Row { get; set; }
@@ -39,12 +39,12 @@ namespace XCode.Transform
         /// <summary>实例化自增抽取器</summary>
         /// <param name="dal"></param>
         /// <param name="tableName"></param>
-        /// <param name="idField"></param>
-        public IdExtracter(DAL dal, String tableName, String idField)
+        /// <param name="field"></param>
+        public IdExtracter(DAL dal, String tableName, IDataColumn field)
         {
             Dal = dal;
-            Builder = new SelectBuilder { Table = tableName, OrderBy = idField + " asc" };
-            IdField = idField;
+            Builder = new SelectBuilder { Table = tableName, OrderBy = field + " asc" };
+            Field = field;
             BatchSize = dal.Db.BatchSize;
         }
         #endregion
@@ -54,12 +54,15 @@ namespace XCode.Transform
         /// <returns></returns>
         public virtual IEnumerable<DbTable> Fetch()
         {
+            var field = Field;
+            var db = Dal.Db;
+            var name = db.FormatName(field);
             while (true)
             {
                 // 分割数据页，自增
                 var sb = Builder.Clone();
                 if (!sb.Where.IsNullOrEmpty()) sb.Where += " And ";
-                sb.Where += $"{IdField}>{Row}";
+                sb.Where += $"{name}>{Row}";
 
                 // 查询数据
                 var dt = Dal.Query(sb, 0, BatchSize);
@@ -72,7 +75,7 @@ namespace XCode.Transform
                 yield return dt;
 
                 // 自增分割时，取最后一行
-                Row = dt.Get<Int64>(count - 1, IdField);
+                Row = dt.Get<Int64>(count - 1, field.ColumnName);
 
                 // 下一页
                 TotalCount += count;

@@ -120,10 +120,10 @@ namespace XCode
             if (entity == null) return 0;
 
             var fact = entity.GetType().AsFactory();
-            session ??= fact.Session;
+            var session2 = session ?? fact.Session;
 
             // Oracle/MySql批量插入
-            if (session.Dal.SupportBatch)
+            if (session2.Dal.SupportBatch)
             {
                 if (list is not IList<T> es) es = list.ToList();
                 foreach (IEntity item in es.ToArray())
@@ -131,10 +131,31 @@ namespace XCode
                     if (item is EntityBase entity2) entity2.Valid(item.IsNullKey);
                     if (!fact.Modules.Valid(item, item.IsNullKey)) es.Remove((T)item);
                 }
-                return BatchInsert(list, null, session);
+
+                // 如果未指定会话，需要支持自动分表，并且需要考虑实体列表可能落入不同库表
+                if (session == null && fact.ShardPolicy != null)
+                {
+                    // 提前计算分表，按库表名分组
+                    var dic = list.GroupBy(e =>
+                    {
+                        var sd = fact.ShardPolicy.Shard(e);
+                        return $"{sd.ConnName}#{sd.TableName}";
+                    });
+                    // 按库表分组执行批量插入
+                    var rs = 0;
+                    foreach (var item in dic)
+                    {
+                        var names = item.Key.Split('#');
+                        using var split = fact.CreateSplit(names[0], names[1]);
+                        rs += BatchInsert(item, null, fact.Session);
+                    }
+                    return rs;
+                }
+
+                return BatchInsert(list, null, session2);
             }
 
-            return DoAction(list, useTransition, e => e.Insert(), session);
+            return DoAction(list, useTransition, e => e.Insert(), session2);
         }
 
         /// <summary>把整个集合更新到数据库</summary>

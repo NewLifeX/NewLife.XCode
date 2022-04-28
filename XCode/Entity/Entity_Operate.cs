@@ -7,6 +7,7 @@ using NewLife;
 using NewLife.Data;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
+using XCode.Shards;
 
 namespace XCode
 {
@@ -156,6 +157,34 @@ namespace XCode
             /// <param name="where">条件，不带Where</param>
             /// <returns>总行数</returns>
             public virtual Int64 FindCount(Expression where) => Entity<TEntity>.FindCount(where);
+            #endregion
+
+            #region 分表分库
+            /// <summary>分表分库策略</summary>
+            public virtual IShardPolicy ShardPolicy { get => Meta.ShardPolicy; set => Meta.ShardPolicy = value; }
+
+            /// <summary>创建分库会话，using结束时自动还原</summary>
+            /// <param name="connName">连接名</param>
+            /// <param name="tableName">表名</param>
+            /// <returns></returns>
+            public virtual IDisposable CreateSplit(String connName, String tableName) => Meta.CreateSplit(connName, tableName);
+
+            /// <summary>针对实体对象自动分库分表</summary>
+            /// <param name="entity"></param>
+            /// <returns></returns>
+            public virtual IDisposable CreateShard(IEntity entity) => Meta.CreateShard(entity as TEntity);
+
+            /// <summary>为实体对象、时间、雪花Id等计算分表分库</summary>
+            /// <param name="value"></param>
+            /// <returns></returns>
+            public virtual IDisposable CreateShard(Object value) => Meta.CreateShard(value);
+
+            /// <summary>针对时间区间自动分库分表，常用于多表顺序查询，支持倒序</summary>
+            /// <param name="start"></param>
+            /// <param name="end"></param>
+            /// <param name="callback"></param>
+            /// <returns></returns>
+            public virtual IEnumerable<T> AutoShard<T>(DateTime start, DateTime end, Func<T> callback) => Meta.AutoShard(start, end, callback);
             #endregion
 
             #region 高并发

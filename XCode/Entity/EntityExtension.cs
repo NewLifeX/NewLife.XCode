@@ -139,15 +139,14 @@ namespace XCode
                     var dic = list.GroupBy(e =>
                     {
                         var sd = fact.ShardPolicy.Shard(e);
-                        return $"{sd.ConnName}#{sd.TableName}";
+                        return fact.GetSession(sd.ConnName, sd.TableName);
                     });
                     // 按库表分组执行批量插入
                     var rs = 0;
                     foreach (var item in dic)
                     {
-                        var names = item.Key.Split('#');
-                        using var split = fact.CreateSplit(names[0], names[1]);
-                        rs += BatchInsert(item, null, fact.Session);
+                        var ss = item.Key;
+                        rs += BatchInsert(item.ToList(), null, ss);
                     }
                     return rs;
                 }

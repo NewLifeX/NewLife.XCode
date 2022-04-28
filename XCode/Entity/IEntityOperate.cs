@@ -156,6 +156,12 @@ namespace XCode
         #endregion
 
         #region 分表分库
+        /// <summary>获取指定连接和表的实体会话。可用于分表逻辑</summary>
+        /// <param name="connName">连接名</param>
+        /// <param name="tableName">表名</param>
+        /// <returns></returns>
+        IEntitySession GetSession(String connName, String tableName);
+
         /// <summary>分表分库策略</summary>
         IShardPolicy ShardPolicy { get; set; }
 

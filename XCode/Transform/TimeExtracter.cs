@@ -46,7 +46,7 @@ namespace XCode.Transform
         public TimeExtracter(DAL dal, String tableName, IDataColumn field)
         {
             Dal = dal;
-            Builder = new SelectBuilder { Table = tableName, OrderBy = field + " asc" };
+            Builder = new SelectBuilder { Table = tableName, OrderBy = field.ColumnName + " asc" };
             Field = field;
             BatchSize = dal.Db.BatchSize;
         }

@@ -57,7 +57,7 @@ namespace XCode.DataAccessLayer
 
             // 如果是新版驱动v8.0，需要设置获取公钥
             var version = _providerFactory?.GetType().Assembly.GetName().Version;
-            if (version != null && version.Major >= 8) builder.TryAdd("AllowPublicKeyRetrieval", "true");
+            if (version == null || version.Major >= 8) builder.TryAdd("AllowPublicKeyRetrieval", "true");
         }
         #endregion
 

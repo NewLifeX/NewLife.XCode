@@ -62,9 +62,10 @@ namespace XCode.DataAccessLayer
                     //!!! 重量级更新：经常出现链接字符串为127/master的连接错误，非常有可能是因为这里线程冲突，A线程创建了实例但未来得及赋值连接字符串，就被B线程使用了
                     var db = type.CreateInstance() as IDatabase;
                     if (!ConnName.IsNullOrEmpty()) db.ConnName = ConnName;
-                    if (!ConnStr.IsNullOrEmpty()) db.ConnectionString = DecodeConnStr(ConnStr);
-
                     if (_infos.TryGetValue(ConnName, out var info)) db.Provider = info.Provider;
+
+                    // 设置连接字符串时，可能触发内部的一系列动作，因此放在最后
+                    if (!ConnStr.IsNullOrEmpty()) db.ConnectionString = DecodeConnStr(ConnStr);
 
                     _Db = db;
 
@@ -354,8 +355,8 @@ namespace XCode.DataAccessLayer
                 var inf = _infos.GetOrAdd(connName, k => new DbInfo { Name = k });
                 inf.Name = connName;
                 inf.ConnectionString = connStr;
-                inf.Type = type;
-                if (provider.IsNullOrEmpty()) inf.Provider = provider;
+                if (type != null) inf.Type = type;
+                if (!provider.IsNullOrEmpty()) inf.Provider = provider;
 
                 // 如果连接字符串改变，则重置所有
                 if (!oldConnStr.IsNullOrEmpty() && !oldConnStr.EqualIgnoreCase(connStr))

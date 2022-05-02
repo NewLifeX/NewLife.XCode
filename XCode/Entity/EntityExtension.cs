@@ -136,10 +136,11 @@ namespace XCode
                 if (session == null && fact.ShardPolicy != null)
                 {
                     // 提前计算分表，按库表名分组
+                    var table = fact.Table;
                     var dic = list.GroupBy(e =>
                     {
                         var sd = fact.ShardPolicy.Shard(e);
-                        return fact.GetSession(sd.ConnName, sd.TableName);
+                        return fact.GetSession(sd.ConnName ?? table.ConnName, sd.TableName ?? table.TableName);
                     });
                     // 按库表分组执行批量插入
                     var rs = 0;

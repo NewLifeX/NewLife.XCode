@@ -3,30 +3,29 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Security.Authentication;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Configuration;
+using NewLife.Data;
+using NewLife.Http;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Serialization;
-using XCode.DataAccessLayer;
-using XCode.Membership;
-using XCode.Code;
-using System.Security.Cryptography;
-using NewLife.Data;
-using System.Threading.Tasks;
-using NewLife.Configuration;
-using System.Text;
-using NewLife.Http;
-using System.Net.WebSockets;
+using Stardust;
 using XCode;
 using XCode.Cache;
-using Stardust;
-using Microsoft.Data.Sqlite;
+using XCode.Code;
+using XCode.DataAccessLayer;
+using XCode.Membership;
 
 namespace Test
 {
@@ -96,19 +95,12 @@ namespace Test
 
         private static void Test35()
         {
-            // 加载数据库驱动
-            var factory = SqliteFactory.Instance;
-            var dal = User.Meta.Session.Dal;
-            dal.Db.Factory = factory;
-
-            var ver = dal.Db.ServerVersion;
-            XTrace.WriteLine("SQLite版本：{0}", ver);
-
-            var list = Role.FindAll();
-            foreach (var item in list)
-            {
-                XTrace.WriteLine(item.Name);
-            }
+            var dal = Role.Meta.Session.Dal;
+            var ds = dal.Select("select * from role");
+            var xml = ds.GetXml();
+            Console.WriteLine(xml);
+            var sch = ds.GetXmlSchema();
+            Console.WriteLine(sch);
         }
 
         private static void Test1()

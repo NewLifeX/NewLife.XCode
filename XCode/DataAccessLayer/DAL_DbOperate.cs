@@ -455,7 +455,19 @@ namespace XCode.DataAccessLayer
             var span = tracer?.NewSpan(traceName, sql);
             try
             {
-                return callback(k1, k2, k3);
+                var rs = callback(k1, k2, k3);
+
+                if (span != null)
+                {
+                    if (rs is DbTable dt)
+                        span.Tag = $"{sql} [rows={dt.Rows?.Count}]";
+                    else if (rs is DataSet ds && ds.Tables.Count > 0)
+                        span.Tag = $"{sql} [rows={ds.Tables[0].Rows.Count}]";
+                    else
+                        span.Tag = $"{sql} [result={rs}]";
+                }
+
+                return rs;
             }
             catch (Exception ex)
             {
@@ -520,7 +532,7 @@ namespace XCode.DataAccessLayer
             return rs;
         }
 
-        private Task<TResult> InvokeAsync<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, Task<TResult>> callback, String action)
+        private async Task<TResult> InvokeAsync<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, Task<TResult>> callback, String action)
         {
             var tracer = Tracer ?? GlobalTracer;
             var traceName = "";
@@ -547,7 +559,19 @@ namespace XCode.DataAccessLayer
             var span = tracer?.NewSpan(traceName, sql);
             try
             {
-                return callback(k1, k2, k3);
+                var rs = await callback(k1, k2, k3);
+
+                if (span != null)
+                {
+                    if (rs is DbTable dt)
+                        span.Tag = $"{sql} [rows={dt.Rows?.Count}]";
+                    else if (rs is DataSet ds && ds.Tables.Count > 0)
+                        span.Tag = $"{sql} [rows={ds.Tables[0].Rows.Count}]";
+                    else
+                        span.Tag = $"{sql} [result={rs}]";
+                }
+
+                return rs;
             }
             catch (Exception ex)
             {

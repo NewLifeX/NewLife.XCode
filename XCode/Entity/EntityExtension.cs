@@ -827,8 +827,8 @@ namespace XCode
             {
                 foreach (var fi in fact.Fields)
                 {
-                    // 脏数据，或者非空非string
-                    if (entity.Dirtys[fi.Name] || !fi.IsNullable && fi.Type != typeof(String) && fi.Type != typeof(DateTime))
+                    // 来自数据库或脏数据，或者非空非string
+                    if (entity.IsFromDatabase || entity.Dirtys[fi.Name] || !fi.IsNullable && fi.Type != typeof(String) && fi.Type != typeof(DateTime))
                     {
                         if (!ns.Contains(fi.Name)) ns.Add(fi.Name);
                     }

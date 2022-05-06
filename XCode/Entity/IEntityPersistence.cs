@@ -495,10 +495,11 @@ namespace XCode
         {
             var factory = Factory;
             var db = session.Dal.Db;
+            var fullInsert = factory.FullInsert;
 
             /*
             * 插入数据原则：
-            * 1，有脏数据的字段一定要参与
+            * 1，来自数据库或有脏数据的字段一定要参与
             * 2，没有脏数据，允许空的字段不参与
             * 3，没有脏数据，不允许空，字符串类型不参与，如果数据库也没有默认值则报错
             * 4，没有脏数据，不允许空，其它类型参与插入
@@ -515,28 +516,28 @@ namespace XCode
                 // 标识列不需要插入，别的类型都需要
                 if (CheckIdentity(db, fi, value, sbNames, sbValues)) continue;
 
-                // 1，有脏数据的字段一定要参与
-                if (!entity.IsDirty(fi.Name))
+                // 1，来自数据库或有脏数据的字段一定要参与
+                if (entity.IsFromDatabase || !entity.IsDirty(fi.Name))
                 {
                     //if (!factory.FullInsert) continue;
 
                     // 2，没有脏数据，允许空的字段不参与
                     if (fi.IsNullable)
                     {
-                        if (!factory.FullInsert) continue;
+                        if (!fullInsert) continue;
                     }
                     else
                     {
                         // 3，没有脏数据，不允许空，字符串类型不参与，如果数据库也没有默认值则报错
                         if (fi.Type == typeof(String) && value == null)
                         {
-                            if (!factory.FullInsert) continue;
+                            if (!fullInsert) continue;
 
                             value = String.Empty;
                         }
                         if (fi.Type == typeof(DateTime))
                         {
-                            if (!factory.FullInsert) continue;
+                            if (!fullInsert) continue;
                         }
 
                         // 4，没有脏数据，不允许空，其它类型参与插入

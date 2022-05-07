@@ -968,21 +968,49 @@ namespace XCode
                 var max = maximumRows;
 
                 var rs = new List<TEntity>();
-                foreach (var shard in shards)
+                //foreach (var shard in shards)
+                //{
+                //    // 如果目标分表不存在，则不要展开查询
+                //    var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : session.Dal;
+                //    if (!dal.TableNames.Contains(shard.TableName)) continue;
+
+                //    using var split = Meta.CreateSplit(shard.ConnName, shard.TableName);
+
+                //    var builder = CreateBuilder(where, order, selects);
+                //    var list2 = LoadData(Meta.Session.Query(builder, row, max));
+                //    if (list2.Count > 0) rs.AddRange(list2);
+                //    if (maximumRows > 0 && rs.Count >= maximumRows) return rs;
+
+                //    max -= list2.Count;
+                //}
+
+                for (var i = 0; i < shards.Length; i++)
                 {
                     // 如果目标分表不存在，则不要展开查询
-                    var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : session.Dal;
-                    if (!dal.TableNames.Contains(shard.TableName)) continue;
+                    var dal = !shards[i].ConnName.IsNullOrEmpty() ? DAL.Create(shards[i].ConnName) : session.Dal;
+                    if (!dal.TableNames.Contains(shards[i].TableName)) continue;
 
-                    using var split = Meta.CreateSplit(shard.ConnName, shard.TableName);
+                    using var split = Meta.CreateSplit(shards[i].ConnName, shards[i].TableName);
 
                     var builder = CreateBuilder(where, order, selects);
                     var list2 = LoadData(Meta.Session.Query(builder, row, max));
-                    if (list2.Count > 0) rs.AddRange(list2);
+                    var skipCount = 0;
+                    if (list2.Count > 0)
+                    {
+                        rs.AddRange(list2);
+                    }
+                    else if (i < shards.Length) // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
+                    {
+                        skipCount = Meta.Session.Query(builder, 0, 0).Count();
+                    }
+
                     if (maximumRows > 0 && rs.Count >= maximumRows) return rs;
 
                     max -= list2.Count;
+                    // 后边表索引记录数应该是减去前张表查询出来的记录总数
+                    row -= skipCount;
                 }
+
                 return rs;
             }
         }

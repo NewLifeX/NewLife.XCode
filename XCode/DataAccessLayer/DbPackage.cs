@@ -30,11 +30,26 @@ namespace XCode.DataAccessLayer
         /// <summary>数据页事件</summary>
         public event EventHandler<PageEventArgs> OnPage;
 
+        /// <summary>批大小。用于批量操作数据，默认5000</summary>
+        public Int32 BatchSize { get; set; }
+
         /// <summary>批量处理时，忽略单表错误，继续处理下一个。默认true</summary>
         public Boolean IgnoreError { get; set; } = true;
 
         /// <summary>批量处理时，忽略单页错误，继续处理下一个。默认false</summary>
         public Boolean IgnorePageError { get; set; }
+
+        /// <summary>批量插入，提供最好吞吐，默认true。为false时关闭批量，采用逐行插入并忽略单行错误</summary>
+        public Boolean BatchInsert { get; set; } = true;
+
+        /// <summary>数据保存模式。默认Insert</summary>
+        public SaveModes Mode { get; set; } = SaveModes.Insert;
+
+        /// <summary>写文件Actor的创建回调，支持外部自定义</summary>
+        public Func<WriteFileActor> WriteFileCallback { get; set; }
+
+        /// <summary>写数据库Actor的创建回调，支持外部自定义</summary>
+        public Func<WriteDbActor> WriteDbCallback { get; set; }
 
         /// <summary>
         /// 性能追踪器
@@ -52,19 +67,15 @@ namespace XCode.DataAccessLayer
         /// <returns></returns>
         public virtual Int32 Backup(IDataTable table, Stream stream)
         {
-            using var span = Tracer?.NewSpan("db:Backup", table.Name);
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:Backup", table.Name);
 
             // 并行写入文件，提升吞吐
-            var writeFile = new WriteFileActor
-            {
-                Stream = stream,
+            var writeFile = WriteFileCallback?.Invoke() ?? new WriteFileActor { BoundedCapacity = 4, };
 
-                // 最多同时堆积数
-                BoundedCapacity = 4,
-                TracerParent = span,
-                Tracer = Tracer,
-                Log = Log,
-            };
+            writeFile.Stream = stream;
+            writeFile.TracerParent = span;
+            writeFile.Tracer = Tracer;
+            writeFile.Log = Log;
 
             var tableName = Dal.Db.FormatName(table);
             var sb = new SelectBuilder { Table = tableName };
@@ -144,24 +155,34 @@ namespace XCode.DataAccessLayer
             return true;
         }
 
-        /// <summary>获取数据抽取器。主键->自增ID->索引->默认分页</summary>
+        /// <summary>获取数据抽取器。自增/数字主键->时间索引->主键分页->索引分页->默认分页</summary>
         /// <param name="table"></param>
         /// <returns></returns>
         protected virtual IExtracter<DbTable> GetExtracter(IDataTable table)
         {
-
             var tableName = Dal.Db.FormatName(table);
-            //主键分页功能
+
+            // 自增抽取，或数字主键
+            var id = table.Columns.FirstOrDefault(e => e.Identity);
+            if (id == null)
+            {
+                var pks = table.Columns.Where(e => e.PrimaryKey).ToList();
+                if (pks.Count == 1 && pks[0].DataType.IsInt()) id = pks[0];
+            }
+            if (id != null)
+                return new IdExtracter(Dal, tableName, id);
+
+            // 时间索引抽取
+            var time = table.Indexes.FirstOrDefault(e => table.GetColumn(e.Columns[0]).DataType == typeof(DateTime));
+            if (time != null)
+                return new TimeExtracter(Dal, tableName, table.GetColumn(time.Columns[0]));
+
+            // 主键分页功能
             var pk = table.Columns.FirstOrDefault(e => e.PrimaryKey);
             if (pk != null)
                 return new PagingExtracter(Dal, tableName, pk.ColumnName);
 
-            //自增ID分页功能
-            var id = table.Columns.FirstOrDefault(e => e.Identity);
-            if (id != null)
-                return new IdExtracter(Dal, tableName, id.ColumnName);
-
-            //索引分页功能
+            // 索引分页功能
             var index = table.Indexes.FirstOrDefault();
             if (index != null)
             {
@@ -170,7 +191,7 @@ namespace XCode.DataAccessLayer
                     return new PagingExtracter(Dal, tableName, i_dc);
             }
 
-            //默认第一个字段
+            // 默认第一个字段
             var dc = table.Columns.FirstOrDefault();
             if (dc != null)
                 return new PagingExtracter(Dal, tableName, dc.ColumnName);
@@ -218,7 +239,7 @@ namespace XCode.DataAccessLayer
         {
             if (tables == null) throw new ArgumentNullException(nameof(tables));
 
-            using var span = Tracer?.NewSpan("db:BackupAll", file);
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:BackupAll", file);
 
             // 过滤不存在的表
             var ts = Dal.Tables.Select(e => e.TableName).ToArray();
@@ -286,20 +307,13 @@ namespace XCode.DataAccessLayer
             if (stream == null) throw new ArgumentNullException(nameof(stream));
             if (table == null) throw new ArgumentNullException(nameof(table));
 
-            using var span = Tracer?.NewSpan("db:Restore", table.Name);
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:Restore", table.Name);
 
-            var writeDb = new WriteDbActor
-            {
-                Table = table,
-                Dal = Dal,
-                IgnorePageError = IgnorePageError,
-                Log = Log,
-                Tracer = Tracer,
+            var writeDb = WriteDbCallback?.Invoke() ?? new WriteDbActor { BoundedCapacity = 4 };
+            writeDb.Host = this;
+            writeDb.Table = table;
+            writeDb.TracerParent = span;
 
-                // 最多同时堆积数页
-                BoundedCapacity = 4,
-                TracerParent = span,
-            };
             var connName = Dal.ConnName;
 
             // 临时关闭日志
@@ -336,7 +350,7 @@ namespace XCode.DataAccessLayer
                 WriteLog("类型[{0}]：{1}", ts.Length, ts.Join(",", e => e?.Name));
 
                 var row = 0;
-                var pageSize = Dal.Db.BatchSize;
+                var pageSize = BatchSize > 0 ? BatchSize : Dal.Db.BatchSize;
                 while (true)
                 {
                     //修复总行数是pageSize的倍数无法退出循环的情况
@@ -415,7 +429,7 @@ namespace XCode.DataAccessLayer
             var file2 = file.GetFullPath();
             if (!File.Exists(file2)) return null;
 
-            using var span = Tracer?.NewSpan("db:RestoreAll", file);
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:RestoreAll", file);
 
             using var fs = new FileStream(file2, FileMode.Open);
             using var zip = new ZipArchive(fs, ZipArchiveMode.Read, true, Encoding.UTF8);
@@ -480,22 +494,14 @@ namespace XCode.DataAccessLayer
             if (connName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(connName));
             if (table == null) throw new ArgumentNullException(nameof(table));
 
-            using var span = Tracer?.NewSpan("db:Sync", $"{table.Name}->{connName}");
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:Sync", $"{table.Name}->{connName}");
 
             var dal = DAL.Create(connName);
 
-            var writeDb = new WriteDbActor
-            {
-                Table = table,
-                Dal = dal,
-                IgnorePageError = IgnorePageError,
-                Log = Log,
-                Tracer = Tracer,
-
-                // 最多同时堆积数页
-                BoundedCapacity = 4,
-                TracerParent = span,
-            };
+            var writeDb = WriteDbCallback?.Invoke() ?? new WriteDbActor { BoundedCapacity = 4 };
+            writeDb.Table = table;
+            writeDb.Host = this;
+            writeDb.TracerParent = span;
 
             var extracer = GetExtracter(table);
 
@@ -560,7 +566,7 @@ namespace XCode.DataAccessLayer
             if (connName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(connName));
             if (tables == null) throw new ArgumentNullException(nameof(tables));
 
-            using var span = Tracer?.NewSpan("db:SyncAll", connName);
+            using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:SyncAll", connName);
 
             var dic = new Dictionary<String, Int32>();
 
@@ -646,7 +652,7 @@ namespace XCode.DataAccessLayer
                 var bn = _Binary;
                 Int32[] fields = null;
 
-                using var span = Tracer?.NewSpan($"db:WriteStream", (Stream as FileStream)?.Name);
+                //using var span = Tracer?.NewSpan($"db:WriteStream", (Stream as FileStream)?.Name);
 
                 // 写头部结构。没有数据时可以备份结构
                 if (!_writeHeader)
@@ -692,23 +698,13 @@ namespace XCode.DataAccessLayer
         /// </summary>
         public class WriteDbActor : Actor
         {
-            /// <summary>
-            /// 数据库连接
-            /// </summary>
-            public DAL Dal { get; set; }
+            /// <summary>父级对象</summary>
+            public DbPackage Host { get; set; }
 
             /// <summary>
             /// 数据表
             /// </summary>
             public IDataTable Table { get; set; }
-
-            /// <summary>批量处理时，忽略单页错误，继续处理下一个。默认false</summary>
-            public Boolean IgnorePageError { get; set; }
-
-            /// <summary>
-            /// 日志
-            /// </summary>
-            public ILog Log { get; set; }
 
             private IDataColumn[] _Columns;
 
@@ -721,10 +717,12 @@ namespace XCode.DataAccessLayer
             {
                 if (context.Message is not DbTable dt) return Task.CompletedTask;
 
+                var dal = Host.Dal;
+
                 // 匹配要写入的列
                 if (_Columns == null)
                 {
-                    //_Columns = Table.GetColumns(dt.Columns);
+                    Tracer = Host.Tracer;
 
                     var columns = new List<IDataColumn>();
                     foreach (var item in dt.Columns)
@@ -743,26 +741,38 @@ namespace XCode.DataAccessLayer
                     _Columns = columns.ToArray();
 
                     // 这里的匹配列是目标表字段名，而DbTable数据取值是Name，两者可能不同
-                    Log?.Info("数据表：{0}/{1}", Table.Name, Table);
-                    Log?.Info("匹配列：{0}", _Columns.Join(",", e => e.ColumnName));
+                    Host.Log?.Info("数据表：{0}/{1}", Table.Name, Table);
+                    Host.Log?.Info("匹配列：{0}", _Columns.Join(",", e => e.ColumnName));
                 }
 
                 // 批量插入
-                using var span = Tracer?.NewSpan($"db:WriteDb", Table.TableName);
-                if (IgnorePageError)
+                using var span = Tracer?.NewSpan($"db:{dal.ConnName}:WriteDb", Table.TableName);
+                try
                 {
-                    try
+                    if (Host.BatchInsert)
                     {
-                        Dal.Session.Insert(Table, _Columns, dt.Cast<IExtend>());
+                        dal.Session.Insert(Table, _Columns, dt.Cast<IExtend>());
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        span?.SetError(ex, dt.Rows?.Count);
+                        foreach (var row in dt)
+                        {
+                            try
+                            {
+                                dal.Insert(row, Table, _Columns, Host.Mode);
+                            }
+                            catch (Exception ex)
+                            {
+                                span?.SetError(ex, row);
+                            }
+                        }
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    Dal.Session.Insert(Table, _Columns, dt.Cast<IExtend>());
+                    span?.SetError(ex, dt.Rows?.Count);
+
+                    if (!Host.IgnorePageError) throw;
                 }
 
                 return Task.CompletedTask;

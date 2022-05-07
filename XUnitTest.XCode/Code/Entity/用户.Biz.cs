@@ -26,7 +26,6 @@ using XCode.Shards;
 
 namespace XCode.Membership
 {
-    /// <summary>用户。用户帐号信息</summary>
     public partial class User : Entity<User>
     {
         #region 对象操作

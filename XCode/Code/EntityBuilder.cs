@@ -69,13 +69,13 @@ namespace XCode.Code
             }
 
             // 更新xsd
-            atts["xmlns"] = atts["xmlns"].Replace("ModelSchema", "Model2022").Replace("Model2020", "Model2022");
-            atts["xs:schemaLocation"] = atts["xs:schemaLocation"].Replace("ModelSchema", "Model2022").Replace("Model2020", "Model2022");
+            atts["xmlns"] = "https://newlifex.com/Model2022.xsd";
+            atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2022.xsd";
 
             // 版本和教程
             var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
-            if (!atts.ContainsKey("Version")) atts["Version"] = asm.FileVersion + "";
-            if (!atts.ContainsKey("Document")) atts["Document"] = "https://www.yuque.com/smartstone/xcode/model";
+            atts["Version"] = asm.FileVersion + "";
+            atts["Document"] = "https://newlifex.com/xcode/model";
 
             // 保存模型文件
             var xmlContent = File.ReadAllText(xmlFile);
@@ -128,6 +128,7 @@ namespace XCode.Code
                 builder.Execute();
                 builder.Save(null, true, chineseFileName);
 
+                builder.Clear();
                 builder.Business = true;
                 builder.Execute();
                 builder.Save(null, false, chineseFileName);
@@ -289,7 +290,7 @@ namespace XCode.Code
         {
             if (Business)
             {
-                WriteLine("/// <summary>{0}</summary>", Table.Description);
+                //WriteLine("/// <summary>{0}</summary>", Table.Description);
                 return;
             }
 

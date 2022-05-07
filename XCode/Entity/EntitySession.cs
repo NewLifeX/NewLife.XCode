@@ -349,6 +349,7 @@ namespace XCode
         private DateTime _NextCount;
         /// <summary>总记录数较小时，使用静态字段，较大时增加使用Cache</summary>
         private Int64 _Count = -2L;
+        readonly Object _count_lock = new();
         /// <summary>总记录数，小于100w时精确查询，否则取索引行数，缓存60秒</summary>
         public Int64 LongCount
         {
@@ -371,24 +372,35 @@ namespace XCode
                     return n;
                 }
 
-                // 来到这里，是第一次访问
-                CheckModel();
-
-                // 从配置读取
-                if (n < 0)
+                var ck = Monitor.TryEnter(_count_lock, 3_000);
+                try
                 {
-                    if (DataCache.Current.Counts.TryGetValue(CacheKey, out var c)) n = c;
+                    n = _Count;
+                    if (n >= 0) return n;
+
+                    // 来到这里，是第一次访问
+                    CheckModel();
+
+                    // 从配置读取
+                    if (n < 0)
+                    {
+                        if (DataCache.Current.Counts.TryGetValue(CacheKey, out var c)) n = c;
+                    }
+
+                    if (DAL.Debug) DAL.WriteLog("{0}.Count 快速计算表记录数（非精确）[{1}/{2}] 参考值 {3:n0}", ThisType.Name, TableName, ConnName, n);
+
+                    LongCount = GetCount(n);
+
+                    // 先拿到记录数再初始化，因为初始化时会用到记录数，同时也避免了死循环
+                    //WaitForInitData();
+                    InitData();
+
+                    return _Count;
                 }
-
-                if (DAL.Debug) DAL.WriteLog("{0}.Count 快速计算表记录数（非精确）[{1}/{2}] 参考值 {3:n0}", ThisType.Name, TableName, ConnName, n);
-
-                LongCount = GetCount(n);
-
-                // 先拿到记录数再初始化，因为初始化时会用到记录数，同时也避免了死循环
-                //WaitForInitData();
-                InitData();
-
-                return _Count;
+                finally
+                {
+                    if (ck) Monitor.Exit(_count_lock);
+                }
             }
             private set
             {

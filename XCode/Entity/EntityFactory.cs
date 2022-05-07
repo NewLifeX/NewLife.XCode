@@ -184,7 +184,7 @@ namespace XCode
 
         private static void Init(String connName, IList<Type> types)
         {
-            using var span = DefaultTracer.Instance?.NewSpan("db:InitConnection", connName);
+            using var span = DefaultTracer.Instance?.NewSpan($"db:{connName}:InitConnection", connName);
             try
             {
                 // 加载所有实体类

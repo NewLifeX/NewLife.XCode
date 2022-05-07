@@ -230,7 +230,6 @@ namespace XCode
         /// <returns></returns>
         public override Int32 Save()
         {
-
             // 来自数据库直接Update
             if (IsFromDatabase) return Update();
 
@@ -253,6 +252,7 @@ namespace XCode
             {
                 Valid(isnew);
                 if (!Meta.Modules.Valid(this, isnew)) return -1;
+
                 // 自动分库分表
                 using var split = Meta.CreateShard(this as TEntity);
                 return this.Upsert(null, null, null, Meta.Session);
@@ -518,7 +518,6 @@ namespace XCode
         /// <returns></returns>
         public static TEntity Find(String name, Object value) => Find(new String[] { name }, new Object[] { value });
 
-
         /// <summary>根据属性以及对应的值，查找单个实体</summary>
         /// <param name="name">属性名称</param>
         /// <param name="value">属性值</param>
@@ -779,11 +778,15 @@ namespace XCode
             // 判断实体
             if (entity == null)
             {
+                var des = Meta.Table.Description;
+                var p = des.IndexOfAny(new[] { '。', '，' });
+                if (p > 0) des = des[..p];
+
                 String msg;
                 if (Helper.IsNullKey(key, field.Type))
-                    msg = $"参数错误！无法取得编号为{key}的{Meta.Table.Description}！可能未设置自增主键！";
+                    msg = $"参数错误！无法取得编号为{key}的{des}！可能未设置自增主键！";
                 else
-                    msg = $"参数错误！无法取得编号为{key}的{Meta.Table.Description}！";
+                    msg = $"参数错误！无法取得编号为{key}的{des}！";
 
                 throw new XCodeException(msg);
             }

@@ -53,9 +53,9 @@ namespace XCode.Code
             var xmlContent = File.ReadAllText(xmlFile);
             atts = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase)
             {
-                ["xmlns"] = "http://www.newlifex.com/Model2022.xsd",
+                ["xmlns"] = "https://newlifex.com/Model2022.xsd",
                 ["xmlns:xs"] = "http://www.w3.org/2001/XMLSchema-instance",
-                ["xs:schemaLocation"] = "http://www.newlifex.com http://www.newlifex.com/Model2022.xsd"
+                ["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2022.xsd"
             };
 
             if (Debug) XTrace.WriteLine("导入模型：{0}", xmlFile);
@@ -445,7 +445,7 @@ namespace XCode.Code
                             try
                             {
                                 // 特殊支持枚举
-                                var type2 = type.GetTypeEx(false);
+                                var type2 = type.GetTypeEx();
                                 if (type2 != null && type2.IsEnum)
                                     WriteLine("case \"{0}\": {0} = ({1})value.ToInt(); break;", column.Name, type);
                                 else

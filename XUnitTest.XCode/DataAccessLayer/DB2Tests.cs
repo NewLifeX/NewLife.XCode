@@ -16,11 +16,12 @@ namespace XUnitTest.XCode.DataAccessLayer
     {
         private static String _ConnStr = "Database=localhost;Uid=myUsername;Pwd=myPassword;";
 
-        [Fact(Skip = "跳过")]
+        [Fact]
         public void LoadDllTest()
         {
-            var file = "Plugins\\IBM.Data.DB2.Core.dll".GetFullPath();
-            var asm = Assembly.LoadFile(file);
+            var file = "IBM.Data.DB2.Core.dll".GetFullPath();
+            if (!File.Exists(file)) file = "Plugins\\IBM.Data.DB2.Core.dll".GetFullPath();
+            var asm = Assembly.LoadFrom(file);
             Assert.NotNull(asm);
 
             var types = asm.GetTypes();
@@ -31,7 +32,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.NotNull(type);
         }
 
-        [Fact(Skip = "跳过")]
+        [Fact]
         public void InitTest()
         {
             var db = DbFactory.Create(DatabaseType.DB2);

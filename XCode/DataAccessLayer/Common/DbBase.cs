@@ -364,6 +364,9 @@ namespace XCode.DataAccessLayer
                 var links = GetLinkNames(assemblyFile, strict);
                 var type = PluginHelper.LoadPlugin(className, null, assemblyFile, links.Join(","));
 
+                var factory = GetProviderFactory(type);
+                if (factory != null) return factory;
+
                 // 反射实现获取数据库工厂
                 var file = assemblyFile;
                 var plugin = NewLife.Setting.Current.GetPluginPath();
@@ -385,23 +388,20 @@ namespace XCode.DataAccessLayer
                         File.Delete(file);
                     }
                     catch (UnauthorizedAccessException) { }
-                    catch (Exception ex) { XTrace.Log.Error(ex.ToString()); }
+                    catch (Exception ex)
+                    {
+                        XTrace.WriteException(ex);
+                    }
 
-                    type = PluginHelper.LoadPlugin(className, null, file, links.Join(","));
+                    type = PluginHelper.LoadPlugin(className, null, assemblyFile, links.Join(","));
 
                     // 如果还没有，就写异常
                     if (!File.Exists(file)) throw new FileNotFoundException("缺少文件" + file + "！", file);
                 }
-                //if (type == null) return null;
+
                 if (type == null) throw new XCodeException("无法加载驱动[{0}]，请从nuget正确引入数据库驱动！", assemblyFile);
 
-                var asm = type.Assembly;
-                if (DAL.Debug) DAL.WriteLog("{2}驱动{0} 版本v{1}", asm.Location, asm.GetName().Version, className.TrimEnd("Client", "Factory"));
-
-                var field = type.GetFieldEx("Instance");
-                if (field == null) return Activator.CreateInstance(type) as DbProviderFactory;
-
-                return Reflect.GetValue(null, field) as DbProviderFactory;
+                return GetProviderFactory(type);
             }
             catch
             {
@@ -409,6 +409,24 @@ namespace XCode.DataAccessLayer
 
                 throw;
             }
+        }
+
+        /// <summary>
+        /// 从类型加载驱动
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static DbProviderFactory GetProviderFactory(Type type)
+        {
+            if (type == null) return null;
+
+            var asm = type.Assembly;
+            if (DAL.Debug) DAL.WriteLog("[{2}]驱动 {0} 版本v{1}", asm.Location, asm.GetName().Version, type.FullName.TrimEnd("Client", "Factory"));
+
+            var field = type.GetFieldEx("Instance");
+            if (field == null) return Activator.CreateInstance(type) as DbProviderFactory;
+
+            return Reflect.GetValue(null, field) as DbProviderFactory;
         }
 
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
@@ -858,12 +876,24 @@ namespace XCode.DataAccessLayer
             return value.ToString();
         }
 
+        private static readonly Char[] _likeKeys = new[] { '\'', '%', '_' };
         /// <summary>格式化模糊搜索的字符串。处理转义字符</summary>
         /// <param name="column">字段</param>
         /// <param name="format">格式化字符串</param>
         /// <param name="value">数值</param>
         /// <returns></returns>
-        public virtual String FormatLike(IDataColumn column, String format, String value) => String.Format(format, FormatName(column), value);
+        public virtual String FormatLike(IDataColumn column, String format, String value)
+        {
+            if (value.IsNullOrEmpty()) return value;
+
+            if (value.IndexOfAny(_likeKeys) >= 0)
+                value = value
+                    .Replace("'", "''")
+                    .Replace("%", "\\%")
+                    .Replace("_", "\\_");
+
+            return String.Format(format, FormatName(column), value);
+        }
 
         /// <summary>格式化参数名</summary>
         /// <param name="name">名称</param>

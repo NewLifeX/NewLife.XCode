@@ -81,7 +81,7 @@ namespace XCode.DataAccessLayer
         {
             get
             {
-                if (DbType is DatabaseType.MySql or DatabaseType.Oracle or DatabaseType.SQLite) return true;
+                if (DbType is DatabaseType.MySql or DatabaseType.Oracle or DatabaseType.SQLite or DatabaseType.PostgreSQL or DatabaseType.PostgreSQL) return true;
 
                 // SqlServer对批处理有BUG，将在3.0中修复
                 // https://github.com/dotnet/corefx/issues/29391

@@ -13,6 +13,7 @@ using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
+using NewLife.Web;
 
 namespace XCode.DataAccessLayer
 {
@@ -30,8 +31,11 @@ namespace XCode.DataAccessLayer
             if (Runtime.Mono)
                 return GetProviderFactory("Mono.Data.Sqlite.dll", "System.Data.SqliteFactory");
 
-            //_Factory = GetProviderFactory(null, "System.Data.SQLite.SQLiteFactory", true);
-            return GetProviderFactory(null, "System.Data.SQLite.SQLiteFactory", true, true) ??
+            var type =
+                PluginHelper.LoadPlugin("Microsoft.Data.Sqlite.SqliteFactory", null, "Microsoft.Data.Sqlite.dll", null) ??
+                PluginHelper.LoadPlugin("System.Data.SQLite.SQLiteFactory", null, "System.Data.SQLite.dll", null);
+
+            return GetProviderFactory(type) ??
                 GetProviderFactory("Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true) ??
                 GetProviderFactory("System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false);
         }
@@ -62,8 +66,8 @@ namespace XCode.DataAccessLayer
         {
             base.OnSetConnectionString(builder);
 
-            var flag = Factory != null && Factory.GetType().FullName.StartsWith("System.Data");
-            if (flag)
+            var provider = _providerFactory?.GetType().FullName ?? Provider;
+            if (provider.EqualIgnoreCase("SQLite") || provider.StartsWithIgnoreCase("System.Data"))
             {
                 //// 正常情况下INSERT, UPDATE和DELETE语句不返回数据。 当开启count-changes，以上语句返回一行含一个整数值的数据——该语句插入，修改或删除的行数。
                 //if (!builder.ContainsKey("count_changes")) builder["count_changes"] = "1";
@@ -140,6 +144,14 @@ namespace XCode.DataAccessLayer
         /// <returns></returns>
         protected override IMetaData OnCreateMetaData() => new SQLiteMetaData();
 
+        public override Boolean Support(String providerName)
+        {
+            providerName = providerName.ToLower();
+            if (providerName.Contains("sqlite")) return true;
+
+            return false;
+        }
+
         private void SetThreadSafe()
         {
             var asm = _providerFactory?.GetType().Assembly;
@@ -206,31 +218,6 @@ namespace XCode.DataAccessLayer
             }
 
             return base.FormatValue(field, value);
-        }
-
-        private static readonly Char[] _likeKeys = new[] { '/', '\'', '[', ']', '%', '&', '(', ')', '_' };
-        /// <summary>格式化模糊搜索的字符串。处理转义字符</summary>
-        /// <param name="column">字段</param>
-        /// <param name="format">格式化字符串</param>
-        /// <param name="value">数值</param>
-        /// <returns></returns>
-        public override String FormatLike(IDataColumn column, String format, String value)
-        {
-            if (value.IsNullOrEmpty()) return value;
-
-            if (value.IndexOfAny(_likeKeys) >= 0)
-                value = value
-                    .Replace("/", "//")
-                    .Replace("'", "''")
-                    .Replace("[", "/[")
-                    .Replace("]", "/]")
-                    .Replace("%", "/%")
-                    .Replace("&", "/&")
-                    .Replace("(", "/(")
-                    .Replace(")", "/)")
-                    .Replace("_", "/_");
-
-            return base.FormatLike(column, format, value);
         }
 
         /// <summary>字符串相加</summary>
@@ -486,13 +473,13 @@ namespace XCode.DataAccessLayer
 
             //return GetTables(rows, names);
 
+            var list = new List<IDataTable>();
             var ss = Database.CreateSession();
 
             var sql = "select * from sqlite_master";
             var ds = ss.Query(sql, null);
-            if (ds.Rows.Count == 0) return null;
+            if (ds.Rows.Count == 0) return list;
 
-            var list = new List<IDataTable>();
             var hs = new HashSet<String>(names ?? new String[0], StringComparer.OrdinalIgnoreCase);
 
             var dts = Select(ds, "type", "table");

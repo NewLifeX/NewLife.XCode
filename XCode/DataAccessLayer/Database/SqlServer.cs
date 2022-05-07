@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
+using NewLife.Web;
 
 namespace XCode.DataAccessLayer
 {
@@ -30,14 +32,19 @@ namespace XCode.DataAccessLayer
             //if (_Factory == null) _Factory = GetProviderFactory("Microsoft.Data.SqlClient.dll", "Microsoft.Data.SqlClient.SqlClientFactory", false, true);
 
             // 根据提供者加载已有驱动
-            var factory = Provider.Contains("Microsoft") ?
-                GetProviderFactory(null, "Microsoft.Data.SqlClient.SqlClientFactory", false, true) :
-                GetProviderFactory(null, "System.Data.SqlClient.SqlClientFactory", false, true);
+            if (!Provider.IsNullOrEmpty() && Provider.Contains("Microsoft"))
+            {
+                var type = PluginHelper.LoadPlugin("Microsoft.Data.SqlClient.SqlClientFactory", null, "Microsoft.Data.SqlClient.dll", null);
+                var factory = GetProviderFactory(type);
+                if (factory != null) return factory;
+            }
 
             // 找不到驱动时，再到线上下载
-            if (factory == null) factory = GetProviderFactory("System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
+            {
+                var factory = GetProviderFactory("System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
 
-            return factory;
+                return factory;
+            }
         }
 
         /// <summary>是否SQL2012及以上</summary>
@@ -110,6 +117,7 @@ namespace XCode.DataAccessLayer
             if (providerName == "sqlclient") return true;
             if (providerName.Contains("mssql")) return true;
             if (providerName.Contains("sqlserver")) return true;
+            if (providerName.Contains("microsoft.data.sqlclient")) return true;
 
             return false;
         }
@@ -433,38 +441,9 @@ namespace XCode.DataAccessLayer
         {
             tableName = tableName.Trim().Trim('[', ']').Trim();
 
-            //var n = 0L;
-            //if (QueryIndex().TryGetValue(tableName, out n)) return n;
-
             var sql = $"select rows from sysindexes where id = object_id('{tableName}') and indid in (0,1)";
             return ExecuteScalar<Int64>(sql);
         }
-
-        //Dictionary<String, Int64> _index;
-        //DateTime _next;
-
-        //Dictionary<String, Int64> QueryIndex()
-        //{
-        //    // 检查更新
-        //    if (_index == null || _next < DateTime.Now)
-        //    {
-        //        _index = QueryIndex_();
-        //        _next = DateTime.Now.AddSeconds(10);
-        //    }
-
-        //    return _index;
-        //}
-
-        //Dictionary<String, Int64> QueryIndex_()
-        //{
-        //    var ds = Query("select object_name(id) as objname,rows from sysindexes where indid in (0,1) and status in (0,2066)");
-        //    var dic = new Dictionary<String, Int64>(StringComparer.OrdinalIgnoreCase);
-        //    foreach (DataRow dr in ds.Tables[0].Rows)
-        //    {
-        //        dic.Add(dr[0] + "", (Int32)dr[1]);
-        //    }
-        //    return dic;
-        //}
 
         /// <summary>执行插入语句并返回新增行的自动编号</summary>
         /// <param name="sql">SQL语句</param>
@@ -607,7 +586,7 @@ namespace XCode.DataAccessLayer
                 //var conn = Database.Pool.Get();
 
                 // 准备
-                var mBatcher = new SqlBatcher();
+                var mBatcher = new SqlBatcher(Database.Factory);
                 mBatcher.StartBatch(conn);
 
                 // 创建并添加Command
@@ -691,11 +670,34 @@ namespace XCode.DataAccessLayer
         private class SqlBatcher
         {
             private DataAdapter mAdapter;
-            private static readonly DbProviderFactory _Factory;
-            static SqlBatcher() => _Factory = new SqlServer().Factory;
+            private readonly DbProviderFactory _factory;
 
             /// <summary>获得批处理是否正在批处理状态。</summary>
             public Boolean IsStarted { get; private set; }
+
+            static MethodInfo _init;
+            static MethodInfo _add;
+            static MethodInfo _exe;
+            static MethodInfo _clear;
+            Func<IDbCommand, Int32> _addToBatch;
+            Func<Int32> _executeBatch;
+            Action _clearBatch;
+
+            public SqlBatcher(DbProviderFactory factory)
+            {
+                _factory = factory;
+
+                if (_init == null)
+                {
+                    using var adapter = factory.CreateDataAdapter();
+                    var type = adapter.GetType();
+
+                    _add = type.GetMethodEx("AddToBatch");
+                    _exe = type.GetMethodEx("ExecuteBatch");
+                    _clear = type.GetMethodEx("ClearBatch");
+                    _init = type.GetMethodEx("InitializeBatching");
+                }
+            }
 
             /// <summary>开始批处理</summary>
             /// <param name="connection">连接。</param>
@@ -703,12 +705,17 @@ namespace XCode.DataAccessLayer
             {
                 if (IsStarted) return;
 
-                var cmd = _Factory.CreateCommand();
+                var cmd = _factory.CreateCommand();
                 cmd.Connection = connection;
 
-                var adapter = _Factory.CreateDataAdapter();
+                var adapter = _factory.CreateDataAdapter();
                 adapter.InsertCommand = cmd;
-                adapter.Invoke("InitializeBatching");
+                //adapter.Invoke("InitializeBatching");
+                _init.As<Action>(adapter)();
+
+                _addToBatch = _add.As<Func<IDbCommand, Int32>>(adapter);
+                _executeBatch = _exe.As<Func<Int32>>(adapter);
+                _clearBatch = _clear.As<Action>(adapter);
 
                 mAdapter = adapter;
 
@@ -723,7 +730,8 @@ namespace XCode.DataAccessLayer
             {
                 if (!IsStarted) throw new InvalidOperationException();
 
-                mAdapter.Invoke("AddToBatch", new Object[] { command });
+                //mAdapter.Invoke("AddToBatch", new Object[] { command });
+                _addToBatch(command);
             }
 
             /// <summary>
@@ -734,7 +742,8 @@ namespace XCode.DataAccessLayer
             {
                 if (!IsStarted) throw new InvalidOperationException();
 
-                return (Int32)mAdapter.Invoke("ExecuteBatch");
+                //return (Int32)mAdapter.Invoke("ExecuteBatch");
+                return _executeBatch();
             }
 
             /// <summary>
@@ -758,7 +767,8 @@ namespace XCode.DataAccessLayer
             {
                 if (!IsStarted) throw new InvalidOperationException();
 
-                mAdapter.Invoke("ClearBatch");
+                //mAdapter.Invoke("ClearBatch");
+                _clearBatch();
             }
         }
         #endregion
@@ -1204,7 +1214,7 @@ namespace XCode.DataAccessLayer
         /// <param name="recoverDir"></param>
         /// <param name="replace"></param>
         /// <param name="compressed"></param>
-        public String Restore(String bakfile, string recoverDir, Boolean replace = true, Boolean compressed = false)
+        public String Restore(String bakfile, String recoverDir, Boolean replace = true, Boolean compressed = false)
         {
             var session = base.Database.CreateSession();
             var result = "";
@@ -1252,8 +1262,8 @@ namespace XCode.DataAccessLayer
                 var restorSql = $@"RESTORE DATABASE {databaseName} from disk= N'{bakfile}' 
                 WITH NOUNLOAD,
                 {(replace ? "REPLACE," : "")}
-                    MOVE '{dataName}' TO '{Path.Combine(recoverDir, string.Concat(databaseName, ".mdf"))}',
-                    MOVE '{logName}' TO '{Path.Combine(recoverDir, string.Concat(databaseName, ".ldf"))}';";
+                    MOVE '{dataName}' TO '{Path.Combine(recoverDir, String.Concat(databaseName, ".mdf"))}',
+                    MOVE '{logName}' TO '{Path.Combine(recoverDir, String.Concat(databaseName, ".ldf"))}';";
                 session.Execute(stopConnect);
                 session.Execute(restorSql);
                 result = "ok";

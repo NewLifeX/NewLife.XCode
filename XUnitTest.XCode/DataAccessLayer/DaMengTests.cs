@@ -23,7 +23,7 @@ namespace XUnitTest.XCode.DataAccessLayer
         public void LoadDllTest()
         {
             var file = "Plugins\\DmProvider.dll".GetFullPath();
-            var asm = Assembly.LoadFile(file);
+            var asm = Assembly.LoadFrom(file);
             Assert.NotNull(asm);
 
             var types = asm.GetTypes();

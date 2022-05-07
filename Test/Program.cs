@@ -3,29 +3,29 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Security.Authentication;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Caching;
+using NewLife.Configuration;
+using NewLife.Data;
+using NewLife.Http;
 using NewLife.Log;
 using NewLife.Net;
 using NewLife.Remoting;
 using NewLife.Security;
 using NewLife.Serialization;
-using XCode.DataAccessLayer;
-using XCode.Membership;
-using XCode.Code;
-using System.Security.Cryptography;
-using NewLife.Data;
-using System.Threading.Tasks;
-using NewLife.Configuration;
-using System.Text;
-using NewLife.Http;
-using System.Net.WebSockets;
+using Stardust;
 using XCode;
 using XCode.Cache;
-using Stardust;
+using XCode.Code;
+using XCode.DataAccessLayer;
+using XCode.Membership;
 
 namespace Test
 {
@@ -95,16 +95,12 @@ namespace Test
 
         private static void Test35()
         {
-            //DAL.AddConnStr("xxgk", "user id=ORCL;password=1;data source=//127.0.0.1/ORCL;Pooling=true;Max Pool Size=5", null, "System.Data.OracleClient");
-            DAL.AddConnStr("xxgk", "Data Source=.;Initial Catalog=Test2;user id=sa;password=1", null, "System.Data.SqlClient");
-            DAL.AddConnStr("xxgk2", "Data Source=.;Initial Catalog=Test;user id=sa;password=1", null, "System.Data.SqlClient");
-            var dal = DAL.Create("xxgk");
-            var dal2 = DAL.Create("xxgk2");
-            var tables = dal.Tables.ToArray();
-            dal.BackupAll(tables, "财政数据库", ignoreError: false);
-            var tt = dal2.RestoreAll("财政数据库", ignoreError: false);
-            //dal.Sync(tables[1], "xxgk");
-            int i = 0;
+            var dal = Role.Meta.Session.Dal;
+            var ds = dal.Select("select * from role");
+            var xml = ds.GetXml();
+            Console.WriteLine(xml);
+            var sch = ds.GetXmlSchema();
+            Console.WriteLine(sch);
         }
 
         private static void Test1()

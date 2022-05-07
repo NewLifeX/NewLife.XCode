@@ -1004,7 +1004,7 @@ namespace XCode
                     }
                     else if (i < shards.Length) // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
                     {
-                        skipCount = Meta.Session.Query(builder, 0, 0).Count();
+                        skipCount = LoadData(Meta.Session.Query(builder, row, max)).Count();
                     }
 
                     if (maximumRows > 0 && rs.Count >= maximumRows) return rs;

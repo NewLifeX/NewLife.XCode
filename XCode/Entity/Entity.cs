@@ -1002,12 +1002,13 @@ namespace XCode
                     {
                         rs.AddRange(list2);
                     }
-                    else if (i < shards.Length) // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
+
+                    if (maximumRows > 0 && rs.Count >= maximumRows) return rs;
+
+                    if (i < shards.Length) // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
                     {
                         skipCount = LoadData(Meta.Session.Query(builder, 0, 0)).Count();
                     }
-
-                    if (maximumRows > 0 && rs.Count >= maximumRows) return rs;
 
                     max -= list2.Count;
                     // 后边表索引记录数应该是减去前张表查询出来的记录总数

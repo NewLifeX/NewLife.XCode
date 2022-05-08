@@ -106,7 +106,7 @@ namespace XCode.DataAccessLayer
                     var connstr = "Data Source=" + cfg.DataPath.CombinePath(connName + ".db");
                     if (set.Migration <= Migration.On) connstr += ";Migration=On";
                     WriteLog("自动为[{0}]设置SQLite连接字符串：{1}", connName, connstr);
-                    AddConnStr(connName, connstr, null, "System.Data.SQLite");
+                    AddConnStr(connName, connstr, null, "SQLite");
                 }
 
                 ConnStr = css[connName];

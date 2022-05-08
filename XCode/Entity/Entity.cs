@@ -966,53 +966,38 @@ namespace XCode
             }
             else
             {
-                // 暂时仅支持row=0，否则不好处理多表查询
+                // 分表查询，需要跳过前面的表
                 var row = startRowIndex;
                 var max = maximumRows;
 
                 var rs = new List<TEntity>();
-                //foreach (var shard in shards)
-                //{
-                //    // 如果目标分表不存在，则不要展开查询
-                //    var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : session.Dal;
-                //    if (!dal.TableNames.Contains(shard.TableName)) continue;
-
-                //    using var split = Meta.CreateSplit(shard.ConnName, shard.TableName);
-
-                //    var builder = CreateBuilder(where, order, selects);
-                //    var list2 = LoadData(Meta.Session.Query(builder, row, max));
-                //    if (list2.Count > 0) rs.AddRange(list2);
-                //    if (maximumRows > 0 && rs.Count >= maximumRows) return rs;
-
-                //    max -= list2.Count;
-                //}
-
                 for (var i = 0; i < shards.Length; i++)
                 {
-                    // 如果目标分表不存在，则不要展开查询
-                    var dal = !shards[i].ConnName.IsNullOrEmpty() ? DAL.Create(shards[i].ConnName) : session.Dal;
-                    if (!dal.TableNames.Contains(shards[i].TableName)) continue;
+                    var connName = shards[i].ConnName;
+                    var tableName = shards[i].TableName;
 
-                    using var split = Meta.CreateSplit(shards[i].ConnName, shards[i].TableName);
+                    // 如果目标分表不存在，则不要展开查询
+                    var dal = !connName.IsNullOrEmpty() ? DAL.Create(connName) : session.Dal;
+                    if (!dal.TableNames.Contains(tableName)) continue;
+
+                    // 分表查询
+                    session = EntitySession<TEntity>.Create(connName, tableName);
 
                     var builder = CreateBuilder(where, order, selects);
-                    var list2 = LoadData(Meta.Session.Query(builder, row, max));
-                    var skipCount = 0;
-                    if (list2.Count > 0)
-                    {
-                        rs.AddRange(list2);
-                    }
+                    var list2 = LoadData(session.Query(builder, row, max));
+                    if (list2.Count > 0) rs.AddRange(list2);
 
+                    // 总数已满足要求，返回
                     if (maximumRows > 0 && rs.Count >= maximumRows) return rs;
 
-                    if (i < shards.Length) // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
-                    {
-                        skipCount = LoadData(Meta.Session.Query(builder, 0, 0)).Count();
-                    }
+                    // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
+                    var skipCount = 0;
+                    if (i < shards.Length) skipCount = session.QueryCount(builder);
 
                     max -= list2.Count;
-                    // 后边表索引记录数应该是减去前张表查询出来的记录总数
+                    // 后边表索引记录数应该是减去前张表查询出来的记录总数，有可能负数
                     row -= skipCount;
+                    if (row < 0) row = 0;
                 }
 
                 return rs;
@@ -1439,27 +1424,13 @@ namespace XCode
                     var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : session.Dal;
                     if (!dal.TableNames.Contains(shard.TableName)) continue;
 
-                    using var split = Meta.CreateSplit(shard.ConnName, shard.TableName);
-
-                    session = Meta.Session;
+                    session = EntitySession<TEntity>.Create(shard.ConnName, shard.TableName);
                     builder.Table = session.FormatedTableName;
                     rs += session.QueryCount(builder);
                 }
                 return rs;
             }
         }
-
-        ///// <summary>执行SQL返回总记录数</summary>
-        ///// <returns>总行数</returns>
-        //public static Int32 FindCount(String sql)
-        //{
-        //    if (!sql.ToLower().Contains("select"))
-        //        return FindCount(sql, null, null, 0, 0);
-
-        //    var session = Meta.Session;
-
-        //    return session.QueryCount(sql);
-        //}
         #endregion
 
         #region 获取查询SQL

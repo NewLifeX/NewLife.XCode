@@ -973,11 +973,11 @@ namespace XCode
                 var rs = new List<TEntity>();
                 for (var i = 0; i < shards.Length; i++)
                 {
-                    var connName = shards[i].ConnName;
-                    var tableName = shards[i].TableName;
+                    var connName = shards[i].ConnName ?? session.ConnName;
+                    var tableName = shards[i].TableName ?? session.TableName;
 
                     // 如果目标分表不存在，则不要展开查询
-                    var dal = !connName.IsNullOrEmpty() ? DAL.Create(connName) : session.Dal;
+                    var dal = DAL.Create(connName);
                     if (!dal.TableNames.Contains(tableName)) continue;
 
                     // 分表查询
@@ -1420,11 +1420,14 @@ namespace XCode
                 var rs = 0;
                 foreach (var shard in shards)
                 {
-                    // 如果目标分表不存在，则不要展开查询
-                    var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : session.Dal;
-                    if (!dal.TableNames.Contains(shard.TableName)) continue;
+                    var connName = shard.ConnName ?? session.ConnName;
+                    var tableName = shard.TableName ?? session.TableName;
 
-                    session = EntitySession<TEntity>.Create(shard.ConnName, shard.TableName);
+                    // 如果目标分表不存在，则不要展开查询
+                    var dal = DAL.Create(connName);
+                    if (!dal.TableNames.Contains(tableName)) continue;
+
+                    session = EntitySession<TEntity>.Create(connName, tableName);
                     builder.Table = session.FormatedTableName;
                     rs += session.QueryCount(builder);
                 }

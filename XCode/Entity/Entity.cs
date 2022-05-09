@@ -1942,9 +1942,15 @@ namespace XCode
             if (key == null) return null;
 
             var entity = find != null ? find(key, true) : FindByKey(key);
-            // 查不到时新建
-            if (entity == null)
+            if (entity != null) return entity;
+
+            // 加锁，避免同一个key并发新增
+            var keyLock = $"{typeof(TEntity).FullName}-{key}";
+            lock (keyLock)
             {
+                entity = find != null ? find(key, false) : FindByKey(key);
+                if (entity != null) return entity;
+
                 if (create != null)
                     entity = create(key);
                 else
@@ -1963,9 +1969,9 @@ namespace XCode
                     entity = find != null ? find(key, false) : FindByKey(key);
                     if (entity == null) throw ex.GetTrue();
                 }
-            }
 
-            return entity;
+                return entity;
+            }
         }
 
         /// <summary>获取 或 新增 对象，不带缓存查询，常用于统计等高并发更新的情况，一般配合SaveAsync</summary>
@@ -1977,11 +1983,19 @@ namespace XCode
         public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, TEntity> find, Func<TKey, TEntity> create)
         {
             if (key == null) return null;
+            if (find == null) throw new ArgumentNullException(nameof(find));
 
             var entity = find(key);
-            // 查不到时新建
-            if (entity == null)
+            if (entity != null) return entity;
+
+            // 加锁，避免同一个key并发新增
+            var keyLock = $"{typeof(TEntity).FullName}-{key}";
+            lock (keyLock)
             {
+                entity = find(key);
+                if (entity != null) return entity;
+
+                if (create == null) throw new ArgumentNullException(nameof(create));
                 entity = create(key);
 
                 // 插入失败时，再次查询
@@ -1994,9 +2008,9 @@ namespace XCode
                     entity = find(key);
                     if (entity == null) throw ex.GetTrue();
                 }
-            }
 
-            return entity;
+                return entity;
+            }
         }
         #endregion
     }

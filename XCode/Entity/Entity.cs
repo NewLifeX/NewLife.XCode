@@ -984,6 +984,7 @@ namespace XCode
                     session = EntitySession<TEntity>.Create(connName, tableName);
 
                     var builder = CreateBuilder(where, order, selects);
+                    builder.Table = session.FormatedTableName;
                     var list2 = LoadData(session.Query(builder, row, max));
                     if (list2.Count > 0) rs.AddRange(list2);
 
@@ -1234,13 +1235,57 @@ namespace XCode
             }
             #endregion
 
-            var builder = CreateBuilder(where, order, selects);
-            var list2 = LoadData(await session.QueryAsync(builder, startRowIndex, maximumRows));
+            // 自动分表
+            var shards = Meta.ShardPolicy?.Shards(where);
+            if (shards == null)
+            {
+                var builder = CreateBuilder(where, order, selects);
+                var list2 = LoadData(await session.QueryAsync(builder, startRowIndex, maximumRows));
 
-            // 如果正在使用单对象缓存，则批量进入
-            if (selects.IsNullOrEmpty() || selects == "*") LoadSingleCache(list2);
+                // 如果正在使用单对象缓存，则批量进入
+                if (selects.IsNullOrEmpty() || selects == "*") LoadSingleCache(list2);
 
-            return list2;
+                return list2;
+            }
+            else
+            {
+                // 分表查询，需要跳过前面的表
+                var row = startRowIndex;
+                var max = maximumRows;
+
+                var rs = new List<TEntity>();
+                for (var i = 0; i < shards.Length; i++)
+                {
+                    var connName = shards[i].ConnName ?? session.ConnName;
+                    var tableName = shards[i].TableName ?? session.TableName;
+
+                    // 如果目标分表不存在，则不要展开查询
+                    var dal = DAL.Create(connName);
+                    if (!dal.TableNames.Contains(tableName)) continue;
+
+                    // 分表查询
+                    session = EntitySession<TEntity>.Create(connName, tableName);
+
+                    var builder = CreateBuilder(where, order, selects);
+                    builder.Table = session.FormatedTableName;
+                    var list2 = LoadData(await session.QueryAsync(builder, row, max));
+                    if (list2.Count > 0) rs.AddRange(list2);
+
+                    // 总数已满足要求，返回
+                    if (maximumRows > 0 && rs.Count >= maximumRows) return rs;
+
+                    // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
+                    var skipCount = 0;
+                    if (i < shards.Length) skipCount = (Int32)(await session.QueryCountAsync(builder));
+
+                    max -= list2.Count;
+                    // 后边表索引记录数应该是减去前张表查询出来的记录总数，有可能负数
+                    row -= skipCount;
+                    if (row < 0) row = 0;
+                }
+
+                return rs;
+            }
         }
 
         /// <summary>同时查询满足条件的记录集和记录总数。没有数据时返回空集合而不是null</summary>
@@ -1323,7 +1368,7 @@ namespace XCode
         /// <param name="startRowIndex">开始行，0表示第一行。这里无意义，仅仅为了保持与FindAll相同的方法签名</param>
         /// <param name="maximumRows">最大返回行数，0表示所有行。这里无意义，仅仅为了保持与FindAll相同的方法签名</param>
         /// <returns>总行数</returns>
-        public static Task<Int64> FindCountAsync(Expression where, String order = null, String selects = null, Int64 startRowIndex = 0, Int64 maximumRows = 0)
+        public static async Task<Int64> FindCountAsync(Expression where, String order = null, String selects = null, Int64 startRowIndex = 0, Int64 maximumRows = 0)
         {
             var session = Meta.Session;
             var db = session.Dal.Db;
@@ -1345,7 +1390,25 @@ namespace XCode
             // 分组查分组数的时候，必须带上全部selects字段
             if (!builder.GroupBy.IsNullOrEmpty()) builder.Column = selects;
 
-            return session.QueryCountAsync(builder);
+            // 自动分表
+            var shards = Meta.ShardPolicy?.Shards(where);
+            if (shards == null) return await session.QueryCountAsync(builder);
+
+            var rs = 0L;
+            foreach (var shard in shards)
+            {
+                var connName = shard.ConnName ?? session.ConnName;
+                var tableName = shard.TableName ?? session.TableName;
+
+                // 如果目标分表不存在，则不要展开查询
+                var dal = DAL.Create(connName);
+                if (!dal.TableNames.Contains(tableName)) continue;
+
+                session = EntitySession<TEntity>.Create(connName, tableName);
+                builder.Table = session.FormatedTableName;
+                rs += await session.QueryCountAsync(builder);
+            }
+            return rs;
         }
         #endregion
 
@@ -1411,28 +1474,23 @@ namespace XCode
 
             // 自动分表
             var shards = Meta.ShardPolicy?.Shards(where);
-            if (shards == null)
-            {
-                return session.QueryCount(builder);
-            }
-            else
-            {
-                var rs = 0;
-                foreach (var shard in shards)
-                {
-                    var connName = shard.ConnName ?? session.ConnName;
-                    var tableName = shard.TableName ?? session.TableName;
+            if (shards == null) return session.QueryCount(builder);
 
-                    // 如果目标分表不存在，则不要展开查询
-                    var dal = DAL.Create(connName);
-                    if (!dal.TableNames.Contains(tableName)) continue;
+            var rs = 0;
+            foreach (var shard in shards)
+            {
+                var connName = shard.ConnName ?? session.ConnName;
+                var tableName = shard.TableName ?? session.TableName;
 
-                    session = EntitySession<TEntity>.Create(connName, tableName);
-                    builder.Table = session.FormatedTableName;
-                    rs += session.QueryCount(builder);
-                }
-                return rs;
+                // 如果目标分表不存在，则不要展开查询
+                var dal = DAL.Create(connName);
+                if (!dal.TableNames.Contains(tableName)) continue;
+
+                session = EntitySession<TEntity>.Create(connName, tableName);
+                builder.Table = session.FormatedTableName;
+                rs += session.QueryCount(builder);
             }
+            return rs;
         }
         #endregion
 

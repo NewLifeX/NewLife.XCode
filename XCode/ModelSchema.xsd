@@ -348,6 +348,13 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute name="Category" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          属性分类
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
   <!--Column-end-->
 

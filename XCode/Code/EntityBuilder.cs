@@ -326,6 +326,10 @@ namespace XCode.Code
             if (dc.Properties.TryGetValue("Attribute", out var att))
                 WriteLine("[{0}]", att.Replace("{name}", dc.Name));
 
+            // 分类特性
+            if (dc.Properties.TryGetValue("Category", out att) && !att.IsNullOrEmpty())
+                WriteLine("[Category(\"{0}\")]", att);
+
             if (!Option.Pure)
             {
                 var dis = dc.DisplayName;

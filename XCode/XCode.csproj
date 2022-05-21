@@ -112,10 +112,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Build.tt</DependentUpon>
     </None>
-    <None Update="Membership\Build.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Build.log</LastGenOutput>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />

@@ -412,7 +412,7 @@ namespace XCode.DataAccessLayer
 
             if (getConfig == null) getConfig = _configProvider?.GetConfig;
             {
-                var str = getConfig?.Invoke(connName);
+                var str = getConfig?.Invoke("db:" + connName);
                 if (str.IsNullOrEmpty()) return false;
 
                 AddConnStr(connName, str, null, null);
@@ -425,7 +425,7 @@ namespace XCode.DataAccessLayer
             if (!connName.EndsWithIgnoreCase(".readonly"))
             {
                 var connName2 = connName + ".readonly";
-                var str = getConfig?.Invoke(connName2);
+                var str = getConfig?.Invoke("db:" + connName2);
                 if (!str.IsNullOrEmpty()) AddConnStr(connName2, str, null, null);
 
                 // 加入集合，定时更新
@@ -441,7 +441,7 @@ namespace XCode.DataAccessLayer
         {
             foreach (var item in _conns)
             {
-                var str = GetConfig?.Invoke(item);
+                var str = GetConfig?.Invoke("db:" + item);
                 if (!str.IsNullOrEmpty()) AddConnStr(item, str, null, null);
             }
         }
@@ -452,7 +452,7 @@ namespace XCode.DataAccessLayer
             {
                 foreach (var item in _conns)
                 {
-                    var str = section[item];
+                    var str = section["db:" + item];
                     if (!str.IsNullOrEmpty()) AddConnStr(item, str, null, null);
                 }
             }

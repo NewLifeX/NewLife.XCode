@@ -993,7 +993,7 @@ namespace XCode
 
                     // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
                     var skipCount = 0;
-                    if (i < shards.Length) skipCount = session.QueryCount(builder);
+                    if (row > 0 && i < shards.Length - 1) skipCount = session.QueryCount(builder);
 
                     max -= list2.Count;
                     // 后边表索引记录数应该是减去前张表查询出来的记录总数，有可能负数

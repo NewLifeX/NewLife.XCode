@@ -135,6 +135,11 @@ namespace XUnitTest.XCode.EntityTests
             Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
             Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time:yyyyMMdd} Where", sqls[^1]);
 
+            list = Log2.Search(null, null, -1, null, -1, time.AddHours(-24), time, null, new PageParameter { PageIndex = 2, PageSize = 100 });
+            Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^3]);
+            Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
+            Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time:yyyyMMdd} Where", sqls[^1]);
+
             // 恢复现场，避免影响其它测试用例
             Log2.Meta.ShardPolicy = null;
         }
@@ -215,6 +220,16 @@ namespace XUnitTest.XCode.EntityTests
             Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^4]);
             Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^3]);
             Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^2]);
+            Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where ID>=", sqls[^1]);
+
+            XTrace.WriteLine("SearchPage");
+            list = Log2.Search(null, null, -1, null, -1, start, time, null, new PageParameter { PageIndex = 2, PageSize = 10000 });
+            Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^7]);
+            Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^6]);
+            Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^5]);
+            Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^4]);
+            Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^3]);
+            Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^2]);
             Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where ID>=", sqls[^1]);
 
             // 日期倒序

@@ -162,7 +162,6 @@ namespace XCode.Membership
 
         private Int32 _Logins;
         /// <summary>登录次数</summary>
-        [Category("登录信息")]
         [DisplayName("登录次数")]
         [Description("登录次数")]
         [DataObjectField(false, false, false, 0)]
@@ -171,7 +170,6 @@ namespace XCode.Membership
 
         private DateTime _LastLogin;
         /// <summary>最后登录</summary>
-        [Category("登录信息")]
         [DisplayName("最后登录")]
         [Description("最后登录")]
         [DataObjectField(false, false, true, 0)]
@@ -180,7 +178,6 @@ namespace XCode.Membership
 
         private String _LastLoginIP;
         /// <summary>最后登录IP</summary>
-        [Category("登录信息")]
         [DisplayName("最后登录IP")]
         [Description("最后登录IP")]
         [DataObjectField(false, false, true, 50)]
@@ -189,7 +186,6 @@ namespace XCode.Membership
 
         private DateTime _RegisterTime;
         /// <summary>注册时间</summary>
-        [Category("登录信息")]
         [DisplayName("注册时间")]
         [Description("注册时间")]
         [DataObjectField(false, false, true, 0)]
@@ -198,7 +194,6 @@ namespace XCode.Membership
 
         private String _RegisterIP;
         /// <summary>注册IP</summary>
-        [Category("登录信息")]
         [DisplayName("注册IP")]
         [Description("注册IP")]
         [DataObjectField(false, false, true, 50)]
@@ -207,7 +202,6 @@ namespace XCode.Membership
 
         private Int32 _OnlineTime;
         /// <summary>在线时间。累计在线总时间，秒</summary>
-        [Category("登录信息")]
         [DisplayName("在线时间")]
         [Description("在线时间。累计在线总时间，秒")]
         [DataObjectField(false, false, false, 0)]
@@ -216,7 +210,6 @@ namespace XCode.Membership
 
         private Int32 _Ex1;
         /// <summary>扩展1</summary>
-        [Category("扩展")]
         [DisplayName("扩展1")]
         [Description("扩展1")]
         [DataObjectField(false, false, false, 0)]
@@ -225,7 +218,6 @@ namespace XCode.Membership
 
         private Int32 _Ex2;
         /// <summary>扩展2</summary>
-        [Category("扩展")]
         [DisplayName("扩展2")]
         [Description("扩展2")]
         [DataObjectField(false, false, false, 0)]
@@ -234,7 +226,6 @@ namespace XCode.Membership
 
         private Double _Ex3;
         /// <summary>扩展3</summary>
-        [Category("扩展")]
         [DisplayName("扩展3")]
         [Description("扩展3")]
         [DataObjectField(false, false, false, 0)]
@@ -243,7 +234,6 @@ namespace XCode.Membership
 
         private String _Ex4;
         /// <summary>扩展4</summary>
-        [Category("扩展")]
         [DisplayName("扩展4")]
         [Description("扩展4")]
         [DataObjectField(false, false, true, 50)]
@@ -252,7 +242,6 @@ namespace XCode.Membership
 
         private String _Ex5;
         /// <summary>扩展5</summary>
-        [Category("扩展")]
         [DisplayName("扩展5")]
         [Description("扩展5")]
         [DataObjectField(false, false, true, 50)]
@@ -262,7 +251,6 @@ namespace XCode.Membership
         private String _Ex6;
         /// <summary>扩展6</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        [Category("扩展")]
         [DisplayName("扩展6")]
         [Description("扩展6")]
         [DataObjectField(false, false, true, 50)]
@@ -271,7 +259,6 @@ namespace XCode.Membership
 
         private String _UpdateUser;
         /// <summary>更新者</summary>
-        [Category("扩展")]
         [DisplayName("更新者")]
         [Description("更新者")]
         [DataObjectField(false, false, true, 50)]
@@ -280,7 +267,6 @@ namespace XCode.Membership
 
         private Int32 _UpdateUserID;
         /// <summary>更新用户</summary>
-        [Category("扩展")]
         [DisplayName("更新用户")]
         [Description("更新用户")]
         [DataObjectField(false, false, false, 0)]
@@ -289,7 +275,6 @@ namespace XCode.Membership
 
         private String _UpdateIP;
         /// <summary>更新地址</summary>
-        [Category("扩展")]
         [DisplayName("更新地址")]
         [Description("更新地址")]
         [DataObjectField(false, false, true, 50)]
@@ -298,7 +283,6 @@ namespace XCode.Membership
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
-        [Category("扩展")]
         [DisplayName("更新时间")]
         [Description("更新时间")]
         [DataObjectField(false, false, false, 0)]
@@ -307,7 +291,6 @@ namespace XCode.Membership
 
         private String _Remark;
         /// <summary>备注</summary>
-        [Category("扩展")]
         [DisplayName("备注")]
         [Description("备注")]
         [DataObjectField(false, false, true, 500)]

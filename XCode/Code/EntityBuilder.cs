@@ -856,6 +856,8 @@ namespace XCode.Code
                         //WriteLine("//[ScriptIgnore]");
                         //if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
                         WriteLine("[Map(nameof({0}), typeof({1}), \"{2}\")]", column.Name, dt.Name, pk.Name);
+                        if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
+                            WriteLine("[Category(\"{0}\")]", att);
                         if (master.DataType == typeof(String))
                             WriteLine("public {2} {0}{1} => {0}?.{1};", pname, master.Name, master.DataType.Name);
                         else

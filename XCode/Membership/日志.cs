@@ -98,6 +98,7 @@ namespace XCode.Membership
 
         private String _Ex4;
         /// <summary>扩展4</summary>
+        [Category("扩展")]
         [DisplayName("扩展4")]
         [Description("扩展4")]
         [DataObjectField(false, false, true, 50)]

@@ -12,11 +12,11 @@
       <Column Name="Code" DataType="String" Description="代码。身份证、员工编号等" />
       <Column Name="AreaId" DataType="Int32" Description="地区。省市区" />
       <Column Name="Avatar" DataType="String" ItemType="image" Length="200" Description="头像" />
-      <Column Name="RoleID" DataType="Int32" Description="角色。主要角色" />
-      <Column Name="RoleIds" DataType="String" Length="200" Description="角色组。次要角色集合" />
-      <Column Name="DepartmentID" DataType="Int32" Description="部门。组织机构" />
-      <Column Name="Online" DataType="Boolean" Description="在线" />
-      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="RoleID" DataType="Int32" Description="角色。主要角色" Category="登录信息" />
+      <Column Name="RoleIds" DataType="String" Length="200" Description="角色组。次要角色集合" Category="登录信息" />
+      <Column Name="DepartmentID" DataType="Int32" Description="部门。组织机构" Category="登录信息" />
+      <Column Name="Online" DataType="Boolean" Description="在线" Category="登录信息" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" Category="登录信息" />
       <Column Name="Age" DataType="Int32" Description="年龄。周岁" />
       <Column Name="Birthday" DataType="DateTime" Description="生日。公历年月日" />
       <Column Name="Logins" DataType="Int32" Description="登录次数" Category="登录信息" />
@@ -215,7 +215,7 @@
       <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
       <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />
       <Column Name="Ex3" DataType="Double" Description="扩展3" Category="扩展" />
-      <Column Name="Ex4" DataType="String" Description="扩展4" />
+      <Column Name="Ex4" DataType="String" Description="扩展4" Category="扩展" />
       <Column Name="Ex5" DataType="String" Description="扩展5" Category="扩展" />
       <Column Name="Ex6" DataType="String" Description="扩展6" Category="扩展" />
       <Column Name="TraceId" DataType="String" Description="性能追踪。用于APM性能追踪定位，还原该事件的调用链" />

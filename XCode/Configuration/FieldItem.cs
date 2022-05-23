@@ -26,11 +26,11 @@ namespace XCode.Configuration
         public DataObjectFieldAttribute DataObject => _DataObjectField;
 
         private readonly DescriptionAttribute _Description;
-
         private readonly DisplayNameAttribute _DisplayName;
+        private readonly CategoryAttribute _Category;
 
         /// <summary>备注</summary>
-        public String Description { get; internal set; }
+        public String Description { get; set; }
 
         private String _dis;
         /// <summary>说明</summary>
@@ -48,8 +48,11 @@ namespace XCode.Configuration
 
                 return name;
             }
-            internal set { _dis = value; }
+            set { _dis = value; }
         }
+
+        /// <summary>分类</summary>
+        public String Category { get; set; }
         #endregion
 
         #region 扩展属性
@@ -153,6 +156,7 @@ namespace XCode.Configuration
                 var df = _DataObjectField = property.GetCustomAttribute<DataObjectFieldAttribute>();
                 var ds = _Description = property.GetCustomAttribute<DescriptionAttribute>();
                 var di = _DisplayName = property.GetCustomAttribute<DisplayNameAttribute>();
+                var ct = _Category = property.GetCustomAttribute<CategoryAttribute>();
                 Map = property.GetCustomAttribute<MapAttribute>();
                 Name = property.Name;
                 Type = property.PropertyType;
@@ -184,6 +188,8 @@ namespace XCode.Configuration
                     Description = dc.Description;
                 if (di != null && !di.DisplayName.IsNullOrEmpty())
                     DisplayName = di.DisplayName;
+                if (ct != null && !ct.Category.IsNullOrEmpty())
+                    Category = ct.Category;
 
                 var map = Map;
                 if (map == null || map.Provider == null) ReadOnly = !property.CanWrite;

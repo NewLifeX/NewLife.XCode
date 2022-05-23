@@ -351,9 +351,9 @@ namespace XCode.Code
             var des = dc.Description;
             WriteLine("/// <summary>{0}</summary>", des);
 
-            // 分类特性
-            if (dc.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
-                WriteLine("[Category(\"{0}\")]", att);
+            //// 分类特性
+            //if (dc.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
+            //    WriteLine("[Category(\"{0}\")]", att);
 
             if (!Option.Pure && !Option.Interface)
             {

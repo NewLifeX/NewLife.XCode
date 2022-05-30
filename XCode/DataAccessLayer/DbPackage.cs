@@ -412,8 +412,12 @@ namespace XCode.DataAccessLayer
 
             if (setSchema) Dal.SetTables(table);
 
+            // 返回恢复行数
             var compressed = file.EndsWithIgnoreCase(".gz");
-            return file2.AsFile().OpenRead(compressed, s => Restore(s, table));
+            var rs = 0;
+            file2.AsFile().OpenRead(compressed, s => { rs = Restore(s, table); });
+
+            return rs;
         }
 
         /// <summary>从指定压缩文件恢复一批数据到目标库</summary>

@@ -187,7 +187,7 @@ namespace XCode.DataAccessLayer
             LoadAppSettings($"appsettings.{env.Trim()}.json", ds);
 
             // 从环境变量加载连接字符串，优先级最高
-            LoadEnvironmentVariable(ds);
+            LoadEnvironmentVariable(ds, Environment.GetEnvironmentVariables());
 
             var cs = new ConcurrentDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in ds)
@@ -206,7 +206,7 @@ namespace XCode.DataAccessLayer
         /// </remarks>
         public static ConcurrentDictionary<String, String> ConnStrs { get; private set; }
 
-        private static void LoadConfig(IDictionary<String, DbInfo> ds)
+        internal static void LoadConfig(IDictionary<String, DbInfo> ds)
         {
             var file = "web.config".GetFullPath();
             var fname = AppDomain.CurrentDomain.FriendlyName;
@@ -252,7 +252,7 @@ namespace XCode.DataAccessLayer
             }
         }
 
-        private static void LoadAppSettings(String fileName, IDictionary<String, DbInfo> ds)
+        internal static void LoadAppSettings(String fileName, IDictionary<String, DbInfo> ds)
         {
             // Asp.Net Core的Debug模式下配置文件位于项目目录而不是输出目录
             var file = fileName.GetBasePath();
@@ -272,30 +272,51 @@ namespace XCode.DataAccessLayer
                     foreach (var item in dic)
                     {
                         var name = item.Key;
-                        if (name.IsNullOrEmpty() || item.Value is not IDictionary<String, Object> cfgs) continue;
-
-                        var connstr = cfgs["connectionString"] + "";
-                        var provider = cfgs["providerName"] + "";
-                        if (connstr.IsNullOrWhiteSpace()) continue;
-
-                        var type = DbFactory.GetProviderType(connstr, provider);
-                        if (type == null) XTrace.WriteLine("无法识别{0}的提供者{1}！", name, provider);
-
-                        ds[name] = new DbInfo
+                        if (name.IsNullOrEmpty()) continue;
+                        if (item.Value is IDictionary<String, Object> cfgs)
                         {
-                            Name = name,
-                            ConnectionString = connstr,
-                            Type = type,
-                            Provider = provider,
-                        };
+                            var connstr = cfgs["connectionString"] + "";
+                            var provider = cfgs["providerName"] + "";
+                            if (connstr.IsNullOrWhiteSpace()) continue;
+
+                            var type = DbFactory.GetProviderType(connstr, provider);
+                            if (type == null) XTrace.WriteLine("无法识别{0}的提供者{1}！", name, provider);
+
+                            ds[name] = new DbInfo
+                            {
+                                Name = name,
+                                ConnectionString = connstr,
+                                Type = type,
+                                Provider = provider,
+                            };
+                        }
+                        else if (item.Value is String connstr)
+                        {
+                            //var connstr = cfgs["connectionString"] + "";
+                            if (connstr.IsNullOrWhiteSpace()) continue;
+
+                            var builder = new ConnectionStringBuilder(connstr);
+                            var provider = builder.TryGetValue("provider", out var prv) ? prv : null;
+
+                            var type = DbFactory.GetProviderType(connstr, provider);
+                            if (type == null) XTrace.WriteLine("无法识别{0}的提供者{1}！", name, provider);
+
+                            ds[name] = new DbInfo
+                            {
+                                Name = name,
+                                ConnectionString = connstr,
+                                Type = type,
+                                Provider = provider,
+                            };
+                        }
                     }
                 }
             }
         }
 
-        private static void LoadEnvironmentVariable(IDictionary<String, DbInfo> ds)
+        internal static void LoadEnvironmentVariable(IDictionary<String, DbInfo> ds, IDictionary envs)
         {
-            foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
+            foreach (DictionaryEntry item in envs)
             {
                 if (item.Key is String key && item.Value is String value && key.StartsWithIgnoreCase("XCode_"))
                 {

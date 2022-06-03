@@ -965,12 +965,16 @@ namespace XCode.DataAccessLayer
                         dp.DbType = DbType.Int16;
                         break;
                     case TypeCode.Int32:
-                    case TypeCode.UInt32:
                         dp.DbType = DbType.Int32;
                         break;
+                    case TypeCode.UInt32:
+                        dp.DbType = DbType.UInt32;
+                        break;
                     case TypeCode.Int64:
-                    case TypeCode.UInt64:
                         dp.DbType = DbType.Int64;
+                        break;
+                    case TypeCode.UInt64:
+                        dp.DbType = DbType.UInt64;
                         break;
                     case TypeCode.Single:
                         dp.DbType = DbType.Double;
@@ -988,6 +992,10 @@ namespace XCode.DataAccessLayer
                         dp.DbType = DbType.String;
                         break;
                     default:
+                        if (type == typeof(Byte[]))
+                        {
+                            dp.DbType = DbType.Binary;
+                        }
                         break;
                 }
                 dp.Value = value;

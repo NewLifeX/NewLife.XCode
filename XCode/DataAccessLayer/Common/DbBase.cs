@@ -91,23 +91,31 @@ namespace XCode.DataAccessLayer
         public virtual DatabaseType Type => DatabaseType.None;
 
         /// <summary>提供者工厂</summary>
-        protected DbProviderFactory _providerFactory;
+        private DbProviderFactory _providerFactory;
         /// <summary>数据库提供者工厂。支持外部修改</summary>
         public DbProviderFactory Factory
         {
-            get
-            {
-                if (_providerFactory != null) return _providerFactory;
-                lock (this)
-                {
-                    if (_providerFactory != null) return _providerFactory;
-
-                    _providerFactory = CreateFactory();
-                }
-
-                return _providerFactory;
-            }
+            get => _providerFactory ??= GetFactory(true);
             set => _providerFactory = value;
+        }
+
+        private static Dictionary<Type, DbProviderFactory> _factories = new();
+        protected DbProviderFactory GetFactory(Boolean create)
+        {
+            var type = GetType();
+            if (_factories.TryGetValue(type, out var factory)) return factory;
+
+            if (!create) return null;
+
+            lock (_factories)
+            {
+                if (_factories.TryGetValue(type, out factory)) return factory;
+
+                factory = CreateFactory();
+                if (factory != null) _factories.Add(type, factory);
+
+                return factory;
+            }
         }
 
         /// <summary>创建工厂</summary>
@@ -139,6 +147,7 @@ namespace XCode.DataAccessLayer
                 if (_ConnectionString != connStr)
                 {
                     _ConnectionString = connStr;
+                    _newStr = null;
 
                     ReleaseSession();
                 }
@@ -152,6 +161,19 @@ namespace XCode.DataAccessLayer
         {
             if (ConnectionString.IsNullOrWhiteSpace())
                 throw new XCodeException("[{0}]未指定连接字符串！", ConnName);
+        }
+
+        private String _newStr;
+        private String GetConnectionString()
+        {
+            if (_newStr != null) return _newStr;
+
+            var builder = new ConnectionStringBuilder(_ConnectionString);
+            OnGetConnectionString(builder);
+            _newStr = builder.ConnectionString;
+            _ConnectionString = _newStr;
+
+            return _newStr;
         }
 
         /// <summary>设置连接字符串时允许从中取值或修改，基类用于读取拥有者Owner，子类重写时应调用基类</summary>
@@ -181,6 +203,11 @@ namespace XCode.DataAccessLayer
             if (db.IsNullOrEmpty()) db = builder["Initial Catalog"];
             DatabaseName = db;
         }
+
+        /// <summary>获取连接字符串时取值或修改</summary>
+        /// <remarks>此时Factory已就绪，可根据驱动调整连接字符串参数</remarks>
+        /// <param name="builder"></param>
+        protected virtual void OnGetConnectionString(ConnectionStringBuilder builder) { }
 
         /// <summary>拥有者</summary>
         public virtual String Owner { get; set; }
@@ -287,7 +314,7 @@ namespace XCode.DataAccessLayer
             if (Factory == null) throw new InvalidOperationException($"无法找到{Type}的ADO.NET驱动，需要从Nuget引用！");
 
             var conn = Factory.CreateConnection();
-            conn.ConnectionString = ConnectionString;
+            conn.ConnectionString = GetConnectionString();
             conn.Open();
 
             return conn;
@@ -300,7 +327,7 @@ namespace XCode.DataAccessLayer
             if (Factory == null) throw new InvalidOperationException($"无法找到{Type}的ADO.NET驱动，需要从Nuget引用！");
 
             var conn = Factory.CreateConnection();
-            conn.ConnectionString = ConnectionString;
+            conn.ConnectionString = GetConnectionString();
             await conn.OpenAsync();
 
             return conn;

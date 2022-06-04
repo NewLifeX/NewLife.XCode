@@ -107,6 +107,7 @@ namespace Company.MyName
 
         private Int32 _RoleID;
         /// <summary>角色。主要角色</summary>
+        [Category("登录信息")]
         [DisplayName("角色")]
         [Description("角色。主要角色")]
         [DataObjectField(false, false, false, 0)]
@@ -115,6 +116,7 @@ namespace Company.MyName
 
         private String _RoleIds;
         /// <summary>角色组。次要角色集合</summary>
+        [Category("登录信息")]
         [DisplayName("角色组")]
         [Description("角色组。次要角色集合")]
         [DataObjectField(false, false, true, 200)]
@@ -123,6 +125,7 @@ namespace Company.MyName
 
         private Int32 _DepartmentID;
         /// <summary>部门。组织机构</summary>
+        [Category("登录信息")]
         [DisplayName("部门")]
         [Description("部门。组织机构")]
         [DataObjectField(false, false, false, 0)]
@@ -131,6 +134,7 @@ namespace Company.MyName
 
         private Boolean _Online;
         /// <summary>在线</summary>
+        [Category("登录信息")]
         [DisplayName("在线")]
         [Description("在线")]
         [DataObjectField(false, false, false, 0)]
@@ -139,6 +143,7 @@ namespace Company.MyName
 
         private Boolean _Enable;
         /// <summary>启用</summary>
+        [Category("登录信息")]
         [DisplayName("启用")]
         [Description("启用")]
         [DataObjectField(false, false, false, 0)]

@@ -311,6 +311,7 @@ namespace XCode.DataAccessLayer
 
             var writeDb = WriteDbCallback?.Invoke() ?? new WriteDbActor { BoundedCapacity = 4 };
             writeDb.Host = this;
+            writeDb.Dal = Dal;
             writeDb.Table = table;
             writeDb.TracerParent = span;
 
@@ -504,7 +505,8 @@ namespace XCode.DataAccessLayer
 
             var writeDb = WriteDbCallback?.Invoke() ?? new WriteDbActor { BoundedCapacity = 4 };
             writeDb.Table = table;
-            writeDb.Host = this;
+            writeDb.Host =this;
+            writeDb.Dal = dal;
             writeDb.TracerParent = span;
 
             var extracer = GetExtracter(table);
@@ -704,7 +706,10 @@ namespace XCode.DataAccessLayer
         {
             /// <summary>父级对象</summary>
             public DbPackage Host { get; set; }
-
+            /// <summary>
+            /// 目标数据库
+            /// </summary>
+            public DAL Dal { get; set; }
             /// <summary>
             /// 数据表
             /// </summary>
@@ -721,7 +726,7 @@ namespace XCode.DataAccessLayer
             {
                 if (context.Message is not DbTable dt) return Task.CompletedTask;
 
-                var dal = Host.Dal;
+                var dal =Dal;
 
                 // 匹配要写入的列
                 if (_Columns == null)

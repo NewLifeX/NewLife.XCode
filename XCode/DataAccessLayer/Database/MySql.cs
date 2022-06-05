@@ -483,6 +483,22 @@ namespace XCode.DataAccessLayer
             return list;
         }
 
+        protected override String GetFieldType(IDataColumn field)
+        {
+
+            field.Length = field.Length > 255 ? 255 : field.Length;
+            if (field.DataType == null && field.RawType == "datetimeoffset")
+            {
+                field.DataType =typeof(DateTime);
+            }
+            if (field.DataType==typeof(Decimal)&& field is XField fi)
+            {
+                // 精度 与 位数
+                field.Precision = field.Length;
+            }
+            return base.GetFieldType(field);
+        }
+
         public override String FieldClause(IDataColumn field, Boolean onlyDefine)
         {
             var sql = base.FieldClause(field, onlyDefine);

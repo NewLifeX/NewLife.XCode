@@ -36,8 +36,8 @@ namespace XCode
         /// <summary>周期。默认1000毫秒，根据繁忙程度动态调节，尽量靠近每次持久化1000个对象</summary>
         public Int32 Period { get; set; } = 1000;
 
-        /// <summary>最大个数，超过该个数时，进入队列将产生堵塞。默认10000</summary>
-        public Int32 MaxEntity { get; set; } = 10_000;
+        /// <summary>最大个数，超过该个数时，进入队列将产生堵塞。默认1_000_000</summary>
+        public Int32 MaxEntity { get; set; } = 1_000_000;
 
         /// <summary>保存速度，每秒保存多少个实体</summary>
         public Int32 Speed { get; private set; }
@@ -81,9 +81,14 @@ namespace XCode
             Interlocked.Increment(ref _count);
 
             // 超过最大值时，堵塞一段时间，等待消费完成
-            while (_count >= MaxEntity)
+            if (_count >= MaxEntity)
             {
-                Thread.Sleep(100);
+                var ss = Session;
+                using var span = DefaultTracer.Instance?.NewError($"db:MaxQueueOverflow", $"{ss.TableName}实体队列溢出，超过最大值{MaxEntity:n0}");
+                while (_count >= MaxEntity)
+                {
+                    Thread.Sleep(100);
+                }
             }
 
             return true;

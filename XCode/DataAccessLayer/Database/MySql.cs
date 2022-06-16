@@ -485,16 +485,15 @@ namespace XCode.DataAccessLayer
 
         protected override String GetFieldType(IDataColumn field)
         {
-
-            field.Length = field.Length > 255 ? 255 : field.Length;
+            //field.Length = field.Length > 255 ? 255 : field.Length;
             if (field.DataType == null && field.RawType == "datetimeoffset")
             {
-                field.DataType =typeof(DateTime);
+                field.DataType = typeof(DateTime);
             }
-            if (field.DataType==typeof(Decimal)&& field is XField fi)
+            if (field.DataType == typeof(Decimal) && field is XField fi)
             {
                 // 精度 与 位数
-                field.Precision = field.Length;
+                field.Precision = field.Length > 255 ? 255 : field.Length;
             }
             return base.GetFieldType(field);
         }

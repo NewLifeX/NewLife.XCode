@@ -461,7 +461,7 @@ namespace XCode
             //var tableName = dal.Db.FormatTableName(session.TableName);
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{session.Table.TableName}");
             try
             {
                 if (span != null && list is ICollection collection) span.Tag = collection.Count + "";
@@ -524,7 +524,7 @@ namespace XCode
             //dal.CheckDatabase();
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:InsertIgnore:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:InsertIgnore:{session.Table.TableName}");
             try
             {
                 if (span != null && list is ICollection collection) span.Tag = collection.Count + "";
@@ -587,7 +587,7 @@ namespace XCode
             //dal.CheckDatabase();
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchReplace:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchReplace:{session.Table.TableName}");
             try
             {
                 if (span != null && list is ICollection collection) span.Tag = collection.Count + "";
@@ -651,7 +651,7 @@ namespace XCode
             //var tableName = dal.Db.FormatTableName(session.TableName);
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{session.Table.TableName}");
             try
             {
                 if (span != null && list is ICollection collection) span.Tag = collection.Count + "";
@@ -739,7 +739,7 @@ namespace XCode
             //var tableName = dal.Db.FormatTableName(session.TableName);
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{session.Table.TableName}");
             try
             {
                 if (span != null && list is ICollection collection) span.Tag = collection.Count + "";
@@ -803,7 +803,7 @@ namespace XCode
             //var tableName = dal.Db.FormatTableName(session.TableName);
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:Upsert:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:Upsert:{session.Table.TableName}");
             try
             {
                 return dal.Session.Upsert(session.Table, columns, updateColumns, addColumns, new[] { entity as IExtend });

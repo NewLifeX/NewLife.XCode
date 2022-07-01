@@ -26,7 +26,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>自动分表查询支持分页；数据模型到属性字段都支持Category分组，最终在魔方表单上分组显示</PackageReleaseNotes>
+    <PackageReleaseNotes>大幅提升异步保存批量插入的吞吐性能</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -38,7 +38,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NewLife.Core" Version="9.2.2022.609-beta1105" />
+    <PackageReference Include="NewLife.Core" Version="9.2.2022.701" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

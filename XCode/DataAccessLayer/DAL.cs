@@ -176,18 +176,46 @@ namespace XCode.DataAccessLayer
         {
             var ds = new ConcurrentDictionary<String, DbInfo>(StringComparer.OrdinalIgnoreCase);
 
-            LoadConfig(ds);
-            //LoadAppSettings(cs, ts);
+            try
+            {
+                LoadConfig(ds);
+                //LoadAppSettings(cs, ts);
+            }
+            catch (Exception ex)
+            {
+                WriteLog("LoadConfig 失败。{0}", ex.Message);
+            }
 
             // 联合使用 appsettings.json
-            LoadAppSettings("appsettings.json", ds);
+            try
+            {
+                LoadAppSettings("appsettings.json", ds);
+            }
+            catch (Exception ex)
+            {
+                WriteLog("LoadAppSettings 失败。{0}", ex.Message);
+            }
             // 读取环境变量:ASPNETCORE_ENVIRONMENT=Development
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             if (String.IsNullOrWhiteSpace(env)) env = "Production";
-            LoadAppSettings($"appsettings.{env.Trim()}.json", ds);
+            try
+            {
+                LoadAppSettings($"appsettings.{env.Trim()}.json", ds);
+            }
+            catch (Exception ex)
+            {
+                WriteLog("LoadAppSettings 失败。{0}", ex.Message);
+            }
 
             // 从环境变量加载连接字符串，优先级最高
-            LoadEnvironmentVariable(ds, Environment.GetEnvironmentVariables());
+            try
+            {
+                LoadEnvironmentVariable(ds, Environment.GetEnvironmentVariables());
+            }
+            catch (Exception ex)
+            {
+                WriteLog("LoadEnvironmentVariable 失败。{0}", ex.Message);
+            }
 
             var cs = new ConcurrentDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
             foreach (var item in ds)

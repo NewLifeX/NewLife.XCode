@@ -135,7 +135,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                 {
                     sc.Add(entity);
                 }
-            }, list);
+            }, list.ToArray());
         }
     }
     #endregion

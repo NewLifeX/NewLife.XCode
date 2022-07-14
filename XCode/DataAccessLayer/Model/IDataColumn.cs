@@ -46,6 +46,9 @@ namespace XCode.DataAccessLayer
         /// <summary>允许空</summary>
         Boolean Nullable { get; set; }
 
+        /// <summary>默认值</summary>
+        String DefaultValue { get; set; }
+
         /// <summary>显示名。如果有Description则使用Description，否则使用Name</summary>
         String DisplayName { get; }
 

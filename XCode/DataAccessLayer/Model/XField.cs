@@ -88,6 +88,12 @@ namespace XCode.DataAccessLayer
         [Description("允许空")]
         public Boolean Nullable { get; set; }
 
+        /// <summary>默认值</summary>
+        [XmlAttribute]
+        [DisplayName("默认值")]
+        [Description("默认值")]
+        public String DefaultValue { get; set; }
+
         private String _Description;
         /// <summary>描述</summary>
         [XmlAttribute]

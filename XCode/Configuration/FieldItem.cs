@@ -227,6 +227,7 @@ namespace XCode.Configuration
                 dc.ItemType = col.ItemType;
                 dc.Precision = col.Precision;
                 dc.Scale = col.Scale;
+                dc.DefaultValue = col.DefaultValue;
             }
 
             // 特别处理，兼容旧版本

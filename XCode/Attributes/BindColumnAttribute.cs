@@ -29,6 +29,9 @@ namespace XCode
         /// <summary>位数</summary>
         public Int32 Scale { get; set; }
 
+        /// <summary>默认值</summary>
+        public String DefaultValue { get; set; }
+
         /// <summary>是否主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
         public Boolean Master { get; set; }
         #endregion

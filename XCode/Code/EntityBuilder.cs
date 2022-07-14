@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using NewLife;
+using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Reflection;
 using XCode.DataAccessLayer;
@@ -340,13 +341,21 @@ namespace XCode.Code
 
             WriteLine("[DataObjectField({0}, {1}, {2}, {3})]", dc.PrimaryKey.ToString().ToLower(), dc.Identity.ToString().ToLower(), dc.Nullable.ToString().ToLower(), dc.Length);
 
+            var sb = Pool.StringBuilder.Get();
+            sb.AppendFormat("[BindColumn(\"{0}\", \"{1}\", \"{2}\"", dc.ColumnName, dc.Description, dc.RawType);
+
             // 支持生成带精度的特性
-            if (!dc.ItemType.IsNullOrEmpty())
-                WriteLine("[BindColumn(\"{0}\", \"{1}\", \"{2}\", ItemType = \"{3}\")]", dc.ColumnName, dc.Description, dc.RawType, dc.ItemType);
-            else if (dc.Precision > 0 || dc.Scale > 0)
-                WriteLine("[BindColumn(\"{0}\", \"{1}\", \"{2}\", Precision = {3}, Scale = {4})]", dc.ColumnName, dc.Description, dc.RawType, dc.Precision, dc.Scale);
-            else
-                WriteLine("[BindColumn(\"{0}\", \"{1}\", \"{2}\"{3})]", dc.ColumnName, dc.Description, dc.RawType, dc.Master ? ", Master = true" : "");
+            if (!dc.ItemType.IsNullOrEmpty()) sb.AppendFormat(", ItemType = \"{0}\"", dc.ItemType);
+
+            if (dc.Precision > 0 || dc.Scale > 0) sb.AppendFormat(", Precision = {0}, Scale = {1}", dc.Precision, dc.Scale);
+
+            if (!dc.DefaultValue.IsNullOrEmpty()) sb.AppendFormat(", DefaultValue = \"{0}\"", dc.DefaultValue);
+
+            if (dc.Master) sb.Append(", Master = true");
+
+            sb.Append(")]");
+
+            WriteLine(sb.Put(true));
 
             if (Option.Interface)
                 WriteLine("{0} {1} {{ get; set; }}", type, dc.Name);

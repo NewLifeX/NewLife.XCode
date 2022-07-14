@@ -111,7 +111,7 @@ namespace Company.MyName
         [DisplayName("角色")]
         [Description("角色。主要角色")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("RoleID", "角色。主要角色", "")]
+        [BindColumn("RoleID", "角色。主要角色", "", DefaultValue = "3")]
         public Int32 RoleID { get => _RoleID; set { if (OnPropertyChanging("RoleID", value)) { _RoleID = value; OnPropertyChanged("RoleID"); } } }
 
         private String _RoleIds;

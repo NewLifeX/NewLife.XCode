@@ -87,12 +87,12 @@ namespace XCodeTool
             var modelInterface = atts["ModelInterface"];
 
             // 生成实体类
-            option.BaseClass = null;
+            //option.BaseClass = null;
             option.ClassNameTemplate = null;
             option.ModelNameForCopy = null;
             if (!modelInterface.IsNullOrEmpty())
             {
-                option.BaseClass = modelInterface;
+                //option.BaseClass = modelInterface;
                 option.ModelNameForCopy = modelInterface;
             }
             else if (!modelClass.IsNullOrEmpty())

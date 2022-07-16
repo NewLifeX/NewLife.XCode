@@ -4,10 +4,10 @@
     <AssemblyName>XCode</AssemblyName>
     <RootNamespace>XCode</RootNamespace>
     <AssemblyTitle>NewLife数据中间件</AssemblyTitle>
-    <Description>数据中间件，支持MySQL、SQLite、SqlServer、Oracle、Postgresql、TDengine、达梦，重点在缓存、性能、分表、自动建表。旧版请找2021.1225</Description>
+    <Description>数据中间件，支持MySQL、SQLite、SqlServer、Oracle、Postgresql、TDengine、达梦，重点在缓存、性能、分表、自动建表。NET45旧版请找2021.1225</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2022 NewLife</Copyright>
-    <VersionPrefix>11.1</VersionPrefix>
+    <VersionPrefix>11.2</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -26,7 +26,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>修正使用事务时没有主动关闭连接可能导致连接数飙升的问题；优化SqlServer的支持；增强数据备份恢复；批量插入支持自动分表</PackageReleaseNotes>
+    <PackageReleaseNotes>大幅提升异步保存批量插入的吞吐性能</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -38,7 +38,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NewLife.Core" Version="9.1.2022.509-beta0301" />
+    <PackageReference Include="NewLife.Core" Version="9.2.2022.701" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />
@@ -60,11 +60,6 @@
     <None Remove="tools\**" />
     <None Remove="Web\**" />
   </ItemGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
   <ItemGroup>
     <Compile Remove="DataAccessLayer\Common\ConnectionPool.cs" />
     <Compile Remove="DataAccessLayer\Database\Firebird.cs" />
@@ -93,10 +88,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
-    <Content Include="Build.tt">
-      <Pack>true</Pack>
-      <PackagePath>content\Entity\</PackagePath>
-    </Content>
     <Content Include="Model.xml">
       <Pack>true</Pack>
       <PackagePath>content\Entity\</PackagePath>
@@ -105,15 +96,5 @@
   <ItemGroup>
     <EmbeddedResource Include="Readme.MD" />
     <EmbeddedResource Include="UpdateInfo.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Membership\Build.log">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Build.tt</DependentUpon>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 </Project>

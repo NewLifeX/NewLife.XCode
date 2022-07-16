@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -107,14 +107,16 @@ namespace Company.MyName
 
         private Int32 _RoleID;
         /// <summary>角色。主要角色</summary>
+        [Category("登录信息")]
         [DisplayName("角色")]
         [Description("角色。主要角色")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("RoleID", "角色。主要角色", "")]
+        [BindColumn("RoleID", "角色。主要角色", "", DefaultValue = "3")]
         public Int32 RoleID { get => _RoleID; set { if (OnPropertyChanging("RoleID", value)) { _RoleID = value; OnPropertyChanged("RoleID"); } } }
 
         private String _RoleIds;
         /// <summary>角色组。次要角色集合</summary>
+        [Category("登录信息")]
         [DisplayName("角色组")]
         [Description("角色组。次要角色集合")]
         [DataObjectField(false, false, true, 200)]
@@ -123,6 +125,7 @@ namespace Company.MyName
 
         private Int32 _DepartmentID;
         /// <summary>部门。组织机构</summary>
+        [Category("登录信息")]
         [DisplayName("部门")]
         [Description("部门。组织机构")]
         [DataObjectField(false, false, false, 0)]
@@ -131,6 +134,7 @@ namespace Company.MyName
 
         private Boolean _Online;
         /// <summary>在线</summary>
+        [Category("登录信息")]
         [DisplayName("在线")]
         [Description("在线")]
         [DataObjectField(false, false, false, 0)]
@@ -139,6 +143,7 @@ namespace Company.MyName
 
         private Boolean _Enable;
         /// <summary>启用</summary>
+        [Category("登录信息")]
         [DisplayName("启用")]
         [Description("启用")]
         [DataObjectField(false, false, false, 0)]
@@ -163,6 +168,7 @@ namespace Company.MyName
 
         private Int32 _Logins;
         /// <summary>登录次数</summary>
+        [Category("登录信息")]
         [DisplayName("登录次数")]
         [Description("登录次数")]
         [DataObjectField(false, false, false, 0)]
@@ -171,6 +177,7 @@ namespace Company.MyName
 
         private DateTime _LastLogin;
         /// <summary>最后登录</summary>
+        [Category("登录信息")]
         [DisplayName("最后登录")]
         [Description("最后登录")]
         [DataObjectField(false, false, true, 0)]
@@ -179,6 +186,7 @@ namespace Company.MyName
 
         private String _LastLoginIP;
         /// <summary>最后登录IP</summary>
+        [Category("登录信息")]
         [DisplayName("最后登录IP")]
         [Description("最后登录IP")]
         [DataObjectField(false, false, true, 50)]
@@ -187,6 +195,7 @@ namespace Company.MyName
 
         private DateTime _RegisterTime;
         /// <summary>注册时间</summary>
+        [Category("登录信息")]
         [DisplayName("注册时间")]
         [Description("注册时间")]
         [DataObjectField(false, false, true, 0)]
@@ -195,6 +204,7 @@ namespace Company.MyName
 
         private String _RegisterIP;
         /// <summary>注册IP</summary>
+        [Category("登录信息")]
         [DisplayName("注册IP")]
         [Description("注册IP")]
         [DataObjectField(false, false, true, 50)]
@@ -203,6 +213,7 @@ namespace Company.MyName
 
         private Int32 _OnlineTime;
         /// <summary>在线时间。累计在线总时间，秒</summary>
+        [Category("登录信息")]
         [DisplayName("在线时间")]
         [Description("在线时间。累计在线总时间，秒")]
         [DataObjectField(false, false, false, 0)]
@@ -211,6 +222,7 @@ namespace Company.MyName
 
         private Int32 _Ex1;
         /// <summary>扩展1</summary>
+        [Category("扩展")]
         [DisplayName("扩展1")]
         [Description("扩展1")]
         [DataObjectField(false, false, false, 0)]
@@ -219,6 +231,7 @@ namespace Company.MyName
 
         private Int32 _Ex2;
         /// <summary>扩展2</summary>
+        [Category("扩展")]
         [DisplayName("扩展2")]
         [Description("扩展2")]
         [DataObjectField(false, false, false, 0)]
@@ -227,6 +240,7 @@ namespace Company.MyName
 
         private Double _Ex3;
         /// <summary>扩展3</summary>
+        [Category("扩展")]
         [DisplayName("扩展3")]
         [Description("扩展3")]
         [DataObjectField(false, false, false, 0)]
@@ -235,6 +249,7 @@ namespace Company.MyName
 
         private String _Ex4;
         /// <summary>扩展4</summary>
+        [Category("扩展")]
         [DisplayName("扩展4")]
         [Description("扩展4")]
         [DataObjectField(false, false, true, 50)]
@@ -243,6 +258,7 @@ namespace Company.MyName
 
         private String _Ex5;
         /// <summary>扩展5</summary>
+        [Category("扩展")]
         [DisplayName("扩展5")]
         [Description("扩展5")]
         [DataObjectField(false, false, true, 50)]
@@ -252,6 +268,7 @@ namespace Company.MyName
         private String _Ex6;
         /// <summary>扩展6</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        [Category("扩展")]
         [DisplayName("扩展6")]
         [Description("扩展6")]
         [DataObjectField(false, false, true, 50)]
@@ -260,6 +277,7 @@ namespace Company.MyName
 
         private String _UpdateUser;
         /// <summary>更新者</summary>
+        [Category("扩展")]
         [DisplayName("更新者")]
         [Description("更新者")]
         [DataObjectField(false, false, true, 50)]
@@ -268,6 +286,7 @@ namespace Company.MyName
 
         private Int32 _UpdateUserID;
         /// <summary>更新用户</summary>
+        [Category("扩展")]
         [DisplayName("更新用户")]
         [Description("更新用户")]
         [DataObjectField(false, false, false, 0)]
@@ -276,6 +295,7 @@ namespace Company.MyName
 
         private String _UpdateIP;
         /// <summary>更新地址</summary>
+        [Category("扩展")]
         [DisplayName("更新地址")]
         [Description("更新地址")]
         [DataObjectField(false, false, true, 50)]
@@ -284,6 +304,7 @@ namespace Company.MyName
 
         private DateTime _UpdateTime;
         /// <summary>更新时间</summary>
+        [Category("扩展")]
         [DisplayName("更新时间")]
         [Description("更新时间")]
         [DataObjectField(false, false, false, 0)]
@@ -292,6 +313,7 @@ namespace Company.MyName
 
         private String _Remark;
         /// <summary>备注</summary>
+        [Category("扩展")]
         [DisplayName("备注")]
         [Description("备注")]
         [DataObjectField(false, false, true, 500)]

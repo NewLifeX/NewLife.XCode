@@ -311,6 +311,7 @@ namespace XCode.DataAccessLayer
 
             var writeDb = WriteDbCallback?.Invoke() ?? new WriteDbActor { BoundedCapacity = 4 };
             writeDb.Host = this;
+            writeDb.Dal = Dal;
             writeDb.Table = table;
             writeDb.TracerParent = span;
 
@@ -412,8 +413,12 @@ namespace XCode.DataAccessLayer
 
             if (setSchema) Dal.SetTables(table);
 
+            // 返回恢复行数
             var compressed = file.EndsWithIgnoreCase(".gz");
-            return file2.AsFile().OpenRead(compressed, s => Restore(s, table));
+            var rs = 0;
+            file2.AsFile().OpenRead(compressed, s => { rs = Restore(s, table); });
+
+            return rs;
         }
 
         /// <summary>从指定压缩文件恢复一批数据到目标库</summary>
@@ -500,7 +505,8 @@ namespace XCode.DataAccessLayer
 
             var writeDb = WriteDbCallback?.Invoke() ?? new WriteDbActor { BoundedCapacity = 4 };
             writeDb.Table = table;
-            writeDb.Host = this;
+            writeDb.Host =this;
+            writeDb.Dal = dal;
             writeDb.TracerParent = span;
 
             var extracer = GetExtracter(table);
@@ -700,7 +706,10 @@ namespace XCode.DataAccessLayer
         {
             /// <summary>父级对象</summary>
             public DbPackage Host { get; set; }
-
+            /// <summary>
+            /// 目标数据库
+            /// </summary>
+            public DAL Dal { get; set; }
             /// <summary>
             /// 数据表
             /// </summary>
@@ -717,7 +726,7 @@ namespace XCode.DataAccessLayer
             {
                 if (context.Message is not DbTable dt) return Task.CompletedTask;
 
-                var dal = Host.Dal;
+                var dal =Dal;
 
                 // 匹配要写入的列
                 if (_Columns == null)

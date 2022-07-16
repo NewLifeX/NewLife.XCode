@@ -461,10 +461,10 @@ namespace XCode
             //var tableName = dal.Db.FormatTableName(session.TableName);
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{fact.Table.TableName}");
             try
             {
-                if (span != null && list is ICollection collection) span.Tag = collection.Count + "";
+                if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
                 var rs = dal.Session.Insert(session.Table, columns, list.Cast<IExtend>());
 
@@ -524,10 +524,10 @@ namespace XCode
             //dal.CheckDatabase();
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:InsertIgnore:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:InsertIgnore:{fact.Table.TableName}");
             try
             {
-                if (span != null && list is ICollection collection) span.Tag = collection.Count + "";
+                if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
                 var rs = dal.Session.InsertIgnore(session.Table, columns, list.Cast<IExtend>());
 
@@ -587,10 +587,10 @@ namespace XCode
             //dal.CheckDatabase();
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchReplace:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchReplace:{fact.Table.TableName}");
             try
             {
-                if (span != null && list is ICollection collection) span.Tag = collection.Count + "";
+                if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
                 var rs = dal.Session.Replace(session.Table, columns, list.Cast<IExtend>());
 
@@ -651,10 +651,10 @@ namespace XCode
             //var tableName = dal.Db.FormatTableName(session.TableName);
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{fact.Table.TableName}");
             try
             {
-                if (span != null && list is ICollection collection) span.Tag = collection.Count + "";
+                if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
                 var rs = dal.Session.Update(session.Table, columns, updateColumns, addColumns, list.Cast<IExtend>());
 
@@ -739,10 +739,10 @@ namespace XCode
             //var tableName = dal.Db.FormatTableName(session.TableName);
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{fact.Table.TableName}");
             try
             {
-                if (span != null && list is ICollection collection) span.Tag = collection.Count + "";
+                if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
                 var rs = dal.Session.Upsert(session.Table, columns, updateColumns, addColumns, list.Cast<IExtend>());
 
@@ -803,9 +803,11 @@ namespace XCode
             //var tableName = dal.Db.FormatTableName(session.TableName);
 
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
-            using var span = tracer?.NewSpan($"db:{dal.ConnName}:Upsert:{session.TableName}");
+            using var span = tracer?.NewSpan($"db:{dal.ConnName}:Upsert:{fact.Table.TableName}");
             try
             {
+                if (span != null) span.Tag = $"{session.TableName}[{entity}]";
+
                 return dal.Session.Upsert(session.Table, columns, updateColumns, addColumns, new[] { entity as IExtend });
             }
             catch (Exception ex)

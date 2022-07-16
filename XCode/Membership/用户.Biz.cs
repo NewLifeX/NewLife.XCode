@@ -135,6 +135,7 @@ namespace XCode.Membership
         public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
 
         /// <summary>部门</summary>
+        [Category("登录信息")]
         [Map(__.DepartmentID, typeof(Department), __.ID)]
         public String DepartmentName => Department?.ToString();
 
@@ -581,6 +582,7 @@ namespace XCode.Membership
         }
 
         /// <summary>角色名</summary>
+        [Category("登录信息")]
         [Map(__.RoleID, typeof(Role), "ID")]
         public virtual String RoleName => Role + "";
 

@@ -516,8 +516,14 @@ namespace XCode
                 // 标识列不需要插入，别的类型都需要
                 if (CheckIdentity(db, fi, value, sbNames, sbValues)) continue;
 
+                // 判断默认值
+                if (!entity.IsDirty(fi.Name) && !fi.Column.DefaultValue.IsNullOrEmpty())
+                {
+                    //entity.SetItem(fi.Name, fi.Column.DefaultValue);
+                    value = fi.Column.DefaultValue.ChangeType(fi.Type);
+                }
                 // 1，来自数据库或有脏数据的字段一定要参与
-                if (entity.IsFromDatabase || !entity.IsDirty(fi.Name))
+                else if (entity.IsFromDatabase || !entity.IsDirty(fi.Name))
                 {
                     //if (!factory.FullInsert) continue;
 

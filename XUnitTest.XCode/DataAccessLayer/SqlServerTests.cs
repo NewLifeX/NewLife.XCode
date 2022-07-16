@@ -50,7 +50,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.NotNull(dp);
         }
 
-        [Fact]
+        [Fact(Skip = "跳过")]
         public void ConnectTest()
         {
             var db = DbFactory.Create(DatabaseType.SqlServer);
@@ -62,7 +62,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             conn.Open();
         }
 
-        [Fact]
+        [Fact(Skip = "跳过")]
         public void DALTest()
         {
             DAL.AddConnStr("sysSqlServer", _ConnStr, null, "SqlServer");
@@ -80,7 +80,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.NotEmpty(ver);
         }
 
-        [Fact]
+        [Fact(Skip = "跳过")]
         public void MetaTest()
         {
             var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
@@ -99,7 +99,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.NotEmpty(tb.Description);
         }
 
-        [Fact]
+        [Fact(Skip = "跳过")]
         public void SelectTest()
         {
             DAL.AddConnStr("sysSqlServer", _ConnStr, null, "SqlServer");
@@ -141,7 +141,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             catch (Exception ex) { XTrace.WriteException(ex); }
         }
 
-        [Fact]
+        [Fact(Skip = "跳过")]
         public void TablePrefixTest()
         {
             DAL.AddConnStr("sysSqlServer", _ConnStr, null, "SqlServer");
@@ -201,7 +201,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             return split;
         }
 
-        [Fact]
+        [Fact(Skip = "跳过")]
         public void BatchInsert()
         {
             using var split = CreateForBatch("BatchInsert");
@@ -293,7 +293,7 @@ namespace XUnitTest.XCode.DataAccessLayer
         //    Assert.NotEqual(gly.ID, gly2.ID);
         //}
 
-        [Fact]
+        [Fact(Skip = "跳过")]
         public void PositiveAndNegative()
         {
             var connName = GetType().Name;
@@ -320,7 +320,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.DoesNotContain(table.TableName, tableNames);
         }
 
-        [Fact]
+        [Fact(Skip = "跳过")]
         public void Backup()
         {
             DAL.AddConnStr("bakSqlServer", _ConnStr, null, "SqlServer");
@@ -347,7 +347,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             File.Delete(file4);
         }
 
-        [Fact]
+        [Fact(Skip = "跳过")]
         public void Restore()
         {
             DAL.AddConnStr("restoreSqlServer", _ConnStr, null, "SqlServer");

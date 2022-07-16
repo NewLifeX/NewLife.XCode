@@ -54,9 +54,13 @@ namespace XCode.DataAccessLayer
 
             // 如未设置Sslmode，默认为none
             if (builder[Sslmode] == null) builder.TryAdd(Sslmode, "none");
+        }
 
+        protected override void OnGetConnectionString(ConnectionStringBuilder builder)
+        {
             // 如果是新版驱动v8.0，需要设置获取公钥
-            var version = _providerFactory?.GetType().Assembly.GetName().Version;
+            var factory = GetFactory(true);
+            var version = factory?.GetType().Assembly.GetName().Version;
             if (version == null || version.Major >= 8) builder.TryAdd("AllowPublicKeyRetrieval", "true");
         }
         #endregion
@@ -477,6 +481,21 @@ namespace XCode.DataAccessLayer
             }
 
             return list;
+        }
+
+        protected override String GetFieldType(IDataColumn field)
+        {
+            //field.Length = field.Length > 255 ? 255 : field.Length;
+            if (field.DataType == null && field.RawType == "datetimeoffset")
+            {
+                field.DataType = typeof(DateTime);
+            }
+            if (field.DataType == typeof(Decimal) && field is XField fi)
+            {
+                // 精度 与 位数
+                field.Precision = field.Length > 255 ? 255 : field.Length;
+            }
+            return base.GetFieldType(field);
         }
 
         public override String FieldClause(IDataColumn field, Boolean onlyDefine)

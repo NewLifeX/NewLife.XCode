@@ -55,18 +55,24 @@ namespace XUnitTest.XCode.DataAccessLayer
         [Fact]
         public void DALTest()
         {
-            var db = "Data\\Membership.db";
-            var dbf = db.GetFullPath();
+            var file = "Data\\Membership.db";
+            var dbf = file.GetFullPath();
 
-            DAL.AddConnStr("sysSQLite", $"Data Source={db}", null, "SQLite");
+            DAL.AddConnStr("sysSQLite", $"Data Source={file}", null, "SQLite");
             var dal = DAL.Create("sysSQLite");
             Assert.NotNull(dal);
             Assert.Equal("sysSQLite", dal.ConnName);
             Assert.Equal(DatabaseType.SQLite, dal.DbType);
 
-            var connstr = dal.Db.ConnectionString;
+            var db = dal.Db;
+            var connstr = db.ConnectionString;
             Assert.Equal(dbf, dal.Db.DatabaseName);
             //Assert.EndsWith("\\Data\\Membership.db;Cache Size=-524288;Synchronous=Off;Journal Mode=WAL", connstr);
+            Assert.EndsWith("\\Data\\Membership.db", connstr);
+
+            using var conn = db.OpenConnection();
+            connstr = conn.ConnectionString;
+            Assert.EndsWith("\\Data\\Membership.db;Cache Size=-524288;Synchronous=Off;Journal Mode=WAL", connstr);
 
             var ver = dal.Db.ServerVersion;
             Assert.NotEmpty(ver);

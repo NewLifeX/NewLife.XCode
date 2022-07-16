@@ -71,6 +71,7 @@ namespace XCode.Membership
 
         private Int32 _Ex1;
         /// <summary>扩展1</summary>
+        [Category("扩展")]
         [DisplayName("扩展1")]
         [Description("扩展1")]
         [DataObjectField(false, false, false, 0)]
@@ -79,6 +80,7 @@ namespace XCode.Membership
 
         private Int32 _Ex2;
         /// <summary>扩展2</summary>
+        [Category("扩展")]
         [DisplayName("扩展2")]
         [Description("扩展2")]
         [DataObjectField(false, false, false, 0)]
@@ -87,6 +89,7 @@ namespace XCode.Membership
 
         private Double _Ex3;
         /// <summary>扩展3</summary>
+        [Category("扩展")]
         [DisplayName("扩展3")]
         [Description("扩展3")]
         [DataObjectField(false, false, false, 0)]
@@ -95,6 +98,7 @@ namespace XCode.Membership
 
         private String _Ex4;
         /// <summary>扩展4</summary>
+        [Category("扩展")]
         [DisplayName("扩展4")]
         [Description("扩展4")]
         [DataObjectField(false, false, true, 50)]
@@ -103,6 +107,7 @@ namespace XCode.Membership
 
         private String _Ex5;
         /// <summary>扩展5</summary>
+        [Category("扩展")]
         [DisplayName("扩展5")]
         [Description("扩展5")]
         [DataObjectField(false, false, true, 50)]
@@ -111,6 +116,7 @@ namespace XCode.Membership
 
         private String _Ex6;
         /// <summary>扩展6</summary>
+        [Category("扩展")]
         [DisplayName("扩展6")]
         [Description("扩展6")]
         [DataObjectField(false, false, true, 50)]
@@ -127,6 +133,7 @@ namespace XCode.Membership
 
         private String _CreateUser;
         /// <summary>创建者</summary>
+        [Category("扩展")]
         [DisplayName("创建者")]
         [Description("创建者")]
         [DataObjectField(false, false, true, 50)]
@@ -135,6 +142,7 @@ namespace XCode.Membership
 
         private Int32 _CreateUserID;
         /// <summary>创建用户</summary>
+        [Category("扩展")]
         [DisplayName("创建用户")]
         [Description("创建用户")]
         [DataObjectField(false, false, false, 0)]
@@ -143,6 +151,7 @@ namespace XCode.Membership
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]

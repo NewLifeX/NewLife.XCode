@@ -62,11 +62,12 @@ namespace XCode.DataAccessLayer
             return base.OnResolveFile(file);
         }
 
-        protected override void OnSetConnectionString(ConnectionStringBuilder builder)
+        protected override void OnGetConnectionString(ConnectionStringBuilder builder)
         {
-            base.OnSetConnectionString(builder);
+            base.OnGetConnectionString(builder);
 
-            var provider = _providerFactory?.GetType().FullName ?? Provider;
+            var factory = GetFactory(true);
+            var provider = factory?.GetType().FullName ?? Provider;
             if (provider.StartsWithIgnoreCase("System.Data"))
             {
                 //// 正常情况下INSERT, UPDATE和DELETE语句不返回数据。 当开启count-changes，以上语句返回一行含一个整数值的数据——该语句插入，修改或删除的行数。
@@ -121,12 +122,13 @@ namespace XCode.DataAccessLayer
             base.Dispose(disposing);
 
             // 不用Factory属性，为了避免触发加载SQLite驱动
-            if (_providerFactory != null)
+            var factory = GetFactory(false);
+            if (factory != null)
             {
                 try
                 {
                     // 清空连接池
-                    var type = _providerFactory.CreateConnection().GetType();
+                    var type = factory.CreateConnection().GetType();
                     type.Invoke("ClearAllPools");
                 }
                 catch (ObjectDisposedException) { }
@@ -152,25 +154,25 @@ namespace XCode.DataAccessLayer
             return false;
         }
 
-        private void SetThreadSafe()
-        {
-            var asm = _providerFactory?.GetType().Assembly;
-            if (asm == null) return;
+        //private void SetThreadSafe()
+        //{
+        //    var asm = _providerFactory?.GetType().Assembly;
+        //    if (asm == null) return;
 
-            var type = asm.GetTypes().FirstOrDefault(e => e.Name == "UnsafeNativeMethods");
-            var mi = type?.GetMethod("sqlite3_config_none", BindingFlags.Static | BindingFlags.NonPublic);
-            if (mi == null) return;
+        //    var type = asm.GetTypes().FirstOrDefault(e => e.Name == "UnsafeNativeMethods");
+        //    var mi = type?.GetMethod("sqlite3_config_none", BindingFlags.Static | BindingFlags.NonPublic);
+        //    if (mi == null) return;
 
-            /*
-             * SQLiteConfigOpsEnum
-             * 	SQLITE_CONFIG_SINGLETHREAD = 1,
-             * 	SQLITE_CONFIG_MULTITHREAD = 2,
-             * 	SQLITE_CONFIG_SERIALIZED = 3,
-             */
+        //    /*
+        //     * SQLiteConfigOpsEnum
+        //     * 	SQLITE_CONFIG_SINGLETHREAD = 1,
+        //     * 	SQLITE_CONFIG_MULTITHREAD = 2,
+        //     * 	SQLITE_CONFIG_SERIALIZED = 3,
+        //     */
 
-            var rs = mi.Invoke(this, new Object[] { 2 });
-            XTrace.WriteLine("sqlite3_config_none(SQLITE_CONFIG_MULTITHREAD) = {0}", rs);
-        }
+        //    var rs = mi.Invoke(this, new Object[] { 2 });
+        //    XTrace.WriteLine("sqlite3_config_none(SQLITE_CONFIG_MULTITHREAD) = {0}", rs);
+        //}
         #endregion
 
         #region 分页

@@ -701,7 +701,7 @@ namespace XCode
                 var dbt = session.Dal.DbType;
                 if (dbt is DatabaseType.SqlServer or DatabaseType.Oracle)
                     columns = fact.Fields.Select(e => e.Field).Where(e => !e.Identity || e.PrimaryKey).ToArray();
-                else if (dbt == DatabaseType.MySql)
+                else if (dbt is DatabaseType.MySql or DatabaseType.SQLite) //SQLite库集合更新这里用到了Insert Into Do Update,所以不能排除主键填充，所以这里增加了 or DatabaseType.SQLite
                     columns = fact.Fields.Select(e => e.Field).ToArray(); //只有标识键的情况下会导致重复执行insert方法 目前只测试了Mysql库
                 else
                     columns = fact.Fields.Select(e => e.Field).Where(e => !e.Identity).ToArray();

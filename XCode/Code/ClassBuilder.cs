@@ -197,6 +197,16 @@ namespace XCode.Code
         /// <summary>执行生成</summary>
         public virtual void Execute()
         {
+            // 参数检查
+            var dt = Table;
+            if (dt == null) throw new ArgumentNullException(nameof(Table));
+            if (dt.Columns == null || dt.Columns.Count == 0) throw new ArgumentOutOfRangeException(nameof(Table));
+
+            foreach (var dc in dt.Columns)
+            {
+                if (dc.DataType == null) throw new XCodeException($"表[{dt.Name}]的字段[{dc.Name}]未指定DataType类型");
+            }
+
             var option = Option;
             if (ClassName.IsNullOrEmpty())
             {

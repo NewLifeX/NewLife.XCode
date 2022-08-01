@@ -125,10 +125,5 @@
     <None Update="Code\Member.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TestEntity\Build.log">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Build.tt</DependentUpon>
-    </None>
   </ItemGroup>
 </Project>

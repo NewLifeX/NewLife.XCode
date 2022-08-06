@@ -73,7 +73,7 @@ namespace XCode
         {
             Dirtys[fieldName] = true;
 
-            PropertyChanged?.Invoke(fieldName, new PropertyChangedEventArgs(fieldName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(fieldName));
         }
         #endregion
 

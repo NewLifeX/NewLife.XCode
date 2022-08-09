@@ -493,7 +493,8 @@ namespace XCode.DataAccessLayer
             if (field.DataType == typeof(Decimal) && field is XField fi)
             {
                 // 精度 与 位数
-                field.Precision = field.Length > 255 ? 255 : field.Length;
+                field.Precision = field.Length <= 0 ? field.Precision : field.Length > 255 ? 255 : field.Length;
+                //field.Precision = field.Length > 255 ? 255 : field.Length <= 0 ? field.Precision : field.Length;
             }
             return base.GetFieldType(field);
         }

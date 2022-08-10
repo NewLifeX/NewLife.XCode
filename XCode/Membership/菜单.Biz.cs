@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Threading;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
@@ -484,7 +485,7 @@ namespace XCode.Membership
                 // 如果新增了菜单，需要检查权限
                 if (list.Count > 0)
                 {
-                    ThreadPoolX.QueueUserWorkItem(() =>
+                    ThreadPool.QueueUserWorkItem(s =>
                     {
                         XTrace.WriteLine("新增了菜单，需要检查权限");
                         var fact = ManageProvider.GetFactory<IRole>();

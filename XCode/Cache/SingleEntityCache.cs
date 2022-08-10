@@ -295,7 +295,7 @@ namespace XCode.Cache
             {
                 // 频繁更新下，采用异步更新缓存，以提升吞吐。非频繁访问时（2倍超时），同步更新
                 if (sec < Expire)
-                    ThreadPoolX.QueueUserWorkItem(UpdateData, ci);
+                    ThreadPool.QueueUserWorkItem(UpdateData, ci);
                 else
                     UpdateData(ci);
             }

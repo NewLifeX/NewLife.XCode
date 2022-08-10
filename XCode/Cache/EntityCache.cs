@@ -161,7 +161,7 @@ namespace XCode.Cache
             if (Interlocked.CompareExchange(ref _updating, 1, 0) != 0) return;
 
             WriteLog($"异步更新缓存，{reason}");
-            ThreadPoolX.QueueUserWorkItem(UpdateCache, reason);
+            ThreadPool.QueueUserWorkItem(s => UpdateCache(s as String), reason);
         }
 
         void UpdateCache(String reason)

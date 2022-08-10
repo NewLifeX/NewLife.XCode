@@ -5,6 +5,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Collections;
@@ -129,9 +130,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (sc.Using)
         {
             // 查询列表异步加入对象缓存
-            ThreadPoolX.QueueUserWorkItem(es =>
+            ThreadPool.QueueUserWorkItem(es =>
             {
-                foreach (var entity in es)
+                foreach (var entity in es as TEntity[])
                 {
                     sc.Add(entity);
                 }

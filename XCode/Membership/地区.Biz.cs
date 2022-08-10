@@ -87,7 +87,7 @@ namespace XCode.Membership
         protected internal override void InitData()
         {
             // 预热数据
-            if (Meta.Session.Count > 0) ThreadPoolX.QueueUserWorkItem(() => Preload());
+            if (Meta.Session.Count > 0) ThreadPool.QueueUserWorkItem(s => Preload());
         }
         #endregion
 

@@ -282,7 +282,7 @@ namespace XCode
                     if (dal.Db.Migration > Migration.ReadOnly /*|| def != this*/)
                         CheckTable();
                     else
-                        ThreadPoolX.QueueUserWorkItem(CheckTable);
+                        ThreadPool.QueueUserWorkItem(s => CheckTable());
                 }
             }
         }
@@ -366,7 +366,7 @@ namespace XCode
                     {
                         _NextCount = now.AddSeconds(60);
                         // 异步更新
-                        ThreadPoolX.QueueUserWorkItem(() => LongCount = GetCount(_Count));
+                        ThreadPool.QueueUserWorkItem(s => LongCount = GetCount(_Count));
                     }
 
                     return n;

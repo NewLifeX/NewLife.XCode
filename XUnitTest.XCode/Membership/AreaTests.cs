@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using NewLife;
+using NewLife.IP;
 using NewLife.Log;
 using NewLife.UnitTest;
 using XCode.Membership;
@@ -17,6 +18,8 @@ namespace XUnitTest.XCode.Membership
         static AreaTests()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            IpResolver.Register();
         }
 
         [TestOrder(20)]

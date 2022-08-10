@@ -23,7 +23,7 @@ namespace XCode.DataAccessLayer
             Register<TDengine>(DatabaseType.TDengine);
             //Register<Access>(DatabaseType.Access);
             //Register<SqlCe>(DatabaseType.SqlCe);
-            Register<Network>(DatabaseType.Network);
+            //Register<Network>(DatabaseType.Network);
         }
         #endregion
 

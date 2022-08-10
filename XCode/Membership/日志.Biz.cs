@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using NewLife;
 using NewLife.Data;
 using XCode.Cache;
@@ -21,7 +22,7 @@ namespace XCode.Membership
 
 #if !DEBUG
             // 关闭SQL日志
-            NewLife.Threading.ThreadPoolX.QueueUserWorkItem(() => { Meta.Session.Dal.Db.ShowSQL = false; });
+            ThreadPool.QueueUserWorkItem(s => { Meta.Session.Dal.Db.ShowSQL = false; });
 #endif
         }
 

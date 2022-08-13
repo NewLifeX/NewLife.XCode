@@ -3,6 +3,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <OutputPath>..\Bin\UnitTest</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Code\BuildTT\UserTT.cs" />

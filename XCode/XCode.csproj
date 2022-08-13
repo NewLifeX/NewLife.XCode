@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
     <AssemblyName>XCode</AssemblyName>
     <RootNamespace>XCode</RootNamespace>
     <AssemblyTitle>NewLife数据中间件</AssemblyTitle>
@@ -17,6 +17,8 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <LangVersion>latest</LangVersion>
     <!--<Nullable>enable</Nullable>-->
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>NewLife.XCode</PackageId>
@@ -38,7 +40,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NewLife.Core" Version="10.0.2022.810-beta0004" />
+    <PackageReference Include="NewLife.Core" Version="10.0.2022.813-beta1403" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

@@ -346,9 +346,11 @@ namespace XCode.DataAccessLayer
             var name = Path.GetFileNameWithoutExtension(assemblyFile);
             if (!name.IsNullOrEmpty())
             {
+#if !NETFRAMEWORK
                 var arch = (RuntimeInformation.OSArchitecture + "").ToLower();
                 // 可能是在x64架构上跑x86
                 if (arch == "x64" && !Environment.Is64BitProcess) arch = "x86";
+#endif
 
                 var platform = "";
                 if (Runtime.Linux)
@@ -359,7 +361,9 @@ namespace XCode.DataAccessLayer
                     platform = "win";
 
                 // 多目标匹配，不区分先后顺序，统一匹配后按照版本和时间排序
+#if !NETFRAMEWORK
                 links.Add($"{name}.{platform}-{arch}");
+#endif
                 links.Add($"{name}.{platform}");
 
                 var ver = Environment.Version;

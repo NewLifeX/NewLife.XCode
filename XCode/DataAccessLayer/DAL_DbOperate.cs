@@ -444,6 +444,12 @@ namespace XCode.DataAccessLayer
                     var p = sql.IndexOf(' ');
                     if (p > 0) action = sql[..p];
                 }
+                else if (action.EqualIgnoreCase("Query", "Select"))
+                {
+                    // 查询数据时，Group作为独立埋点操作名
+                    if (sql.ToLower().Contains("group by"))
+                        action = "Group";
+                }
 
                 traceName = $"db:{ConnName}:{action}";
 

@@ -37,9 +37,9 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="IBM.Data.DB2.Core" Version="3.1.0.600" />
-    <PackageReference Include="NewLife.Redis" Version="5.0.2022.810-beta0542" />
-    <PackageReference Include="NewLife.Remoting" Version="2.0.2022.810-beta0529" />
-    <PackageReference Include="NewLife.Stardust" Version="2.3.2022.810-beta1054" />
+    <PackageReference Include="NewLife.Redis" Version="5.0.2022.813-beta1456" />
+    <PackageReference Include="NewLife.Remoting" Version="2.0.2022.813-beta1441" />
+    <PackageReference Include="NewLife.Stardust" Version="2.3.2022.814-beta0337" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.70" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
   </ItemGroup>

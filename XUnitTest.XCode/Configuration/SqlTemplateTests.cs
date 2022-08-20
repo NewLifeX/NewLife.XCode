@@ -190,7 +190,7 @@ select * from userx where id=@id
             Assert.Equal("[test] Select Count(*) From (select * from menu2 where 'visible'=2) SourceTable", sql);
 
             var menu = Menu3.FindByID(1234);
-            Assert.Equal("[test] Select * From (select * from menu2 where 'visible'=2) SourceTable Order By ID Desc", sql);
+            Assert.Equal("[test] Select * From (select * from menu2 where 'visible'=2) SourceTable", sql);
 
             var menu2 = Menu3.FindByKey(1234);
             Assert.Equal("[test] Select * From (select * from menu2 where 'visible'=2) SourceTable Where ID=1234", sql);
@@ -218,7 +218,7 @@ select * from userx where id=@id
             Assert.Equal("[mysql_member] Select Count(*) From (select * from menu2 where 'visible'=1) SourceTable", sql);
 
             var menu = Menu3.FindByID(1234);
-            Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable Order By ID Desc", sql);
+            Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable", sql);
 
             var menu2 = Menu3.FindByKey(1234);
             Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable Where ID=1234", sql);

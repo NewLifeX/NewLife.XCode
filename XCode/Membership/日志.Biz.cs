@@ -19,6 +19,7 @@ namespace XCode.Membership
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<UserModule>();
             Meta.Modules.Add<IPModule>();
+            Meta.Modules.Add<TraceModule>();
 
 #if !DEBUG
             // 关闭SQL日志

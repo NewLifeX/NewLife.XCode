@@ -453,7 +453,7 @@ internal class SQLiteMetaData : FileDbMetaData
         { typeof(Int64), new String[] { "integer", "counter", "autoincrement", "identity", "long", "bigint" } },
         { typeof(Single), new String[] { "single" } },
         { typeof(Double), new String[] { "real", "float", "double" } },
-        { typeof(Decimal), new String[] { "money", "decimal", "currency", "numeric" } },
+        { typeof(Decimal), new String[] { "decimal", "money", "currency", "numeric" } },
         { typeof(DateTime), new String[] { "datetime", "smalldate", "timestamp", "date", "time" } },
         { typeof(String), new String[] { "nvarchar({0})", "ntext", "varchar({0})", "memo({0})", "longtext({0})", "note({0})", "text({0})", "string({0})", "char({0})", "char({0})" } }
     };

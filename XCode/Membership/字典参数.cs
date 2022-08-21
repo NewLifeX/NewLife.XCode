@@ -94,14 +94,14 @@ namespace XCode.Membership
         [BindColumn("Ex1", "扩展1", "")]
         public Int32 Ex1 { get => _Ex1; set { if (OnPropertyChanging("Ex1", value)) { _Ex1 = value; OnPropertyChanged("Ex1"); } } }
 
-        private Int32 _Ex2;
+        private Decimal _Ex2;
         /// <summary>扩展2</summary>
         [Category("扩展")]
         [DisplayName("扩展2")]
         [Description("扩展2")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("Ex2", "扩展2", "")]
-        public Int32 Ex2 { get => _Ex2; set { if (OnPropertyChanging("Ex2", value)) { _Ex2 = value; OnPropertyChanged("Ex2"); } } }
+        [BindColumn("Ex2", "扩展2", "", Precision = 19, Scale = 4)]
+        public Decimal Ex2 { get => _Ex2; set { if (OnPropertyChanging("Ex2", value)) { _Ex2 = value; OnPropertyChanged("Ex2"); } } }
 
         private Double _Ex3;
         /// <summary>扩展3</summary>
@@ -270,7 +270,7 @@ namespace XCode.Membership
                     case "Kind": _Kind = (XCode.Membership.ParameterKinds)value.ToInt(); break;
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "Ex1": _Ex1 = value.ToInt(); break;
-                    case "Ex2": _Ex2 = value.ToInt(); break;
+                    case "Ex2": _Ex2 = Convert.ToDecimal(value); break;
                     case "Ex3": _Ex3 = value.ToDouble(); break;
                     case "Ex4": _Ex4 = Convert.ToString(value); break;
                     case "Ex5": _Ex5 = Convert.ToString(value); break;

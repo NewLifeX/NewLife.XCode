@@ -153,7 +153,7 @@
       <Column Name="Kind" DataType="Int32" Description="种类。0普通，21列表，22名值" Type="XCode.Membership.ParameterKinds" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
-      <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />
+      <Column Name="Ex2" DataType="Decimal" Precision="19" Scale="4" Description="扩展2" Category="扩展" />
       <Column Name="Ex3" DataType="Double" Description="扩展3" Category="扩展" />
       <Column Name="Ex4" DataType="String" Description="扩展4" Category="扩展" />
       <Column Name="Ex5" DataType="String" Description="扩展5" Category="扩展" />

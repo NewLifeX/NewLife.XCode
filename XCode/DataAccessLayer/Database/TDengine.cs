@@ -283,6 +283,7 @@ namespace XCode.DataAccessLayer
                     var table = DAL.CreateTable();
                     table.TableName = name;
                     table.Owner = dr["stable_name"] as String;
+                    table.DbType = Database.Type;
 
                     #region 字段
                     sql = $"DESCRIBE {name}";

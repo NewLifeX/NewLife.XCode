@@ -183,11 +183,13 @@ public partial class TDengineConnection : DbConnection
             return handler;
         }
 
-        protected override void OnDispose(IntPtr value) =>
+        protected override void OnDispose(IntPtr value)
+        {
 #if DEBUG
             XTrace.WriteLine("断开TDengine");
 #endif
             TD.Close(value);
+        }
     }
 
     private static readonly ConcurrentDictionary<String, IPool<IntPtr>> _cache = new();

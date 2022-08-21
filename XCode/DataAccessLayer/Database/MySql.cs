@@ -377,6 +377,7 @@ namespace XCode.DataAccessLayer
                     var table = DAL.CreateTable();
                     table.TableName = name;
                     table.Description = dr["Comment"] + "";
+                    table.DbType = Database.Type;
 
                     #region 字段
                     sql = $"SHOW FULL COLUMNS FROM `{db}`.`{name}`";

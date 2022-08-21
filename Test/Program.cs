@@ -95,7 +95,13 @@ namespace Test
 
         private static void Test35()
         {
+            EntityFactory.InitAll();
+
             var dal = Role.Meta.Session.Dal;
+            var ts = dal.Tables;
+
+            var xx = DAL.Export(ts);
+
             var ds = dal.Select("select * from role");
             var xml = ds.GetXml();
             Console.WriteLine(xml);

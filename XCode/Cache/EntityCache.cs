@@ -8,7 +8,6 @@ using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Threading;
-using XCode.DataAccessLayer;
 
 namespace XCode.Cache;
 
@@ -171,11 +170,11 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
     {
         Interlocked.Increment(ref _updating);
 
-        var act = LogPrefix;
-        var p = act.IndexOf("<");
-        if (p > 0) act = act[..p];
-        if (isAsync) act += "Async";
-        using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:{act}:{TableName}", reason);
+        //var act = LogPrefix;
+        //var p = act.IndexOf("<");
+        //if (p > 0) act = act[..p];
+        //if (isAsync) act += "Async";
+        //using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:{act}:{TableName}", reason);
 
         var ts = _Times;
 

@@ -310,7 +310,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     {
         WriteLog(".CreateItem {0}", key);
 
-        using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:Single:{TableName}", $"CreateItem({key})");
+        //using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:Single:{TableName}", $"CreateItem({key})");
 
         // 开始更新数据，然后加入缓存
         var mkey = (TKey)(Object)key;
@@ -324,7 +324,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     {
         WriteLog(".CreateSlaveItem {0}", key);
 
-        using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:Single:{TableName}", $"CreateSlaveItem({key})");
+        //using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:Single:{TableName}", $"CreateSlaveItem({key})");
 
         // 开始更新数据，然后加入缓存
         var entity = Invoke(FindSlaveKeyMethod, key + "");
@@ -381,7 +381,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
 
         WriteLog(".UpdateData {0} Expire={1} Visit={2}", item.Key, item.ExpireTime, item.VisitTime);
 
-        using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:Single:{TableName}", $"UpdateData({key})");
+        //using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:Single:{TableName}", $"UpdateData({key})");
 
         // 先修改过期时间
         item.ExpireTime = TimerX.Now.AddSeconds(Expire);

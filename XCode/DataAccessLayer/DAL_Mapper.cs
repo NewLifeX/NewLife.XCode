@@ -147,11 +147,26 @@ namespace XCode.DataAccessLayer
         /// <returns></returns>
         public IDataReader ExecuteReader(String sql, Object param = null)
         {
-            //var ps = param?.ToDictionary();
-            var cmd = Session.CreateCommand(sql, CommandType.Text, Db.CreateParameters(param));
-            cmd.Connection = Db.OpenConnection();
+            var traceName = $"db:{ConnName}:ExecuteReader";
+            if (Tracer != null)
+            {
+                var tables = GetTables(sql);
+                if (tables.Length > 0) traceName += ":" + tables.Join("-");
+            }
+            using var span = Tracer?.NewSpan(traceName, sql);
+            try
+            {
+                //var ps = param?.ToDictionary();
+                var cmd = Session.CreateCommand(sql, CommandType.Text, Db.CreateParameters(param));
+                cmd.Connection = Db.OpenConnection();
 
-            return cmd.ExecuteReader(CommandBehavior.CloseConnection);
+                return cmd.ExecuteReader(CommandBehavior.CloseConnection);
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+                throw;
+            }
         }
 
         /// <summary>执行SQL语句，返回结果中的第一行第一列</summary>
@@ -175,10 +190,25 @@ namespace XCode.DataAccessLayer
         /// <returns></returns>
         public Task<DbDataReader> ExecuteReaderAsync(String sql, Object param = null)
         {
-            var cmd = Session.CreateCommand(sql, CommandType.Text, Db.CreateParameters(param));
-            cmd.Connection = Db.OpenConnection();
+            var traceName = $"db:{ConnName}:ExecuteReaderAsync";
+            if (Tracer != null)
+            {
+                var tables = GetTables(sql);
+                if (tables.Length > 0) traceName += ":" + tables.Join("-");
+            }
+            using var span = Tracer?.NewSpan(traceName, sql);
+            try
+            {
+                var cmd = Session.CreateCommand(sql, CommandType.Text, Db.CreateParameters(param));
+                cmd.Connection = Db.OpenConnection();
 
-            return cmd.ExecuteReaderAsync(CommandBehavior.CloseConnection);
+                return cmd.ExecuteReaderAsync(CommandBehavior.CloseConnection);
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+                throw;
+            }
         }
 
         /// <summary>执行SQL语句，返回结果中的第一行第一列</summary>

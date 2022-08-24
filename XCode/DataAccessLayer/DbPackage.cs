@@ -755,7 +755,7 @@ namespace XCode.DataAccessLayer
                 }
 
                 // 批量插入
-                using var span = Tracer?.NewSpan($"db:{dal.ConnName}:WriteDb", Table.TableName);
+                using var span = Tracer?.NewSpan($"db:{dal.ConnName}:WriteDb:{Table.TableName}", Table);
                 try
                 {
                     if (Host.BatchInsert)

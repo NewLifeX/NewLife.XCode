@@ -436,7 +436,18 @@ namespace XCode
 
             // 100w数据时，没有预热Select Count需要3000ms，预热后需要500ms
             if (dal.DbType != DatabaseType.SQLite && (count <= 0 || count >= 1_000_000) && !Table.IsView)
-                count = dal.Session.QueryCountFast(FormatedTableName);
+            {
+                using var span = dal.Tracer?.NewSpan($"db:{ConnName}:QueryCountFast:{TableName}");
+                try
+                {
+                    count = dal.Session.QueryCountFast(FormatedTableName);
+                }
+                catch (Exception ex)
+                {
+                    span?.SetError(ex, null);
+                    throw;
+                }
+            }
 
             // 查真实记录数，修正FastCount不够准确的情况
             if (/*count >= 0 &&*/ count < 10_000_000)
@@ -672,17 +683,28 @@ namespace XCode
         /// <returns></returns>
         public Int32 Truncate()
         {
-            var rs = GetDAL(false).Session.Truncate(FormatedTableName);
+            var dal = GetDAL(false);
 
-            // 干掉所有缓存
-            _cache?.Clear("Truncate", true);
-            _singleCache?.Clear("Truncate");
-            LongCount = 0;
+            using var span = dal.Tracer?.NewSpan($"db:{ConnName}:Truncate:{TableName}");
+            try
+            {
+                var rs = dal.Session.Truncate(FormatedTableName);
 
-            //// 重新初始化
-            //hasCheckInitData = false;
+                // 干掉所有缓存
+                _cache?.Clear("Truncate", true);
+                _singleCache?.Clear("Truncate");
+                LongCount = 0;
 
-            return rs;
+                //// 重新初始化
+                //hasCheckInitData = false;
+
+                return rs;
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+                throw;
+            }
         }
         #endregion
 

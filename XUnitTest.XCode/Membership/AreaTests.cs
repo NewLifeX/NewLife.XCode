@@ -262,6 +262,7 @@ namespace XUnitTest.XCode.Membership
             if (File.Exists(file.GetFullPath())) File.Delete(file.GetFullPath());
 
             var rs = Area.Export(file);
+            XTrace.WriteLine("rs={0}", rs);
             Assert.Equal(46533, rs);
             Assert.True(File.Exists(file.GetFullPath()));
 

@@ -64,6 +64,14 @@ public class UserModule : EntityModule
         return false;
     }
 
+    /// <summary>创建实体对象</summary>
+    /// <param name="entity"></param>
+    /// <param name="forEdit"></param>
+    protected override void OnCreate(IEntity entity, Boolean forEdit)
+    {
+        if (forEdit) OnValid(entity, true);
+    }
+
     /// <summary>验证数据，自动加上创建和更新的信息</summary>
     /// <param name="entity"></param>
     /// <param name="isNew"></param>
@@ -133,6 +141,14 @@ public class TimeModule : EntityModule
         }
 
         return false;
+    }
+
+    /// <summary>创建实体对象</summary>
+    /// <param name="entity"></param>
+    /// <param name="forEdit"></param>
+    protected override void OnCreate(IEntity entity, Boolean forEdit)
+    {
+        if (forEdit) OnValid(entity, true);
     }
 
     /// <summary>验证数据，自动加上创建和更新的信息</summary>

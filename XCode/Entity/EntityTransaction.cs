@@ -26,7 +26,7 @@ public class EntityTransaction<TEntity> : EntityTransaction where TEntity : Enti
     public EntityTransaction()
         : base(null as IDbSession)
     {
-        span = DAL.GlobalTracer?.NewSpan($"db:{Entity<TEntity>.Meta.ConnName}:Transaction");
+        span = DAL.GlobalTracer?.NewSpan($"db:{Entity<TEntity>.Meta.ConnName}:Transaction", typeof(TEntity).FullName);
 
         Entity<TEntity>.Meta.Session.BeginTrans();
 
@@ -39,6 +39,8 @@ public class EntityTransaction<TEntity> : EntityTransaction where TEntity : Enti
         Entity<TEntity>.Meta.Session.Commit();
 
         hasFinish = true;
+        span?.Dispose();
+        span = null;
     }
 
     /// <summary>回滚事务</summary>
@@ -49,9 +51,14 @@ public class EntityTransaction<TEntity> : EntityTransaction where TEntity : Enti
             // 回滚时忽略异常
             if (hasStart && !hasFinish) Entity<TEntity>.Meta.Session.Rollback();
         }
-        catch (Exception ex) { XTrace.WriteException(ex); }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
 
         hasFinish = true;
+        span?.Dispose();
+        span = null;
     }
 }
 
@@ -91,7 +98,7 @@ public class EntityTransaction : DisposeBase
         Session = session;
         if (session != null)
         {
-            span = DAL.GlobalTracer?.NewSpan($"db:{session.Database.ConnName}:Transaction");
+            span = DAL.GlobalTracer?.NewSpan($"db:{session.Database.ConnName}:Transaction", level);
 
             session.BeginTransaction(level);
             hasStart = true;

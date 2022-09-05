@@ -51,7 +51,9 @@ namespace XCode
             factory = factoryType?.CreateInstance() as IEntityFactory;
             if (factory == null) throw new XCodeException("无法创建[{0}]的实体工厂！", type.FullName);
 
-            _factories.TryAdd(type, factory);
+            //!!! 有可能多线程同时初始化相同实体类的实体工厂，需要避免返回不同的工厂实例，确保工厂成员的唯一性，例如雪花实例
+            //_factories.TryAdd(type, factory);
+            factory = _factories.GetOrAdd(type, factory);
 
             return factory;
         }

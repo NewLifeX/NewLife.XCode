@@ -7,6 +7,7 @@ using System.Linq;
 using NewLife;
 using NewLife.Data;
 using NewLife.IO;
+using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Serialization;
 using XCode.Configuration;
@@ -448,7 +449,7 @@ namespace XCode
                 //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
                 if (!fact.FullInsert)
                 {
-                    var dirtys = GetInsertColumns(fact, list.Cast<IEntity>());
+                    var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
                     columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
                 }
             }
@@ -512,7 +513,7 @@ namespace XCode
                 // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
                 if (!fact.FullInsert)
                 {
-                    var dirtys = GetInsertColumns(fact, list.Cast<IEntity>());
+                    var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
                     columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
                 }
             }
@@ -575,7 +576,7 @@ namespace XCode
                 // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
                 if (!fact.FullInsert)
                 {
-                    var dirtys = GetInsertColumns(fact, list.Cast<IEntity>());
+                    var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
                     columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
                 }
             }
@@ -633,7 +634,7 @@ namespace XCode
             if (updateColumns == null)
             {
                 // 所有实体对象的脏字段作为更新字段
-                var dirtys = GetInsertColumns(fact, list.Cast<IEntity>());
+                var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
                 // 创建时间等字段不参与Update
                 dirtys = dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).ToArray();
 
@@ -695,29 +696,50 @@ namespace XCode
             var fact = entity.GetType().AsFactory();
             session ??= fact.Session;
 
-            // SqlServer的批量Upsert需要主键参与，哪怕是自增，构建update的where时用到主键
+            // 批量Upsert需要主键参与，哪怕是自增，构建update的where时用到主键
             if (columns == null)
             {
-                var dbt = session.Dal.DbType;
-                if (dbt is DatabaseType.SqlServer or DatabaseType.Oracle)
-                    columns = fact.Fields.Select(e => e.Field).Where(e => !e.Identity || e.PrimaryKey).ToArray();
-                else if (dbt is DatabaseType.MySql)
+                columns = fact.Fields.Select(e => e.Field).ToArray();
+
+                if (!fact.FullInsert)
                 {
-                    // 只有标识键的情况下会导致重复执行insert方法 目前只测试了Mysql库
-                    columns = fact.Fields.Select(e => e.Field).ToArray();
+                    var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+                    columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
                 }
-                else if (dbt is DatabaseType.SQLite)
+
+                // 遇到自增字段，需要谨慎处理，部分insert部分update则无法执行upsert
+                var uk = fact.Unique;
+                if (uk != null && uk.IsIdentity)
                 {
-                    // SQLite库集合更新这里用到了Insert Into Do Update,所以不能排除主键填充，所以这里增加了 or DatabaseType.SQLite
                     // 如果所有自增字段都是0，则不参与批量Upsert
-                    var uk = fact.Unique;
-                    if (uk != null && uk.IsIdentity && list.All(e => e.IsNullKey))
-                        columns = fact.Fields.Select(e => e.Field).Where(e => !e.Identity).ToArray();
+                    if (list.All(e => (Int64)e[uk.Name] == 0))
+                        columns = columns.Where(e => !e.Identity).ToArray();
+                    else if (list.All(e => (Int64)e[uk.Name] != 0))
+                    { }
                     else
-                        columns = fact.Fields.Select(e => e.Field).ToArray();
+                        throw new NotSupportedException($"Upsert遇到自增字段，且部分为0部分不为0，无法同时支持Insert和Update");
                 }
-                else
-                    columns = fact.Fields.Select(e => e.Field).Where(e => !e.Identity).ToArray();
+
+                //var dbt = session.Dal.DbType;
+                //if (dbt is DatabaseType.SqlServer or DatabaseType.Oracle)
+                //    columns = fact.Fields.Select(e => e.Field).Where(e => !e.Identity || e.PrimaryKey).ToArray();
+                //else if (dbt is DatabaseType.MySql)
+                //{
+                //    // 只有标识键的情况下会导致重复执行insert方法 目前只测试了Mysql库
+                //    columns = fact.Fields.Select(e => e.Field).ToArray();
+                //}
+                //else if (dbt is DatabaseType.SQLite)
+                //{
+                //    // SQLite库集合更新这里用到了Insert Into Do Update,所以不能排除主键填充，所以这里增加了 or DatabaseType.SQLite
+                //    // 如果所有自增字段都是0，则不参与批量Upsert
+                //    var uk = fact.Unique;
+                //    if (uk != null && uk.IsIdentity && list.All(e => e.IsNullKey))
+                //        columns = fact.Fields.Select(e => e.Field).Where(e => !e.Identity).ToArray();
+                //    else
+                //        columns = fact.Fields.Select(e => e.Field).ToArray();
+                //}
+                //else
+                //    columns = fact.Fields.Select(e => e.Field).Where(e => !e.Identity).ToArray();
 
                 // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
                 //var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
@@ -725,17 +747,12 @@ namespace XCode
                 //    columns = columns.Where(e => e.Nullable || dirtys.Contains(e.Name)).ToArray();
                 //else
                 //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
-                if (!fact.FullInsert)
-                {
-                    var dirtys = GetInsertColumns(fact, list.Cast<IEntity>());
-                    columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
-                }
             }
             //if (updateColumns == null) updateColumns = entity.Dirtys.Keys;
             if (updateColumns == null)
             {
                 // 所有实体对象的脏字段作为更新字段
-                var dirtys = GetInsertColumns(fact, list.Cast<IEntity>());
+                var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
                 // 创建时间等字段不参与Update
                 dirtys = dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).ToArray();
 
@@ -751,6 +768,7 @@ namespace XCode
             //dal.CheckDatabase();
             //var tableName = dal.Db.FormatTableName(session.TableName);
 
+            //XTrace.WriteLine("columns={0}", columns.Join(",", e => e.ColumnName));
             var tracer = dal.Tracer ?? DAL.GlobalTracer;
             using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{fact.Table.TableName}");
             try
@@ -801,7 +819,7 @@ namespace XCode
                 //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
                 if (!fact.FullInsert)
                 {
-                    var dirtys = GetInsertColumns(fact, new[] { entity });
+                    var dirtys = GetDirtyColumns(fact, new[] { entity });
                     columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
                 }
             }
@@ -834,7 +852,7 @@ namespace XCode
         /// <param name="fact"></param>
         /// <param name="list"></param>
         /// <returns></returns>
-        private static String[] GetInsertColumns(IEntityFactory fact, IEnumerable<IEntity> list)
+        private static String[] GetDirtyColumns(IEntityFactory fact, IEnumerable<IEntity> list)
         {
             // 获取所有带有脏数据的字段
             var ns = new List<String>();

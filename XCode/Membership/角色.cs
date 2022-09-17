@@ -59,6 +59,14 @@ namespace XCode.Membership
         [BindColumn("Permission", "权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔", "")]
         public String Permission { get => _Permission; set { if (OnPropertyChanging("Permission", value)) { _Permission = value; OnPropertyChanged("Permission"); } } }
 
+        private Int32 _Sort;
+        /// <summary>排序</summary>
+        [DisplayName("排序")]
+        [Description("排序")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("Sort", "排序", "")]
+        public Int32 Sort { get => _Sort; set { if (OnPropertyChanging("Sort", value)) { _Sort = value; OnPropertyChanged("Sort"); } } }
+
         private Int32 _Ex1;
         /// <summary>扩展1</summary>
         [Category("扩展")]
@@ -210,6 +218,7 @@ namespace XCode.Membership
                     case "Enable": return _Enable;
                     case "IsSystem": return _IsSystem;
                     case "Permission": return _Permission;
+                    case "Sort": return _Sort;
                     case "Ex1": return _Ex1;
                     case "Ex2": return _Ex2;
                     case "Ex3": return _Ex3;
@@ -237,6 +246,7 @@ namespace XCode.Membership
                     case "Enable": _Enable = value.ToBoolean(); break;
                     case "IsSystem": _IsSystem = value.ToBoolean(); break;
                     case "Permission": _Permission = Convert.ToString(value); break;
+                    case "Sort": _Sort = value.ToInt(); break;
                     case "Ex1": _Ex1 = value.ToInt(); break;
                     case "Ex2": _Ex2 = value.ToInt(); break;
                     case "Ex3": _Ex3 = value.ToDouble(); break;
@@ -276,6 +286,9 @@ namespace XCode.Membership
 
             /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
             public static readonly Field Permission = FindByName("Permission");
+
+            /// <summary>排序</summary>
+            public static readonly Field Sort = FindByName("Sort");
 
             /// <summary>扩展1</summary>
             public static readonly Field Ex1 = FindByName("Ex1");
@@ -342,6 +355,9 @@ namespace XCode.Membership
 
             /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
             public const String Permission = "Permission";
+
+            /// <summary>排序</summary>
+            public const String Sort = "Sort";
 
             /// <summary>扩展1</summary>
             public const String Ex1 = "Ex1";

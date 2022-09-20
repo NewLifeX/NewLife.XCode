@@ -308,30 +308,44 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
 
     private CacheItem CreateItem<TKey2>(TKey2 key)
     {
-        WriteLog(".CreateItem {0}", key);
+        WriteLog(".CreateItem({0})", key);
+        DAL.SetSpanTag($"Single.GetItem({key})");
 
         //using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:Single:{TableName}", $"CreateItem({key})");
+        try
+        {
+            // 开始更新数据，然后加入缓存
+            var mkey = (TKey)(Object)key;
+            var entity = Invoke(FindKeyMethod, mkey);
+            if (entity == null) return null;
 
-        // 开始更新数据，然后加入缓存
-        var mkey = (TKey)(Object)key;
-        var entity = Invoke(FindKeyMethod, mkey);
-        if (entity == null) return null;
-
-        return AddItem(mkey, entity);
+            return AddItem(mkey, entity);
+        }
+        finally
+        {
+            DAL.SetSpanTag(null);
+        }
     }
 
     private CacheItem CreateSlaveItem<TKey2>(TKey2 key)
     {
-        WriteLog(".CreateSlaveItem {0}", key);
+        WriteLog(".CreateSlaveItem({0})", key);
+        DAL.SetSpanTag($"Single.GetSlave({key})");
 
         //using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:Single:{TableName}", $"CreateSlaveItem({key})");
+        try
+        {
+            // 开始更新数据，然后加入缓存
+            var entity = Invoke(FindSlaveKeyMethod, key + "");
+            if (entity == null) return null;
 
-        // 开始更新数据，然后加入缓存
-        var entity = Invoke(FindSlaveKeyMethod, key + "");
-        if (entity == null) return null;
-
-        var mkey = GetKeyMethod(entity);
-        return AddItem(mkey, entity);
+            var mkey = GetKeyMethod(entity);
+            return AddItem(mkey, entity);
+        }
+        finally
+        {
+            DAL.SetSpanTag(null);
+        }
     }
 
     /// <summary>向两个字典加入数据</summary>
@@ -380,6 +394,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         var item = state as CacheItem;
 
         WriteLog(".UpdateData {0} Expire={1} Visit={2}", item.Key, item.ExpireTime, item.VisitTime);
+        DAL.SetSpanTag($"Single.Update({item.Key}) Expire={item.ExpireTime} Visit={item.VisitTime}");
 
         //using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:Single:{TableName}", $"UpdateData({key})");
 
@@ -399,6 +414,10 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         catch (Exception ex)
         {
             XTrace.WriteLine($"[{TableName}/{ConnName}]" + ex.GetTrue());
+        }
+        finally
+        {
+            DAL.SetSpanTag(null);
         }
     }
     #endregion

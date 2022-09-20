@@ -582,7 +582,11 @@ namespace XCode.DataAccessLayer
             try
             {
                 //CheckDatabase();
-                return Db.CreateMetaData().GetTables();
+                var tables = Db.CreateMetaData().GetTables();
+
+                if (span != null) span.Tag += ": " + tables.Join(",");
+
+                return tables;
             }
             catch (Exception ex)
             {
@@ -606,7 +610,11 @@ namespace XCode.DataAccessLayer
             using var span = tracer?.NewSpan($"db:{ConnName}:GetTableNames", ConnName);
             try
             {
-                return Db.CreateMetaData().GetTableNames();
+                var tables = Db.CreateMetaData().GetTableNames();
+
+                if (span != null) span.Tag += ": " + tables.Join(",");
+
+                return tables;
             }
             catch (Exception ex)
             {

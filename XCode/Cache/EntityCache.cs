@@ -8,6 +8,7 @@ using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Threading;
+using XCode.DataAccessLayer;
 
 namespace XCode.Cache;
 
@@ -183,6 +184,7 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
         if (ts > 0) ExpiredTime = TimerX.Now.AddSeconds(Expire);
 
         WriteLog("更新（第{0}次） 原因：{1}", ts + 1, reason);
+        DAL.SetSpanTag($"{LogPrefix}更新（第{ts + 1}次） 原因：{reason}");
 
         try
         {
@@ -195,6 +197,7 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
         finally
         {
             _updating = 0;
+            DAL.SetSpanTag(null);
         }
 
         ts = Interlocked.Increment(ref _Times);

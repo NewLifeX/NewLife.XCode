@@ -95,18 +95,13 @@ namespace Test
 
         private static void Test35()
         {
-            EntityFactory.InitAll();
+            //var file = "http://x.newlifex.com/Area.csv.gz";
 
-            var dal = Role.Meta.Session.Dal;
-            var ts = dal.Tables;
+            //Area.Meta.Session.Truncate();
+            //var rs = Area.Import(file, true, 3);
 
-            var xx = DAL.Export(ts);
-
-            var ds = dal.Select("select * from role");
-            var xml = ds.GetXml();
-            Console.WriteLine(xml);
-            var sch = ds.GetXmlSchema();
-            Console.WriteLine(sch);
+            var ar = Area.FindByID(710000);
+            var list = ar.Childs;
         }
 
         private static void Test1()

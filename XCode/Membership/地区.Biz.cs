@@ -295,7 +295,8 @@ namespace XCode.Membership
             // 实体缓存
             var rs = Meta.Cache.FindAll(e => e.ParentID == parentid);
             // 有子节点，并且都是启用状态，则直接使用
-            if (rs.Count > 0 && rs.Any(e => e.Enable)) return rs;
+            //if (rs.Count > 0 && rs.Any(e => e.Enable)) return rs;
+            if (rs.Count > 0) return rs;
 
             var key = parentid + "";
             if (_pcache.TryGetValue(key, out rs)) return rs;
@@ -552,6 +553,8 @@ namespace XCode.Membership
         /// <summary>扫描预热数据</summary>
         public static Int32 Preload()
         {
+            XTrace.WriteLine("Area.Preload 地区数据预热");
+
             var layer = 2;
             var count = 0;
             var list = Root.Childs.ToArray().ToList();

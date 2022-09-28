@@ -38,9 +38,10 @@ namespace XCode.Membership
             }
 
             // 处理过长的备注
-            if (!Remark.IsNullOrEmpty() && Remark.Length > 500) Remark = Remark[..500];
+            var len = _.Remark.Length;
+            if (len > 0 && !Remark.IsNullOrEmpty() && Remark.Length > len) Remark = Remark[..len];
 
-            var len = _.UserName.Length;
+            len = _.UserName.Length;
             if (len > 0 && !UserName.IsNullOrEmpty() && UserName.Length > len) UserName = UserName[..len];
 
             base.Valid(isNew);

@@ -40,7 +40,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NewLife.Core" Version="10.0.2022.901" />
+    <PackageReference Include="NewLife.Core" Version="10.0.2022.1001" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

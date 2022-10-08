@@ -135,8 +135,13 @@ internal class SqlServer : RemoteDb
         // 从第一行开始，不需要分页
         if (startRowIndex <= 0 && maximumRows < 1) return sql;
 
+        // 先用字符串判断，命中率高，这样可以提高处理效率
+        var hasOrderBy = false;
+        if (sql.Contains(" Order ") && sql.ToLower().Contains(" order "))
+            hasOrderBy = true;
+
         // 使用MS SQL 2012特有的分页算法
-        if (IsSQL2012) return PageSplitFor2012(sql, startRowIndex, maximumRows);
+        if (hasOrderBy && IsSQL2012) return PageSplitFor2012(sql, startRowIndex, maximumRows);
 
         var builder = new SelectBuilder();
         builder.Parse(sql);
@@ -198,16 +203,16 @@ internal class SqlServer : RemoteDb
             return builder.Clone().Top(maximumRows);
         }
 
+        // 修复无主键分页报错的情况
+        if (builder.Key.IsNullOrEmpty() && builder.OrderBy.IsNullOrEmpty()) throw new XCodeException("分页算法要求指定排序列！" + builder.ToString());
+
         // Sql2012，非首页
-        if (IsSQL2012)
+        if (IsSQL2012 && !builder.OrderBy.IsNullOrEmpty())
         {
             builder = builder.Clone();
             builder.Limit = $"offset {startRowIndex} rows fetch next {maximumRows} rows only";
             return builder;
         }
-
-        // 修复无主键分页报错的情况
-        if (builder.Key.IsNullOrEmpty() && builder.OrderBy.IsNullOrEmpty()) throw new XCodeException("分页算法要求指定排序列！" + builder.ToString());
 
         // 如果包含分组，则必须作为子查询
         var builder1 = builder.CloneWithGroupBy("XCode_T0", true);

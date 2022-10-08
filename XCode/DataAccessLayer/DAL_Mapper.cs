@@ -87,6 +87,8 @@ namespace XCode.DataAccessLayer
             var start = (page.PageIndex - 1) * page.PageSize;
             var max = page.PageSize;
 
+            if (!page.OrderBy.IsNullOrEmpty()) sql += " " + page.OrderBy;
+
             return Query<T>(sql, param, start, max);
         }
 

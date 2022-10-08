@@ -712,9 +712,9 @@ namespace XCode
                 if (uk != null && uk.IsIdentity)
                 {
                     // 如果所有自增字段都是0，则不参与批量Upsert
-                    if (list.All(e => (Int64)e[uk.Name] == 0))
+                    if (list.All(e => e[uk.Name].ToLong() == 0))
                         columns = columns.Where(e => !e.Identity).ToArray();
-                    else if (list.All(e => (Int64)e[uk.Name] != 0))
+                    else if (list.All(e => e[uk.Name].ToLong() != 0))
                     { }
                     else
                         throw new NotSupportedException($"Upsert遇到自增字段，且部分为0部分不为0，无法同时支持Insert和Update");

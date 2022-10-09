@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NewLife;
+using NewLife.Data;
 using NewLife.Log;
 using NewLife.Security;
 using XCode;
@@ -367,5 +368,38 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.Equal("ok", result3);
 
         }
+        [Fact]
+        public void QuerySqlTest()
+        {
+             var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
+
+            DAL.AddConnStr("sysSqlServerv", connStr, null, "SqlServer");
+            var dal = DAL.Create("sysSqlServerv");
+
+            
+            dal.Query<Role>("select * from Role order by id");
+
+            var p1 = new PageParameter() { PageSize = 20, PageIndex = 1, Sort = "Id", RetrieveTotalCount = true, Desc = false };
+            dal.Query<Role>("select * from Role ", null, p1);
+
+            var p2 = new PageParameter() { PageSize = 20, PageIndex = 1, Sort = "Id", RetrieveTotalCount = true, Desc = false };
+            dal.Query<Role>("select * from Role", null, p2);
+
+
+            dal.Query<Role>("select * from Role order by id");
+
+            var p11 = new PageParameter() { PageSize = 20, PageIndex = 2, Sort = "Id", RetrieveTotalCount = true, Desc = false };
+            dal.Query<Role>("select * from Role ", null, p11);
+
+            var p21 = new PageParameter() { PageSize = 20, PageIndex = 2, Sort = "Id", RetrieveTotalCount = true, Desc = false };
+            dal.Query<Role>("select * from Role", null, p21);
+            // 清理现场
+            //try
+            //{
+            //    dal.Execute("drop database membership_test");
+            //}
+            //catch (Exception ex) { XTrace.WriteException(ex); }
+        }
+
     }
 }

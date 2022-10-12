@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -101,6 +102,40 @@ namespace XCode.Membership
         /// <summary>父级</summary>
         [Map(__.ParentID, typeof(Department), __.ID)]
         public String ParentName => Parent?.ToString();
+
+        /// <summary>父级路径</summary>
+        public String ParentPath
+        {
+            get
+            {
+                var list = new List<Department>();
+                var ids = new List<Int32>();
+                var p = Parent;
+                while (p != null && !ids.Contains(p.ID))
+                {
+                    list.Add(p);
+                    ids.Add(p.ID);
+
+                    p = p.Parent;
+                }
+                if (list != null && list.Count > 0) return list.Where(r => r.Visible).Join("/", r => r.Name);
+
+                return Parent?.Name;
+            }
+        }
+
+        /// <summary>路径</summary>
+        public String Path
+        {
+            get
+            {
+                var p = ParentPath;
+                if (p.IsNullOrEmpty()) return Name;
+                if (!Visible) return p;
+
+                return p + "/" + Name;
+            }
+        }
         #endregion
 
         #region 扩展查询

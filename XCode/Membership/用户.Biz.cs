@@ -137,7 +137,7 @@ namespace XCode.Membership
         /// <summary>部门</summary>
         [Category("登录信息")]
         [Map(__.DepartmentID, typeof(Department), __.ID)]
-        public String DepartmentName => Department?.ToString();
+        public String DepartmentName => Department?.Path;
 
         /// <summary>
         /// 地区名

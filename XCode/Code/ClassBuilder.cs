@@ -70,6 +70,8 @@ public class ClassBuilder
             option.ConnName = atts["ConnName"];
             option.DisplayName = atts["DisplayName"];
             option.BaseClass = atts["BaseClass"];
+
+            option.Items = atts;
         }
 
         // 保存文件名

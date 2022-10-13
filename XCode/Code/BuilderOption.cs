@@ -48,6 +48,9 @@ public class BuilderOption
 
     /// <summary>显示名</summary>
     public String DisplayName { get; set; }
+
+    /// <summary>扩展数据</summary>
+    public IDictionary<String,String> Items { get; set; }
     #endregion
 
     #region 构造

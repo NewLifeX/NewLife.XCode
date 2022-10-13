@@ -40,6 +40,11 @@ namespace XCode.Code
             atts["ConnName"] = option.ConnName + "";
             atts["DisplayName"] = option.DisplayName + "";
             atts["BaseClass"] = option.BaseClass + "";
+
+            // 生成决定是否生成魔方代码
+            atts["CubeOutput"] = option.Items?["CubeOutput"];
+
+            // 清理不再使用的历史配置项
             atts.Remove("NameIgnoreCase");
             atts.Remove("IgnoreNameCase");
             atts.Remove("ChineseFileName");

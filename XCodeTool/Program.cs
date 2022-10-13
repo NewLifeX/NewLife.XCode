@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using NewLife;
 using NewLife.Log;
 using XCode;
@@ -62,7 +63,7 @@ class Program
             var xml = ms.ToStr();
 
             file = Environment.CurrentDirectory.CombinePath("Model.xml");
-            File.WriteAllText(file, xml);
+            File.WriteAllText(file, xml, Encoding.UTF8);
         }
     }
 
@@ -158,6 +159,9 @@ class Program
             var opt = option.Clone();
             if (opt.Items != null && opt.Items.TryGetValue("CubeOutput", out var output) && !output.IsNullOrEmpty())
             {
+                opt.BaseClass = null;
+                //opt.Namespace = null;
+
                 opt.Output = output;
                 CubeBuilder.BuildArea(opt);
 

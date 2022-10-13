@@ -92,7 +92,7 @@ namespace XCode.Code
             {
                 if (Debug) XTrace.WriteLine("修正模型：{0}", xmlFile);
 
-                File.WriteAllText(xmlFile, xml2);
+                File.WriteAllText(xmlFile, xml2, Encoding.UTF8);
             }
         }
 

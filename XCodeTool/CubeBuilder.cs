@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NewLife;
 using NewLife.Log;
 using XCode.Code;
@@ -31,7 +32,7 @@ namespace {Project}.Areas.{Name}
 }";
 
     /// <summary>控制器模版</summary>
-    public String ControllerTemplate { get; set; } = @"using {Namespace};
+    public String ControllerTemplate { get; set; } = @"using {EntityNamespace};
 using NewLife;
 using NewLife.Cube;
 using NewLife.Cube.Extensions;
@@ -44,9 +45,9 @@ namespace {Project}.Areas.{Name}.Controllers
     /// <summary>{DisplayName}</summary>
     [Menu(10, true, Icon = ""fa-table"")]
     [{Name}Area]
-    public class {ClassName}Controller : {ControllerBase}<{ClassName}>
+    public class {ClassName} : {BaseClass}<{EntityName}>
     {
-        static {ClassName}Controller()
+        static {ClassName}()
         {
             //LogOnChange = true;
 
@@ -61,11 +62,11 @@ namespace {Project}.Areas.{Name}.Controllers
             //    var df = ListFields.AddListField(""devices"", null, ""Onlines"");
             //    df.DisplayName = ""查看设备"";
             //    df.Url = ""Device?groupId={Id}"";
-            //    df.DataVisible = e => (e as {ClassName}).Devices > 0;
+            //    df.DataVisible = e => (e as {EntityName}).Devices > 0;
             //}
             //{
             //    var df = ListFields.GetField(""Kind"") as ListField;
-            //    df.GetValue = e => ((Int32)(e as {ClassName}).Kind).ToString(""X4"");
+            //    df.GetValue = e => ((Int32)(e as {EntityName}).Kind).ToString(""X4"");
             //}
             //ListFields.TraceUrl(""TraceId"");
         }
@@ -73,14 +74,14 @@ namespace {Project}.Areas.{Name}.Controllers
         /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
         /// <param name=""p"">分页器。包含分页排序参数，以及Http请求参数</param>
         /// <returns></returns>
-        protected override IEnumerable<{ClassName}> Search(Pager p)
+        protected override IEnumerable<{EntityName}> Search(Pager p)
         {
             //var deviceId = p[""deviceId""].ToInt(-1);
 
             var start = p[""dtStart""].ToDateTime();
             var end = p[""dtEnd""].ToDateTime();
 
-            return {ClassName}.Search(start, end, p[""Q""], p);
+            return {EntityName}.Search(start, end, p[""Q""], p);
         }
     }
 }";
@@ -121,7 +122,7 @@ namespace {Project}.Areas.{Name}.Controllers
 
         // 输出到文件
         file.EnsureDirectory(true);
-        File.WriteAllText(file, code);
+        File.WriteAllText(file, code, Encoding.UTF8);
 
         return 1;
     }
@@ -143,6 +144,10 @@ namespace {Project}.Areas.{Name}.Controllers
         else
             project = option.ConnName + "Web";
 
+        if (option.ClassNameTemplate.IsNullOrEmpty()) option.ClassNameTemplate = "{name}Controller";
+        //if (option.Namespace.IsNullOrEmpty()) option.Namespace = $"{project}.Areas.{option.ConnName}.Controllers";
+        //if (option.BaseClass.IsNullOrEmpty()) option.BaseClass = "EntityController";
+
         if (Debug) XTrace.WriteLine("生成控制器 {0}", option.Output.GetBasePath());
 
         var count = 0;
@@ -160,10 +165,18 @@ namespace {Project}.Areas.{Name}.Controllers
             };
             if (Debug) builder.Log = XTrace.Log;
 
+            if (builder.Option.BaseClass.IsNullOrEmpty())
+            {
+                if (item.InsertOnly)
+                    builder.Option.BaseClass = "ReadOnlyEntityController";
+                else
+                    builder.Option.BaseClass = "EntityController";
+            }
+
             builder.Load(item);
 
             builder.Execute();
-            builder.Save("Controller.cs", false, false);
+            builder.Save(null, false, false);
 
             count++;
         }
@@ -179,13 +192,14 @@ namespace {Project}.Areas.{Name}.Controllers
         var opt = Option;
         var code = ControllerTemplate;
 
-        code = code.Replace("{Namespace}", opt.Namespace);
+        code = code.Replace("{EntityNamespace}", opt.Namespace);
         code = code.Replace("{ClassName}", ClassName);
+        code = code.Replace("{EntityName}", Table.Name);
         code = code.Replace("{Project}", Project);
         code = code.Replace("{Name}", opt.ConnName);
         code = code.Replace("{DisplayName}", Table.Description);
 
-        code = code.Replace("{ControllerBase}", Table.InsertOnly ? "ReadOnlyEntityController" : "EntityController");
+        code = code.Replace("{BaseClass}", GetBaseClass());
 
         if (Table.Columns.Any(c => c.Name.EqualIgnoreCase("TraceId")))
             code = code.Replace("//ListFields.TraceUrl(", "ListFields.TraceUrl(");

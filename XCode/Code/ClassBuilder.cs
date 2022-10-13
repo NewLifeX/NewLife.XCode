@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
@@ -588,7 +589,7 @@ public class ClassBuilder
 
         p = p.GetBasePath();
 
-        if (!File.Exists(p) || overwrite) File.WriteAllText(p.EnsureDirectory(true), ToString());
+        if (!File.Exists(p) || overwrite) File.WriteAllText(p.EnsureDirectory(true), ToString(), Encoding.UTF8);
 
         return p;
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NewLife;
 using NewLife.Log;
 using XCode.DataAccessLayer;
@@ -106,7 +107,7 @@ namespace XCode.Code
             }
 
             // 输出到文件
-            File.WriteAllText(file, writer.ToString());
+            File.WriteAllText(file, writer.ToString(), Encoding.UTF8);
 
             return count;
         }

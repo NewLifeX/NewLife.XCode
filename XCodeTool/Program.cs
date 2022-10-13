@@ -165,7 +165,6 @@ class Program
                 opt.Output = output;
                 CubeBuilder.BuildArea(opt);
 
-                opt.Output = output.CombinePath("Controllers");
                 CubeBuilder.BuildControllers(tables, opt);
             }
         }

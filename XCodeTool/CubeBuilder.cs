@@ -14,15 +14,21 @@ namespace XCode;
 public class CubeBuilder : ClassBuilder
 {
     #region 属性
-    /// <summary>项目名</summary>
-    public String Project { get; set; }
+    /// <summary>区域名</summary>
+    public String AreaName { get; set; }
+
+    /// <summary>根命名空间</summary>
+    public String RootNamespace { get; set; }
+
+    /// <summary>菜单排序</summary>
+    public Int32 Sort { get; set; }
 
     /// <summary>区域模版</summary>
     public String AreaTemplate { get; set; } = @"using System.ComponentModel;
 using NewLife;
 using NewLife.Cube;
 
-namespace {Project}.Areas.{Name}
+namespace {RootNamespace}.Areas.{Name}
 {
     [DisplayName(""{DisplayName}"")]
     public class {Name}Area : AreaBase
@@ -40,10 +46,10 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using XCode.Membership;
 
-namespace {Project}.Areas.{Name}.Controllers
+namespace {RootNamespace}.Areas.{Name}.Controllers
 {
     /// <summary>{DisplayName}</summary>
-    [Menu(10, true, Icon = ""fa-table"")]
+    [Menu({Sort}, true, Icon = ""fa-table"")]
     [{Name}Area]
     public class {ClassName} : {BaseClass}<{EntityName}>
     {
@@ -105,18 +111,21 @@ namespace {Project}.Areas.{Name}.Controllers
         // 文件已存在，不要覆盖
         if (File.Exists(file)) return 0;
 
+        // 根命名空间
+        var root = FindProjectRootNamespace(option.Output);
+        if (root.IsNullOrEmpty()) root = option.ConnName + "Web";
+
         if (Debug) XTrace.WriteLine("生成魔方区域 {0}", file);
 
-        var builder = new CubeBuilder();
-        if (option.Items != null && option.Items.TryGetValue("CubeProject", out var project))
-            builder.Project = project;
-        else
-            builder.Project = option.ConnName + "Web";
+        var builder = new CubeBuilder
+        {
+            RootNamespace = root
+        };
 
         var code = builder.AreaTemplate;
 
         //code = code.Replace("{Namespace}", option.Namespace);
-        code = code.Replace("{Project}", builder.Project);
+        code = code.Replace("{RootNamespace}", builder.RootNamespace);
         code = code.Replace("{Name}", option.ConnName);
         code = code.Replace("{DisplayName}", option.DisplayName);
 
@@ -138,19 +147,33 @@ namespace {Project}.Areas.{Name}.Controllers
         else
             option = option.Clone();
 
-        var project = "";
-        if (option.Items != null && option.Items.TryGetValue("CubeProject", out var str))
-            project = str;
-        else
-            project = option.ConnName + "Web";
+        // 根命名空间
+        var root = FindProjectRootNamespace(option.Output);
+        if (root.IsNullOrEmpty()) root = option.ConnName + "Web";
+
+        // 自动识别并修正区域名（主要是大小写）
+        var areaName = option.ConnName;
+        foreach (var fi in option.Output.AsDirectory().GetFiles("*Area.cs"))
+        {
+            var txt = File.ReadAllText(fi.FullName);
+            var str = txt.Substring("public class", "AreaBase")?.Trim(' ', ':');
+            if (!str.IsNullOrEmpty())
+            {
+                areaName = str.TrimEnd("Area");
+                break;
+            }
+        }
 
         if (option.ClassNameTemplate.IsNullOrEmpty()) option.ClassNameTemplate = "{name}Controller";
         //if (option.Namespace.IsNullOrEmpty()) option.Namespace = $"{project}.Areas.{option.ConnName}.Controllers";
         //if (option.BaseClass.IsNullOrEmpty()) option.BaseClass = "EntityController";
 
+        option.Output = option.Output.CombinePath("Controllers");
+
         if (Debug) XTrace.WriteLine("生成控制器 {0}", option.Output.GetBasePath());
 
         var count = 0;
+        var n = tables.Count;
         foreach (var item in tables)
         {
             // 跳过排除项
@@ -161,7 +184,10 @@ namespace {Project}.Areas.{Name}.Controllers
             {
                 Table = item,
                 Option = option.Clone(),
-                Project = project,
+
+                AreaName = areaName,
+                RootNamespace = root,
+                Sort = n * 10,
             };
             if (Debug) builder.Log = XTrace.Log;
 
@@ -179,9 +205,72 @@ namespace {Project}.Areas.{Name}.Controllers
             builder.Save(null, false, false);
 
             count++;
+            n--;
         }
 
         return count;
+    }
+
+    /// <summary>在指定目录中查找项目名</summary>
+    /// <param name="dir"></param>
+    /// <returns></returns>
+    static String FindProjectRootNamespace(String dir)
+    {
+        var di = dir.AsDirectory();
+        if (di.Exists)
+        {
+            foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
+            {
+                var ns = Path.GetFileNameWithoutExtension(fi.FullName);
+
+                var xml = File.ReadAllText(fi.FullName);
+                if (!xml.IsNullOrEmpty())
+                {
+                    var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
+                    if (!str.IsNullOrEmpty()) ns = str;
+                }
+
+                if (!ns.IsNullOrEmpty()) return ns;
+            }
+        }
+
+        di = di.Parent;
+        if (di.Exists)
+        {
+            foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
+            {
+                var ns = Path.GetFileNameWithoutExtension(fi.FullName);
+
+                var xml = File.ReadAllText(fi.FullName);
+                if (!xml.IsNullOrEmpty())
+                {
+                    var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
+                    if (!str.IsNullOrEmpty()) ns = str;
+                }
+
+                if (!ns.IsNullOrEmpty()) return ns;
+            }
+        }
+
+        di = di.Parent;
+        if (di.Exists)
+        {
+            foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
+            {
+                var ns = Path.GetFileNameWithoutExtension(fi.FullName);
+
+                var xml = File.ReadAllText(fi.FullName);
+                if (!xml.IsNullOrEmpty())
+                {
+                    var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
+                    if (!str.IsNullOrEmpty()) ns = str;
+                }
+
+                if (!ns.IsNullOrEmpty()) return ns;
+            }
+        }
+
+        return null;
     }
     #endregion
 
@@ -195,9 +284,10 @@ namespace {Project}.Areas.{Name}.Controllers
         code = code.Replace("{EntityNamespace}", opt.Namespace);
         code = code.Replace("{ClassName}", ClassName);
         code = code.Replace("{EntityName}", Table.Name);
-        code = code.Replace("{Project}", Project);
-        code = code.Replace("{Name}", opt.ConnName);
+        code = code.Replace("{RootNamespace}", RootNamespace);
+        code = code.Replace("{Name}", AreaName);
         code = code.Replace("{DisplayName}", Table.Description);
+        code = code.Replace("{Sort}", Sort + "");
 
         code = code.Replace("{BaseClass}", GetBaseClass());
 

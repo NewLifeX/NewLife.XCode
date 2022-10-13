@@ -237,22 +237,27 @@ namespace XCode.Code
                 baseClass += "IExtend";
             }
 
-            var bs = baseClass?.Split(',').Select(e => e.Trim()).ToArray();
+            var bs = baseClass?.Split(',').Select(e => e.Trim()).ToList() ?? new List<String>();
 
             // 数据类的基类只有接口，业务类基类则比较复杂
             var name = "";
             if (Business)
             {
                 // 数据类只要实体基类
-                name = bs?.FirstOrDefault(e => e.Contains("Entity"));
+                name = bs.FirstOrDefault(e => e.Contains("Entity"));
                 if (name.IsNullOrEmpty()) name = "Entity";
 
                 name = $"{name}<{ClassName}>";
             }
             else
             {
+                // 有可能实现了接口拷贝
+                var model = Option.ModelNameForCopy;
+                if (!model.IsNullOrEmpty() && model.StartsWith("I")) bs.Add(model);
+
                 // 数据类不要实体基类
-                name = bs?.Where(e => !e.Contains("Entity")).Join(", ");
+                bs = bs.Where(e => !e.Contains("Entity")).ToList();
+                if (bs.Count > 0) name = bs.Distinct().Join(", ");
             }
 
             return name?.Replace("{name}", ClassName);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NewLife;
 using NewLife.Reflection;
+using XCode.Configuration;
 
 namespace XCode
 {
@@ -77,8 +78,15 @@ namespace XCode
             var key = Key;
             var mst = fact.Master?.Name;
 
+            if (key.IsNullOrEmpty()) key = fact.Unique?.Name;
             if (key.IsNullOrEmpty()) throw new ArgumentNullException("没有设置关联键", nameof(Key));
             if (mst.IsNullOrEmpty()) throw new ArgumentNullException("没有设置主要字段");
+
+            // 修正字段大小写，用户书写Map特性时，可能把字段名大小写写错
+            if (fact.Table.FindByName(key) is FieldItem fi)
+            {
+                key = fi.Name;
+            }
 
             // 数据较少时，从缓存读取
             var list = fact.Session.Count < 1000 ? fact.FindAllWithCache() : fact.FindAll("", null, null, 0, 100);

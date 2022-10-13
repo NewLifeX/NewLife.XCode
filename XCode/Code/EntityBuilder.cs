@@ -43,6 +43,7 @@ namespace XCode.Code
 
             // 生成决定是否生成魔方代码
             atts["CubeOutput"] = option.Items?["CubeOutput"];
+            atts["CubeProject"] = option.Items?["CubeProject"];
 
             // 清理不再使用的历史配置项
             atts.Remove("NameIgnoreCase");

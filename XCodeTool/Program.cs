@@ -159,9 +159,10 @@ class Program
             if (opt.Items != null && opt.Items.TryGetValue("CubeOutput", out var output) && !output.IsNullOrEmpty())
             {
                 opt.Output = output;
-
                 CubeBuilder.BuildArea(opt);
-                CubeBuilder.BuildController(tables, opt);
+
+                opt.Output = output.CombinePath("Controllers");
+                CubeBuilder.BuildControllers(tables, opt);
             }
         }
     }

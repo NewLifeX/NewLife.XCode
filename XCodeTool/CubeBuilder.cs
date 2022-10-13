@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.VisualBasic.FileIO;
 using NewLife;
 using NewLife.Log;
 using XCode.Code;
@@ -14,6 +13,9 @@ namespace XCode;
 public class CubeBuilder : ClassBuilder
 {
     #region 属性
+    /// <summary>项目名</summary>
+    public String Project { get; set; }
+
     /// <summary>区域模版</summary>
     public String AreaTemplate { get; set; } = @"using System.ComponentModel;
 using NewLife;
@@ -37,33 +39,48 @@ using NewLife.Cube.ViewModels;
 using NewLife.Web;
 using XCode.Membership;
 
-namespace GpsWeb.Areas.Gps.Controllers
+namespace {Project}.Areas.{Name}.Controllers
 {
-    [Menu(30, true)]
-    [GpsArea]
-    public class TirePressureController : ReadOnlyEntityController<TirePressure>
+    /// <summary>{DisplayName}</summary>
+    [Menu(10, true, Icon = ""fa-table"")]
+    [{Name}Area]
+    public class {ClassName}Controller : {ControllerBase}<{ClassName}>
     {
-        static TirePressureController()
+        static {ClassName}Controller()
         {
-            ListFields.RemoveField(""Id"", ""Creator"");
+            //LogOnChange = true;
 
-            {
-                var df = ListFields.GetField(""TraceId"") as ListField;
-                df.DisplayName = ""跟踪"";
-                df.Url = StarHelper.BuildUrl(""{TraceId}"");
-                df.DataVisible = e => !(e as TirePressure).TraceId.IsNullOrEmpty();
-            }
+            //ListFields.RemoveField(""Id"", ""Creator"");
+            ListFields.RemoveCreateField();
+
+            //{
+            //    var df = ListFields.GetField(""Code"") as ListField;
+            //    df.Url = ""?code={Code}"";
+            //}
+            //{
+            //    var df = ListFields.AddListField(""devices"", null, ""Onlines"");
+            //    df.DisplayName = ""查看设备"";
+            //    df.Url = ""Device?groupId={Id}"";
+            //    df.DataVisible = e => (e as {ClassName}).Devices > 0;
+            //}
+            //{
+            //    var df = ListFields.GetField(""Kind"") as ListField;
+            //    df.GetValue = e => ((Int32)(e as {ClassName}).Kind).ToString(""X4"");
+            //}
+            //ListFields.TraceUrl(""TraceId"");
         }
 
-        protected override IEnumerable<TirePressure> Search(Pager p)
+        /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
+        /// <param name=""p"">分页器。包含分页排序参数，以及Http请求参数</param>
+        /// <returns></returns>
+        protected override IEnumerable<{ClassName}> Search(Pager p)
         {
-            var deviceId = p[""deviceId""].ToInt(-1);
-            var provider = p[""provider""];
+            //var deviceId = p[""deviceId""].ToInt(-1);
 
             var start = p[""dtStart""].ToDateTime();
             var end = p[""dtEnd""].ToDateTime();
 
-            return TirePressure.Search(deviceId, provider, start, end, p[""Q""], p);
+            return {ClassName}.Search(start, end, p[""Q""], p);
         }
     }
 }";
@@ -90,10 +107,15 @@ namespace GpsWeb.Areas.Gps.Controllers
         if (Debug) XTrace.WriteLine("生成魔方区域 {0}", file);
 
         var builder = new CubeBuilder();
+        if (option.Items != null && option.Items.TryGetValue("CubeProject", out var project))
+            builder.Project = project;
+        else
+            builder.Project = option.ConnName + "Web";
+
         var code = builder.AreaTemplate;
 
         //code = code.Replace("{Namespace}", option.Namespace);
-        code = code.Replace("{Project}", option.ConnName + "Web");
+        code = code.Replace("{Project}", builder.Project);
         code = code.Replace("{Name}", option.ConnName);
         code = code.Replace("{DisplayName}", option.DisplayName);
 
@@ -108,48 +130,43 @@ namespace GpsWeb.Areas.Gps.Controllers
     /// <param name="tables">表集合</param>
     /// <param name="option">可选项</param>
     /// <returns></returns>
-    public static Int32 BuildController(IList<IDataTable> tables, BuilderOption option = null)
+    public static Int32 BuildControllers(IList<IDataTable> tables, BuilderOption option = null)
     {
         if (option == null)
             option = new BuilderOption();
         else
             option = option.Clone();
 
-        var file = option.ConnName;
-        if (file.IsNullOrEmpty()) file = "Model";
-        file += ".htm";
-        file = file.GetBasePath();
+        var project = "";
+        if (option.Items != null && option.Items.TryGetValue("CubeProject", out var str))
+            project = str;
+        else
+            project = option.ConnName + "Web";
 
-        if (Debug) XTrace.WriteLine("生成控制器 {0}", file);
+        if (Debug) XTrace.WriteLine("生成控制器 {0}", option.Output.GetBasePath());
 
         var count = 0;
-        var writer = new StringWriter();
-
         foreach (var item in tables)
         {
             // 跳过排除项
             if (option.Excludes.Contains(item.Name)) continue;
             if (option.Excludes.Contains(item.TableName)) continue;
 
-            var builder = new HtmlBuilder
+            var builder = new CubeBuilder
             {
-                Writer = writer,
                 Table = item,
                 Option = option.Clone(),
+                Project = project,
             };
             if (Debug) builder.Log = XTrace.Log;
 
             builder.Load(item);
 
-            // 执行生成
             builder.Execute();
-            //builder.Save(null, true, false);
+            builder.Save("Controller.cs", false, false);
 
             count++;
         }
-
-        // 输出到文件
-        File.WriteAllText(file, writer.ToString());
 
         return count;
     }
@@ -159,99 +176,40 @@ namespace GpsWeb.Areas.Gps.Controllers
     /// <summary>生成前</summary>
     protected override void OnExecuting()
     {
-        if (Table.DisplayName.IsNullOrEmpty())
-            WriteLine("<h3>{0}</h3>", Table.TableName);
-        else
-            WriteLine("<h3>{0}（{1}）</h3>", Table.DisplayName, Table.TableName);
+        var opt = Option;
+        var code = ControllerTemplate;
 
-        WriteLine("<table>");
-        {
-            WriteLine("<thead>");
-            WriteLine("<tr>");
-            WriteLine("<th>名称</th>");
-            WriteLine("<th>显示名</th>");
-            WriteLine("<th>类型</th>");
-            WriteLine("<th>长度</th>");
-            WriteLine("<th>精度</th>");
-            WriteLine("<th>主键</th>");
-            WriteLine("<th>允许空</th>");
-            WriteLine("<th>备注</th>");
-            WriteLine("</tr>");
-            WriteLine("</thead>");
-        }
-        WriteLine("<tbody>");
+        code = code.Replace("{Namespace}", opt.Namespace);
+        code = code.Replace("{ClassName}", ClassName);
+        code = code.Replace("{Project}", Project);
+        code = code.Replace("{Name}", opt.ConnName);
+        code = code.Replace("{DisplayName}", Table.Description);
+
+        code = code.Replace("{ControllerBase}", Table.InsertOnly ? "ReadOnlyEntityController" : "EntityController");
+
+        if (Table.Columns.Any(c => c.Name.EqualIgnoreCase("TraceId")))
+            code = code.Replace("//ListFields.TraceUrl(", "ListFields.TraceUrl(");
+
+        Writer.Write(code);
     }
 
     /// <summary>生成后</summary>
-    protected override void OnExecuted()
-    {
-        WriteLine("</tbody>");
-        WriteLine("</table>");
-
-        WriteLine("<br></br>");
-    }
+    protected override void OnExecuted() { }
 
     /// <summary>生成主体</summary>
-    protected override void BuildItems()
-    {
-        for (var i = 0; i < Table.Columns.Count; i++)
-        {
-            var column = Table.Columns[i];
-
-            // 跳过排除项
-            if (!ValidColumn(column)) continue;
-
-            if (i > 0) WriteLine();
-            BuildItem(column);
-        }
-    }
-
-    /// <summary>生成项</summary>
-    /// <param name="column"></param>
-    protected override void BuildItem(IDataColumn column)
-    {
-        WriteLine("<tr>");
-        {
-            WriteLine("<td>{0}</td>", column.ColumnName);
-            WriteLine("<td>{0}</td>", column.DisplayName);
-            WriteLine("<td>{0}</td>", column.RawType ?? column.DataType?.FullName.TrimStart("System."));
-
-            if (column.Length > 0)
-                WriteLine("<td>{0}</td>", column.Length);
-            else
-                WriteLine("<td></td>");
-
-            if (column.Precision > 0 || column.Scale > 0)
-                WriteLine("<td>({0}, {1})</td>", column.Precision, column.Scale);
-            else
-                WriteLine("<td></td>");
-
-            if (column.Identity)
-                WriteLine("<td title=\"自增\">AI</td>");
-            else if (column.PrimaryKey)
-                WriteLine("<td title=\"主键\">PK</td>");
-            else if (Table.Indexes.Any(e => e.Unique && e.Columns.Length == 1 && e.Columns[0].EqualIgnoreCase(column.Name, column.ColumnName)))
-                WriteLine("<td title=\"唯一索引\">UQ</td>");
-            else
-                WriteLine("<td></td>");
-
-            WriteLine("<td>{0}</td>", column.Nullable ? "" : "N");
-            WriteLine("<td>{0}</td>", column.Description?.TrimStart(column.DisplayName).TrimStart("。", "，"));
-        }
-        WriteLine("</tr>");
-    }
+    protected override void BuildItems() { }
     #endregion
 
     #region 辅助
-    /// <summary>写入</summary>
-    /// <param name="value"></param>
-    protected override void WriteLine(String value = null)
-    {
-        if (!value.IsNullOrEmpty() && value.Length > 2 && value[0] == '<' && value[1] == '/') SetIndent(false);
+    ///// <summary>写入</summary>
+    ///// <param name="value"></param>
+    //protected override void WriteLine(String value = null)
+    //{
+    //    if (!value.IsNullOrEmpty() && value.Length > 2 && value[0] == '<' && value[1] == '/') SetIndent(false);
 
-        base.WriteLine(value);
+    //    base.WriteLine(value);
 
-        if (!value.IsNullOrEmpty() && value.Length > 2 && value[0] == '<' && value[1] != '/' && !value.Contains("</")) SetIndent(true);
-    }
+    //    if (!value.IsNullOrEmpty() && value.Length > 2 && value[0] == '<' && value[1] != '/' && !value.Contains("</")) SetIndent(true);
+    //}
     #endregion
 }

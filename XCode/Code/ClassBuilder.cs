@@ -567,6 +567,9 @@ public class ClassBuilder
 
     #region 保存
     /// <summary>保存文件，返回文件路径</summary>
+    /// <param name="ext">扩展名，默认.cs</param>
+    /// <param name="overwrite">是否覆盖目标文件</param>
+    /// <param name="chineseFileName">是否使用中文名</param>
     public virtual String Save(String ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
     {
         var p = Option.Output;

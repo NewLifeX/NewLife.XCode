@@ -98,6 +98,7 @@ namespace GpsWeb.Areas.Gps.Controllers
         code = code.Replace("{DisplayName}", option.DisplayName);
 
         // 输出到文件
+        file.EnsureDirectory(true);
         File.WriteAllText(file, code);
 
         return 1;

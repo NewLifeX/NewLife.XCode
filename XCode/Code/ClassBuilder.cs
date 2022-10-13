@@ -68,8 +68,8 @@ public class ClassBuilder
             option.Output = atts["Output"] ?? Path.GetDirectoryName(xmlFile);
             option.Namespace = atts["NameSpace"] ?? Path.GetFileNameWithoutExtension(xmlFile);
             option.ConnName = atts["ConnName"];
-            option.BaseClass = atts["BaseClass"];
             option.DisplayName = atts["DisplayName"];
+            option.BaseClass = atts["BaseClass"];
         }
 
         // 保存文件名

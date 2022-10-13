@@ -38,8 +38,8 @@ namespace XCode.Code
             atts["Output"] = option.Output + "";
             atts["NameSpace"] = option.Namespace + "";
             atts["ConnName"] = option.ConnName + "";
-            atts["BaseClass"] = option.BaseClass + "";
             atts["DisplayName"] = option.DisplayName + "";
+            atts["BaseClass"] = option.BaseClass + "";
             atts.Remove("NameIgnoreCase");
             atts.Remove("IgnoreNameCase");
             atts.Remove("ChineseFileName");

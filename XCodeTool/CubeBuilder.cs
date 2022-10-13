@@ -104,7 +104,16 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
         else
             option = option.Clone();
 
-        var file = $"{option.ConnName}Area.cs";
+        // 自动识别并修正区域名（主要是大小写）
+        var areaName = FindAreaName(option.Output);
+        if (!areaName.IsNullOrEmpty()) return 0;
+
+        // 优先使用路径最后一段作为区域名，其次再用连接名
+        areaName = Path.GetFileNameWithoutExtension(option.Output);
+        if (areaName.IsNullOrEmpty())
+            areaName = option.ConnName;
+
+        var file = $"{areaName}Area.cs";
         file = option.Output.CombinePath(file);
         file = file.GetBasePath();
 
@@ -115,7 +124,7 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
         var root = FindProjectRootNamespace(option.Output);
         if (root.IsNullOrEmpty()) root = option.ConnName + "Web";
 
-        if (Debug) XTrace.WriteLine("生成魔方区域 {0}", file);
+        if (Debug) XTrace.WriteLine("生成魔方区域 {0} {1}", areaName, file);
 
         var builder = new CubeBuilder
         {
@@ -126,7 +135,7 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
 
         //code = code.Replace("{Namespace}", option.Namespace);
         code = code.Replace("{RootNamespace}", builder.RootNamespace);
-        code = code.Replace("{Name}", option.ConnName);
+        code = code.Replace("{Name}", areaName);
         code = code.Replace("{DisplayName}", option.DisplayName);
 
         // 输出到文件
@@ -152,21 +161,10 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
         if (root.IsNullOrEmpty()) root = option.ConnName + "Web";
 
         // 自动识别并修正区域名（主要是大小写）
-        var areaName = option.ConnName;
-        foreach (var fi in option.Output.AsDirectory().GetFiles("*Area.cs"))
-        {
-            var txt = File.ReadAllText(fi.FullName);
-            var str = txt.Substring("public class", "AreaBase")?.Trim(' ', ':');
-            if (!str.IsNullOrEmpty())
-            {
-                areaName = str.TrimEnd("Area");
-                break;
-            }
-        }
+        var areaName = FindAreaName(option.Output);
+        if (areaName.IsNullOrEmpty()) areaName = option.ConnName;
 
         if (option.ClassNameTemplate.IsNullOrEmpty()) option.ClassNameTemplate = "{name}Controller";
-        //if (option.Namespace.IsNullOrEmpty()) option.Namespace = $"{project}.Areas.{option.ConnName}.Controllers";
-        //if (option.BaseClass.IsNullOrEmpty()) option.BaseClass = "EntityController";
 
         option.Output = option.Output.CombinePath("Controllers");
 
@@ -209,6 +207,24 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
         }
 
         return count;
+    }
+
+    static String FindAreaName(String dir)
+    {
+        var di = dir.AsDirectory();
+        if (!di.Exists) return null;
+
+        foreach (var fi in di.GetFiles("*Area.cs"))
+        {
+            var txt = File.ReadAllText(fi.FullName);
+            var str = txt.Substring("public class", "AreaBase")?.Trim(' ', ':');
+            if (!str.IsNullOrEmpty())
+            {
+                return str.TrimEnd("Area");
+            }
+        }
+
+        return null;
     }
 
     /// <summary>在指定目录中查找项目名</summary>

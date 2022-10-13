@@ -39,6 +39,7 @@ namespace XCode.Code
             atts["NameSpace"] = option.Namespace + "";
             atts["ConnName"] = option.ConnName + "";
             atts["BaseClass"] = option.BaseClass + "";
+            atts["DisplayName"] = option.DisplayName + "";
             atts.Remove("NameIgnoreCase");
             atts.Remove("IgnoreNameCase");
             atts.Remove("ChineseFileName");

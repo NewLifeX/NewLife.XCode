@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using NewLife;
 using NewLife.Log;
+using XCode;
 using XCode.Code;
 
 namespace XCodeTool
@@ -139,6 +140,10 @@ namespace XCodeTool
 
             // 生成数据字典
             HtmlBuilder.BuildDataDictionary(tables, option);
+
+            // 生成魔方区域和控制器
+            CubeBuilder.BuildArea(option);
+            CubeBuilder.BuildController(tables, option);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -504,6 +505,20 @@ public class ClassBuilder
         }
         WriteLine("}");
         WriteLine("#endregion");
+    }
+
+    /// <summary>生成实体转模型函数</summary>
+    /// <param name="modelClass"></param>
+    /// <param name="modelInterface"></param>
+    protected virtual void BuildEntityToModel(String modelClass, String modelInterface)
+    {
+        WriteLine($"public {modelInterface} ToModel()");
+        WriteLine("{");
+        WriteLine($"var model = new {modelClass}();");
+        WriteLine("model.Copy(this);");
+        WriteLine("");
+        WriteLine(" return model;");
+        WriteLine("}");
     }
     #endregion
 

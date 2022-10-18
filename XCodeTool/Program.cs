@@ -94,6 +94,7 @@ class Program
             //opt.BaseClass = null;
             opt.ClassNameTemplate = null;
             opt.ModelNameForCopy = null;
+            opt.ModelNameForToModel = modelClass;
             if (!modelInterface.IsNullOrEmpty())
             {
                 //opt.BaseClass = modelInterface;

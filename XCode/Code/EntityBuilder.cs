@@ -131,6 +131,11 @@ namespace XCode.Code
                 };
                 if (Debug) builder.Log = XTrace.Log;
 
+                if (option.ModelNameForToModel.IsNullOrEmpty())
+                {
+                    option.ModelNameForToModel = item.Name;
+                }
+
                 builder.Load(item);
 
                 builder.Execute();
@@ -1165,6 +1170,8 @@ namespace XCode.Code
         protected virtual void BuildBusiness()
         {
             WriteLine("#region 业务操作");
+            BuildEntityToModel(Option.ModelNameForToModel.Replace("{name}", ClassName), Option.ModelNameForCopy.Replace("{name}", ClassName));
+            WriteLine("");
             WriteLine("#endregion");
         }
         #endregion

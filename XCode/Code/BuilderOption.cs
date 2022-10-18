@@ -37,6 +37,9 @@ public class BuilderOption
     /// <summary>用于生成拷贝函数的模型类。例如{name}或I{name}</summary>
     public String ModelNameForCopy { get; set; }
 
+    /// <summary>用户实体转为模型类的模型类。例如{name}或{name}DTO</summary>
+    public String ModelNameForToModel { get; set; }
+
     /// <summary>排除项。要排除的表或者字段，不区分大小写</summary>
     public ICollection<String> Excludes { get; set; } = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
 
@@ -50,7 +53,7 @@ public class BuilderOption
     public String DisplayName { get; set; }
 
     /// <summary>扩展数据</summary>
-    public IDictionary<String,String> Items { get; set; }
+    public IDictionary<String, String> Items { get; set; }
     #endregion
 
     #region 构造

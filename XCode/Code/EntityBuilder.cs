@@ -384,15 +384,7 @@ namespace XCode.Code
         protected override void BuildItems()
         {
             if (Business)
-            {
                 BuildBiz();
-                var model = Option.ModelNameForCopy;
-                if (!Option.Interface && !model.IsNullOrEmpty())
-                {
-                    WriteLine();
-                    BuildCopy(model.Replace("{name}", Table.Name));
-                }
-            }
             else
             {
                 base.BuildItems();

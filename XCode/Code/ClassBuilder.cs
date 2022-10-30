@@ -345,6 +345,16 @@ public class ClassBuilder
             WriteLine();
             BuildExtend();
         }
+
+        // 生成拷贝函数。需要有基类
+        //var bs = Option.BaseClass.Split(",").Select(e => e.Trim()).ToArray();
+        //var model = bs.FirstOrDefault(e => e[0] == 'I' && e.Contains("{name}"));
+        var model = Option.ModelNameForCopy;
+        if (!Option.Interface && !model.IsNullOrEmpty())
+        {
+            WriteLine();
+            BuildCopy(model.Replace("{name}", Table.Name));
+        }
     }
 
     /// <summary>生成每一项</summary>

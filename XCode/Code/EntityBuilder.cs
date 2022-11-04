@@ -1170,8 +1170,12 @@ namespace XCode.Code
         protected virtual void BuildBusiness()
         {
             WriteLine("#region 业务操作");
-            BuildEntityToModel(Option.ModelNameForToModel.Replace("{name}", ClassName), Option.ModelNameForCopy.Replace("{name}", ClassName));
-            WriteLine("");
+            var toModel = Option.ModelNameForToModel;
+            if (!toModel.IsNullOrEmpty())
+            {
+                BuildEntityToModel(toModel.Replace("{name}", ClassName), Option.ModelNameForCopy.Replace("{name}", ClassName));
+                WriteLine("");
+            }
             WriteLine("#endregion");
         }
         #endregion

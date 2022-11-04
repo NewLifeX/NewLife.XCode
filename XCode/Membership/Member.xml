@@ -121,6 +121,7 @@
       <Column Name="Icon" DataType="String" Description="图标" />
       <Column Name="Visible" DataType="Boolean" Description="可见" />
       <Column Name="Necessary" DataType="Boolean" Description="必要。必要的菜单，必须至少有角色拥有这些权限，如果没有则自动授权给系统角色" />
+      <Column Name="NewWindow" DataType="Boolean" Description="新窗口。新窗口打开链接" />
       <Column Name="Permission" DataType="String" Length="200" Description="权限子项。逗号分隔，每个权限子项名值竖线分隔" />
       <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
       <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />

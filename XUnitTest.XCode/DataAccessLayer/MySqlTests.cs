@@ -78,7 +78,10 @@ namespace XUnitTest.XCode.DataAccessLayer
 
             using var conn = db.OpenConnection();
             connstr = conn.ConnectionString;
-            Assert.EndsWith("characterset=utf8mb4;sslmode=Disabled;allowpublickeyretrieval=True", connstr);
+            //Assert.EndsWith("characterset=utf8mb4;sslmode=Disabled;allowpublickeyretrieval=True", connstr);
+            Assert.Contains("characterset=utf8mb4", connstr);
+            Assert.Contains("sslmode=", connstr);
+            Assert.Contains("allowpublickeyretrieval=True", connstr);
 
             var ver = db.ServerVersion;
             Assert.NotEmpty(ver);

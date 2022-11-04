@@ -100,6 +100,14 @@ namespace XCode.Membership
         [BindColumn("Necessary", "必要。必要的菜单，必须至少有角色拥有这些权限，如果没有则自动授权给系统角色", "")]
         public Boolean Necessary { get => _Necessary; set { if (OnPropertyChanging("Necessary", value)) { _Necessary = value; OnPropertyChanged("Necessary"); } } }
 
+        private Boolean _NewWindow;
+        /// <summary>新窗口。新窗口打开链接</summary>
+        [DisplayName("新窗口")]
+        [Description("新窗口。新窗口打开链接")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("NewWindow", "新窗口。新窗口打开链接", "")]
+        public Boolean NewWindow { get => _NewWindow; set { if (OnPropertyChanging("NewWindow", value)) { _NewWindow = value; OnPropertyChanged("NewWindow"); } } }
+
         private String _Permission;
         /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
         [DisplayName("权限子项")]
@@ -264,6 +272,7 @@ namespace XCode.Membership
                     case "Icon": return _Icon;
                     case "Visible": return _Visible;
                     case "Necessary": return _Necessary;
+                    case "NewWindow": return _NewWindow;
                     case "Permission": return _Permission;
                     case "Ex1": return _Ex1;
                     case "Ex2": return _Ex2;
@@ -297,6 +306,7 @@ namespace XCode.Membership
                     case "Icon": _Icon = Convert.ToString(value); break;
                     case "Visible": _Visible = value.ToBoolean(); break;
                     case "Necessary": _Necessary = value.ToBoolean(); break;
+                    case "NewWindow": _NewWindow = value.ToBoolean(); break;
                     case "Permission": _Permission = Convert.ToString(value); break;
                     case "Ex1": _Ex1 = value.ToInt(); break;
                     case "Ex2": _Ex2 = value.ToInt(); break;
@@ -352,6 +362,9 @@ namespace XCode.Membership
 
             /// <summary>必要。必要的菜单，必须至少有角色拥有这些权限，如果没有则自动授权给系统角色</summary>
             public static readonly Field Necessary = FindByName("Necessary");
+
+            /// <summary>新窗口。新窗口打开链接</summary>
+            public static readonly Field NewWindow = FindByName("NewWindow");
 
             /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
             public static readonly Field Permission = FindByName("Permission");
@@ -436,6 +449,9 @@ namespace XCode.Membership
 
             /// <summary>必要。必要的菜单，必须至少有角色拥有这些权限，如果没有则自动授权给系统角色</summary>
             public const String Necessary = "Necessary";
+
+            /// <summary>新窗口。新窗口打开链接</summary>
+            public const String NewWindow = "NewWindow";
 
             /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
             public const String Permission = "Permission";

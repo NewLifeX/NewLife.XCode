@@ -368,7 +368,8 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.Equal("ok", result3);
 
         }
-        [Fact]
+
+        [Fact(Skip = "跳过")]
         public void QuerySqlTest()
         {
              var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");

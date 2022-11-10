@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema id="Model2022"
-    targetNamespace="http://newlifex.com/Model2022.xsd"
+    targetNamespace="https://newlifex.com/Model2022.xsd"
     elementFormDefault="qualified"
-    xmlns="http://newlifex.com/Model2022.xsd"
-    xmlns:mstns="http://newlifex.com/Model2022.xsd"
+    xmlns="https://newlifex.com/Model2022.xsd"
+    xmlns:mstns="https://newlifex.com/Model2022.xsd"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
 >
   <xs:annotation>
@@ -46,13 +46,6 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="ChineseFileName" type="BooleanType">
-      <xs:annotation>
-        <xs:documentation xml:lang="zh-cn">
-          是否使用中文作为实体类文件名
-        </xs:documentation>
-      </xs:annotation>
-    </xs:attribute>
     <xs:attribute name="ModelClass" type="xs:string">
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">
@@ -71,6 +64,27 @@
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">
           数据库名称格式，可选 Default/Upper/Lower/Underline
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="ChineseFileName" type="BooleanType">
+      <xs:annotation>
+        <xs:documentation xml:lang="zh-cn">
+          是否使用中文作为实体类文件名
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="DisplayName" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="zh-cn">
+          模块名称
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="CubeOutput" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="zh-cn">
+          魔方输出目录
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -303,6 +317,13 @@
       <xs:annotation>
         <xs:documentation>
           允许空
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="DefaultValue" type="BooleanType">
+      <xs:annotation>
+        <xs:documentation>
+          默认值
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

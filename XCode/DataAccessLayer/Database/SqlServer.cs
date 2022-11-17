@@ -1137,7 +1137,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
             var db = Database as DbBase;
             var tracer = db.Tracer;
             if (schema is not DDLSchema.BackupDatabase and not DDLSchema.RestoreDatabase) tracer = null;
-            using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
+            using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
 
             var dbname = "";
             var file = "";

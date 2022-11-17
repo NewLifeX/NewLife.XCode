@@ -915,6 +915,45 @@ internal class SQLiteMetaData : FileDbMetaData
         base.CheckTable(entitytable, dbtable, mode);
     }
 
+    protected override void CreateTable(StringBuilder sb, IDataTable table, Boolean onlySql)
+    {
+        // 创建表失败后，不再处理注释和索引
+        if (!PerformSchema(sb, onlySql, DDLSchema.CreateTable, table)) return;
+
+        // SQLite表和字段不支持注释
+        //// 加上表注释
+        //if (!String.IsNullOrEmpty(table.Description)) PerformSchema(sb, onlySql, DDLSchema.AddTableDescription, table);
+
+        //// 加上字段注释
+        //foreach (var item in table.Columns)
+        //{
+        //    if (!String.IsNullOrEmpty(item.Description)) PerformSchema(sb, onlySql, DDLSchema.AddColumnDescription, item);
+        //}
+
+        // 加上索引
+        if (table.Indexes != null)
+        {
+            var ids = new List<String>();
+            foreach (var item in table.Indexes)
+            {
+                if (item.PrimaryKey) continue;
+                // 如果索引全部就是主键，无需创建索引
+                if (table.GetColumns(item.Columns).All(e => e.PrimaryKey)) continue;
+
+                // 索引不能重复，不缺分大小写，但字段相同而顺序不同，算作不同索引
+                var key = item.Columns.Join(",").ToLower();
+                if (ids.Contains(key))
+                    WriteLog("[{0}]索引重复 {1}({2})", table.TableName, item.Name, item.Columns.Join(","));
+                else
+                {
+                    ids.Add(key);
+
+                    PerformSchema(sb, onlySql, DDLSchema.CreateIndex, item);
+                }
+            }
+        }
+    }
+
     public override String CompactDatabaseSQL() => "VACUUM";
 
     //public override Int32 CompactDatabase() => Database.CreateSession().Execute("VACUUM");

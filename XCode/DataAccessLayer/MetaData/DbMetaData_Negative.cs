@@ -140,7 +140,7 @@ internal partial class DbMetaData
 
                 // 在MySql中，可能存在同名表（大小写不一致），需要先做确定查找，再做不区分大小写的查找
                 var dbtable = dbtables?.FirstOrDefault(e => e.TableName == name);
-                if (dbtable == null) dbtable = dbtables?.FirstOrDefault(e => e.TableName.EqualIgnoreCase(name));
+                dbtable ??= dbtables?.FirstOrDefault(e => e.TableName.EqualIgnoreCase(name));
 
                 // 判断指定表是否存在于数据库中，以决定是创建表还是修改表
                 if (dbtable != null)

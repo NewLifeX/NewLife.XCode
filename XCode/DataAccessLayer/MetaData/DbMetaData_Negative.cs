@@ -309,17 +309,18 @@ internal partial class DbMetaData
         {
             foreach (var item in dbdis.ToArray())
             {
-                // 计算的索引不需要删除
-                //if (item.Computed) continue;
-
                 // 主键的索引不能删
                 if (item.PrimaryKey) continue;
 
-                var di = ModelHelper.GetIndex(entitytable, item.Columns);
-                if (di != null && di.Unique == item.Unique) continue;
+                // 实体类中索引列名可能是属性名而不是字段名，需要转换
+                var dcs = entitytable.GetColumns(item.Columns);
 
-                PerformSchema(sb, noDelete, DDLSchema.DropIndex, item);
-                dbdis.Remove(item);
+                var di = ModelHelper.GetIndex(entitytable, dcs.Select(e => e.ColumnName).ToArray());
+                if (di == null)
+                {
+                    PerformSchema(sb, noDelete, DDLSchema.DropIndex, item);
+                    dbdis.Remove(item);
+                }
             }
         }
         #endregion
@@ -333,11 +334,12 @@ internal partial class DbMetaData
             {
                 if (item.PrimaryKey) continue;
 
-                var di = ModelHelper.GetIndex(dbtable, item.Columns);
-                // 计算出来的索引，也表示没有，需要创建
-                if (di != null && di.Unique == item.Unique) continue;
-                //// 如果这个索引的唯一字段是主键，则无需建立索引
-                //if (item.Columns.Length == 1 && entitytable.GetColumn(item.Columns[0]).PrimaryKey) continue;
+                // 实体类中索引列名可能是属性名而不是字段名，需要转换
+                var dcs = entitytable.GetColumns(item.Columns);
+
+                var di = ModelHelper.GetIndex(dbtable, dcs.Select(e => e.ColumnName).ToArray());
+                //// 计算出来的索引，也表示没有，需要创建
+                //if (di != null && di.Unique == item.Unique) continue;
                 // 如果索引全部就是主键，无需创建索引
                 if (entitytable.GetColumns(item.Columns).All(e => e.PrimaryKey)) continue;
 
@@ -349,7 +351,8 @@ internal partial class DbMetaData
                 {
                     ids.Add(key);
 
-                    PerformSchema(sb, onlySql, DDLSchema.CreateIndex, item);
+                    if (di == null)
+                        PerformSchema(sb, onlySql, DDLSchema.CreateIndex, item);
                 }
 
                 if (di == null)

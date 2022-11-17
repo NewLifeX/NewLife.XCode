@@ -261,7 +261,8 @@ internal partial class DbMetaData
                 WriteLog("字段{0}.{1}类型需要由数据库的{2}改变为实体的{3}", entitytable.Name, item.Name, dbf.DataType, item.DataType);
                 PerformSchema(sb, noDelete, DDLSchema.AlterColumn, item, dbf);
             }
-            if (IsColumnChanged(item, dbf, entityDb)) PerformSchema(sb, noDelete, DDLSchema.AlterColumn, item, dbf);
+            else if (IsColumnChanged(item, dbf, entityDb))
+                PerformSchema(sb, noDelete, DDLSchema.AlterColumn, item, dbf);
 
             //if (item.Description + "" != dbf.Description + "")
             if (FormatDescription(item.Description) != FormatDescription(dbf.Description))
@@ -427,7 +428,7 @@ internal partial class DbMetaData
         return true;
     }
 
-    protected virtual String ReBuildTable(IDataTable entitytable, IDataTable dbtable)
+    protected virtual String RebuildTable(IDataTable entitytable, IDataTable dbtable)
     {
         // 通过重建表的方式修改字段
         var tableName = dbtable.TableName;
@@ -438,6 +439,14 @@ internal partial class DbMetaData
         // 每个分号后面故意加上空格，是为了让DbMetaData执行SQL时，不要按照分号加换行来拆分这个SQL语句
         var sb = new StringBuilder();
         //sb.AppendLine("BEGIN TRANSACTION; ");
+
+        // 释放旧索引
+        foreach (var di in dbtable.Indexes)
+        {
+            sb.Append(DropIndexSQL(di));
+            sb.AppendLine("; ");
+        }
+
         sb.Append(RenameTable(tableName, tempTableName));
         sb.AppendLine("; ");
         sb.Append(CreateTableSQL(entitytable));
@@ -535,6 +544,16 @@ internal partial class DbMetaData
             sb.AppendFormat("Insert Into {0} Select * From {1}", tableName, tempTableName);
         }
         sb.AppendLine("; ");
+
+        // 创建新索引
+        var sb2 = new StringBuilder();
+        CreateIndexes(sb2, entitytable, true);
+        if (sb2.Length > 0)
+        {
+            sb.Append(sb2.ToString().Replace(";" + Environment.NewLine, "; " + Environment.NewLine));
+            sb.AppendLine("; ");
+        }
+
         sb.AppendFormat("Drop Table {0}", tempTableName);
         //sb.AppendLine("; ");
         //sb.Append("COMMIT;");
@@ -645,6 +664,11 @@ internal partial class DbMetaData
         }
 
         // 加上索引
+        CreateIndexes(sb, table, onlySql);
+    }
+
+    void CreateIndexes(StringBuilder sb, IDataTable table, Boolean onlySql)
+    {
         if (table.Indexes != null)
         {
             var ids = new List<String>();

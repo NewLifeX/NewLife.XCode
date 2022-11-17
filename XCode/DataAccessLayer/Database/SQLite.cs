@@ -835,13 +835,18 @@ internal class SQLiteMetaData : FileDbMetaData
             return null;
         }
 
+        var db = Database as DbBase;
+        using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:SetSchema:RebuildTable", sql);
+
         var sql2 = sql;
 
-        sql = ReBuildTable(entitytable, dbtable);
+        sql = RebuildTable(entitytable, dbtable);
         if (sql.IsNullOrEmpty() || onlySql) return sql;
 
         // 输出日志，说明重建表的理由
         WriteLog("SQLite需要重建表，因无法执行：{0}", sql2);
+
+        span?.SetTag(sql);
 
         var flag = true;
         // 如果设定不允许删
@@ -873,8 +878,10 @@ internal class SQLiteMetaData : FileDbMetaData
             }
             session.Commit();
         }
-        catch
+        catch (Exception ex)
         {
+            span?.SetError(ex, null);
+
             session.Rollback();
             throw;
         }
@@ -945,6 +952,8 @@ internal class SQLiteMetaData : FileDbMetaData
 
         return base.IsColumnTypeChanged(entityColumn, dbColumn);
     }
+
+    //public override String AlterColumnSQL(IDataColumn field, IDataColumn oldfield) => null;
 
     public override String CompactDatabaseSQL() => "VACUUM";
 

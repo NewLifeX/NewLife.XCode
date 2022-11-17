@@ -1397,9 +1397,9 @@ internal class SqlServerMetaData : RemoteDbMetaData
             return base.RenameTable(tableName, tempTableName);
     }
 
-    protected override String ReBuildTable(IDataTable entitytable, IDataTable dbtable)
+    protected override String RebuildTable(IDataTable entitytable, IDataTable dbtable)
     {
-        var sql = base.ReBuildTable(entitytable, dbtable);
+        var sql = base.RebuildTable(entitytable, dbtable);
         if (String.IsNullOrEmpty(sql)) return sql;
 
         // 特殊处理带标识列的表，需要增加SET IDENTITY_INSERT
@@ -1430,10 +1430,10 @@ internal class SqlServerMetaData : RemoteDbMetaData
         if (field.Identity && !oldfield.Identity)
         {
             //return DropColumnSQL(oldfield) + ";" + Environment.NewLine + AddColumnSQL(field);
-            return ReBuildTable(field.Table, oldfield.Table);
+            return RebuildTable(field.Table, oldfield.Table);
         }
         // 类型改变，必须重建表
-        if (IsColumnTypeChanged(field, oldfield)) return ReBuildTable(field.Table, oldfield.Table);
+        if (IsColumnTypeChanged(field, oldfield)) return RebuildTable(field.Table, oldfield.Table);
 
         var sql = $"Alter Table {FormatName(field.Table)} Alter Column {FieldClause(field, false)}";
         var pk = DeletePrimaryKeySQL(field);

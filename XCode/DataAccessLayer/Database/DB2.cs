@@ -901,23 +901,23 @@ namespace XCode.DataAccessLayer
         };
 
         #region 架构定义
-        public override Object SetSchema(DDLSchema schema, params Object[] values)
-        {
-            var session = Database.CreateSession();
+        //public override Object SetSchema(DDLSchema schema, params Object[] values)
+        //{
+        //    var session = Database.CreateSession();
 
-            var dbname = String.Empty;
-            var databaseName = String.Empty;
-            switch (schema)
-            {
-                case DDLSchema.DatabaseExist:
-                    // DB2不支持判断数据库是否存在
-                    return true;
+        //    var dbname = String.Empty;
+        //    var databaseName = String.Empty;
+        //    switch (schema)
+        //    {
+        //        case DDLSchema.DatabaseExist:
+        //            // DB2不支持判断数据库是否存在
+        //            return true;
 
-                default:
-                    break;
-            }
-            return base.SetSchema(schema, values);
-        }
+        //        default:
+        //            break;
+        //    }
+        //    return base.SetSchema(schema, values);
+        //}
 
         public override String DatabaseExistSQL(String dbname) => String.Empty;
 

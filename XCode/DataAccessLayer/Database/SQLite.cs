@@ -669,17 +669,24 @@ internal class SQLiteMetaData : FileDbMetaData
     #region 数据定义
     public override Object SetSchema(DDLSchema schema, params Object[] values)
     {
-        switch (schema)
         {
-            case DDLSchema.BackupDatabase:
-                var dbname = FileName;
-                if (!dbname.IsNullOrEmpty()) dbname = Path.GetFileNameWithoutExtension(dbname);
-                var file = "";
-                if (values != null && values.Length > 0) file = values[0] as String;
-                return Backup(dbname, file, false);
+            var db = Database as DbBase;
+            var tracer = db.Tracer;
+            if (schema is not DDLSchema.BackupDatabase) tracer = null;
+            using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
 
-            default:
-                break;
+            switch (schema)
+            {
+                case DDLSchema.BackupDatabase:
+                    var dbname = FileName;
+                    if (!dbname.IsNullOrEmpty()) dbname = Path.GetFileNameWithoutExtension(dbname);
+                    var file = "";
+                    if (values != null && values.Length > 0) file = values[0] as String;
+                    return Backup(dbname, file, false);
+
+                default:
+                    break;
+            }
         }
         return base.SetSchema(schema, values);
     }
@@ -910,6 +917,6 @@ internal class SQLiteMetaData : FileDbMetaData
 
     public override String CompactDatabaseSQL() => "VACUUM";
 
-    public override Int32 CompactDatabase() => Database.CreateSession().Execute("VACUUM");
+    //public override Int32 CompactDatabase() => Database.CreateSession().Execute("VACUUM");
     #endregion
 }

@@ -98,19 +98,26 @@ namespace XCode.DataAccessLayer
         /// <returns></returns>
         public override Object SetSchema(DDLSchema schema, Object[] values)
         {
-            //Object obj = null;
-            switch (schema)
             {
-                case DDLSchema.CreateDatabase:
-                    CreateDatabase();
-                    return null;
-                case DDLSchema.DropDatabase:
-                    DropDatabase();
-                    return null;
-                case DDLSchema.DatabaseExist:
-                    return File.Exists(FileName);
-                default:
-                    break;
+                var db = Database as DbBase;
+                var tracer = db.Tracer;
+                if (schema is not DDLSchema.DatabaseExist and not DDLSchema.CreateDatabase and not DDLSchema.DropDatabase) tracer = null;
+                using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
+
+                //Object obj = null;
+                switch (schema)
+                {
+                    case DDLSchema.CreateDatabase:
+                        CreateDatabase();
+                        return null;
+                    case DDLSchema.DropDatabase:
+                        DropDatabase();
+                        return null;
+                    case DDLSchema.DatabaseExist:
+                        return File.Exists(FileName);
+                    default:
+                        break;
+                }
             }
             return base.SetSchema(schema, values);
         }

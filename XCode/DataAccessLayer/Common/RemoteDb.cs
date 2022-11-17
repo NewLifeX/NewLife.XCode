@@ -199,46 +199,55 @@ abstract class RemoteDbMetaData : DbMetaData
     #region 架构定义
     public override Object SetSchema(DDLSchema schema, params Object[] values)
     {
-        var session = Database.CreateSession();
-        var databaseName = Database.DatabaseName;
-
-        // ahuang 2014.06.12  类型强制转string的bug
-        if (values != null && values.Length > 0 && values[0] is String str && !str.IsNullOrEmpty()) databaseName = str;
-
-        switch (schema)
         {
-            //case DDLSchema.TableExist:
-            //    return session.QueryCount(GetSchemaSQL(schema, values)) > 0;
+            var db = Database as DbBase;
+            var tracer = db.Tracer;
+            if (schema is not DDLSchema.DatabaseExist and not DDLSchema.CreateDatabase) tracer = null;
+            using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
 
-            case DDLSchema.DatabaseExist:
-                return DatabaseExist(databaseName);
+            var session = Database.CreateSession();
+            var databaseName = Database.DatabaseName;
 
-            case DDLSchema.CreateDatabase:
-                values = new Object[] { databaseName, values == null || values.Length < 2 ? null : values[1] };
+            // ahuang 2014.06.12  类型强制转string的bug
+            if (values != null && values.Length > 0 && values[0] is String str && !str.IsNullOrEmpty()) databaseName = str;
 
-                var sql = base.GetSchemaSQL(schema, values);
-                if (sql.IsNullOrEmpty()) return null;
+            switch (schema)
+            {
+                //case DDLSchema.TableExist:
+                //    return session.QueryCount(GetSchemaSQL(schema, values)) > 0;
 
-                if (session is RemoteDbSession ss)
-                {
-                    ss.WriteSQL(sql);
-                    return ss.ProcessWithSystem((s, c) =>
+                case DDLSchema.DatabaseExist:
+                    return DatabaseExist(databaseName);
+
+                case DDLSchema.CreateDatabase:
+                    values = new Object[] { databaseName, values == null || values.Length < 2 ? null : values[1] };
+
+                    var sql = base.GetSchemaSQL(schema, values);
+                    if (sql.IsNullOrEmpty()) return null;
+
+                    if (span != null) span.Tag += Environment.NewLine + sql;
+
+                    if (session is RemoteDbSession ss)
                     {
-                        using var cmd = Database.Factory.CreateCommand();
-                        cmd.Connection = c;
-                        cmd.CommandText = sql;
+                        ss.WriteSQL(sql);
+                        return ss.ProcessWithSystem((s, c) =>
+                        {
+                            using var cmd = Database.Factory.CreateCommand();
+                            cmd.Connection = c;
+                            cmd.CommandText = sql;
 
-                        return cmd.ExecuteNonQuery();
-                    });
-                }
+                            return cmd.ExecuteNonQuery();
+                        });
+                    }
 
-                return 0;
+                    return 0;
 
-            //case DDLSchema.DropDatabase:
-            //    return DropDatabase(databaseName);
+                //case DDLSchema.DropDatabase:
+                //    return DropDatabase(databaseName);
 
-            default:
-                break;
+                default:
+                    break;
+            }
         }
         return base.SetSchema(schema, values);
     }

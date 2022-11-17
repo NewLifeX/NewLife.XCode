@@ -257,6 +257,9 @@ abstract class DbBase : DisposeBase, IDatabase
 
     /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
     public Int32 CommandTimeout { get; set; }
+
+    /// <summary>性能追踪器</summary>
+    public ITracer Tracer { get; set; }
     #endregion
 
     #region 方法

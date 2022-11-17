@@ -915,43 +915,35 @@ internal class SQLiteMetaData : FileDbMetaData
         base.CheckTable(entitytable, dbtable, mode);
     }
 
-    protected override void CreateTable(StringBuilder sb, IDataTable table, Boolean onlySql)
+    protected override Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
     {
-        // 创建表失败后，不再处理注释和索引
-        if (!PerformSchema(sb, onlySql, DDLSchema.CreateTable, table)) return;
-
         // SQLite表和字段不支持注释
-        //// 加上表注释
-        //if (!String.IsNullOrEmpty(table.Description)) PerformSchema(sb, onlySql, DDLSchema.AddTableDescription, table);
-
-        //// 加上字段注释
-        //foreach (var item in table.Columns)
-        //{
-        //    if (!String.IsNullOrEmpty(item.Description)) PerformSchema(sb, onlySql, DDLSchema.AddColumnDescription, item);
-        //}
-
-        // 加上索引
-        if (table.Indexes != null)
+        switch (schema)
         {
-            var ids = new List<String>();
-            foreach (var item in table.Indexes)
-            {
-                if (item.PrimaryKey) continue;
-                // 如果索引全部就是主键，无需创建索引
-                if (table.GetColumns(item.Columns).All(e => e.PrimaryKey)) continue;
-
-                // 索引不能重复，不缺分大小写，但字段相同而顺序不同，算作不同索引
-                var key = item.Columns.Join(",").ToLower();
-                if (ids.Contains(key))
-                    WriteLog("[{0}]索引重复 {1}({2})", table.TableName, item.Name, item.Columns.Join(","));
-                else
-                {
-                    ids.Add(key);
-
-                    PerformSchema(sb, onlySql, DDLSchema.CreateIndex, item);
-                }
-            }
+            case DDLSchema.AddTableDescription:
+            case DDLSchema.DropTableDescription:
+            case DDLSchema.AddColumnDescription:
+            case DDLSchema.DropColumnDescription:
+                return true;
+            default:
+                break;
         }
+        return base.PerformSchema(sb, onlySql, schema, values);
+    }
+
+    protected override Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)
+    {
+        var type1 = entityColumn.DataType;
+        var type2 = dbColumn.DataType;
+
+        // SQLite只有一种整数，不去比较类型差异
+        if (type1 == type2) return false;
+        if (type1.IsInt() && type2.IsInt()) return false;
+        //if ((type1 == typeof(Int32) || type1 == typeof(Int64)) &&
+        //    (type2 == typeof(Int32) || type2 == typeof(Int64)))
+        //    return false;
+
+        return base.IsColumnTypeChanged(entityColumn, dbColumn);
     }
 
     public override String CompactDatabaseSQL() => "VACUUM";

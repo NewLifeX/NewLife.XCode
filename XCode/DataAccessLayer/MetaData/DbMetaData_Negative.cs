@@ -190,9 +190,6 @@ internal partial class DbMetaData
     /// <returns></returns>
     protected virtual String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean onlySql, Boolean noDelete)
     {
-        //var onlySql = mode <= Migration.ReadOnly;
-        //var noDelete = mode < Migration.Full;
-
         var sb = new StringBuilder();
         var etdic = entitytable.Columns.ToDictionary(e => e.ColumnName.ToLower(), e => e, StringComparer.OrdinalIgnoreCase);
         var dbdic = dbtable.Columns.ToDictionary(e => e.ColumnName.ToLower(), e => e, StringComparer.OrdinalIgnoreCase);
@@ -556,7 +553,8 @@ internal partial class DbMetaData
     /// <param name="onlySql"></param>
     /// <param name="schema"></param>
     /// <param name="values"></param>
-    protected Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
+    /// <returns>返回是否成功</returns>
+    protected virtual Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
     {
         var sql = GetSchemaSQL(schema, values);
         if (!String.IsNullOrEmpty(sql))

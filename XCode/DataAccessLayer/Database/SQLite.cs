@@ -822,7 +822,7 @@ internal class SQLiteMetaData : FileDbMetaData
         }
 
         // 把onlySql设为true，让基类只产生语句而不执行
-        var sql = base.CheckColumnsChange(entitytable, dbtable, true, false);
+        var sql = base.CheckColumnsChange(entitytable, dbtable, onlySql, true);
         if (sql.IsNullOrEmpty()) return sql;
 
         // SQLite 3.35.0 起支持 Drop Column
@@ -831,10 +831,17 @@ internal class SQLiteMetaData : FileDbMetaData
         var v = ver.IsNullOrEmpty() ? null : new Version(ver);
 
         // 只有修改字段、删除字段需要重建表
-        if (!sql.Contains("Alter Column") && !sql.Contains("Drop Column") ||
-            sql.Contains("Drop Column") && v != null && v >= new Version(3, 35))
+        if (!sql.Contains("Alter Column") && !sql.Contains("Drop Column"))
         {
             if (onlySql) return sql;
+
+            Database.CreateSession().Execute(sql);
+
+            return null;
+        }
+        if (sql.Contains("Drop Column") && v != null && v >= new Version(3, 35))
+        {
+            if (onlySql || noDelete) return sql;
 
             Database.CreateSession().Execute(sql);
 

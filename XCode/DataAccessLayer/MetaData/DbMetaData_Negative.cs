@@ -170,7 +170,7 @@ internal partial class DbMetaData
             CreateTable(sb, entitytable, onlySql);
 
             // 仅获取语句
-            if (onlySql) WriteLog("只检查不对数据库进行操作,请手工创建表：" + entitytable.TableName + Environment.NewLine + sb.ToString());
+            if (onlySql) WriteLog($"DDL模式[{mode}]，请手工创建表：{entitytable.TableName}{Environment.NewLine}{sb}");
         }
         else
         {
@@ -178,7 +178,7 @@ internal partial class DbMetaData
             var sql = CheckColumnsChange(entitytable, dbtable, onlySql, noDelete);
             if (!String.IsNullOrEmpty(sql)) sql += ";";
             sql += CheckTableDescriptionAndIndex(entitytable, dbtable, mode);
-            if (!sql.IsNullOrEmpty()) WriteLog("只检查不对数据库进行操作,请手工使用以下语句修改表：" + Environment.NewLine + sql);
+            if (!sql.IsNullOrEmpty()) WriteLog($"DDL模式[{mode}]，请手工修改表：{Environment.NewLine}{sql}");
         }
     }
 
@@ -187,7 +187,7 @@ internal partial class DbMetaData
     /// <param name="dbtable"></param>
     /// <param name="onlySql"></param>
     /// <param name="noDelete"></param>
-    /// <returns></returns>
+    /// <returns>返回未执行语句</returns>
     protected virtual String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean onlySql, Boolean noDelete)
     {
         var sb = new StringBuilder();
@@ -235,16 +235,16 @@ internal partial class DbMetaData
         }
         if (sbDelete.Length > 0)
         {
-            if (noDelete)
-            {
-                // 不许删除列，显示日志
-                WriteLog("数据表中发现有多余字段，请手工执行以下语句删除：" + Environment.NewLine + sbDelete);
-            }
-            else
-            {
-                if (sb.Length > 0) sb.AppendLine(";");
-                sb.Append(sbDelete);
-            }
+            //if (noDelete)
+            //{
+            //    // 不许删除列，显示日志
+            //    WriteLog("数据表中发现有多余字段，请手工执行以下语句删除：" + Environment.NewLine + sbDelete);
+            //}
+            //else
+            //{
+            if (sb.Length > 0) sb.AppendLine(";");
+            sb.Append(sbDelete);
+            //}
         }
         #endregion
 
@@ -283,7 +283,7 @@ internal partial class DbMetaData
     /// <param name="entitytable"></param>
     /// <param name="dbtable"></param>
     /// <param name="mode"></param>
-    /// <returns></returns>
+    /// <returns>返回未执行语句</returns>
     protected virtual String CheckTableDescriptionAndIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
         var onlySql = mode <= Migration.ReadOnly;
@@ -579,15 +579,10 @@ internal partial class DbMetaData
     protected virtual Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
     {
         var sql = GetSchemaSQL(schema, values);
-        if (!String.IsNullOrEmpty(sql))
-        {
-            if (sb.Length > 0) sb.AppendLine(";");
-            sb.Append(sql);
-        }
-        else if (sql == null)
-        {
-            // 只有null才表示通过非SQL的方式处理，而String.Empty表示已经通过别的SQL处理，这里不用输出日志
 
+        // 只有null才表示通过非SQL的方式处理，而String.Empty表示已经通过别的SQL处理，这里不用输出日志
+        if (sql == null)
+        {
             // 没办法形成SQL，输出日志信息
             var s = new StringBuilder();
             if (values != null && values.Length > 0)
@@ -636,7 +631,15 @@ internal partial class DbMetaData
             //WriteLog("修改表：{0} {1}", schema.ToString(), s.ToString());
         }
 
-        if (!onlySql)
+        if (onlySql)
+        {
+            if (!String.IsNullOrEmpty(sql))
+            {
+                if (sb.Length > 0) sb.AppendLine(";");
+                sb.Append(sql);
+            }
+        }
+        else
         {
             try
             {

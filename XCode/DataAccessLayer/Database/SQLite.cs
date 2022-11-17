@@ -825,8 +825,14 @@ internal class SQLiteMetaData : FileDbMetaData
         var sql = base.CheckColumnsChange(entitytable, dbtable, true, false);
         if (sql.IsNullOrEmpty()) return sql;
 
+        // SQLite 3.35.0 起支持 Drop Column
+        // https://sqlite.org/releaselog/3_35_0.html
+        var ver = Database.ServerVersion;
+        var v = ver.IsNullOrEmpty() ? null : new Version(ver);
+
         // 只有修改字段、删除字段需要重建表
-        if (!sql.Contains("Alter Column") && !sql.Contains("Drop Column"))
+        if (!sql.Contains("Alter Column") && !sql.Contains("Drop Column") ||
+            sql.Contains("Drop Column") && v != null && v >= new Version(3, 35))
         {
             if (onlySql) return sql;
 

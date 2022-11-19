@@ -478,13 +478,14 @@ internal class SqlServer : RemoteDb
     public override String FormatLike(IDataColumn column, String format, String value)
     {
         if (value.IsNullOrEmpty()) return value;
-
-        if (value.IndexOfAny(_likeKeys) >= 0)
-            value = value
-                .Replace("[", "[[]")
-                .Replace("]", "[]]")
-                .Replace("%", "[%]")
-                .Replace("_", "[_]");
+        // fix 2022.11.17
+        // Like 构建SQL语句不参转义   
+        //if (value.IndexOfAny(_likeKeys) >= 0)
+        //    value = value
+        //        .Replace("[", "[[]")
+        //        .Replace("]", "[]]")
+        //        .Replace("%", "[%]")
+        //        .Replace("_", "[_]");
 
         return base.FormatLike(column, format, value);
     }

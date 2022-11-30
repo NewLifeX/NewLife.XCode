@@ -275,6 +275,11 @@ abstract class DbBase : DisposeBase, IDatabase
 
         session = OnCreateSession();
 
+        if (session is DbSession ds)
+        {
+            if (ds.Log != null && ds.Log.Level <= LogLevel.Debug) ds.Tracer = Tracer;
+        }
+
         CheckConnStr();
 
         _store.Value = session;

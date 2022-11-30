@@ -42,6 +42,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
     #region 属性
     /// <summary>数据库</summary>
     public IDatabase Database { get; }
+
+    /// <summary>链路追踪</summary>
+    public ITracer Tracer { get; set; }
     #endregion
 
     #region 打开/关闭
@@ -90,7 +93,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
                 // 如果重试次数用完，或者不应该在该异常上重试，则直接向上抛出异常
                 if (i == retry || !ShouldRetryOn(ex)) throw;
 
-                if (XTrace.Log.Level <= LogLevel.Debug) WriteLog("retry {0}，delay {1}", i + 1, delay);
+                Log?.Debug("retry {0}，delay {1}", i + 1, delay);
                 Thread.Sleep(delay);
 
                 // 间隔时间倍增，最大30秒
@@ -121,7 +124,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
                 // 如果重试次数用完，或者不应该在该异常上重试，则直接向上抛出异常
                 if (i == retry || !ShouldRetryOn(ex)) throw;
 
-                if (XTrace.Log.Level <= LogLevel.Debug) WriteLog("retry {0}，delay {1}", i + 1, delay);
+                Log?.Debug("retry {0}，delay {1}", i + 1, delay);
                 Thread.Sleep(delay);
 
                 // 间隔时间倍增，最大30秒
@@ -153,7 +156,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
                 // 如果重试次数用完，或者不应该在该异常上重试，则直接向上抛出异常
                 if (i == retry || !ShouldRetryOn(ex)) throw;
 
-                if (XTrace.Log.Level <= LogLevel.Debug) WriteLog("retry {0}，delay {1}", i + 1, delay);
+                Log?.Debug("retry {0}，delay {1}", i + 1, delay);
                 Thread.Sleep(delay);
 
                 // 间隔时间倍增，最大30秒
@@ -184,7 +187,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
                 // 如果重试次数用完，或者不应该在该异常上重试，则直接向上抛出异常
                 if (i == retry || !ShouldRetryOn(ex)) throw;
 
-                if (XTrace.Log.Level <= LogLevel.Debug) WriteLog("retry {0}，delay {1}", i + 1, delay);
+                Log?.Debug("retry {0}，delay {1}", i + 1, delay);
                 Thread.Sleep(delay);
 
                 // 间隔时间倍增，最大30秒
@@ -252,20 +255,24 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
     {
         if (Disposed) throw new ObjectDisposedException(GetType().Name);
 
+        using var span = Tracer?.NewSpan($"db:{Database.ConnName}:DbSession:BeginTransaction", level);
         try
         {
             var tr = Transaction;
             if (tr == null || tr is DisposeBase db && db.Disposed)
             {
-                tr = new Transaction(this, level);
+                var transaction = new Transaction(this, level);
 
-                Transaction = tr;
+                if (Log != null && Log.Level <= LogLevel.Debug) transaction.Tracer = Tracer;
+
+                Transaction = tr = transaction;
             }
 
             return tr.Begin().Count;
         }
         catch (DbException ex)
         {
+            span?.SetError(ex, null);
             throw OnException(ex);
         }
     }
@@ -277,12 +284,14 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
         var tr = Transaction;
         if (tr == null) throw new XDbSessionException(this, "当前并未开始事务，请用BeginTransaction方法开始新事务！");
 
+        using var span = Tracer?.NewSpan($"db:{Database.ConnName}:DbSession:Commit");
         try
         {
             tr.Commit();
         }
         catch (DbException ex)
         {
+            span?.SetError(ex, null);
             throw OnException(ex);
         }
         finally
@@ -301,12 +310,14 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
         var tr = Transaction;
         if (tr == null) throw new XDbSessionException(this, "当前并未开始事务，请用BeginTransaction方法开始新事务！");
 
+        using var span = Tracer?.NewSpan($"db:{Database.ConnName}:DbSession:Rollback");
         try
         {
             tr.Rollback();
         }
         catch (DbException ex)
         {
+            span?.SetError(ex, null);
             if (!ignoreException) throw OnException(ex);
         }
         finally
@@ -919,6 +930,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
     /// <summary>是否输出SQL语句，默认为XCode调试开关XCode.Debug</summary>
     public Boolean ShowSQL { get; set; }
 
+    /// <summary>日志</summary>
+    public ILog Log { get; set; } = XTrace.Log;
+
     private static ILog logger;
 
     /// <summary>写入SQL到文本中</summary>
@@ -934,7 +948,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
 
         var sqlpath = Setting.Current.SQLPath;
         if (String.IsNullOrEmpty(sqlpath))
-            WriteLog(sql);
+            Log?.Info(sql);
         else
         {
             logger ??= TextFileLog.Create(sqlpath);
@@ -1005,10 +1019,10 @@ internal abstract partial class DbSession : DisposeBase, IDbSession
         return sql;
     }
 
-    /// <summary>输出日志</summary>
-    /// <param name="format"></param>
-    /// <param name="args"></param>
-    public static void WriteLog(String format, params Object[] args) => XTrace.WriteLine(format, args);
+    ///// <summary>输出日志</summary>
+    ///// <param name="format"></param>
+    ///// <param name="args"></param>
+    //public static void WriteLog(String format, params Object[] args) => XTrace.WriteLine(format, args);
     #endregion
 
     #region SQL时间跟踪

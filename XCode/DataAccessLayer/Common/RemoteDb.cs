@@ -136,7 +136,7 @@ abstract class RemoteDbSession : DbSession
         // 如果指定了数据库名，并且不是master，则切换到master
         if (!dbname.IsNullOrEmpty() && !dbname.EqualIgnoreCase(sysdbname))
         {
-            if (DAL.Debug) WriteLog("切换到系统库[{0}]", sysdbname);
+            Log?.Info("切换到系统库[{0}]", sysdbname);
             using var conn = Database.Factory.CreateConnection();
             try
             {
@@ -153,7 +153,7 @@ abstract class RemoteDbSession : DbSession
             }
             finally
             {
-                if (DAL.Debug) WriteLog("退出系统库[{0}]，回到[{1}]", sysdbname, dbname);
+                Log?.Info("退出系统库[{0}]，回到[{1}]", sysdbname, dbname);
             }
         }
         else

@@ -77,11 +77,14 @@ class Transaction : DisposeBase, ITransaction
     {
         base.Dispose(disposing);
 
+        using var span = Tracer?.NewSpan($"db:{_Session.Database.ConnName}:Transaction:Dispose", Count);
+
         // 存在未提交层数，则回滚
         if (Count > 0)
         {
-            _Count = 1;
-            Rollback();
+            //_Count = 1;
+            //Rollback();
+            OnRollback();
         }
 
         Tran.TryDispose();
@@ -120,6 +123,8 @@ class Transaction : DisposeBase, ITransaction
 
         if (tr != null) return tr;
 
+        using var span = Tracer?.NewSpan($"db:{_Session.Database.ConnName}:Transaction:Check", Level);
+
         // 真正打开事务
         tr = Tran = conn.BeginTransaction(Level);
         cmd.Transaction = tr;
@@ -128,6 +133,8 @@ class Transaction : DisposeBase, ITransaction
         Level = tr.IsolationLevel;
         ID = Interlocked.Increment(ref _gid);
         Log.Debug("Tran.Begin {0} {1}", ID, Level);
+
+        span?.SetTag(new { ID, Level, ThreadId = Thread.CurrentThread.ManagedThreadId });
 
         return tr;
     }
@@ -141,6 +148,8 @@ class Transaction : DisposeBase, ITransaction
 
         if (n == 1)
         {
+            using var span = Tracer?.NewSpan($"db:{_Session.Database.ConnName}:Transaction:Begin", new { ID, ThreadId = Thread.CurrentThread.ManagedThreadId });
+
             // 打开事务后，由事务管理连接
             Conn = _Session.Database.OpenConnection();
         }
@@ -155,6 +164,8 @@ class Transaction : DisposeBase, ITransaction
 
         if (n == 0)
         {
+            using var span = Tracer?.NewSpan($"db:{_Session.Database.ConnName}:Transaction:Commit", new { ID, Executes, ThreadId = Thread.CurrentThread.ManagedThreadId });
+
             var tr = Tran;
             try
             {
@@ -164,6 +175,12 @@ class Transaction : DisposeBase, ITransaction
 
                     tr.Commit();
                 }
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+
+                throw;
             }
             finally
             {
@@ -185,31 +202,47 @@ class Transaction : DisposeBase, ITransaction
 
         if (n == 0)
         {
-            var tr = Tran;
-            try
-            {
-                if (tr != null)
-                {
-                    Log.Debug("Tran.Rollback {0} {1} Executes={2}", ID, Level, Executes);
-
-                    tr.Rollback();
-                }
-            }
-            finally
-            {
-                Tran.TryDispose();
-                Tran = null;
-
-                Conn?.Close();
-                Conn = null;
-            }
+            OnRollback();
         }
 
         return this;
     }
+
+    void OnRollback()
+    {
+        using var span = Tracer?.NewSpan($"db:{_Session.Database.ConnName}:Transaction:Rollback", new { ID, Executes, ThreadId = Thread.CurrentThread.ManagedThreadId });
+
+        var tr = Tran;
+        try
+        {
+            if (tr != null)
+            {
+                Log.Debug("Tran.Rollback {0} {1} Executes={2}", ID, Level, Executes);
+
+                tr.Rollback();
+            }
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+
+            throw;
+        }
+        finally
+        {
+            Tran.TryDispose();
+            Tran = null;
+
+            Conn?.Close();
+            Conn = null;
+        }
+    }
     #endregion
 
     #region 日志
+    /// <summary>链路追踪</summary>
+    public ITracer Tracer { get; set; }
+
     /// <summary>日志</summary>
     public ILog Log { get; set; } = Logger.Null;
     #endregion

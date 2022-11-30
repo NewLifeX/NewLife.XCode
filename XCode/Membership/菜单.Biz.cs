@@ -485,7 +485,7 @@ namespace XCode.Membership
                 // 如果新增了菜单，需要检查权限
                 if (list.Count > 0)
                 {
-                    ThreadPool.QueueUserWorkItem(s =>
+                    ThreadPool.UnsafeQueueUserWorkItem(s =>
                     {
                         try
                         {
@@ -497,7 +497,7 @@ namespace XCode.Membership
                         {
                             XTrace.WriteException(ex);
                         }
-                    });
+                    }, null);
                 }
 
                 return list;

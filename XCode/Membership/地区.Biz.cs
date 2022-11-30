@@ -89,7 +89,7 @@ namespace XCode.Membership
             // 预热数据
             if (Meta.Session.Count > 0)
             {
-                ThreadPool.QueueUserWorkItem(s =>
+                ThreadPool.UnsafeQueueUserWorkItem(s =>
                 {
                     try
                     {
@@ -99,7 +99,7 @@ namespace XCode.Membership
                     {
                         XTrace.WriteException(ex);
                     }
-                });
+                }, null);
             }
         }
         #endregion

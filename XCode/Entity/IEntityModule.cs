@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -63,7 +63,7 @@ namespace XCode
         public virtual void Add(IEntityModule module)
         {
             // 异步添加实体模块，避免死锁。实体类一般在静态构造函数里面添加模块，如果这里同步初始化会非常危险
-            ThreadPool.QueueUserWorkItem(s => AddAsync(module));
+            ThreadPool.UnsafeQueueUserWorkItem(s => AddAsync(s as IEntityModule), module);
         }
 
         /// <summary>添加实体模块</summary>

@@ -282,7 +282,7 @@ namespace XCode
                     if (dal.Db.Migration > Migration.ReadOnly /*|| def != this*/)
                         CheckTable();
                     else
-                        ThreadPool.QueueUserWorkItem(s =>
+                        ThreadPool.UnsafeQueueUserWorkItem(s =>
                         {
                             try
                             {
@@ -292,7 +292,7 @@ namespace XCode
                             {
                                 XTrace.WriteException(ex);
                             }
-                        });
+                        }, null);
                 }
             }
         }
@@ -376,7 +376,7 @@ namespace XCode
                     {
                         _NextCount = now.AddSeconds(60);
                         // 异步更新
-                        ThreadPool.QueueUserWorkItem(s =>
+                        ThreadPool.UnsafeQueueUserWorkItem(s =>
                         {
                             try
                             {
@@ -386,7 +386,7 @@ namespace XCode
                             {
                                 XTrace.WriteException(ex);
                             }
-                        });
+                        }, null);
                     }
 
                     return n;

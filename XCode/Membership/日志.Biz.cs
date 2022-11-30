@@ -23,7 +23,7 @@ namespace XCode.Membership
 
 #if !DEBUG
             // 关闭SQL日志
-            ThreadPool.QueueUserWorkItem(s => { Meta.Session.Dal.Db.ShowSQL = false; });
+            ThreadPool.UnsafeQueueUserWorkItem(s => { Meta.Session.Dal.Db.ShowSQL = false; }, null);
 #endif
         }
 

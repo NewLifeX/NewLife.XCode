@@ -130,7 +130,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (sc.Using)
         {
             // 查询列表异步加入对象缓存
-            ThreadPool.QueueUserWorkItem(es =>
+            ThreadPool.UnsafeQueueUserWorkItem(es =>
             {
                 foreach (var entity in es as TEntity[])
                 {

@@ -1171,7 +1171,7 @@ namespace XCode.Code
         {
             WriteLine("#region 业务操作");
             var toModel = Option.ModelNameForToModel;
-            if (!toModel.IsNullOrEmpty())
+            if (!toModel.IsNullOrEmpty() && !Option.ModelNameForCopy.IsNullOrEmpty())
             {
                 BuildEntityToModel(toModel.Replace("{name}", ClassName), Option.ModelNameForCopy.Replace("{name}", ClassName));
                 WriteLine("");

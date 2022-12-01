@@ -1,15 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net6.0</TargetFrameworks>
+    <TargetFrameworks>net7.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <Version>1.0.0.1130</Version>
-    <FileVersion>1.0.0.1130</FileVersion>
-    <AssemblyVersion>1.0.*</AssemblyVersion>
+    <VersionPrefix>1.0</VersionPrefix>
+    <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
+    <Version>$(VersionPrefix).$(VersionSuffix)</Version>
+    <FileVersion>$(Version)</FileVersion>
+    <AssemblyVersion>$(VersionPrefix).*</AssemblyVersion>
     <Deterministic>false</Deterministic>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <DefineConstants>TRACE</DefineConstants>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <OutputPath>..\Bin\Test\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -37,11 +36,11 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="IBM.Data.DB2.Core" Version="3.1.0.600" />
-    <PackageReference Include="NewLife.Redis" Version="5.0.2022.901" />
-    <PackageReference Include="NewLife.Remoting" Version="2.0.2022.1004" />
-    <PackageReference Include="NewLife.Stardust" Version="2.3.2022.1001" />
+    <PackageReference Include="NewLife.Redis" Version="5.0.2022.1101" />
+    <PackageReference Include="NewLife.Remoting" Version="2.0.2022.1127-beta0246" />
+    <PackageReference Include="NewLife.Stardust" Version="2.5.2022.1129-beta1431" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.80" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.4" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XCode\XCode.csproj" />

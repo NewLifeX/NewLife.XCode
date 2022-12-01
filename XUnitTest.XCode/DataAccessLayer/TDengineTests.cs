@@ -53,7 +53,7 @@ public class TDengineTests
     }
 
     [TestOrder(10)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.TDengine);
@@ -71,7 +71,7 @@ public class TDengineTests
     }
 
     [TestOrder(20)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void DALTest()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -89,7 +89,7 @@ public class TDengineTests
     }
 
     [TestOrder(30)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void CreateDatabase()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -100,7 +100,7 @@ public class TDengineTests
     }
 
     [TestOrder(32)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void CreateDatabase2()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -114,7 +114,7 @@ public class TDengineTests
     }
 
     [TestOrder(34)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void CreateTable()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -126,7 +126,7 @@ public class TDengineTests
     }
 
     [TestOrder(36)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void CreateSuperTable()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -148,7 +148,7 @@ public class TDengineTests
     }
 
     [TestOrder(40)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void QueryTest()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -162,7 +162,7 @@ public class TDengineTests
     }
 
     [TestOrder(50)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void InsertTest()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -191,7 +191,7 @@ public class TDengineTests
     }
 
     [TestOrder(60)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void MetaTest()
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
@@ -243,7 +243,7 @@ public class TDengineTests
     }
 
     [TestOrder(70)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void BatchInsert()
     {
         using var split = CreateForBatch("BatchInsert");
@@ -266,7 +266,7 @@ public class TDengineTests
     }
 
     [TestOrder(80)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void PositiveAndNegative()
     {
         var connName = GetType().Name;

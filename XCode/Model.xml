@@ -24,7 +24,7 @@
       <Column Name="LastLoginIP" DataType="String" Description="最后登录IP" Category="登录信息" />
       <Column Name="RegisterTime" DataType="DateTime" Description="注册时间" Category="登录信息" />
       <Column Name="RegisterIP" DataType="String" Description="注册IP" Category="登录信息" />
-      <Column Name="OnlineTime" DataType="Int32" Description="在线时间。累计在线总时间，秒" Category="登录信息" />
+      <Column Name="OnlineTime" DataType="Int32" Description="在线时间。累计在线总时间，秒" ItemType="TimeSpan" Category="登录信息" />
       <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
       <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />
       <Column Name="Ex3" DataType="Double" Description="扩展3" Category="扩展" />

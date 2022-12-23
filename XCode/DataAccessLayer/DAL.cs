@@ -78,6 +78,9 @@ public partial class DAL
     /// <summary>数据库会话</summary>
     public IDbSession Session => Db.CreateSession();
 
+    /// <summary>数据库会话。为异步操作而准备，将来可能移除</summary>
+    public IAsyncDbSession AsyncSession => (Db as DbBase).CreateSessionForAsync();
+
     private String _mapTo;
     private readonly ICache _cache = new MemoryCache();
     #endregion

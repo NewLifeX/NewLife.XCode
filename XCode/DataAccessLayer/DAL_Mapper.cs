@@ -108,7 +108,7 @@ namespace XCode.DataAccessLayer
         {
             if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
-            var dt = await QueryByCacheAsync(sql, param, "", (s, p, k3) => Session.QueryAsync(s, Db.CreateParameters(p)), nameof(QueryAsync));
+            var dt = await QueryByCacheAsync(sql, param, "", (s, p, k3) => AsyncSession.QueryAsync(s, Db.CreateParameters(p)), nameof(QueryAsync));
 
             // 优先特殊处理基础类型，选择第一字段
             var type = typeof(T);
@@ -184,7 +184,7 @@ namespace XCode.DataAccessLayer
         /// <param name="param">参数对象</param>
         /// <returns></returns>
         public Task<Int32> ExecuteAsync(String sql, Object param = null) =>
-            ExecuteByCacheAsync(sql, "", param, (s, t, p) => Session.ExecuteAsync(s, CommandType.Text, Db.CreateParameters(p)));
+            ExecuteByCacheAsync(sql, "", param, (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, Db.CreateParameters(p)));
 
         /// <summary>执行Sql并返回数据读取器</summary>
         /// <param name="sql"></param>
@@ -219,7 +219,7 @@ namespace XCode.DataAccessLayer
         /// <param name="param">参数对象</param>
         /// <returns></returns>
         public Task<T> ExecuteScalarAsync<T>(String sql, Object param = null) =>
-            QueryByCacheAsync(sql, param, "", (s, p, k3) => Session.ExecuteScalarAsync<T>(s, CommandType.Text, Db.CreateParameters(p)), nameof(ExecuteScalarAsync));
+            QueryByCacheAsync(sql, param, "", (s, p, k3) => AsyncSession.ExecuteScalarAsync<T>(s, CommandType.Text, Db.CreateParameters(p)), nameof(ExecuteScalarAsync));
 
         private ConcurrentDictionary<Type, String> _tableMaps = new();
         private String OnGetTableName(Type type)
@@ -398,7 +398,7 @@ namespace XCode.DataAccessLayer
             var vs = dps.Join(",", e => e.ParameterName);
             var sql = $"Insert Into {tableName}({ns}) Values({vs})";
 
-            return ExecuteByCacheAsync(sql, "", dps, (s, t, p) => Session.ExecuteAsync(s, CommandType.Text, p));
+            return ExecuteByCacheAsync(sql, "", dps, (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, p));
         }
 
         /// <summary>更新数据。不支持自动识别主键</summary>
@@ -460,7 +460,7 @@ namespace XCode.DataAccessLayer
 
             var sql = sb.Put(true);
 
-            return ExecuteByCacheAsync(sql, "", dps.ToArray(), (s, t, p) => Session.ExecuteAsync(s, CommandType.Text, p));
+            return ExecuteByCacheAsync(sql, "", dps.ToArray(), (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, p));
         }
 
         /// <summary>删除数据</summary>
@@ -492,7 +492,7 @@ namespace XCode.DataAccessLayer
             }
             var sql = sb.Put(true);
 
-            return ExecuteByCacheAsync(sql, "", dps.ToArray(), (s, t, p) => Session.ExecuteAsync(s, CommandType.Text, p));
+            return ExecuteByCacheAsync(sql, "", dps.ToArray(), (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, p));
         }
 
         /// <summary>插入数据</summary>

@@ -82,7 +82,10 @@ abstract class DbBase : DisposeBase, IDatabase
     internal void ReleaseSession()
     {
         var st = _store;
-        if (st != null) _store = new AsyncLocal<IDbSession>();
+        if (st != null) _store = new ThreadLocal<IDbSession>();
+       
+        var st2 = _store2;
+        if (st2 != null) _store2 = new AsyncLocal<IAsyncDbSession>();
     }
     #endregion
 
@@ -263,7 +266,8 @@ abstract class DbBase : DisposeBase, IDatabase
     #endregion
 
     #region 方法
-    private AsyncLocal<IDbSession> _store = new();
+    private ThreadLocal<IDbSession> _store = new();
+    private AsyncLocal<IAsyncDbSession> _store2 = new();
 
     /// <summary>创建数据库会话，数据库在每一个线程都有唯一的一个实例</summary>
     /// <returns></returns>
@@ -283,6 +287,28 @@ abstract class DbBase : DisposeBase, IDatabase
         CheckConnStr();
 
         _store.Value = session;
+
+        return session;
+    }
+
+    /// <summary>为异步操作创建数据库会话，数据库在每一个异步上下文都有唯一的一个实例</summary>
+    /// <returns></returns>
+    public IAsyncDbSession CreateSessionForAsync()
+    {
+        // 会话可能已经被销毁
+        var session = _store2.Value;
+        if (session != null && !session.Disposed) return session;
+
+        session = OnCreateSession() as IAsyncDbSession;
+
+        if (session is DbSession ds)
+        {
+            if (ds.Log != null && ds.Log.Level <= LogLevel.Debug) ds.Tracer = Tracer;
+        }
+
+        CheckConnStr();
+
+        _store2.Value = session;
 
         return session;
     }

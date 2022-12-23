@@ -19,7 +19,7 @@ using XCode.Exceptions;
 namespace XCode.DataAccessLayer;
 
 /// <summary>数据库会话基类</summary>
-internal abstract partial class DbSession : DisposeBase, IDbSession
+internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSession
 {
     #region 构造函数
     protected DbSession(IDatabase db)

@@ -212,7 +212,7 @@ partial class DAL
         return QueryByCacheAsync(builder, startRowIndex, maximumRows, (sb, start, max) =>
         {
             sb = PageSplit(sb, start, max);
-            return Session.QueryAsync(sb.ToString(), sb.Parameters.ToArray());
+            return AsyncSession.QueryAsync(sb.ToString(), sb.Parameters.ToArray());
         }, nameof(QueryAsync));
     }
 
@@ -222,7 +222,7 @@ partial class DAL
     /// <returns></returns>
     public Task<DbTable> QueryAsync(String sql, IDictionary<String, Object> ps = null)
     {
-        return QueryByCacheAsync(sql, ps, "", (s, p, k3) => Session.QueryAsync(s, Db.CreateParameters(p)), nameof(QueryAsync));
+        return QueryByCacheAsync(sql, ps, "", (s, p, k3) => AsyncSession.QueryAsync(s, Db.CreateParameters(p)), nameof(QueryAsync));
     }
 
     /// <summary>执行SQL查询，返回总记录数</summary>
@@ -230,7 +230,7 @@ partial class DAL
     /// <returns></returns>
     public Task<Int64> SelectCountAsync(SelectBuilder sb)
     {
-        return QueryByCacheAsync(sb, "", "", (s, k2, k3) => Session.QueryCountAsync(s), nameof(SelectCountAsync));
+        return QueryByCacheAsync(sb, "", "", (s, k2, k3) => AsyncSession.QueryCountAsync(s), nameof(SelectCountAsync));
     }
 
     /// <summary>执行SQL查询，返回总记录数</summary>
@@ -240,7 +240,7 @@ partial class DAL
     /// <returns></returns>
     public Task<Int64> SelectCountAsync(String sql, CommandType type, params IDataParameter[] ps)
     {
-        return QueryByCacheAsync(sql, type, ps, (s, t, p) => Session.QueryCountAsync(s, t, p), nameof(SelectCountAsync));
+        return QueryByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.QueryCountAsync(s, t, p), nameof(SelectCountAsync));
     }
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
@@ -248,7 +248,7 @@ partial class DAL
     /// <returns></returns>
     public Task<Int32> ExecuteAsync(String sql)
     {
-        return ExecuteByCacheAsync(sql, "", "", (s, t, p) => Session.ExecuteAsync(s));
+        return ExecuteByCacheAsync(sql, "", "", (s, t, p) => AsyncSession.ExecuteAsync(s));
     }
 
     /// <summary>执行插入语句并返回新增行的自动编号</summary>
@@ -256,7 +256,7 @@ partial class DAL
     /// <returns>新增行的自动编号</returns>
     public Task<Int64> InsertAndGetIdentityAsync(String sql)
     {
-        return ExecuteByCacheAsync(sql, "", "", (s, t, p) => Session.InsertAndGetIdentityAsync(s));
+        return ExecuteByCacheAsync(sql, "", "", (s, t, p) => AsyncSession.InsertAndGetIdentityAsync(s));
     }
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
@@ -266,7 +266,7 @@ partial class DAL
     /// <returns></returns>
     public Task<Int32> ExecuteAsync(String sql, CommandType type, params IDataParameter[] ps)
     {
-        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => Session.ExecuteAsync(s, t, p));
+        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteAsync(s, t, p));
     }
 
     /// <summary>执行插入语句并返回新增行的自动编号</summary>
@@ -276,7 +276,7 @@ partial class DAL
     /// <returns>新增行的自动编号</returns>
     public Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type, params IDataParameter[] ps)
     {
-        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => Session.InsertAndGetIdentityAsync(s, t, p));
+        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.InsertAndGetIdentityAsync(s, t, p));
     }
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
@@ -286,7 +286,7 @@ partial class DAL
     /// <returns></returns>
     public Task<Int32> ExecuteAsync(String sql, CommandType type, IDictionary<String, Object> ps)
     {
-        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => Session.ExecuteAsync(s, t, Db.CreateParameters(p)));
+        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteAsync(s, t, Db.CreateParameters(p)));
     }
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
@@ -299,7 +299,7 @@ partial class DAL
         {
             using var cmd = Session.CreateCommand(s);
             if (t > 0) cmd.CommandTimeout = t;
-            return Session.ExecuteAsync(cmd);
+            return AsyncSession.ExecuteAsync(cmd);
         });
     }
 
@@ -311,7 +311,7 @@ partial class DAL
     /// <returns></returns>
     public Task<T> ExecuteScalarAsync<T>(String sql, CommandType type, IDictionary<String, Object> ps)
     {
-        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => Session.ExecuteScalarAsync<T>(s, t, Db.CreateParameters(p)));
+        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteScalarAsync<T>(s, t, Db.CreateParameters(p)));
     }
     #endregion
 

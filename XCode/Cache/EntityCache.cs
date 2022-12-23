@@ -164,7 +164,7 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
 
         reason = $"异步更新缓存，{reason}";
         WriteLog(reason);
-        Task.Run(() => UpdateCache(reason, true));
+        ThreadPool.UnsafeQueueUserWorkItem(s => UpdateCache(reason, true), null);
     }
 
     void UpdateCache(String reason, Boolean isAsync = false)

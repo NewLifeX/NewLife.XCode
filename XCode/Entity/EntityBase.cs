@@ -227,18 +227,7 @@ namespace XCode
         private IEntityAddition _Addition;
         /// <summary>累加</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        IEntityAddition IEntity.Addition
-        {
-            get
-            {
-                if (_Addition == null)
-                {
-                    _Addition = new EntityAddition();
-                    _Addition.Entity = this;
-                }
-                return _Addition;
-            }
-        }
+        IEntityAddition IEntity.Addition => _Addition ??= new EntityAddition(this);
         #endregion
 
         #region 主键为空

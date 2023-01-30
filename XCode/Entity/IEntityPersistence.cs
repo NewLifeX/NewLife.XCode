@@ -629,7 +629,7 @@ namespace XCode
 
                 // 检查累加，如果累加且累加值为0，则跳过更新
                 var flag = TryCheckAdditionalValue(dfs, fi.Name, out var val, out var sign);
-                if (flag && Convert.ToDecimal(val) == 0) continue;
+                if (flag && val.ToDecimal() == 0) continue;
 
                 var value = entity[fi.Name];
 
@@ -789,7 +789,7 @@ namespace XCode
                             v = -v;
                             sign = false;
                         }
-                        value = v;
+                        value = Single.IsNaN(v) ? 0 : v;
                     }
                     break;
                 case TypeCode.Double:
@@ -800,7 +800,7 @@ namespace XCode
                             v = -v;
                             sign = false;
                         }
-                        value = v;
+                        value = Double.IsNaN(v) ? 0 : v;
                     }
                     break;
                 case TypeCode.Decimal:

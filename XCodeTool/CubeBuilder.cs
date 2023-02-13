@@ -58,7 +58,7 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
             //LogOnChange = true;
 
             //ListFields.RemoveField(""Id"", ""Creator"");
-            ListFields.RemoveCreateField();
+            ListFields.RemoveCreateField().RemoveRemarkField();
 
             //{
             //    var df = ListFields.GetField(""Code"") as ListField;

@@ -18,6 +18,7 @@
     <LangVersion>latest</LangVersion>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>xcode</ToolCommandName>
+    <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>$(AssemblyName)</PackageId>

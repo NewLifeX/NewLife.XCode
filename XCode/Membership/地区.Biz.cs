@@ -176,7 +176,7 @@ namespace XCode.Membership
                                                           return list;
                                                       });
 
-        private Boolean IsVirtual => Name.EqualIgnoreCase("市辖区", "直辖县");
+        private Boolean IsVirtual => Name.EqualIgnoreCase("市辖区", "直辖县", "直辖镇");
         #endregion
 
         #region 扩展查询

@@ -110,7 +110,9 @@ class Program
         // 生成简易模型类
         {
             var opt = option.Clone();
-            opt.Output = opt.Output.CombinePath(@"..\Models\");
+            opt.Items.TryGetValue("ModelsOutput", out var output);
+            output ??= @"..\Models\";
+            opt.Output = opt.Output.CombinePath(output);
             opt.BaseClass = modelInterface;
             opt.ClassNameTemplate = modelClass;
             opt.ModelNameForCopy = !modelInterface.IsNullOrEmpty() ? modelInterface : modelClass;
@@ -131,7 +133,9 @@ class Program
         // 生成简易接口
         {
             var opt = option.Clone();
-            opt.Output = opt.Output.CombinePath(@"..\Interfaces\");
+            opt.Items.TryGetValue("InterfacesOutput", out var output);
+            output ??= @"..\Interfaces\";
+            opt.Output = opt.Output.CombinePath(output);
             opt.BaseClass = null;
             opt.ClassNameTemplate = modelInterface;
             opt.ModelNameForCopy = null;

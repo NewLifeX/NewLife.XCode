@@ -55,7 +55,7 @@ public class ModelResolver : IModelResolver
     public Boolean Camel { get; set; } = true;
 
     /// <summary>描述信息分隔符。从描述信息前部分隔出显示名</summary>
-    public Char[] SeparateChars { get; set; } = new Char[] { '.', '。', ',', '，', ';', '；', ':', '：', '(', '（', '\r', '\n' };
+    public Char[] SeparateChars { get; set; } = new Char[] { '.', '。', ',', '，', ';', '；', ':', '：', '\r', '\n' };
     #endregion
 
     #region 名称处理
@@ -200,11 +200,25 @@ public class ModelResolver : IModelResolver
         // p=0表示符号在第一位，不考虑
         if (p > 0) name = name[..p].Trim();
 
+        // 调整括号过滤规则
+        if (name.StartsWith("(") || name.StartsWith("（"))
+        {
+            var index = name.IndexOf(")");
+            var index2 = name.IndexOf("）");
+            index = index > index2 ? index2 : index;
+            if (index > 0)
+            {
+                var firstName = name.Substring(1, index - 1);
+                var lastName = name[(index + 1)..];
+                name = $"{firstName}{lastName}";
+            }
+        }
+
         name = name.Replace("$", null);
-        name = name.Replace("(", null);
-        name = name.Replace(")", null);
-        name = name.Replace("（", null);
-        name = name.Replace("）", null);
+        //name = name.Replace("(", null);
+        //name = name.Replace(")", null);
+        //name = name.Replace("（", null);
+        //name = name.Replace("）", null);
         name = name.Replace(" ", null);
         name = name.Replace("　", null);
         name = name.Replace("/", "_");

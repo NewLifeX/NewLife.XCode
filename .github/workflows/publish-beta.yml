@@ -28,8 +28,8 @@ jobs:
         dotnet build -c Release --version-suffix ${{ env.VERSION }}
     - name: Pack
       run: |
-        dotnet pack --no-build --version-suffix ${{ env.VERSION }} -o out XCode/XCode.csproj
-        dotnet pack --no-build --version-suffix ${{ env.VERSION }} -o out XCodeTool/XCodeTool.csproj
+        dotnet pack --no-build --version-suffix ${{ env.VERSION }} -c Release -o out XCode/XCode.csproj
+        dotnet pack --no-build --version-suffix ${{ env.VERSION }} -c Release -o out XCodeTool/XCodeTool.csproj
 
     - name: Publish
       run: |

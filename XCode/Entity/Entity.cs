@@ -12,7 +12,6 @@ using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Reflection;
 using NewLife.Serialization;
-using NewLife.Threading;
 using XCode.Common;
 using XCode.Configuration;
 using XCode.DataAccessLayer;

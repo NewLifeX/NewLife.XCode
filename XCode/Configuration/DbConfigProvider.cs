@@ -55,25 +55,6 @@ public class DbConfigProvider : ConfigProvider
         var list = Parameter.FindAllByUserID(UserId, Category);
         foreach (var section in Root.Childs)
         {
-            //if (section.Childs != null && section.Childs.Count > 0)
-            //{
-            //    foreach (var sec in section.Childs)
-            //    {
-            //        var pi = list.FirstOrDefault(_ => _.Category == section.Key && _.Name == sec.Key);
-            //        if (pi == null)
-            //        {
-            //            pi = new Parameter { Category = section.Key, Name = sec.Key };
-            //            list.Add(pi);
-            //        }
-
-            //        pi.Value = sec.Value;
-            //        pi.UserID = UserId;
-            //        pi.Enable = true;
-            //        pi.Remark = sec.Comment;
-            //    }
-            //}
-            //else
-            //{
             var pi = list.FirstOrDefault(_ => _.Name == section.Key);
             if (pi == null)
             {
@@ -85,9 +66,10 @@ public class DbConfigProvider : ConfigProvider
             pi.UserID = UserId;
             pi.Enable = true;
             pi.Remark = section.Comment;
-            //}
+
+            pi.Save();
         }
-        list.Save();
+        //list.Save();
 
         // 通知绑定对象，配置数据有改变
         NotifyChange();

@@ -67,7 +67,10 @@ namespace XCode.Model
                             rs += item.Update();
                             break;
                         case EntityActions.Upsert:
-                            rs += item.Upsert(null, null, null, Session);
+                            if (item.IsFromDatabase)
+                                rs += item.Update();
+                            else
+                                rs += item.Upsert(null, null, null, Session);
                             break;
                         case EntityActions.Delete:
                             rs += item.Delete();
@@ -92,9 +95,9 @@ namespace XCode.Model
                             // 来自数据库，更新
                             if (item.IsFromDatabase)
                                 us.Add(item);
-                            //// 空主键，插入
-                            //else if (item.IsNullKey)
-                            //    ns.Add(item);
+                            // 空主键，插入
+                            else if (item.IsNullKey)
+                                ns.Add(item);
                             // 其它 Upsert
                             else
                                 ps.Add(item);
@@ -107,7 +110,10 @@ namespace XCode.Model
                         us.Add(item);
                         break;
                     case EntityActions.Upsert:
-                        ps.Add(item);
+                        if (item.IsFromDatabase)
+                            us.Add(item);
+                        else
+                            ps.Add(item);
                         break;
                     case EntityActions.Delete:
                         ds.Add(item);

@@ -1681,22 +1681,23 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             Where = where
         };
 
-        // chenqi [2018-5-7] 
-        // 处理Select列
-        // SQL Server数据库特殊处理：由于T-SQL查询列为*号，order by未使用索引字段，将导致索引不会被命中。
-        if (session.Dal.DbType == DatabaseType.SqlServer)
-        {
-            if (builder.Column.IsNullOrEmpty() || builder.Column.Equals("*"))
-            {
-                var fields = factory.Selects;
-                if (fields.IsNullOrWhiteSpace())
-                    //fields = Meta.Factory.FieldNames.Select(Meta.FormatName).Join(",");
-                    //不能直接通过获取FieldNames的方式拼接查询字段，如果列名和实际的属性名称存在差异的情况下会导致查询错误 By Xiyunfei
-                    fields = factory.Fields.Join(",", e => db.FormatName(e.Field));
-                builder.Column = fields;
-            }
-        }
-        else
+        // stone [2023-02-25] 经确认，select *不会影响到索引命中
+        //// chenqi [2018-5-7] 
+        //// 处理Select列
+        //// SQL Server数据库特殊处理：由于T-SQL查询列为*号，order by未使用索引字段，将导致索引不会被命中。
+        //if (session.Dal.DbType == DatabaseType.SqlServer)
+        //{
+        //    if (builder.Column.IsNullOrEmpty() || builder.Column.Equals("*"))
+        //    {
+        //        var fields = factory.Selects;
+        //        if (fields.IsNullOrWhiteSpace())
+        //            //fields = Meta.Factory.FieldNames.Select(Meta.FormatName).Join(",");
+        //            //不能直接通过获取FieldNames的方式拼接查询字段，如果列名和实际的属性名称存在差异的情况下会导致查询错误 By Xiyunfei
+        //            fields = factory.Fields.Join(",", e => db.FormatName(e.Field));
+        //        builder.Column = fields;
+        //    }
+        //}
+        //else
         {
             if (builder.Column.IsNullOrEmpty())
                 builder.Column = factory.Selects;

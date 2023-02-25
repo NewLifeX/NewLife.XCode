@@ -110,30 +110,41 @@ public class DbConfigProvider : ConfigProvider
     public override Boolean SaveAll()
     {
         var list = Parameter.FindAllByUserID(UserId, Category);
-        foreach (var section in Root.Childs)
-        {
-            var pi = list.FirstOrDefault(_ => _.Name == section.Key);
-            if (pi == null)
-            {
-                pi = new Parameter { UserID = UserId, Category = Category, Name = section.Key };
-                list.Add(pi);
-            }
-
-            pi.Value = section.Value;
-            //pi.UserID = UserId;
-            pi.Enable = true;
-
-            if (!section.Comment.IsNullOrEmpty())
-                pi.Remark = section.Comment;
-
-            pi.Save();
-        }
-        //list.Save();
+        Save(list, Root, null);
 
         // 通知绑定对象，配置数据有改变
         NotifyChange();
 
         return true;
+    }
+
+    void Save(IList<Parameter> list, IConfigSection root, String prefix)
+    {
+        foreach (var section in root.Childs)
+        {
+            var name = prefix + section.Key;
+            if (section.Childs != null && section.Childs.Count > 0)
+            {
+                Save(list, section, name + ":");
+            }
+            else
+            {
+                var pi = list.FirstOrDefault(_ => _.Name == name);
+                if (pi == null)
+                {
+                    pi = new Parameter { UserID = UserId, Category = Category, Name = name };
+                    list.Add(pi);
+                }
+
+                pi.Value = section.Value;
+                pi.Enable = true;
+
+                if (!section.Comment.IsNullOrEmpty())
+                    pi.Remark = section.Comment;
+
+                pi.Save();
+            }
+        }
     }
     #endregion
 

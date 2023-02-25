@@ -42,7 +42,11 @@ public partial class Entity<TEntity>
         /// <summary>表信息</summary>
         public static TableItem Table => _Table.Value;
 
+#if NET45
+        private static readonly ThreadLocal<String> _ConnName = new();
+#else
         private static readonly AsyncLocal<String> _ConnName = new();
+#endif
         /// <summary>链接名。线程内允许修改，修改者负责还原。若要还原默认值，设为null即可</summary>
         public static String ConnName
         {
@@ -50,7 +54,11 @@ public partial class Entity<TEntity>
             set { _Session.Value = null; _ConnName.Value = value; }
         }
 
+#if NET45
+        private static readonly ThreadLocal<String> _TableName = new();
+#else
         private static readonly AsyncLocal<String> _TableName = new();
+#endif
         /// <summary>表名。线程内允许修改，修改者负责还原</summary>
         public static String TableName
         {
@@ -83,7 +91,11 @@ public partial class Entity<TEntity>
         #endregion
 
         #region 会话
+#if NET45
+        private static readonly ThreadLocal<EntitySession<TEntity>> _Session = new();
+#else
         private static readonly AsyncLocal<EntitySession<TEntity>> _Session = new();
+#endif
         /// <summary>实体会话。线程静态</summary>
         public static EntitySession<TEntity> Session => _Session.Value ??= EntitySession<TEntity>.Create(ConnName, TableName);
         #endregion

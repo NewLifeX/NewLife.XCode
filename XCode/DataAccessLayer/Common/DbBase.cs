@@ -83,9 +83,14 @@ abstract class DbBase : DisposeBase, IDatabase
     {
         var st = _store;
         if (st != null) _store = new ThreadLocal<IDbSession>();
-       
+
+#if NET45
+        var st2 = _store2;
+        if (st2 != null) _store2 = new ThreadLocal<IAsyncDbSession>();
+#else
         var st2 = _store2;
         if (st2 != null) _store2 = new AsyncLocal<IAsyncDbSession>();
+#endif
     }
     #endregion
 
@@ -267,7 +272,11 @@ abstract class DbBase : DisposeBase, IDatabase
 
     #region 方法
     private ThreadLocal<IDbSession> _store = new();
+#if NET45
+    private ThreadLocal<IAsyncDbSession> _store2 = new();
+#else
     private AsyncLocal<IAsyncDbSession> _store2 = new();
+#endif
 
     /// <summary>创建数据库会话，数据库在每一个线程都有唯一的一个实例</summary>
     /// <returns></returns>

@@ -350,7 +350,11 @@ partial class DAL
     /// <summary>数据层缓存。默认10秒</summary>
     public Int32 Expire { get; set; }
 
+#if NET45
+    private static readonly ThreadLocal<String> _SpanTag = new();
+#else
     private static readonly AsyncLocal<String> _SpanTag = new();
+#endif
 
     /// <summary>埋点上下文信息。用于附加在埋点标签后的上下文信息</summary>
     public static void SetSpanTag(String value) => _SpanTag.Value = value;

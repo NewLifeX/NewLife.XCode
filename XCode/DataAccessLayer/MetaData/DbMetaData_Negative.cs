@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+﻿using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
 using NewLife;
@@ -157,7 +154,7 @@ internal partial class DbMetaData
 
     protected virtual void CheckTable(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
-        var onlySql = mode <= Migration.ReadOnly;
+        var @readonly = mode <= Migration.ReadOnly;
         if (dbtable == null)
         {
             // 没有字段的表不创建
@@ -167,15 +164,15 @@ internal partial class DbMetaData
 
             var sb = new StringBuilder();
             // 建表，如果不是onlySql，执行时DAL会输出SQL日志
-            CreateTable(sb, entitytable, onlySql);
+            CreateTable(sb, entitytable, @readonly);
 
             // 仅获取语句
-            if (onlySql) WriteLog($"DDL模式[{mode}]，请手工创建表：{entitytable.TableName}{Environment.NewLine}{sb}");
+            if (@readonly) WriteLog($"DDL模式[{mode}]，请手工创建表：{entitytable.TableName}{Environment.NewLine}{sb}");
         }
         else
         {
-            var noDelete = mode < Migration.Full;
-            var sql = CheckColumnsChange(entitytable, dbtable, onlySql, noDelete);
+            var onlyCreate = mode < Migration.Full;
+            var sql = CheckColumnsChange(entitytable, dbtable, @readonly, onlyCreate);
             if (!String.IsNullOrEmpty(sql)) sql += ";";
             sql += CheckTableDescriptionAndIndex(entitytable, dbtable, mode);
             if (!sql.IsNullOrEmpty()) WriteLog($"DDL模式[{mode}]，请手工修改表：{Environment.NewLine}{sql}");
@@ -185,10 +182,10 @@ internal partial class DbMetaData
     /// <summary>检查字段改变。某些数据库（如SQLite）没有添删改字段的DDL语法，可重载该方法，使用重建表方法ReBuildTable</summary>
     /// <param name="entitytable"></param>
     /// <param name="dbtable"></param>
-    /// <param name="onlySql"></param>
-    /// <param name="noDelete"></param>
+    /// <param name="readonly"></param>
+    /// <param name="onlyCreate"></param>
     /// <returns>返回未执行语句</returns>
-    protected virtual String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean onlySql, Boolean noDelete)
+    protected virtual String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean @readonly, Boolean onlyCreate)
     {
         var sb = new StringBuilder();
         var etdic = entitytable.Columns.ToDictionary(e => e.ColumnName.ToLower(), e => e, StringComparer.OrdinalIgnoreCase);
@@ -216,8 +213,8 @@ internal partial class DbMetaData
                     item.Nullable = true;
                 }
 
-                PerformSchema(sb, onlySql, DDLSchema.AddColumn, item);
-                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, onlySql, DDLSchema.AddColumnDescription, item);
+                PerformSchema(sb, @readonly, DDLSchema.AddColumn, item);
+                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, @readonly, DDLSchema.AddColumnDescription, item);
             }
         }
         #endregion
@@ -229,8 +226,8 @@ internal partial class DbMetaData
             var item = dbtable.Columns[i];
             if (!etdic.ContainsKey(item.ColumnName.ToLower()))
             {
-                if (!String.IsNullOrEmpty(item.Description)) PerformSchema(sb, onlySql || noDelete, DDLSchema.DropColumnDescription, item);
-                PerformSchema(sbDelete, onlySql || noDelete, DDLSchema.DropColumn, item);
+                if (!String.IsNullOrEmpty(item.Description)) PerformSchema(sb, @readonly || onlyCreate, DDLSchema.DropColumnDescription, item);
+                PerformSchema(sbDelete, @readonly || onlyCreate, DDLSchema.DropColumn, item);
             }
         }
         if (sbDelete.Length > 0)
@@ -259,10 +256,12 @@ internal partial class DbMetaData
             if (IsColumnTypeChanged(item, dbf))
             {
                 WriteLog("字段{0}.{1}类型需要由数据库的{2}改变为实体的{3}", entitytable.Name, item.Name, dbf.DataType, item.DataType);
-                PerformSchema(sb, noDelete, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, onlyCreate, DDLSchema.AlterColumn, item, dbf);
             }
+            else if (IsColumnLengthChanged(item, dbf, entityDb))
+                PerformSchema(sb, @readonly, DDLSchema.AlterColumn, item, dbf);
             else if (IsColumnChanged(item, dbf, entityDb))
-                PerformSchema(sb, noDelete, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, onlyCreate, DDLSchema.AlterColumn, item, dbf);
 
             //if (item.Description + "" != dbf.Description + "")
             if (FormatDescription(item.Description) != FormatDescription(dbf.Description))
@@ -271,7 +270,7 @@ internal partial class DbMetaData
                 //if (dbf.Description != null) PerformSchema(sb, noDelete, DDLSchema.DropColumnDescription, dbf);
 
                 // 加上新注释
-                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, onlySql, DDLSchema.AddColumnDescription, item);
+                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, @readonly, DDLSchema.AddColumnDescription, item);
             }
         }
         #endregion
@@ -286,8 +285,8 @@ internal partial class DbMetaData
     /// <returns>返回未执行语句</returns>
     protected virtual String CheckTableDescriptionAndIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
-        var onlySql = mode <= Migration.ReadOnly;
-        var noDelete = mode < Migration.Full;
+        var @readonly = mode <= Migration.ReadOnly;
+        var onlyCreate = mode < Migration.Full;
 
         var sb = new StringBuilder();
 
@@ -299,7 +298,7 @@ internal partial class DbMetaData
             //if (!String.IsNullOrEmpty(dbtable.Description)) PerformSchema(sb, onlySql, DDLSchema.DropTableDescription, dbtable);
 
             // 加上新注释
-            if (!String.IsNullOrEmpty(entitytable.Description)) PerformSchema(sb, onlySql, DDLSchema.AddTableDescription, entitytable);
+            if (!String.IsNullOrEmpty(entitytable.Description)) PerformSchema(sb, @readonly, DDLSchema.AddTableDescription, entitytable);
         }
         #endregion
 
@@ -318,7 +317,7 @@ internal partial class DbMetaData
                 var di = ModelHelper.GetIndex(entitytable, dcs.Select(e => e.ColumnName).ToArray());
                 if (di == null)
                 {
-                    PerformSchema(sb, noDelete, DDLSchema.DropIndex, item);
+                    PerformSchema(sb, onlyCreate, DDLSchema.DropIndex, item);
                     dbdis.Remove(item);
                 }
             }
@@ -352,7 +351,7 @@ internal partial class DbMetaData
                     ids.Add(key);
 
                     if (di == null)
-                        PerformSchema(sb, onlySql, DDLSchema.CreateIndex, item);
+                        PerformSchema(sb, @readonly, DDLSchema.CreateIndex, item);
                 }
 
                 if (di == null)
@@ -363,7 +362,7 @@ internal partial class DbMetaData
         }
         #endregion
 
-        if (!onlySql) return null;
+        if (!@readonly) return null;
 
         return sb.ToString();
     }
@@ -392,6 +391,19 @@ internal partial class DbMetaData
         //if (entityColumn.PrimaryKey != dbColumn.PrimaryKey) return true;
         //if (entityColumn.Nullable != dbColumn.Nullable && !entityColumn.Identity && !entityColumn.PrimaryKey) return true;
 
+        // 是否已改变
+        var isChanged = false;
+
+        return isChanged;
+    }
+
+    /// <summary>检查字段是否有改变，除了默认值和备注以外</summary>
+    /// <param name="entityColumn"></param>
+    /// <param name="dbColumn"></param>
+    /// <param name="entityDb"></param>
+    /// <returns></returns>
+    protected virtual Boolean IsColumnLengthChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase entityDb)
+    {
         // 是否已改变
         var isChanged = false;
 

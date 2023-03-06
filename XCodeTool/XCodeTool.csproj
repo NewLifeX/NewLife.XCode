@@ -12,8 +12,7 @@
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
-    <AssemblyVersion>$(VersionPrefix).*</AssemblyVersion>
-    <Deterministic>false</Deterministic>
+    <AssemblyVersion>$(VersionPrefix).$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</AssemblyVersion>
     <OutputPath>..\Bin</OutputPath>
     <LangVersion>latest</LangVersion>
     <PackAsTool>true</PackAsTool>

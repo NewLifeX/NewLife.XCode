@@ -54,7 +54,10 @@ public class BatchFinder<TKey, TEntity> where TEntity : Entity<TEntity>, new()
         // 先查缓存
         if (Cache.TryGetValue(key, out var entity)) return entity;
 
-        if (!_Keys.Contains(key)) throw new ArgumentOutOfRangeException(nameof(key));
+        if (key is Int32 n && n == 0) return null;
+        if (key is Int64 g && g == 0) return null;
+        if (key is String str && str.IsNullOrEmpty()) return null;
+        if (!_Keys.Contains(key)) throw new ArgumentOutOfRangeException(nameof(key), key, "error");
 
         var uk = Factory.Table.FindByName(Factory.Unique);
 

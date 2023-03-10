@@ -152,7 +152,7 @@ namespace XCode.DataAccessLayer
             var traceName = $"db:{ConnName}:ExecuteReader";
             if (Tracer != null)
             {
-                var tables = GetTables(sql);
+                var tables = GetTables(sql, true);
                 if (tables.Length > 0) traceName += ":" + tables.Join("-");
             }
             using var span = Tracer?.NewSpan(traceName, sql);
@@ -195,7 +195,7 @@ namespace XCode.DataAccessLayer
             var traceName = $"db:{ConnName}:ExecuteReaderAsync";
             if (Tracer != null)
             {
-                var tables = GetTables(sql);
+                var tables = GetTables(sql, true);
                 if (tables.Length > 0) traceName += ":" + tables.Join("-");
             }
             using var span = Tracer?.NewSpan(traceName, sql);

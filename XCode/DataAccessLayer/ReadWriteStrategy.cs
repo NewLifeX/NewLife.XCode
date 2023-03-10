@@ -67,7 +67,7 @@ namespace XCode.DataAccessLayer
             // 是否忽略的表名
             if (!sql.IsNullOrEmpty())
             {
-                var tables = DAL.GetTables(sql);
+                var tables = DAL.GetTables(sql, false);
                 foreach (var item in tables)
                 {
                     if (IgnoreTables.Contains(item)) return false;

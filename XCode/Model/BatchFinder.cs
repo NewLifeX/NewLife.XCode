@@ -17,6 +17,9 @@ public class BatchFinder<TKey, TEntity> where TEntity : Entity<TEntity>, new()
     /// <summary>主键集合</summary>
     public IList<TKey> Keys => _Keys;
 
+    /// <summary>批量查询数据的回调方法。支持外部自定义，内部默认使用In主键的操作</summary>
+    public Func<IList<TKey>, IList<TEntity>> Callback { get; set; }
+
     /// <summary>缓存数据</summary>
     public IDictionary<TKey, TEntity> Cache { get; } = new ConcurrentDictionary<TKey, TEntity>();
 
@@ -29,6 +32,10 @@ public class BatchFinder<TKey, TEntity> where TEntity : Entity<TEntity>, new()
     #region 构造
     /// <summary>实例化批量查找器</summary>
     public BatchFinder() => Factory = typeof(TEntity).AsFactory();
+
+    /// <summary>实例化批量查找器，并添加keys</summary>
+    /// <param name="keys"></param>
+    public BatchFinder(IEnumerable<TKey> keys) : this() => Add(keys);
     #endregion
 
     #region 方法
@@ -65,10 +72,12 @@ public class BatchFinder<TKey, TEntity> where TEntity : Entity<TEntity>, new()
         while (_index < _Keys.Count)
         {
             var ks = _Keys.Skip(_index).Take(BatchSize).ToList();
-            var list = Factory.FindAll(uk.In(ks), null, null, 0, 0);
+            var list = Callback != null ?
+                Callback(ks) :
+                Factory.FindAll(uk.In(ks), null, null, 0, 0).Cast<TEntity>().ToList();
             foreach (var item in list)
             {
-                Cache[(TKey)item[uk.Name]] = (TEntity)item;
+                Cache[(TKey)item[uk.Name]] = item;
             }
 
             // 找找有没有，如果没有则继续查
@@ -79,5 +88,10 @@ public class BatchFinder<TKey, TEntity> where TEntity : Entity<TEntity>, new()
 
         return null;
     }
+
+    /// <summary>索引访问器</summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public TEntity this[TKey key] => FindByKey(key);
     #endregion
 }

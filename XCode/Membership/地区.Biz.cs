@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -177,6 +178,15 @@ namespace XCode.Membership
                                                       });
 
         private Boolean IsVirtual => Name.EqualIgnoreCase("市辖区", "直辖县", "直辖镇");
+
+        /// <summary>租户</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+
+        /// <summary>租户名</summary>
+        [Map(__.TenantId, typeof(Tenant), __.ID)]
+        public String TenantName => Tenant?.Name;
+
         #endregion
 
         #region 扩展查询

@@ -17,6 +17,7 @@ namespace XCode.Membership
     [BindIndex("IU_Parameter_UserID_Category_Name", true, "UserID,Category,Name")]
     [BindIndex("IX_Parameter_Category_Name", false, "Category,Name")]
     [BindIndex("IX_Parameter_UpdateTime", false, "UpdateTime")]
+    [BindIndex("IX_Parameter_TenantId", false, "TenantId")]
     [BindTable("Parameter", Description = "字典参数", ConnName = "Membership", DbType = DatabaseType.None)]
     public partial class Parameter
     {
@@ -28,6 +29,14 @@ namespace XCode.Membership
         [DataObjectField(true, true, false, 0)]
         [BindColumn("ID", "编号", "")]
         public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+
+        private Int32 _TenantId;
+        /// <summary>租户</summary>
+        [DisplayName("租户")]
+        [Description("租户")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("TenantId", "租户", "")]
+        public Int32 TenantId { get => _TenantId; set { if (OnPropertyChanging("TenantId", value)) { _TenantId = value; OnPropertyChanged("TenantId"); } } }
 
         private Int32 _UserID;
         /// <summary>用户。按用户区分参数，用户0表示系统级</summary>
@@ -232,6 +241,7 @@ namespace XCode.Membership
                 switch (name)
                 {
                     case "ID": return _ID;
+                    case "TenantId": return _TenantId;
                     case "UserID": return _UserID;
                     case "Category": return _Category;
                     case "Name": return _Name;
@@ -262,6 +272,7 @@ namespace XCode.Membership
                 switch (name)
                 {
                     case "ID": _ID = value.ToInt(); break;
+                    case "TenantId": _TenantId = value.ToInt(); break;
                     case "UserID": _UserID = value.ToInt(); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Name": _Name = Convert.ToString(value); break;
@@ -296,6 +307,9 @@ namespace XCode.Membership
         {
             /// <summary>编号</summary>
             public static readonly Field ID = FindByName("ID");
+
+            /// <summary>租户</summary>
+            public static readonly Field TenantId = FindByName("TenantId");
 
             /// <summary>用户。按用户区分参数，用户0表示系统级</summary>
             public static readonly Field UserID = FindByName("UserID");
@@ -371,6 +385,9 @@ namespace XCode.Membership
         {
             /// <summary>编号</summary>
             public const String ID = "ID";
+
+            /// <summary>租户</summary>
+            public const String TenantId = "TenantId";
 
             /// <summary>用户。按用户区分参数，用户0表示系统级</summary>
             public const String UserID = "UserID";

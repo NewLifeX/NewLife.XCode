@@ -15,6 +15,7 @@ namespace XCode.Membership
     [DataObject]
     [Description("菜单")]
     [BindIndex("IX_Menu_Name", false, "Name")]
+    [BindIndex("IX_Menu_TenantId", false, "TenantId")]
     [BindIndex("IU_Menu_ParentID_Name", true, "ParentID,Name")]
     [BindTable("Menu", Description = "菜单", ConnName = "Membership", DbType = DatabaseType.None)]
     public partial class Menu
@@ -27,6 +28,14 @@ namespace XCode.Membership
         [DataObjectField(true, true, false, 0)]
         [BindColumn("ID", "编号", "")]
         public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+
+        private Int32 _TenantId;
+        /// <summary>租户</summary>
+        [DisplayName("租户")]
+        [Description("租户")]
+        [DataObjectField(false, false, false, 0)]
+        [BindColumn("TenantId", "租户", "")]
+        public Int32 TenantId { get => _TenantId; set { if (OnPropertyChanging("TenantId", value)) { _TenantId = value; OnPropertyChanged("TenantId"); } } }
 
         private String _Name;
         /// <summary>名称</summary>
@@ -263,6 +272,7 @@ namespace XCode.Membership
                 switch (name)
                 {
                     case "ID": return _ID;
+                    case "TenantId": return _TenantId;
                     case "Name": return _Name;
                     case "DisplayName": return _DisplayName;
                     case "FullName": return _FullName;
@@ -297,6 +307,7 @@ namespace XCode.Membership
                 switch (name)
                 {
                     case "ID": _ID = value.ToInt(); break;
+                    case "TenantId": _TenantId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
                     case "FullName": _FullName = Convert.ToString(value); break;
@@ -335,6 +346,9 @@ namespace XCode.Membership
         {
             /// <summary>编号</summary>
             public static readonly Field ID = FindByName("ID");
+
+            /// <summary>租户</summary>
+            public static readonly Field TenantId = FindByName("TenantId");
 
             /// <summary>名称</summary>
             public static readonly Field Name = FindByName("Name");
@@ -422,6 +436,9 @@ namespace XCode.Membership
         {
             /// <summary>编号</summary>
             public const String ID = "ID";
+
+            /// <summary>租户</summary>
+            public const String TenantId = "TenantId";
 
             /// <summary>名称</summary>
             public const String Name = "Name";

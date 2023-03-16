@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Collections;
@@ -84,6 +85,14 @@ namespace XCode.Membership
         /// <summary>用户名</summary>
         [Map(nameof(UserID))]
         public String UserName => UserID == 0 ? "全局" : (User + "");
+
+        /// <summary>租户</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+
+        /// <summary>租户名</summary>
+        [Map(__.TenantId, typeof(Tenant), __.ID)]
+        public String TenantName => Tenant?.Name;
         #endregion
 
         #region 扩展查询

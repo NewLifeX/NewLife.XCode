@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Threading;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
 using XCode.Cache;
@@ -60,6 +63,14 @@ namespace XCode.Membership
         #endregion
 
         #region 扩展属性
+        /// <summary>租户</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+
+        /// <summary>租户名</summary>
+        [Map(__.TenantId, typeof(Tenant), __.ID)]
+        public String TenantName => Tenant?.Name;
+
         #endregion
 
         #region 扩展查询

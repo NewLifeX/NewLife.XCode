@@ -95,6 +95,14 @@ namespace XCode.Membership
         [Map(__.ManagerID, typeof(User), __.ID)]
         public String ManagerName => Manager?.ToString();
 
+        /// <summary>租户</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+
+        /// <summary>租户名</summary>
+        [Map(__.TenantId, typeof(Tenant), __.ID)]
+        public String TenantName => Tenant?.Name;
+
         /// <summary>父级</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
         public Department Parent => Extends.Get(nameof(Department), k => FindByID(ParentID));
@@ -206,6 +214,26 @@ namespace XCode.Membership
             if (parentId >= 0) exp &= _.ParentID == parentId;
             if (enable != null) exp &= _.Enable == enable.Value;
             if (visible != null) exp &= _.Visible == visible.Value;
+            if (!key.IsNullOrEmpty()) exp &= _.Code.StartsWith(key) | _.Name.StartsWith(key) | _.FullName.StartsWith(key);
+
+            return FindAll(exp, page);
+        }
+
+        /// <summary>高级搜索(带租户)</summary>
+        /// <param name="tenantId"></param>
+        /// <param name="parentId"></param>
+        /// <param name="enable"></param>
+        /// <param name="visible"></param>
+        /// <param name="key"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        public static IList<Department> SearchWithTenant(Int32 tenantId, Int32 parentId, Boolean? enable, Boolean? visible, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+            if (parentId >= 0) exp &= _.ParentID == parentId;
+            if (enable != null) exp &= _.Enable == enable.Value;
+            if (visible != null) exp &= _.Visible == visible.Value;
+            if (tenantId > 0) exp &= _.TenantId == tenantId;
             if (!key.IsNullOrEmpty()) exp &= _.Code.StartsWith(key) | _.Name.StartsWith(key) | _.FullName.StartsWith(key);
 
             return FindAll(exp, page);

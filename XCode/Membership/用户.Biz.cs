@@ -145,6 +145,14 @@ namespace XCode.Membership
         [Map(nameof(AreaId))]
         public String AreaName => Area.FindByID(AreaId)?.Path;
 
+        /// <summary>租户</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+
+        /// <summary>租户名</summary>
+        [Map("TenantName", typeof(Tenant), __.ID)]
+        public String TenantName => Tenant?.Name;
+
         ///// <summary>兼容旧版角色组</summary>
         //[Obsolete("=>RoleIds")]
         //public String RoleIDs { get => RoleIds; set => RoleIds = value; }
@@ -238,6 +246,15 @@ namespace XCode.Membership
         /// <returns></returns>
         public static IList<User> Search(String key, Int32 roleId, Boolean? isEnable, PageParameter p) => Search(key, roleId, isEnable, DateTime.MinValue, DateTime.MinValue, p);
 
+        /// <summary>高级查询(带租户)</summary>
+        /// <param name="key"></param>
+        /// <param name="tenantId"></param>
+        /// <param name="roleId"></param>
+        /// <param name="isEnable"></param>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public static IList<User> SearchWithTenant(String key, Int32 tenantId, Int32 roleId, Boolean? isEnable, PageParameter p) => SearchWithTenant(key, tenantId, roleId, isEnable, DateTime.MinValue, DateTime.MinValue, p);
+
         /// <summary>高级查询</summary>
         /// <param name="key"></param>
         /// <param name="roleId"></param>
@@ -251,6 +268,34 @@ namespace XCode.Membership
             var exp = _.LastLogin.Between(start, end);
             if (roleId > 0) exp &= _.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",");
             if (isEnable != null) exp &= _.Enable == isEnable;
+
+            // 先精确查询，再模糊
+            if (!key.IsNullOrEmpty())
+            {
+                var list = FindAll(exp & (_.Code == key | _.Name == key | _.DisplayName == key | _.Mail == key | _.Mobile == key), p);
+                if (list.Count > 0) return list;
+
+                exp &= (_.Code.Contains(key) | _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Mail.Contains(key) | _.Mobile.Contains(key));
+            }
+
+            return FindAll(exp, p);
+        }
+
+        /// <summary>高级查询(带租户)</summary>
+        /// <param name="key"></param>
+        /// <param name="tenantId"></param>
+        /// <param name="roleId"></param>
+        /// <param name="isEnable"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public static IList<User> SearchWithTenant(String key, Int32 tenantId, Int32 roleId, Boolean? isEnable, DateTime start, DateTime end, PageParameter p)
+        {
+            var exp = _.LastLogin.Between(start, end);
+            if (roleId > 0) exp &= _.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",");
+            if (isEnable != null) exp &= _.Enable == isEnable;
+            if (tenantId > 0) exp &= _.TenantId == tenantId;
 
             // 先精确查询，再模糊
             if (!key.IsNullOrEmpty())
@@ -285,6 +330,29 @@ namespace XCode.Membership
             return FindAll(exp, page);
         }
 
+        /// <summary>高级搜索（带租户）</summary>
+        /// <param name="tenantId"></param>
+        /// <param name="roleId"></param>
+        /// <param name="departmentId"></param>
+        /// <param name="enable"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="key"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        public static IList<User> SearchWithTenant(Int32 tenantId, Int32 roleId, Int32 departmentId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+            if (roleId >= 0) exp &= _.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",");
+            if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
+            if (enable != null) exp &= _.Enable == enable.Value;
+            if (tenantId > 0) exp &= _.TenantId == tenantId;
+            exp &= _.LastLogin.Between(start, end);
+            if (!key.IsNullOrEmpty()) exp &= _.Code.StartsWith(key) | _.Name.StartsWith(key) | _.DisplayName.StartsWith(key) | _.Mobile.StartsWith(key) | _.Mail.StartsWith(key);
+
+            return FindAll(exp, page);
+        }
+
         /// <summary>高级搜索</summary>
         /// <param name="roleIds">角色</param>
         /// <param name="departmentIds">部门</param>
@@ -295,6 +363,18 @@ namespace XCode.Membership
         /// <param name="page"></param>
         /// <returns></returns>
         public static IList<User> Search(Int32[] roleIds, Int32[] departmentIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page) => Search(roleIds, departmentIds, null, enable, start, end, key, page);
+
+        /// <summary>高级搜索（带租户）</summary>
+        /// <param name="tenantIds"></param>
+        /// <param name="roleIds"></param>
+        /// <param name="departmentIds"></param>
+        /// <param name="enable"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="key"></param>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        public static IList<User> SearchWithTenant(Int32[] tenantIds, Int32[] roleIds, Int32[] departmentIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page) => SearchWithTenant(tenantIds, roleIds, departmentIds, null, enable, start, end, key, page);
 
         /// <summary>高级搜索</summary>
         /// <param name="roleIds">角色</param>
@@ -309,6 +389,41 @@ namespace XCode.Membership
         public static IList<User> Search(Int32[] roleIds, Int32[] departmentIds, Int32[] areaIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
+            if (roleIds != null && roleIds.Length > 0)
+            {
+                //exp &= _.RoleID.In(roleIds) | _.RoleIds.Contains("," + roleIds.Join(",") + ",");
+                var exp2 = new WhereExpression();
+                exp2 |= _.RoleID.In(roleIds);
+                foreach (var rid in roleIds)
+                {
+                    exp2 |= _.RoleIds.Contains("," + rid + ",");
+                }
+                exp &= exp2;
+            }
+            if (departmentIds != null && departmentIds.Length > 0) exp &= _.DepartmentID.In(departmentIds);
+            if (areaIds != null && areaIds.Length > 0) exp &= _.AreaId.In(areaIds);
+            if (enable != null) exp &= _.Enable == enable.Value;
+            exp &= _.LastLogin.Between(start, end);
+            if (!key.IsNullOrEmpty()) exp &= _.Code.StartsWith(key) | _.Name.StartsWith(key) | _.DisplayName.StartsWith(key) | _.Mobile.StartsWith(key) | _.Mail.StartsWith(key);
+
+            return FindAll(exp, page);
+        }
+
+        /// <summary>高级搜索（带租户）</summary>
+        /// <param name="tenantIds">租户</param>
+        /// <param name="roleIds">角色</param>
+        /// <param name="departmentIds">部门</param>
+        /// <param name="areaIds">地区</param>
+        /// <param name="enable">启用</param>
+        /// <param name="start">登录时间开始</param>
+        /// <param name="end">登录时间结束</param>
+        /// <param name="key">关键字，搜索代码、名称、昵称、手机、邮箱</param>
+        /// <param name="page"></param>
+        /// <returns></returns>
+        public static IList<User> SearchWithTenant(Int32[] tenantIds, Int32[] roleIds, Int32[] departmentIds, Int32[] areaIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+            if (tenantIds != null && tenantIds.Length > 0) exp &= _.TenantId.In(tenantIds);
             if (roleIds != null && roleIds.Length > 0)
             {
                 //exp &= _.RoleID.In(roleIds) | _.RoleIds.Contains("," + roleIds.Join(",") + ",");
@@ -646,6 +761,9 @@ namespace XCode.Membership
 
         /// <summary>角色名</summary>
         String RoleName { get; }
+
+        /// <summary></summary>
+        String TenantName { get; }
 
         /// <summary>用户是否拥有当前菜单的指定权限</summary>
         /// <param name="menu">指定菜单</param>

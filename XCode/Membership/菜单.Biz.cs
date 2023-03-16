@@ -154,6 +154,15 @@ namespace XCode.Membership
 
         /// <summary>友好名称。优先显示名</summary>
         public String FriendName => DisplayName.IsNullOrWhiteSpace() ? Name : DisplayName;
+
+        /// <summary>租户</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+
+        /// <summary>租户名</summary>
+        [Map(__.TenantId, typeof(Tenant), __.ID)]
+        public String TenantName => Tenant?.Name;
+
         #endregion
 
         #region 扩展查询

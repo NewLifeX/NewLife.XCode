@@ -225,6 +225,17 @@ namespace XCode.Membership
         }
         #endregion
 
+        #region 扩展属性
+        /// <summary>租户</summary>
+        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+
+        /// <summary>租户名</summary>
+        [Map(__.TenantId, typeof(Tenant), __.ID)]
+        public String TenantName => Tenant?.Name;
+
+        #endregion 
+
         #region 扩展查询
         /// <summary>根据编号查找角色</summary>
         /// <param name="id"></param>

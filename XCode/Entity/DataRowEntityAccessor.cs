@@ -190,15 +190,17 @@ namespace XCode
             // 不处理相同数据的赋值
             if (Equals(value, oldValue)) return;
 
-            if (type == typeof(String))
-            {
-                // 不处理空字符串对空字符串的赋值
-                if (value != null && String.IsNullOrEmpty(value.ToString()))
-                {
-                    if (oldValue == null || String.IsNullOrEmpty(oldValue.ToString())) return;
-                }
-            }
-            else if (type == typeof(Boolean))
+            //!!! 填充数据的时候，数据库里面是什么值这里就填充什么值，允许String.Empty覆盖null。同时也解决了给字段赋值Empty后会反复update的问题
+            //if (type == typeof(String))
+            //{
+            //    // 不处理空字符串对空字符串的赋值
+            //    if (value != null && String.IsNullOrEmpty(value.ToString()))
+            //    {
+            //        if (oldValue == null || String.IsNullOrEmpty(oldValue.ToString())) return;
+            //    }
+            //}
+            //else 
+            if (type == typeof(Boolean))
             {
                 // 处理字符串转为布尔型
                 if (value != null && value.GetType() == typeof(String))

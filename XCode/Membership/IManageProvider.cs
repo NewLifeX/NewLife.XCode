@@ -33,6 +33,15 @@ namespace XCode.Membership
         /// <param name="context"></param>
         void SetCurrent(IManageUser user, IServiceProvider context);
 
+        /// <summary>获取租户信息</summary>
+        /// <returns></returns>
+        Int32 GetTenant(IServiceProvider context);
+
+        /// <summary>设置租户</summary>
+        /// <param name="tenantId"></param>
+        /// <param name="context"></param>
+        void SetTenant(Int32 tenantId, IServiceProvider context);
+
         /// <summary>根据用户编号查找</summary>
         /// <param name="userid"></param>
         /// <returns></returns>
@@ -99,6 +108,10 @@ namespace XCode.Membership
         /// <summary>当前用户</summary>
         public virtual IManageUser Current { get => GetCurrent(); set => SetCurrent(value); }
 
+        private Int32 _TenantId;
+        /// <summary>当前租户信息</summary>
+        public Int32 CurrentTenant { get => GetTenant(); set => SetTenant(value); }
+
         /// <summary>密码提供者</summary>
         public IPasswordProvider PasswordProvider { get; set; } = new SaltPasswordProvider();
 
@@ -111,6 +124,15 @@ namespace XCode.Membership
         /// <param name="user"></param>
         /// <param name="context"></param>
         public abstract void SetCurrent(IManageUser user, IServiceProvider context = null);
+
+        /// <summary>获取当前用户租户</summary>
+        /// <returns></returns>
+        public abstract Int32 GetTenant(IServiceProvider context = null);
+
+        /// <summary>设置当前用户租户</summary>
+        /// <param name="tenantId"></param>
+        /// <param name="context"></param>
+        public abstract void SetTenant(Int32 tenantId, IServiceProvider context = null);
 
         /// <summary>根据用户编号查找</summary>
         /// <param name="userid"></param>
@@ -294,7 +316,7 @@ namespace XCode.Membership
         private static void Register<TIEntity>(IEntityFactory factory)
         {
             InitFactories();
-            
+
             _factories[typeof(TIEntity)] = factory;
         }
 

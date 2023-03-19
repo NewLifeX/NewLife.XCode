@@ -3,7 +3,6 @@
   <Table Name="User" Description="用户。用户帐号信息">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="TenantId" DataType="Int32" Description="租户" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。登录用户名" />
       <Column Name="Password" DataType="String" Length="200" Description="密码" />
       <Column Name="DisplayName" DataType="String" Description="昵称" />
@@ -117,7 +116,6 @@
   <Table Name="Menu" Description="菜单" BaseType="EntityTree">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="TenantId" DataType="Int32" Description="租户" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="DisplayName" DataType="String" Description="显示名" />
       <Column Name="FullName" DataType="String" Length="200" Description="全名" />
@@ -147,7 +145,6 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" />
-      <Index Columns="TenantId" />
       <Index Columns="ParentID,Name" Unique="True" />
     </Indexes>
   </Table>
@@ -188,7 +185,6 @@
   <Table Name="Area" Description="地区。行政区划数据，最高支持四级地址，9位数字">
     <Columns>
       <Column Name="ID" DataType="Int32" PrimaryKey="True" Description="编码。行政区划编码" />
-      <Column Name="TenantId" DataType="Int32" Description="租户" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="FullName" DataType="String" Master="True" Description="全名" />
       <Column Name="ParentID" DataType="Int32" Description="父级" />
@@ -209,7 +205,6 @@
     </Columns>
     <Indexes>
       <Index Columns="ParentID" />
-      <Index Columns="TenantId" />
       <Index Columns="Name" />
       <Index Columns="PinYin" />
       <Index Columns="JianPin" />
@@ -260,6 +255,23 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
+    </Indexes>
+  </Table>
+  <Table Name="TenantUser" Description="租户用户关系">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
+      <Column Name="TenantId" DataType="Int32" Description="租户" />
+      <Column Name="UserId" DataType="Int32" Description="用户" />
+      <Column Name="CreateUserId" DataType="Int32" Description="创建者" Model="False" Category="扩展" />
+      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Model="False" Category="扩展" />
+      <Column Name="CreateIP" DataType="String" Description="创建地址" Model="False" Category="扩展" />
+      <Column Name="UpdateUserId" DataType="Int32" Description="更新者" Model="False" Category="扩展" />
+      <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" Model="False" Category="扩展" />
+      <Column Name="UpdateIP" DataType="String" Description="更新地址" Model="False" Category="扩展" />
+      <Column Name="Remark" DataType="String" Length="500" Description="描述" Category="扩展" />
+    </Columns>
+    <Indexes>
+      <Index Columns="TenantId,UserId" Unique="True" />
     </Indexes>
   </Table>
 </Tables>

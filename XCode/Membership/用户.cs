@@ -32,14 +32,6 @@ namespace XCode.Membership
         [BindColumn("ID", "编号", "")]
         public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
-        private Int32 _TenantId;
-        /// <summary>租户</summary>
-        [DisplayName("租户")]
-        [Description("租户")]
-        [DataObjectField(false, false, false, 0)]
-        [BindColumn("TenantId", "租户", "")]
-        public Int32 TenantId { get => _TenantId; set { if (OnPropertyChanging("TenantId", value)) { _TenantId = value; OnPropertyChanged("TenantId"); } } }
-
         private String _Name;
         /// <summary>名称。登录用户名</summary>
         [DisplayName("名称")]
@@ -339,7 +331,6 @@ namespace XCode.Membership
                 switch (name)
                 {
                     case "ID": return _ID;
-                    case "TenantId": return _TenantId;
                     case "Name": return _Name;
                     case "Password": return _Password;
                     case "DisplayName": return _DisplayName;
@@ -381,7 +372,6 @@ namespace XCode.Membership
                 switch (name)
                 {
                     case "ID": _ID = value.ToInt(); break;
-                    case "TenantId": _TenantId = value.ToInt(); break;
                     case "Name": _Name = Convert.ToString(value); break;
                     case "Password": _Password = Convert.ToString(value); break;
                     case "DisplayName": _DisplayName = Convert.ToString(value); break;
@@ -427,9 +417,6 @@ namespace XCode.Membership
         {
             /// <summary>编号</summary>
             public static readonly Field ID = FindByName("ID");
-
-            /// <summary>租户</summary>
-            public static readonly Field TenantId = FindByName("TenantId");
 
             /// <summary>名称。登录用户名</summary>
             public static readonly Field Name = FindByName("Name");
@@ -538,9 +525,6 @@ namespace XCode.Membership
         {
             /// <summary>编号</summary>
             public const String ID = "ID";
-
-            /// <summary>租户</summary>
-            public const String TenantId = "TenantId";
 
             /// <summary>名称。登录用户名</summary>
             public const String Name = "Name";

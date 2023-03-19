@@ -147,11 +147,11 @@ namespace XCode.Membership
 
         /// <summary>租户</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+        public IList<Tenant> Tenants => Extends.Get(nameof(Tenants), k => TenantUser.FindAllByUserId(ID).Select(e => e.Tenant).ToList());
 
         /// <summary>租户名</summary>
         [Map("TenantName", typeof(Tenant), __.ID)]
-        public String TenantName => Tenant?.Name;
+        public String TenantName => Tenants.Join(",", e => e.Name);
 
         ///// <summary>兼容旧版角色组</summary>
         //[Obsolete("=>RoleIds")]
@@ -295,7 +295,8 @@ namespace XCode.Membership
             var exp = _.LastLogin.Between(start, end);
             if (roleId > 0) exp &= _.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",");
             if (isEnable != null) exp &= _.Enable == isEnable;
-            if (tenantId > 0) exp &= _.TenantId == tenantId;
+            var tlist = TenantUser.FindAllByTenantId(tenantId);
+            if (tlist.Count > 0) exp &= _.ID.In(tlist.Select(e => e.UserId));
 
             // 先精确查询，再模糊
             if (!key.IsNullOrEmpty())
@@ -346,7 +347,9 @@ namespace XCode.Membership
             if (roleId >= 0) exp &= _.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",");
             if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
             if (enable != null) exp &= _.Enable == enable.Value;
-            if (tenantId > 0) exp &= _.TenantId == tenantId;
+            var tlist = TenantUser.FindAllByTenantId(tenantId);
+            if (tlist.Count > 0) exp &= _.ID.In(tlist.Select(e => e.UserId));
+
             exp &= _.LastLogin.Between(start, end);
             if (!key.IsNullOrEmpty()) exp &= _.Code.StartsWith(key) | _.Name.StartsWith(key) | _.DisplayName.StartsWith(key) | _.Mobile.StartsWith(key) | _.Mail.StartsWith(key);
 
@@ -423,7 +426,12 @@ namespace XCode.Membership
         public static IList<User> SearchWithTenant(Int32[] tenantIds, Int32[] roleIds, Int32[] departmentIds, Int32[] areaIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
         {
             var exp = new WhereExpression();
-            if (tenantIds != null && tenantIds.Length > 0) exp &= _.TenantId.In(tenantIds);
+            if (tenantIds != null && tenantIds.Length > 0)
+            {
+                var uList = TenantUser.FindAllByTenantIds(tenantIds).Select(e => e.UserId);
+                exp &= _.ID.In(uList);
+            }
+
             if (roleIds != null && roleIds.Length > 0)
             {
                 //exp &= _.RoleID.In(roleIds) | _.RoleIds.Contains("," + roleIds.Join(",") + ",");

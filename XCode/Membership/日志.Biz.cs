@@ -173,6 +173,41 @@ namespace XCode.Membership
 
             return FindAll(exp, p);
         }
+
+        /// <summary>带租户查询</summary>
+        /// <param name="tenantId"></param>
+        /// <param name="category"></param>
+        /// <param name="action"></param>
+        /// <param name="linkId"></param>
+        /// <param name="success"></param>
+        /// <param name="userid"></param>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="key"></param>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        public static IList<Log> SearchWithTenant(Int32 tenantId, String category, String action, Int32 linkId, Boolean? success, Int32 userid, DateTime start, DateTime end, String key, PageParameter p)
+        {
+            var exp = new WhereExpression();
+
+            if (tenantId > 0) exp &= _.TenantId == tenantId;
+            if (!category.IsNullOrEmpty() && category != "全部") exp &= _.Category == category;
+            if (!action.IsNullOrEmpty() && action != "全部") exp &= _.Action == action;
+            if (linkId > 0) exp &= _.LinkID == linkId;
+            if (success != null) exp &= _.Success == success;
+            if (userid > 0) exp &= _.CreateUserID == userid;
+
+            // 主键带有时间戳
+            var snow = Meta.Factory.Snow;
+            if (snow != null)
+                exp &= _.ID.Between(start, end, snow);
+            else
+                exp &= _.CreateTime.Between(start, end);
+
+            if (!key.IsNullOrEmpty()) exp &= _.Remark.Contains(key);
+
+            return FindAll(exp, p);
+        }
         #endregion
 
         #region 扩展操作

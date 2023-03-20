@@ -95,7 +95,6 @@ public class EntityBuilder : ClassBuilder
     /// <summary>为Xml模型文件生成实体类</summary>
     /// <param name="tables">模型文件</param>
     /// <param name="option">生成可选项</param>
-    /// <param name="chineseFileName">是否中文名称</param>
     public static Int32 BuildTables(IList<IDataTable> tables, BuilderOption option)
     {
         if (tables == null || tables.Count == 0) return 0;

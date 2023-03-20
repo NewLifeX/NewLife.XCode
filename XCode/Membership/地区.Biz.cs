@@ -1,20 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Net.Http;
+﻿using System.IO.Compression;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Data;
-using NewLife.Http;
 using NewLife.Log;
-using NewLife.Threading;
 using XCode.Transform;
 
 namespace XCode.Membership;
@@ -116,23 +107,23 @@ public partial class Area : Entity<Area>
     /// <summary>所有父级</summary>
     [XmlIgnore, ScriptIgnore]
     public IList<Area> AllParents => Extends.Get(nameof(AllParents), k =>
-                                                   {
-                                                       var list = new List<Area>();
-                                                       var entity = Parent;
-                                                       while (entity != null)
-                                                       {
-                                                           if (entity.ID == 0 || list.Contains(entity)) break;
+    {
+        var list = new List<Area>();
+        var entity = Parent;
+        while (entity != null)
+        {
+            if (entity.ID == 0 || list.Contains(entity)) break;
 
-                                                           list.Add(entity);
+            list.Add(entity);
 
-                                                           entity = entity.Parent;
-                                                       }
+            entity = entity.Parent;
+        }
 
-                                                       // 倒序
-                                                       list.Reverse();
+        // 倒序
+        list.Reverse();
 
-                                                       return list;
-                                                   });
+        return list;
+    });
 
     /// <summary>父级路径</summary>
     public String ParentPath
@@ -166,37 +157,37 @@ public partial class Area : Entity<Area>
     /// <summary>子孙级区域。支持省市区，不支持乡镇街道</summary>
     [XmlIgnore, ScriptIgnore]
     public IList<Area> AllChilds => Extends.Get(nameof(AllChilds), k =>
-                                                  {
-                                                      var list = new List<Area>();
-                                                      foreach (var item in Childs)
-                                                      {
-                                                          list.Add(item);
-                                                          if (item.Level < 3) list.AddRange(item.AllChilds);
-                                                      }
-                                                      return list;
-                                                  });
+    {
+        var list = new List<Area>();
+        foreach (var item in Childs)
+        {
+            list.Add(item);
+            if (item.Level < 3) list.AddRange(item.AllChilds);
+        }
+        return list;
+    });
 
     private Boolean IsVirtual => Name.EqualIgnoreCase("市辖区", "直辖县", "直辖镇");
     #endregion
 
     #region 扩展查询
-    ///// <summary>根据编号查找</summary>
-    ///// <param name="id">编号</param>
-    ///// <returns>实体对象</returns>
-    //public static Area FindByID(Int32 id)
-    //{
-    //    //if (id == 0) return Root;
-    //    if (id <= 10_00_00 || id > 99_99_99_999) return null;
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static Area FindByID(Int32 id)
+    {
+        //if (id == 0) return Root;
+        if (id <= 10_00_00 || id > 99_99_99_999) return null;
 
-    //    //// 实体缓存
-    //    //var r = Meta.Cache.Find(e => e.ID == id);
-    //    //if (r != null) return r;
+        //// 实体缓存
+        //var r = Meta.Cache.Find(e => e.ID == id);
+        //if (r != null) return r;
 
-    //    // 单对象缓存
-    //    return Meta.SingleCache[id];
+        // 单对象缓存
+        return Meta.SingleCache[id];
 
-    //    //return Find(_.ID == id);
-    //}
+        //return Find(_.ID == id);
+    }
 
     /// <summary>根据ID列表数组查询，一般先后查街道、区县、城市、省份</summary>
     /// <param name="ids"></param>
@@ -228,10 +219,10 @@ public partial class Area : Entity<Area>
         return r.Childs.Find(e => e.Name == name || e.FullName == name);
     }
 
-    ///// <summary>根据名称查询三级地区，可能有多个地区同名</summary>
-    ///// <param name="name"></param>
-    ///// <returns></returns>
-    //public static IList<Area> FindAllByName(String name) => Meta.Cache.Entities.FindAll(e => e.Name == name || e.FullName == name);
+    /// <summary>根据名称查询三级地区，可能有多个地区同名</summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static IList<Area> FindAllByName(String name) => Meta.Cache.Entities.FindAll(e => e.Name == name || e.FullName == name);
 
     /// <summary>根据名称列表数组查询，依次查省份、城市、区县、街道</summary>
     /// <param name="names">名称列表</param>
@@ -298,28 +289,28 @@ public partial class Area : Entity<Area>
     /// <summary>根据父级查子级，专属缓存</summary>
     private static readonly ICache _pcache = new MemoryCache { Expire = 20 * 60, Period = 10 * 60, };
 
-    ///// <summary>根据父级查找。三级地区使用实体缓存，四级地区使用专属缓存</summary>
-    ///// <param name="parentid">父级</param>
-    ///// <returns>实体列表</returns>
-    //public static IList<Area> FindAllByParentID(Int32 parentid)
-    //{
-    //    if (parentid is < 0 or > 99_99_99) return new List<Area>();
+    /// <summary>根据父级查找。三级地区使用实体缓存，四级地区使用专属缓存</summary>
+    /// <param name="parentid">父级</param>
+    /// <returns>实体列表</returns>
+    public static IList<Area> FindAllByParentID(Int32 parentid)
+    {
+        if (parentid is < 0 or > 99_99_99) return new List<Area>();
 
-    //    // 实体缓存
-    //    var rs = Meta.Cache.FindAll(e => e.ParentID == parentid);
-    //    // 有子节点，并且都是启用状态，则直接使用
-    //    //if (rs.Count > 0 && rs.Any(e => e.Enable)) return rs;
-    //    if (rs.Count > 0) return rs;
+        // 实体缓存
+        var rs = Meta.Cache.FindAll(e => e.ParentID == parentid);
+        // 有子节点，并且都是启用状态，则直接使用
+        //if (rs.Count > 0 && rs.Any(e => e.Enable)) return rs;
+        if (rs.Count > 0) return rs;
 
-    //    var key = parentid + "";
-    //    if (_pcache.TryGetValue(key, out rs)) return rs;
+        var key = parentid + "";
+        if (_pcache.TryGetValue(key, out rs)) return rs;
 
-    //    rs = FindAll(_.ParentID == parentid, _.ID.Asc(), null, 0, 0);
+        rs = FindAll(_.ParentID == parentid, _.ID.Asc(), null, 0, 0);
 
-    //    _pcache.Set(key, rs, 20 * 60);
+        _pcache.Set(key, rs, 20 * 60);
 
-    //    return rs;
-    //}
+        return rs;
+    }
     #endregion
 
     #region 高级查询

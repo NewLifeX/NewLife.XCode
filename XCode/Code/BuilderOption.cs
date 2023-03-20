@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace XCode.Code;
+﻿namespace XCode.Code;
 
 /// <summary>生成器选项</summary>
 public class BuilderOption
@@ -33,6 +30,9 @@ public class BuilderOption
 
     /// <summary>可扩展。实现IExtend接口</summary>
     public Boolean Extend { get; set; }
+
+    /// <summary>在数据类上生成扩展属性</summary>
+    public Boolean ExtendOnData { get; set; }
 
     /// <summary>用于生成拷贝函数的模型类。例如{name}或I{name}</summary>
     public String ModelNameForCopy { get; set; }

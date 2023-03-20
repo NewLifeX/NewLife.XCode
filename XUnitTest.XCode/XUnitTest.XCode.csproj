@@ -22,6 +22,8 @@
     <Compile Remove="Code\Entity\日志.cs" />
     <Compile Remove="Code\Entity\用户.Biz.cs" />
     <Compile Remove="Code\Entity\用户.cs" />
+    <Compile Remove="Code\entity_log_normal.cs" />
+    <Compile Remove="Code\entity_log_normal_biz.cs" />
     <Compile Remove="Code\entity_user_normal.cs" />
     <Compile Remove="Code\entity_user_normal_biz.cs" />
     <Compile Remove="Code\Models\IUserModel.cs" />
@@ -84,6 +86,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Code\Entity\用户.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Code\entity_log_normal.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Code\entity_log_normal_biz.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Code\entity_user_normal_biz.cs">

@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using System.Text;
-using System.Xml.Linq;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
@@ -13,7 +12,7 @@ namespace XCode.Code;
 public class EntityBuilder : ClassBuilder
 {
     #region 属性
-    /// <summary>业务类。</summary>
+    /// <summary>业务类</summary>
     public Boolean Business { get; set; }
 
     /// <summary>所有表类型名。用于扩展属性</summary>
@@ -299,6 +298,52 @@ public class EntityBuilder : ClassBuilder
             Writer.Write("}");
         }
     }
+
+    /// <summary>生成主体</summary>
+    protected override void BuildItems()
+    {
+        if (Business)
+        {
+            BuildAction();
+
+            if (!Option.ExtendOnData)
+            {
+                WriteLine();
+                BuildExtendProperty();
+
+                WriteLine();
+                BuildExtendSearch();
+
+                WriteLine();
+                BuildSearch();
+            }
+
+            WriteLine();
+            BuildBusiness();
+        }
+        else
+        {
+            base.BuildItems();
+
+            WriteLine();
+            BuildExtend();
+
+            if (Option.ExtendOnData)
+            {
+                WriteLine();
+                BuildExtendProperty();
+
+                WriteLine();
+                BuildExtendSearch();
+
+                WriteLine();
+                BuildSearch();
+            }
+
+            WriteLine();
+            BuildFieldName();
+        }
+    }
     #endregion
 
     #region 数据类
@@ -377,32 +422,6 @@ public class EntityBuilder : ClassBuilder
             WriteLine("{0} {1} {{ get; set; }}", type, dc.Name);
         else
             WriteLine("public {0} {1} {{ get => _{1}; set {{ if (OnPropertyChanging(\"{1}\", value)) {{ _{1} = value; OnPropertyChanged(\"{1}\"); }} }} }}", type, dc.Name);
-    }
-
-    /// <summary>生成主体</summary>
-    protected override void BuildItems()
-    {
-        if (Business)
-            BuildBiz();
-        else
-        {
-            base.BuildItems();
-
-            WriteLine();
-            BuildExtend();
-
-            WriteLine();
-            BuildExtendProperty();
-
-            WriteLine();
-            BuildExtendSearch();
-
-            WriteLine();
-            BuildSearch();
-
-            WriteLine();
-            BuildFieldName();
-        }
     }
 
     private void BuildExtend()
@@ -545,24 +564,6 @@ public class EntityBuilder : ClassBuilder
     #endregion
 
     #region 业务类
-    /// <summary>生成实体类业务部分</summary>
-    protected virtual void BuildBiz()
-    {
-        BuildAction();
-
-        WriteLine();
-        BuildExtendPropertyBiz();
-
-        WriteLine();
-        BuildExtendSearchBiz();
-
-        WriteLine();
-        BuildSearchBiz();
-
-        WriteLine();
-        BuildBusiness();
-    }
-
     /// <summary>对象操作</summary>
     protected virtual void BuildAction()
     {
@@ -1179,27 +1180,6 @@ public class EntityBuilder : ClassBuilder
             }
         }
 
-        WriteLine("#endregion");
-    }
-
-    /// <summary>扩展属性</summary>
-    protected virtual void BuildExtendPropertyBiz()
-    {
-        WriteLine("#region 扩展属性");
-        WriteLine("#endregion");
-    }
-
-    /// <summary>扩展查询</summary>
-    protected virtual void BuildExtendSearchBiz()
-    {
-        WriteLine("#region 扩展查询");
-        WriteLine("#endregion");
-    }
-
-    /// <summary>高级查询</summary>
-    protected virtual void BuildSearchBiz()
-    {
-        WriteLine("#region 高级查询");
         WriteLine("#endregion");
     }
 

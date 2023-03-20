@@ -10,6 +10,7 @@ namespace XUnitTest.XCode.Code;
 public class EntityBuilderTests
 {
     private IDataTable _table;
+    private IDataTable _tableLog;
     private BuilderOption _option;
 
     public EntityBuilderTests()
@@ -17,6 +18,7 @@ public class EntityBuilderTests
         _option = new BuilderOption();
         var tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
         _table = tables.FirstOrDefault(e => e.Name == "User");
+        _tableLog = tables.FirstOrDefault(e => e.Name == "Log");
     }
 
     private String ReadTarget(String file, String text)
@@ -64,6 +66,45 @@ public class EntityBuilderTests
         Assert.NotEmpty(rs);
 
         target = ReadTarget("Code\\entity_user_normal_biz.cs", rs);
+        Assert.Equal(target, rs);
+    }
+
+    [Fact]
+    public void ExtendOnData()
+    {
+        var option = new BuilderOption
+        {
+            ConnName = "MyConn",
+            Namespace = "Company.MyName",
+            Partial = true,
+            ExtendOnData = true
+        };
+        option.Usings.Add("NewLife.Remoting");
+
+        var builder = new EntityBuilder
+        {
+            Table = _tableLog,
+            Option = option,
+        };
+
+        // 数据类
+        builder.Execute();
+
+        var rs = builder.ToString();
+        Assert.NotEmpty(rs);
+
+        var target = ReadTarget("Code\\entity_log_normal.cs", rs);
+        Assert.Equal(target, rs);
+
+        // 业务类
+        builder.Clear();
+        builder.Business = true;
+        builder.Execute();
+
+        rs = builder.ToString();
+        Assert.NotEmpty(rs);
+
+        target = ReadTarget("Code\\entity_log_normal_biz.cs", rs);
         Assert.Equal(target, rs);
     }
 

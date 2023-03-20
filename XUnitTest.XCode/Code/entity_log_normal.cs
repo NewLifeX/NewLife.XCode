@@ -6,31 +6,32 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Remoting;
 using XCode;
 using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
-namespace XCode.Membership
+namespace Company.MyName
 {
     /// <summary>日志</summary>
     [Serializable]
     [DataObject]
     [Description("日志")]
-    [BindIndex("IX_Log_Action_Category_CreateTime", false, "Action,Category,CreateTime")]
-    [BindIndex("IX_Log_CreateUserID_CreateTime", false, "CreateUserID,CreateTime")]
-    [BindIndex("IX_Log_CreateTime", false, "CreateTime")]
-    [BindTable("Log", Description = "日志", ConnName = "Log", DbType = DatabaseType.None)]
-    public partial class Log : ILog
+    [BindIndex("IX_Log_Action_Category_ID", false, "Action,Category,ID")]
+    [BindIndex("IX_Log_Category_LinkID_ID", false, "Category,LinkID,ID")]
+    [BindIndex("IX_Log_CreateUserID_ID", false, "CreateUserID,ID")]
+    [BindTable("Log", Description = "日志", ConnName = "MyConn", DbType = DatabaseType.None)]
+    public partial class Log
     {
         #region 属性
-        private Int32 _ID;
+        private Int64 _ID;
         /// <summary>编号</summary>
         [DisplayName("编号")]
         [Description("编号")]
-        [DataObjectField(true, true, false, 0)]
+        [DataObjectField(true, false, false, 0)]
         [BindColumn("ID", "编号", "")]
-        public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+        public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
         private String _Category;
         /// <summary>类别</summary>
@@ -74,6 +75,7 @@ namespace XCode.Membership
 
         private Int32 _Ex1;
         /// <summary>扩展1</summary>
+        [Category("扩展")]
         [DisplayName("扩展1")]
         [Description("扩展1")]
         [DataObjectField(false, false, false, 0)]
@@ -82,6 +84,7 @@ namespace XCode.Membership
 
         private Int32 _Ex2;
         /// <summary>扩展2</summary>
+        [Category("扩展")]
         [DisplayName("扩展2")]
         [Description("扩展2")]
         [DataObjectField(false, false, false, 0)]
@@ -90,6 +93,7 @@ namespace XCode.Membership
 
         private Double _Ex3;
         /// <summary>扩展3</summary>
+        [Category("扩展")]
         [DisplayName("扩展3")]
         [Description("扩展3")]
         [DataObjectField(false, false, false, 0)]
@@ -98,6 +102,7 @@ namespace XCode.Membership
 
         private String _Ex4;
         /// <summary>扩展4</summary>
+        [Category("扩展")]
         [DisplayName("扩展4")]
         [Description("扩展4")]
         [DataObjectField(false, false, true, 50)]
@@ -106,6 +111,7 @@ namespace XCode.Membership
 
         private String _Ex5;
         /// <summary>扩展5</summary>
+        [Category("扩展")]
         [DisplayName("扩展5")]
         [Description("扩展5")]
         [DataObjectField(false, false, true, 50)]
@@ -114,14 +120,24 @@ namespace XCode.Membership
 
         private String _Ex6;
         /// <summary>扩展6</summary>
+        [Category("扩展")]
         [DisplayName("扩展6")]
         [Description("扩展6")]
         [DataObjectField(false, false, true, 50)]
         [BindColumn("Ex6", "扩展6", "")]
         public String Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
 
+        private String _TraceId;
+        /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
+        [DisplayName("性能追踪")]
+        [Description("性能追踪。用于APM性能追踪定位，还原该事件的调用链")]
+        [DataObjectField(false, false, true, 50)]
+        [BindColumn("TraceId", "性能追踪。用于APM性能追踪定位，还原该事件的调用链", "")]
+        public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
         private String _CreateUser;
         /// <summary>创建者</summary>
+        [Category("扩展")]
         [DisplayName("创建者")]
         [Description("创建者")]
         [DataObjectField(false, false, true, 50)]
@@ -130,6 +146,7 @@ namespace XCode.Membership
 
         private Int32 _CreateUserID;
         /// <summary>创建用户</summary>
+        [Category("扩展")]
         [DisplayName("创建用户")]
         [Description("创建用户")]
         [DataObjectField(false, false, false, 0)]
@@ -138,6 +155,7 @@ namespace XCode.Membership
 
         private String _CreateIP;
         /// <summary>创建地址</summary>
+        [Category("扩展")]
         [DisplayName("创建地址")]
         [Description("创建地址")]
         [DataObjectField(false, false, true, 50)]
@@ -156,34 +174,9 @@ namespace XCode.Membership
         /// <summary>详细信息</summary>
         [DisplayName("详细信息")]
         [Description("详细信息")]
-        [DataObjectField(false, false, true, 500)]
+        [DataObjectField(false, false, true, 2000)]
         [BindColumn("Remark", "详细信息", "")]
         public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
-        #endregion
-
-        #region 拷贝
-        /// <summary>拷贝模型对象</summary>
-        /// <param name="model">模型</param>
-        public void Copy(ILog model)
-        {
-            ID = model.ID;
-            Category = model.Category;
-            Action = model.Action;
-            LinkID = model.LinkID;
-            Success = model.Success;
-            UserName = model.UserName;
-            Ex1 = model.Ex1;
-            Ex2 = model.Ex2;
-            Ex3 = model.Ex3;
-            Ex4 = model.Ex4;
-            Ex5 = model.Ex5;
-            Ex6 = model.Ex6;
-            CreateUser = model.CreateUser;
-            CreateUserID = model.CreateUserID;
-            CreateIP = model.CreateIP;
-            CreateTime = model.CreateTime;
-            Remark = model.Remark;
-        }
         #endregion
 
         #region 获取/设置 字段值
@@ -208,6 +201,7 @@ namespace XCode.Membership
                     case "Ex4": return _Ex4;
                     case "Ex5": return _Ex5;
                     case "Ex6": return _Ex6;
+                    case "TraceId": return _TraceId;
                     case "CreateUser": return _CreateUser;
                     case "CreateUserID": return _CreateUserID;
                     case "CreateIP": return _CreateIP;
@@ -220,7 +214,7 @@ namespace XCode.Membership
             {
                 switch (name)
                 {
-                    case "ID": _ID = value.ToInt(); break;
+                    case "ID": _ID = value.ToLong(); break;
                     case "Category": _Category = Convert.ToString(value); break;
                     case "Action": _Action = Convert.ToString(value); break;
                     case "LinkID": _LinkID = value.ToInt(); break;
@@ -232,6 +226,7 @@ namespace XCode.Membership
                     case "Ex4": _Ex4 = Convert.ToString(value); break;
                     case "Ex5": _Ex5 = Convert.ToString(value); break;
                     case "Ex6": _Ex6 = Convert.ToString(value); break;
+                    case "TraceId": _TraceId = Convert.ToString(value); break;
                     case "CreateUser": _CreateUser = Convert.ToString(value); break;
                     case "CreateUserID": _CreateUserID = value.ToInt(); break;
                     case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -241,6 +236,86 @@ namespace XCode.Membership
                 }
             }
         }
+        #endregion
+
+        #region 扩展属性
+        #endregion
+
+        #region 扩展查询
+        /// <summary>根据编号查找</summary>
+        /// <param name="id">编号</param>
+        /// <returns>实体对象</returns>
+        public static Log FindByID(Int64 id)
+        {
+            if (id <= 0) return null;
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+
+            // 单对象缓存
+            return Meta.SingleCache[id];
+
+            //return Find(_.ID == id);
+        }
+
+        /// <summary>根据创建用户、编号查找</summary>
+        /// <param name="createUserId">创建用户</param>
+        /// <param name="id">编号</param>
+        /// <returns>实体列表</returns>
+        public static IList<Log> FindAllByCreateUserIDAndID(Int32 createUserId, Int64 id)
+        {
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserID == createUserId && e.ID == id);
+
+            return FindAll(_.CreateUserID == createUserId & _.ID == id);
+        }
+        #endregion
+
+        #region 高级查询
+        /// <summary>高级查询</summary>
+        /// <param name="category">类别</param>
+        /// <param name="action">操作</param>
+        /// <param name="linkId">链接</param>
+        /// <param name="createUserId">创建用户</param>
+        /// <param name="start">时间开始</param>
+        /// <param name="end">时间结束</param>
+        /// <param name="key">关键字</param>
+        /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+        /// <returns>实体列表</returns>
+        public static IList<Log> Search(String category, String action, Int32 linkId, Int32 createUserId, DateTime start, DateTime end, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+
+            if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+            if (!action.IsNullOrEmpty()) exp &= _.Action == action;
+            if (linkId >= 0) exp &= _.LinkID == linkId;
+            if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
+            exp &= _.CreateTime.Between(start, end);
+            if (!key.IsNullOrEmpty()) exp &= _.Category.Contains(key) | _.Action.Contains(key) | _.UserName.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.TraceId.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.Remark.Contains(key);
+
+            return FindAll(exp, page);
+        }
+
+        // Select Count(Id) as Id,Action From Log Where CreateTime>'2020-01-24 00:00:00' Group By Action Order By Id Desc limit 20
+        static readonly FieldCache<Log> _ActionCache = new FieldCache<Log>(nameof(Action))
+        {
+            //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+        };
+
+        /// <summary>获取操作列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetActionList() => _ActionCache.FindAllName();
+
+        // Select Count(Id) as Id,Category From Log Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
+        static readonly FieldCache<Log> _CategoryCache = new FieldCache<Log>(nameof(Category))
+        {
+            //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+        };
+
+        /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
         #endregion
 
         #region 字段名
@@ -282,6 +357,9 @@ namespace XCode.Membership
 
             /// <summary>扩展6</summary>
             public static readonly Field Ex6 = FindByName("Ex6");
+
+            /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
+            public static readonly Field TraceId = FindByName("TraceId");
 
             /// <summary>创建者</summary>
             public static readonly Field CreateUser = FindByName("CreateUser");
@@ -339,6 +417,9 @@ namespace XCode.Membership
 
             /// <summary>扩展6</summary>
             public const String Ex6 = "Ex6";
+
+            /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
+            public const String TraceId = "TraceId";
 
             /// <summary>创建者</summary>
             public const String CreateUser = "CreateUser";

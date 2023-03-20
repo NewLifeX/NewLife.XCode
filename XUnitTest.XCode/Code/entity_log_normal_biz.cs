@@ -15,6 +15,7 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
+using NewLife.Remoting;
 using NewLife.Threading;
 using NewLife.Web;
 using XCode;
@@ -24,21 +25,30 @@ using XCode.DataAccessLayer;
 using XCode.Membership;
 using XCode.Shards;
 
-namespace XCode.Membership
+namespace Company.MyName
 {
     public partial class Log : Entity<Log>
     {
         #region 对象操作
         static Log()
         {
+            Meta.Table.DataTable.InsertOnly = true;
+
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
             //df.Add(nameof(LinkID));
+            // 按天分表
+            //Meta.ShardPolicy = new TimeShardPolicy(nameof(ID), Meta.Factory)
+            //{
+            //    TablePolicy = "{{0}}_{{1:yyyyMMdd}}",
+            //    Step = TimeSpan.FromDays(1),
+            //};
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Modules.Add<UserModule>();
             Meta.Modules.Add<TimeModule>();
             Meta.Modules.Add<IPModule>();
+            Meta.Modules.Add<TraceModule>();
         }
 
         /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
@@ -72,6 +82,7 @@ namespace XCode.Membership
         //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Log[日志]数据……");
 
         //    var entity = new Log();
+        //    entity.ID = 0;
         //    entity.Category = "abc";
         //    entity.Action = "abc";
         //    entity.LinkID = 0;
@@ -83,6 +94,7 @@ namespace XCode.Membership
         //    entity.Ex4 = "abc";
         //    entity.Ex5 = "abc";
         //    entity.Ex6 = "abc";
+        //    entity.TraceId = "abc";
         //    entity.CreateUser = "abc";
         //    entity.CreateUserID = 0;
         //    entity.CreateIP = "abc";
@@ -108,70 +120,7 @@ namespace XCode.Membership
         //}
         #endregion
 
-        #region 扩展属性
-        #endregion
-
-        #region 扩展查询
-        /// <summary>根据编号查找</summary>
-        /// <param name="id">编号</param>
-        /// <returns>实体对象</returns>
-        public static Log FindByID(Int32 id)
-        {
-            if (id <= 0) return null;
-
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
-
-            // 单对象缓存
-            return Meta.SingleCache[id];
-
-            //return Find(_.ID == id);
-        }
-        #endregion
-
-        #region 高级查询
-        /// <summary>高级查询</summary>
-        /// <param name="category">类别</param>
-        /// <param name="action">操作</param>
-        /// <param name="createUserId">创建用户</param>
-        /// <param name="start">时间开始</param>
-        /// <param name="end">时间结束</param>
-        /// <param name="key">关键字</param>
-        /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
-        /// <returns>实体列表</returns>
-        public static IList<Log> Search(String category, String action, Int32 createUserId, DateTime start, DateTime end, String key, PageParameter page)
-        {
-            var exp = new WhereExpression();
-
-            if (!category.IsNullOrEmpty()) exp &= _.Category == category;
-            if (!action.IsNullOrEmpty()) exp &= _.Action == action;
-            if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
-            exp &= _.CreateTime.Between(start, end);
-            if (!key.IsNullOrEmpty()) exp &= _.Category.Contains(key) | _.Action.Contains(key) | _.UserName.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.Remark.Contains(key);
-
-            return FindAll(exp, page);
-        }
-
-        // Select Count(ID) as ID,Action From Log Where CreateTime>'2020-01-24 00:00:00' Group By Action Order By ID Desc limit 20
-        static readonly FieldCache<Log> _ActionCache = new FieldCache<Log>(nameof(Action))
-        {
-            //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-        };
-
-        /// <summary>获取操作列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-        /// <returns></returns>
-        public static IDictionary<String, String> GetActionList() => _ActionCache.FindAllName();
-        #endregion
-
         #region 业务操作
-        public ILog ToModel()
-        {
-            var model = new User();
-            model.Copy(this);
-
-             return model;
-        }
-
         #endregion
     }
 }

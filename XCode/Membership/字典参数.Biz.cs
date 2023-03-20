@@ -77,31 +77,31 @@ namespace XCode.Membership
         #endregion
 
         #region 扩展属性
-        /// <summary>用户</summary>
-        [XmlIgnore, IgnoreDataMember]
-        public IManageUser User => Extends.Get(nameof(User), k => Membership.User.FindByID(UserID));
+        ///// <summary>用户</summary>
+        //[XmlIgnore, IgnoreDataMember]
+        //public IManageUser User => Extends.Get(nameof(User), k => Membership.User.FindByID(UserID));
 
-        /// <summary>用户名</summary>
-        [Map(nameof(UserID))]
-        public String UserName => UserID == 0 ? "全局" : (User + "");
+        ///// <summary>用户名</summary>
+        //[Map(nameof(UserID))]
+        //public String UserName => UserID == 0 ? "全局" : (User + "");
         #endregion
 
         #region 扩展查询
-        /// <summary>根据编号查找</summary>
-        /// <param name="id">编号</param>
-        /// <returns>实体对象</returns>
-        public static Parameter FindByID(Int32 id)
-        {
-            if (id <= 0) return null;
+        ///// <summary>根据编号查找</summary>
+        ///// <param name="id">编号</param>
+        ///// <returns>实体对象</returns>
+        //public static Parameter FindByID(Int32 id)
+        //{
+        //    if (id <= 0) return null;
 
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+        //    // 实体缓存
+        //    if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
 
-            // 单对象缓存
-            //return Meta.SingleCache[id];
+        //    // 单对象缓存
+        //    //return Meta.SingleCache[id];
 
-            return Find(_.ID == id);
-        }
+        //    return Find(_.ID == id);
+        //}
 
         /// <summary>根据用户查找</summary>
         /// <param name="userId">用户</param>

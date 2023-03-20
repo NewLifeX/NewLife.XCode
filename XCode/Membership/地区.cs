@@ -1,10 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
+using NewLife;
+using NewLife.Data;
 using XCode;
+using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
@@ -229,6 +232,148 @@ namespace XCode.Membership
                 }
             }
         }
+        #endregion
+
+        #region 扩展属性
+        #endregion
+
+        #region 扩展查询
+        /// <summary>根据编码查找</summary>
+        /// <param name="id">编码</param>
+        /// <returns>实体对象</returns>
+        public static Area FindByID(Int32 id)
+        {
+            if (id <= 0) return null;
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+
+            // 单对象缓存
+            return Meta.SingleCache[id];
+
+            //return Find(_.ID == id);
+        }
+
+        /// <summary>根据父级查找</summary>
+        /// <param name="parentId">父级</param>
+        /// <returns>实体列表</returns>
+        public static IList<Area> FindAllByParentID(Int32 parentId)
+        {
+            if (parentId <= 0) return new List<Area>();
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId);
+
+            return FindAll(_.ParentID == parentId);
+        }
+
+        /// <summary>根据名称查找</summary>
+        /// <param name="name">名称</param>
+        /// <returns>实体列表</returns>
+        public static IList<Area> FindAllByName(String name)
+        {
+            if (name.IsNullOrEmpty()) return new List<Area>();
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+
+            return FindAll(_.Name == name);
+        }
+
+        /// <summary>根据拼音查找</summary>
+        /// <param name="pinYin">拼音</param>
+        /// <returns>实体列表</returns>
+        public static IList<Area> FindAllByPinYin(String pinYin)
+        {
+            if (pinYin.IsNullOrEmpty()) return new List<Area>();
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.PinYin.EqualIgnoreCase(pinYin));
+
+            return FindAll(_.PinYin == pinYin);
+        }
+
+        /// <summary>根据简拼查找</summary>
+        /// <param name="jianPin">简拼</param>
+        /// <returns>实体列表</returns>
+        public static IList<Area> FindAllByJianPin(String jianPin)
+        {
+            if (jianPin.IsNullOrEmpty()) return new List<Area>();
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.JianPin.EqualIgnoreCase(jianPin));
+
+            return FindAll(_.JianPin == jianPin);
+        }
+
+        /// <summary>根据地址编码查找</summary>
+        /// <param name="geoHash">地址编码</param>
+        /// <returns>实体列表</returns>
+        public static IList<Area> FindAllByGeoHash(String geoHash)
+        {
+            if (geoHash.IsNullOrEmpty()) return new List<Area>();
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.GeoHash.EqualIgnoreCase(geoHash));
+
+            return FindAll(_.GeoHash == geoHash);
+        }
+        #endregion
+
+        #region 高级查询
+        /// <summary>高级查询</summary>
+        /// <param name="name">名称</param>
+        /// <param name="parentId">父级</param>
+        /// <param name="pinYin">拼音</param>
+        /// <param name="jianPin">简拼</param>
+        /// <param name="geoHash">地址编码。字符串前缀相同越多，地理距离越近，8位精度19米，6位610米</param>
+        /// <param name="key">关键字</param>
+        /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+        /// <returns>实体列表</returns>
+        public static IList<Area> Search(String name, Int32 parentId, String pinYin, String jianPin, String geoHash, DateTime start, DateTime end, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+
+            if (!name.IsNullOrEmpty()) exp &= _.Name == name;
+            if (parentId >= 0) exp &= _.ParentID == parentId;
+            if (!pinYin.IsNullOrEmpty()) exp &= _.PinYin == pinYin;
+            if (!jianPin.IsNullOrEmpty()) exp &= _.JianPin == jianPin;
+            if (!geoHash.IsNullOrEmpty()) exp &= _.GeoHash == geoHash;
+            exp &= _.UpdateTime.Between(start, end);
+            if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.FullName.Contains(key) | _.Kind.Contains(key) | _.English.Contains(key) | _.PinYin.Contains(key) | _.JianPin.Contains(key) | _.TelCode.Contains(key) | _.ZipCode.Contains(key) | _.GeoHash.Contains(key) | _.Remark.Contains(key);
+
+            return FindAll(exp, page);
+        }
+
+        // Select Count(Id) as Id,PinYin From Area Where CreateTime>'2020-01-24 00:00:00' Group By PinYin Order By Id Desc limit 20
+        static readonly FieldCache<Area> _PinYinCache = new FieldCache<Area>(nameof(PinYin))
+        {
+            //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+        };
+
+        /// <summary>获取拼音列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetPinYinList() => _PinYinCache.FindAllName();
+
+        // Select Count(Id) as Id,JianPin From Area Where CreateTime>'2020-01-24 00:00:00' Group By JianPin Order By Id Desc limit 20
+        static readonly FieldCache<Area> _JianPinCache = new FieldCache<Area>(nameof(JianPin))
+        {
+            //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+        };
+
+        /// <summary>获取简拼列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetJianPinList() => _JianPinCache.FindAllName();
+
+        // Select Count(Id) as Id,GeoHash From Area Where CreateTime>'2020-01-24 00:00:00' Group By GeoHash Order By Id Desc limit 20
+        static readonly FieldCache<Area> _GeoHashCache = new FieldCache<Area>(nameof(GeoHash))
+        {
+            //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+        };
+
+        /// <summary>获取地址编码列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetGeoHashList() => _GeoHashCache.FindAllName();
         #endregion
 
         #region 字段名

@@ -130,20 +130,20 @@ namespace XCode.Membership
         [DisplayName("物理地址")]
         public String LastLoginAddress => LastLoginIP.IPToAddress();
 
-        /// <summary>部门</summary>
-        [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
+        ///// <summary>部门</summary>
+        //[XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        //public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
 
-        /// <summary>部门</summary>
-        [Category("登录信息")]
-        [Map(__.DepartmentID, typeof(Department), __.ID)]
-        public String DepartmentName => Department?.Path;
+        ///// <summary>部门</summary>
+        //[Category("登录信息")]
+        //[Map(__.DepartmentID, typeof(Department), __.ID)]
+        //public String DepartmentName => Department?.Path;
 
-        /// <summary>
-        /// 地区名
-        /// </summary>
-        [Map(nameof(AreaId))]
-        public String AreaName => Area.FindByID(AreaId)?.Path;
+        ///// <summary>
+        ///// 地区名
+        ///// </summary>
+        //[Map(nameof(AreaId))]
+        //public String AreaName => Area.FindByID(AreaId)?.Path;
 
         ///// <summary>兼容旧版角色组</summary>
         //[Obsolete("=>RoleIds")]
@@ -151,31 +151,31 @@ namespace XCode.Membership
         #endregion
 
         #region 扩展查询
-        /// <summary>根据编号查找</summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public static User FindByID(Int32 id)
-        {
-            if (id <= 0) return null;
+        ///// <summary>根据编号查找</summary>
+        ///// <param name="id"></param>
+        ///// <returns></returns>
+        //public static User FindByID(Int32 id)
+        //{
+        //    if (id <= 0) return null;
 
-            if (Meta.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+        //    if (Meta.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
 
-            // 实体缓存
-            return Meta.SingleCache[id];
-        }
+        //    // 实体缓存
+        //    return Meta.SingleCache[id];
+        //}
 
-        /// <summary>根据名称查找</summary>
-        /// <param name="name">名称</param>
-        /// <returns></returns>
-        public static User FindByName(String name)
-        {
-            if (name.IsNullOrEmpty()) return null;
+        ///// <summary>根据名称查找</summary>
+        ///// <param name="name">名称</param>
+        ///// <returns></returns>
+        //public static User FindByName(String name)
+        //{
+        //    if (name.IsNullOrEmpty()) return null;
 
-            if (Meta.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
+        //    if (Meta.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
 
-            // 单对象缓存
-            return Meta.SingleCache.GetItemWithSlaveKey(name) as User;
-        }
+        //    // 单对象缓存
+        //    return Meta.SingleCache.GetItemWithSlaveKey(name) as User;
+        //}
 
         /// <summary>根据邮箱地址查找</summary>
         /// <param name="mail"></param>
@@ -562,10 +562,15 @@ namespace XCode.Membership
         #endregion
 
         #region 权限
+        ///// <summary>角色</summary>
+        ///// <remarks>扩展属性不缓存空对象，一般来说，每个管理员都有对应的角色，如果没有，可能是在初始化</remarks>
+        //[XmlIgnore, ScriptIgnore, IgnoreDataMember]
+        //public virtual IRole Role => Extends.Get(nameof(Role), k => ManageProvider.Get<IRole>()?.FindByID(RoleID));
+
         /// <summary>角色</summary>
         /// <remarks>扩展属性不缓存空对象，一般来说，每个管理员都有对应的角色，如果没有，可能是在初始化</remarks>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-        public virtual IRole Role => Extends.Get(nameof(Role), k => ManageProvider.Get<IRole>()?.FindByID(RoleID));
+        IRole IUser.Role => Extends.Get(nameof(Role), k => ManageProvider.Get<IRole>()?.FindByID(RoleID));
 
         /// <summary>角色集合</summary>
         [XmlIgnore, ScriptIgnore, IgnoreDataMember]
@@ -581,10 +586,10 @@ namespace XCode.Membership
             return ids.Distinct().ToArray();
         }
 
-        /// <summary>角色名</summary>
-        [Category("登录信息")]
-        [Map(__.RoleID, typeof(Role), "ID")]
-        public virtual String RoleName => Role + "";
+        ///// <summary>角色名</summary>
+        //[Category("登录信息")]
+        //[Map(__.RoleID, typeof(Role), "ID")]
+        //public virtual String RoleName => Role + "";
 
         /// <summary>角色组名</summary>
         [Map(__.RoleIds)]

@@ -157,15 +157,15 @@ namespace XCode.Membership
         #endregion
 
         #region 扩展查询
-        /// <summary>根据编号查找</summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public static Menu FindByID(Int32 id)
-        {
-            if (id <= 0) return null;
+        ///// <summary>根据编号查找</summary>
+        ///// <param name="id"></param>
+        ///// <returns></returns>
+        //public static Menu FindByID(Int32 id)
+        //{
+        //    if (id <= 0) return null;
 
-            return Meta.Cache.Find(e => e.ID == id);
-        }
+        //    return Meta.Cache.Find(e => e.ID == id);
+        //}
 
         /// <summary>根据名字查找</summary>
         /// <param name="name">名称</param>

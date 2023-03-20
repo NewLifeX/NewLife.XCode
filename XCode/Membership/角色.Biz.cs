@@ -226,30 +226,30 @@ namespace XCode.Membership
         #endregion
 
         #region 扩展查询
-        /// <summary>根据编号查找角色</summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public static Role FindByID(Int32 id)
-        {
-            if (id <= 0 || Meta.Cache.Entities == null || Meta.Cache.Entities.Count <= 0) return null;
+        ///// <summary>根据编号查找角色</summary>
+        ///// <param name="id"></param>
+        ///// <returns></returns>
+        //public static Role FindByID(Int32 id)
+        //{
+        //    if (id <= 0 || Meta.Cache.Entities == null || Meta.Cache.Entities.Count <= 0) return null;
 
-            return Meta.Cache.Entities.ToArray().FirstOrDefault(e => e.ID == id);
-        }
+        //    return Meta.Cache.Entities.ToArray().FirstOrDefault(e => e.ID == id);
+        //}
 
         /// <summary>根据编号查找角色</summary>
         /// <param name="id"></param>
         /// <returns></returns>
         IRole IRole.FindByID(Int32 id) => FindByID(id);
 
-        /// <summary>根据名称查找角色</summary>
-        /// <param name="name">名称</param>
-        /// <returns></returns>
-        public static Role FindByName(String name)
-        {
-            if (String.IsNullOrEmpty(name) || Meta.Cache.Entities == null || Meta.Cache.Entities.Count <= 0) return null;
+        ///// <summary>根据名称查找角色</summary>
+        ///// <param name="name">名称</param>
+        ///// <returns></returns>
+        //public static Role FindByName(String name)
+        //{
+        //    if (String.IsNullOrEmpty(name) || Meta.Cache.Entities == null || Meta.Cache.Entities.Count <= 0) return null;
 
-            return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
-        }
+        //    return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
+        //}
         #endregion
 
         #region 扩展权限

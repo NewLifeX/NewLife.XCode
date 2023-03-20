@@ -139,32 +139,32 @@ namespace XCode.Membership
         #endregion
 
         #region 扩展查询
-        /// <summary>根据编号查找</summary>
-        /// <param name="id">编号</param>
-        /// <returns>实体对象</returns>
-        public static Department FindByID(Int32 id)
-        {
-            if (id <= 0) return null;
+        ///// <summary>根据编号查找</summary>
+        ///// <param name="id">编号</param>
+        ///// <returns>实体对象</returns>
+        //public static Department FindByID(Int32 id)
+        //{
+        //    if (id <= 0) return null;
 
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+        //    // 实体缓存
+        //    if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
 
-            // 单对象缓存
-            return Meta.SingleCache[id];
+        //    // 单对象缓存
+        //    return Meta.SingleCache[id];
 
-            //return Find(_.ID == id);
-        }
+        //    //return Find(_.ID == id);
+        //}
 
-        /// <summary>根据名称查找</summary>
-        /// <param name="name">名称</param>
-        /// <returns>实体列表</returns>
-        public static IList<Department> FindAllByName(String name)
-        {
-            // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name == name);
+        ///// <summary>根据名称查找</summary>
+        ///// <param name="name">名称</param>
+        ///// <returns>实体列表</returns>
+        //public static IList<Department> FindAllByName(String name)
+        //{
+        //    // 实体缓存
+        //    if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name == name);
 
-            return FindAll(_.Name == name);
-        }
+        //    return FindAll(_.Name == name);
+        //}
 
         /// <summary>根据名称、父级查找</summary>
         /// <param name="name">名称</param>

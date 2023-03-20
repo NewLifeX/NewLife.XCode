@@ -198,6 +198,7 @@ public class EntityBuilder : ClassBuilder
         var us = Option.Usings;
 
         us.Add("NewLife");
+        us.Add("NewLife.Data");
         us.Add("XCode");
         us.Add("XCode.Cache");
         us.Add("XCode.Configuration");
@@ -218,7 +219,6 @@ public class EntityBuilder : ClassBuilder
             us.Add("System.Runtime.Serialization");
 
             us.Add("NewLife");
-            us.Add("NewLife.Data");
             us.Add("NewLife.Model");
             us.Add("NewLife.Log");
             us.Add("NewLife.Reflection");
@@ -945,9 +945,9 @@ public class EntityBuilder : ClassBuilder
                     {
                         var dc = cs[0];
                         if (dc.DataType.IsInt())
-                            WriteLine("if ({0} <= 0) return null;", dc.Name);
+                            WriteLine("if ({0} <= 0) return null;", dc.CamelName());
                         else if (dc.DataType == typeof(String))
-                            WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.Name);
+                            WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.CamelName());
                     }
 
                     var exp = new StringBuilder();
@@ -991,9 +991,9 @@ public class EntityBuilder : ClassBuilder
                     {
                         var dc = cs[0];
                         if (dc.DataType.IsInt())
-                            WriteLine("if ({0} <= 0) return new List<{1}>();", dc.Name, ClassName);
+                            WriteLine("if ({0} <= 0) return new List<{1}>();", dc.CamelName(), ClassName);
                         else if (dc.DataType == typeof(String))
-                            WriteLine("if ({0}.IsNullOrEmpty()) return new List<{1}>();", dc.Name, ClassName);
+                            WriteLine("if ({0}.IsNullOrEmpty()) return new List<{1}>();", dc.CamelName(), ClassName);
                     }
 
                     var exp = new StringBuilder();
@@ -1056,7 +1056,7 @@ public class EntityBuilder : ClassBuilder
 
             cs.Remove(dcTime);
             cs.RemoveAll(e => e.Name.EqualIgnoreCase("key", "page"));
-            if (dcSnow != null && dcTime != null)
+            if (dcSnow != null || dcTime != null)
                 cs.RemoveAll(e => e.Name.EqualIgnoreCase("start", "end"));
 
             // 可用于关键字模糊搜索的字段
@@ -1068,7 +1068,7 @@ public class EntityBuilder : ClassBuilder
             {
                 WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.Description);
             }
-            if (dcSnow != null && dcTime != null)
+            if (dcSnow != null || dcTime != null)
             {
                 WriteLine("/// <param name=\"start\">{0}开始</param>", dcTime.DisplayName);
                 WriteLine("/// <param name=\"end\">{0}结束</param>", dcTime.DisplayName);

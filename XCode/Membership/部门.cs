@@ -1,10 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
+using NewLife;
+using NewLife.Data;
 using XCode;
+using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
@@ -309,6 +312,98 @@ namespace XCode.Membership
                 }
             }
         }
+        #endregion
+
+        #region 扩展属性
+        #endregion
+
+        #region 扩展查询
+        /// <summary>根据编号查找</summary>
+        /// <param name="id">编号</param>
+        /// <returns>实体对象</returns>
+        public static Department FindByID(Int32 id)
+        {
+            if (id <= 0) return null;
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+
+            // 单对象缓存
+            return Meta.SingleCache[id];
+
+            //return Find(_.ID == id);
+        }
+
+        /// <summary>根据名称查找</summary>
+        /// <param name="name">名称</param>
+        /// <returns>实体列表</returns>
+        public static IList<Department> FindAllByName(String name)
+        {
+            if (name.IsNullOrEmpty()) return new List<Department>();
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+
+            return FindAll(_.Name == name);
+        }
+
+        /// <summary>根据父级、名称查找</summary>
+        /// <param name="parentId">父级</param>
+        /// <param name="name">名称</param>
+        /// <returns>实体列表</returns>
+        public static IList<Department> FindAllByParentIDAndName(Int32 parentId, String name)
+        {
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+
+            return FindAll(_.ParentID == parentId & _.Name == name);
+        }
+
+        /// <summary>根据代码查找</summary>
+        /// <param name="code">代码</param>
+        /// <returns>实体列表</returns>
+        public static IList<Department> FindAllByCode(String code)
+        {
+            if (code.IsNullOrEmpty()) return new List<Department>();
+
+            // 实体缓存
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
+
+            return FindAll(_.Code == code);
+        }
+        #endregion
+
+        #region 高级查询
+        /// <summary>高级查询</summary>
+        /// <param name="code">代码</param>
+        /// <param name="name">名称</param>
+        /// <param name="parentId">父级</param>
+        /// <param name="key">关键字</param>
+        /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+        /// <returns>实体列表</returns>
+        public static IList<Department> Search(String code, String name, Int32 parentId, DateTime start, DateTime end, String key, PageParameter page)
+        {
+            var exp = new WhereExpression();
+
+            if (!code.IsNullOrEmpty()) exp &= _.Code == code;
+            if (!name.IsNullOrEmpty()) exp &= _.Name == name;
+            if (parentId >= 0) exp &= _.ParentID == parentId;
+            exp &= _.UpdateTime.Between(start, end);
+            if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.FullName.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+
+            return FindAll(exp, page);
+        }
+
+        // Select Count(ID) as ID,Code From Department Where CreateTime>'2020-01-24 00:00:00' Group By Code Order By ID Desc limit 20
+        static readonly FieldCache<Department> _CodeCache = new FieldCache<Department>(nameof(Code))
+        {
+            //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+        };
+
+        /// <summary>获取代码列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+        /// <returns></returns>
+        public static IDictionary<String, String> GetCodeList() => _CodeCache.FindAllName();
         #endregion
 
         #region 字段名

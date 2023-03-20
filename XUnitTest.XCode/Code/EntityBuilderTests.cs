@@ -21,8 +21,8 @@ public class EntityBuilderTests
 
     private String ReadTarget(String file, String text)
     {
-        var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
-        File.WriteAllText(file2, text);
+        //var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
+        //File.WriteAllText(file2, text);
 
         var target = File.ReadAllText(file.GetFullPath());
 
@@ -134,7 +134,7 @@ public class EntityBuilderTests
     //}
 
     [Fact]
-    public void BuildTT()
+    public void BuildUser()
     {
         var dir = @".\Entity\".GetFullPath();
         if (Directory.Exists(dir)) Directory.Delete(dir, true);
@@ -201,6 +201,66 @@ public class EntityBuilderTests
         {
             var rs = File.ReadAllText("Output\\EntityInterfaces\\IUser.cs".GetFullPath());
             var target = ReadTarget("Code\\EntityInterfaces\\IUser.cs", rs);
+            Assert.Equal(target, rs);
+        }
+    }
+
+    [Fact]
+    public void BuildLog()
+    {
+        var dir = @".\Entity\".GetFullPath();
+        if (Directory.Exists(dir)) Directory.Delete(dir, true);
+
+        dir = @".\Output\EntityModels\".GetFullPath();
+        if (Directory.Exists(dir)) Directory.Delete(dir, true);
+
+        dir = @".\Output\EntityInterfaces\".GetFullPath();
+        if (Directory.Exists(dir)) Directory.Delete(dir, true);
+
+        // 加载模型文件，得到数据表
+        var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
+        var option = new BuilderOption();
+        var tables = ClassBuilder.LoadModels(file, option, out var atts);
+        EntityBuilder.FixModelFile(file, option, atts, tables);
+
+        // 生成实体类
+        option.BaseClass = "I{name}";
+        option.ModelNameForCopy = "I{name}";
+        EntityBuilder.BuildTables(tables, option, chineseFileName: true);
+
+        // 生成简易模型类
+        option.Output = @"Output\EntityModels\";
+        option.ClassNameTemplate = "{name}Model";
+        option.ModelNameForCopy = "I{name}";
+        ClassBuilder.BuildModels(tables, option);
+
+        // 生成简易接口
+        option.BaseClass = null;
+        option.ClassNameTemplate = null;
+        option.Output = @"Output\EntityInterfaces\";
+        ClassBuilder.BuildInterfaces(tables, option);
+
+        {
+            var rs = File.ReadAllText("Entity\\日志.cs".GetFullPath());
+            var target = ReadTarget("Code\\Entity\\日志.cs", rs);
+            Assert.Equal(target, rs);
+        }
+
+        {
+            var rs = File.ReadAllText("Entity\\日志.Biz.cs".GetFullPath());
+            var target = ReadTarget("Code\\Entity\\日志.Biz.cs", rs);
+            Assert.Equal(target, rs);
+        }
+
+        {
+            var rs = File.ReadAllText("Output\\EntityModels\\LogModel.cs".GetFullPath());
+            var target = ReadTarget("Code\\EntityModels\\LogModel.cs", rs);
+            Assert.Equal(target, rs);
+        }
+
+        {
+            var rs = File.ReadAllText("Output\\EntityInterfaces\\ILog.cs".GetFullPath());
+            var target = ReadTarget("Code\\EntityInterfaces\\ILog.cs", rs);
             Assert.Equal(target, rs);
         }
     }

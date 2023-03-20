@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
+using NewLife;
 using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
@@ -456,8 +457,6 @@ namespace XCode.Membership
         /// <summary>高级查询</summary>
         /// <param name="name">名称。登录用户名</param>
         /// <param name="roleId">角色。主要角色</param>
-        /// <param name="start">更新时间开始</param>
-        /// <param name="end">更新时间结束</param>
         /// <param name="key">关键字</param>
         /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
         /// <returns>实体列表</returns>

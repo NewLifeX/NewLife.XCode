@@ -197,7 +197,9 @@ public class EntityBuilder : ClassBuilder
     {
         var us = Option.Usings;
 
+        us.Add("NewLife");
         us.Add("XCode");
+        us.Add("XCode.Cache");
         us.Add("XCode.Configuration");
         us.Add("XCode.DataAccessLayer");
 
@@ -1050,8 +1052,12 @@ public class EntityBuilder : ClassBuilder
             // 时间字段。无差别支持UpdateTime/CreateTime
             var dcTime = cs.FirstOrDefault(e => e.DataType == typeof(DateTime));
             dcTime ??= Table.GetColumns(new[] { "UpdateTime", "CreateTime" })?.FirstOrDefault();
+            var dcSnow = cs.FirstOrDefault(e => e.PrimaryKey && !e.Identity && e.DataType == typeof(Int64));
+
             cs.Remove(dcTime);
-            cs.RemoveAll(e => e.Name.EqualIgnoreCase("start", "end", "key", "page"));
+            cs.RemoveAll(e => e.Name.EqualIgnoreCase("key", "page"));
+            if (dcSnow != null && dcTime != null)
+                cs.RemoveAll(e => e.Name.EqualIgnoreCase("start", "end"));
 
             // 可用于关键字模糊搜索的字段
             var keys = Table.Columns.Where(e => e.DataType == typeof(String)).ToList();
@@ -1062,7 +1068,7 @@ public class EntityBuilder : ClassBuilder
             {
                 WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.Description);
             }
-            if (dcTime != null)
+            if (dcSnow != null && dcTime != null)
             {
                 WriteLine("/// <param name=\"start\">{0}开始</param>", dcTime.DisplayName);
                 WriteLine("/// <param name=\"end\">{0}结束</param>", dcTime.DisplayName);
@@ -1100,14 +1106,14 @@ public class EntityBuilder : ClassBuilder
                     else if (dc.DataType == typeof(String))
                         WriteLine("if (!{0}.IsNullOrEmpty()) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
                 }
-                if (dcTime != null)
-                {
+
+                if (dcSnow != null)
+                    WriteLine("exp &= _.{0}.Between(start, end, Meta.Factory.Snow);", dcSnow.Name);
+                else if (dcTime != null)
                     WriteLine("exp &= _.{0}.Between(start, end);", dcTime.Name);
-                }
+
                 if (keys.Count > 0)
-                {
                     WriteLine("if (!key.IsNullOrEmpty()) exp &= {0};", keys.Join(" | ", k => $"_.{k.Name}.Contains(key)"));
-                }
 
                 // 查询返回
                 WriteLine();
@@ -1414,8 +1420,12 @@ public class EntityBuilder : ClassBuilder
             // 时间字段。无差别支持UpdateTime/CreateTime
             var dcTime = cs.FirstOrDefault(e => e.DataType == typeof(DateTime));
             dcTime ??= Table.GetColumns(new[] { "UpdateTime", "CreateTime" })?.FirstOrDefault();
+            var dcSnow = cs.FirstOrDefault(e => e.PrimaryKey && !e.Identity && e.DataType == typeof(Int64));
+
             cs.Remove(dcTime);
-            cs.RemoveAll(e => e.Name.EqualIgnoreCase("start", "end", "key", "page"));
+            cs.RemoveAll(e => e.Name.EqualIgnoreCase("key", "page"));
+            if (dcSnow != null && dcTime != null)
+                cs.RemoveAll(e => e.Name.EqualIgnoreCase("start", "end"));
 
             // 可用于关键字模糊搜索的字段
             var keys = Table.Columns.Where(e => e.DataType == typeof(String)).ToList();
@@ -1463,10 +1473,12 @@ public class EntityBuilder : ClassBuilder
                     else if (dc.DataType == typeof(String))
                         WriteLine("//\tif (!{0}.IsNullOrEmpty()) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
                 }
-                if (dcTime != null)
-                {
+           
+                if (dcSnow != null)
+                    WriteLine("//\texp &= _.{0}.Between(start, end, Meta.Factory.Snow);", dcSnow.Name);
+                else if (dcTime != null)
                     WriteLine("//\texp &= _.{0}.Between(start, end);", dcTime.Name);
-                }
+
                 if (keys.Count > 0)
                 {
                     WriteLine("//\tif (!key.IsNullOrEmpty()) exp &= {0};", keys.Join(" | ", k => $"_.{k.Name}.Contains(key)"));

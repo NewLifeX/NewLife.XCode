@@ -21,8 +21,8 @@ public class EntityBuilderTests
 
     private String ReadTarget(String file, String text)
     {
-        //var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
-        //File.WriteAllText(file2, text);
+        var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
+        File.WriteAllText(file2, text);
 
         var target = File.ReadAllText(file.GetFullPath());
 

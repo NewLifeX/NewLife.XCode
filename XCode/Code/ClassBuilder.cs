@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
@@ -203,8 +198,7 @@ public class ClassBuilder
     public virtual void Execute()
     {
         // 参数检查
-        var dt = Table;
-        if (dt == null) throw new ArgumentNullException(nameof(Table));
+        var dt = Table ?? throw new ArgumentNullException(nameof(Table));
         if (dt.Columns == null || dt.Columns.Count == 0) throw new ArgumentOutOfRangeException(nameof(Table));
 
         foreach (var dc in dt.Columns)
@@ -223,7 +217,7 @@ public class ClassBuilder
         WriteLog("生成 {0} {1} {2}", Table.Name, Table.DisplayName, new { option.ClassNameTemplate, option.BaseClass, option.ModelNameForCopy, option.Namespace }.ToJson(false, false, false));
 
         //Clear();
-        if (Writer == null) Writer = new StringWriter();
+        Writer ??= new StringWriter();
 
         OnExecuting();
 

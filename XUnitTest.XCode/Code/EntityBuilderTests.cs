@@ -195,7 +195,8 @@ public class EntityBuilderTests
         // 生成实体类
         option.BaseClass = "I{name}";
         option.ModelNameForCopy = "I{name}";
-        EntityBuilder.BuildTables(tables, option, chineseFileName: true);
+        option.ChineseFileName = true;
+        EntityBuilder.BuildTables(tables, option);
 
         // 生成简易模型类
         option.Output = @"Output\EntityModels\";
@@ -267,7 +268,8 @@ public class EntityBuilderTests
         // 生成实体类
         option.BaseClass = "I{name}";
         option.ModelNameForCopy = "I{name}";
-        EntityBuilder.BuildTables(tables, option, chineseFileName: true);
+        option.ChineseFileName = true;
+        EntityBuilder.BuildTables(tables, option);
 
         // 生成简易模型类
         option.Output = @"Output\EntityModels\";

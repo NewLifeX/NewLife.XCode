@@ -52,6 +52,9 @@ public class BuilderOption
     /// <summary>显示名</summary>
     public String DisplayName { get; set; }
 
+    /// <summary>是否使用中文文件名。默认true</summary>
+    public Boolean ChineseFileName { get; set; } = true;
+
     /// <summary>扩展数据</summary>
     public IDictionary<String, String> Items { get; set; }
     #endregion

@@ -21,18 +21,9 @@ class Program
             Console.WriteLine("NewLife.XCode v{0}", Assembly.GetExecutingAssembly().GetName().Version);
             Console.WriteLine("Usage: xcode model.xml");
             Console.WriteLine();
-            //Console.WriteLine("commands:");
-            //Console.WriteLine("\tentity\t\tGenerate entity class");
-            //Console.WriteLine("\tmodel\t\tGenerate model class");
-            //Console.WriteLine("\tinterface\tGenerate interface");
-            //Console.WriteLine();
-            //Console.WriteLine("options:");
-            //Console.WriteLine("\t-output <PATH>\t\t输出目录");
-            //Console.WriteLine("\t-baseClass <NAME>\t\t基类。可能包含基类和接口，其中{name}替换为Table.Name");
-            //Console.WriteLine("\t-classNameTemplate <NAME>\t类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等");
-            //Console.WriteLine("\t-modelNameForCopy <NAME>\t用于生成拷贝函数的模型类。例如{name}或I{name}");
         }
 
+        // 在当前目录查找模型文件
         var file = "";
         if (args.Length > 0) file = args.LastOrDefault();
         if (file.IsNullOrEmpty())
@@ -67,6 +58,8 @@ class Program
         }
     }
 
+    /// <summary>生成实体类。调整该方法可以改变生成实体类代码的逻辑</summary>
+    /// <param name="modelFile"></param>
     static void Build(String modelFile)
     {
         Console.WriteLine("正在处理：{0}", modelFile);
@@ -83,6 +76,12 @@ class Program
         var option = new BuilderOption();
         var tables = ClassBuilder.LoadModels(modelFile, option, out var atts);
         EntityBuilder.FixModelFile(modelFile, option, atts, tables);
+
+        // 是否把扩展属性生成到数据类
+        //option.ExtendOnData = true;
+
+        // 是否使用中文名
+        //option.ChineseFileName = true;
 
         // 简易模型类名称，如{name}Model。指定后将生成简易模型类和接口，可用于数据传输
         var modelClass = atts["ModelClass"];
@@ -104,7 +103,7 @@ class Program
             {
                 opt.ModelNameForCopy = modelClass;
             }
-            EntityBuilder.BuildTables(tables, opt, chineseFileName: true);
+            EntityBuilder.BuildTables(tables, opt);
         }
 
         // 生成简易模型类

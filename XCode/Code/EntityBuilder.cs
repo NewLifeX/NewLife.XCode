@@ -44,7 +44,7 @@ public class EntityBuilder : ClassBuilder
         // 清理不再使用的历史配置项
         atts.Remove("NameIgnoreCase");
         atts.Remove("IgnoreNameCase");
-        atts.Remove("ChineseFileName");
+        //atts.Remove("ChineseFileName");
         atts.Remove("ModelFile");
         atts.Remove("RenderGenEntity");
 
@@ -96,7 +96,7 @@ public class EntityBuilder : ClassBuilder
     /// <param name="tables">模型文件</param>
     /// <param name="option">生成可选项</param>
     /// <param name="chineseFileName">是否中文名称</param>
-    public static Int32 BuildTables(IList<IDataTable> tables, BuilderOption option, Boolean chineseFileName = true)
+    public static Int32 BuildTables(IList<IDataTable> tables, BuilderOption option)
     {
         if (tables == null || tables.Count == 0) return 0;
 
@@ -135,12 +135,12 @@ public class EntityBuilder : ClassBuilder
             builder.Load(item);
 
             builder.Execute();
-            builder.Save(null, true, chineseFileName);
+            builder.Save(null, true, option.ChineseFileName);
 
             builder.Clear();
             builder.Business = true;
             builder.Execute();
-            builder.Save(null, false, chineseFileName);
+            builder.Save(null, false, option.ChineseFileName);
 
             count++;
         }

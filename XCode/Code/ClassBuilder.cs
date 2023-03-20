@@ -68,6 +68,12 @@ public class ClassBuilder
             option.DisplayName = atts["DisplayName"];
             option.BaseClass = atts["BaseClass"];
 
+            if (atts.TryGetValue("ExtendOnData", out var str) && !str.IsNullOrEmpty())
+                option.ExtendOnData = str.ToBoolean();
+
+            if (atts.TryGetValue("ChineseFileName", out str) && !str.IsNullOrEmpty())
+                option.ChineseFileName = str.ToBoolean();
+
             option.Items = atts;
         }
 

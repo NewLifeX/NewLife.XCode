@@ -1023,6 +1023,31 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     ///// <param name="format"></param>
     ///// <param name="args"></param>
     //public static void WriteLog(String format, params Object[] args) => XTrace.WriteLine(format, args);
+
+    /// <summary>设置是否显示SQL，退出作用域后恢复</summary>
+    /// <param name="showSql"></param>
+    /// <returns></returns>
+    public IDisposable SetShowSql(Boolean showSql)
+    {
+        var show = new MyShowSql
+        {
+            Session = this,
+            ShowSql = ShowSQL
+        };
+
+        ShowSQL = showSql;
+
+        return show;
+    }
+
+    class MyShowSql : IDisposable
+    {
+        public DbSession Session { get; set; }
+
+        public Boolean ShowSql { get; set; }
+
+        public void Dispose() => Session.ShowSQL = ShowSql;
+    }
     #endregion
 
     #region SQL时间跟踪

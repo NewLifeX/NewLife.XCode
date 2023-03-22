@@ -21,8 +21,8 @@ public class DbConfigProvider : ConfigProvider
     /// <summary>本地缓存配置数据。即使网络断开，仍然能够加载使用本地数据，默认 Json</summary>
     public ConfigCacheLevel CacheLevel { get; set; } = ConfigCacheLevel.Json;
 
-    /// <summary>更新周期。默认10秒，0秒表示不做自动更新</summary>
-    public Int32 Period { get; set; } = 10;
+    /// <summary>更新周期。默认15秒，0秒表示不做自动更新</summary>
+    public Int32 Period { get; set; } = 15;
 
     private IDictionary<String, Object> _cache;
     #endregion
@@ -33,21 +33,30 @@ public class DbConfigProvider : ConfigProvider
     public override void Init(String value)
     {
         // 只有全局配置支持本地缓存
-        if (UserId == 0) return;
+        if (UserId != 0) return;
 
-        // 本地缓存
+        // 本地缓存。兼容旧版配置文件
         var name = Category;
-        var file = $"Config/{name}.config".GetFullPath();
+        var file = $"Config/dbConfig_{name}.json".GetFullPath();
+        var old = $"Config/{name}.config".GetFullPath();
+        if (!File.Exists(file)) file = old;
         if ((Root == null || Root.Childs.Count == 0) && CacheLevel > ConfigCacheLevel.NoCache && File.Exists(file))
         {
             XTrace.WriteLine("[{0}/{1}]加载缓存配置：{2}", Category, UserId, file);
-            var json = File.ReadAllText(file);
+            var txt = File.ReadAllText(file);
+
+            // 删除旧版
+            if (file.EndsWithIgnoreCase(".config")) File.Delete(file);
 
             // 加密存储
             if (CacheLevel == ConfigCacheLevel.Encrypted)
-                json = Aes.Create().Decrypt(json.ToBase64(), name.GetBytes()).ToStr();
+                txt = Aes.Create().Decrypt(txt.ToBase64(), name.GetBytes()).ToStr();
 
-            Root = Build(JsonParser.Decode(json));
+            txt = txt.Trim();
+            var dic = txt.StartsWith("{") && txt.EndsWith("}") ?
+                JsonParser.Decode(txt) :
+                XmlParser.Decode(txt);
+            Root = Build(dic);
         }
     }
 
@@ -161,14 +170,14 @@ public class DbConfigProvider : ConfigProvider
         if (CacheLevel > ConfigCacheLevel.NoCache)
         {
             var name = Category;
-            var file = $"Config/{name}.config".GetFullPath();
-            var json = configs.ToJson();
+            var file = $"Config/dbConfig_{name}.json".GetFullPath();
+            var txt = configs.ToJson(true);
 
             // 加密存储
             if (CacheLevel == ConfigCacheLevel.Encrypted)
-                json = Aes.Create().Encrypt(json.GetBytes(), name.GetBytes()).ToBase64();
+                txt = Aes.Create().Encrypt(txt.GetBytes(), name.GetBytes()).ToBase64();
 
-            File.WriteAllText(file.EnsureDirectory(true), json);
+            File.WriteAllText(file.EnsureDirectory(true), txt);
         }
     }
 
@@ -248,6 +257,8 @@ public class DbConfigProvider : ConfigProvider
     /// <param name="state"></param>
     protected void DoRefresh(Object state)
     {
+        using var showSql = Parameter.Meta.Session.Dal.Session.SetShowSql(false);
+
         var dic = GetAll();
         if (dic == null) return;
 

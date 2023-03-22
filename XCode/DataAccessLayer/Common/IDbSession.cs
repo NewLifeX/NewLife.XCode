@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Data;
 
@@ -37,6 +34,11 @@ public interface IDbSession : IDisposable2
     /// <param name="callback"></param>
     /// <returns></returns>
     Task<TResult> ProcessAsync<TResult>(Func<DbConnection, Task<TResult>> callback);
+
+    /// <summary>设置是否显示SQL，退出作用域后恢复</summary>
+    /// <param name="showSql"></param>
+    /// <returns></returns>
+    IDisposable SetShowSql(Boolean showSql);
     #endregion
 
     #region 事务

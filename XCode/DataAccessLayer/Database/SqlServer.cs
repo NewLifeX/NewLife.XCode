@@ -486,7 +486,11 @@ internal class SqlServer : RemoteDb
         //        .Replace("]", "[]]")
         //        .Replace("%", "[%]")
         //        .Replace("_", "[_]");
-
+        // fix 2023.03.22
+        // LIKE 构建SQL语句 中 [ ] % 会循环转义 ,只转_比较合适
+        if (value.IndexOfAny(_likeKeys) >= 0)
+              value = value
+                   .Replace("_", "[_]");
         return base.FormatLike(column, format, value);
     }
     #endregion

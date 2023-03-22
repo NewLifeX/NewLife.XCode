@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Security.Cryptography;
+using NewLife;
 using NewLife.Configuration;
 using NewLife.Log;
 using NewLife.Serialization;
@@ -17,6 +18,9 @@ public class DbConfigProvider : ConfigProvider
     /// <summary>分类</summary>
     public String Category { get; set; }
 
+    /// <summary>本地缓存配置数据。即使网络断开，仍然能够加载使用本地数据，默认 Json</summary>
+    public ConfigCacheLevel CacheLevel { get; set; } = ConfigCacheLevel.Json;
+
     /// <summary>更新周期。默认10秒，0秒表示不做自动更新</summary>
     public Int32 Period { get; set; } = 10;
 
@@ -24,6 +28,28 @@ public class DbConfigProvider : ConfigProvider
     #endregion
 
     #region 方法
+    /// <summary>初始化提供者，如有必要，此时加载缓存文件</summary>
+    /// <param name="value"></param>
+    public override void Init(String value)
+    {
+        // 只有全局配置支持本地缓存
+        if (UserId == 0) return;
+
+        // 本地缓存
+        var name = Category;
+        var file = $"Config/{name}.config".GetFullPath();
+        if ((Root == null || Root.Childs.Count == 0) && CacheLevel > ConfigCacheLevel.NoCache && File.Exists(file))
+        {
+            XTrace.WriteLine("[{0}/{1}]加载缓存配置：{2}", Category, UserId, file);
+            var json = File.ReadAllText(file);
+
+            // 加密存储
+            if (CacheLevel == ConfigCacheLevel.Encrypted)
+                json = Aes.Create().Decrypt(json.ToBase64(), name.GetBytes()).ToStr();
+
+            Root = Build(JsonParser.Decode(json));
+        }
+    }
 
     /// <summary>获取所有配置</summary>
     /// <returns></returns>
@@ -76,34 +102,74 @@ public class DbConfigProvider : ConfigProvider
         return root;
     }
 
+    private Int32 _inited;
     /// <summary>加载配置</summary>
     public override Boolean LoadAll()
     {
-        //// 换个对象，避免数组元素在多次加载后重叠
-        //var root = new ConfigSection { };
+        try
+        {
+            // 首次访问，加载配置
+            if (_inited == 0 && Interlocked.CompareExchange(ref _inited, 1, 0) == 0)
+                Init(null);
+        }
+        catch { }
 
-        //var list = Parameter.FindAllByUserID(UserId, Category);
-        //foreach (var item in list)
-        //{
-        //    if (!item.Enable) continue;
+        try
+        {
+            IsNew = true;
 
-        //    var section = root.GetOrAddChild(item.Name);
+            var dic = GetAll();
+            if (dic != null && dic.Count > 0)
+            {
+                IsNew = false;
 
-        //    section.Value = item.Value;
-        //    section.Comment = item.Remark;
-        //}
-        //Root = root;
+                Root = Build(dic);
 
-        var dic = GetAll();
-        Root = Build(dic);
+                // 缓存
+                SaveCache(dic);
+            }
+            else
+            {
+                // 首次加载，且配置文件存在，需要保存一份回去数据库。可能是从配置文件迁移为数据库配置
+                if (Root != null && Root.Childs.Count > 0)
+                {
+                    XTrace.WriteLine("[{0}/{1}]从文件保存配置到数据库", Category, UserId);
 
+                    SaveAll();
+                }
+            }
+
+            // 自动更新
+            if (Period > 0) InitTimer();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+
+            return false;
+        }
+    }
+
+    private void SaveCache(IDictionary<String, Object> configs)
+    {
         // 缓存
-        _cache = dic;
+        _cache = configs;
 
-        // 自动更新
-        if (Period > 0) InitTimer();
+        // 本地缓存
+        if (CacheLevel > ConfigCacheLevel.NoCache)
+        {
+            var name = Category;
+            var file = $"Config/{name}.config".GetFullPath();
+            var json = configs.ToJson();
 
-        return true;
+            // 加密存储
+            if (CacheLevel == ConfigCacheLevel.Encrypted)
+                json = Aes.Create().Encrypt(json.GetBytes(), name.GetBytes()).ToBase64();
+
+            File.WriteAllText(file.EnsureDirectory(true), json);
+        }
     }
 
     /// <summary>保存配置树到数据源</summary>
@@ -206,7 +272,7 @@ public class DbConfigProvider : ConfigProvider
             Root = Build(dic);
 
             // 缓存
-            _cache = dic;
+            SaveCache(dic);
 
             NotifyChange();
         }

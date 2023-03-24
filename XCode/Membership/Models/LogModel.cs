@@ -9,7 +9,7 @@ using NewLife.Data;
 namespace XCode.Membership;
 
 /// <summary>日志</summary>
-public partial class LogModel : ILog, IModel
+public partial class LogModel : IModel
 {
     #region 属性
     /// <summary>编号</summary>

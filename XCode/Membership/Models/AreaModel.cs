@@ -9,7 +9,7 @@ using NewLife.Data;
 namespace XCode.Membership;
 
 /// <summary>地区。行政区划数据，最高支持四级地址，9位数字</summary>
-public partial class AreaModel : IArea, IModel
+public partial class AreaModel : IModel
 {
     #region 属性
     /// <summary>编码。行政区划编码</summary>

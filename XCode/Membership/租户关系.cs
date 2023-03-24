@@ -13,13 +13,14 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Membership;
 
-/// <summary>租户。多租户SAAS平台，用于隔离业务数据</summary>
+/// <summary>租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权</summary>
 [Serializable]
 [DataObject]
-[Description("租户。多租户SAAS平台，用于隔离业务数据")]
-[BindIndex("IU_Tenant_Code", true, "Code")]
-[BindTable("Tenant", Description = "租户。多租户SAAS平台，用于隔离业务数据", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class Tenant : ITenant
+[Description("租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权")]
+[BindIndex("IU_TenantUser_TenantId_UserId", true, "TenantId,UserId")]
+[BindIndex("IX_TenantUser_UserId", false, "UserId")]
+[BindTable("TenantUser", Description = "租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权", ConnName = "Membership", DbType = DatabaseType.None)]
+public partial class TenantUser : ITenantUser
 {
     #region 属性
     private Int32 _Id;
@@ -30,21 +31,21 @@ public partial class Tenant : ITenant
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private String _Code;
-    /// <summary>编码。唯一编码</summary>
-    [DisplayName("编码")]
-    [Description("编码。唯一编码")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Code", "编码。唯一编码", "")]
-    public String Code { get => _Code; set { if (OnPropertyChanging("Code", value)) { _Code = value; OnPropertyChanged("Code"); } } }
+    private Int32 _TenantId;
+    /// <summary>租户</summary>
+    [DisplayName("租户")]
+    [Description("租户")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("TenantId", "租户", "")]
+    public Int32 TenantId { get => _TenantId; set { if (OnPropertyChanging("TenantId", value)) { _TenantId = value; OnPropertyChanged("TenantId"); } } }
 
-    private String _Name;
-    /// <summary>名称。显示名称</summary>
-    [DisplayName("名称")]
-    [Description("名称。显示名称")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Name", "名称。显示名称", "", Master = true)]
-    public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+    private Int32 _UserId;
+    /// <summary>用户</summary>
+    [DisplayName("用户")]
+    [Description("用户")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("UserId", "用户", "")]
+    public Int32 UserId { get => _UserId; set { if (OnPropertyChanging("UserId", value)) { _UserId = value; OnPropertyChanged("UserId"); } } }
 
     private Boolean _Enable;
     /// <summary>启用</summary>
@@ -54,45 +55,21 @@ public partial class Tenant : ITenant
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+    private Int32 _RoleId;
+    /// <summary>角色。用户在该租户所对应的主要角色，替换用户自身的角色组</summary>
+    [DisplayName("角色")]
+    [Description("角色。用户在该租户所对应的主要角色，替换用户自身的角色组")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("RoleId", "角色。用户在该租户所对应的主要角色，替换用户自身的角色组", "")]
+    public Int32 RoleId { get => _RoleId; set { if (OnPropertyChanging("RoleId", value)) { _RoleId = value; OnPropertyChanged("RoleId"); } } }
+
     private String _RoleIds;
-    /// <summary>角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同</summary>
+    /// <summary>角色组。次要角色集合</summary>
     [DisplayName("角色组")]
-    [Description("角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同")]
+    [Description("角色组。次要角色集合")]
     [DataObjectField(false, false, true, 200)]
-    [BindColumn("RoleIds", "角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同", "")]
+    [BindColumn("RoleIds", "角色组。次要角色集合", "")]
     public String RoleIds { get => _RoleIds; set { if (OnPropertyChanging("RoleIds", value)) { _RoleIds = value; OnPropertyChanged("RoleIds"); } } }
-
-    private String _Logo;
-    /// <summary>图标。附件路径</summary>
-    [DisplayName("图标")]
-    [Description("图标。附件路径")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("Logo", "图标。附件路径", "", ItemType = "image")]
-    public String Logo { get => _Logo; set { if (OnPropertyChanging("Logo", value)) { _Logo = value; OnPropertyChanged("Logo"); } } }
-
-    private String _DatabaseName;
-    /// <summary>数据库。分库用的数据库名</summary>
-    [DisplayName("数据库")]
-    [Description("数据库。分库用的数据库名")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("DatabaseName", "数据库。分库用的数据库名", "")]
-    public String DatabaseName { get => _DatabaseName; set { if (OnPropertyChanging("DatabaseName", value)) { _DatabaseName = value; OnPropertyChanged("DatabaseName"); } } }
-
-    private String _TableName;
-    /// <summary>数据表。分表用的数据表前缀</summary>
-    [DisplayName("数据表")]
-    [Description("数据表。分表用的数据表前缀")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("TableName", "数据表。分表用的数据表前缀", "")]
-    public String TableName { get => _TableName; set { if (OnPropertyChanging("TableName", value)) { _TableName = value; OnPropertyChanged("TableName"); } } }
-
-    private DateTime _Expired;
-    /// <summary>过期时间。达到该时间后，自动禁用租户，空表示永不过期</summary>
-    [DisplayName("过期时间")]
-    [Description("过期时间。达到该时间后，自动禁用租户，空表示永不过期")]
-    [DataObjectField(false, false, true, 0)]
-    [BindColumn("Expired", "过期时间。达到该时间后，自动禁用租户，空表示永不过期", "")]
-    public DateTime Expired { get => _Expired; set { if (OnPropertyChanging("Expired", value)) { _Expired = value; OnPropertyChanged("Expired"); } } }
 
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
@@ -161,17 +138,14 @@ public partial class Tenant : ITenant
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(TenantModel model)
+    public void Copy(TenantUserModel model)
     {
         Id = model.Id;
-        Code = model.Code;
-        Name = model.Name;
+        TenantId = model.TenantId;
+        UserId = model.UserId;
         Enable = model.Enable;
+        RoleId = model.RoleId;
         RoleIds = model.RoleIds;
-        Logo = model.Logo;
-        DatabaseName = model.DatabaseName;
-        TableName = model.TableName;
-        Expired = model.Expired;
         Remark = model.Remark;
     }
     #endregion
@@ -185,14 +159,11 @@ public partial class Tenant : ITenant
         get => name switch
         {
             "Id" => _Id,
-            "Code" => _Code,
-            "Name" => _Name,
+            "TenantId" => _TenantId,
+            "UserId" => _UserId,
             "Enable" => _Enable,
+            "RoleId" => _RoleId,
             "RoleIds" => _RoleIds,
-            "Logo" => _Logo,
-            "DatabaseName" => _DatabaseName,
-            "TableName" => _TableName,
-            "Expired" => _Expired,
             "CreateUserId" => _CreateUserId,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
@@ -207,14 +178,11 @@ public partial class Tenant : ITenant
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Code": _Code = Convert.ToString(value); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "TenantId": _TenantId = value.ToInt(); break;
+                case "UserId": _UserId = value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
+                case "RoleId": _RoleId = value.ToInt(); break;
                 case "RoleIds": _RoleIds = Convert.ToString(value); break;
-                case "Logo": _Logo = Convert.ToString(value); break;
-                case "DatabaseName": _DatabaseName = Convert.ToString(value); break;
-                case "TableName": _TableName = Convert.ToString(value); break;
-                case "Expired": _Expired = value.ToDateTime(); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -229,35 +197,26 @@ public partial class Tenant : ITenant
     #endregion
 
     #region 字段名
-    /// <summary>取得租户字段信息的快捷方式</summary>
+    /// <summary>取得租户关系字段信息的快捷方式</summary>
     public partial class _
     {
         /// <summary>编号</summary>
         public static readonly Field Id = FindByName("Id");
 
-        /// <summary>编码。唯一编码</summary>
-        public static readonly Field Code = FindByName("Code");
+        /// <summary>租户</summary>
+        public static readonly Field TenantId = FindByName("TenantId");
 
-        /// <summary>名称。显示名称</summary>
-        public static readonly Field Name = FindByName("Name");
+        /// <summary>用户</summary>
+        public static readonly Field UserId = FindByName("UserId");
 
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
-        /// <summary>角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同</summary>
+        /// <summary>角色。用户在该租户所对应的主要角色，替换用户自身的角色组</summary>
+        public static readonly Field RoleId = FindByName("RoleId");
+
+        /// <summary>角色组。次要角色集合</summary>
         public static readonly Field RoleIds = FindByName("RoleIds");
-
-        /// <summary>图标。附件路径</summary>
-        public static readonly Field Logo = FindByName("Logo");
-
-        /// <summary>数据库。分库用的数据库名</summary>
-        public static readonly Field DatabaseName = FindByName("DatabaseName");
-
-        /// <summary>数据表。分表用的数据表前缀</summary>
-        public static readonly Field TableName = FindByName("TableName");
-
-        /// <summary>过期时间。达到该时间后，自动禁用租户，空表示永不过期</summary>
-        public static readonly Field Expired = FindByName("Expired");
 
         /// <summary>创建者</summary>
         public static readonly Field CreateUserId = FindByName("CreateUserId");
@@ -283,35 +242,26 @@ public partial class Tenant : ITenant
         static Field FindByName(String name) => Meta.Table.FindByName(name);
     }
 
-    /// <summary>取得租户字段名称的快捷方式</summary>
+    /// <summary>取得租户关系字段名称的快捷方式</summary>
     public partial class __
     {
         /// <summary>编号</summary>
         public const String Id = "Id";
 
-        /// <summary>编码。唯一编码</summary>
-        public const String Code = "Code";
+        /// <summary>租户</summary>
+        public const String TenantId = "TenantId";
 
-        /// <summary>名称。显示名称</summary>
-        public const String Name = "Name";
+        /// <summary>用户</summary>
+        public const String UserId = "UserId";
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";
 
-        /// <summary>角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同</summary>
+        /// <summary>角色。用户在该租户所对应的主要角色，替换用户自身的角色组</summary>
+        public const String RoleId = "RoleId";
+
+        /// <summary>角色组。次要角色集合</summary>
         public const String RoleIds = "RoleIds";
-
-        /// <summary>图标。附件路径</summary>
-        public const String Logo = "Logo";
-
-        /// <summary>数据库。分库用的数据库名</summary>
-        public const String DatabaseName = "DatabaseName";
-
-        /// <summary>数据表。分表用的数据表前缀</summary>
-        public const String TableName = "TableName";
-
-        /// <summary>过期时间。达到该时间后，自动禁用租户，空表示永不过期</summary>
-        public const String Expired = "Expired";
 
         /// <summary>创建者</summary>
         public const String CreateUserId = "CreateUserId";

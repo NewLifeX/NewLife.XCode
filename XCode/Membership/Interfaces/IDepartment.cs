@@ -14,6 +14,9 @@ public partial interface IDepartment
     /// <summary>编号</summary>
     Int32 ID { get; set; }
 
+    /// <summary>租户</summary>
+    Int32 TenantId { get; set; }
+
     /// <summary>代码</summary>
     String Code { get; set; }
 

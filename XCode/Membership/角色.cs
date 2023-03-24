@@ -209,7 +209,7 @@ public partial class Role : IRole
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(IRole model)
+    public void Copy(RoleModel model)
     {
         ID = model.ID;
         Name = model.Name;

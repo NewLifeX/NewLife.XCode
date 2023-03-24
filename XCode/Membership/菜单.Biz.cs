@@ -550,20 +550,20 @@ public partial interface IMenu
     Dictionary<Int32, String> Permissions { get; }
 }
 
-partial class MenuModel
-{
-    IMenu IMenu.Parent => throw new NotImplementedException();
+//partial class MenuModel
+//{
+//    IMenu IMenu.Parent => throw new NotImplementedException();
 
-    IList<IMenu> IMenu.Childs => throw new NotImplementedException();
+//    IList<IMenu> IMenu.Childs => throw new NotImplementedException();
 
-    IList<IMenu> IMenu.AllChilds => throw new NotImplementedException();
+//    IList<IMenu> IMenu.AllChilds => throw new NotImplementedException();
 
-    Dictionary<Int32, String> IMenu.Permissions => throw new NotImplementedException();
+//    Dictionary<Int32, String> IMenu.Permissions => throw new NotImplementedException();
 
-    String IMenu.GetFullPath(Boolean includeSelf, String separator, Func<IMenu, String> func) => throw new NotImplementedException();
-    IMenu IMenu.Add(String name, String displayName, String fullName, String url) => throw new NotImplementedException();
-    IMenu IMenu.FindByPath(String path) => throw new NotImplementedException();
-    void IMenu.Up() => throw new NotImplementedException();
-    void IMenu.Down() => throw new NotImplementedException();
-    IList<IMenu> IMenu.GetSubMenus(Int32[] filters, Boolean inclInvisible) => throw new NotImplementedException();
-}
+//    String IMenu.GetFullPath(Boolean includeSelf, String separator, Func<IMenu, String> func) => throw new NotImplementedException();
+//    IMenu IMenu.Add(String name, String displayName, String fullName, String url) => throw new NotImplementedException();
+//    IMenu IMenu.FindByPath(String path) => throw new NotImplementedException();
+//    void IMenu.Up() => throw new NotImplementedException();
+//    void IMenu.Down() => throw new NotImplementedException();
+//    IList<IMenu> IMenu.GetSubMenus(Int32[] filters, Boolean inclInvisible) => throw new NotImplementedException();
+//}

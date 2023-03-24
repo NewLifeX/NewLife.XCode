@@ -9,11 +9,14 @@ using NewLife.Data;
 namespace XCode.Membership;
 
 /// <summary>部门。组织机构，多级树状结构</summary>
-public partial class DepartmentModel : IDepartment, IModel
+public partial class DepartmentModel : IModel
 {
     #region 属性
     /// <summary>编号</summary>
     public Int32 ID { get; set; }
+
+    /// <summary>租户</summary>
+    public Int32 TenantId { get; set; }
 
     /// <summary>代码</summary>
     public String Code { get; set; }
@@ -99,6 +102,7 @@ public partial class DepartmentModel : IDepartment, IModel
             return name switch
             {
                 "ID" => ID,
+                "TenantId" => TenantId,
                 "Code" => Code,
                 "Name" => Name,
                 "FullName" => FullName,
@@ -131,6 +135,7 @@ public partial class DepartmentModel : IDepartment, IModel
             switch (name)
             {
                 case "ID": ID = value.ToInt(); break;
+                case "TenantId": TenantId = value.ToInt(); break;
                 case "Code": Code = Convert.ToString(value); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "FullName": FullName = Convert.ToString(value); break;
@@ -166,6 +171,7 @@ public partial class DepartmentModel : IDepartment, IModel
     public void Copy(IDepartment model)
     {
         ID = model.ID;
+        TenantId = model.TenantId;
         Code = model.Code;
         Name = model.Name;
         FullName = model.FullName;

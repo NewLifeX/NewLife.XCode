@@ -181,7 +181,7 @@ public partial class Log : ILog
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(ILog model)
+    public void Copy(LogModel model)
     {
         ID = model.ID;
         Category = model.Category;

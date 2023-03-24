@@ -227,7 +227,7 @@ public partial class Parameter : IParameter
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(IParameter model)
+    public void Copy(ParameterModel model)
     {
         ID = model.ID;
         UserID = model.UserID;

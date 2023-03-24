@@ -9,7 +9,7 @@ using NewLife.Data;
 namespace XCode.Membership;
 
 /// <summary>用户。用户帐号信息</summary>
-public partial class UserModel : IUser, IModel
+public partial class UserModel : IModel
 {
     #region 属性
     /// <summary>编号</summary>

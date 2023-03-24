@@ -9,7 +9,7 @@ using NewLife.Data;
 namespace XCode.Membership;
 
 /// <summary>角色</summary>
-public partial class RoleModel : IRole, IModel
+public partial class RoleModel : IModel
 {
     #region 属性
     /// <summary>编号</summary>

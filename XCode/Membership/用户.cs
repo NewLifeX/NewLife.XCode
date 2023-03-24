@@ -326,7 +326,7 @@ public partial class User : IUser
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(IUser model)
+    public void Copy(UserModel model)
     {
         ID = model.ID;
         Name = model.Name;

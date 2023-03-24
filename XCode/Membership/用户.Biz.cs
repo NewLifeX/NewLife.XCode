@@ -644,15 +644,15 @@ public partial interface IUser
     Int32 Save();
 }
 
-public partial class UserModel
-{
-    IRole IUser.Role => throw new NotImplementedException();
+//public partial class UserModel
+//{
+//    IRole IUser.Role => throw new NotImplementedException();
 
-    IRole[] IUser.Roles => throw new NotImplementedException();
+//    IRole[] IUser.Roles => throw new NotImplementedException();
 
-    String IUser.RoleName => throw new NotImplementedException();
+//    String IUser.RoleName => throw new NotImplementedException();
 
-    Boolean IUser.Has(IMenu menu, params PermissionFlags[] flags) => throw new NotImplementedException();
-    void IUser.Logout() => throw new NotImplementedException();
-    Int32 IUser.Save() => throw new NotImplementedException();
-}
+//    Boolean IUser.Has(IMenu menu, params PermissionFlags[] flags) => throw new NotImplementedException();
+//    void IUser.Logout() => throw new NotImplementedException();
+//    Int32 IUser.Save() => throw new NotImplementedException();
+//}

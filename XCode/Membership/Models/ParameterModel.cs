@@ -9,7 +9,7 @@ using NewLife.Data;
 namespace XCode.Membership;
 
 /// <summary>字典参数</summary>
-public partial class ParameterModel : IParameter, IModel
+public partial class ParameterModel : IModel
 {
     #region 属性
     /// <summary>编号</summary>

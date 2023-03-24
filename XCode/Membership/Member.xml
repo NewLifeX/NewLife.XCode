@@ -86,7 +86,6 @@
   <Table Name="Role" Description="角色">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="TenantId" DataType="Int32" Description="租户" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="IsSystem" DataType="Boolean" Description="系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除" />
@@ -110,7 +109,6 @@
     </Columns>
     <Indexes>
       <Index Columns="Name" Unique="True" />
-      <Index Columns="TenantId" />
     </Indexes>
   </Table>
   <Table Name="Menu" Description="菜单" BaseType="EntityTree">
@@ -151,7 +149,6 @@
   <Table Name="Parameter" Description="字典参数">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="TenantId" DataType="Int32" Description="租户" />
       <Column Name="UserID" DataType="Int32" Description="用户。按用户区分参数，用户0表示系统级" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
@@ -179,7 +176,6 @@
       <Index Columns="UserID,Category,Name" Unique="True" />
       <Index Columns="Category,Name" />
       <Index Columns="UpdateTime" />
-      <Index Columns="TenantId" />
     </Indexes>
   </Table>
   <Table Name="Area" Description="地区。行政区划数据，最高支持四级地址，9位数字">
@@ -215,7 +211,6 @@
   <Table Name="Log" Description="日志" ConnName="Log" InsertOnly="True">
     <Columns>
       <Column Name="ID" DataType="Int64" PrimaryKey="True" Description="编号" />
-      <Column Name="TenantId" DataType="Int32" Description="租户" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Action" DataType="String" Description="操作" />
       <Column Name="LinkID" DataType="Int32" Description="链接" />
@@ -238,13 +233,19 @@
       <Index Columns="Action,Category,ID" />
       <Index Columns="Category,LinkID,ID" />
       <Index Columns="CreateUserID,ID" />
-      <Index Columns="TenantId" />
     </Indexes>
   </Table>
-  <Table Name="Tenant" Description="租户">
+  <Table Name="Tenant" Description="租户。多租户SAAS平台，用于隔离业务数据">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="Name" DataType="String" Master="True" Description="名称" />
+      <Column Name="Code" DataType="String" Description="编码。唯一编码" />
+      <Column Name="Name" DataType="String" Master="True" Description="名称。显示名称" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="RoleIds" DataType="String" Length="200" Description="角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同" />
+      <Column Name="Logo" DataType="String" ItemType="image" Description="图标。附件路径" />
+      <Column Name="DatabaseName" DataType="String" Description="数据库。分库用的数据库名" />
+      <Column Name="TableName" DataType="String" Description="数据表。分表用的数据表前缀" />
+      <Column Name="Expired" DataType="DateTime" Description="过期时间。达到该时间后，自动禁用租户，空表示永不过期" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建者" Model="False" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Model="False" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Model="False" Category="扩展" />
@@ -254,14 +255,17 @@
       <Column Name="Remark" DataType="String" Length="500" Description="描述" Category="扩展" />
     </Columns>
     <Indexes>
-      <Index Columns="Name" Unique="True" />
+      <Index Columns="Code" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="TenantUser" Description="租户用户关系">
+  <Table Name="TenantUser" Description="租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="TenantId" DataType="Int32" Description="租户" />
       <Column Name="UserId" DataType="Int32" Description="用户" />
+      <Column Name="Enable" DataType="Boolean" Description="启用" />
+      <Column Name="RoleId" DataType="Int32" Description="角色。用户在该租户所对应的主要角色，替换用户自身的角色组" />
+      <Column Name="RoleIds" DataType="String" Length="200" Description="角色组。次要角色集合" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建者" Model="False" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Model="False" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Model="False" Category="扩展" />
@@ -272,6 +276,7 @@
     </Columns>
     <Indexes>
       <Index Columns="TenantId,UserId" Unique="True" />
+      <Index Columns="UserId" />
     </Indexes>
   </Table>
 </Tables>

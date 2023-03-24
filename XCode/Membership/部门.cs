@@ -21,6 +21,7 @@ namespace XCode.Membership;
 [BindIndex("IX_Department_ParentID_Name", false, "ParentID,Name")]
 [BindIndex("IX_Department_Code", false, "Code")]
 [BindIndex("IX_Department_UpdateTime", false, "UpdateTime")]
+[BindIndex("IX_Department_TenantId", false, "TenantId")]
 [BindTable("Department", Description = "部门。组织机构，多级树状结构", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class Department : IDepartment
 {
@@ -32,6 +33,14 @@ public partial class Department : IDepartment
     [DataObjectField(true, true, false, 0)]
     [BindColumn("ID", "编号", "")]
     public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+
+    private Int32 _TenantId;
+    /// <summary>租户</summary>
+    [DisplayName("租户")]
+    [Description("租户")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("TenantId", "租户", "")]
+    public Int32 TenantId { get => _TenantId; set { if (OnPropertyChanging("TenantId", value)) { _TenantId = value; OnPropertyChanged("TenantId"); } } }
 
     private String _Code;
     /// <summary>代码</summary>
@@ -244,9 +253,10 @@ public partial class Department : IDepartment
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(IDepartment model)
+    public void Copy(DepartmentModel model)
     {
         ID = model.ID;
+        TenantId = model.TenantId;
         Code = model.Code;
         Name = model.Name;
         FullName = model.FullName;
@@ -283,6 +293,7 @@ public partial class Department : IDepartment
         get => name switch
         {
             "ID" => _ID,
+            "TenantId" => _TenantId,
             "Code" => _Code,
             "Name" => _Name,
             "FullName" => _FullName,
@@ -314,6 +325,7 @@ public partial class Department : IDepartment
             switch (name)
             {
                 case "ID": _ID = value.ToInt(); break;
+                case "TenantId": _TenantId = value.ToInt(); break;
                 case "Code": _Code = Convert.ToString(value); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "FullName": _FullName = Convert.ToString(value); break;
@@ -350,6 +362,9 @@ public partial class Department : IDepartment
     {
         /// <summary>编号</summary>
         public static readonly Field ID = FindByName("ID");
+
+        /// <summary>租户</summary>
+        public static readonly Field TenantId = FindByName("TenantId");
 
         /// <summary>代码</summary>
         public static readonly Field Code = FindByName("Code");
@@ -431,6 +446,9 @@ public partial class Department : IDepartment
     {
         /// <summary>编号</summary>
         public const String ID = "ID";
+
+        /// <summary>租户</summary>
+        public const String TenantId = "TenantId";
 
         /// <summary>代码</summary>
         public const String Code = "Code";

@@ -1,28 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
-using System.Web;
+﻿using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
-using NewLife.Model;
-using NewLife.Reflection;
-using NewLife.Threading;
-using NewLife.Web;
-using XCode;
-using XCode.Cache;
-using XCode.Configuration;
-using XCode.DataAccessLayer;
-using XCode.Membership;
-using XCode.Shards;
 
 namespace XCode.Membership;
 
@@ -51,63 +31,16 @@ public partial class TenantUser : Entity<TenantUser>
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);
 
-        // 在新插入数据或者修改了指定字段时进行修正
-        // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-        /*var user = ManageProvider.User;
-        if (user != null)
+        // 重新整理角色
+        var ids = GetRoleIDs();
+        if (ids.Length > 0)
         {
-            if (isNew && !Dirtys[nameof(CreateUserId)]) CreateUserId = user.ID;
-            if (!Dirtys[nameof(UpdateUserId)]) UpdateUserId = user.ID;
-        }*/
-        //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-        //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
-        //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
-        //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
-
-        // 检查唯一索引
-        // CheckExist(isNew, nameof(TenantId), nameof(UserId));
+            RoleId = ids[0];
+            var str = ids.Skip(1).Join();
+            if (!str.IsNullOrEmpty()) str = "," + str + ",";
+            RoleIds = str;
+        }
     }
-
-    ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-    //[EditorBrowsable(EditorBrowsableState.Never)]
-    //protected override void InitData()
-    //{
-    //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-    //    if (Meta.Session.Count > 0) return;
-
-    //    if (XTrace.Debug) XTrace.WriteLine("开始初始化TenantUser[租户关系]数据……");
-
-    //    var entity = new TenantUser();
-    //    entity.TenantId = 0;
-    //    entity.UserId = 0;
-    //    entity.Enable = true;
-    //    entity.RoleId = 0;
-    //    entity.RoleIds = "abc";
-    //    entity.CreateUserId = 0;
-    //    entity.CreateTime = DateTime.Now;
-    //    entity.CreateIP = "abc";
-    //    entity.UpdateUserId = 0;
-    //    entity.UpdateTime = DateTime.Now;
-    //    entity.UpdateIP = "abc";
-    //    entity.Remark = "abc";
-    //    entity.Insert();
-
-    //    if (XTrace.Debug) XTrace.WriteLine("完成初始化TenantUser[租户关系]数据！");
-    //}
-
-    ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-    ///// <returns></returns>
-    //public override Int32 Insert()
-    //{
-    //    return base.Insert();
-    //}
-
-    ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-    ///// <returns></returns>
-    //protected override Int32 OnDelete()
-    //{
-    //    return base.OnDelete();
-    //}
     #endregion
 
     #region 扩展属性
@@ -132,11 +65,29 @@ public partial class TenantUser : Entity<TenantUser>
     /// <summary>角色</summary>
     [XmlIgnore, IgnoreDataMember]
     //[ScriptIgnore]
-    public Role Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleId));
+    public IRole Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleId));
 
     /// <summary>角色</summary>
     [Map(nameof(RoleId), typeof(Role), "ID")]
     public String RoleName => Role?.Name;
+
+    /// <summary>角色集合</summary>
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).ToArray());
+
+    /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>
+    /// <returns></returns>
+    public virtual Int32[] GetRoleIDs()
+    {
+        var ids = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
+        if (RoleId > 0) ids.Insert(0, RoleId);
+
+        return ids.Distinct().ToArray();
+    }
+
+    /// <summary>角色组名</summary>
+    [Map(__.RoleIds)]
+    public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
 
     #endregion
 
@@ -217,13 +168,65 @@ public partial class TenantUser : Entity<TenantUser>
     #endregion
 
     #region 业务操作
+    /// <summary>转模型</summary>
+    /// <returns></returns>
     public TenantUserModel ToModel()
     {
         var model = new TenantUserModel();
         model.Copy(this);
 
-         return model;
+        return model;
     }
 
+    /// <summary>用户是否拥有当前菜单的指定权限</summary>
+    /// <param name="menu">指定菜单</param>
+    /// <param name="flags">是否拥有多个权限中的任意一个，或的关系。如果需要表示与的关系，可以传入一个多权限位合并</param>
+    /// <returns></returns>
+    public Boolean Has(IMenu menu, params PermissionFlags[] flags)
+    {
+        if (menu == null) throw new ArgumentNullException(nameof(menu));
+
+        // 角色集合
+        var rs = Roles;
+
+        // 如果没有指定权限子项，则指判断是否拥有资源
+        if (flags == null || flags.Length == 0) return rs.Any(r => r.Has(menu.ID));
+
+        foreach (var item in flags)
+        {
+            // 如果判断None，则直接返回
+            if (item == PermissionFlags.None) return true;
+
+            // 菜单必须拥有这些权限位才行
+            if (menu.Permissions.ContainsKey((Int32)item))
+            {
+                //// 如果判断None，则直接返回
+                //if (item == PermissionFlags.None) return true;
+
+                if (rs.Any(r => r.Has(menu.ID, item))) return true;
+            }
+        }
+
+        return false;
+    }
     #endregion
+}
+
+/// <summary>租户关系</summary>
+public partial interface ITenantUser
+{
+    /// <summary>角色</summary>
+    IRole Role { get; }
+
+    /// <summary>角色集合</summary>
+    IRole[] Roles { get; }
+
+    /// <summary>角色名</summary>
+    String RoleName { get; }
+
+    /// <summary>用户是否拥有当前菜单的指定权限</summary>
+    /// <param name="menu">指定菜单</param>
+    /// <param name="flags">是否拥有多个权限中的任意一个，或的关系。如果需要表示与的关系，可以传入一个多权限位合并</param>
+    /// <returns></returns>
+    Boolean Has(IMenu menu, params PermissionFlags[] flags);
 }

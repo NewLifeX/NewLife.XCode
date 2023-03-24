@@ -759,7 +759,7 @@ public class DbPackage
             {
                 if (Host.BatchInsert)
                 {
-                    dal.Session.Insert(Table, _Columns, dt.Cast<IExtend>());
+                    dal.Session.Insert(Table, _Columns, dt.Cast<IModel>());
                 }
                 else
                 {

@@ -40,7 +40,7 @@ public class InsertBuilder
     /// <param name="columns"></param>
     /// <param name="entity"></param>
     /// <returns></returns>
-    public virtual String GetSql(IDatabase database, IDataTable table, IDataColumn[] columns, IExtend entity)
+    public virtual String GetSql(IDatabase database, IDataTable table, IDataColumn[] columns, IModel entity)
     {
         Parameters = null;
 

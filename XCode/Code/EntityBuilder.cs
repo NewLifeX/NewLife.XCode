@@ -233,10 +233,10 @@ public class EntityBuilder : ClassBuilder
     protected override String GetBaseClass()
     {
         var baseClass = Option.BaseClass;
-        if (Option.Extend)
+        if (Option.HasIndex)
         {
             if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
-            baseClass += "IExtend";
+            baseClass += "IModel";
         }
 
         var bs = baseClass?.Split(',').Select(e => e.Trim()).ToList() ?? new List<String>();

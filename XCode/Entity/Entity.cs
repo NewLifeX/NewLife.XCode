@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Data;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
@@ -723,8 +717,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public static TEntity FindByKey(Object key, String selects)
     {
-        var field = Meta.Unique;
-        if (field == null) throw new ArgumentNullException(nameof(Meta.Unique), "FindByKey方法要求" + typeof(TEntity).FullName + "有唯一主键！");
+        var field = Meta.Unique ?? throw new ArgumentNullException(nameof(Meta.Unique), "FindByKey方法要求" + typeof(TEntity).FullName + "有唯一主键！");
 
         // 唯一键为自增且参数小于等于0时，返回空
         if (Helper.IsNullKey(key, field.Type)) return null;
@@ -737,8 +730,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public static TEntity FindByKey(Object key)
     {
-        var field = Meta.Unique;
-        if (field == null) throw new ArgumentNullException(nameof(Meta.Unique), "FindByKey方法要求" + typeof(TEntity).FullName + "有唯一主键！");
+        var field = Meta.Unique ?? throw new ArgumentNullException(nameof(Meta.Unique), "FindByKey方法要求" + typeof(TEntity).FullName + "有唯一主键！");
 
         // 唯一键为自增且参数小于等于0时，返回空
         if (Helper.IsNullKey(key, field.Type)) return null;
@@ -751,8 +743,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public static TEntity FindByKeyForEdit(Object key)
     {
-        var field = Meta.Unique;
-        if (field == null) throw new ArgumentNullException("Meta.Unique", "FindByKeyForEdit方法要求该表有唯一主键！");
+        var field = Meta.Unique ?? throw new ArgumentNullException("Meta.Unique", "FindByKeyForEdit方法要求该表有唯一主键！");
 
         // 参数为空时，返回新实例
         if (key == null) return Meta.Factory.Create(true) as TEntity;
@@ -1822,7 +1813,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             if (Meta.Table.FindByName(name) is FieldItem f && f.IsDynamic) value = value.ChangeType(f.Type);
 
             //Extends[name] = value;
-            Items[name] = value;
+            (this as IExtend).Items[name] = value;
         }
     }
     #endregion
@@ -1974,9 +1965,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public Int32 ResetDirty()
     {
-        var key = Meta.Unique;
-        if (key == null) throw new InvalidOperationException("要求有唯一主键");
-
+        var key = Meta.Unique ?? throw new InvalidOperationException("要求有唯一主键");
         var rs = 0;
         var entity = FindByKey(this[key.Name]);
         foreach (var item in Meta.Fields)

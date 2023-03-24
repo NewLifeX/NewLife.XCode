@@ -131,7 +131,7 @@ namespace XUnitTest.XCode.Code
             var option = new BuilderOption
             {
                 Pure = true,
-                Extend = true,
+                HasIndex = true,
                 BaseClass = "Object, Ixx{name}",
                 ClassNameTemplate = "Extend{name}",
                 ModelNameForCopy = "Extend{name}",
@@ -158,7 +158,7 @@ namespace XUnitTest.XCode.Code
             var option = new BuilderOption
             {
                 Pure = true,
-                Extend = true,
+                HasIndex = true,
                 BaseClass = null,
                 ClassNameTemplate = "Extend{name}2",
                 DisplayNameTemplate = "{displayName}模型",

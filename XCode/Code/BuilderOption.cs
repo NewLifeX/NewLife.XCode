@@ -28,8 +28,8 @@ public class BuilderOption
     /// <summary>是否分部类</summary>
     public Boolean Partial { get; set; }
 
-    /// <summary>可扩展。实现IExtend接口</summary>
-    public Boolean Extend { get; set; }
+    /// <summary>带有索引器。实现IModel接口</summary>
+    public Boolean HasIndex { get; set; }
 
     /// <summary>在数据类上生成扩展属性</summary>
     public Boolean ExtendOnData { get; set; }

@@ -281,9 +281,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <returns>剩下的事务计数</returns>
     public virtual Int32 Commit()
     {
-        var tr = Transaction;
-        if (tr == null) throw new XDbSessionException(this, "当前并未开始事务，请用BeginTransaction方法开始新事务！");
-
+        var tr = Transaction ?? throw new XDbSessionException(this, "当前并未开始事务，请用BeginTransaction方法开始新事务！");
         using var span = Tracer?.NewSpan($"db:{Database.ConnName}:DbSession:Commit");
         try
         {
@@ -307,9 +305,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <returns>剩下的事务计数</returns>
     public Int32 Rollback(Boolean ignoreException = true)
     {
-        var tr = Transaction;
-        if (tr == null) throw new XDbSessionException(this, "当前并未开始事务，请用BeginTransaction方法开始新事务！");
-
+        var tr = Transaction ?? throw new XDbSessionException(this, "当前并未开始事务，请用BeginTransaction方法开始新事务！");
         using var span = Tracer?.NewSpan($"db:{Database.ConnName}:DbSession:Rollback");
         try
         {
@@ -711,21 +707,21 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="columns">要插入的字段，默认所有字段</param>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
-    public virtual Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IExtend> list) => throw new NotSupportedException();
+    public virtual Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list) => throw new NotSupportedException();
 
     /// <summary>批量忽略插入</summary>
     /// <param name="table">数据表</param>
     /// <param name="columns">要插入的字段，默认所有字段</param>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
-    public virtual Int32 InsertIgnore(IDataTable table, IDataColumn[] columns, IEnumerable<IExtend> list) => throw new NotSupportedException();
+    public virtual Int32 InsertIgnore(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list) => throw new NotSupportedException();
 
     /// <summary>批量替换</summary>
     /// <param name="table">数据表</param>
     /// <param name="columns">要插入的字段，默认所有字段</param>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
-    public virtual Int32 Replace(IDataTable table, IDataColumn[] columns, IEnumerable<IExtend> list) => throw new NotSupportedException();
+    public virtual Int32 Replace(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list) => throw new NotSupportedException();
 
     /// <summary>批量更新</summary>
     /// <param name="table">数据表</param>
@@ -734,7 +730,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="addColumns">要累加更新的字段，默认累加</param>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
-    public virtual Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IExtend> list) => throw new NotSupportedException();
+    public virtual Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list) => throw new NotSupportedException();
 
     /// <summary>批量插入或更新</summary>
     /// <param name="table">数据表</param>
@@ -743,7 +739,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="addColumns">主键已存在时，要累加更新的字段</param>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
-    public virtual Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IExtend> list) => throw new NotSupportedException();
+    public virtual Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list) => throw new NotSupportedException();
 
     protected virtual void BuildInsert(StringBuilder sb, DbBase db, String action, IDataTable table, IDataColumn[] columns)
     {
@@ -758,7 +754,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         sb.Append(')');
     }
 
-    protected virtual void BuildBatchValues(StringBuilder sb, DbBase db, String action, IDataTable table, IDataColumn[] columns, IEnumerable<IExtend> list)
+    protected virtual void BuildBatchValues(StringBuilder sb, DbBase db, String action, IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
     {
         // 优化支持DbTable
         if (list.FirstOrDefault() is DbRow)

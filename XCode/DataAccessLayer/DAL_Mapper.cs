@@ -128,7 +128,7 @@ namespace XCode.DataAccessLayer
 
         private static Boolean IsValueTuple(Type type)
         {
-            if ((Object)type != null && type.IsValueType)
+            if (type is not null && type.IsValueType)
             {
                 return type.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal);
             }
@@ -277,7 +277,7 @@ namespace XCode.DataAccessLayer
         /// <param name="data">数据对象</param>
         /// <param name="mode">保存模式，默认Insert</param>
         /// <returns></returns>
-        public Int32 Insert(IExtend data, IDataTable table, IDataColumn[] columns = null, SaveModes mode = SaveModes.Insert)
+        public Int32 Insert(IModel data, IDataTable table, IDataColumn[] columns = null, SaveModes mode = SaveModes.Insert)
         {
             var builder = new InsertBuilder
             {

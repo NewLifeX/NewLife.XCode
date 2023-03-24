@@ -237,7 +237,7 @@ public class ClassBuilder
     {
         // 引用命名空间
         var us = Option.Usings;
-        if (Option.Extend && !us.Contains("NewLife.Data")) us.Add("NewLife.Data");
+        if (Option.HasIndex && !us.Contains("NewLife.Data")) us.Add("NewLife.Data");
 
         us = us.Distinct().OrderBy(e => e.StartsWith("System") ? 0 : 1).ThenBy(e => e).ToArray();
         foreach (var item in us)
@@ -282,10 +282,10 @@ public class ClassBuilder
     protected virtual String GetBaseClass()
     {
         var baseClass = Option.BaseClass?.Replace("{name}", Table.Name);
-        if (Option.Extend)
+        if (Option.HasIndex)
         {
             if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
-            baseClass += "IExtend";
+            baseClass += "IModel";
         }
 
         return baseClass;
@@ -340,10 +340,10 @@ public class ClassBuilder
         }
         WriteLine("#endregion");
 
-        if (Option.Extend)
+        if (Option.HasIndex)
         {
             WriteLine();
-            BuildExtend();
+            BuildIndexItems();
         }
 
         // 生成拷贝函数。需要有基类
@@ -387,7 +387,7 @@ public class ClassBuilder
             WriteLine("public {0} {1} {{ get; set; }}", type, dc.Name);
     }
 
-    private void BuildExtend()
+    private void BuildIndexItems()
     {
         WriteLine("#region 获取/设置 字段值");
         WriteLine("/// <summary>获取/设置 字段值</summary>");

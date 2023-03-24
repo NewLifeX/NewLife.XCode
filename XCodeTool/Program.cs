@@ -98,10 +98,11 @@ class Program
             opt.ModelNameForToModel = modelClass;
             if (!modelInterface.IsNullOrEmpty())
             {
-                //opt.BaseClass = modelInterface;
-                opt.ModelNameForCopy = modelInterface;
+                opt.BaseClass = modelInterface;
+                //opt.ModelNameForCopy = modelInterface;
             }
-            else if (!modelClass.IsNullOrEmpty())
+            //else
+            if (!modelClass.IsNullOrEmpty())
             {
                 opt.ModelNameForCopy = modelClass;
             }
@@ -114,7 +115,7 @@ class Program
             opt.Items.TryGetValue("ModelsOutput", out var output);
             output ??= @".\Models\";
             opt.Output = opt.Output.CombinePath(output);
-            opt.BaseClass = modelInterface;
+            opt.BaseClass = null;
             opt.ClassNameTemplate = modelClass;
             opt.ModelNameForCopy = !modelInterface.IsNullOrEmpty() ? modelInterface : modelClass;
             opt.HasIndex = true;

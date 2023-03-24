@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using NewLife.Remoting;
 
 namespace Company.MyName;
+
 /// <summary>用户。用户帐号信息</summary>
 [Serializable]
 [DataObject]

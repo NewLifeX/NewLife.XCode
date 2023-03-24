@@ -56,8 +56,7 @@ public partial class DAL
             {
                 if (_Db != null) return _Db;
 
-                var type = ProviderType;
-                if (type == null) throw new XCodeException("无法识别{0}的数据提供者！", ConnName);
+                var type = ProviderType ?? throw new XCodeException("无法识别{0}的数据提供者！", ConnName);
 
                 //!!! 重量级更新：经常出现链接字符串为127/master的连接错误，非常有可能是因为这里线程冲突，A线程创建了实例但未来得及赋值连接字符串，就被B线程使用了
                 var db = type.CreateInstance() as IDatabase;

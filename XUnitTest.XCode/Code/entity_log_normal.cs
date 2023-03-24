@@ -13,6 +13,7 @@ using XCode.Configuration;
 using XCode.DataAccessLayer;
 
 namespace Company.MyName;
+
 /// <summary>日志</summary>
 [Serializable]
 [DataObject]
@@ -184,31 +185,28 @@ public partial class Log
     /// <returns></returns>
     public override Object this[String name]
     {
-        get
+        get => name switch
         {
-            switch (name)
-            {
-                case "ID": return _ID;
-                case "Category": return _Category;
-                case "Action": return _Action;
-                case "LinkID": return _LinkID;
-                case "Success": return _Success;
-                case "UserName": return _UserName;
-                case "Ex1": return _Ex1;
-                case "Ex2": return _Ex2;
-                case "Ex3": return _Ex3;
-                case "Ex4": return _Ex4;
-                case "Ex5": return _Ex5;
-                case "Ex6": return _Ex6;
-                case "TraceId": return _TraceId;
-                case "CreateUser": return _CreateUser;
-                case "CreateUserID": return _CreateUserID;
-                case "CreateIP": return _CreateIP;
-                case "CreateTime": return _CreateTime;
-                case "Remark": return _Remark;
-                default: return base[name];
-            }
-        }
+            "ID" => _ID,
+            "Category" => _Category,
+            "Action" => _Action,
+            "LinkID" => _LinkID,
+            "Success" => _Success,
+            "UserName" => _UserName,
+            "Ex1" => _Ex1,
+            "Ex2" => _Ex2,
+            "Ex3" => _Ex3,
+            "Ex4" => _Ex4,
+            "Ex5" => _Ex5,
+            "Ex6" => _Ex6,
+            "TraceId" => _TraceId,
+            "CreateUser" => _CreateUser,
+            "CreateUserID" => _CreateUserID,
+            "CreateIP" => _CreateIP,
+            "CreateTime" => _CreateTime,
+            "Remark" => _Remark,
+            _ => base[name]
+        };
         set
         {
             switch (name)
@@ -436,5 +434,4 @@ public partial class Log
         public const String Remark = "Remark";
     }
     #endregion
-}
 }

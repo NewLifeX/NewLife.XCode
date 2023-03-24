@@ -12,6 +12,7 @@ using XCode.Configuration;
 using XCode.DataAccessLayer;
 
 namespace XCode.Membership;
+
 /// <summary>用户。用户帐号信息</summary>
 [Serializable]
 [DataObject]
@@ -309,43 +310,40 @@ public partial class User : IUser
     /// <returns></returns>
     public override Object this[String name]
     {
-        get
+        get => name switch
         {
-            switch (name)
-            {
-                case "ID": return _ID;
-                case "Name": return _Name;
-                case "Password": return _Password;
-                case "DisplayName": return _DisplayName;
-                case "Sex": return _Sex;
-                case "Mail": return _Mail;
-                case "Mobile": return _Mobile;
-                case "Code": return _Code;
-                case "Avatar": return _Avatar;
-                case "RoleID": return _RoleID;
-                case "RoleIds": return _RoleIds;
-                case "DepartmentID": return _DepartmentID;
-                case "Online": return _Online;
-                case "Enable": return _Enable;
-                case "Logins": return _Logins;
-                case "LastLogin": return _LastLogin;
-                case "LastLoginIP": return _LastLoginIP;
-                case "RegisterTime": return _RegisterTime;
-                case "RegisterIP": return _RegisterIP;
-                case "Ex1": return _Ex1;
-                case "Ex2": return _Ex2;
-                case "Ex3": return _Ex3;
-                case "Ex4": return _Ex4;
-                case "Ex5": return _Ex5;
-                case "Ex6": return _Ex6;
-                case "UpdateUser": return _UpdateUser;
-                case "UpdateUserID": return _UpdateUserID;
-                case "UpdateIP": return _UpdateIP;
-                case "UpdateTime": return _UpdateTime;
-                case "Remark": return _Remark;
-                default: return base[name];
-            }
-        }
+            "ID" => _ID,
+            "Name" => _Name,
+            "Password" => _Password,
+            "DisplayName" => _DisplayName,
+            "Sex" => _Sex,
+            "Mail" => _Mail,
+            "Mobile" => _Mobile,
+            "Code" => _Code,
+            "Avatar" => _Avatar,
+            "RoleID" => _RoleID,
+            "RoleIds" => _RoleIds,
+            "DepartmentID" => _DepartmentID,
+            "Online" => _Online,
+            "Enable" => _Enable,
+            "Logins" => _Logins,
+            "LastLogin" => _LastLogin,
+            "LastLoginIP" => _LastLoginIP,
+            "RegisterTime" => _RegisterTime,
+            "RegisterIP" => _RegisterIP,
+            "Ex1" => _Ex1,
+            "Ex2" => _Ex2,
+            "Ex3" => _Ex3,
+            "Ex4" => _Ex4,
+            "Ex5" => _Ex5,
+            "Ex6" => _Ex6,
+            "UpdateUser" => _UpdateUser,
+            "UpdateUserID" => _UpdateUserID,
+            "UpdateIP" => _UpdateIP,
+            "UpdateTime" => _UpdateTime,
+            "Remark" => _Remark,
+            _ => base[name]
+        };
         set
         {
             switch (name)
@@ -577,5 +575,4 @@ public partial class User : IUser
         public const String Remark = "Remark";
     }
     #endregion
-}
 }

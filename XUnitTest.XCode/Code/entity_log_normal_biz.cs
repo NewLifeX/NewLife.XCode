@@ -26,6 +26,7 @@ using XCode.Membership;
 using XCode.Shards;
 
 namespace Company.MyName;
+
 public partial class Log : Entity<Log>
 {
     #region 对象操作
@@ -121,5 +122,4 @@ public partial class Log : Entity<Log>
 
     #region 业务操作
     #endregion
-}
 }

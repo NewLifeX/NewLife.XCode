@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -6,10 +6,10 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;
 
-namespace XCode.Code;
+namespace XCode.Membership;
 
-/// <summary>用户模型。帐号信息</summary>
-public class ExtendUser2 : IModel
+/// <summary>用户。用户帐号信息</summary>
+public partial class UserModel : IUser, IModel
 {
     #region 属性
     /// <summary>编号</summary>
@@ -182,6 +182,44 @@ public class ExtendUser2 : IModel
                 case "Remark": Remark = Convert.ToString(value); break;
             }
         }
+    }
+    #endregion
+
+    #region 拷贝
+    /// <summary>拷贝模型对象</summary>
+    /// <param name="model">模型</param>
+    public void Copy(IUser model)
+    {
+        ID = model.ID;
+        Name = model.Name;
+        Password = model.Password;
+        DisplayName = model.DisplayName;
+        Sex = model.Sex;
+        Mail = model.Mail;
+        Mobile = model.Mobile;
+        Code = model.Code;
+        AreaId = model.AreaId;
+        Avatar = model.Avatar;
+        RoleID = model.RoleID;
+        RoleIds = model.RoleIds;
+        DepartmentID = model.DepartmentID;
+        Online = model.Online;
+        Enable = model.Enable;
+        Age = model.Age;
+        Birthday = model.Birthday;
+        Logins = model.Logins;
+        LastLogin = model.LastLogin;
+        LastLoginIP = model.LastLoginIP;
+        RegisterTime = model.RegisterTime;
+        RegisterIP = model.RegisterIP;
+        OnlineTime = model.OnlineTime;
+        Ex1 = model.Ex1;
+        Ex2 = model.Ex2;
+        Ex3 = model.Ex3;
+        Ex4 = model.Ex4;
+        Ex5 = model.Ex5;
+        Ex6 = model.Ex6;
+        Remark = model.Remark;
     }
     #endregion
 }

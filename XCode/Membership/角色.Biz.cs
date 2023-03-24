@@ -441,3 +441,18 @@ public partial interface IRole
     /// <returns></returns>
     Int32 Save();
 }
+
+partial class RoleModel
+{
+    IDictionary<Int32, PermissionFlags> IRole.Permissions => throw new NotImplementedException();
+
+    Int32[] IRole.Resources => throw new NotImplementedException();
+
+    Boolean IRole.Has(Int32 resid, PermissionFlags flag) => throw new NotImplementedException();
+    PermissionFlags IRole.Get(Int32 resid) => throw new NotImplementedException();
+    void IRole.Set(Int32 resid, PermissionFlags flag) => throw new NotImplementedException();
+    void IRole.Reset(Int32 resid, PermissionFlags flag) => throw new NotImplementedException();
+    IRole IRole.FindByID(Int32 id) => throw new NotImplementedException();
+    IRole IRole.GetOrAdd(String name) => throw new NotImplementedException();
+    Int32 IRole.Save() => throw new NotImplementedException();
+}

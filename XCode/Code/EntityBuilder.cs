@@ -292,10 +292,10 @@ public class EntityBuilder : ClassBuilder
         //    BuildInterface();
         //}
 
-        if (!Option.Namespace.IsNullOrEmpty())
-        {
-            Writer.Write("}");
-        }
+        //if (!Option.Namespace.IsNullOrEmpty())
+        //{
+        //    Writer.Write("}");
+        //}
     }
 
     /// <summary>生成主体</summary>
@@ -325,7 +325,7 @@ public class EntityBuilder : ClassBuilder
             base.BuildItems();
 
             WriteLine();
-            BuildExtend();
+            BuildIndexItems();
 
             if (Option.ExtendOnData)
             {
@@ -423,7 +423,7 @@ public class EntityBuilder : ClassBuilder
             WriteLine("public {0} {1} {{ get => _{1}; set {{ if (OnPropertyChanging(\"{1}\", value)) {{ _{1} = value; OnPropertyChanged(\"{1}\"); }} }} }}", type, dc.Name);
     }
 
-    private void BuildExtend()
+    private void BuildIndexItems()
     {
         WriteLine("#region 获取/设置 字段值");
         WriteLine("/// <summary>获取/设置 字段值</summary>");
@@ -433,23 +433,21 @@ public class EntityBuilder : ClassBuilder
         WriteLine("{");
 
         // get
-        WriteLine("get");
+        WriteLine("get => name switch");
         WriteLine("{");
         {
-            WriteLine("switch (name)");
-            WriteLine("{");
             foreach (var column in Table.Columns)
             {
                 // 跳过排除项
                 if (Option.Excludes.Contains(column.Name)) continue;
                 if (Option.Excludes.Contains(column.ColumnName)) continue;
 
-                WriteLine("case \"{0}\": return _{0};", column.Name);
+                WriteLine("\"{0}\" => _{0},", column.Name);
             }
-            WriteLine("default: return base[name];");
-            WriteLine("}");
+            //WriteLine("default: return base[name];");
+            WriteLine("_ => base[name]");
         }
-        WriteLine("}");
+        WriteLine("};");
 
         // set
         WriteLine("set");

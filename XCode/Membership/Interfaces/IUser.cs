@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 
-namespace XCode.Code;
+namespace XCode.Membership;
 
 /// <summary>用户。用户帐号信息</summary>
 public partial interface IUser

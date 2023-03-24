@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using NewLife.Data;
 
 namespace XCode.Code;
+
 /// <summary>用户。用户帐号信息</summary>
 public class ExtendUser : Object, IxxUser, IModel
 {
@@ -110,40 +111,40 @@ public class ExtendUser : Object, IxxUser, IModel
     {
         get
         {
-            switch (name)
+            return name switch
             {
-                case "ID": return ID;
-                case "Name": return Name;
-                case "Password": return Password;
-                case "DisplayName": return DisplayName;
-                case "Sex": return Sex;
-                case "Mail": return Mail;
-                case "Mobile": return Mobile;
-                case "Code": return Code;
-                case "AreaId": return AreaId;
-                case "Avatar": return Avatar;
-                case "RoleID": return RoleID;
-                case "RoleIds": return RoleIds;
-                case "DepartmentID": return DepartmentID;
-                case "Online": return Online;
-                case "Enable": return Enable;
-                case "Age": return Age;
-                case "Birthday": return Birthday;
-                case "Logins": return Logins;
-                case "LastLogin": return LastLogin;
-                case "LastLoginIP": return LastLoginIP;
-                case "RegisterTime": return RegisterTime;
-                case "RegisterIP": return RegisterIP;
-                case "OnlineTime": return OnlineTime;
-                case "Ex1": return Ex1;
-                case "Ex2": return Ex2;
-                case "Ex3": return Ex3;
-                case "Ex4": return Ex4;
-                case "Ex5": return Ex5;
-                case "Ex6": return Ex6;
-                case "Remark": return Remark;
-                default: throw new KeyNotFoundException($"{name} not found");
-            }
+                "ID" => ID,
+                "Name" => Name,
+                "Password" => Password,
+                "DisplayName" => DisplayName,
+                "Sex" => Sex,
+                "Mail" => Mail,
+                "Mobile" => Mobile,
+                "Code" => Code,
+                "AreaId" => AreaId,
+                "Avatar" => Avatar,
+                "RoleID" => RoleID,
+                "RoleIds" => RoleIds,
+                "DepartmentID" => DepartmentID,
+                "Online" => Online,
+                "Enable" => Enable,
+                "Age" => Age,
+                "Birthday" => Birthday,
+                "Logins" => Logins,
+                "LastLogin" => LastLogin,
+                "LastLoginIP" => LastLoginIP,
+                "RegisterTime" => RegisterTime,
+                "RegisterIP" => RegisterIP,
+                "OnlineTime" => OnlineTime,
+                "Ex1" => Ex1,
+                "Ex2" => Ex2,
+                "Ex3" => Ex3,
+                "Ex4" => Ex4,
+                "Ex5" => Ex5,
+                "Ex6" => Ex6,
+                "Remark" => Remark,
+                _ => null
+            };
         }
         set
         {
@@ -179,7 +180,6 @@ public class ExtendUser : Object, IxxUser, IModel
                 case "Ex5": Ex5 = Convert.ToString(value); break;
                 case "Ex6": Ex6 = Convert.ToString(value); break;
                 case "Remark": Remark = Convert.ToString(value); break;
-                default: throw new KeyNotFoundException($"{name} not found");
             }
         }
     }

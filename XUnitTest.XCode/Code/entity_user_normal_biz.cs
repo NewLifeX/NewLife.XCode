@@ -26,6 +26,7 @@ using XCode.Membership;
 using XCode.Shards;
 
 namespace Company.MyName;
+
 public partial class User : Entity<User>
 {
     #region 对象操作
@@ -285,5 +286,4 @@ public partial class User : Entity<User>
 
     #region 业务操作
     #endregion
-}
 }

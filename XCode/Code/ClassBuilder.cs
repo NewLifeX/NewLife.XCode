@@ -250,6 +250,7 @@ public class ClassBuilder
         if (!ns.IsNullOrEmpty())
         {
             WriteLine("namespace {0};", ns);
+            WriteLine();
             //WriteLine("{");
         }
 
@@ -400,17 +401,18 @@ public class ClassBuilder
         WriteLine("get");
         WriteLine("{");
         {
-            WriteLine("switch (name)");
+            WriteLine("return name switch");
             WriteLine("{");
             foreach (var column in Table.Columns)
             {
                 // 跳过排除项
                 if (!ValidColumn(column)) continue;
 
-                WriteLine("case \"{0}\": return {0};", column.Name);
+                WriteLine("\"{0}\" => {0},", column.Name);
             }
-            WriteLine("default: throw new KeyNotFoundException($\"{name} not found\");");
-            WriteLine("}");
+            //WriteLine("default: throw new KeyNotFoundException($\"{name} not found\");");
+            WriteLine("_ => null");
+            WriteLine("};");
         }
         WriteLine("}");
 
@@ -478,7 +480,7 @@ public class ClassBuilder
                     }
                 }
             }
-            WriteLine("default: throw new KeyNotFoundException($\"{name} not found\");");
+            //WriteLine("default: throw new KeyNotFoundException($\"{name} not found\");");
             WriteLine("}");
         }
         WriteLine("}");

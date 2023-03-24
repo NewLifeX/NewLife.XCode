@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />
+    <Compile Remove="Interfaces\**" />
     <Compile Remove="Membership\Config\**" />
     <Compile Remove="Membership\Log\**" />
     <Compile Remove="Service\**" />
@@ -55,6 +56,7 @@
     <Compile Remove="tools\**" />
     <Compile Remove="Web\**" />
     <EmbeddedResource Remove="build\**" />
+    <EmbeddedResource Remove="Interfaces\**" />
     <EmbeddedResource Remove="Membership\Config\**" />
     <EmbeddedResource Remove="Membership\Log\**" />
     <EmbeddedResource Remove="Service\**" />
@@ -62,6 +64,7 @@
     <EmbeddedResource Remove="tools\**" />
     <EmbeddedResource Remove="Web\**" />
     <None Remove="build\**" />
+    <None Remove="Interfaces\**" />
     <None Remove="Membership\Config\**" />
     <None Remove="Membership\Log\**" />
     <None Remove="Service\**" />

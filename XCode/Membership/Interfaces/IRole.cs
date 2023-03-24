@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -7,27 +7,27 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership;
 
-/// <summary>日志</summary>
-public partial interface ILog
+/// <summary>角色</summary>
+public partial interface IRole
 {
     #region 属性
     /// <summary>编号</summary>
     Int32 ID { get; set; }
 
-    /// <summary>类别</summary>
-    String Category { get; set; }
+    /// <summary>名称</summary>
+    String Name { get; set; }
 
-    /// <summary>操作</summary>
-    String Action { get; set; }
+    /// <summary>启用</summary>
+    Boolean Enable { get; set; }
 
-    /// <summary>链接</summary>
-    Int32 LinkID { get; set; }
+    /// <summary>系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</summary>
+    Boolean IsSystem { get; set; }
 
-    /// <summary>成功</summary>
-    Boolean Success { get; set; }
+    /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
+    String Permission { get; set; }
 
-    /// <summary>用户名</summary>
-    String UserName { get; set; }
+    /// <summary>排序</summary>
+    Int32 Sort { get; set; }
 
     /// <summary>扩展1</summary>
     Int32 Ex1 { get; set; }
@@ -56,10 +56,22 @@ public partial interface ILog
     /// <summary>创建地址</summary>
     String CreateIP { get; set; }
 
-    /// <summary>时间</summary>
+    /// <summary>创建时间</summary>
     DateTime CreateTime { get; set; }
 
-    /// <summary>详细信息</summary>
+    /// <summary>更新者</summary>
+    String UpdateUser { get; set; }
+
+    /// <summary>更新用户</summary>
+    Int32 UpdateUserID { get; set; }
+
+    /// <summary>更新地址</summary>
+    String UpdateIP { get; set; }
+
+    /// <summary>更新时间</summary>
+    DateTime UpdateTime { get; set; }
+
+    /// <summary>备注</summary>
     String Remark { get; set; }
     #endregion
 }

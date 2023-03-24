@@ -6,6 +6,7 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 
 namespace XCode.Membership;
+
 /// <summary>日志</summary>
 public partial class LogModel : ILog
 {

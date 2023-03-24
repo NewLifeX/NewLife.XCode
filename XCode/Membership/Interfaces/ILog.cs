@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -12,7 +12,7 @@ public partial interface ILog
 {
     #region 属性
     /// <summary>编号</summary>
-    Int32 ID { get; set; }
+    Int64 ID { get; set; }
 
     /// <summary>类别</summary>
     String Category { get; set; }
@@ -46,6 +46,9 @@ public partial interface ILog
 
     /// <summary>扩展6</summary>
     String Ex6 { get; set; }
+
+    /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
+    String TraceId { get; set; }
 
     /// <summary>创建者</summary>
     String CreateUser { get; set; }

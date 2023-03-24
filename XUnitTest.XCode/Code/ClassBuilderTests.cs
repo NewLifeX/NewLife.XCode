@@ -6,339 +6,338 @@ using XCode.Code;
 using XCode.DataAccessLayer;
 using Xunit;
 
-namespace XUnitTest.XCode.Code
+namespace XUnitTest.XCode.Code;
+
+public class ClassBuilderTests
 {
-    public class ClassBuilderTests
+    private IList<IDataTable> _tables;
+    private IDataTable _table;
+    private BuilderOption _option;
+
+    public ClassBuilderTests()
     {
-        private IList<IDataTable> _tables;
-        private IDataTable _table;
-        private BuilderOption _option;
+        _option = new BuilderOption();
+        _tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
+        _table = _tables.FirstOrDefault(e => e.Name == "User");
+    }
 
-        public ClassBuilderTests()
+    private String ReadTarget(String file, String text)
+    {
+        //var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
+        //File.WriteAllText(file2, text);
+
+        var target = File.ReadAllText(file.GetFullPath());
+
+        return target;
+    }
+
+    [Fact]
+    public void Normal()
+    {
+        var builder = new ClassBuilder
         {
-            _option = new BuilderOption();
-            _tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
-            _table = _tables.FirstOrDefault(e => e.Name == "User");
-        }
+            Table = _table,
+        };
+        builder.Option.Namespace = "Company.MyName";
+        builder.Option.Usings.Add("NewLife.Remoting");
 
-        private String ReadTarget(String file, String text)
+        builder.Execute();
+
+        var rs = builder.ToString();
+        Assert.NotEmpty(rs);
+
+        var target = ReadTarget("Code\\class_user_normal.cs", rs);
+        Assert.Equal(target, rs);
+    }
+
+    [Fact]
+    public void BaseClass()
+    {
+        var builder = new ClassBuilder
         {
-            //var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
-            //File.WriteAllText(file2, text);
+            Table = _table,
+        };
+        builder.Option.BaseClass = "MyEntityBase";
+        builder.Option.Partial = false;
 
-            var target = File.ReadAllText(file.GetFullPath());
+        builder.Execute();
 
-            return target;
-        }
+        var rs = builder.ToString();
+        Assert.NotEmpty(rs);
 
-        [Fact]
-        public void Normal()
+        var target = ReadTarget("Code\\class_user_baseclass.cs", rs);
+        Assert.Equal(target, rs);
+    }
+
+    [Fact]
+    public void Pure()
+    {
+        var option = new BuilderOption
         {
-            var builder = new ClassBuilder
-            {
-                Table = _table,
-            };
-            builder.Option.Namespace = "Company.MyName";
-            builder.Option.Usings.Add("NewLife.Remoting");
+            Pure = true,
+            Partial = true,
+            ClassNameTemplate = "Pure{name}",
+            BaseClass = "Object, Ixx{name}",
+            ModelNameForCopy = "Ixx{name}",
+        };
 
-            builder.Execute();
-
-            var rs = builder.ToString();
-            Assert.NotEmpty(rs);
-
-            var target = ReadTarget("Code\\class_user_normal.cs", rs);
-            Assert.Equal(target, rs);
-        }
-
-        [Fact]
-        public void BaseClass()
+        var builder = new ClassBuilder
         {
-            var builder = new ClassBuilder
-            {
-                Table = _table,
-            };
-            builder.Option.BaseClass = "MyEntityBase";
-            builder.Option.Partial = false;
+            Table = _table,
+            Option = option,
+        };
 
-            builder.Execute();
+        builder.Execute();
 
-            var rs = builder.ToString();
-            Assert.NotEmpty(rs);
+        var rs = builder.ToString();
+        Assert.NotEmpty(rs);
 
-            var target = ReadTarget("Code\\class_user_baseclass.cs", rs);
-            Assert.Equal(target, rs);
-        }
+        var target = ReadTarget("Code\\class_user_pure.cs", rs);
+        Assert.Equal(target, rs);
+    }
 
-        [Fact]
-        public void Pure()
+    [Fact]
+    public void Interface()
+    {
+        var option = new BuilderOption
         {
-            var option = new BuilderOption
-            {
-                Pure = true,
-                Partial = true,
-                ClassNameTemplate = "Pure{name}",
-                BaseClass = "Object, Ixx{name}",
-                ModelNameForCopy = "Ixx{name}",
-            };
+            Interface = true,
+            BaseClass = "NewLife.Data.IModel",
+            ClassNameTemplate = "Ixx{name}",
+        };
+        option.Excludes.Add("UpdateUser");
+        option.Excludes.Add("UpdateUserID");
+        option.Excludes.Add("UpdateIP");
+        option.Excludes.Add("UpdateTime");
 
-            var builder = new ClassBuilder
-            {
-                Table = _table,
-                Option = option,
-            };
-
-            builder.Execute();
-
-            var rs = builder.ToString();
-            Assert.NotEmpty(rs);
-
-            var target = ReadTarget("Code\\class_user_pure.cs", rs);
-            Assert.Equal(target, rs);
-        }
-
-        [Fact]
-        public void Interface()
+        var builder = new ClassBuilder
         {
-            var option = new BuilderOption
-            {
-                Interface = true,
-                BaseClass = "NewLife.Data.IExtend",
-                ClassNameTemplate = "Ixx{name}",
-            };
-            option.Excludes.Add("UpdateUser");
-            option.Excludes.Add("UpdateUserID");
-            option.Excludes.Add("UpdateIP");
-            option.Excludes.Add("UpdateTime");
+            Table = _table,
+            Option = option,
+        };
 
-            var builder = new ClassBuilder
-            {
-                Table = _table,
-                Option = option,
-            };
+        builder.Execute();
 
-            builder.Execute();
+        var rs = builder.ToString();
+        Assert.NotEmpty(rs);
 
-            var rs = builder.ToString();
-            Assert.NotEmpty(rs);
+        var target = ReadTarget("Code\\class_user_interface.cs", rs);
+        Assert.Equal(target, rs);
+    }
 
-            var target = ReadTarget("Code\\class_user_interface.cs", rs);
-            Assert.Equal(target, rs);
-        }
-
-        [Fact]
-        public void Extend()
+    [Fact]
+    public void Extend()
+    {
+        var option = new BuilderOption
         {
-            var option = new BuilderOption
-            {
-                Pure = true,
-                HasIndex = true,
-                BaseClass = "Object, Ixx{name}",
-                ClassNameTemplate = "Extend{name}",
-                ModelNameForCopy = "Extend{name}",
-            };
+            Pure = true,
+            HasIndex = true,
+            BaseClass = "Object, Ixx{name}",
+            ClassNameTemplate = "Extend{name}",
+            ModelNameForCopy = "Extend{name}",
+        };
 
-            var builder = new ClassBuilder
-            {
-                Table = _table,
-                Option = option,
-            };
-
-            builder.Execute();
-
-            var rs = builder.ToString();
-            Assert.NotEmpty(rs);
-
-            var target = ReadTarget("Code\\class_user_extend.cs", rs);
-            Assert.Equal(target, rs);
-        }
-
-        [Fact]
-        public void Extend2()
+        var builder = new ClassBuilder
         {
-            var option = new BuilderOption
-            {
-                Pure = true,
-                HasIndex = true,
-                BaseClass = null,
-                ClassNameTemplate = "Extend{name}2",
-                DisplayNameTemplate = "{displayName}模型",
-            };
-            option.Excludes.Add("UpdateUser");
-            option.Excludes.Add("UpdateUserID");
-            option.Excludes.Add("UpdateIP");
-            option.Excludes.Add("UpdateTime");
+            Table = _table,
+            Option = option,
+        };
 
-            var builder = new ClassBuilder
-            {
-                Table = _table,
-                Option = option,
-            };
+        builder.Execute();
 
-            builder.Execute();
+        var rs = builder.ToString();
+        Assert.NotEmpty(rs);
 
-            var rs = builder.ToString();
-            Assert.NotEmpty(rs);
+        var target = ReadTarget("Code\\class_user_extend.cs", rs);
+        Assert.Equal(target, rs);
+    }
 
-            var target = ReadTarget("Code\\class_user_extend2.cs", rs);
-            Assert.Equal(target, rs);
-        }
-
-        [Fact]
-        public void Save()
+    [Fact]
+    public void Extend2()
+    {
+        var option = new BuilderOption
         {
-            var builder = new ClassBuilder
-            {
-                Table = _table,
-            };
-            var option = builder.Option;
-            option.Pure = true;
-            option.Output = ".\\Output\\Save";
+            Pure = true,
+            HasIndex = true,
+            BaseClass = null,
+            ClassNameTemplate = "Extend{name}2",
+            DisplayNameTemplate = "{displayName}模型",
+        };
+        option.Excludes.Add("UpdateUser");
+        option.Excludes.Add("UpdateUserID");
+        option.Excludes.Add("UpdateIP");
+        option.Excludes.Add("UpdateTime");
 
-            if (Directory.Exists(option.Output.GetFullPath())) Directory.Delete(option.Output.GetFullPath(), true);
+        var builder = new ClassBuilder
+        {
+            Table = _table,
+            Option = option,
+        };
 
-            builder.Execute();
+        builder.Execute();
 
-            var file = (option.Output + "\\" + builder.Table.DisplayName + ".cs").GetFullPath();
-            if (File.Exists(file)) File.Delete(file);
+        var rs = builder.ToString();
+        Assert.NotEmpty(rs);
 
-            builder.Save();
+        var target = ReadTarget("Code\\class_user_extend2.cs", rs);
+        Assert.Equal(target, rs);
+    }
+
+    [Fact]
+    public void Save()
+    {
+        var builder = new ClassBuilder
+        {
+            Table = _table,
+        };
+        var option = builder.Option;
+        option.Pure = true;
+        option.Output = ".\\Output\\Save";
+
+        if (Directory.Exists(option.Output.GetFullPath())) Directory.Delete(option.Output.GetFullPath(), true);
+
+        builder.Execute();
+
+        var file = (option.Output + "\\" + builder.Table.DisplayName + ".cs").GetFullPath();
+        if (File.Exists(file)) File.Delete(file);
+
+        builder.Save();
+        Assert.True(File.Exists(file));
+
+        var rs = File.ReadAllText(file);
+        var target = ReadTarget("Code\\class_user_save.cs", rs);
+        Assert.Equal(target, rs);
+
+        file = (option.Output + "\\" + builder.Table.Name + ".xs").GetFullPath();
+        if (File.Exists(file)) File.Delete(file);
+
+        builder.Save(".xs", false, false);
+        Assert.True(File.Exists(file));
+
+        rs = File.ReadAllText(file);
+        Assert.Equal(target, rs);
+    }
+
+    [Fact]
+    public void BuildModels()
+    {
+        var dir = ".\\Output\\Models\\";
+        if (Directory.Exists(dir.GetFullPath())) Directory.Delete(dir.GetFullPath(), true);
+
+        var option = new BuilderOption
+        {
+            Output = dir,
+            ClassNameTemplate = "{name}Model"
+        };
+
+        ClassBuilder.BuildModels(_tables, option);
+
+        option.ClassNameTemplate = "I{name}Model";
+        ClassBuilder.BuildInterfaces(_tables, option);
+
+        foreach (var item in _tables)
+        {
+            var file = dir.CombinePath(item.Name + "Model.cs").GetFullPath();
             Assert.True(File.Exists(file));
 
-            var rs = File.ReadAllText(file);
-            var target = ReadTarget("Code\\class_user_save.cs", rs);
-            Assert.Equal(target, rs);
+            if (item.Name == "User")
+            {
+                var rs = File.ReadAllText(file);
+                var target = ReadTarget("Code\\Models\\UserModel.cs", rs);
+                Assert.Equal(target, rs);
+            }
 
-            file = (option.Output + "\\" + builder.Table.Name + ".xs").GetFullPath();
-            if (File.Exists(file)) File.Delete(file);
-
-            builder.Save(".xs", false, false);
+            file = dir.CombinePath("I" + item.Name + "Model.cs").GetFullPath();
             Assert.True(File.Exists(file));
 
-            rs = File.ReadAllText(file);
-            Assert.Equal(target, rs);
+            if (item.Name == "User")
+            {
+                var rs = File.ReadAllText(file);
+                var target = ReadTarget("Code\\Models\\IUserModel.cs", rs);
+                Assert.Equal(target, rs);
+            }
         }
+    }
 
-        [Fact]
-        public void BuildModels()
+    [Fact]
+    public void BuildDtos()
+    {
+        var dir = ".\\Output\\Dtos\\";
+        if (Directory.Exists(dir.GetFullPath())) Directory.Delete(dir.GetFullPath(), true);
+
+        var option = new BuilderOption
         {
-            var dir = ".\\Output\\Models\\";
-            if (Directory.Exists(dir.GetFullPath())) Directory.Delete(dir.GetFullPath(), true);
+            Output = dir,
+            ClassNameTemplate = "{name}Dto",
+        };
 
-            var option = new BuilderOption
-            {
-                Output = dir,
-                ClassNameTemplate = "{name}Model"
-            };
+        ClassBuilder.BuildModels(_tables, option);
 
-            ClassBuilder.BuildModels(_tables, option);
+        option.ClassNameTemplate = null;
+        ClassBuilder.BuildInterfaces(_tables, option);
 
-            option.ClassNameTemplate = "I{name}Model";
-            ClassBuilder.BuildInterfaces(_tables, option);
-
-            foreach (var item in _tables)
-            {
-                var file = dir.CombinePath(item.Name + "Model.cs").GetFullPath();
-                Assert.True(File.Exists(file));
-
-                if (item.Name == "User")
-                {
-                    var rs = File.ReadAllText(file);
-                    var target = ReadTarget("Code\\Models\\UserModel.cs", rs);
-                    Assert.Equal(target, rs);
-                }
-
-                file = dir.CombinePath("I" + item.Name + "Model.cs").GetFullPath();
-                Assert.True(File.Exists(file));
-
-                if (item.Name == "User")
-                {
-                    var rs = File.ReadAllText(file);
-                    var target = ReadTarget("Code\\Models\\IUserModel.cs", rs);
-                    Assert.Equal(target, rs);
-                }
-            }
-        }
-
-        [Fact]
-        public void BuildDtos()
+        foreach (var item in _tables)
         {
-            var dir = ".\\Output\\Dtos\\";
-            if (Directory.Exists(dir.GetFullPath())) Directory.Delete(dir.GetFullPath(), true);
+            var file = dir.CombinePath(item.Name + "Dto.cs").GetFullPath();
+            Assert.True(File.Exists(file));
 
-            var option = new BuilderOption
+            if (item.Name == "User")
             {
-                Output = dir,
-                ClassNameTemplate = "{name}Dto",
-            };
+                var rs = File.ReadAllText(file);
+                var target = ReadTarget("Code\\Dtos\\UserDto.cs", rs);
+                Assert.Equal(target, rs);
+            }
 
-            ClassBuilder.BuildModels(_tables, option);
+            file = dir.CombinePath("I" + item.Name + ".cs").GetFullPath();
+            Assert.True(File.Exists(file));
 
-            option.ClassNameTemplate = null;
-            ClassBuilder.BuildInterfaces(_tables, option);
-
-            foreach (var item in _tables)
+            if (item.Name == "User")
             {
-                var file = dir.CombinePath(item.Name + "Dto.cs").GetFullPath();
-                Assert.True(File.Exists(file));
-
-                if (item.Name == "User")
-                {
-                    var rs = File.ReadAllText(file);
-                    var target = ReadTarget("Code\\Dtos\\UserDto.cs", rs);
-                    Assert.Equal(target, rs);
-                }
-
-                file = dir.CombinePath("I" + item.Name + ".cs").GetFullPath();
-                Assert.True(File.Exists(file));
-
-                if (item.Name == "User")
-                {
-                    var rs = File.ReadAllText(file);
-                    var target = ReadTarget("Code\\Dtos\\IUser.cs", rs);
-                    Assert.Equal(target, rs);
-                }
+                var rs = File.ReadAllText(file);
+                var target = ReadTarget("Code\\Dtos\\IUser.cs", rs);
+                Assert.Equal(target, rs);
             }
         }
+    }
 
-        [Fact]
-        public void BuildTT()
+    [Fact]
+    public void BuildTT()
+    {
+        var dir = ".\\Output\\BuildTT\\";
+        if (Directory.Exists(dir.GetFullPath())) Directory.Delete(dir.GetFullPath(), true);
+
+        var option = new BuilderOption
         {
-            var dir = ".\\Output\\BuildTT\\";
-            if (Directory.Exists(dir.GetFullPath())) Directory.Delete(dir.GetFullPath(), true);
+            Output = dir,
+            ClassNameTemplate = "{name}TT"
+        };
 
-            var option = new BuilderOption
+        // 测试Built.tt
+        foreach (var item in _tables)
+        {
+            var builder = new ClassBuilder
             {
-                Output = dir,
-                ClassNameTemplate = "{name}TT"
+                Table = item,
+                Option = option,
             };
-
-            // 测试Built.tt
-            foreach (var item in _tables)
-            {
-                var builder = new ClassBuilder
-                {
-                    Table = item,
-                    Option = option,
-                };
-                builder.Execute();
-                builder.Save(null, true, false);
-            }
-
-            foreach (var item in _tables)
-            {
-                var file = dir.CombinePath(item.Name + "TT.cs").GetFullPath();
-                Assert.True(File.Exists(file));
-
-                if (item.Name == "User")
-                {
-                    var rs = File.ReadAllText(file);
-                    var target = ReadTarget("Code\\BuildTT\\UserTT.cs", rs);
-                    Assert.Equal(target, rs);
-                }
-            }
-
-            // 清理
-            //Directory.Delete(dir.GetFullPath(), true);
+            builder.Execute();
+            builder.Save(null, true, false);
         }
+
+        foreach (var item in _tables)
+        {
+            var file = dir.CombinePath(item.Name + "TT.cs").GetFullPath();
+            Assert.True(File.Exists(file));
+
+            if (item.Name == "User")
+            {
+                var rs = File.ReadAllText(file);
+                var target = ReadTarget("Code\\BuildTT\\UserTT.cs", rs);
+                Assert.Equal(target, rs);
+            }
+        }
+
+        // 清理
+        //Directory.Delete(dir.GetFullPath(), true);
     }
 }

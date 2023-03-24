@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using NewLife;
+using NewLife.Http;
 using NewLife.IP;
 using NewLife.Log;
 using NewLife.UnitTest;
@@ -12,6 +14,7 @@ using static XCode.Membership.Area;
 
 namespace XUnitTest.XCode.Membership;
 
+[Collection("Database")]
 [TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
 public class AreaTests
 {
@@ -240,7 +243,13 @@ public class AreaTests
 
         //if (Area.Meta.Count == 0)
         {
-            var file = "http://x.newlifex.com/Area.csv.gz";
+            var url = "http://x.newlifex.com/Area.csv.gz";
+            var file = "Area.csv.gz";
+            if(!File.Exists(file.GetFullPath()))
+            {
+                var http = new HttpClient();
+                http.DownloadFileAsync(url, file).Wait();
+            }
 
             Area.Meta.Session.Truncate();
             var rs = Area.Import(file, true, 3);

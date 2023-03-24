@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using NewLife;
+using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Reflection;
 using XCode.Configuration;
@@ -35,11 +36,11 @@ public class WhereBuilder
     #region 方法
     /// <summary>设置数据源</summary>
     /// <param name="dictionary"></param>
-    public void SetData(IDictionary<String, Object> dictionary) => Data = dictionary;
+    public void SetData(IDictionary<String, Object> dictionary) => Data = new NullableDictionary<String, Object>(dictionary, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>设置第二数据源</summary>
     /// <param name="dictionary"></param>
-    public void SetData2(IDictionary<String, Object> dictionary) => Data2 = dictionary;
+    public void SetData2(IDictionary<String, Object> dictionary) => Data2 = new NullableDictionary<String, Object>(dictionary, StringComparer.OrdinalIgnoreCase);
     #endregion
 
     #region 表达式

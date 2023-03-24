@@ -28,6 +28,7 @@
     <Compile Remove="Code\entity_user_normal_biz.cs" />
     <Compile Remove="Code\Models\IUserModel.cs" />
     <Compile Remove="Code\Models\UserModel.cs" />
+    <Compile Remove="DataAccessLayer\DAL_EnvironmentVariable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Configuration\AreaX.sql" />

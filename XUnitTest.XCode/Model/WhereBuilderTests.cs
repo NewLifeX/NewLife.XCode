@@ -73,7 +73,8 @@ namespace XUnitTest.XCode.Model
             Assert.NotNull(fe);
             Assert.Equal(Log._.CreateUserID, fe.Field);
             Assert.Equal("=", fe.Action);
-            Assert.Null(fe.Value);
+            //Assert.Null(fe.Value);
+            Assert.Equal(1234, fe.Value);
         }
 
         [Fact(DisplayName = "无字段")]

@@ -4,6 +4,7 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.EntityTests
 {
+    [Collection("Database")]
     public class BinaryEntityTests
     {
         [Fact]

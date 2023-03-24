@@ -840,6 +840,7 @@ public partial class Area : Entity<Area>
         //var first = rs.Count == 0;
 
         var count = 0;
+        var bs=new List<Area>();
         foreach (var r in list)
         {
             if (r.ID is < 10_00_00 or > 99_99_99) continue;
@@ -884,8 +885,9 @@ public partial class Area : Entity<Area>
                 r.CreateTime = DateTime.Now;
                 r.UpdateTime = DateTime.Now;
                 r.Valid(true);
-                r.SaveAsync();
+                //r.SaveAsync();
 
+                bs.Add(r);
                 rs.Add(r);
 
                 count++;
@@ -910,12 +912,15 @@ public partial class Area : Entity<Area>
 
                     XTrace.Log.Debug(re.Dirtys.Join(",", e => $"{e}={r2[e]}"));
 
-                    r2.SaveAsync();
+                    //r2.SaveAsync();
+                    bs.Add(r2);
 
                     count++;
                 }
             }
         }
+
+        bs.Save(true);
 
         return count;
     }
@@ -1014,7 +1019,7 @@ public partial class Area : Entity<Area>
         Meta.Session.ClearCache("Import", false);
 
         // 等待异步写入的数据，导入四级地址时要做校验
-        var retry = 10;
+        var retry = 20;
         while (retry-- > 0 && Area.FindCount() < 3639) Thread.Sleep(500);
 
         if (level >= 4) count += MergeLevel4(list, addLose);

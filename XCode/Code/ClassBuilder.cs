@@ -249,8 +249,8 @@ public class ClassBuilder
         var ns = Option.Namespace;
         if (!ns.IsNullOrEmpty())
         {
-            WriteLine("namespace {0}", ns);
-            WriteLine("{");
+            WriteLine("namespace {0};", ns);
+            //WriteLine("{");
         }
 
         BuildClassHeader();
@@ -318,10 +318,10 @@ public class ClassBuilder
         // 类接口
         WriteLine("}");
 
-        if (!Option.Namespace.IsNullOrEmpty())
-        {
-            Writer.Write("}");
-        }
+        //if (!Option.Namespace.IsNullOrEmpty())
+        //{
+        //    Writer.Write("}");
+        //}
     }
 
     /// <summary>生成主体</summary>

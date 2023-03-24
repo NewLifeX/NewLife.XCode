@@ -30,7 +30,7 @@ class Program
         {
             var di = Environment.CurrentDirectory.AsDirectory();
             // 选当前目录第一个
-            file = di.GetFiles("*.xml", SearchOption.TopDirectoryOnly).FirstOrDefault()?.FullName;
+            file = di.GetFiles("*.xml", SearchOption.TopDirectoryOnly).FirstOrDefault(e => e.Name != "XCode.xml")?.FullName;
         }
         if (!file.IsNullOrEmpty())
         {
@@ -77,6 +77,8 @@ class Program
         var tables = ClassBuilder.LoadModels(modelFile, option, out var atts);
         EntityBuilder.FixModelFile(modelFile, option, atts, tables);
 
+        Console.WriteLine("共有模型：{0}", tables.Count);
+
         // 是否把扩展属性生成到数据类
         //option.ExtendOnData = true;
 
@@ -110,11 +112,12 @@ class Program
         {
             var opt = option.Clone();
             opt.Items.TryGetValue("ModelsOutput", out var output);
-            output ??= @"..\Models\";
+            output ??= @".\Models\";
             opt.Output = opt.Output.CombinePath(output);
             opt.BaseClass = modelInterface;
             opt.ClassNameTemplate = modelClass;
             opt.ModelNameForCopy = !modelInterface.IsNullOrEmpty() ? modelInterface : modelClass;
+            opt.HasIndex = true;
             if (!modelClass.IsNullOrEmpty())
             {
                 ClassBuilder.BuildModels(tables, opt);
@@ -133,11 +136,12 @@ class Program
         {
             var opt = option.Clone();
             opt.Items.TryGetValue("InterfacesOutput", out var output);
-            output ??= @"..\Interfaces\";
+            output ??= @".\Interfaces\";
             opt.Output = opt.Output.CombinePath(output);
             opt.BaseClass = null;
             opt.ClassNameTemplate = modelInterface;
             opt.ModelNameForCopy = null;
+            opt.HasIndex = false;
             if (!modelInterface.IsNullOrEmpty())
             {
                 ClassBuilder.BuildInterfaces(tables, opt);

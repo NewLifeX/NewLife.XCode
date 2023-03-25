@@ -43,7 +43,7 @@ public partial class DepartmentModel : IModel
     public Boolean Visible { get; set; }
 
     /// <summary>管理者</summary>
-    public Int32 ManagerID { get; set; }
+    public Int32 ManagerId { get; set; }
 
     /// <summary>扩展1</summary>
     public Int32 Ex1 { get; set; }
@@ -111,7 +111,7 @@ public partial class DepartmentModel : IModel
                 "Sort" => Sort,
                 "Enable" => Enable,
                 "Visible" => Visible,
-                "ManagerID" => ManagerID,
+                "ManagerId" => ManagerId,
                 "Ex1" => Ex1,
                 "Ex2" => Ex2,
                 "Ex3" => Ex3,
@@ -144,7 +144,7 @@ public partial class DepartmentModel : IModel
                 case "Sort": Sort = value.ToInt(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "Visible": Visible = value.ToBoolean(); break;
-                case "ManagerID": ManagerID = value.ToInt(); break;
+                case "ManagerId": ManagerId = value.ToInt(); break;
                 case "Ex1": Ex1 = value.ToInt(); break;
                 case "Ex2": Ex2 = value.ToInt(); break;
                 case "Ex3": Ex3 = value.ToDouble(); break;
@@ -180,7 +180,7 @@ public partial class DepartmentModel : IModel
         Sort = model.Sort;
         Enable = model.Enable;
         Visible = model.Visible;
-        ManagerID = model.ManagerID;
+        ManagerId = model.ManagerId;
         Ex1 = model.Ex1;
         Ex2 = model.Ex2;
         Ex3 = model.Ex3;

@@ -46,6 +46,12 @@ namespace XCode.DataAccessLayer
         [Description("元素类型")]
         public String ItemType { get; set; }
 
+        /// <summary>元素类型</summary>
+        [XmlAttribute]
+        [DisplayName("映射")]
+        [Description("映射，表间关联")]
+        public String Map { get; set; }
+
         /// <summary>标识</summary>
         [XmlAttribute]
         [DisplayName("标识")]

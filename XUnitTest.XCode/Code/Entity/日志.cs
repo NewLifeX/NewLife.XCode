@@ -17,20 +17,20 @@ namespace XCode.Membership;
 [Serializable]
 [DataObject]
 [Description("日志")]
-[BindIndex("IX_Log_Action_Category_CreateTime", false, "Action,Category,CreateTime")]
-[BindIndex("IX_Log_CreateUserID_CreateTime", false, "CreateUserID,CreateTime")]
-[BindIndex("IX_Log_CreateTime", false, "CreateTime")]
+[BindIndex("IX_Log_Action_Category_ID", false, "Action,Category,ID")]
+[BindIndex("IX_Log_Category_LinkID_ID", false, "Category,LinkID,ID")]
+[BindIndex("IX_Log_CreateUserID_ID", false, "CreateUserID,ID")]
 [BindTable("Log", Description = "日志", ConnName = "Log", DbType = DatabaseType.None)]
 public partial class Log : ILog
 {
     #region 属性
-    private Int32 _ID;
+    private Int64 _ID;
     /// <summary>编号</summary>
     [DisplayName("编号")]
     [Description("编号")]
-    [DataObjectField(true, true, false, 0)]
+    [DataObjectField(true, false, false, 0)]
     [BindColumn("ID", "编号", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
     private String _Category;
     /// <summary>类别</summary>
@@ -74,6 +74,7 @@ public partial class Log : ILog
 
     private Int32 _Ex1;
     /// <summary>扩展1</summary>
+    [Category("扩展")]
     [DisplayName("扩展1")]
     [Description("扩展1")]
     [DataObjectField(false, false, false, 0)]
@@ -82,6 +83,7 @@ public partial class Log : ILog
 
     private Int32 _Ex2;
     /// <summary>扩展2</summary>
+    [Category("扩展")]
     [DisplayName("扩展2")]
     [Description("扩展2")]
     [DataObjectField(false, false, false, 0)]
@@ -90,6 +92,7 @@ public partial class Log : ILog
 
     private Double _Ex3;
     /// <summary>扩展3</summary>
+    [Category("扩展")]
     [DisplayName("扩展3")]
     [Description("扩展3")]
     [DataObjectField(false, false, false, 0)]
@@ -98,6 +101,7 @@ public partial class Log : ILog
 
     private String _Ex4;
     /// <summary>扩展4</summary>
+    [Category("扩展")]
     [DisplayName("扩展4")]
     [Description("扩展4")]
     [DataObjectField(false, false, true, 50)]
@@ -106,6 +110,7 @@ public partial class Log : ILog
 
     private String _Ex5;
     /// <summary>扩展5</summary>
+    [Category("扩展")]
     [DisplayName("扩展5")]
     [Description("扩展5")]
     [DataObjectField(false, false, true, 50)]
@@ -114,14 +119,24 @@ public partial class Log : ILog
 
     private String _Ex6;
     /// <summary>扩展6</summary>
+    [Category("扩展")]
     [DisplayName("扩展6")]
     [Description("扩展6")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Ex6", "扩展6", "")]
     public String Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
 
+    private String _TraceId;
+    /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
+    [DisplayName("性能追踪")]
+    [Description("性能追踪。用于APM性能追踪定位，还原该事件的调用链")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("TraceId", "性能追踪。用于APM性能追踪定位，还原该事件的调用链", "")]
+    public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+
     private String _CreateUser;
     /// <summary>创建者</summary>
+    [Category("扩展")]
     [DisplayName("创建者")]
     [Description("创建者")]
     [DataObjectField(false, false, true, 50)]
@@ -130,6 +145,7 @@ public partial class Log : ILog
 
     private Int32 _CreateUserID;
     /// <summary>创建用户</summary>
+    [Category("扩展")]
     [DisplayName("创建用户")]
     [Description("创建用户")]
     [DataObjectField(false, false, false, 0)]
@@ -138,6 +154,7 @@ public partial class Log : ILog
 
     private String _CreateIP;
     /// <summary>创建地址</summary>
+    [Category("扩展")]
     [DisplayName("创建地址")]
     [Description("创建地址")]
     [DataObjectField(false, false, true, 50)]
@@ -156,7 +173,7 @@ public partial class Log : ILog
     /// <summary>详细信息</summary>
     [DisplayName("详细信息")]
     [Description("详细信息")]
-    [DataObjectField(false, false, true, 500)]
+    [DataObjectField(false, false, true, 2000)]
     [BindColumn("Remark", "详细信息", "")]
     public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
@@ -178,6 +195,7 @@ public partial class Log : ILog
         Ex4 = model.Ex4;
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
+        TraceId = model.TraceId;
         CreateUser = model.CreateUser;
         CreateUserID = model.CreateUserID;
         CreateIP = model.CreateIP;
@@ -206,6 +224,7 @@ public partial class Log : ILog
             "Ex4" => _Ex4,
             "Ex5" => _Ex5,
             "Ex6" => _Ex6,
+            "TraceId" => _TraceId,
             "CreateUser" => _CreateUser,
             "CreateUserID" => _CreateUserID,
             "CreateIP" => _CreateIP,
@@ -217,7 +236,7 @@ public partial class Log : ILog
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
+                case "ID": _ID = value.ToLong(); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Action": _Action = Convert.ToString(value); break;
                 case "LinkID": _LinkID = value.ToInt(); break;
@@ -229,6 +248,7 @@ public partial class Log : ILog
                 case "Ex4": _Ex4 = Convert.ToString(value); break;
                 case "Ex5": _Ex5 = Convert.ToString(value); break;
                 case "Ex6": _Ex6 = Convert.ToString(value); break;
+                case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
@@ -279,6 +299,9 @@ public partial class Log : ILog
 
         /// <summary>扩展6</summary>
         public static readonly Field Ex6 = FindByName("Ex6");
+
+        /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
+        public static readonly Field TraceId = FindByName("TraceId");
 
         /// <summary>创建者</summary>
         public static readonly Field CreateUser = FindByName("CreateUser");
@@ -336,6 +359,9 @@ public partial class Log : ILog
 
         /// <summary>扩展6</summary>
         public const String Ex6 = "Ex6";
+
+        /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
+        public const String TraceId = "TraceId";
 
         /// <summary>创建者</summary>
         public const String CreateUser = "CreateUser";

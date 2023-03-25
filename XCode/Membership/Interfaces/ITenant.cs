@@ -23,6 +23,9 @@ public partial interface ITenant
     /// <summary>启用</summary>
     Boolean Enable { get; set; }
 
+    /// <summary>管理者</summary>
+    Int32 ManagerId { get; set; }
+
     /// <summary>角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同</summary>
     String RoleIds { get; set; }
 

@@ -24,6 +24,9 @@ public partial class TenantModel : IModel
     /// <summary>启用</summary>
     public Boolean Enable { get; set; }
 
+    /// <summary>管理者</summary>
+    public Int32 ManagerId { get; set; }
+
     /// <summary>角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同</summary>
     public String RoleIds { get; set; }
 
@@ -57,6 +60,7 @@ public partial class TenantModel : IModel
                 "Code" => Code,
                 "Name" => Name,
                 "Enable" => Enable,
+                "ManagerId" => ManagerId,
                 "RoleIds" => RoleIds,
                 "Logo" => Logo,
                 "DatabaseName" => DatabaseName,
@@ -74,6 +78,7 @@ public partial class TenantModel : IModel
                 case "Code": Code = Convert.ToString(value); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "Enable": Enable = value.ToBoolean(); break;
+                case "ManagerId": ManagerId = value.ToInt(); break;
                 case "RoleIds": RoleIds = Convert.ToString(value); break;
                 case "Logo": Logo = Convert.ToString(value); break;
                 case "DatabaseName": DatabaseName = Convert.ToString(value); break;
@@ -94,6 +99,7 @@ public partial class TenantModel : IModel
         Code = model.Code;
         Name = model.Name;
         Enable = model.Enable;
+        ManagerId = model.ManagerId;
         RoleIds = model.RoleIds;
         Logo = model.Logo;
         DatabaseName = model.DatabaseName;

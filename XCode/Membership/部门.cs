@@ -106,13 +106,13 @@ public partial class Department : IDepartment
     [BindColumn("Visible", "可见", "")]
     public Boolean Visible { get => _Visible; set { if (OnPropertyChanging("Visible", value)) { _Visible = value; OnPropertyChanged("Visible"); } } }
 
-    private Int32 _ManagerID;
+    private Int32 _ManagerId;
     /// <summary>管理者</summary>
     [DisplayName("管理者")]
     [Description("管理者")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ManagerID", "管理者", "")]
-    public Int32 ManagerID { get => _ManagerID; set { if (OnPropertyChanging("ManagerID", value)) { _ManagerID = value; OnPropertyChanged("ManagerID"); } } }
+    [BindColumn("ManagerId", "管理者", "")]
+    public Int32 ManagerId { get => _ManagerId; set { if (OnPropertyChanging("ManagerId", value)) { _ManagerId = value; OnPropertyChanged("ManagerId"); } } }
 
     private Int32 _Ex1;
     /// <summary>扩展1</summary>
@@ -265,7 +265,7 @@ public partial class Department : IDepartment
         Sort = model.Sort;
         Enable = model.Enable;
         Visible = model.Visible;
-        ManagerID = model.ManagerID;
+        ManagerId = model.ManagerId;
         Ex1 = model.Ex1;
         Ex2 = model.Ex2;
         Ex3 = model.Ex3;
@@ -302,7 +302,7 @@ public partial class Department : IDepartment
             "Sort" => _Sort,
             "Enable" => _Enable,
             "Visible" => _Visible,
-            "ManagerID" => _ManagerID,
+            "ManagerId" => _ManagerId,
             "Ex1" => _Ex1,
             "Ex2" => _Ex2,
             "Ex3" => _Ex3,
@@ -334,7 +334,7 @@ public partial class Department : IDepartment
                 case "Sort": _Sort = value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Visible": _Visible = value.ToBoolean(); break;
-                case "ManagerID": _ManagerID = value.ToInt(); break;
+                case "ManagerId": _ManagerId = value.ToInt(); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
                 case "Ex2": _Ex2 = value.ToInt(); break;
                 case "Ex3": _Ex3 = value.ToDouble(); break;
@@ -391,7 +391,7 @@ public partial class Department : IDepartment
         public static readonly Field Visible = FindByName("Visible");
 
         /// <summary>管理者</summary>
-        public static readonly Field ManagerID = FindByName("ManagerID");
+        public static readonly Field ManagerId = FindByName("ManagerId");
 
         /// <summary>扩展1</summary>
         public static readonly Field Ex1 = FindByName("Ex1");
@@ -475,7 +475,7 @@ public partial class Department : IDepartment
         public const String Visible = "Visible";
 
         /// <summary>管理者</summary>
-        public const String ManagerID = "ManagerID";
+        public const String ManagerId = "ManagerId";
 
         /// <summary>扩展1</summary>
         public const String Ex1 = "Ex1";

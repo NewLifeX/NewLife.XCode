@@ -18,6 +18,9 @@ namespace XCode.Membership;
 [DataObject]
 [Description("用户。用户帐号信息")]
 [BindIndex("IU_User_Name", true, "Name")]
+[BindIndex("IX_User_Mail", false, "Mail")]
+[BindIndex("IX_User_Mobile", false, "Mobile")]
+[BindIndex("IX_User_Code", false, "Code")]
 [BindIndex("IX_User_RoleID", false, "RoleID")]
 [BindIndex("IX_User_UpdateTime", false, "UpdateTime")]
 [BindTable("User", Description = "用户。用户帐号信息", ConnName = "Membership", DbType = DatabaseType.None)]
@@ -44,7 +47,7 @@ public partial class User : IUser
     /// <summary>密码</summary>
     [DisplayName("密码")]
     [Description("密码")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, true, 200)]
     [BindColumn("Password", "密码", "")]
     public String Password { get => _Password; set { if (OnPropertyChanging("Password", value)) { _Password = value; OnPropertyChanged("Password"); } } }
 
@@ -88,6 +91,14 @@ public partial class User : IUser
     [BindColumn("Code", "代码。身份证、员工编号等", "")]
     public String Code { get => _Code; set { if (OnPropertyChanging("Code", value)) { _Code = value; OnPropertyChanged("Code"); } } }
 
+    private Int32 _AreaId;
+    /// <summary>地区。省市区</summary>
+    [DisplayName("地区")]
+    [Description("地区。省市区")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("AreaId", "地区。省市区", "")]
+    public Int32 AreaId { get => _AreaId; set { if (OnPropertyChanging("AreaId", value)) { _AreaId = value; OnPropertyChanged("AreaId"); } } }
+
     private String _Avatar;
     /// <summary>头像</summary>
     [DisplayName("头像")]
@@ -98,14 +109,16 @@ public partial class User : IUser
 
     private Int32 _RoleID;
     /// <summary>角色。主要角色</summary>
+    [Category("登录信息")]
     [DisplayName("角色")]
     [Description("角色。主要角色")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("RoleID", "角色。主要角色", "")]
+    [BindColumn("RoleID", "角色。主要角色", "", DefaultValue = "3")]
     public Int32 RoleID { get => _RoleID; set { if (OnPropertyChanging("RoleID", value)) { _RoleID = value; OnPropertyChanged("RoleID"); } } }
 
     private String _RoleIds;
     /// <summary>角色组。次要角色集合</summary>
+    [Category("登录信息")]
     [DisplayName("角色组")]
     [Description("角色组。次要角色集合")]
     [DataObjectField(false, false, true, 200)]
@@ -114,6 +127,7 @@ public partial class User : IUser
 
     private Int32 _DepartmentID;
     /// <summary>部门。组织机构</summary>
+    [Category("登录信息")]
     [DisplayName("部门")]
     [Description("部门。组织机构")]
     [DataObjectField(false, false, false, 0)]
@@ -122,6 +136,7 @@ public partial class User : IUser
 
     private Boolean _Online;
     /// <summary>在线</summary>
+    [Category("登录信息")]
     [DisplayName("在线")]
     [Description("在线")]
     [DataObjectField(false, false, false, 0)]
@@ -130,14 +145,32 @@ public partial class User : IUser
 
     private Boolean _Enable;
     /// <summary>启用</summary>
+    [Category("登录信息")]
     [DisplayName("启用")]
     [Description("启用")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+    private Int32 _Age;
+    /// <summary>年龄。周岁</summary>
+    [DisplayName("年龄")]
+    [Description("年龄。周岁")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Age", "年龄。周岁", "")]
+    public Int32 Age { get => _Age; set { if (OnPropertyChanging("Age", value)) { _Age = value; OnPropertyChanged("Age"); } } }
+
+    private DateTime _Birthday;
+    /// <summary>生日。公历年月日</summary>
+    [DisplayName("生日")]
+    [Description("生日。公历年月日")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("Birthday", "生日。公历年月日", "")]
+    public DateTime Birthday { get => _Birthday; set { if (OnPropertyChanging("Birthday", value)) { _Birthday = value; OnPropertyChanged("Birthday"); } } }
+
     private Int32 _Logins;
     /// <summary>登录次数</summary>
+    [Category("登录信息")]
     [DisplayName("登录次数")]
     [Description("登录次数")]
     [DataObjectField(false, false, false, 0)]
@@ -146,6 +179,7 @@ public partial class User : IUser
 
     private DateTime _LastLogin;
     /// <summary>最后登录</summary>
+    [Category("登录信息")]
     [DisplayName("最后登录")]
     [Description("最后登录")]
     [DataObjectField(false, false, true, 0)]
@@ -154,6 +188,7 @@ public partial class User : IUser
 
     private String _LastLoginIP;
     /// <summary>最后登录IP</summary>
+    [Category("登录信息")]
     [DisplayName("最后登录IP")]
     [Description("最后登录IP")]
     [DataObjectField(false, false, true, 50)]
@@ -162,6 +197,7 @@ public partial class User : IUser
 
     private DateTime _RegisterTime;
     /// <summary>注册时间</summary>
+    [Category("登录信息")]
     [DisplayName("注册时间")]
     [Description("注册时间")]
     [DataObjectField(false, false, true, 0)]
@@ -170,14 +206,25 @@ public partial class User : IUser
 
     private String _RegisterIP;
     /// <summary>注册IP</summary>
+    [Category("登录信息")]
     [DisplayName("注册IP")]
     [Description("注册IP")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("RegisterIP", "注册IP", "")]
     public String RegisterIP { get => _RegisterIP; set { if (OnPropertyChanging("RegisterIP", value)) { _RegisterIP = value; OnPropertyChanged("RegisterIP"); } } }
 
+    private Int32 _OnlineTime;
+    /// <summary>在线时间。累计在线总时间，秒</summary>
+    [Category("登录信息")]
+    [DisplayName("在线时间")]
+    [Description("在线时间。累计在线总时间，秒")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("OnlineTime", "在线时间。累计在线总时间，秒", "", ItemType = "TimeSpan")]
+    public Int32 OnlineTime { get => _OnlineTime; set { if (OnPropertyChanging("OnlineTime", value)) { _OnlineTime = value; OnPropertyChanged("OnlineTime"); } } }
+
     private Int32 _Ex1;
     /// <summary>扩展1</summary>
+    [Category("扩展")]
     [DisplayName("扩展1")]
     [Description("扩展1")]
     [DataObjectField(false, false, false, 0)]
@@ -186,6 +233,7 @@ public partial class User : IUser
 
     private Int32 _Ex2;
     /// <summary>扩展2</summary>
+    [Category("扩展")]
     [DisplayName("扩展2")]
     [Description("扩展2")]
     [DataObjectField(false, false, false, 0)]
@@ -194,6 +242,7 @@ public partial class User : IUser
 
     private Double _Ex3;
     /// <summary>扩展3</summary>
+    [Category("扩展")]
     [DisplayName("扩展3")]
     [Description("扩展3")]
     [DataObjectField(false, false, false, 0)]
@@ -202,6 +251,7 @@ public partial class User : IUser
 
     private String _Ex4;
     /// <summary>扩展4</summary>
+    [Category("扩展")]
     [DisplayName("扩展4")]
     [Description("扩展4")]
     [DataObjectField(false, false, true, 50)]
@@ -210,6 +260,7 @@ public partial class User : IUser
 
     private String _Ex5;
     /// <summary>扩展5</summary>
+    [Category("扩展")]
     [DisplayName("扩展5")]
     [Description("扩展5")]
     [DataObjectField(false, false, true, 50)]
@@ -219,6 +270,7 @@ public partial class User : IUser
     private String _Ex6;
     /// <summary>扩展6</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [Category("扩展")]
     [DisplayName("扩展6")]
     [Description("扩展6")]
     [DataObjectField(false, false, true, 50)]
@@ -227,6 +279,7 @@ public partial class User : IUser
 
     private String _UpdateUser;
     /// <summary>更新者</summary>
+    [Category("扩展")]
     [DisplayName("更新者")]
     [Description("更新者")]
     [DataObjectField(false, false, true, 50)]
@@ -235,6 +288,7 @@ public partial class User : IUser
 
     private Int32 _UpdateUserID;
     /// <summary>更新用户</summary>
+    [Category("扩展")]
     [DisplayName("更新用户")]
     [Description("更新用户")]
     [DataObjectField(false, false, false, 0)]
@@ -243,6 +297,7 @@ public partial class User : IUser
 
     private String _UpdateIP;
     /// <summary>更新地址</summary>
+    [Category("扩展")]
     [DisplayName("更新地址")]
     [Description("更新地址")]
     [DataObjectField(false, false, true, 50)]
@@ -251,6 +306,7 @@ public partial class User : IUser
 
     private DateTime _UpdateTime;
     /// <summary>更新时间</summary>
+    [Category("扩展")]
     [DisplayName("更新时间")]
     [Description("更新时间")]
     [DataObjectField(false, false, false, 0)]
@@ -259,9 +315,10 @@ public partial class User : IUser
 
     private String _Remark;
     /// <summary>备注</summary>
+    [Category("扩展")]
     [DisplayName("备注")]
     [Description("备注")]
-    [DataObjectField(false, false, true, 200)]
+    [DataObjectField(false, false, true, 500)]
     [BindColumn("Remark", "备注", "")]
     public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
@@ -279,27 +336,27 @@ public partial class User : IUser
         Mail = model.Mail;
         Mobile = model.Mobile;
         Code = model.Code;
+        AreaId = model.AreaId;
         Avatar = model.Avatar;
         RoleID = model.RoleID;
         RoleIds = model.RoleIds;
         DepartmentID = model.DepartmentID;
         Online = model.Online;
         Enable = model.Enable;
+        Age = model.Age;
+        Birthday = model.Birthday;
         Logins = model.Logins;
         LastLogin = model.LastLogin;
         LastLoginIP = model.LastLoginIP;
         RegisterTime = model.RegisterTime;
         RegisterIP = model.RegisterIP;
+        OnlineTime = model.OnlineTime;
         Ex1 = model.Ex1;
         Ex2 = model.Ex2;
         Ex3 = model.Ex3;
         Ex4 = model.Ex4;
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
-        UpdateUser = model.UpdateUser;
-        UpdateUserID = model.UpdateUserID;
-        UpdateIP = model.UpdateIP;
-        UpdateTime = model.UpdateTime;
         Remark = model.Remark;
     }
     #endregion
@@ -320,17 +377,21 @@ public partial class User : IUser
             "Mail" => _Mail,
             "Mobile" => _Mobile,
             "Code" => _Code,
+            "AreaId" => _AreaId,
             "Avatar" => _Avatar,
             "RoleID" => _RoleID,
             "RoleIds" => _RoleIds,
             "DepartmentID" => _DepartmentID,
             "Online" => _Online,
             "Enable" => _Enable,
+            "Age" => _Age,
+            "Birthday" => _Birthday,
             "Logins" => _Logins,
             "LastLogin" => _LastLogin,
             "LastLoginIP" => _LastLoginIP,
             "RegisterTime" => _RegisterTime,
             "RegisterIP" => _RegisterIP,
+            "OnlineTime" => _OnlineTime,
             "Ex1" => _Ex1,
             "Ex2" => _Ex2,
             "Ex3" => _Ex3,
@@ -356,17 +417,21 @@ public partial class User : IUser
                 case "Mail": _Mail = Convert.ToString(value); break;
                 case "Mobile": _Mobile = Convert.ToString(value); break;
                 case "Code": _Code = Convert.ToString(value); break;
+                case "AreaId": _AreaId = value.ToInt(); break;
                 case "Avatar": _Avatar = Convert.ToString(value); break;
                 case "RoleID": _RoleID = value.ToInt(); break;
                 case "RoleIds": _RoleIds = Convert.ToString(value); break;
                 case "DepartmentID": _DepartmentID = value.ToInt(); break;
                 case "Online": _Online = value.ToBoolean(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
+                case "Age": _Age = value.ToInt(); break;
+                case "Birthday": _Birthday = value.ToDateTime(); break;
                 case "Logins": _Logins = value.ToInt(); break;
                 case "LastLogin": _LastLogin = value.ToDateTime(); break;
                 case "LastLoginIP": _LastLoginIP = Convert.ToString(value); break;
                 case "RegisterTime": _RegisterTime = value.ToDateTime(); break;
                 case "RegisterIP": _RegisterIP = Convert.ToString(value); break;
+                case "OnlineTime": _OnlineTime = value.ToInt(); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
                 case "Ex2": _Ex2 = value.ToInt(); break;
                 case "Ex3": _Ex3 = value.ToDouble(); break;
@@ -412,6 +477,9 @@ public partial class User : IUser
         /// <summary>代码。身份证、员工编号等</summary>
         public static readonly Field Code = FindByName("Code");
 
+        /// <summary>地区。省市区</summary>
+        public static readonly Field AreaId = FindByName("AreaId");
+
         /// <summary>头像</summary>
         public static readonly Field Avatar = FindByName("Avatar");
 
@@ -430,6 +498,12 @@ public partial class User : IUser
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
+        /// <summary>年龄。周岁</summary>
+        public static readonly Field Age = FindByName("Age");
+
+        /// <summary>生日。公历年月日</summary>
+        public static readonly Field Birthday = FindByName("Birthday");
+
         /// <summary>登录次数</summary>
         public static readonly Field Logins = FindByName("Logins");
 
@@ -444,6 +518,9 @@ public partial class User : IUser
 
         /// <summary>注册IP</summary>
         public static readonly Field RegisterIP = FindByName("RegisterIP");
+
+        /// <summary>在线时间。累计在线总时间，秒</summary>
+        public static readonly Field OnlineTime = FindByName("OnlineTime");
 
         /// <summary>扩展1</summary>
         public static readonly Field Ex1 = FindByName("Ex1");
@@ -508,6 +585,9 @@ public partial class User : IUser
         /// <summary>代码。身份证、员工编号等</summary>
         public const String Code = "Code";
 
+        /// <summary>地区。省市区</summary>
+        public const String AreaId = "AreaId";
+
         /// <summary>头像</summary>
         public const String Avatar = "Avatar";
 
@@ -526,6 +606,12 @@ public partial class User : IUser
         /// <summary>启用</summary>
         public const String Enable = "Enable";
 
+        /// <summary>年龄。周岁</summary>
+        public const String Age = "Age";
+
+        /// <summary>生日。公历年月日</summary>
+        public const String Birthday = "Birthday";
+
         /// <summary>登录次数</summary>
         public const String Logins = "Logins";
 
@@ -540,6 +626,9 @@ public partial class User : IUser
 
         /// <summary>注册IP</summary>
         public const String RegisterIP = "RegisterIP";
+
+        /// <summary>在线时间。累计在线总时间，秒</summary>
+        public const String OnlineTime = "OnlineTime";
 
         /// <summary>扩展1</summary>
         public const String Ex1 = "Ex1";

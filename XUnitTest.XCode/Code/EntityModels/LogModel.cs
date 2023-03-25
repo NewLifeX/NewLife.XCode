@@ -12,7 +12,7 @@ public partial class LogModel : ILog
 {
     #region 属性
     /// <summary>编号</summary>
-    public Int32 ID { get; set; }
+    public Int64 ID { get; set; }
 
     /// <summary>类别</summary>
     public String Category { get; set; }
@@ -47,6 +47,9 @@ public partial class LogModel : ILog
     /// <summary>扩展6</summary>
     public String Ex6 { get; set; }
 
+    /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
+    public String TraceId { get; set; }
+
     /// <summary>创建者</summary>
     public String CreateUser { get; set; }
 
@@ -80,6 +83,7 @@ public partial class LogModel : ILog
         Ex4 = model.Ex4;
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
+        TraceId = model.TraceId;
         CreateUser = model.CreateUser;
         CreateUserID = model.CreateUserID;
         CreateIP = model.CreateIP;

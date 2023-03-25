@@ -54,6 +54,14 @@ public partial class Tenant : ITenant
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+    private Int32 _ManagerId;
+    /// <summary>管理者</summary>
+    [DisplayName("管理者")]
+    [Description("管理者")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ManagerId", "管理者", "")]
+    public Int32 ManagerId { get => _ManagerId; set { if (OnPropertyChanging("ManagerId", value)) { _ManagerId = value; OnPropertyChanged("ManagerId"); } } }
+
     private String _RoleIds;
     /// <summary>角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同</summary>
     [DisplayName("角色组")]
@@ -167,6 +175,7 @@ public partial class Tenant : ITenant
         Code = model.Code;
         Name = model.Name;
         Enable = model.Enable;
+        ManagerId = model.ManagerId;
         RoleIds = model.RoleIds;
         Logo = model.Logo;
         DatabaseName = model.DatabaseName;
@@ -188,6 +197,7 @@ public partial class Tenant : ITenant
             "Code" => _Code,
             "Name" => _Name,
             "Enable" => _Enable,
+            "ManagerId" => _ManagerId,
             "RoleIds" => _RoleIds,
             "Logo" => _Logo,
             "DatabaseName" => _DatabaseName,
@@ -210,6 +220,7 @@ public partial class Tenant : ITenant
                 case "Code": _Code = Convert.ToString(value); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
+                case "ManagerId": _ManagerId = value.ToInt(); break;
                 case "RoleIds": _RoleIds = Convert.ToString(value); break;
                 case "Logo": _Logo = Convert.ToString(value); break;
                 case "DatabaseName": _DatabaseName = Convert.ToString(value); break;
@@ -243,6 +254,9 @@ public partial class Tenant : ITenant
 
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
+
+        /// <summary>管理者</summary>
+        public static readonly Field ManagerId = FindByName("ManagerId");
 
         /// <summary>角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同</summary>
         public static readonly Field RoleIds = FindByName("RoleIds");
@@ -297,6 +311,9 @@ public partial class Tenant : ITenant
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";
+
+        /// <summary>管理者</summary>
+        public const String ManagerId = "ManagerId";
 
         /// <summary>角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同</summary>
         public const String RoleIds = "RoleIds";

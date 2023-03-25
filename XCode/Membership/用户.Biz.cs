@@ -128,10 +128,6 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     /// </summary>
     [Map(nameof(AreaId))]
     public String AreaName => Area.FindByID(AreaId)?.Path;
-
-    ///// <summary>兼容旧版角色组</summary>
-    //[Obsolete("=>RoleIds")]
-    //public String RoleIDs { get => RoleIds; set => RoleIds = value; }
     #endregion
 
     #region 扩展查询

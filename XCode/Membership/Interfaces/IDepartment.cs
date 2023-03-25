@@ -42,7 +42,7 @@ public partial interface IDepartment
     Boolean Visible { get; set; }
 
     /// <summary>管理者</summary>
-    Int32 ManagerID { get; set; }
+    Int32 ManagerId { get; set; }
 
     /// <summary>扩展1</summary>
     Int32 Ex1 { get; set; }

@@ -44,32 +44,31 @@ public partial class TenantUser : Entity<TenantUser>
     #endregion
 
     #region 扩展属性
-    /// <summary>租户</summary>
-    [XmlIgnore, IgnoreDataMember]
-    //[ScriptIgnore]
-    public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+    ///// <summary>租户</summary>
+    //[XmlIgnore, IgnoreDataMember]
+    ////[ScriptIgnore]
+    //public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
 
-    /// <summary>租户</summary>
-    [Map(nameof(TenantId), typeof(Tenant), "Id")]
-    public String TenantName => Tenant?.Name;
+    ///// <summary>租户</summary>
+    //[Map(nameof(TenantId), typeof(Tenant), "Id")]
+    //public String TenantName => Tenant?.Name;
 
-    /// <summary>用户</summary>
-    [XmlIgnore, IgnoreDataMember]
-    //[ScriptIgnore]
-    public User User => Extends.Get(nameof(User), k => User.FindByID(UserId));
+    ///// <summary>用户</summary>
+    //[XmlIgnore, IgnoreDataMember]
+    ////[ScriptIgnore]
+    //public User User => Extends.Get(nameof(User), k => User.FindByID(UserId));
 
-    /// <summary>用户</summary>
-    [Map(nameof(UserId), typeof(User), "ID")]
-    public String UserName => User?.Name;
-
-    /// <summary>角色</summary>
-    [XmlIgnore, IgnoreDataMember]
-    //[ScriptIgnore]
-    public IRole Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleId));
+    ///// <summary>用户</summary>
+    //[Map(nameof(UserId), typeof(User), "ID")]
+    //public String UserName => User?.Name;
 
     /// <summary>角色</summary>
-    [Map(nameof(RoleId), typeof(Role), "ID")]
-    public String RoleName => Role?.Name;
+    [XmlIgnore, IgnoreDataMember]
+    IRole ITenantUser.Role => Role;
+
+    ///// <summary>角色</summary>
+    //[Map(nameof(RoleId), typeof(Role), "ID")]
+    //public String RoleName => Role?.Name;
 
     /// <summary>角色集合</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]

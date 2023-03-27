@@ -114,14 +114,14 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     [DisplayName("物理地址")]
     public String LastLoginAddress => LastLoginIP.IPToAddress();
 
-    /// <summary>部门</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
+    ///// <summary>部门</summary>
+    //[XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    //public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
 
-    /// <summary>部门</summary>
-    [Category("登录信息")]
-    [Map(__.DepartmentID, typeof(Department), __.ID)]
-    public String DepartmentName => Department?.Path;
+    ///// <summary>部门</summary>
+    //[Category("登录信息")]
+    //[Map(__.DepartmentID, typeof(Department), __.ID)]
+    //public String DepartmentName => Department?.Path;
 
     /// <summary>
     /// 地区名
@@ -545,7 +545,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     /// <summary>角色</summary>
     /// <remarks>扩展属性不缓存空对象，一般来说，每个管理员都有对应的角色，如果没有，可能是在初始化</remarks>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public virtual IRole Role => Extends.Get(nameof(Role), k => ManageProvider.Get<IRole>()?.FindByID(RoleID));
+    IRole IUser.Role => Role;
 
     /// <summary>角色集合</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
@@ -561,10 +561,10 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
         return ids.Distinct().ToArray();
     }
 
-    /// <summary>角色名</summary>
-    [Category("登录信息")]
-    [Map(__.RoleID, typeof(Role), "ID")]
-    public virtual String RoleName => Role + "";
+    ///// <summary>角色名</summary>
+    //[Category("登录信息")]
+    //[Map(__.RoleID, typeof(Role), "ID")]
+    //public virtual String RoleName => Role + "";
 
     /// <summary>角色组名</summary>
     [Map(__.RoleIds)]

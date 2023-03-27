@@ -257,6 +257,9 @@ public partial class Area : IArea
     }
     #endregion
 
+    #region 关联映射
+    #endregion
+
     #region 字段名
     /// <summary>取得地区字段信息的快捷方式</summary>
     public partial class _

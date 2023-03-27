@@ -239,6 +239,17 @@ public partial class Tenant : ITenant
     }
     #endregion
 
+    #region 关联映射
+    /// <summary>管理者</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public User Manager => Extends.Get(nameof(Manager), k => User.FindByID(ManagerId));
+
+    /// <summary>管理者</summary>
+    [Map(nameof(ManagerId), typeof(User), "ID")]
+    public String ManagerName => Manager?.ToString();
+
+    #endregion
+
     #region 字段名
     /// <summary>取得租户字段信息的快捷方式</summary>
     public partial class _

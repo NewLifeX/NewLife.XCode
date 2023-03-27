@@ -196,6 +196,33 @@ public partial class TenantUser : ITenantUser
     }
     #endregion
 
+    #region 关联映射
+    /// <summary>租户</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+
+    /// <summary>租户</summary>
+    [Map(nameof(TenantId), typeof(Tenant), "Id")]
+    public String TenantName => Tenant?.ToString();
+
+    /// <summary>用户</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public User User => Extends.Get(nameof(User), k => User.FindByID(UserId));
+
+    /// <summary>用户</summary>
+    [Map(nameof(UserId), typeof(User), "ID")]
+    public String UserName => User?.ToString();
+
+    /// <summary>角色</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Role Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleId));
+
+    /// <summary>角色</summary>
+    [Map(nameof(RoleId), typeof(Role), "ID")]
+    public String RoleName => Role?.Name;
+
+    #endregion
+
     #region 字段名
     /// <summary>取得租户关系字段信息的快捷方式</summary>
     public partial class _

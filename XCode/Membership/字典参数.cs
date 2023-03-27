@@ -321,6 +321,17 @@ public partial class Parameter : IParameter
     }
     #endregion
 
+    #region 关联映射
+    /// <summary>用户</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public User User => Extends.Get(nameof(User), k => User.FindByID(UserID));
+
+    /// <summary>用户</summary>
+    [Map(nameof(UserID), typeof(User), "ID")]
+    public String UserName => User?.ToString();
+
+    #endregion
+
     #region 字段名
     /// <summary>取得字典参数字段信息的快捷方式</summary>
     public partial class _

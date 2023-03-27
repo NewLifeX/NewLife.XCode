@@ -37,13 +37,13 @@ public partial class Parameter : Entity<Parameter>
     #endregion
 
     #region 扩展属性
-    /// <summary>用户</summary>
-    [XmlIgnore, IgnoreDataMember]
-    public IManageUser User => Extends.Get(nameof(User), k => Membership.User.FindByID(UserID));
+    ///// <summary>用户</summary>
+    //[XmlIgnore, IgnoreDataMember]
+    //public IManageUser User => Extends.Get(nameof(User), k => Membership.User.FindByID(UserID));
 
-    /// <summary>用户名</summary>
-    [Map(nameof(UserID))]
-    public String UserName => UserID == 0 ? "全局" : (User + "");
+    ///// <summary>用户名</summary>
+    //[Map(nameof(UserID))]
+    //public String UserName => UserID == 0 ? "全局" : (User + "");
     #endregion
 
     #region 扩展查询

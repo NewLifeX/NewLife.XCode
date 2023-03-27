@@ -260,6 +260,18 @@ public partial class Log : ILog
     }
     #endregion
 
+    #region 关联映射
+    /// <summary>创建用户</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public User MyCreateUser => Extends.Get(nameof(MyCreateUser), k => User.FindByID(CreateUserID));
+
+    /// <summary>创建用户</summary>
+    [Map(nameof(CreateUserID), typeof(User), "ID")]
+    [Category("扩展")]
+    public String CreateUserName => MyCreateUser?.ToString();
+
+    #endregion
+
     #region 字段名
     /// <summary>取得日志字段信息的快捷方式</summary>
     public partial class _

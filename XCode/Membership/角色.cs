@@ -297,6 +297,9 @@ public partial class Role : IRole
     }
     #endregion
 
+    #region 关联映射
+    #endregion
+
     #region 字段名
     /// <summary>取得角色字段信息的快捷方式</summary>
     public partial class _

@@ -193,6 +193,7 @@ public class EntityBuilderTests
         EntityBuilder.FixModelFile(file, option, atts, tables);
 
         // 生成实体类
+        option.Output = @".\Entity\";
         option.BaseClass = "I{name}";
         option.ModelNameForCopy = "I{name}";
         option.ChineseFileName = true;
@@ -266,6 +267,7 @@ public class EntityBuilderTests
         EntityBuilder.FixModelFile(file, option, atts, tables);
 
         // 生成实体类
+        option.Output = @".\Entity\";
         option.BaseClass = "I{name}";
         option.ModelNameForCopy = "I{name}";
         option.ChineseFileName = true;

@@ -22,7 +22,7 @@ public interface IDataColumn
     /// <summary>元素类型</summary>
     String ItemType { get; set; }
 
-    /// <summary>映射，表间关联</summary>
+    /// <summary>映射，表间关联，格式Role.Id.Name</summary>
     String Map { get; set; }
 
     /// <summary>标识</summary>

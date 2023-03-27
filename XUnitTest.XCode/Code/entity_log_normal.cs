@@ -235,6 +235,9 @@ public partial class Log
     }
     #endregion
 
+    #region 关联映射
+    #endregion
+
     #region 扩展属性
     #endregion
 

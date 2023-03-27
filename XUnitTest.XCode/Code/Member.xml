@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="XCode.Membership" ConnName="Membership" Output="Entity" BaseClass="Entity" Document="https://newlifex.com/xcode/model" Version="11.7.2023.0325" DisplayName="" CubeOutput="" xmlns="https://newlifex.com/Model2022.xsd">
+<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="XCode.Membership" ConnName="Membership" Output="" BaseClass="Entity" ModelClass="{name}Model" ModelInterface="I{name}" Version="11.7.2023.0327" Document="https://newlifex.com/xcode/model" DisplayName="" CubeOutput="" xmlns="https://newlifex.com/Model2022.xsd">
   <Table Name="User" Description="用户。用户帐号信息">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -10,11 +10,11 @@
       <Column Name="Mail" DataType="String" ItemType="mail" Description="邮件" />
       <Column Name="Mobile" DataType="String" ItemType="mobile" Description="手机" />
       <Column Name="Code" DataType="String" Description="代码。身份证、员工编号等" />
-      <Column Name="AreaId" DataType="Int32" Description="地区。省市区" />
+      <Column Name="AreaId" DataType="Int32" Map="XCode.Membership.Area@Id@Path@AreaPath" Description="地区。省市区" />
       <Column Name="Avatar" DataType="String" ItemType="image" Length="200" Description="头像" />
-      <Column Name="RoleID" DataType="Int32" Map="Role.Id" DefaultValue="3" Description="角色。主要角色" Category="登录信息" />
+      <Column Name="RoleID" DataType="Int32" Map="Role@Id@Name" DefaultValue="3" Description="角色。主要角色" Category="登录信息" />
       <Column Name="RoleIds" DataType="String" Length="200" Description="角色组。次要角色集合" Category="登录信息" />
-      <Column Name="DepartmentID" DataType="Int32" Map="Department.Id" Description="部门。组织机构" Category="登录信息" />
+      <Column Name="DepartmentID" DataType="Int32" Map="Department@Id@Name" Description="部门。组织机构" Category="登录信息" />
       <Column Name="Online" DataType="Boolean" Description="在线" Category="登录信息" />
       <Column Name="Enable" DataType="Boolean" Description="启用" Category="登录信息" />
       <Column Name="Age" DataType="Int32" Description="年龄。周岁" />
@@ -49,7 +49,7 @@
   <Table Name="Department" Description="部门。组织机构，多级树状结构">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="TenantId" DataType="Int32" Map="Tenant.Id" Description="租户" />
+      <Column Name="TenantId" DataType="Int32" Map="Tenant@Id@$" Description="租户" />
       <Column Name="Code" DataType="String" Description="代码" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
       <Column Name="FullName" DataType="String" Length="200" Description="全名" />
@@ -58,7 +58,7 @@
       <Column Name="Sort" DataType="Int32" Description="排序。同级内排序" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
       <Column Name="Visible" DataType="Boolean" Description="可见" />
-      <Column Name="ManagerId" DataType="Int32" Map="User.Id" Description="管理者" />
+      <Column Name="ManagerId" DataType="Int32" Map="User@Id@$" Description="管理者" />
       <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
       <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />
       <Column Name="Ex3" DataType="Double" Description="扩展3" Category="扩展" />
@@ -149,7 +149,7 @@
   <Table Name="Parameter" Description="字典参数">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="UserID" DataType="Int32" Map="User.Id" Description="用户。按用户区分参数，用户0表示系统级" />
+      <Column Name="UserID" DataType="Int32" Map="User@Id@$" Description="用户。按用户区分参数，用户0表示系统级" />
       <Column Name="Category" DataType="String" Description="类别" />
       <Column Name="Name" DataType="String" Master="True" Description="名称" />
       <Column Name="Value" DataType="String" Length="200" Description="数值" />
@@ -224,7 +224,7 @@
       <Column Name="Ex6" DataType="String" Description="扩展6" Category="扩展" />
       <Column Name="TraceId" DataType="String" Description="性能追踪。用于APM性能追踪定位，还原该事件的调用链" />
       <Column Name="CreateUser" DataType="String" Description="创建者" Category="扩展" />
-      <Column Name="CreateUserID" DataType="Int32" Description="创建用户" Category="扩展" />
+      <Column Name="CreateUserID" DataType="Int32" Map="User@Id@$" Description="创建用户" Category="扩展" />
       <Column Name="CreateIP" DataType="String" Description="创建地址" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Nullable="False" Description="时间" />
       <Column Name="Remark" DataType="String" Length="2000" Description="详细信息" />
@@ -241,7 +241,7 @@
       <Column Name="Code" DataType="String" Description="编码。唯一编码" />
       <Column Name="Name" DataType="String" Master="True" Description="名称。显示名称" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="ManagerId" DataType="Int32" Map="User.Id" Description="管理者" />
+      <Column Name="ManagerId" DataType="Int32" Map="User@Id@$" Description="管理者" />
       <Column Name="RoleIds" DataType="String" Length="200" Description="角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同" />
       <Column Name="Logo" DataType="String" ItemType="image" Description="图标。附件路径" />
       <Column Name="DatabaseName" DataType="String" Description="数据库。分库用的数据库名" />
@@ -262,10 +262,10 @@
   <Table Name="TenantUser" Description="租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
-      <Column Name="TenantId" DataType="Int32" Map="Tenant.Id" Description="租户" />
-      <Column Name="UserId" DataType="Int32" Map="User.Id" Description="用户" />
+      <Column Name="TenantId" DataType="Int32" Map="Tenant@Id@$" Description="租户" />
+      <Column Name="UserId" DataType="Int32" Map="User@Id@$" Description="用户" />
       <Column Name="Enable" DataType="Boolean" Description="启用" />
-      <Column Name="RoleId" DataType="Int32" Map="Role.Id" Description="角色。用户在该租户所对应的主要角色，替换用户自身的角色组" />
+      <Column Name="RoleId" DataType="Int32" Map="Role@Id@Name" Description="角色。用户在该租户所对应的主要角色，替换用户自身的角色组" />
       <Column Name="RoleIds" DataType="String" Length="200" Description="角色组。次要角色集合" />
       <Column Name="CreateUserId" DataType="Int32" Description="创建者" Model="False" Category="扩展" />
       <Column Name="CreateTime" DataType="DateTime" Description="创建时间" Model="False" Category="扩展" />

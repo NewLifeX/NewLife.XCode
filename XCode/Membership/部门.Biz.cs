@@ -10,7 +10,7 @@ using NewLife.Log;
 namespace XCode.Membership;
 
 /// <summary>部门。组织机构，多级树状结构</summary>
-public partial class Department : Entity<Department>
+public partial class Department : Entity<Department>, ITenantSource
 {
     #region 对象操作
     static Department()

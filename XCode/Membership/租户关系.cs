@@ -20,7 +20,7 @@ namespace XCode.Membership;
 [BindIndex("IU_TenantUser_TenantId_UserId", true, "TenantId,UserId")]
 [BindIndex("IX_TenantUser_UserId", false, "UserId")]
 [BindTable("TenantUser", Description = "租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class TenantUser : ITenantUser
+public partial class TenantUser : ITenantUser, IEntity<TenantUserModel>
 {
     #region 属性
     private Int32 _Id;

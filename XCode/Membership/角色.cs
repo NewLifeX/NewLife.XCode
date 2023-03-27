@@ -19,7 +19,7 @@ namespace XCode.Membership;
 [Description("角色")]
 [BindIndex("IU_Role_Name", true, "Name")]
 [BindTable("Role", Description = "角色", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class Role : IRole
+public partial class Role : IRole, IEntity<RoleModel>
 {
     #region 属性
     private Int32 _ID;

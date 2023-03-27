@@ -512,7 +512,7 @@ public class ClassBuilder
     /// <summary>生成实体转模型函数</summary>
     /// <param name="modelClass"></param>
     /// <param name="modelInterface"></param>
-    protected virtual void BuildEntityToModel(String modelClass, String modelInterface)
+    protected virtual void BuildToModel(String modelClass, String modelInterface)
     {
         WriteLine($"public {modelInterface} ToModel()");
         WriteLine("{");

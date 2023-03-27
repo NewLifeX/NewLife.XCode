@@ -24,7 +24,7 @@ namespace XCode.Membership;
 [BindIndex("IX_Area_GeoHash", false, "GeoHash")]
 [BindIndex("IX_Area_UpdateTime_ID", false, "UpdateTime,ID")]
 [BindTable("Area", Description = "地区。行政区划数据，最高支持四级地址，9位数字", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class Area : IArea
+public partial class Area : IArea, IEntity<AreaModel>
 {
     #region 属性
     private Int32 _ID;

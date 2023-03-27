@@ -21,7 +21,7 @@ namespace XCode.Membership;
 [BindIndex("IX_Parameter_Category_Name", false, "Category,Name")]
 [BindIndex("IX_Parameter_UpdateTime", false, "UpdateTime")]
 [BindTable("Parameter", Description = "字典参数", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class Parameter : IParameter
+public partial class Parameter : IParameter, IEntity<ParameterModel>
 {
     #region 属性
     private Int32 _ID;

@@ -2,6 +2,19 @@
 
 namespace XCode;
 
+/// <summary>数据实体接口扩展</summary>
+/// <typeparam name="TModel"></typeparam>
+public interface IEntity<TModel>
+{
+    /// <summary>拷贝模型对象</summary>
+    /// <param name="model"></param>
+    void Copy(TModel model);
+
+    ///// <summary>转模型对象</summary>
+    ///// <returns></returns>
+    //TModel ToModel();
+}
+
 /// <summary>数据实体接口</summary>
 public interface IEntity : IModel
 {
@@ -75,33 +88,22 @@ public interface IEntity : IModel
     #endregion
 
     #region 获取/设置 字段值
-    ///// <summary>获取/设置 字段值。</summary>
-    ///// <param name="name">字段名</param>
-    ///// <returns></returns>
-    //Object this[String name] { get; set; }
-
     /// <summary>设置字段值</summary>
     /// <param name="name">字段名</param>
     /// <param name="value">值</param>
     /// <returns>返回是否成功设置了数据</returns>
     Boolean SetItem(String name, Object value);
 
-    ///// <summary>设置脏数据项。如果某个键存在并且数据没有脏，则设置</summary>
-    ///// <param name="name"></param>
-    ///// <param name="value"></param>
-    ///// <returns>返回是否成功设置了数据</returns>
-    //Boolean SetNoDirtyItem(String name, Object value);
-
     /// <summary>克隆实体。创建当前对象的克隆对象，仅拷贝基本字段</summary>
     /// <param name="setDirty">是否设置脏数据</param>
     /// <returns></returns>
     IEntity CloneEntity(Boolean setDirty = true);
 
-    /// <summary>复制来自指定实体的成员，可以是不同类型的实体，只复制共有的基本字段，影响脏数据</summary>
-    /// <param name="entity">来源实体对象</param>
-    /// <param name="setDirty">是否设置脏数据</param>
-    /// <returns>实际复制成员数</returns>
-    Int32 CopyFrom(IEntity entity, Boolean setDirty = true);
+    ///// <summary>复制来自指定实体的成员，可以是不同类型的实体，只复制共有的基本字段，影响脏数据</summary>
+    ///// <param name="entity">来源实体对象</param>
+    ///// <param name="setDirty">是否设置脏数据</param>
+    ///// <returns>实际复制成员数</returns>
+    //Int32 CopyFrom(IEntity entity, Boolean setDirty = true);
 
     /// <summary>复制来自指定模型的成员，可以是不同类型</summary>
     /// <param name="model">来源实体对象</param>

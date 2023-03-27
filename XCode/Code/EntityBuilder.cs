@@ -255,10 +255,15 @@ public class EntityBuilder : ClassBuilder
         {
             // 有可能实现了接口拷贝
             var model = Option.ModelNameForCopy;
-            if (!model.IsNullOrEmpty() && model.StartsWith("I")) bs.Add(model);
+            if (!model.IsNullOrEmpty())
+            {
+                if (model.StartsWith("I")) bs.Add(model);
+
+                bs.Add($"IEntity<{model}>");
+            }
 
             // 数据类不要实体基类
-            bs = bs.Where(e => !e.Contains("Entity")).ToList();
+            bs = bs.Where(e => !e.StartsWithIgnoreCase("Entity<", "EntityBase<")).ToList();
             if (bs.Count > 0) name = bs.Distinct().Join(", ");
         }
 
@@ -1263,7 +1268,7 @@ public class EntityBuilder : ClassBuilder
         var toModel = Option.ModelNameForToModel;
         if (!toModel.IsNullOrEmpty() && !Option.ModelNameForCopy.IsNullOrEmpty())
         {
-            BuildEntityToModel(toModel.Replace("{name}", ClassName), Option.ModelNameForCopy.Replace("{name}", ClassName));
+            BuildToModel(toModel.Replace("{name}", ClassName), Option.ModelNameForCopy.Replace("{name}", ClassName));
             WriteLine("");
         }
         WriteLine("#endregion");

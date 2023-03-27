@@ -24,7 +24,7 @@ namespace XCode.Membership;
 [BindIndex("IX_User_RoleID", false, "RoleID")]
 [BindIndex("IX_User_UpdateTime", false, "UpdateTime")]
 [BindTable("User", Description = "用户。用户帐号信息", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class User : IUser
+public partial class User : IUser, IEntity<IUser>
 {
     #region 属性
     private Int32 _ID;

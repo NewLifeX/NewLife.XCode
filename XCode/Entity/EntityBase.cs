@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using System.Security.Cryptography;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;
@@ -124,49 +125,8 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     /// <param name="entity">来源实体对象</param>
     /// <param name="setDirty">是否设置脏数据</param>
     /// <returns>实际复制成员数</returns>
-    public virtual Int32 CopyFrom(IEntity entity, Boolean setDirty = true)
-    {
-        if (entity == this) return 0;
-
-        IEntity src = this;
-        var fact1 = src.GetType().AsFactory();
-        var fact2 = entity.GetType().AsFactory();
-        var nsSrc = fact1.FieldNames;
-        //if (nsSrc == null || nsSrc.Count <= 0) return 0;
-        var nsDes = fact2.FieldNames;
-        if (nsDes == null || nsDes.Count <= 0) return 0;
-
-        var n = 0;
-        foreach (var item in nsDes)
-        {
-            if (nsSrc.Contains(item))
-            {
-                if (setDirty)
-                    src.SetItem(item, entity[item]);
-                else
-                    src[item] = entity[item];
-            }
-            else
-            {
-                // 如果没有该字段，则写入到扩展属性里面去
-                src[item] = entity[item];
-                if (setDirty) Dirtys[item] = true;
-            }
-
-            n++;
-        }
-        // 赋值扩展数据
-        //entity.Extends.CopyTo(src.Extends);
-        if (entity is EntityBase entity2 && entity2._Items != null && entity2._Items.Count > 0)
-        {
-            foreach (var item in entity2._Items)
-            {
-                src[item.Key] = item.Value;
-            }
-        }
-
-        return n;
-    }
+    [Obsolete("=>CopyFrom(IModel model, Boolean setDirty)")]
+    public virtual Int32 CopyFrom(IEntity entity, Boolean setDirty = true) => CopyFrom((IModel)entity, setDirty);
 
     /// <summary>复制来自指定模型的成员，可以是不同类型</summary>
     /// <param name="model">来源实体对象</param>
@@ -179,14 +139,51 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
         IEntity src = this;
 
         var n = 0;
-        foreach (var item in src.GetType().AsFactory().FieldNames)
+        if (model is IEntity entity)
         {
-            if (setDirty)
-                src.SetItem(item, model[item]);
-            else
-                src[item] = model[item];
+            var nsSrc = src.GetType().AsFactory().FieldNames;
+            var nsDes = entity.GetType().AsFactory().FieldNames;
+            if (nsDes == null || nsDes.Count <= 0) return 0;
 
-            n++;
+            foreach (var item in nsDes)
+            {
+                if (nsSrc.Contains(item))
+                {
+                    if (setDirty)
+                        src.SetItem(item, entity[item]);
+                    else
+                        src[item] = entity[item];
+                }
+                else
+                {
+                    // 如果没有该字段，则写入到扩展属性里面去
+                    src[item] = entity[item];
+                    if (setDirty) Dirtys[item] = true;
+                }
+
+                n++;
+            }
+            // 赋值扩展数据
+            //entity.Extends.CopyTo(src.Extends);
+            if (entity is EntityBase entity2 && entity2._Items != null && entity2._Items.Count > 0)
+            {
+                foreach (var item in entity2._Items)
+                {
+                    src[item.Key] = item.Value;
+                }
+            }
+        }
+        else
+        {
+            foreach (var item in src.GetType().AsFactory().FieldNames)
+            {
+                if (setDirty)
+                    src.SetItem(item, model[item]);
+                else
+                    src[item] = model[item];
+
+                n++;
+            }
         }
 
         return n;

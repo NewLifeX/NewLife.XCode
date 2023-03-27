@@ -21,7 +21,7 @@ namespace XCode.Membership;
 [BindIndex("IX_Log_Category_LinkID_ID", false, "Category,LinkID,ID")]
 [BindIndex("IX_Log_CreateUserID_ID", false, "CreateUserID,ID")]
 [BindTable("Log", Description = "日志", ConnName = "Log", DbType = DatabaseType.None)]
-public partial class Log : ILog
+public partial class Log : ILog, IEntity<LogModel>
 {
     #region 属性
     private Int64 _ID;

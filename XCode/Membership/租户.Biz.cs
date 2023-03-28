@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Common;
 using NewLife.Data;
 
 namespace XCode.Membership;
@@ -28,56 +29,8 @@ public partial class Tenant : Entity<Tenant>
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);
 
-        // 在新插入数据或者修改了指定字段时进行修正
-        // 处理当前已登录用户信息，可以由UserModule过滤器代劳
-        /*var user = ManageProvider.User;
-        if (user != null)
-        {
-            if (isNew && !Dirtys[nameof(CreateUserId)]) CreateUserId = user.ID;
-            if (!Dirtys[nameof(UpdateUserId)]) UpdateUserId = user.ID;
-        }*/
-        //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-        //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
-        //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
-        //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
+        if (Code.IsNullOrEmpty()) Code = PinYin.GetFirst(Name);
     }
-
-    ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
-    //[EditorBrowsable(EditorBrowsableState.Never)]
-    //protected override void InitData()
-    //{
-    //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
-    //    if (Meta.Session.Count > 0) return;
-
-    //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Tenant[租户]数据……");
-
-    //    var entity = new Tenant();
-    //    entity.Name = "abc";
-    //    entity.CreateUserId = 0;
-    //    entity.CreateTime = DateTime.Now;
-    //    entity.CreateIP = "abc";
-    //    entity.UpdateUserId = 0;
-    //    entity.UpdateTime = DateTime.Now;
-    //    entity.UpdateIP = "abc";
-    //    entity.Remark = "abc";
-    //    entity.Insert();
-
-    //    if (XTrace.Debug) XTrace.WriteLine("完成初始化Tenant[租户]数据！");
-    //}
-
-    ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
-    ///// <returns></returns>
-    //public override Int32 Insert()
-    //{
-    //    return base.Insert();
-    //}
-
-    ///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>
-    ///// <returns></returns>
-    //protected override Int32 OnDelete()
-    //{
-    //    return base.OnDelete();
-    //}
     #endregion
 
     #region 扩展属性
@@ -115,16 +68,21 @@ public partial class Tenant : Entity<Tenant>
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="name">名称</param>
+    /// <param name="managerId"></param>
+    /// <param name="enable"></param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Tenant> Search(String name, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Tenant> Search(String name, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (!name.IsNullOrEmpty()) exp &= _.Name == name;
+        if (managerId >= 0) exp &= _.ManagerId == managerId;
+        if (enable != null) exp &= _.Enable == enable;
+
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 

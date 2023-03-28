@@ -138,17 +138,22 @@ public partial class TenantUser : Entity<TenantUser>
     /// <summary>高级查询</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="userId">用户</param>
+    /// <param name="roleId"></param>
+    /// <param name="enable"></param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<TenantUser> Search(Int32 tenantId, Int32 userId, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<TenantUser> Search(Int32 tenantId, Int32 userId, Int32 roleId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (tenantId >= 0) exp &= _.TenantId == tenantId;
         if (userId >= 0) exp &= _.UserId == userId;
+        if (roleId >= 0) exp &= _.RoleId == roleId;
+        if (enable != null) exp &= _.Enable == enable;
+
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= _.RoleIds.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 

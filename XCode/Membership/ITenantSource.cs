@@ -15,7 +15,19 @@ public interface ITenantSource
 /// </remarks>
 public class TenantContext
 {
+    #region 属性
+    /// <summary>租户标识</summary>
+    public Int32 TenantId { get; set; }
 
+    #endregion
+
+#if NET45
+    private static readonly ThreadLocal<TenantContext> _Current = new();
+#else
+    private static readonly AsyncLocal<TenantContext> _Current = new();
+#endif
+    /// <summary>当前租户上下文</summary>
+    public static TenantContext Current { get => _Current.Value; set => _Current.Value = value; }
 }
 
 /// <summary>多租户助手</summary>
@@ -25,4 +37,43 @@ public static class TenantSourceHelper
     //{
 
     //}
+}
+
+/// <summary>租户过滤器。添加修改时自动设置租户标识</summary>
+public class TenantFilter : EntityModule
+{
+    /// <summary>初始化。检查是否匹配</summary>
+    /// <param name="entityType"></param>
+    /// <returns></returns>
+    protected override Boolean OnInit(Type entityType) => entityType.GetInterfaces().Any(e => e == typeof(ITenantSource));
+
+    /// <summary>创建实体对象</summary>
+    /// <param name="entity"></param>
+    /// <param name="forEdit"></param>
+    protected override void OnCreate(IEntity entity, Boolean forEdit)
+    {
+        var ctx = TenantContext.Current;
+        if (ctx != null && entity is ITenantSource tenant)
+        {
+            tenant.TenantId = ctx.TenantId;
+        }
+    }
+
+    /// <summary>验证数据，自动加上创建和更新的信息</summary>
+    /// <param name="entity"></param>
+    /// <param name="isNew"></param>
+    protected override Boolean OnValid(IEntity entity, Boolean isNew)
+    {
+        if (entity is not ITenantSource tenant) return true;
+
+        var ctx = TenantContext.Current;
+        if (ctx == null) return true;
+
+        if (tenant.TenantId == 0 && !entity.IsDirty("TenantId"))
+            tenant.TenantId = ctx.TenantId;
+        //else if (tenant.TenantId != ctx.TenantId)
+        //    return false;
+
+        return true;
+    }
 }

@@ -1,7 +1,5 @@
 ﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
-using System.Security.Cryptography;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;

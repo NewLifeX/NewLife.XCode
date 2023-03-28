@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using NewLife;
 using NewLife.Collections;
-using NewLife.Data;
 using NewLife.Reflection;
 using XCode.Configuration;
+using XCode.Membership;
 
 namespace XCode.Model;
 
@@ -93,7 +93,7 @@ public class WhereBuilder
         // StartSiteId in {#SiteIds} or CityId={#CityId}
 
         // 解析表达式
-        var model = Find(exp, new[] { "==", "!=", "<>", "=", " in" });
+        var model = Parse(exp, new[] { "==", "!=", "<>", "=", " in" });
         if (model != null)
         {
             switch (model.Action)
@@ -169,6 +169,13 @@ public class WhereBuilder
         var exp = Expression;
         if (exp.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Expression));
 
+        // 支持租户模式检查
+        if (entity is ITenantSource source)
+        {
+            var ctx = TenantContext.Current;
+            if (ctx == null || ctx.TenantId != source.TenantId) return false;
+        }
+
         return EvalParse(Expression, entity);
     }
 
@@ -210,7 +217,7 @@ public class WhereBuilder
 
         // 等号运算
         // 解析表达式
-        var model = Find(exp, new[] { "==", "!=", "<>", "=", " in" });
+        var model = Parse(exp, new[] { "==", "!=", "<>", "=", " in" });
         if (model != null)
         {
             var eval = entity[model.Field.Name];
@@ -245,7 +252,7 @@ public class WhereBuilder
     #endregion
 
     #region 辅助
-    private Model Find(String exp, String[] seps)
+    private Model Parse(String exp, String[] seps)
     {
         foreach (var item in seps)
         {
@@ -275,20 +282,8 @@ public class WhereBuilder
     class Model
     {
         public String Action { get; set; }
-        //public String Name { get; set; }
         public Object Value { get; set; }
         public FieldItem Field { get; set; }
     }
-
-    //private Int32 IndexOfAny(String str, String[] seps)
-    //{
-    //    foreach (var item in seps)
-    //    {
-    //        var p = str.IndexOf(item);
-    //        if (p >= 0) return p;
-    //    }
-
-    //    return -1;
-    //}
     #endregion
 }

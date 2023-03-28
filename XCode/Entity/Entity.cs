@@ -1011,7 +1011,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             where &= exp;
         else if (page.State is WhereBuilder builder)
         {
-            if (builder.Factory == null) builder.Factory = Meta.Factory;
+            builder.Factory ??= Meta.Factory;
             where &= builder.GetExpression();
         }
 
@@ -1294,7 +1294,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             where &= exp;
         else if (page.State is WhereBuilder builder)
         {
-            if (builder.Factory == null) builder.Factory = Meta.Factory;
+            builder.Factory ??= Meta.Factory;
             where &= builder.GetExpression();
         }
 
@@ -1568,7 +1568,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var exp = new WhereExpression();
         if (String.IsNullOrEmpty(keys)) return exp;
 
-        if (func == null) func = SearchWhereByKey;
+        func ??= SearchWhereByKey;
 
         var ks = keys.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         for (var i = 0; i < ks.Length; i++)

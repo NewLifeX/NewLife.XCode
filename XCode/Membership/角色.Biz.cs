@@ -63,7 +63,7 @@ public partial class Role : LogEntity<Role>, IRole
     }
 
     /// <summary>初始化时执行必要的权限检查，以防万一管理员无法操作</summary>
-    static void CheckRole()
+    public static void CheckRole()
     {
         // InitData中用缓存将会导致二次调用InitData，从而有一定几率死锁
         var list = FindAll();

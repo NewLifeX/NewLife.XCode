@@ -30,10 +30,10 @@ public interface IMenuFactory
     /// <returns></returns>
     IList<IMenu> GetMySubMenus(Int32 menuid, IUser user, Boolean inclInvisible);
 
-    /// <summary>扫描命名空间下的控制器并添加为菜单</summary>
-    /// <param name="rootName"></param>
-    /// <param name="asm"></param>
-    /// <param name="nameSpace"></param>
-    /// <returns></returns>
-    IList<IMenu> ScanController(String rootName, Assembly asm, String nameSpace);
+    ///// <summary>扫描命名空间下的控制器并添加为菜单</summary>
+    ///// <param name="rootName"></param>
+    ///// <param name="asm"></param>
+    ///// <param name="nameSpace"></param>
+    ///// <returns></returns>
+    //IList<IMenu> ScanController(String rootName, Assembly asm, String nameSpace);
 }

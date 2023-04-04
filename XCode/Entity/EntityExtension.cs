@@ -3,6 +3,7 @@ using System.Data;
 using NewLife;
 using NewLife.Data;
 using NewLife.IO;
+using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Serialization;
 using XCode.Configuration;
@@ -121,6 +122,8 @@ public static class EntityExtension
         // Oracle/MySql批量插入
         if (session2.Dal.SupportBatch)
         {
+            DefaultSpan.Current?.AppendTag("SupportBatch");
+
             if (list is not IList<T> es) es = list.ToList();
             foreach (IEntity item in es.ToArray())
             {
@@ -131,6 +134,8 @@ public static class EntityExtension
             // 如果未指定会话，需要支持自动分表，并且需要考虑实体列表可能落入不同库表
             if (session == null && fact.ShardPolicy != null)
             {
+                DefaultSpan.Current?.AppendTag("ShardPolicy");
+
                 // 提前计算分表，按库表名分组
                 var table = fact.Table;
                 var dic = list.GroupBy(e =>

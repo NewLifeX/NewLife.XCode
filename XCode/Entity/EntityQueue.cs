@@ -3,6 +3,7 @@ using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
+using XCode.DataAccessLayer;
 
 namespace XCode;
 
@@ -39,7 +40,11 @@ public class EntityQueue : DisposeBase
     /// <summary>保存速度，每秒保存多少个实体</summary>
     public Int32 Speed { get; private set; }
 
+    /// <summary>链路追踪</summary>
+    public ITracer Tracer { get; set; } = DAL.GlobalTracer;
+
     private TimerX _Timer;
+    private String _lastTraceId;
     #endregion
 
     #region 构造
@@ -85,6 +90,8 @@ public class EntityQueue : DisposeBase
                 };
             }
         }
+
+        _lastTraceId = DefaultSpan.Current?.ToString();
 
         var rs = false;
         if (msDelay <= 0)
@@ -150,7 +157,20 @@ public class EntityQueue : DisposeBase
         {
             Interlocked.Add(ref _count, -list.Count);
 
-            Process(list);
+            var ss = Session;
+            DefaultSpan.Current = null;
+            using var span = Tracer?.NewSpan($"db:{ss.ConnName}:Queue:{ss.TableName}", list.Count);
+            if (_lastTraceId != null) span?.Detach(_lastTraceId);
+            _lastTraceId = null;
+            try
+            {
+                Process(list);
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+                throw;
+            }
         }
     }
 
@@ -177,6 +197,7 @@ public class EntityQueue : DisposeBase
         for (var i = 0; i < list.Count;)
         {
             var batch = list.Skip(i).Take(batchSize).ToList();
+            DefaultSpan.Current?.AppendTag($"batch={batch.Count}");
 
             try
             {
@@ -218,7 +239,9 @@ public class EntityQueue : DisposeBase
         Speed = ms == 0 ? 0 : (Int32)(list.Count * 1000 / ms);
         if (Debug || list.Count > 10000)
         {
-            XTrace.WriteLine($"实体队列[{ss.TableName}/{ss.ConnName}]\t保存 {list.Count:n0}\t耗时 {ms:n0}ms\t速度 {speed:n0}tps\t周期 {p:n0}ms");
+            var msg = $"实体队列[{ss.TableName}/{ss.ConnName}]\t保存 {list.Count:n0}\t耗时 {ms:n0}ms\t速度 {speed:n0}tps\t周期 {p:n0}ms";
+            DefaultSpan.Current?.AppendTag(ms);
+            XTrace.WriteLine(msg);
         }
 
         // 马上再来一次，以便于连续处理数据

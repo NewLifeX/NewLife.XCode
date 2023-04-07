@@ -413,6 +413,32 @@ public partial class User
     #endregion
 
     #region 关联映射
+    /// <summary>地区</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public XCode.Membership.Area Area => Extends.Get(nameof(Area), k => XCode.Membership.Area.FindById(AreaId));
+
+    /// <summary>地区</summary>
+    [Map(nameof(AreaId), typeof(XCode.Membership.Area), "Id")]
+    public String AreaPath => Area?.Path;
+
+    /// <summary>角色</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Role Role => Extends.Get(nameof(Role), k => Role.FindById(RoleID));
+
+    /// <summary>角色</summary>
+    [Map(nameof(RoleID), typeof(Role), "Id")]
+    [Category("登录信息")]
+    public String RoleName => Role?.Name;
+
+    /// <summary>部门</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Department Department => Extends.Get(nameof(Department), k => Department.FindById(DepartmentID));
+
+    /// <summary>部门</summary>
+    [Map(nameof(DepartmentID), typeof(Department), "Id")]
+    [Category("登录信息")]
+    public String DepartmentName => Department?.Name;
+
     #endregion
 
     #region 字段名

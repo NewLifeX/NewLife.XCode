@@ -236,6 +236,10 @@ public partial class Log
     #endregion
 
     #region 关联映射
+    /// <summary>创建用户</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public User MyCreateUser => Extends.Get(nameof(MyCreateUser), k => User.FindById(CreateUserID));
+
     #endregion
 
     #region 扩展属性

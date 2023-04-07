@@ -622,54 +622,68 @@ public class EntityBuilder : ClassBuilder
             var className = fullName;
             var p = className.LastIndexOf('.');
             if (p > 0) className = className[(p + 1)..];
+
+            // 找到映射表，有可能映射表在别的模型集，mapTable可能为空，此时直接使用类名
             var mapTable = AllTables.FirstOrDefault(e => className.EqualIgnoreCase(e.Name, e.TableName));
-            if (mapTable == null) continue;
+            //if (mapTable == null) continue;
 
-            var mapId = ss.Length > 1 ? mapTable.GetColumn(ss[1]) : mapTable.PrimaryKeys.FirstOrDefault();
-            if (mapId == null) continue;
+            IDataColumn mapId = null;
+            if (mapTable != null)
+                mapId = ss.Length > 1 ? mapTable.GetColumn(ss[1]) : mapTable.PrimaryKeys.FirstOrDefault();
+            //if (mapId == null) continue;
+            var mapIdName = mapId?.Name ?? ss[1];
 
-            var mapName = ss.Length > 2 && ss[2] != "$" ? mapTable.GetColumn(ss[2]) : null;
-            mapName ??= mapTable.Columns.FirstOrDefault(e => e.Master);
-            mapName ??= mapTable.GetColumn("Name");
-
+            IDataColumn mapName = null;
             if (mapTable != null)
             {
-                // 属性名
-                var name = column.Name.TrimEnd("Id", "ID", mapId.Name);
-                if (Table.Columns.Any(e => e.Name.EqualIgnoreCase(name))) name = "My" + name;
-
-                // 备注
-                var dis = column.DisplayName;
-                if (dis.IsNullOrEmpty()) dis = mapTable.DisplayName;
-
-                WriteLine("/// <summary>{0}</summary>", dis);
-                WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
-                WriteLine("public {0} {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapId.Name, column.Name);
-
-                var myName = ss.Length > 3 ? ss[3] : null;
-                if (myName.IsNullOrEmpty() && mapName != null)
-                    myName = column.Name.TrimEnd("Id", "ID", mapId.Name) + mapName.Name;
-
-                // 扩展属性有可能恰巧跟已有字段同名
-                if (!myName.IsNullOrEmpty() && !Table.Columns.Any(e => e.Name.EqualIgnoreCase(myName)))
-                {
-                    WriteLine();
-                    WriteLine("/// <summary>{0}</summary>", dis);
-                    WriteLine("[Map(nameof({0}), typeof({1}), \"{2}\")]", column.Name, fullName, mapId.Name);
-                    if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
-                        WriteLine("[Category(\"{0}\")]", att);
-                    if (ss.Length > 2 && ss[2] == "$")
-                        WriteLine("public String {0} => {1}?.ToString();", myName, name);
-                    else if (ss.Length > 2 && mapName.DataType == typeof(String))
-                        WriteLine("public String {0} => {1}?.{2};", myName, name, ss[2]);
-                    else if (mapName.DataType == typeof(String))
-                        WriteLine("public String {0} => {1}?.{2};", myName, name, mapName.Name);
-                    else
-                        WriteLine("public {3} {0} => {1} != null ? {1}.{2} : 0;", myName, name, mapName.Name, mapName.DataType.Name);
-                }
-
-                WriteLine();
+                mapName = ss.Length > 2 && ss[2] != "$" ? mapTable.GetColumn(ss[2]) : null;
+                mapName ??= mapTable.Columns.FirstOrDefault(e => e.Master);
+                mapName ??= mapTable.GetColumn("Name");
             }
+            else
+            {
+                // 默认字符串类型
+                mapName = new XField { Name = ss[2], DataType = typeof(String) };
+            }
+
+            // 属性名
+            var name = column.Name.TrimEnd("Id", "ID", mapIdName);
+            if (Table.Columns.Any(e => e.Name.EqualIgnoreCase(name))) name = "My" + name;
+
+            // 备注
+            var dis = column.DisplayName;
+            if (dis.IsNullOrEmpty()) dis = mapTable?.DisplayName;
+
+            WriteLine("/// <summary>{0}</summary>", dis);
+            WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
+            WriteLine("public {0} {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapIdName, column.Name);
+
+            var myName = ss.Length > 3 ? ss[3] : null;
+            if (myName.IsNullOrEmpty())
+            {
+                myName = column.Name.TrimEnd("Id", "ID", mapIdName);
+                if (mapName != null && mapName.Name != "$") myName += mapName.Name;
+            }
+
+            // 扩展属性有可能恰巧跟已有字段同名
+            if (!myName.IsNullOrEmpty() && !Table.Columns.Any(e => e.Name.EqualIgnoreCase(myName)))
+            {
+                WriteLine();
+                WriteLine("/// <summary>{0}</summary>", dis);
+                WriteLine("[Map(nameof({0}), typeof({1}), \"{2}\")]", column.Name, fullName, mapIdName);
+                if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
+                    WriteLine("[Category(\"{0}\")]", att);
+                if (ss.Length > 2 && ss[2] == "$")
+                    WriteLine("public String {0} => {1}?.ToString();", myName, name);
+                else if (ss.Length > 2 && mapName.DataType == typeof(String))
+                    WriteLine("public String {0} => {1}?.{2};", myName, name, ss[2]);
+                else if (mapName.DataType == typeof(String))
+                    WriteLine("public String {0} => {1}?.{2};", myName, name, mapName.Name);
+                else
+                    WriteLine("public {3} {0} => {1} != null ? {1}.{2} : 0;", myName, name, mapName.Name, mapName.DataType.Name);
+            }
+
+            WriteLine();
         }
 
         WriteLine("#endregion");

@@ -12,14 +12,20 @@ namespace XCode.Code;
 public class EntityBuilder : ClassBuilder
 {
     #region 属性
+
+    /// <summary>自定义业务类，仅生成一次</summary>
+    public Boolean CustomBusiness { get; set; }
+
     /// <summary>业务类</summary>
     public Boolean Business { get; set; }
 
     /// <summary>所有表类型名。用于扩展属性</summary>
     public IList<IDataTable> AllTables { get; set; } = new List<IDataTable>();
-    #endregion
+
+    #endregion 属性
 
     #region 静态快速
+
     /// <summary>修正模型文件</summary>
     /// <param name="xmlFile"></param>
     /// <param name="option"></param>
@@ -139,16 +145,25 @@ public class EntityBuilder : ClassBuilder
             builder.Clear();
             builder.Business = true;
             builder.Execute();
-            builder.Save(null, false, option.ChineseFileName);
-
-            count++;
+            builder.Save(null, option.OverwriteBizFile, option.ChineseFileName);
+            if (option.CreateCustomBizFile)
+            {
+                //新增自定义业务文件,仅生成一次
+                builder.Clear();
+                builder.CustomBusiness = true;
+                builder.Execute();
+                builder.Save(null, false, option.ChineseFileName);
+                count++;
+            }
         }
 
         return count;
     }
-    #endregion
+
+    #endregion 静态快速
 
     #region 方法
+
     /// <summary>加载数据表</summary>
     /// <param name="table"></param>
     public override void Load(IDataTable table)
@@ -178,9 +193,11 @@ public class EntityBuilder : ClassBuilder
         else if (!modelClass.IsNullOrEmpty())
             option.ModelNameForCopy = modelClass;
     }
-    #endregion
+
+    #endregion 方法
 
     #region 基础
+
     /// <summary>执行生成</summary>
     protected override void OnExecuting()
     {
@@ -281,8 +298,12 @@ public class EntityBuilder : ClassBuilder
             ext = ".Biz.cs";
             //overwrite = false;
         }
-
-        return base.Save(ext, overwrite, chineseFileName);
+        if (CustomBusiness)
+        {
+            ext = ".CusBiz.cs";
+            //overwrite = false;
+        }
+        return base.Save(ext, overwrite, chineseFileName); ;
     }
 
     /// <summary>生成尾部</summary>
@@ -306,7 +327,11 @@ public class EntityBuilder : ClassBuilder
     /// <summary>生成主体</summary>
     protected override void BuildItems()
     {
-        if (Business)
+        if (CustomBusiness)
+        {
+            BuildCustomBizDescription();
+        }
+        else if (Business)
         {
             BuildAction();
 
@@ -351,9 +376,11 @@ public class EntityBuilder : ClassBuilder
             BuildFieldName();
         }
     }
-    #endregion
+
+    #endregion 基础
 
     #region 数据类
+
     /// <summary>实体类头部</summary>
     protected override void BuildAttribute()
     {
@@ -482,18 +509,23 @@ public class EntityBuilder : ClassBuilder
                             case "Int32":
                                 WriteLine("case \"{0}\": _{0} = value.ToInt(); break;", column.Name);
                                 break;
+
                             case "Int64":
                                 WriteLine("case \"{0}\": _{0} = value.ToLong(); break;", column.Name);
                                 break;
+
                             case "Double":
                                 WriteLine("case \"{0}\": _{0} = value.ToDouble(); break;", column.Name);
                                 break;
+
                             case "Boolean":
                                 WriteLine("case \"{0}\": _{0} = value.ToBoolean(); break;", column.Name);
                                 break;
+
                             case "DateTime":
                                 WriteLine("case \"{0}\": _{0} = value.ToDateTime(); break;", column.Name);
                                 break;
+
                             default:
                                 WriteLine("case \"{0}\": _{0} = Convert.To{1}(value); break;", column.Name, type);
                                 break;
@@ -642,9 +674,22 @@ public class EntityBuilder : ClassBuilder
 
         WriteLine("#endregion");
     }
-    #endregion
+
+    #endregion 数据类
 
     #region 业务类
+
+    /// <summary>自定义业务逻辑文件说明信息</summary>
+    protected virtual void BuildCustomBizDescription()
+    {
+        WriteLine($"//生成时间:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
+        WriteLine("//自定义业务逻辑写在本文件中");
+        WriteLine("//本文件由代码生成器初次生成后不再重新生成");
+        WriteLine("#region 自定义业务逻辑生成");
+        WriteLine();
+        WriteLine("#endregion");
+    }
+
     /// <summary>对象操作</summary>
     protected virtual void BuildAction()
     {
@@ -846,6 +891,7 @@ public class EntityBuilder : ClassBuilder
                 case TypeCode.Boolean:
                     WriteLine("//    entity.{0} = true;", column.Name);
                     break;
+
                 case TypeCode.SByte:
                 case TypeCode.Byte:
                 case TypeCode.Int16:
@@ -856,17 +902,21 @@ public class EntityBuilder : ClassBuilder
                 case TypeCode.UInt64:
                     WriteLine("//    entity.{0} = 0;", column.Name);
                     break;
+
                 case TypeCode.Single:
                 case TypeCode.Double:
                 case TypeCode.Decimal:
                     WriteLine("//    entity.{0} = 0.0;", column.Name);
                     break;
+
                 case TypeCode.DateTime:
                     WriteLine("//    entity.{0} = DateTime.Now;", column.Name);
                     break;
+
                 case TypeCode.String:
                     WriteLine("//    entity.{0} = \"abc\";", column.Name);
                     break;
+
                 default:
                     break;
             }
@@ -1098,7 +1148,6 @@ public class EntityBuilder : ClassBuilder
                 }
                 WriteLine("}");
             }
-
         }
 
         WriteLine("#endregion");
@@ -1199,7 +1248,6 @@ public class EntityBuilder : ClassBuilder
                 WriteLine("return FindAll(exp, page);");
             }
             WriteLine("}");
-
         }
 
         // 字段缓存，用于魔方前台下拉选择
@@ -1273,5 +1321,6 @@ public class EntityBuilder : ClassBuilder
         }
         WriteLine("#endregion");
     }
-    #endregion
+
+    #endregion 业务类
 }

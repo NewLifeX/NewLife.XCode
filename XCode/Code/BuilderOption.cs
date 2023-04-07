@@ -57,12 +57,12 @@ public class BuilderOption
     public Boolean ChineseFileName { get; set; } = true;
 
     /// <summary>
-    /// 是否创建用户自定义文件夹
+    /// 是否创建用户自定义业务文件
     /// </summary>
     public Boolean CreateCustomBizFile { get; set; } = false;
 
     /// <summary>
-    /// 是否在生成.biz.cs文件时复写已存在的文件
+    /// 是否在生成.biz.cs文件时复盖已存在的文件
     /// </summary>
     public Boolean OverwriteBizFile { get; set; } = false;
 

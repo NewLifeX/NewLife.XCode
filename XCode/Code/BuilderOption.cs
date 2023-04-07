@@ -4,6 +4,7 @@
 public class BuilderOption
 {
     #region 属性
+
     /// <summary>类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等</summary>
     public String ClassNameTemplate { get; set; }
 
@@ -55,11 +56,23 @@ public class BuilderOption
     /// <summary>是否使用中文文件名。默认true</summary>
     public Boolean ChineseFileName { get; set; } = true;
 
+    /// <summary>
+    /// 是否创建用户自定义业务文件
+    /// </summary>
+    public Boolean CreateCustomBizFile { get; set; } = false;
+
+    /// <summary>
+    /// 是否在生成.biz.cs文件时复盖已存在的文件
+    /// </summary>
+    public Boolean OverwriteBizFile { get; set; } = false;
+
     /// <summary>扩展数据</summary>
     public IDictionary<String, String> Items { get; set; }
-    #endregion
+
+    #endregion 属性
 
     #region 构造
+
     /// <summary>实例化</summary>
     public BuilderOption()
     {
@@ -72,9 +85,11 @@ public class BuilderOption
         Usings.Add("System.Web.Script.Serialization");
         Usings.Add("System.Xml.Serialization");
     }
-    #endregion
+
+    #endregion 构造
 
     #region 方法
+
     /// <summary>克隆</summary>
     /// <returns></returns>
     public BuilderOption Clone()
@@ -86,5 +101,6 @@ public class BuilderOption
 
         return option;
     }
-    #endregion
+
+    #endregion 方法
 }

@@ -12,6 +12,7 @@ namespace XCode.Code;
 public class ClassBuilder
 {
     #region 属性
+
     /// <summary>写入器</summary>
     public TextWriter Writer { get; set; }
 
@@ -23,9 +24,11 @@ public class ClassBuilder
 
     /// <summary>生成器选项</summary>
     public BuilderOption Option { get; set; } = new BuilderOption();
-    #endregion
+
+    #endregion 属性
 
     #region 静态快速
+
     /// <summary>加载模型文件</summary>
     /// <param name="xmlFile">Xml模型文件</param>
     /// <param name="option">生成可选项</param>
@@ -73,6 +76,10 @@ public class ClassBuilder
 
             if (atts.TryGetValue("ChineseFileName", out str) && !str.IsNullOrEmpty())
                 option.ChineseFileName = str.ToBoolean();
+            if (atts.TryGetValue("CreateCustomBizFile", out str) && !str.IsNullOrEmpty())
+                option.CreateCustomBizFile = str.ToBoolean();
+            if (atts.TryGetValue("OverwriteBizFile", out str) && !str.IsNullOrEmpty())
+                option.OverwriteBizFile = str.ToBoolean();
 
             option.Items = atts;
         }
@@ -178,9 +185,11 @@ public class ClassBuilder
 
         return count;
     }
-    #endregion
+
+    #endregion 静态快速
 
     #region 方法
+
     /// <summary>加载数据表</summary>
     /// <param name="table"></param>
     public virtual void Load(IDataTable table)
@@ -197,9 +206,11 @@ public class ClassBuilder
         str = table.Properties["Output"];
         if (!str.IsNullOrEmpty()) option.Output = str.GetBasePath();
     }
-    #endregion
+
+    #endregion 方法
 
     #region 主方法
+
     /// <summary>执行生成</summary>
     public virtual void Execute()
     {
@@ -435,7 +446,6 @@ public class ClassBuilder
                 {
                     if (!type.Contains("."))
                     {
-
                     }
                     if (!type.Contains(".") && conv.GetMethod("To" + type, new Type[] { typeof(Object) }) != null)
                     {
@@ -444,18 +454,23 @@ public class ClassBuilder
                             case "Int32":
                                 WriteLine("case \"{0}\": {0} = value.ToInt(); break;", column.Name);
                                 break;
+
                             case "Int64":
                                 WriteLine("case \"{0}\": {0} = value.ToLong(); break;", column.Name);
                                 break;
+
                             case "Double":
                                 WriteLine("case \"{0}\": {0} = value.ToDouble(); break;", column.Name);
                                 break;
+
                             case "Boolean":
                                 WriteLine("case \"{0}\": {0} = value.ToBoolean(); break;", column.Name);
                                 break;
+
                             case "DateTime":
                                 WriteLine("case \"{0}\": {0} = value.ToDateTime(); break;", column.Name);
                                 break;
+
                             default:
                                 WriteLine("case \"{0}\": {0} = Convert.To{1}(value); break;", column.Name, type);
                                 break;
@@ -522,9 +537,11 @@ public class ClassBuilder
         WriteLine(" return model;");
         WriteLine("}");
     }
-    #endregion
+
+    #endregion 主方法
 
     #region 写入缩进方法
+
     private String _Indent;
 
     /// <summary>设置缩进</summary>
@@ -581,9 +598,11 @@ public class ClassBuilder
     /// <summary>输出结果</summary>
     /// <returns></returns>
     public override String ToString() => Writer.ToString();
-    #endregion
+
+    #endregion 写入缩进方法
 
     #region 保存
+
     /// <summary>保存文件，返回文件路径</summary>
     /// <param name="ext">扩展名，默认.cs</param>
     /// <param name="overwrite">是否覆盖目标文件</param>
@@ -591,7 +610,10 @@ public class ClassBuilder
     public virtual String Save(String ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
     {
         var p = Option.Output;
-
+        if (ext == ".CusBiz.cs")
+        {
+            p = p.CombinePath(p, "CustomBiz");
+        }
         if (ext.IsNullOrEmpty())
             ext = ".cs";
         else if (!ext.Contains("."))
@@ -610,9 +632,11 @@ public class ClassBuilder
 
         return p;
     }
-    #endregion
+
+    #endregion 保存
 
     #region 辅助
+
     /// <summary>验证字段是否可用于生成</summary>
     /// <param name="column"></param>
     /// <param name="validModel"></param>
@@ -661,5 +685,6 @@ public class ClassBuilder
     /// <param name="format"></param>
     /// <param name="args"></param>
     public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
-    #endregion
+
+    #endregion 辅助
 }

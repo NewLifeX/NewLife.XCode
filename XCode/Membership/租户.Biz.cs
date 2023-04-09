@@ -73,8 +73,8 @@ public partial class Tenant : Entity<Tenant>
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="name">名称</param>
-    /// <param name="managerId"></param>
-    /// <param name="enable"></param>
+    /// <param name="managerId">租户管理员</param>
+    /// <param name="enable">是否启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
@@ -85,7 +85,7 @@ public partial class Tenant : Entity<Tenant>
         var exp = new WhereExpression();
 
         if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-        if (managerId >= 0) exp &= _.ManagerId == managerId;
+        if (managerId > 0) exp &= _.ManagerId == managerId;
         if (enable != null) exp &= _.Enable == enable;
 
         exp &= _.UpdateTime.Between(start, end);

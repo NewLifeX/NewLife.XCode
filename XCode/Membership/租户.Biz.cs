@@ -34,6 +34,11 @@ public partial class Tenant : Entity<Tenant>
     #endregion
 
     #region 扩展属性
+
+    /// <summary>角色组名</summary>
+    [Map(__.RoleIds)]
+    public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
+
     #endregion
 
     #region 扩展查询

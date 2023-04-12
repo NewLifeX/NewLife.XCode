@@ -122,15 +122,20 @@ public partial class TenantUser : Entity<TenantUser>
 
     /// <summary>根据用户查找</summary>
     /// <param name="userId">用户</param>
+    /// <param name="isAll">是否包含停用(默认不包含停用)</param>
     /// <returns>实体列表</returns>
-    public static IList<TenantUser> FindAllByUserId(Int32 userId)
+    public static IList<TenantUser> FindAllByUserId(Int32 userId, Boolean isAll = false)
     {
         if (userId <= 0) return new List<TenantUser>();
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserId == userId);
+        if (Meta.Session.Count < 1000) return isAll ? Meta.Cache.FindAll(e => e.UserId == userId) : Meta.Cache.FindAll(e => e.UserId == userId && e.Enable);
 
-        return FindAll(_.UserId == userId);
+        var exp = new WhereExpression();
+        exp &= _.UserId == userId;
+        if (!isAll) exp &= _.Enable == isAll;
+
+        return FindAll(exp);
     }
     #endregion
 

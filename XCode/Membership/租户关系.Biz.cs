@@ -133,7 +133,7 @@ public partial class TenantUser : Entity<TenantUser>
 
         var exp = new WhereExpression();
         exp &= _.UserId == userId;
-        if (!isAll) exp &= _.Enable == isAll;
+        if (!isAll) exp &= _.Enable == true;
 
         return FindAll(exp);
     }

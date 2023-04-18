@@ -167,7 +167,8 @@ public partial class Area : Entity<Area>
         return list;
     });
 
-    private Boolean IsVirtual => Name.EqualIgnoreCase("市辖区", "直辖县", "直辖镇");
+    /// <summary>是否虚拟地区</summary>
+    public Boolean IsVirtual => Name.EqualIgnoreCase("市辖区", "直辖县", "直辖镇");
     #endregion
 
     #region 扩展查询

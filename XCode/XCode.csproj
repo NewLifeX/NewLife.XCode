@@ -44,7 +44,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.2.2023.401" />
+    <PackageReference Include="NewLife.Core" Version="10.2.2023.417-beta0135" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

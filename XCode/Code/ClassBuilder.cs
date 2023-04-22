@@ -149,10 +149,8 @@ public class ClassBuilder
             builder.Load(item);
 
             // 自定义模型
-            //var modelClass = item.Properties["ModelClass"];
-            //var modelInterface = item.Properties["ModelInterface"];
-            var modelClass = option.ModelClass;
-            var modelInterface = option.ModelInterface;
+            var modelClass = item.Properties["ModelClass"];
+            var modelInterface = item.Properties["ModelInterface"];
             if (!modelClass.IsNullOrEmpty()) builder.Option.ClassNameTemplate = modelClass;
             if (!modelInterface.IsNullOrEmpty())
             {
@@ -202,7 +200,8 @@ public class ClassBuilder
             builder.Load(item);
 
             // 自定义模型
-            var modelInterface = item.Properties["ModelInterface"];
+            //var modelInterface = item.Properties["ModelInterface"];
+            var modelInterface = option.ModelInterface;
             if (!modelInterface.IsNullOrEmpty()) builder.Option.ClassNameTemplate = modelInterface;
 
             builder.Execute();

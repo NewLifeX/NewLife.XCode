@@ -168,12 +168,12 @@ class Program
         // 生成魔方区域和控制器
         {
             var opt = option.Clone() as CubeBuilderOption;
-            if (opt.Items != null && opt.Items.TryGetValue("CubeOutput", out var output) && !output.IsNullOrEmpty())
+            if (opt.Items != null && !opt.CubeOutput.IsNullOrEmpty())
             {
                 opt.BaseClass = null;
                 //opt.Namespace = null;
 
-                opt.Output = output;
+                opt.Output = opt.CubeOutput;
                 CubeBuilder.BuildArea(opt);
 
                 CubeBuilder.BuildControllers(tables, opt);

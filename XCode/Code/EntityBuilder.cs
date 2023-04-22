@@ -82,8 +82,8 @@ public class EntityBuilder : ClassBuilder
         }
 
         // 更新xsd
-        atts["xmlns"] = "https://newlifex.com/Model2022.xsd";
-        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2022.xsd";
+        atts["xmlns"] = "https://newlifex.com/Model2023.xsd";
+        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2023.xsd";
 
         // 版本和教程
         var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
@@ -191,10 +191,8 @@ public class EntityBuilder : ClassBuilder
         if (!str.IsNullOrEmpty()) option.BaseClass = str;
 
         // Copy模版
-        //var modelClass = table.Properties["ModelClass"];
-        //var modelInterface = table.Properties["ModelInterface"];
-        var modelClass = option.ModelClass;
-        var modelInterface = option.ModelInterface;
+        var modelClass = table.Properties["ModelClass"];
+        var modelInterface = table.Properties["ModelInterface"];
         if (!modelInterface.IsNullOrEmpty())
         {
             option.BaseClass = modelInterface;

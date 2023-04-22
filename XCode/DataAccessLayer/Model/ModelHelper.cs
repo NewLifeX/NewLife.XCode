@@ -461,11 +461,11 @@ public static class ModelHelper
             else
             {
                 // 这里必须处理，否则加载特殊Xml文件时将会导致死循环
-                reader.Read();
+                reader.Skip();
             }
         }
 
-        reader.ReadEndElement();
+        if (reader.NodeType == XmlNodeType.EndElement) reader.ReadEndElement();
     }
 
     /// <summary>读取</summary>

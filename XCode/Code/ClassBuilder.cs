@@ -561,7 +561,7 @@ public class ClassBuilder
         WriteLine($"var model = new {modelClass}();");
         WriteLine("model.Copy(this);");
         WriteLine("");
-        WriteLine(" return model;");
+        WriteLine("return model;");
         WriteLine("}");
     }
 

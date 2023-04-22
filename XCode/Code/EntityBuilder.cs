@@ -288,7 +288,7 @@ public class EntityBuilder : ClassBuilder
             }
 
             // 数据类不要实体基类
-            bs = bs.Where(e => !e.StartsWithIgnoreCase("Entity<", "EntityBase<")).ToList();
+            bs = bs.Where(e => e != "Entity" && !e.StartsWithIgnoreCase("Entity<", "EntityBase<")).ToList();
             if (bs.Count > 0) name = bs.Distinct().Join(", ");
         }
 
@@ -1336,9 +1336,10 @@ public class EntityBuilder : ClassBuilder
     {
         WriteLine("#region 业务操作");
         var toModel = EntityOption.ModelNameForToModel;
-        if (!toModel.IsNullOrEmpty() && !Option.ModelNameForCopy.IsNullOrEmpty())
+        var model = Option.ModelNameForCopy;
+        if (!toModel.IsNullOrEmpty() && !model.IsNullOrEmpty())
         {
-            BuildToModel(toModel.Replace("{name}", ClassName), Option.ModelNameForCopy.Replace("{name}", ClassName));
+            BuildToModel(toModel.Replace("{name}", ClassName), model.Replace("{name}", ClassName));
             WriteLine("");
         }
         WriteLine("#endregion");

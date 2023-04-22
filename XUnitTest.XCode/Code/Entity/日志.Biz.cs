@@ -205,7 +205,7 @@ public partial class Log : Entity<Log>
         var model = new User();
         model.Copy(this);
 
-         return model;
+        return model;
     }
 
     #endregion

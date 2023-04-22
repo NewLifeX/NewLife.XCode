@@ -24,73 +24,79 @@ public class CubeBuilder : ClassBuilder
     public Int32 Sort { get; set; }
 
     /// <summary>区域模版</summary>
-    public String AreaTemplate { get; set; } = @"using System.ComponentModel;
-using NewLife;
-using NewLife.Cube;
+    public String AreaTemplate { get; set; } = """
+        using System.ComponentModel;
+        using NewLife;
+        using NewLife.Cube;
 
-namespace {RootNamespace}.Areas.{Name}
-{
-    [DisplayName(""{DisplayName}"")]
-    public class {Name}Area : AreaBase
-    {
-        public {Name}Area() : base(nameof({Name}Area).TrimEnd(""Area"")) { }
-    }
-}";
+        namespace {RootNamespace}.Areas.{Name}
+        {
+            [DisplayName("{DisplayName}")]
+            public class {Name}Area : AreaBase
+            {
+                public {Name}Area() : base(nameof({Name}Area).TrimEnd("Area")) { }
+            }
+        }
+        """;
 
     /// <summary>控制器模版</summary>
-    public String ControllerTemplate { get; set; } = @"using {EntityNamespace};
-using NewLife;
-using NewLife.Cube;
-using NewLife.Cube.Extensions;
-using NewLife.Cube.ViewModels;
-using NewLife.Web;
-using XCode.Membership;
+    public String ControllerTemplate { get; set; } = """
+        using {EntityNamespace};
+        using NewLife;
+        using NewLife.Cube;
+        using NewLife.Cube.Extensions;
+        using NewLife.Cube.ViewModels;
+        using NewLife.Web;
+        using XCode.Membership;
+        using static {EntityNamespace}.{EntityName};
 
-namespace {RootNamespace}.Areas.{Name}.Controllers
-{
-    /// <summary>{DisplayName}</summary>
-    [Menu({Sort}, true, Icon = ""fa-table"")]
-    [{Name}Area]
-    public class {ClassName} : {BaseClass}<{EntityName}>
-    {
-        static {ClassName}()
+        namespace {RootNamespace}.Areas.{Name}.Controllers
         {
-            //LogOnChange = true;
+            /// <summary>{DisplayName}</summary>
+            [Menu({Sort}, true, Icon = "fa-table")]
+            [{Name}Area]
+            public class {ClassName} : {BaseClass}<{EntityName}>
+            {
+                static {ClassName}()
+                {
+                    //LogOnChange = true;
 
-            //ListFields.RemoveField(""Id"", ""Creator"");
-            ListFields.RemoveCreateField().RemoveRemarkField();
+                    //ListFields.RemoveField("Id", "Creator");
+                    ListFields.RemoveCreateField().RemoveRemarkField();
 
-            //{
-            //    var df = ListFields.GetField(""Code"") as ListField;
-            //    df.Url = ""?code={Code}"";
-            //}
-            //{
-            //    var df = ListFields.AddListField(""devices"", null, ""Onlines"");
-            //    df.DisplayName = ""查看设备"";
-            //    df.Url = ""Device?groupId={Id}"";
-            //    df.DataVisible = e => (e as {EntityName}).Devices > 0;
-            //}
-            //{
-            //    var df = ListFields.GetField(""Kind"") as ListField;
-            //    df.GetValue = e => ((Int32)(e as {EntityName}).Kind).ToString(""X4"");
-            //}
-            //ListFields.TraceUrl(""TraceId"");
+                    //{
+                    //    var df = ListFields.GetField("Code") as ListField;
+                    //    df.Url = "?code={Code}";
+                    //}
+                    //{
+                    //    var df = ListFields.AddListField("devices", null, "Onlines");
+                    //    df.DisplayName = "查看设备";
+                    //    df.Url = "Device?groupId={Id}";
+                    //    df.DataVisible = e => (e as {EntityName}).Devices > 0;
+                    //}
+                    //{
+                    //    var df = ListFields.GetField("Kind") as ListField;
+                    //    df.GetValue = e => ((Int32)(e as {EntityName}).Kind).ToString("X4");
+                    //}
+                    //ListFields.TraceUrl("TraceId");
+                }
+
+                /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
+                /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
+                /// <returns></returns>
+                protected override IEnumerable<{EntityName}> Search(Pager p)
+                {
+                    //var deviceId = p["deviceId"].ToInt(-1);
+                    //var enable = p["enable"]?.Boolean();
+        
+                    var start = p["dtStart"].ToDateTime();
+                    var end = p["dtEnd"].ToDateTime();
+
+                    return {EntityName}.Search(start, end, p["Q"], p);
+                }
+            }
         }
-
-        /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
-        /// <param name=""p"">分页器。包含分页排序参数，以及Http请求参数</param>
-        /// <returns></returns>
-        protected override IEnumerable<{EntityName}> Search(Pager p)
-        {
-            //var deviceId = p[""deviceId""].ToInt(-1);
-
-            var start = p[""dtStart""].ToDateTime();
-            var end = p[""dtEnd""].ToDateTime();
-
-            return {EntityName}.Search(start, end, p[""Q""], p);
-        }
-    }
-}";
+        """;
     #endregion
 
     #region 静态

@@ -106,7 +106,7 @@ public class ClassBuilder
                 }
             }
 
-            if (option.Output.IsNullOrEmpty()) option.Output = dir;
+            if (option.Output.IsNullOrEmpty() && !dir.EqualIgnoreCase(".".GetBasePath())) option.Output = dir;
             if (option.Namespace.IsNullOrEmpty()) option.Namespace = Path.GetFileNameWithoutExtension(xmlFile);
         }
 

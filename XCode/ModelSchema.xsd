@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema id="Model2022"
-    targetNamespace="https://newlifex.com/Model2022.xsd"
+<xs:schema id="Model2023"
+    targetNamespace="https://newlifex.com/Model2023.xsd"
     elementFormDefault="qualified"
-    xmlns="https://newlifex.com/Model2022.xsd"
-    xmlns:mstns="https://newlifex.com/Model2022.xsd"
+    xmlns="https://newlifex.com/Model2023.xsd"
+    xmlns:mstns="https://newlifex.com/Model2023.xsd"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
 >
     <xs:annotation>
@@ -12,111 +12,41 @@
         </xs:documentation>
     </xs:annotation>
 
-    <xs:element name="Tables" type="TablesType"></xs:element>
+    <xs:element name="EntityModel" type="EntityModelType"></xs:element>
 
-    <xs:complexType name="TablesType">
+    <xs:complexType name="EntityModelType">
+        <xs:annotation>
+            <xs:documentation xml:lang="zh-cn">
+                实体模型，定义表结构以及代码申城配置
+            </xs:documentation>
+        </xs:annotation>
         <xs:sequence>
-            <xs:element name="Table" type="TableType" maxOccurs="unbounded" ></xs:element>
+            <xs:element name="Option" type="OptionType">
+                <xs:annotation>
+                    <xs:documentation xml:lang="zh-cn">
+                        代码生成配置项
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="Table" type="TableType">
+                <xs:annotation>
+                    <xs:documentation xml:lang="zh-cn">
+                        数据列表
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
         </xs:sequence>
-        <xs:attribute name="NameSpace" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    实体类的命名空间
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="ConnName" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    实体类的数据库连接名
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="Output" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    输出目录，绝对或相对地址，相对模型文件所在目录
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="BaseClass" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    实体类的基类
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="ModelClass" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    简易模型类名称，如{name}Model。指定后将生成简易模型类，可用于数据传输
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="ModelInterface" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    简易模型接口名称，如{name}Model。指定后将生成简易模型接口，可用于数据传输
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="NameFormat" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    数据库名称格式，可选 Default/Upper/Lower/Underline
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="ChineseFileName" type="BooleanType">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    是否使用中文作为实体类文件名
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="OverwriteBizFile" type="BooleanType">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    是否在生成.biz.cs文件时复盖已存在的文件
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="CreateCustomBizFile" type="BooleanType">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    是否创建用户自定义业务文件
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="DisplayName" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    模块名称
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="CubeOutput" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    魔方输出目录
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="Version" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    XCode版本
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="Document" type="xs:string">
-            <xs:annotation>
-                <xs:documentation xml:lang="zh-cn">
-                    文档教程
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
     </xs:complexType>
+
+    <!--Option-start-->
+    <xs:complexType name="OptionType">
+        <xs:annotation>
+            <xs:documentation xml:lang="zh-cn">
+                配置项
+            </xs:documentation>
+        </xs:annotation>
+    </xs:complexType>
+    <!--Option-end-->
 
     <!--Table-start-->
     <xs:complexType name="TableType">

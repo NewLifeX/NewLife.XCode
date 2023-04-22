@@ -236,7 +236,7 @@ public class Program
     /// <summary>测试序列化</summary>
     private static void Test12()
     {
-        var option = new BuilderOption();
+        var option = new EntityBuilderOption();
         var tables = ClassBuilder.LoadModels("../../NewLife.Cube/CubeDemoNC/Areas/School/Models/Model.xml", option, out var atts);
         EntityBuilder.BuildTables(tables, option);
     }

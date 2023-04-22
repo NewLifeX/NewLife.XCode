@@ -103,12 +103,12 @@ public class CubeBuilder : ClassBuilder
     /// <summary>生成魔方区域</summary>
     /// <param name="option">可选项</param>
     /// <returns></returns>
-    public static Int32 BuildArea(BuilderOption option)
+    public static Int32 BuildArea(CubeBuilderOption option)
     {
         if (option == null)
-            option = new BuilderOption();
+            option = new CubeBuilderOption();
         else
-            option = option.Clone();
+            option = option.Clone() as CubeBuilderOption;
 
         // 自动识别并修正区域名（主要是大小写）
         var areaName = FindAreaName(option.Output);
@@ -155,12 +155,12 @@ public class CubeBuilder : ClassBuilder
     /// <param name="tables">表集合</param>
     /// <param name="option">可选项</param>
     /// <returns></returns>
-    public static Int32 BuildControllers(IList<IDataTable> tables, BuilderOption option = null)
+    public static Int32 BuildControllers(IList<IDataTable> tables, CubeBuilderOption option = null)
     {
         if (option == null)
-            option = new BuilderOption();
+            option = new CubeBuilderOption();
         else
-            option = option.Clone();
+            option = option.Clone() as CubeBuilderOption;
 
         // 根命名空间
         var root = FindProjectRootNamespace(option.Output);

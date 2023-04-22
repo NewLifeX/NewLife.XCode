@@ -73,7 +73,7 @@ class Program
         //ModelResolver.Current = new ModelResolver { TrimUnderline = false, Camel = false };
 
         // 加载模型文件，得到数据表
-        var option = new BuilderOption();
+        var option = new CubeBuilderOption();
         var tables = ClassBuilder.LoadModels(modelFile, option, out var atts);
         EntityBuilder.FixModelFile(modelFile, option, atts, tables);
 
@@ -86,12 +86,14 @@ class Program
         //option.ChineseFileName = true;
 
         // 简易模型类名称，如{name}Model。指定后将生成简易模型类和接口，可用于数据传输
-        var modelClass = atts["ModelClass"];
-        var modelInterface = atts["ModelInterface"];
+        //var modelClass = atts["ModelClass"];
+        //var modelInterface = atts["ModelInterface"];
+        var modelClass = option.ModelClass;
+        var modelInterface = option.ModelInterface;
 
         // 生成实体类
         {
-            var opt = option.Clone();
+            var opt = option.Clone() as EntityBuilderOption;
             //opt.BaseClass = null;
             opt.ClassNameTemplate = null;
             opt.ModelNameForCopy = null;
@@ -111,14 +113,14 @@ class Program
 
         // 生成简易模型类
         {
-            var opt = option.Clone();
+            var opt = option.Clone() as EntityBuilderOption;
             opt.Items.TryGetValue("ModelsOutput", out var output);
             output ??= @".\Models\";
             opt.Output = opt.Output.CombinePath(output);
             opt.BaseClass = null;
             opt.ClassNameTemplate = modelClass;
             opt.ModelNameForCopy = !modelInterface.IsNullOrEmpty() ? modelInterface : modelClass;
-            opt.HasIndex = true;
+            opt.HasIModel = true;
             if (!modelClass.IsNullOrEmpty())
             {
                 ClassBuilder.BuildModels(tables, opt);
@@ -135,14 +137,14 @@ class Program
 
         // 生成简易接口
         {
-            var opt = option.Clone();
+            var opt = option.Clone() as EntityBuilderOption;
             opt.Items.TryGetValue("InterfacesOutput", out var output);
             output ??= @".\Interfaces\";
             opt.Output = opt.Output.CombinePath(output);
             opt.BaseClass = null;
             opt.ClassNameTemplate = modelInterface;
             opt.ModelNameForCopy = null;
-            opt.HasIndex = false;
+            opt.HasIModel = false;
             if (!modelInterface.IsNullOrEmpty())
             {
                 ClassBuilder.BuildInterfaces(tables, opt);
@@ -165,7 +167,7 @@ class Program
 
         // 生成魔方区域和控制器
         {
-            var opt = option.Clone();
+            var opt = option.Clone() as CubeBuilderOption;
             if (opt.Items != null && opt.Items.TryGetValue("CubeOutput", out var output) && !output.IsNullOrEmpty())
             {
                 opt.BaseClass = null;

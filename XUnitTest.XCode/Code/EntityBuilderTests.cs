@@ -34,7 +34,7 @@ public class EntityBuilderTests
     [Fact]
     public void Normal()
     {
-        var option = new BuilderOption
+        var option = new EntityBuilderOption
         {
             ConnName = "MyConn",
             Namespace = "Company.MyName",
@@ -72,7 +72,7 @@ public class EntityBuilderTests
     [Fact]
     public void ExtendOnData()
     {
-        var option = new BuilderOption
+        var option = new EntityBuilderOption
         {
             ConnName = "MyConn",
             Namespace = "Company.MyName",
@@ -111,7 +111,7 @@ public class EntityBuilderTests
     [Fact]
     public void Exclude()
     {
-        var option = new BuilderOption
+        var option = new EntityBuilderOption
         {
             ConnName = "MyConn",
             Namespace = "Company.MyName",
@@ -188,7 +188,7 @@ public class EntityBuilderTests
 
         // 加载模型文件，得到数据表
         var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
-        var option = new BuilderOption();
+        var option = new EntityBuilderOption();
         var tables = ClassBuilder.LoadModels(file, option, out var atts);
         EntityBuilder.FixModelFile(file, option, atts, tables);
 
@@ -262,7 +262,7 @@ public class EntityBuilderTests
 
         // 加载模型文件，得到数据表
         var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
-        var option = new BuilderOption();
+        var option = new EntityBuilderOption();
         var tables = ClassBuilder.LoadModels(file, option, out var atts);
         EntityBuilder.FixModelFile(file, option, atts, tables);
 
@@ -315,11 +315,12 @@ public class EntityBuilderTests
     {
         // 加载模型文件，得到数据表
         var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
-        var option = new BuilderOption();
+        var option = new EntityBuilderOption();
         var tables = ClassBuilder.LoadModels(file, option, out var atts);
         EntityBuilder.FixModelFile(file, option, atts, tables);
 
-        atts["NameFormat"] = "underline";
+        //atts["NameFormat"] = "underline";
+        option.NameFormat = NameFormats.Underline;
         file = @"..\..\XUnitTest.XCode\Code\Member2.xml";
         EntityBuilder.FixModelFile(file, option, atts, tables);
 

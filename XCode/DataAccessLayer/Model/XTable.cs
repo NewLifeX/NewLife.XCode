@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Schema;
@@ -236,15 +233,15 @@ namespace XCode.DataAccessLayer
         #region IXmlSerializable 成员
         /// <summary>获取架构</summary>
         /// <returns></returns>
-        XmlSchema IXmlSerializable.GetSchema() { return null; }
+        XmlSchema IXmlSerializable.GetSchema() => null;
 
         /// <summary>读取</summary>
         /// <param name="reader"></param>
-        void IXmlSerializable.ReadXml(XmlReader reader) { ModelHelper.ReadXml(this, reader); }
+        void IXmlSerializable.ReadXml(XmlReader reader) => ModelHelper.ReadXml(this, reader);
 
         /// <summary>写入</summary>
         /// <param name="writer"></param>
-        void IXmlSerializable.WriteXml(XmlWriter writer) { ModelHelper.WriteXml(this, writer); }
+        void IXmlSerializable.WriteXml(XmlWriter writer) => ModelHelper.WriteXml(this, writer);
         #endregion
     }
 }

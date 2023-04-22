@@ -46,6 +46,7 @@ public class ClassBuilder
 
         if (xmlFile.IsNullOrEmpty()) throw new Exception("找不到任何模型文件！");
 
+        var dir = Path.GetDirectoryName(xmlFile);
         xmlFile = xmlFile.GetBasePath();
         if (!File.Exists(xmlFile)) throw new FileNotFoundException("指定模型文件不存在！", xmlFile);
 
@@ -53,35 +54,60 @@ public class ClassBuilder
         var xmlContent = File.ReadAllText(xmlFile);
         atts = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase)
         {
-            ["xmlns"] = "https://newlifex.com/Model2022.xsd",
+            ["xmlns"] = "https://newlifex.com/Model2023.xsd",
             ["xmlns:xs"] = "http://www.w3.org/2001/XMLSchema-instance",
-            ["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2022.xsd"
+            ["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2023.xsd"
         };
 
         if (Debug) XTrace.WriteLine("导入模型：{0}", xmlFile);
 
         // 导入模型
-        var tables = ModelHelper.FromXml(xmlContent, DAL.CreateTable, atts);
+        var tables = ModelHelper.FromXml(xmlContent, DAL.CreateTable, option, atts);
 
         if (option != null)
         {
-            option.Output = atts["Output"] ?? Path.GetDirectoryName(xmlFile);
-            option.Namespace = atts["NameSpace"] ?? Path.GetFileNameWithoutExtension(xmlFile);
-            option.ConnName = atts["ConnName"];
-            option.DisplayName = atts["DisplayName"];
-            option.BaseClass = atts["BaseClass"];
+            //option.Output = atts["Output"] ?? Path.GetDirectoryName(xmlFile);
+            //option.Namespace = atts["NameSpace"] ?? Path.GetFileNameWithoutExtension(xmlFile);
+            //option.ConnName = atts["ConnName"];
+            //option.DisplayName = atts["DisplayName"];
+            //option.BaseClass = atts["BaseClass"];
 
-            if (atts.TryGetValue("ExtendOnData", out var str) && !str.IsNullOrEmpty())
-                option.ExtendOnData = str.ToBoolean();
+            //if (atts.TryGetValue("ExtendOnData", out var str) && !str.IsNullOrEmpty())
+            //    option.ExtendOnData = str.ToBoolean();
 
-            if (atts.TryGetValue("ChineseFileName", out str) && !str.IsNullOrEmpty())
-                option.ChineseFileName = str.ToBoolean();
-            if (atts.TryGetValue("CreateCustomBizFile", out str) && !str.IsNullOrEmpty())
-                option.CreateCustomBizFile = str.ToBoolean();
-            if (atts.TryGetValue("OverwriteBizFile", out str) && !str.IsNullOrEmpty())
-                option.OverwriteBizFile = str.ToBoolean();
+            //if (atts.TryGetValue("ChineseFileName", out str) && !str.IsNullOrEmpty())
+            //    option.ChineseFileName = str.ToBoolean();
+            //if (atts.TryGetValue("CreateCustomBizFile", out str) && !str.IsNullOrEmpty())
+            //    option.CreateCustomBizFile = str.ToBoolean();
+            //if (atts.TryGetValue("OverwriteBizFile", out str) && !str.IsNullOrEmpty())
+            //    option.OverwriteBizFile = str.ToBoolean();
 
             option.Items = atts;
+
+            // 反射去掉option中已有设置，改用头部配置对象
+            foreach (var pi in option.GetType().GetProperties())
+            {
+                if (atts.TryGetValue(pi.Name, out var val))
+                {
+                    if (pi.PropertyType.IsEnum)
+                        option.SetValue(pi, Enum.Parse(pi.PropertyType, val, true));
+                    else
+                        option.SetValue(pi, val);
+                    atts.Remove(pi.Name);
+                }
+            }
+
+            // 去掉空属性
+            foreach (var item in atts.ToKeyArray())
+            {
+                if (atts.TryGetValue(item, out var val) && val.IsNullOrEmpty())
+                {
+                    atts.Remove(item);
+                }
+            }
+
+            if (option.Output.IsNullOrEmpty()) option.Output = dir;
+            if (option.Namespace.IsNullOrEmpty()) option.Namespace = Path.GetFileNameWithoutExtension(xmlFile);
         }
 
         // 保存文件名
@@ -123,8 +149,10 @@ public class ClassBuilder
             builder.Load(item);
 
             // 自定义模型
-            var modelClass = item.Properties["ModelClass"];
-            var modelInterface = item.Properties["ModelInterface"];
+            //var modelClass = item.Properties["ModelClass"];
+            //var modelInterface = item.Properties["ModelInterface"];
+            var modelClass = option.ModelClass;
+            var modelInterface = option.ModelInterface;
             if (!modelClass.IsNullOrEmpty()) builder.Option.ClassNameTemplate = modelClass;
             if (!modelInterface.IsNullOrEmpty())
             {
@@ -248,7 +276,7 @@ public class ClassBuilder
     {
         // 引用命名空间
         var us = Option.Usings;
-        if (Option.HasIndex && !us.Contains("NewLife.Data")) us.Add("NewLife.Data");
+        if (Option.HasIModel && !us.Contains("NewLife.Data")) us.Add("NewLife.Data");
 
         us = us.Distinct().OrderBy(e => e.StartsWith("System") ? 0 : 1).ThenBy(e => e).ToArray();
         foreach (var item in us)
@@ -294,7 +322,7 @@ public class ClassBuilder
     protected virtual String GetBaseClass()
     {
         var baseClass = Option.BaseClass?.Replace("{name}", Table.Name);
-        if (Option.HasIndex)
+        if (Option.HasIModel)
         {
             if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
             baseClass += "IModel";
@@ -352,7 +380,7 @@ public class ClassBuilder
         }
         WriteLine("#endregion");
 
-        if (Option.HasIndex)
+        if (Option.HasIModel)
         {
             WriteLine();
             BuildIndexItems();

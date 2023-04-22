@@ -22,6 +22,8 @@ public class EntityBuilder : ClassBuilder
     /// <summary>所有表类型名。用于扩展属性</summary>
     public IList<IDataTable> AllTables { get; set; } = new List<IDataTable>();
 
+    /// <summary>实体类生成选型</summary>
+    public EntityBuilderOption EntityOption => Option as EntityBuilderOption;
     #endregion 属性
 
     #region 静态快速
@@ -37,14 +39,14 @@ public class EntityBuilder : ClassBuilder
         if (xmlFile.IsNullOrEmpty()) xmlFile = atts["ModelFile"];
 
         // 反哺。确保输出空特性
-        atts["Output"] = option.Output + "";
-        atts["NameSpace"] = option.Namespace + "";
-        atts["ConnName"] = option.ConnName + "";
-        atts["DisplayName"] = option.DisplayName + "";
-        atts["BaseClass"] = option.BaseClass + "";
+        //atts["Output"] = option.Output + "";
+        //atts["NameSpace"] = option.Namespace + "";
+        //atts["ConnName"] = option.ConnName + "";
+        //atts["DisplayName"] = option.DisplayName + "";
+        //atts["BaseClass"] = option.BaseClass + "";
 
         // 生成决定是否生成魔方代码
-        atts["CubeOutput"] = option.Items?["CubeOutput"];
+        //atts["CubeOutput"] = option.Items?["CubeOutput"];
         //atts["CubeProject"] = option.Items?["CubeProject"];
 
         // 清理不再使用的历史配置项
@@ -60,20 +62,21 @@ public class EntityBuilder : ClassBuilder
         }
 
         // 格式化处理字段名
-        if (Enum.TryParse<NameFormats>(atts["NameFormat"], true, out var format) && format > NameFormats.Default)
+        //if (Enum.TryParse<NameFormats>(atts["NameFormat"], true, out var format) && format > NameFormats.Default)
+        if (option is EntityBuilderOption opt && opt.NameFormat > NameFormats.Default)
         {
-            XTrace.WriteLine("处理表名字段名为：{0}", format);
+            XTrace.WriteLine("处理表名字段名为：{0}", opt.NameFormat);
 
             var resolve = ModelResolver.Current;
             foreach (var dt in tables)
             {
                 if (dt.TableName.IsNullOrEmpty() || dt.TableName == dt.Name)
-                    dt.TableName = resolve.GetDbName(dt.Name, format);
+                    dt.TableName = resolve.GetDbName(dt.Name, opt.NameFormat);
 
                 foreach (var col in dt.Columns)
                 {
                     if (col.ColumnName.IsNullOrEmpty() || col.ColumnName == col.Name)
-                        col.ColumnName = resolve.GetDbName(col.Name, format);
+                        col.ColumnName = resolve.GetDbName(col.Name, opt.NameFormat);
                 }
             }
         }
@@ -84,12 +87,17 @@ public class EntityBuilder : ClassBuilder
 
         // 版本和教程
         var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
-        atts["Version"] = asm.FileVersion + "";
-        atts["Document"] = "https://newlifex.com/xcode/model";
+        //atts["Version"] = asm.FileVersion + "";
+        //atts["Document"] = "https://newlifex.com/xcode/model";
+        if (option is EntityBuilderOption opt2)
+        {
+            opt2.Version = asm.FileVersion + "";
+            opt2.Document = "https://newlifex.com/xcode/model";
+        }
 
         // 保存模型文件
         var xmlContent = File.ReadAllText(xmlFile);
-        var xml2 = ModelHelper.ToXml(tables, atts);
+        var xml2 = ModelHelper.ToXml(tables, option, atts);
         if (xmlContent != xml2)
         {
             if (Debug) XTrace.WriteLine("修正模型：{0}", xmlFile);
@@ -101,14 +109,14 @@ public class EntityBuilder : ClassBuilder
     /// <summary>为Xml模型文件生成实体类</summary>
     /// <param name="tables">模型文件</param>
     /// <param name="option">生成可选项</param>
-    public static Int32 BuildTables(IList<IDataTable> tables, BuilderOption option)
+    public static Int32 BuildTables(IList<IDataTable> tables, EntityBuilderOption option)
     {
         if (tables == null || tables.Count == 0) return 0;
 
         if (option == null)
-            option = new BuilderOption();
+            option = new EntityBuilderOption();
         else
-            option = option.Clone();
+            option = option.Clone() as EntityBuilderOption;
         option.Partial = true;
 
         if (Debug)
@@ -170,7 +178,7 @@ public class EntityBuilder : ClassBuilder
     {
         Table = table;
 
-        var option = Option;
+        var option = EntityOption;
 
         base.Load(table);
 
@@ -183,8 +191,10 @@ public class EntityBuilder : ClassBuilder
         if (!str.IsNullOrEmpty()) option.BaseClass = str;
 
         // Copy模版
-        var modelClass = table.Properties["ModelClass"];
-        var modelInterface = table.Properties["ModelInterface"];
+        //var modelClass = table.Properties["ModelClass"];
+        //var modelInterface = table.Properties["ModelInterface"];
+        var modelClass = option.ModelClass;
+        var modelInterface = option.ModelInterface;
         if (!modelInterface.IsNullOrEmpty())
         {
             option.BaseClass = modelInterface;
@@ -250,7 +260,7 @@ public class EntityBuilder : ClassBuilder
     protected override String GetBaseClass()
     {
         var baseClass = Option.BaseClass;
-        if (Option.HasIndex)
+        if (Option.HasIModel)
         {
             if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
             baseClass += "IModel";
@@ -335,7 +345,7 @@ public class EntityBuilder : ClassBuilder
         {
             BuildAction();
 
-            if (!Option.ExtendOnData)
+            if (!EntityOption.ExtendOnData)
             {
                 WriteLine();
                 BuildExtendProperty();
@@ -360,7 +370,7 @@ public class EntityBuilder : ClassBuilder
             WriteLine();
             BuildMap();
 
-            if (Option.ExtendOnData)
+            if (EntityOption.ExtendOnData)
             {
                 WriteLine();
                 BuildExtendProperty();
@@ -399,7 +409,7 @@ public class EntityBuilder : ClassBuilder
         }
 
         var cn = dt.Properties["ConnName"];
-        if (cn.IsNullOrEmpty()) cn = Option.ConnName;
+        if (cn.IsNullOrEmpty()) cn = EntityOption.ConnName;
         WriteLine("[BindTable(\"{0}\", Description = \"{1}\", ConnName = \"{2}\", DbType = DatabaseType.{3})]", dt.TableName, dt.Description, cn, dt.DbType);
     }
 
@@ -1327,7 +1337,7 @@ public class EntityBuilder : ClassBuilder
     protected virtual void BuildBusiness()
     {
         WriteLine("#region 业务操作");
-        var toModel = Option.ModelNameForToModel;
+        var toModel = EntityOption.ModelNameForToModel;
         if (!toModel.IsNullOrEmpty() && !Option.ModelNameForCopy.IsNullOrEmpty())
         {
             BuildToModel(toModel.Replace("{name}", ClassName), Option.ModelNameForCopy.Replace("{name}", ClassName));

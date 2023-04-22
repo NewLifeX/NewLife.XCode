@@ -58,7 +58,7 @@ public class HtmlBuilder : ClassBuilder
         else
             option = option.Clone();
 
-        var file = option.ConnName;
+        var file = (option as EntityBuilderOption)?.ConnName;
         if (file.IsNullOrEmpty()) file = "Model";
         file += ".htm";
         file = file.GetBasePath();

@@ -131,7 +131,7 @@ public class ClassBuilderTests
         var option = new BuilderOption
         {
             Pure = true,
-            HasIndex = true,
+            HasIModel = true,
             BaseClass = "Object, Ixx{name}",
             ClassNameTemplate = "Extend{name}",
             ModelNameForCopy = "Extend{name}",
@@ -158,7 +158,7 @@ public class ClassBuilderTests
         var option = new BuilderOption
         {
             Pure = true,
-            HasIndex = true,
+            HasIModel = true,
             BaseClass = null,
             ClassNameTemplate = "Extend{name}2",
             DisplayNameTemplate = "{displayName}模型",

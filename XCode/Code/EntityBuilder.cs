@@ -321,7 +321,7 @@ public class EntityBuilder : ClassBuilder
         {
             BuildAction();
 
-            if (!EntityOption.ExtendOnData)
+            //if (!EntityOption.ExtendOnData)
             {
                 WriteLine();
                 BuildExtendProperty();
@@ -346,17 +346,17 @@ public class EntityBuilder : ClassBuilder
             WriteLine();
             BuildMap();
 
-            if (EntityOption.ExtendOnData)
-            {
-                WriteLine();
-                BuildExtendProperty();
+            //if (EntityOption.ExtendOnData)
+            //{
+            //    WriteLine();
+            //    BuildExtendProperty();
 
-                WriteLine();
-                BuildExtendSearch();
+            //    WriteLine();
+            //    BuildExtendSearch();
 
-                WriteLine();
-                BuildSearch();
-            }
+            //    WriteLine();
+            //    BuildSearch();
+            //}
 
             WriteLine();
             BuildFieldName();

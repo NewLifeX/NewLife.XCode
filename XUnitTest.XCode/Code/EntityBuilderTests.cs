@@ -77,7 +77,7 @@ public class EntityBuilderTests
             ConnName = "MyConn",
             Namespace = "Company.MyName",
             Partial = true,
-            ExtendOnData = true
+            //ExtendOnData = true
         };
         option.Usings.Add("NewLife.Remoting");
 

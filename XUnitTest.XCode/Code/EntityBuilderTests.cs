@@ -366,6 +366,8 @@ public class EntityBuilderTests
             // 扩展查询部分，由于插入在后面，无法进行相等比较
             var p = rs.IndexOf("#region 扩展查询");
             Assert.Equal(target.Substring(0, p), rs.Substring(0, p));
+            Assert.Contains("FindByName(String name)", rs);
+            Assert.Contains("FindAllByMail(String mail)", rs);
         }
     }
 }

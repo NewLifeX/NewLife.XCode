@@ -320,42 +320,28 @@ public class EntityBuilder : ClassBuilder
 
         // 合并扩展属性
         {
-            var newNs = Find(newLines, "#region 扩展属性", "#endregion");
-            var oldNs = Find(oldLines, "#region 扩展属性", "#endregion");
+            var sname = "#region 扩展属性";
+            var newNs = Find(newLines, sname, "#endregion");
+            var oldNs = Find(oldLines, sname, "#endregion");
 
             // 两个都有才合并
-            if (newNs.Count > 2 && oldNs.Count >= 2)
+            if (newNs != null && oldNs != null)
             {
+                // endregion 所在行
                 var p = oldNs.Start + oldNs.Count - 1;
-                var ns = oldLines.Skip(oldNs.Start + 1).Take(oldNs.Count - 2).ToArray();
-                var merging = false;
-                for (var i = 1; i < newNs.Count - 1; i++)
+                foreach (var item in newNs.Sections)
                 {
-                    var line = newLines[newNs.Start + i];
-                    if (merging)
+                    // 如果旧文件中不存在，则插入
+                    if (!oldNs.Sections.Any(e => e.Name == item.Name))
                     {
-                        // 持续合并，直到遇到空行
-                        if (line.IsNullOrWhiteSpace())
-                            merging = false;
-                        else
-                            oldLines.Insert(p++, line);
-                    }
-                    else
-                    {
-                        // 当前行不在旧文件中，且不是空行，则开始合并
-                        if (!line.IsNullOrWhiteSpace() && (ns.Length == 0 || !ns.Any(e => e.Contains(line))))
+                        // 前面有变化，需要插入空行
+                        if (changed > 0) oldLines.Insert(p++, "");
+
+                        foreach (var elm in item.Lines)
                         {
-                            merging = true;
-
-                            var pre = newLines[newNs.Start];
-                            if (pre.IsNullOrWhiteSpace())
-                                oldLines.Insert(p++, pre);
-                            else if (changed > 0)
-                                oldLines.Insert(p++, "");
-                            oldLines.Insert(p++, line);
-
-                            changed++;
+                            oldLines.Insert(p++, elm);
                         }
+                        changed++;
                     }
                 }
             }
@@ -363,42 +349,28 @@ public class EntityBuilder : ClassBuilder
 
         // 合并扩展查询
         {
-            var newNs = Find(newLines, "#region 扩展查询", "#endregion");
-            var oldNs = Find(oldLines, "#region 扩展查询", "#endregion");
+            var sname = "#region 扩展查询";
+            var newNs = Find(newLines, sname, "#endregion");
+            var oldNs = Find(oldLines, sname, "#endregion");
 
             // 两个都有才合并
-            if (newNs.Count > 2 && oldNs.Count >= 2)
+            if (newNs != null && oldNs != null)
             {
+                // endregion 所在行
                 var p = oldNs.Start + oldNs.Count - 1;
-                var ns = oldLines.Skip(oldNs.Start + 1).Take(oldNs.Count - 2).ToArray();
-                var merging = false;
-                for (var i = 1; i < newNs.Count - 1; i++)
+                foreach (var item in newNs.Sections)
                 {
-                    var line = newLines[newNs.Start + i];
-                    if (merging)
+                    // 如果旧文件中不存在，则插入
+                    if (!oldNs.Sections.Any(e => e.Name == item.Name))
                     {
-                        // 持续合并，直到遇到空行
-                        if (line.IsNullOrWhiteSpace())
-                            merging = false;
-                        else
-                            oldLines.Insert(p++, line);
-                    }
-                    else
-                    {
-                        // 当前行不在旧文件中，且不是空行，则开始合并
-                        if (!line.IsNullOrWhiteSpace() && (ns.Length == 0 || !ns.Any(e => e.Contains(line))))
+                        // 前面有变化，需要插入空行
+                        if (changed > 0) oldLines.Insert(p++, "");
+
+                        foreach (var elm in item.Lines)
                         {
-                            merging = true;
-
-                            var pre = newLines[newNs.Start];
-                            if (pre.IsNullOrWhiteSpace())
-                                oldLines.Insert(p++, pre);
-                            else if (changed > 0)
-                                oldLines.Insert(p++, "");
-                            oldLines.Insert(p++, line);
-
-                            changed++;
+                            oldLines.Insert(p++, elm);
                         }
+                        changed++;
                     }
                 }
             }
@@ -407,10 +379,17 @@ public class EntityBuilder : ClassBuilder
         if (changed > 0) File.WriteAllLines(fileName, oldLines);
     }
 
-    Range Find(IList<String> lines, String start, String end)
+    class MyRange
     {
-        var s = 0;
-        var e = 0;
+        public Int32 Start { get; set; }
+        public Int32 Count { get; set; }
+        public IList<MemberSection> Sections { get; set; }
+    }
+
+    MyRange Find(IList<String> lines, String start, String end)
+    {
+        var s = -1;
+        var e = -1;
         var flag = 0;
         for (var i = 0; i < lines.Count && flag < 2; i++)
         {
@@ -432,7 +411,16 @@ public class EntityBuilder : ClassBuilder
             }
         }
 
-        return (s, e - s + 1);
+        if (s < 0 || e < 0) return null;
+
+        var ns = lines.Skip(s).Take(e - s + 1).ToArray();
+        var list = MemberSection.Parse(ns);
+        foreach (var item in list)
+        {
+            item.StartLine += s;
+        }
+
+        return new MyRange { Start = s, Count = e - s + 1, Sections = list };
     }
 
     /// <summary>生成尾部</summary>

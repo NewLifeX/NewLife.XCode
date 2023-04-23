@@ -9,6 +9,9 @@ internal class MemberSection
     /// <summary>名称。成员名或方法签名</summary>
     public String Name { get; set; }
 
+    /// <summary>开始行行号</summary>
+    public Int32 StartLine { get; set; }
+
     /// <summary>代码行</summary>
     public String[] Lines { get; set; }
     #endregion
@@ -61,6 +64,7 @@ internal class MemberSection
                     var ms = new MemberSection
                     {
                         Name = name,
+                        StartLine = p,
                         Lines = lines.Skip(p).Take(i - p).ToArray()
                     };
                     list.Add(ms);
@@ -74,6 +78,7 @@ internal class MemberSection
                     var ms = new MemberSection
                     {
                         Name = name,
+                        StartLine = p,
                         Lines = lines.Skip(p).Take(i - p + 1).ToArray()
                     };
                     list.Add(ms);

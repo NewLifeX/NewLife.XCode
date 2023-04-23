@@ -15,6 +15,9 @@ public class EntityBuilder : ClassBuilder
     /// <summary>业务类</summary>
     public Boolean Business { get; set; }
 
+    /// <summary>合并业务类，当业务类已存在时。默认true</summary>
+    public Boolean MergeBusiness { get; set; } = true;
+
     /// <summary>所有表类型名。用于扩展属性</summary>
     public IList<IDataTable> AllTables { get; set; } = new List<IDataTable>();
 
@@ -295,7 +298,7 @@ public class EntityBuilder : ClassBuilder
         }
 
         // Biz业务文件已存在时，部分覆盖
-        if (Business && !overwrite)
+        if (Business && !overwrite && MergeBusiness)
         {
             var fileName = GetFileName(ext, chineseFileName);
             if (File.Exists(fileName))
@@ -335,7 +338,7 @@ public class EntityBuilder : ClassBuilder
                     if (!oldNs.Sections.Any(e => e.Name == item.Name))
                     {
                         // 前面有变化，需要插入空行
-                        if (changed > 0) oldLines.Insert(p++, "");
+                        if (changed > 0 || oldNs.Sections.Count > 0) oldLines.Insert(p++, "");
 
                         foreach (var elm in item.Lines)
                         {
@@ -361,10 +364,12 @@ public class EntityBuilder : ClassBuilder
                 foreach (var item in newNs.Sections)
                 {
                     // 如果旧文件中不存在，则插入
-                    if (!oldNs.Sections.Any(e => e.Name == item.Name))
+                    //if (!oldNs.Sections.Any(e => e.Name == item.Name))
+                    // 可能参数名大小写不一致
+                    if (!oldNs.Sections.Any(e => e.Name.EqualIgnoreCase(item.Name)))
                     {
                         // 前面有变化，需要插入空行
-                        if (changed > 0) oldLines.Insert(p++, "");
+                        if (changed > 0 || oldNs.Sections.Count > 0) oldLines.Insert(p++, "");
 
                         foreach (var elm in item.Lines)
                         {
@@ -376,7 +381,7 @@ public class EntityBuilder : ClassBuilder
             }
         }
 
-        if (changed > 0) File.WriteAllLines(fileName, oldLines);
+        if (changed > 0) File.WriteAllText(fileName, oldLines.Join(Environment.NewLine).Trim());
     }
 
     class MyRange

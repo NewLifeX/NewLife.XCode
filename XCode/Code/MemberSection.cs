@@ -48,6 +48,8 @@ internal class MemberSection
                 {
                     p = i - 1;
                     status = 1;
+
+                    name = GetName(line);
                 }
             }
             else if (status >= 1)
@@ -56,7 +58,7 @@ internal class MemberSection
                 if (line == "{")
                     status++;
                 // 右大括号，减少缩进。有些代码风格并没有把左大括号放在独立一行
-                else if (line == "}" && status > 1)
+                else if (line.StartsWith("}") && status > 1)
                     status--;
                 // 遇到空行，代码段结束
                 else if (status == 1 && (line.IsNullOrEmpty() || line.StartsWith("/// <summary>") || line.EndsWith("#endregion")))
@@ -88,30 +90,35 @@ internal class MemberSection
                 }
                 else
                 {
-                    if (line.StartsWithIgnoreCase("public ", "protect ", "private ", "internal ", "static "))
-                    {
-                        var str = line;
-
-                        // 去掉修饰符
-                        var p2 = str.IndexOf(' ');
-                        if (p2 > 0) str = str.Substring(p2 + 1);
-                        str = str.TrimStart("static ");
-
-                        // 去掉参数
-                        p2 = str.IndexOfAny(new[] { '{', '=' });
-                        str = p2 > 0 ? str.Substring(0, p2).Trim() : str;
-
-                        // 去掉返回值
-                        p2 = str.IndexOf(' ');
-                        str = p2 > 0 ? str.Substring(p2 + 1).Trim() : str;
-
-                        name = str;
-                    }
+                    if (name.IsNullOrEmpty()) name = GetName(line);
                 }
             }
         }
 
         return list;
+    }
+
+    static String GetName(String line)
+    {
+        if (!line.StartsWithIgnoreCase("public ", "protect ", "private ", "internal ", "static "))
+            return null;
+
+        var str = line;
+
+        // 去掉修饰符
+        var p2 = str.IndexOf(' ');
+        if (p2 > 0) str = str.Substring(p2 + 1);
+        str = str.TrimStart("static ", "readonly ");
+
+        // 去掉参数
+        p2 = str.IndexOfAny(new[] { '{', '=' });
+        str = p2 > 0 ? str.Substring(0, p2).Trim() : str;
+
+        // 去掉返回值
+        p2 = str.IndexOf(' ');
+        str = p2 > 0 ? str.Substring(p2 + 1).Trim() : str;
+
+        return str;
     }
 
     /// <summary>已重载。</summary>

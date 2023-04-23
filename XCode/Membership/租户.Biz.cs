@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Common;
 using NewLife.Data;
 
@@ -67,6 +67,19 @@ public partial class Tenant : Entity<Tenant>
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.Name == name);
+    }
+
+    /// <summary>根据编码查找</summary>
+    /// <param name="code">编码</param>
+    /// <returns>实体对象</returns>
+    public static Tenant FindByCode(String code)
+    {
+        if (code.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Code.EqualIgnoreCase(code));
+
+        return Find(_.Code == code);
     }
     #endregion
 

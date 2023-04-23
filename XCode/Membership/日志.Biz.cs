@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Data;
 using XCode.Cache;
 
@@ -158,6 +158,35 @@ public partial class Log : Entity<Log>
         if (!key.IsNullOrEmpty()) exp &= _.Remark.Contains(key);
 
         return FindAll(exp, p);
+    }
+
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static Log FindByID(Int64 id)
+    {
+        if (id <= 0) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.ID == id);
+    }
+
+    /// <summary>根据创建用户、编号查找</summary>
+    /// <param name="createUserId">创建用户</param>
+    /// <param name="id">编号</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByCreateUserIDAndID(Int32 createUserId, Int64 id)
+    {
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserID == createUserId && e.ID == id);
+
+        return FindAll(_.CreateUserID == createUserId & _.ID == id);
     }
     #endregion
 

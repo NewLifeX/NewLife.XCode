@@ -1,4 +1,4 @@
-﻿using System.Runtime.Serialization;
+using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
@@ -136,6 +136,19 @@ public partial class TenantUser : Entity<TenantUser>
         if (!isAll) exp &= _.Enable == true;
 
         return FindAll(exp);
+    }
+
+    /// <summary>根据用户查找</summary>
+    /// <param name="userId">用户</param>
+    /// <returns>实体列表</returns>
+    public static IList<TenantUser> FindAllByUserId(Int32 userId)
+    {
+        if (userId <= 0) return new List<TenantUser>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserId == userId);
+
+        return FindAll(_.UserId == userId);
     }
     #endregion
 

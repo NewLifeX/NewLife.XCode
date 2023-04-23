@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
@@ -80,6 +80,19 @@ public partial class Parameter : Entity<Parameter>
         return Meta.Session.Count < 1000
             ? Meta.Cache.FindAll(e => e.UserID == userId && e.Category == category)
             : FindAll(_.UserID == userId & _.Category == category);
+    }
+
+    /// <summary>根据类别、名称查找</summary>
+    /// <param name="category">类别</param>
+    /// <param name="name">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<Parameter> FindAllByCategoryAndName(String category, String name)
+    {
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));
+
+        return FindAll(_.Category == category & _.Name == name);
     }
     #endregion
 

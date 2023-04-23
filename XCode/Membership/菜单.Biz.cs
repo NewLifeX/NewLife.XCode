@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -206,6 +206,32 @@ public partial class Menu : EntityTree<Menu>, IMenu
         if (list == null || list.Count <= 0) return new List<IMenu>();
 
         return list.Where(e => filters.Contains(e.ID)).Cast<IMenu>().ToList();
+    }
+
+    /// <summary>根据名称查找</summary>
+    /// <param name="name">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<Menu> FindAllByName(String name)
+    {
+        if (name.IsNullOrEmpty()) return new List<Menu>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+
+        return FindAll(_.Name == name);
+    }
+
+    /// <summary>根据父编号、名称查找</summary>
+    /// <param name="parentId">父编号</param>
+    /// <param name="name">名称</param>
+    /// <returns>实体对象</returns>
+    public static Menu FindByParentIDAndName(Int32 parentId, String name)
+    {
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+
+        return Find(_.ParentID == parentId & _.Name == name);
     }
     #endregion
 

@@ -316,7 +316,7 @@ public class EntityBuilder : ClassBuilder
         var newLines = ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
         var oldLines = File.ReadAllLines(fileName).ToList();
 
-        var flag = false;
+        var changed = 0;
 
         // 合并扩展属性
         {
@@ -324,24 +324,87 @@ public class EntityBuilder : ClassBuilder
             var oldNs = Find(oldLines, "#region 扩展属性", "#endregion");
 
             // 两个都有才合并
-            if (newNs.Count > 2 && oldNs.Count > 0)
+            if (newNs.Count > 2 && oldNs.Count >= 2)
             {
                 var p = oldNs.Start + oldNs.Count - 1;
-                var ns = oldLines.Skip(oldNs.Start + 1).Take(oldNs.Count - 1).ToArray();
+                var ns = oldLines.Skip(oldNs.Start + 1).Take(oldNs.Count - 2).ToArray();
+                var merging = false;
                 for (var i = 1; i < newNs.Count - 1; i++)
                 {
                     var line = newLines[newNs.Start + i];
-                    if (line.IsNullOrWhiteSpace() || ns.Length == 0 || !ns.Any(e => e.Contains(line)))
+                    if (merging)
                     {
-                        oldLines.Insert(p++, line);
+                        // 持续合并，直到遇到空行
+                        if (line.IsNullOrWhiteSpace())
+                            merging = false;
+                        else
+                            oldLines.Insert(p++, line);
+                    }
+                    else
+                    {
+                        // 当前行不在旧文件中，且不是空行，则开始合并
+                        if (!line.IsNullOrWhiteSpace() && (ns.Length == 0 || !ns.Any(e => e.Contains(line))))
+                        {
+                            merging = true;
+
+                            var pre = newLines[newNs.Start];
+                            if (pre.IsNullOrWhiteSpace())
+                                oldLines.Insert(p++, pre);
+                            else if (changed > 0)
+                                oldLines.Insert(p++, "");
+                            oldLines.Insert(p++, line);
+
+                            changed++;
+                        }
                     }
                 }
-
-                flag = true;
             }
         }
 
-        if (flag) File.WriteAllLines(fileName, oldLines);
+        // 合并扩展查询
+        {
+            var newNs = Find(newLines, "#region 扩展查询", "#endregion");
+            var oldNs = Find(oldLines, "#region 扩展查询", "#endregion");
+
+            // 两个都有才合并
+            if (newNs.Count > 2 && oldNs.Count >= 2)
+            {
+                var p = oldNs.Start + oldNs.Count - 1;
+                var ns = oldLines.Skip(oldNs.Start + 1).Take(oldNs.Count - 2).ToArray();
+                var merging = false;
+                for (var i = 1; i < newNs.Count - 1; i++)
+                {
+                    var line = newLines[newNs.Start + i];
+                    if (merging)
+                    {
+                        // 持续合并，直到遇到空行
+                        if (line.IsNullOrWhiteSpace())
+                            merging = false;
+                        else
+                            oldLines.Insert(p++, line);
+                    }
+                    else
+                    {
+                        // 当前行不在旧文件中，且不是空行，则开始合并
+                        if (!line.IsNullOrWhiteSpace() && (ns.Length == 0 || !ns.Any(e => e.Contains(line))))
+                        {
+                            merging = true;
+
+                            var pre = newLines[newNs.Start];
+                            if (pre.IsNullOrWhiteSpace())
+                                oldLines.Insert(p++, pre);
+                            else if (changed > 0)
+                                oldLines.Insert(p++, "");
+                            oldLines.Insert(p++, line);
+
+                            changed++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (changed > 0) File.WriteAllLines(fileName, oldLines);
     }
 
     Range Find(IList<String> lines, String start, String end)

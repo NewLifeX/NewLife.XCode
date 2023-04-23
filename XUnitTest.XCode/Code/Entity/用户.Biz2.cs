@@ -156,35 +156,6 @@ public partial class User : Entity<User>
         //return Find(_.ID == id);
     }
 
-    /// <summary>根据名称查找</summary>
-    /// <param name="name">名称</param>
-    /// <returns>实体对象</returns>
-    public static User FindByName(String name)
-    {
-        if (name.IsNullOrEmpty()) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
-
-        // 单对象缓存
-        //return Meta.SingleCache.GetItemWithSlaveKey(name) as User;
-
-        return Find(_.Name == name);
-    }
-
-    /// <summary>根据邮件查找</summary>
-    /// <param name="mail">邮件</param>
-    /// <returns>实体列表</returns>
-    public static IList<User> FindAllByMail(String mail)
-    {
-        if (mail.IsNullOrEmpty()) return new List<User>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mail.EqualIgnoreCase(mail));
-
-        return FindAll(_.Mail == mail);
-    }
-
     /// <summary>根据手机查找</summary>
     /// <param name="mobile">手机</param>
     /// <returns>实体列表</returns>

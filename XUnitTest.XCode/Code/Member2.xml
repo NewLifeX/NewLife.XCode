@@ -48,7 +48,7 @@
       <Column Name="Avatar" DataType="String" ItemType="image" Length="200" Description="头像" />
       <Column Name="RoleID" ColumnName="role_id" DataType="Int32" Map="Role@Id@Name" DefaultValue="3" Description="角色。主要角色" Category="登录信息" />
       <Column Name="RoleIds" ColumnName="role_ids" DataType="String" Length="200" Description="角色组。次要角色集合" Category="登录信息" />
-      <Column Name="DepartmentID" ColumnName="department_id" DataType="Int32" Map="Department@Id@Name" Description="部门。组织机构" Category="登录信息" />
+      <Column Name="DepartmentID" ColumnName="department_id" DataType="Int32" Description="部门。组织机构" Category="登录信息" />
       <Column Name="Online" DataType="Boolean" Description="在线" Category="登录信息" />
       <Column Name="Enable" DataType="Boolean" Description="启用" Category="登录信息" />
       <Column Name="Age" DataType="Int32" Description="年龄。周岁" />

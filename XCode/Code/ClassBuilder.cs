@@ -629,12 +629,11 @@ public class ClassBuilder
     #endregion 写入缩进方法
 
     #region 保存
-
-    /// <summary>保存文件，返回文件路径</summary>
-    /// <param name="ext">扩展名，默认.cs</param>
-    /// <param name="overwrite">是否覆盖目标文件</param>
-    /// <param name="chineseFileName">是否使用中文名</param>
-    public virtual String Save(String ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
+    /// <summary>获取文件名</summary>
+    /// <param name="ext"></param>
+    /// <param name="chineseFileName"></param>
+    /// <returns></returns>
+    protected virtual String GetFileName(String ext = null, Boolean chineseFileName = true)
     {
         var p = Option.Output;
         if (ext.IsNullOrEmpty())
@@ -650,6 +649,17 @@ public class ClassBuilder
             p = p.CombinePath(ClassName + ext);
 
         p = p.GetBasePath();
+
+        return p;
+    }
+
+    /// <summary>保存文件，返回文件路径</summary>
+    /// <param name="ext">扩展名，默认.cs</param>
+    /// <param name="overwrite">是否覆盖目标文件</param>
+    /// <param name="chineseFileName">是否使用中文名</param>
+    public virtual String Save(String ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
+    {
+        var p = GetFileName(ext, chineseFileName);
 
         if (!File.Exists(p) || overwrite) File.WriteAllText(p.EnsureDirectory(true), ToString(), Encoding.UTF8);
 

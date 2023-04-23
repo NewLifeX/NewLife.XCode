@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using NewLife;
+using NewLife.Log;
 using XCode.Code;
 using XCode.DataAccessLayer;
 using Xunit;
@@ -326,5 +329,39 @@ public class EntityBuilderTests
 
         var xml = File.ReadAllText(file);
         Assert.Contains("Name", xml);
+    }
+
+    [Fact]
+    public void Merge()
+    {
+        // 加载模型文件，得到数据表
+        var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
+        var option = new EntityBuilderOption();
+        var tables = ClassBuilder.LoadModels(file, option, out var atts);
+
+        // 生成实体类
+        option.Output = @".\Entity\";
+
+        var builder = new EntityBuilder
+        {
+            AllTables = tables,
+            Option = option.Clone(),
+            Log = XTrace.Log,
+        };
+
+        builder.Load(tables.FirstOrDefault(e => e.Name == "User"));
+
+        builder.Business = true;
+        builder.Execute();
+        //builder.Save(null, false, option.ChineseFileName);
+
+        var fileName = "Code\\Entity\\用户.Biz2.cs".GetBasePath();
+        builder.Merge(fileName);
+
+        {
+            var rs = File.ReadAllText("Code\\Entity\\用户.Biz2.cs".GetFullPath());
+            var target = ReadTarget("Code\\Entity\\用户.Biz.cs", rs);
+            Assert.Equal(target, rs);
+        }
     }
 }

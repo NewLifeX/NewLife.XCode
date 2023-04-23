@@ -293,7 +293,83 @@ public class EntityBuilder : ClassBuilder
             ext = ".Biz.cs";
             //overwrite = false;
         }
+
+        // Biz业务文件已存在时，部分覆盖
+        if (Business && !overwrite)
+        {
+            var fileName = GetFileName(ext, chineseFileName);
+            if (File.Exists(fileName))
+            {
+                Merge(fileName);
+                return fileName;
+            }
+        }
+
         return base.Save(ext, overwrite, chineseFileName); ;
+    }
+
+    /// <summary>合并当前生成内容到旧文件中</summary>
+    /// <param name="fileName"></param>
+    public void Merge(String fileName)
+    {
+        // 新旧代码分组
+        var newLines = ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+        var oldLines = File.ReadAllLines(fileName).ToList();
+
+        var flag = false;
+
+        // 合并扩展属性
+        {
+            var newNs = Find(newLines, "#region 扩展属性", "#endregion");
+            var oldNs = Find(oldLines, "#region 扩展属性", "#endregion");
+
+            // 两个都有才合并
+            if (newNs.Count > 2 && oldNs.Count > 0)
+            {
+                var p = oldNs.Start + oldNs.Count - 1;
+                var ns = oldLines.Skip(oldNs.Start + 1).Take(oldNs.Count - 1).ToArray();
+                for (var i = 1; i < newNs.Count - 1; i++)
+                {
+                    var line = newLines[newNs.Start + i];
+                    if (line.IsNullOrWhiteSpace() || ns.Length == 0 || !ns.Any(e => e.Contains(line)))
+                    {
+                        oldLines.Insert(p++, line);
+                    }
+                }
+
+                flag = true;
+            }
+        }
+
+        if (flag) File.WriteAllLines(fileName, oldLines);
+    }
+
+    Range Find(IList<String> lines, String start, String end)
+    {
+        var s = 0;
+        var e = 0;
+        var flag = 0;
+        for (var i = 0; i < lines.Count && flag < 2; i++)
+        {
+            if (flag == 0)
+            {
+                if (lines[i].Contains(start))
+                {
+                    s = i;
+                    flag = 1;
+                }
+            }
+            else if (flag == 1)
+            {
+                if (lines[i].Contains(end))
+                {
+                    e = i;
+                    flag = 2;
+                }
+            }
+        }
+
+        return (s, e - s + 1);
     }
 
     /// <summary>生成尾部</summary>
@@ -1313,4 +1389,10 @@ public class EntityBuilder : ClassBuilder
     }
 
     #endregion 业务类
+}
+
+internal record struct Range(Int32 Start, Int32 Count)
+{
+    public static implicit operator (Int32 Start, Int32 Count)(Range value) => (value.Start, value.Count);
+    public static implicit operator Range((Int32 Start, Int32 Count) value) => new Range(value.Start, value.Count);
 }

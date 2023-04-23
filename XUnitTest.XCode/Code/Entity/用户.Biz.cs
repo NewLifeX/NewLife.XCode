@@ -145,7 +145,6 @@ public partial class User : Entity<User>
     [Map(nameof(DepartmentID), typeof(Department), "ID")]
     [Category("登录信息")]
     public String DepartmentName => Department?.Name;
-
     #endregion
 
     #region 扩展查询

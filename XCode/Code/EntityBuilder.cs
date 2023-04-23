@@ -1078,6 +1078,7 @@ public class EntityBuilder : ClassBuilder
     {
         WriteLine("#region 扩展属性");
 
+        var first = true;
         foreach (var column in Table.Columns)
         {
             // 跳过排除项
@@ -1102,6 +1103,12 @@ public class EntityBuilder : ClassBuilder
 
                 var pk = dt.PrimaryKeys[0];
 
+                if (!first)
+                {
+                    WriteLine();
+                    first = true;
+                }
+
                 WriteLine("/// <summary>{0}</summary>", dis);
                 WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
                 WriteLine("public {1} {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
@@ -1122,7 +1129,7 @@ public class EntityBuilder : ClassBuilder
                         WriteLine("public {2} {0}{1} => {0} != null ? {0}.{1} : 0;", pname, master.Name, master.DataType.Name);
                 }
 
-                WriteLine();
+                //WriteLine();
             }
         }
 

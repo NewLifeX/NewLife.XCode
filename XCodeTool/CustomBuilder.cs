@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using NewLife;
 using NewLife.Log;
 using XCode.Code;
@@ -24,7 +25,28 @@ public class CustomBuilder : EntityBuilder
             ext = ".CusBiz.cs";
             //overwrite = false;
         }
-        return base.Save(ext, overwrite, chineseFileName); ;
+        var p = Option.Output;
+        if (ext == ".CusBiz.cs")
+        {
+            p = p.CombinePath(p, "CustomBiz");
+        }
+        if (ext.IsNullOrEmpty())
+            ext = ".cs";
+        else if (!ext.Contains("."))
+            ext += ".cs";
+
+        if (Option.Interface)
+            p = p.CombinePath(ClassName + ext);
+        else if (chineseFileName && !Table.DisplayName.IsNullOrEmpty())
+            p = p.CombinePath(Table.DisplayName + ext);
+        else
+            p = p.CombinePath(ClassName + ext);
+
+        p = p.GetBasePath();
+
+        if (!File.Exists(p) || overwrite) File.WriteAllText(p.EnsureDirectory(true), ToString(), Encoding.UTF8);
+
+        return p;
     }
 
     protected override void BuildItems()

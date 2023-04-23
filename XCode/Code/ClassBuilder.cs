@@ -637,10 +637,6 @@ public class ClassBuilder
     public virtual String Save(String ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
     {
         var p = Option.Output;
-        if (ext == ".CusBiz.cs")
-        {
-            p = p.CombinePath(p, "CustomBiz");
-        }
         if (ext.IsNullOrEmpty())
             ext = ".cs";
         else if (!ext.Contains("."))

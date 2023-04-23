@@ -12,9 +12,9 @@ public class BuilderOption
     [Description("输出目录")]
     public String Output { get; set; }
 
-    /// <summary>是否使用中文文件名。默认true</summary>
-    [Description("是否使用中文文件名。默认true")]
-    public Boolean ChineseFileName { get; set; } = true;
+    /// <summary>是否使用中文文件名。默认false</summary>
+    [Description("是否使用中文文件名。默认false")]
+    public Boolean ChineseFileName { get; set; } 
 
     /// <summary>基类。可能包含基类和接口，其中{name}替换为Table.Name</summary>
     [Description("基类。可能包含基类和接口，其中{name}替换为Table.Name")]

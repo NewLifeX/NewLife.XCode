@@ -12,10 +12,6 @@ namespace XCode.Code;
 public class EntityBuilder : ClassBuilder
 {
     #region 属性
-
-    /// <summary>自定义业务类，仅生成一次</summary>
-    public Boolean CustomBusiness { get; set; }
-
     /// <summary>业务类</summary>
     public Boolean Business { get; set; }
 
@@ -153,16 +149,7 @@ public class EntityBuilder : ClassBuilder
             builder.Clear();
             builder.Business = true;
             builder.Execute();
-            builder.Save(null, option.OverwriteBizFile, option.ChineseFileName);
-            if (option.CreateCustomBizFile)
-            {
-                //新增自定义业务文件,仅生成一次
-                builder.Clear();
-                builder.CustomBusiness = true;
-                builder.Execute();
-                builder.Save(null, false, option.ChineseFileName);
-                count++;
-            }
+            builder.Save(null, false, option.ChineseFileName);
         }
 
         return count;
@@ -306,11 +293,6 @@ public class EntityBuilder : ClassBuilder
             ext = ".Biz.cs";
             //overwrite = false;
         }
-        if (CustomBusiness)
-        {
-            ext = ".CusBiz.cs";
-            //overwrite = false;
-        }
         return base.Save(ext, overwrite, chineseFileName); ;
     }
 
@@ -335,11 +317,7 @@ public class EntityBuilder : ClassBuilder
     /// <summary>生成主体</summary>
     protected override void BuildItems()
     {
-        if (CustomBusiness)
-        {
-            BuildCustomBizDescription();
-        }
-        else if (Business)
+        if (Business)
         {
             BuildAction();
 
@@ -406,9 +384,9 @@ public class EntityBuilder : ClassBuilder
             WriteLine("[BindIndex(\"{0}\", {1}, \"{2}\")]", item.Name, item.Unique.ToString().ToLower(), item.Columns.Join());
         }
 
-        var cn = dt.Properties["ConnName"];
-        if (cn.IsNullOrEmpty()) cn = EntityOption.ConnName;
-        WriteLine("[BindTable(\"{0}\", Description = \"{1}\", ConnName = \"{2}\", DbType = DatabaseType.{3})]", dt.TableName, dt.Description, cn, dt.DbType);
+        var connName = dt.Properties["ConnName"];
+        if (connName.IsNullOrEmpty()) connName = EntityOption.ConnName;
+        WriteLine("[BindTable(\"{0}\", Description = \"{1}\", ConnName = \"{2}\", DbType = DatabaseType.{3})]", dt.TableName, dt.Description, connName, dt.DbType);
     }
 
     /// <summary>生成每一项</summary>
@@ -700,17 +678,6 @@ public class EntityBuilder : ClassBuilder
     #endregion 数据类
 
     #region 业务类
-
-    /// <summary>自定义业务逻辑文件说明信息</summary>
-    protected virtual void BuildCustomBizDescription()
-    {
-        WriteLine($"//生成时间:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
-        WriteLine("//自定义业务逻辑写在本文件中");
-        WriteLine("//本文件由代码生成器初次生成后不再重新生成");
-        WriteLine("#region 自定义业务逻辑生成");
-        WriteLine();
-        WriteLine("#endregion");
-    }
 
     /// <summary>对象操作</summary>
     protected virtual void BuildAction()

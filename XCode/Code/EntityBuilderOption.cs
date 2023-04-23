@@ -22,18 +22,6 @@ public class EntityBuilderOption : BuilderOption
     [Description("命名格式。Default/Upper/Lower/Underline")]
     public NameFormats NameFormat { get; set; }
 
-    /// <summary>
-    /// 是否创建用户自定义业务文件
-    /// </summary>
-    [Description("是否创建用户自定义业务文件")]
-    public Boolean CreateCustomBizFile { get; set; } = false;
-
-    /// <summary>
-    /// 是否在生成.biz.cs文件时复盖已存在的文件
-    /// </summary>
-    [Description("是否在生成.biz.cs文件时复盖已存在的文件")]
-    public Boolean OverwriteBizFile { get; set; } = false;
-
     /// <summary>生成器版本</summary>
     [Description("生成器版本")]
     public String Version { get; set; }

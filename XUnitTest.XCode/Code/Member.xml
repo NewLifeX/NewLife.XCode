@@ -3,7 +3,7 @@
   <Option>
     <!--输出目录-->
     <Output>..\..\XUnitTest.XCode\Code</Output>
-    <!--是否使用中文文件名。默认true-->
+    <!--是否使用中文文件名。默认false-->
     <ChineseFileName>True</ChineseFileName>
     <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
     <BaseClass>Entity</BaseClass>
@@ -31,12 +31,8 @@
     <ExtendOnData>False</ExtendOnData>
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
-    <!--是否创建用户自定义业务文件-->
-    <CreateCustomBizFile>False</CreateCustomBizFile>
-    <!--是否在生成.biz.cs文件时复盖已存在的文件-->
-    <OverwriteBizFile>False</OverwriteBizFile>
     <!--生成器版本-->
-    <Version>11.8.2023.0422</Version>
+    <Version>11.8.2023.0423</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
   </Option>

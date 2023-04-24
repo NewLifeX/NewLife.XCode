@@ -81,18 +81,18 @@ public class MemberSectionTests
                 return FindAll(_.Mobile == mobile);
             }
 
-            /// <summary>根据代码查找</summary>
-            /// <param name="code">代码</param>
-            /// <returns>实体列表</returns>
-            public static IList<User> FindAllByCode(String code)
-            {
-                if (code.IsNullOrEmpty()) return new List<User>();
-
-                // 实体缓存
-                if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
-
-                return FindAll(_.Code == code);
-            }
+            ///// <summary>根据代码查找</summary>
+            ///// <param name="code">代码</param>
+            ///// <returns>实体列表</returns>
+            //public static IList<User> FindAllByCode(String code)
+            //{
+            //    if (code.IsNullOrEmpty()) return new List<User>();
+            //
+            //    // 实体缓存
+            //    if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
+            //
+            //    return FindAll(_.Code == code);
+            //}
 
             /// <summary>根据角色查找</summary>
             /// <param name="roleId">角色</param>

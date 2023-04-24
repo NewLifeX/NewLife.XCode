@@ -30,7 +30,7 @@
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Underline</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0423</Version>
+    <Version>11.8.2023.0424</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
   </Option>

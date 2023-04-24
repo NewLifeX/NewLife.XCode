@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Xml.Linq;
+using NewLife;
 
 namespace XCode.Code;
 
@@ -37,7 +38,7 @@ internal class MemberSection
             if (status == -1)
             {
                 // 遇到空行，代码段开始
-                if (line.IsNullOrEmpty() || line.StartsWith("/// <summary>"))
+                if (line.IsNullOrEmpty() || IsStart(line))
                 {
                     status = 0;
                 }
@@ -64,36 +65,18 @@ internal class MemberSection
                 else if (line.StartsWith("}") && status > 1)
                     status--;
                 // 遇到空行，代码段结束
-                else if (status == 1 && (line.IsNullOrEmpty() || line.StartsWith("/// <summary>") || line.EndsWith("#endregion")))
+                else if (status == 1 && (line.IsNullOrEmpty() || IsStart(line) || line.EndsWith("#endregion")))
                 {
-                    var key = name;
-                    var pKey = key?.IndexOf('(') ?? 0;
-                    if (pKey > 0) key = key.Substring(0, pKey);
-                    var ms = new MemberSection
-                    {
-                        Name = key,
-                        FullName = name,
-                        StartLine = p,
-                        Lines = lines.Skip(p).Take(i - p).ToArray()
-                    };
+                    var ms = Create(name, p, lines.Skip(p).Take(i - p).ToArray());
                     list.Add(ms);
 
-                    status = line.StartsWith("/// <summary>") ? 0 : -1;
+                    status = IsStart(line) ? 0 : -1;
                     name = null;
                 }
                 // 最后一行，也要结束
                 else if (status == 1 && i == lines.Count - 1)
                 {
-                    var key = name;
-                    var pKey = key?.IndexOf('(') ?? 0;
-                    if (pKey > 0) key = key.Substring(0, pKey);
-                    var ms = new MemberSection
-                    {
-                        Name = key,
-                        FullName = name,
-                        StartLine = p,
-                        Lines = lines.Skip(p).Take(i - p + 1).ToArray()
-                    };
+                    var ms = Create(name, p, lines.Skip(p).Take(i - p + 1).ToArray());
                     list.Add(ms);
 
                     status = -1;
@@ -107,6 +90,38 @@ internal class MemberSection
         }
 
         return list;
+    }
+
+    static Boolean IsStart(String line) => line.StartsWith("/// <summary>") || line.StartsWith("///// <summary>");
+
+    static MemberSection Create(String name, Int32 p, String[] lines)
+    {
+        // 名称为空，可能被注释了
+        if (name.IsNullOrEmpty())
+        {
+            foreach (var line in lines)
+            {
+                if (line.Trim().StartsWith("//"))
+                {
+                    name = GetName(line.Trim().Substring(2));
+                    if (!name.IsNullOrEmpty()) break;
+                }
+            }
+        }
+
+        var key = name;
+        var pKey = key?.IndexOf('(') ?? 0;
+        if (pKey > 0) key = key.Substring(0, pKey);
+
+        var ms = new MemberSection
+        {
+            Name = key,
+            FullName = name,
+            StartLine = p,
+            Lines = lines
+        };
+
+        return ms;
     }
 
     static String GetName(String line)

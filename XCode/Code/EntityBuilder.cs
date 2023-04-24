@@ -1141,10 +1141,13 @@ public class EntityBuilder : ClassBuilder
             pk = Table.PrimaryKeys[0];
             var name = pk.CamelName();
 
+            var type = pk.Properties["Type"];
+            if (type.IsNullOrEmpty()) type = pk.DataType?.Name;
+
             WriteLine("/// <summary>根据{0}查找</summary>", pk.DisplayName);
             WriteLine("/// <param name=\"{0}\">{1}</param>", name, pk.DisplayName);
             WriteLine("/// <returns>实体对象</returns>");
-            WriteLine("public static {3} FindBy{0}({1} {2})", pk.Name, pk.DataType.Name, name, ClassName);
+            WriteLine("public static {3} FindBy{0}({1} {2})", pk.Name, type, name, ClassName);
             WriteLine("{");
             {
                 if (pk.DataType.IsInt())
@@ -1191,11 +1194,21 @@ public class EntityBuilder : ClassBuilder
                 WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.DisplayName);
             }
 
+            var ps = new Dictionary<String, String>();
+            foreach (var dc in cs)
+            {
+                var type = dc.Properties["Type"];
+                if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+
+                ps[dc.CamelName()] = type;
+            }
+            var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
+
             // 返回类型
             if (di.Unique)
             {
                 WriteLine("/// <returns>{0}</returns>", di.Unique ? "实体对象" : "实体列表");
-                WriteLine("public static {2} FindBy{0}({1})", cs.Select(e => e.Name).Join("And"), cs.Select(e => e.DataType.Name + " " + e.CamelName()).Join(", "), ClassName);
+                WriteLine("public static {2} FindBy{0}({1})", cs.Select(e => e.Name).Join("And"), args, ClassName);
                 WriteLine("{");
                 {
                     if (cs.Length == 1)
@@ -1221,7 +1234,7 @@ public class EntityBuilder : ClassBuilder
                             wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
                     }
 
-                    WriteLine();
+                    if (cs.Length == 1) WriteLine();
                     WriteLine("// 实体缓存");
                     WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => {0});", wh);
 
@@ -1241,7 +1254,7 @@ public class EntityBuilder : ClassBuilder
             else
             {
                 WriteLine("/// <returns>{0}</returns>", di.Unique ? "实体对象" : "实体列表");
-                WriteLine("public static IList<{2}> FindAllBy{0}({1})", cs.Select(e => e.Name).Join("And"), cs.Select(e => e.DataType.Name + " " + e.CamelName()).Join(", "), ClassName);
+                WriteLine("public static IList<{2}> FindAllBy{0}({1})", cs.Select(e => e.Name).Join("And"), args, ClassName);
                 WriteLine("{");
                 {
                     if (cs.Length == 1)
@@ -1267,7 +1280,7 @@ public class EntityBuilder : ClassBuilder
                             wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
                     }
 
-                    WriteLine();
+                    if (cs.Length == 1) WriteLine();
                     WriteLine("// 实体缓存");
                     WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => {0});", wh);
 
@@ -1340,13 +1353,19 @@ public class EntityBuilder : ClassBuilder
             {
                 if (pis.Length > 0) pis.Append(", ");
 
+                var type = dc.Properties["Type"];
+                if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+
                 if (dc.DataType == typeof(Boolean))
-                    pis.Append($"{dc.DataType.Name}? {dc.CamelName()}");
+                    pis.Append($"{type}? {dc.CamelName()}");
                 else
-                    pis.Append($"{dc.DataType.Name} {dc.CamelName()}");
+                    pis.Append($"{type} {dc.CamelName()}");
             }
             var piTime = dcTime == null ? "" : "DateTime start, DateTime end, ";
-            WriteLine("public static IList<{0}> Search({1}, {2}String key, PageParameter page)", returnName, pis, piTime);
+            if (pis.Length > 0)
+                WriteLine("public static IList<{0}> Search({1}, {2}String key, PageParameter page)", returnName, pis, piTime);
+            else
+                WriteLine("public static IList<{0}> Search({2}String key, PageParameter page)", returnName, pis, piTime);
             WriteLine("{");
             {
                 WriteLine("var exp = new WhereExpression();");
@@ -1452,10 +1471,4 @@ public class EntityBuilder : ClassBuilder
     }
 
     #endregion 业务类
-}
-
-internal record struct Range(Int32 Start, Int32 Count)
-{
-    public static implicit operator (Int32 Start, Int32 Count)(Range value) => (value.Start, value.Count);
-    public static implicit operator Range((Int32 Start, Int32 Count) value) => new Range(value.Start, value.Count);
 }

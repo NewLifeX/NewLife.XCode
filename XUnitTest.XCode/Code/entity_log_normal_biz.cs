@@ -146,7 +146,6 @@ public partial class Log : Entity<Log>
     /// <returns>实体列表</returns>
     public static IList<Log> FindAllByCreateUserIDAndID(Int32 createUserId, Int64 id)
     {
-
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserID == createUserId && e.ID == id);
 

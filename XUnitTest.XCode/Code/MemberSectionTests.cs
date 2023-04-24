@@ -120,12 +120,20 @@ public class MemberSectionTests
 
         Assert.Equal("Department", list[0].Name);
         Assert.Equal("DepartmentName", list[1].Name);
-        Assert.Equal("FindByID(Int32 id)", list[2].Name);
-        Assert.Equal("FindByName(String name)", list[3].Name);
-        Assert.Equal("FindAllByMail(String mail)", list[4].Name);
-        Assert.Equal("FindAllByMobile(String mobile)", list[5].Name);
-        Assert.Equal("FindAllByCode(String code)", list[6].Name);
-        Assert.Equal("FindAllByRoleID(Int32 roleId)", list[7].Name);
+
+        Assert.Equal("FindByID", list[2].Name);
+        Assert.Equal("FindByName", list[3].Name);
+        Assert.Equal("FindAllByMail", list[4].Name);
+        Assert.Equal("FindAllByMobile", list[5].Name);
+        Assert.Equal("FindAllByCode", list[6].Name);
+        Assert.Equal("FindAllByRoleID", list[7].Name);
+
+        Assert.Equal("FindByID(Int32 id)", list[2].FullName);
+        Assert.Equal("FindByName(String name)", list[3].FullName);
+        Assert.Equal("FindAllByMail(String mail)", list[4].FullName);
+        Assert.Equal("FindAllByMobile(String mobile)", list[5].FullName);
+        Assert.Equal("FindAllByCode(String code)", list[6].FullName);
+        Assert.Equal("FindAllByRoleID(Int32 roleId)", list[7].FullName);
 
         //Assert.Equal(lines.Length, list.Sum(e => e.Lines.Length));
     }
@@ -372,14 +380,24 @@ public class MemberSectionTests
         Assert.Equal("Childs", list[5].Name);
         Assert.Equal("AllChilds", list[6].Name);
         Assert.Equal("IsVirtual", list[7].Name);
-        Assert.Equal("FindByID(Int32 id)", list[8].Name);
-        Assert.Equal("FindByIDs(params Int32[] ids)", list[9].Name);
-        Assert.Equal("FindByName(Int32 parentId, String name)", list[10].Name);
-        Assert.Equal("FindAllByName(String name)", list[11].Name);
-        Assert.Equal("FindByNames(params String[] names)", list[12].Name);
-        Assert.Equal("FindByFullName(String name)", list[13].Name);
+
+        Assert.Equal("FindByID", list[8].Name);
+        Assert.Equal("FindByIDs", list[9].Name);
+        Assert.Equal("FindByName", list[10].Name);
+        Assert.Equal("FindAllByName", list[11].Name);
+        Assert.Equal("FindByNames", list[12].Name);
+        Assert.Equal("FindByFullName", list[13].Name);
         Assert.Equal("_pcache", list[14].Name);
-        Assert.Equal("FindAllByParentID(Int32 parentid)", list[15].Name);
+        Assert.Equal("FindAllByParentID", list[15].Name);
+
+        Assert.Equal("FindByID(Int32 id)", list[8].FullName);
+        Assert.Equal("FindByIDs(params Int32[] ids)", list[9].FullName);
+        Assert.Equal("FindByName(Int32 parentId, String name)", list[10].FullName);
+        Assert.Equal("FindAllByName(String name)", list[11].FullName);
+        Assert.Equal("FindByNames(params String[] names)", list[12].FullName);
+        Assert.Equal("FindByFullName(String name)", list[13].FullName);
+        Assert.Equal("_pcache", list[14].FullName);
+        Assert.Equal("FindAllByParentID(Int32 parentid)", list[15].FullName);
 
         //Assert.Equal(lines.Length, list.Sum(e => e.Lines.Length));
     }

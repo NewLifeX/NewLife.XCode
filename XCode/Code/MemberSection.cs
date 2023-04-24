@@ -9,6 +9,9 @@ internal class MemberSection
     /// <summary>名称。成员名或方法签名</summary>
     public String Name { get; set; }
 
+    /// <summary>全名</summary>
+    public String FullName { get; set; }
+
     /// <summary>开始行行号</summary>
     public Int32 StartLine { get; set; }
 
@@ -63,9 +66,13 @@ internal class MemberSection
                 // 遇到空行，代码段结束
                 else if (status == 1 && (line.IsNullOrEmpty() || line.StartsWith("/// <summary>") || line.EndsWith("#endregion")))
                 {
+                    var key = name;
+                    var pKey = key?.IndexOf('(') ?? 0;
+                    if (pKey > 0) key = key.Substring(0, pKey);
                     var ms = new MemberSection
                     {
-                        Name = name,
+                        Name = key,
+                        FullName = name,
                         StartLine = p,
                         Lines = lines.Skip(p).Take(i - p).ToArray()
                     };
@@ -77,9 +84,13 @@ internal class MemberSection
                 // 最后一行，也要结束
                 else if (status == 1 && i == lines.Count - 1)
                 {
+                    var key = name;
+                    var pKey = key?.IndexOf('(') ?? 0;
+                    if (pKey > 0) key = key.Substring(0, pKey);
                     var ms = new MemberSection
                     {
-                        Name = name,
+                        Name = key,
+                        FullName = name,
                         StartLine = p,
                         Lines = lines.Skip(p).Take(i - p + 1).ToArray()
                     };

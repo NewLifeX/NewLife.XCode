@@ -5,6 +5,7 @@ using System.Linq;
 using NewLife;
 using NewLife.Log;
 using NewLife.Security;
+using NewLife.Serialization;
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
@@ -338,6 +339,47 @@ namespace XUnitTest.XCode.DataAccessLayer
             tableNames = dal.GetTableNames();
             XTrace.WriteLine("tableNames: {0}", tableNames.Join());
             Assert.DoesNotContain(table.TableName, tableNames);
+        }
+
+        [Fact]
+        public void SelectTinyintTest()
+        {
+            var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
+            DAL.AddConnStr("MySql_tinyint", connStr, null, "MySql");
+
+            var dal = DAL.Create("MySql_tinyint");
+
+            var table = User.Meta.Table.DataTable.Clone() as IDataTable;
+            table.TableName = "user_tinyint";
+            table.DbType = DatabaseType.MySql;
+
+            var column = table.GetColumn("RoleId");
+            column.DataType = typeof(Byte);
+            column.RawType="tinyint(1)";
+
+            //if (dal.TableNames.Contains(table.TableName)) 
+            //    dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+
+            dal.SetTables(table);
+
+            User.Meta.ConnName = dal.ConnName;
+            User.Meta.TableName = table.TableName;
+
+            var count = User.FindCount();
+            XTrace.WriteLine("count={0}", count);
+
+            var user = User.FindByName("stone");
+            if (user == null)
+            {
+                user = new User { Name = "stone", RoleID = 4 };
+                user.Insert();
+            }
+
+            XTrace.WriteLine("SelectDs");
+            var ds = dal.Select("select * from user_tinyint");
+
+            var list = User.FindAll();
+            XTrace.WriteLine(list.ToJson(true));
         }
     }
 }

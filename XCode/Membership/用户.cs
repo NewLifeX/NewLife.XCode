@@ -282,8 +282,8 @@ public partial class User : IUser, IEntity<UserModel>
     [Category("扩展")]
     [DisplayName("更新者")]
     [Description("更新者")]
-    [DataObjectField(false, false, true, 50)]
-    [BindColumn("UpdateUser", "更新者", "")]
+    [DataObjectField(false, false, false, 50)]
+    [BindColumn("UpdateUser", "更新者", "", DefaultValue = "''")]
     public String UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
 
     private Int32 _UpdateUserID;

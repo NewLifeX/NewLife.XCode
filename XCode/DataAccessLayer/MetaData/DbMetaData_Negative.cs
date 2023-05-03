@@ -863,15 +863,15 @@ internal partial class DbMetaData
     protected virtual String GetDefault(IDataColumn field, Boolean onlyDefine)
     {
         if (field.DataType.IsInt() || field.DataType.IsEnum)
-            return " DEFAULT 0";
+            return $" DEFAULT {field.DefaultValue.ToInt()}";
         else if (field.DataType == typeof(Boolean))
-            return " DEFAULT 0";
+            return $" DEFAULT {(field.DefaultValue.ToBoolean() ? 1 : 0)}";
         else if (field.DataType == typeof(Double) || field.DataType == typeof(Single) || field.DataType == typeof(Decimal))
-            return " DEFAULT 0";
+            return $" DEFAULT {field.DefaultValue.ToDouble()}";
         else if (field.DataType == typeof(DateTime))
-            return " DEFAULT '0001-01-01'";
+            return $" DEFAULT {field.DefaultValue ?? "'0001-01-01'"}";
         else if (field.DataType == typeof(String))
-            return " DEFAULT ''";
+            return $" DEFAULT {field.DefaultValue ?? "''"}";
 
         return null;
     }

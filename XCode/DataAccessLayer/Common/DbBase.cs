@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Data;
 using System.Data.Common;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
@@ -180,6 +174,16 @@ abstract class DbBase : DisposeBase, IDatabase
         OnGetConnectionString(builder);
         _newStr = builder.ConnectionString;
         _ConnectionString = _newStr;
+
+        // 显示当前数据库的地址和用户名
+        if (DAL.Debug)
+        {
+            var server = builder["DataSource"] ?? builder["Data Source"] ?? builder["Server"];
+            var db = builder["Database"] ?? builder["Db"];
+            var uid = builder["User"] ?? builder["Uid"];
+
+            XTrace.WriteLine("[{0}] DataSource={1} Database={2} User={3}", ConnName, server, db, uid);
+        }
 
         return _newStr;
     }

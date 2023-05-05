@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -20,18 +21,19 @@ class Program
         {
             Console.WriteLine("NewLife.XCode v{0}", Assembly.GetExecutingAssembly().GetName().Version);
             Console.WriteLine("Usage: xcode model.xml");
+            Console.WriteLine("Upgrade: https://x.newlifex.com/xcodetool.exe");
             Console.WriteLine();
         }
 
         // 在当前目录查找模型文件
         var file = "";
         if (args.Length > 0) file = args.LastOrDefault();
-        if (file.IsNullOrEmpty())
-        {
-            var di = Environment.CurrentDirectory.AsDirectory();
-            // 选当前目录第一个
-            file = di.GetFiles("*.xml", SearchOption.TopDirectoryOnly).FirstOrDefault(e => e.Name != "XCode.xml")?.FullName;
-        }
+        //if (file.IsNullOrEmpty())
+        //{
+        //    var di = Environment.CurrentDirectory.AsDirectory();
+        //    // 选当前目录第一个
+        //    file = di.GetFiles("*.xml", SearchOption.TopDirectoryOnly).FirstOrDefault(e => e.Name != "XCode.xml")?.FullName;
+        //}
         if (!file.IsNullOrEmpty())
         {
             if (!Path.IsPathRooted(file))
@@ -49,12 +51,44 @@ class Program
         }
         else
         {
-            // 实在没有，释放一个出来
-            var ms = Assembly.GetExecutingAssembly().GetManifestResourceStream("XCode.Model.xml");
-            var xml = ms.ToStr();
+            // 遍历当前目录及子目录
+            var files = new List<String>();
+            var di = Environment.CurrentDirectory.AsDirectory();
+            //foreach (var fi in di.GetFiles("*.xml", SearchOption.TopDirectoryOnly))
+            foreach (var fi in di.GetFiles("*.xml", SearchOption.AllDirectories))
+            {
+                if (!fi.Name.EqualIgnoreCase("XCode.xml"))
+                {
+                    var txt = File.ReadAllText(fi.FullName);
+                    if (txt.Contains("<Tables") || txt.Contains("<EntityModel")) files.Add(fi.FullName);
+                }
+            }
+            //foreach (var item in di.GetDirectories())
+            //{
+            //    foreach (var fi in item.GetFiles("*.xml", SearchOption.TopDirectoryOnly))
+            //    {
+            //        var txt = File.ReadAllText(fi.FullName);
+            //        if (txt.Contains("<Tables") || txt.Contains("<EntityModel")) files.Add(fi.FullName);
+            //    }
+            //}
 
-            file = Environment.CurrentDirectory.CombinePath("Model.xml");
-            File.WriteAllText(file, xml, Encoding.UTF8);
+            if (files.Count > 0)
+            {
+                // 循环处理
+                foreach (var item in files)
+                {
+                    Build(item);
+                }
+            }
+            else
+            {
+                // 实在没有，释放一个出来
+                var ms = Assembly.GetExecutingAssembly().GetManifestResourceStream("XCode.Model.xml");
+                var xml = ms.ToStr();
+
+                file = Environment.CurrentDirectory.CombinePath("Model.xml");
+                File.WriteAllText(file, xml, Encoding.UTF8);
+            }
         }
     }
 
@@ -62,7 +96,7 @@ class Program
     /// <param name="modelFile"></param>
     static void Build(String modelFile)
     {
-        Console.WriteLine("正在处理：{0}", modelFile);
+        XTrace.WriteLine("正在处理：{0}", modelFile);
 
         EntityBuilder.Debug = true;
 
@@ -77,7 +111,7 @@ class Program
         var tables = ClassBuilder.LoadModels(modelFile, option, out var atts);
         EntityBuilder.FixModelFile(modelFile, option, atts, tables);
 
-        Console.WriteLine("共有模型：{0}", tables.Count);
+        XTrace.WriteLine("共有模型：{0}", tables.Count);
 
         // 是否把扩展属性生成到数据类
         //option.ExtendOnData = true;

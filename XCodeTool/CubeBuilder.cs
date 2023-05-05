@@ -118,7 +118,7 @@ public class CubeBuilder : ClassBuilder
             option = option.Clone() as CubeBuilderOption;
 
         // 自动识别并修正区域名（主要是大小写）
-        var areaName = FindAreaName(option.Output);
+        var areaName = FindAreaName(option.Output.GetBasePath());
         if (!areaName.IsNullOrEmpty()) return 0;
 
         // 优先使用路径最后一段作为区域名，其次再用连接名

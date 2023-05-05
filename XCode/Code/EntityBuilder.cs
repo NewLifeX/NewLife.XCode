@@ -1109,7 +1109,7 @@ public class EntityBuilder : ClassBuilder
                 // 主字段
                 var master = dt.Master ?? dt.GetColumn("Name");
                 // 扩展属性有可能恰巧跟已有字段同名
-                if (master != null && !master.PrimaryKey && !dt.Columns.Any(e => e.Name.EqualIgnoreCase(pname + master.Name)))
+                if (master != null && !master.PrimaryKey && !Table.Columns.Any(e => e.Name.EqualIgnoreCase(pname + master.Name)))
                 {
                     WriteLine();
                     WriteLine("/// <summary>{0}</summary>", dis);

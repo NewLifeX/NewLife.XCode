@@ -916,7 +916,7 @@ internal partial class DbMetaData
             return $" DEFAULT {field.DefaultValue.ToDouble()}";
         else if (field.DataType == typeof(DateTime))
             return $" DEFAULT {field.DefaultValue ?? "'0001-01-01'"}";
-        else if (field.DataType == typeof(String))
+        else if (field.DataType == typeof(String) && field.Length > 0)
             return $" DEFAULT {field.DefaultValue ?? "''"}";
 
         return null;

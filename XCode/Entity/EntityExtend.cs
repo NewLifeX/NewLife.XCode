@@ -21,7 +21,7 @@ public class EntityExtend
     public EntityExtend()
     {
         // 扩展属性默认10秒过期，然后异步更新
-        Expire = Setting.Current.ExtendExpire;
+        Expire = XCodeSetting.Current.ExtendExpire;
     }
 
     /// <summary>扩展获取数据项，当数据项不存在时，通过调用委托获取数据项。线程安全。</summary>

@@ -366,7 +366,7 @@ partial class DAL
 
         var exp = Expire;
         if (exp == 0) exp = Db.DataCache;
-        if (exp == 0) exp = Setting.Current.DataCacheExpire;
+        if (exp == 0) exp = XCodeSetting.Current.DataCacheExpire;
         if (exp <= 0) return null;
 
         Expire = exp;

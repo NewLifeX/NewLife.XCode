@@ -57,7 +57,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     /// <summary>实例化一个实体缓存</summary>
     public SingleEntityCache()
     {
-        var exp = Setting.Current.SingleCacheExpire;
+        var exp = XCodeSetting.Current.SingleCacheExpire;
         if (exp <= 0) exp = 10;
         Expire = exp;
 

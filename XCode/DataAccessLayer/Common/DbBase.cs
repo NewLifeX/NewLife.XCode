@@ -41,7 +41,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>实例化</summary>
     public DbBase()
     {
-        var set = Setting.Current;
+        var set = XCodeSetting.Current;
         Migration = set.Migration;
         TraceSQLTime = set.TraceSQLTime;
         RetryOnFailure = set.RetryOnFailure;

@@ -57,6 +57,7 @@ namespace XCode.DataAccessLayer
         String ConnName { get; set; }
 
         /// <summary>链接字符串</summary>
+        /// <remarks>内部密码字段已解密</remarks>
         String ConnectionString { get; set; }
 
         /// <summary>数据库提供者。用于选择驱动</summary>

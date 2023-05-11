@@ -266,15 +266,16 @@ internal partial class DbMetaData
         {
             if (!dbdic.TryGetValue(item.ColumnName, out var dbf)) continue;
 
+            // 对于修改列，只读或者只创建，都只要sql
             if (IsColumnTypeChanged(item, dbf))
             {
                 WriteLog("字段{0}.{1}类型需要由数据库的{2}改变为实体的{3}", entitytable.Name, item.Name, dbf.DataType, item.DataType);
-                PerformSchema(sb, onlyCreate, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
             }
             else if (IsColumnLengthChanged(item, dbf, entityDb))
-                PerformSchema(sb, @readonly, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
             else if (IsColumnChanged(item, dbf, entityDb))
-                PerformSchema(sb, onlyCreate, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
 
             //if (item.Description + "" != dbf.Description + "")
             if (FormatDescription(item.Description) != FormatDescription(dbf.Description))
@@ -283,7 +284,7 @@ internal partial class DbMetaData
                 //if (dbf.Description != null) PerformSchema(sb, noDelete, DDLSchema.DropColumnDescription, dbf);
 
                 // 加上新注释
-                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, @readonly, DDLSchema.AddColumnDescription, item);
+                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AddColumnDescription, item);
             }
         }
         #endregion

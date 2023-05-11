@@ -49,7 +49,7 @@ public class TraceModule : EntityModule
             // 多编码合并
             var old = entity[__.TraceId] as String;
             var ss = old?.Split(',').ToList();
-            if (ss.Count > 0 && !ss.Contains(traceId))
+            if (ss != null && ss.Count > 0 && !ss.Contains(traceId))
             {
                 ss.Add(traceId);
 

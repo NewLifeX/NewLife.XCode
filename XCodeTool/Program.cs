@@ -148,13 +148,14 @@ class Program
         // 生成简易模型类
         {
             var opt = option.Clone() as EntityBuilderOption;
-            opt.Items.TryGetValue("ModelsOutput", out var output);
-            output ??= @".\Models\";
+            //opt.Items.TryGetValue("ModelsOutput", out var output);
+            var output = option.ModelsOutput ?? @".\Models\";
             opt.Output = opt.Output.CombinePath(output);
             opt.BaseClass = null;
             opt.ClassNameTemplate = modelClass;
             opt.ModelNameForCopy = !modelInterface.IsNullOrEmpty() ? modelInterface : modelClass;
             opt.HasIModel = true;
+            opt.Partial = true;
             if (!modelClass.IsNullOrEmpty())
             {
                 ClassBuilder.BuildModels(tables, opt);
@@ -172,13 +173,15 @@ class Program
         // 生成简易接口
         {
             var opt = option.Clone() as EntityBuilderOption;
-            opt.Items.TryGetValue("InterfacesOutput", out var output);
-            output ??= @".\Interfaces\";
+            //opt.Items.TryGetValue("InterfacesOutput", out var output);
+            //output ??= @".\Interfaces\";
+            var output = option.InterfacesOutput ?? @".\Interfaces\";
             opt.Output = opt.Output.CombinePath(output);
             opt.BaseClass = null;
             opt.ClassNameTemplate = modelInterface;
             opt.ModelNameForCopy = null;
             opt.HasIModel = false;
+            opt.Partial = true;
             if (!modelInterface.IsNullOrEmpty())
             {
                 ClassBuilder.BuildInterfaces(tables, opt);

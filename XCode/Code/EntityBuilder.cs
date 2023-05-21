@@ -37,6 +37,21 @@ public class EntityBuilder : ClassBuilder
         // 保存文件名
         if (xmlFile.IsNullOrEmpty()) xmlFile = atts["ModelFile"];
 
+        // 给默认字段赋值
+        var def = option.GetType().CreateInstance() as BuilderOption;
+        foreach (var pi in option.GetType().GetProperties(true))
+        {
+            var val = option.GetValue(pi);
+            if (pi.PropertyType == typeof(String) && val is String str)
+            {
+                if (str.IsNullOrEmpty()) option.SetValue(pi, def.GetValue(pi));
+            }
+            else
+            {
+                if (val == null) option.SetValue(pi, def.GetValue(pi));
+            }
+        }
+
         // 反哺。确保输出空特性
         //atts["Output"] = option.Output + "";
         //atts["NameSpace"] = option.Namespace + "";

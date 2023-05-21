@@ -9,8 +9,6 @@
     <BaseClass>Entity</BaseClass>
     <!--命名空间-->
     <Namespace>XCode.Membership</Namespace>
-    <!--是否分部类-->
-    <Partial>False</Partial>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
     <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
@@ -25,12 +23,16 @@
     <ModelInterface>I{name}</ModelInterface>
     <!--数据库连接名-->
     <ConnName>Membership</ConnName>
+    <!--模型类输出目录。默认当前目录的Models子目录-->
+    <ModelsOutput>.\Models\</ModelsOutput>
+    <!--模型接口输出目录。默认当前目录的Interfaces子目录-->
+    <InterfacesOutput>.\Interfaces\</InterfacesOutput>
     <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->
     <ModelNameForToModel />
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Underline</NameFormat>
     <!--生成器版本-->
-    <Version>11.8.2023.0511</Version>
+    <Version>11.8.2023.0522</Version>
     <!--帮助文档-->
     <Document>https://newlifex.com/xcode/model</Document>
   </Option>

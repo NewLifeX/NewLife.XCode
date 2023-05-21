@@ -47,10 +47,14 @@ internal class MemberSection
             {
                 // 空行后的#，不认为是开始
                 if (line.StartsWith("#region"))
-                    status = -1;
+                    status = 0;
                 else
                 {
-                    p = i - 1;
+                    var pre = lines[i - 1]?.Trim();
+                    if (pre.IsNullOrEmpty() || pre.StartsWith("#region"))
+                        p = i;
+                    else
+                        p = i - 1;
                     status = 1;
 
                     name = GetName(line);
@@ -70,7 +74,7 @@ internal class MemberSection
                     var ms = Create(name, p, lines.Skip(p).Take(i - p).ToArray());
                     list.Add(ms);
 
-                    status = IsStart(line) ? 0 : -1;
+                    status = line.IsNullOrEmpty() || IsStart(line) ? 0 : -1;
                     name = null;
                 }
                 // 最后一行，也要结束
@@ -92,7 +96,7 @@ internal class MemberSection
         return list;
     }
 
-    static Boolean IsStart(String line) => line.StartsWith("/// <summary>") || line.StartsWith("///// <summary>");
+    static Boolean IsStart(String line) => line.StartsWith("/// <summary>") || line.StartsWith("///// <summary>") || line.StartsWith("#region");
 
     static MemberSection Create(String name, Int32 p, String[] lines)
     {
@@ -126,7 +130,7 @@ internal class MemberSection
 
     static String GetName(String line)
     {
-        if (!line.StartsWithIgnoreCase("public ", "protect ", "private ", "internal ", "static "))
+        if (!line.StartsWithIgnoreCase("public ", "protected ", "private ", "internal ", "static "))
             return null;
 
         var str = line;

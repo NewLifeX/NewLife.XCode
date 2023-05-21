@@ -401,4 +401,72 @@ public class MemberSectionTests
 
         //Assert.Equal(lines.Length, list.Sum(e => e.Lines.Length));
     }
+
+    [Fact]
+    public void Parse3()
+    {
+        var code =
+"""
+    #region 扩展属性
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    public Product Product => Extends.Get(nameof(Product), k => Product.FindById(ProductId));
+
+    [Map(nameof(ProductId), typeof(Product), "Id")]
+    public String ProductName => Product?.Name;
+
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    public DeviceGroup Group => Extends.Get(nameof(Group), k => DeviceGroup.FindById(GroupId));
+
+    [Map(nameof(GroupId), typeof(DeviceGroup), "Id")]
+    public String GroupPath => Group?.Name;
+
+    [Category("基本信息")]
+    [Map(nameof(CityId))]
+    public String AreaName => Area.FindByIDs(CityId, ProvinceId)?.Path;
+
+    /// <summary>父级设备</summary>
+    [XmlIgnore, IgnoreDataMember]
+    //[ScriptIgnore]
+    public Device Parent => Extends.Get(nameof(Parent), k => Device.FindById(ParentId));
+
+    /// <summary>父级设备</summary>
+    [Map(nameof(ParentId), typeof(Device), "Id")]
+    public String ParentName => Parent?.Name;
+
+    /// <summary>子设备。借助扩展属性缓存</summary>
+    [XmlIgnore, IgnoreDataMember]
+    public IList<Device> Childs => Extends.Get(nameof(Childs), k => FindAllByParent(Id));
+
+    /// <summary>设备属性。借助扩展属性缓存</summary>
+    [XmlIgnore, IgnoreDataMember]
+    public IList<DeviceProperty> Properties => Extends.Get(nameof(Properties), k => DeviceProperty.FindAllByDeviceId(Id));
+
+    /// <summary>设备服务。借助扩展属性缓存</summary>
+    [XmlIgnore, IgnoreDataMember]
+    public IList<DeviceService> Services => Extends.Get(nameof(Services), k => DeviceService.FindAllByDeviceId(Id));
+
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    protected Boolean IgnoreVaild { get; set; } = false;
+    #endregion
+""";
+
+        var lines = code.Split(Environment.NewLine);
+
+        var list = MemberSection.Parse(lines);
+
+        Assert.NotNull(list);
+        Assert.Equal(11, list.Count);
+
+        Assert.Equal("Product", list[0].Name);
+        Assert.Equal("ProductName", list[1].Name);
+        Assert.Equal("Group", list[2].Name);
+        Assert.Equal("GroupPath", list[3].Name);
+        Assert.Equal("AreaName", list[4].Name);
+        Assert.Equal("Parent", list[5].Name);
+        Assert.Equal("ParentName", list[6].Name);
+        Assert.Equal("Childs", list[7].Name);
+        Assert.Equal("Properties", list[8].Name);
+        Assert.Equal("Services", list[9].Name);
+        Assert.Equal("IgnoreVaild", list[10].Name);
+    }
 }

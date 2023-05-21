@@ -227,7 +227,8 @@ public class ClassBuilderTests
         var option = new BuilderOption
         {
             Output = dir,
-            ClassNameTemplate = "{name}Model"
+            ClassNameTemplate = "{name}Model",
+            Partial = true,
         };
 
         ClassBuilder.BuildModels(_tables, option);
@@ -269,6 +270,7 @@ public class ClassBuilderTests
         {
             Output = dir,
             ClassNameTemplate = "{name}Dto",
+            Partial = true,
         };
 
         ClassBuilder.BuildModels(_tables, option);

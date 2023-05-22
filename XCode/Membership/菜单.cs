@@ -13,13 +13,13 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Membership;
 
-/// <summary>菜单</summary>
+/// <summary>菜单。功能权限，大多数时候也是可见页面</summary>
 [Serializable]
 [DataObject]
-[Description("菜单")]
+[Description("菜单。功能权限，大多数时候也是可见页面")]
 [BindIndex("IX_Menu_Name", false, "Name")]
 [BindIndex("IU_Menu_ParentID_Name", true, "ParentID,Name")]
-[BindTable("Menu", Description = "菜单", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("Menu", Description = "菜单。功能权限，大多数时候也是可见页面", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class Menu : IMenu, IEntity<MenuModel>
 {
     #region 属性

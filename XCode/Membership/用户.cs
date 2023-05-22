@@ -13,17 +13,17 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Membership;
 
-/// <summary>用户。用户帐号信息</summary>
+/// <summary>用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户</summary>
 [Serializable]
 [DataObject]
-[Description("用户。用户帐号信息")]
+[Description("用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户")]
 [BindIndex("IU_User_Name", true, "Name")]
 [BindIndex("IX_User_Mail", false, "Mail")]
 [BindIndex("IX_User_Mobile", false, "Mobile")]
 [BindIndex("IX_User_Code", false, "Code")]
 [BindIndex("IX_User_RoleID", false, "RoleID")]
 [BindIndex("IX_User_UpdateTime", false, "UpdateTime")]
-[BindTable("User", Description = "用户。用户帐号信息", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("User", Description = "用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class User : IUser, IEntity<UserModel>
 {
     #region 属性
@@ -68,27 +68,27 @@ public partial class User : IUser, IEntity<UserModel>
     public XCode.Membership.SexKinds Sex { get => _Sex; set { if (OnPropertyChanging("Sex", value)) { _Sex = value; OnPropertyChanged("Sex"); } } }
 
     private String _Mail;
-    /// <summary>邮件</summary>
+    /// <summary>邮件。支持登录</summary>
     [DisplayName("邮件")]
-    [Description("邮件")]
+    [Description("邮件。支持登录")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Mail", "邮件", "", ItemType = "mail")]
+    [BindColumn("Mail", "邮件。支持登录", "", ItemType = "mail")]
     public String Mail { get => _Mail; set { if (OnPropertyChanging("Mail", value)) { _Mail = value; OnPropertyChanged("Mail"); } } }
 
     private String _Mobile;
-    /// <summary>手机</summary>
+    /// <summary>手机。支持登录</summary>
     [DisplayName("手机")]
-    [Description("手机")]
+    [Description("手机。支持登录")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Mobile", "手机", "", ItemType = "mobile")]
+    [BindColumn("Mobile", "手机。支持登录", "", ItemType = "mobile")]
     public String Mobile { get => _Mobile; set { if (OnPropertyChanging("Mobile", value)) { _Mobile = value; OnPropertyChanged("Mobile"); } } }
 
     private String _Code;
-    /// <summary>代码。身份证、员工编号等</summary>
+    /// <summary>代码。身份证、员工编码等，支持登录</summary>
     [DisplayName("代码")]
-    [Description("代码。身份证、员工编号等")]
+    [Description("代码。身份证、员工编码等，支持登录")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Code", "代码。身份证、员工编号等", "")]
+    [BindColumn("Code", "代码。身份证、员工编码等，支持登录", "")]
     public String Code { get => _Code; set { if (OnPropertyChanging("Code", value)) { _Code = value; OnPropertyChanged("Code"); } } }
 
     private Int32 _AreaId;
@@ -214,12 +214,12 @@ public partial class User : IUser, IEntity<UserModel>
     public String RegisterIP { get => _RegisterIP; set { if (OnPropertyChanging("RegisterIP", value)) { _RegisterIP = value; OnPropertyChanged("RegisterIP"); } } }
 
     private Int32 _OnlineTime;
-    /// <summary>在线时间。累计在线总时间，秒</summary>
+    /// <summary>在线时间。累计在线总时间，单位秒</summary>
     [Category("登录信息")]
     [DisplayName("在线时间")]
-    [Description("在线时间。累计在线总时间，秒")]
+    [Description("在线时间。累计在线总时间，单位秒")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("OnlineTime", "在线时间。累计在线总时间，秒", "", ItemType = "TimeSpan")]
+    [BindColumn("OnlineTime", "在线时间。累计在线总时间，单位秒", "", ItemType = "TimeSpan")]
     public Int32 OnlineTime { get => _OnlineTime; set { if (OnPropertyChanging("OnlineTime", value)) { _OnlineTime = value; OnPropertyChanged("OnlineTime"); } } }
 
     private Int32 _Ex1;
@@ -497,13 +497,13 @@ public partial class User : IUser, IEntity<UserModel>
         /// <summary>性别。未知、男、女</summary>
         public static readonly Field Sex = FindByName("Sex");
 
-        /// <summary>邮件</summary>
+        /// <summary>邮件。支持登录</summary>
         public static readonly Field Mail = FindByName("Mail");
 
-        /// <summary>手机</summary>
+        /// <summary>手机。支持登录</summary>
         public static readonly Field Mobile = FindByName("Mobile");
 
-        /// <summary>代码。身份证、员工编号等</summary>
+        /// <summary>代码。身份证、员工编码等，支持登录</summary>
         public static readonly Field Code = FindByName("Code");
 
         /// <summary>地区。省市区</summary>
@@ -548,7 +548,7 @@ public partial class User : IUser, IEntity<UserModel>
         /// <summary>注册IP</summary>
         public static readonly Field RegisterIP = FindByName("RegisterIP");
 
-        /// <summary>在线时间。累计在线总时间，秒</summary>
+        /// <summary>在线时间。累计在线总时间，单位秒</summary>
         public static readonly Field OnlineTime = FindByName("OnlineTime");
 
         /// <summary>扩展1</summary>
@@ -605,13 +605,13 @@ public partial class User : IUser, IEntity<UserModel>
         /// <summary>性别。未知、男、女</summary>
         public const String Sex = "Sex";
 
-        /// <summary>邮件</summary>
+        /// <summary>邮件。支持登录</summary>
         public const String Mail = "Mail";
 
-        /// <summary>手机</summary>
+        /// <summary>手机。支持登录</summary>
         public const String Mobile = "Mobile";
 
-        /// <summary>代码。身份证、员工编号等</summary>
+        /// <summary>代码。身份证、员工编码等，支持登录</summary>
         public const String Code = "Code";
 
         /// <summary>地区。省市区</summary>
@@ -656,7 +656,7 @@ public partial class User : IUser, IEntity<UserModel>
         /// <summary>注册IP</summary>
         public const String RegisterIP = "RegisterIP";
 
-        /// <summary>在线时间。累计在线总时间，秒</summary>
+        /// <summary>在线时间。累计在线总时间，单位秒</summary>
         public const String OnlineTime = "OnlineTime";
 
         /// <summary>扩展1</summary>

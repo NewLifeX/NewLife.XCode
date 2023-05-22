@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership;
 
-/// <summary>字典参数</summary>
+/// <summary>字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合</summary>
 public partial interface IParameter
 {
     #region 属性

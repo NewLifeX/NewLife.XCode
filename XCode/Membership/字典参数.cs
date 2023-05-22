@@ -13,14 +13,14 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Membership;
 
-/// <summary>字典参数</summary>
+/// <summary>字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合</summary>
 [Serializable]
 [DataObject]
-[Description("字典参数")]
+[Description("字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合")]
 [BindIndex("IU_Parameter_UserID_Category_Name", true, "UserID,Category,Name")]
 [BindIndex("IX_Parameter_Category_Name", false, "Category,Name")]
 [BindIndex("IX_Parameter_UpdateTime", false, "UpdateTime")]
-[BindTable("Parameter", Description = "字典参数", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("Parameter", Description = "字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class Parameter : IParameter, IEntity<ParameterModel>
 {
     #region 属性

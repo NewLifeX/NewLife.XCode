@@ -224,7 +224,7 @@ public class CubeBuilder : ClassBuilder
 
     static String FindAreaName(String dir)
     {
-        var di = dir.AsDirectory();
+        var di = dir.GetBasePath().AsDirectory();
         if (!di.Exists) return null;
 
         foreach (var fi in di.GetFiles("*Area.cs"))
@@ -245,58 +245,26 @@ public class CubeBuilder : ClassBuilder
     /// <returns></returns>
     static String FindProjectRootNamespace(String dir)
     {
-        var di = dir.AsDirectory();
-        if (di.Exists)
+        var di = dir.GetBasePath().AsDirectory();
+        for (var i = 0; i < 3; i++)
         {
-            foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
+            if (di.Exists)
             {
-                var ns = Path.GetFileNameWithoutExtension(fi.FullName);
-
-                var xml = File.ReadAllText(fi.FullName);
-                if (!xml.IsNullOrEmpty())
+                foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
                 {
-                    var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
-                    if (!str.IsNullOrEmpty()) ns = str;
+                    var ns = Path.GetFileNameWithoutExtension(fi.FullName);
+
+                    var xml = File.ReadAllText(fi.FullName);
+                    if (!xml.IsNullOrEmpty())
+                    {
+                        var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
+                        if (!str.IsNullOrEmpty()) ns = str;
+                    }
+
+                    if (!ns.IsNullOrEmpty()) return ns;
                 }
-
-                if (!ns.IsNullOrEmpty()) return ns;
             }
-        }
-
-        di = di.Parent;
-        if (di.Exists)
-        {
-            foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
-            {
-                var ns = Path.GetFileNameWithoutExtension(fi.FullName);
-
-                var xml = File.ReadAllText(fi.FullName);
-                if (!xml.IsNullOrEmpty())
-                {
-                    var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
-                    if (!str.IsNullOrEmpty()) ns = str;
-                }
-
-                if (!ns.IsNullOrEmpty()) return ns;
-            }
-        }
-
-        di = di.Parent;
-        if (di.Exists)
-        {
-            foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
-            {
-                var ns = Path.GetFileNameWithoutExtension(fi.FullName);
-
-                var xml = File.ReadAllText(fi.FullName);
-                if (!xml.IsNullOrEmpty())
-                {
-                    var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
-                    if (!str.IsNullOrEmpty()) ns = str;
-                }
-
-                if (!ns.IsNullOrEmpty()) return ns;
-            }
+            di = di.Parent;
         }
 
         return null;

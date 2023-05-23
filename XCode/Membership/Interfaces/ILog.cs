@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership;
 
-/// <summary>日志</summary>
+/// <summary>日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除</summary>
 public partial interface ILog
 {
     #region 属性

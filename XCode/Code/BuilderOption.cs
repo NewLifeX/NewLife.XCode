@@ -10,7 +10,7 @@ public class BuilderOption
     #region 属性
     /// <summary>输出目录</summary>
     [Description("输出目录")]
-    public String Output { get; set; }
+    public String Output { get; set; } = @".\";
 
     /// <summary>是否使用中文文件名。默认false</summary>
     [Description("是否使用中文文件名。默认false")]
@@ -26,6 +26,7 @@ public class BuilderOption
 
     /// <summary>是否分部类</summary>
     [Description("是否分部类")]
+    [XmlIgnore, IgnoreDataMember]
     public Boolean Partial { get; set; }
 
     /// <summary>类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等</summary>

@@ -8,7 +8,7 @@ using NewLife.Data;
 
 namespace XCode.Membership;
 
-/// <summary>角色</summary>
+/// <summary>角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限</summary>
 public partial class RoleModel : IModel
 {
     #region 属性

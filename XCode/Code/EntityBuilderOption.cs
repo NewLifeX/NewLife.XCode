@@ -10,6 +10,14 @@ public class EntityBuilderOption : BuilderOption
     [Description("数据库连接名")]
     public String ConnName { get; set; }
 
+    /// <summary>模型类输出目录。默认当前目录的Models子目录</summary>
+    [Description("模型类输出目录。默认当前目录的Models子目录")]
+    public String ModelsOutput { get; set; } = @".\Models\";
+
+    /// <summary>模型接口输出目录。默认当前目录的Interfaces子目录</summary>
+    [Description("模型接口输出目录。默认当前目录的Interfaces子目录")]
+    public String InterfacesOutput { get; set; } = @".\Interfaces\";
+
     /// <summary>用户实体转为模型类的模型类。例如{name}或{name}DTO</summary>
     [Description("用户实体转为模型类的模型类。例如{name}或{name}DTO")]
     public String ModelNameForToModel { get; set; }

@@ -128,7 +128,7 @@ public class ClassBuilder
             option = option.Clone();
 
         option.Pure = true;
-        option.Partial = true;
+        //option.Partial = true;
 
         if (Debug) XTrace.WriteLine("生成简易模型类 {0}", option.Output.GetBasePath());
 
@@ -179,7 +179,7 @@ public class ClassBuilder
             option = option.Clone();
 
         option.Interface = true;
-        option.Partial = true;
+        //option.Partial = true;
 
         if (Debug) XTrace.WriteLine("生成简易接口 {0}", option.Output.GetBasePath());
 

@@ -38,16 +38,16 @@
     <!--魔方控制器输出目录-->
     <CubeOutput />
   </Option>
-  <Table Name="User" Description="用户。用户帐号信息">
+  <Table Name="User" Description="用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。登录用户名" />
       <Column Name="Password" DataType="String" Length="200" Description="密码" />
       <Column Name="DisplayName" DataType="String" Description="昵称" />
       <Column Name="Sex" DataType="Int32" Description="性别。未知、男、女" Type="XCode.Membership.SexKinds" />
-      <Column Name="Mail" DataType="String" ItemType="mail" Description="邮件" />
-      <Column Name="Mobile" DataType="String" ItemType="mobile" Description="手机" />
-      <Column Name="Code" DataType="String" Description="代码。身份证、员工编号等" />
+      <Column Name="Mail" DataType="String" ItemType="mail" Description="邮件。支持登录" />
+      <Column Name="Mobile" DataType="String" ItemType="mobile" Description="手机。支持登录" />
+      <Column Name="Code" DataType="String" Description="代码。身份证、员工编码等，支持登录" />
       <Column Name="AreaId" DataType="Int32" Map="XCode.Membership.Area@Id@Path@AreaPath" Description="地区。省市区" />
       <Column Name="Avatar" DataType="String" ItemType="image" Length="200" Description="头像" />
       <Column Name="RoleID" DataType="Int32" Map="Role@Id@Name" DefaultValue="3" Description="角色。主要角色" Category="登录信息" />
@@ -62,7 +62,7 @@
       <Column Name="LastLoginIP" DataType="String" Description="最后登录IP" Category="登录信息" />
       <Column Name="RegisterTime" DataType="DateTime" Description="注册时间" Category="登录信息" />
       <Column Name="RegisterIP" DataType="String" Description="注册IP" Category="登录信息" />
-      <Column Name="OnlineTime" DataType="Int32" ItemType="TimeSpan" Description="在线时间。累计在线总时间，秒" Category="登录信息" />
+      <Column Name="OnlineTime" DataType="Int32" ItemType="TimeSpan" Description="在线时间。累计在线总时间，单位秒" Category="登录信息" />
       <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
       <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />
       <Column Name="Ex3" DataType="Double" Description="扩展3" Category="扩展" />
@@ -84,7 +84,7 @@
       <Index Columns="UpdateTime" />
     </Indexes>
   </Table>
-  <Table Name="Department" Description="部门。组织机构，多级树状结构">
+  <Table Name="Department" Description="部门。组织机构，多级树状结构，支持多租户">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="TenantId" DataType="Int32" Map="Tenant@Id@$" Description="租户" />
@@ -121,7 +121,7 @@
       <Index Columns="TenantId" />
     </Indexes>
   </Table>
-  <Table Name="Role" Description="角色">
+  <Table Name="Role" Description="角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
@@ -149,7 +149,7 @@
       <Index Columns="Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="Menu" Description="菜单" BaseType="EntityTree">
+  <Table Name="Menu" Description="菜单。功能权限，大多数时候也是可见页面" BaseType="EntityTree">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
@@ -184,7 +184,7 @@
       <Index Columns="ParentID,Name" Unique="True" />
     </Indexes>
   </Table>
-  <Table Name="Parameter" Description="字典参数">
+  <Table Name="Parameter" Description="字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
       <Column Name="UserID" DataType="Int32" Map="User@Id@$" Description="用户。按用户区分参数，用户0表示系统级" />
@@ -246,7 +246,7 @@
       <Index Columns="UpdateTime,ID" />
     </Indexes>
   </Table>
-  <Table Name="Log" Description="日志" ConnName="Log" InsertOnly="True">
+  <Table Name="Log" Description="日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除" ConnName="Log" InsertOnly="True">
     <Columns>
       <Column Name="ID" DataType="Int64" PrimaryKey="True" Description="编号" />
       <Column Name="Category" DataType="String" Description="类别" />

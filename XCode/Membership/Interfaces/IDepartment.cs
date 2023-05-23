@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership;
 
-/// <summary>部门。组织机构，多级树状结构</summary>
+/// <summary>部门。组织机构，多级树状结构，支持多租户</summary>
 public partial interface IDepartment
 {
     #region 属性

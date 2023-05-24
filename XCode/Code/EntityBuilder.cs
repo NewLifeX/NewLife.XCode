@@ -1211,7 +1211,28 @@ public class EntityBuilder : ClassBuilder
             }
 
             // 只有整数和字符串能生成查询函数
-            if (!cs.All(e => e.DataType.IsInt() || e.DataType == typeof(String))) continue;
+            var flag = true;
+            foreach (var dc in cs)
+            {
+                if (dc.DataType.IsInt() || dc.DataType == typeof(String))
+                {
+                    flag = true;
+                }
+                else if (dc.DataType == typeof(DateTime))
+                {
+                    if (dc.Name.EqualIgnoreCase("CreateTime", "UpdateTime"))
+                    {
+                        flag = false;
+                    }
+                }
+                else
+                {
+                    flag = false;
+                }
+
+                if (!flag) break;
+            }
+            if (!flag) continue;
 
             WriteLine();
             WriteLine("/// <summary>根据{0}查找</summary>", cs.Select(e => e.DisplayName).Join("、"));

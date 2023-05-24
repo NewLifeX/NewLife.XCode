@@ -188,6 +188,43 @@ public partial class Log : Entity<Log>
 
         return FindAll(_.CreateUserID == createUserId & _.ID == id);
     }
+
+    /// <summary>根据操作、类别查找</summary>
+    /// <param name="action">操作</param>
+    /// <param name="category">类别</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByActionAndCategory(String action, String category)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Action.EqualIgnoreCase(action) && e.Category.EqualIgnoreCase(category));
+
+        return FindAll(_.Action == action & _.Category == category);
+    }
+
+    /// <summary>根据类别、链接查找</summary>
+    /// <param name="category">类别</param>
+    /// <param name="linkId">链接</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByCategoryAndLinkID(String category, Int32 linkId)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.LinkID == linkId);
+
+        return FindAll(_.Category == category & _.LinkID == linkId);
+    }
+
+    /// <summary>根据创建用户查找</summary>
+    /// <param name="createUserId">创建用户</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByCreateUserID(Int32 createUserId)
+    {
+        if (createUserId <= 0) return new List<Log>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserID == createUserId);
+
+        return FindAll(_.CreateUserID == createUserId);
+    }
     #endregion
 
     #region 扩展操作

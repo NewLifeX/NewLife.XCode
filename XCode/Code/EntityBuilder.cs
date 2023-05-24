@@ -1149,6 +1149,8 @@ public class EntityBuilder : ClassBuilder
     {
         WriteLine("#region 扩展查询");
 
+        var names = new List<String>();
+
         // 主键
         IDataColumn pk = null;
         if (Table.PrimaryKeys.Length == 1)
@@ -1159,10 +1161,13 @@ public class EntityBuilder : ClassBuilder
             var type = pk.Properties["Type"];
             if (type.IsNullOrEmpty()) type = pk.DataType?.Name;
 
+            var methodName = $"FindBy{pk.Name}";
+            names.Add(methodName);
+
             WriteLine("/// <summary>根据{0}查找</summary>", pk.DisplayName);
             WriteLine("/// <param name=\"{0}\">{1}</param>", name, pk.DisplayName);
             WriteLine("/// <returns>实体对象</returns>");
-            WriteLine("public static {3} FindBy{0}({1} {2})", pk.Name, type, name, ClassName);
+            WriteLine("public static {3} {0}({1} {2})", methodName, type, name, ClassName);
             WriteLine("{");
             {
                 if (pk.DataType.IsInt())
@@ -1193,11 +1198,17 @@ public class EntityBuilder : ClassBuilder
             // 跳过主键
             if (di.Columns.Length == 1 && pk != null && di.Columns[0].EqualIgnoreCase(pk.Name, pk.ColumnName)) continue;
 
-            // 超过2字段索引，不要生成查询函数
-            if (di.Columns.Length > 2) continue;
+            // 超过3字段索引，不要生成查询函数
+            if (di.Columns.Length > 3) continue;
 
             var cs = Table.GetColumns(di.Columns);
             if (cs == null || cs.Length != di.Columns.Length) continue;
+
+            // 索引最后一个字段如果是主键Id，则该不参与生成查询方法
+            if (pk != null && cs[cs.Length - 1].ColumnName.EqualIgnoreCase(pk.ColumnName))
+            {
+                cs = cs.Take(cs.Length - 1).ToArray();
+            }
 
             // 只有整数和字符串能生成查询函数
             if (!cs.All(e => e.DataType.IsInt() || e.DataType == typeof(String))) continue;
@@ -1219,11 +1230,17 @@ public class EntityBuilder : ClassBuilder
             }
             var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
 
+            // 如果方法名已存在，则不生成
+            var methodName = cs.Select(e => e.Name).Join("And");
+            methodName = di.Unique ? $"FindBy{methodName}" : $"FindAllBy{methodName}";
+            if (names.Contains(methodName)) continue;
+            names.Add(methodName);
+
             // 返回类型
             if (di.Unique)
             {
                 WriteLine("/// <returns>{0}</returns>", di.Unique ? "实体对象" : "实体列表");
-                WriteLine("public static {2} FindBy{0}({1})", cs.Select(e => e.Name).Join("And"), args, ClassName);
+                WriteLine("public static {2} {0}({1})", methodName, args, ClassName);
                 WriteLine("{");
                 {
                     if (cs.Length == 1)
@@ -1269,7 +1286,7 @@ public class EntityBuilder : ClassBuilder
             else
             {
                 WriteLine("/// <returns>{0}</returns>", di.Unique ? "实体对象" : "实体列表");
-                WriteLine("public static IList<{2}> FindAllBy{0}({1})", cs.Select(e => e.Name).Join("And"), args, ClassName);
+                WriteLine("public static IList<{2}> {0}({1})", methodName, args, ClassName);
                 WriteLine("{");
                 {
                     if (cs.Length == 1)

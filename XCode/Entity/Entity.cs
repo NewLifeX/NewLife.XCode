@@ -10,6 +10,7 @@ using XCode.Common;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 using XCode.Model;
+using XCode.Shards;
 
 namespace XCode;
 
@@ -958,6 +959,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
         else
         {
+            // 根据分页字段排序分页表
+            shards = FixOrder(shards, order);
+
             // 分表查询，需要跳过前面的表
             var row = startRowIndex;
             var max = maximumRows;
@@ -995,6 +999,30 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
             return rs;
         }
+    }
+
+    static ShardModel[] FixOrder(ShardModel[] shards, String order)
+    {
+        // 根据分页字段排序分页表
+        var ds = order?.Split(",");
+        if (ds != null)
+        {
+            var sfield = Meta.ShardPolicy.Field;
+            foreach (var item in ds)
+            {
+                var ss = item.Split(' ');
+                if (ss[0].EqualIgnoreCase(sfield.Name, sfield.ColumnName))
+                {
+                    // 默认升序，第二个元素是desc才是降序
+                    if (ss.Length >= 2 && ss[1].EqualIgnoreCase("desc"))
+                        shards = shards.OrderByDescending(e => e.ConnName).ThenByDescending(e => e.TableName).ToArray();
+                    else
+                        shards = shards.OrderBy(e => e.ConnName).ThenBy(e => e.TableName).ToArray();
+                }
+            }
+        }
+
+        return shards;
     }
 
     /// <summary>同时查询满足条件的记录集和记录总数。没有数据时返回空集合而不是null</summary>
@@ -1241,6 +1269,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
         else
         {
+            // 根据分页字段排序分页表
+            shards = FixOrder(shards, order);
+
             // 分表查询，需要跳过前面的表
             var row = startRowIndex;
             var max = maximumRows;

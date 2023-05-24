@@ -230,9 +230,9 @@ public partial class User : Entity<User>
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="name">名称。登录用户名</param>
-    /// <param name="mail">邮件</param>
-    /// <param name="mobile">手机</param>
-    /// <param name="code">代码。身份证、员工编号等</param>
+    /// <param name="mail">邮件。支持登录</param>
+    /// <param name="mobile">手机。支持登录</param>
+    /// <param name="code">代码。身份证、员工编码等，支持登录</param>
     /// <param name="roleId">角色。主要角色</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>

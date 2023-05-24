@@ -14,14 +14,14 @@ using XCode.DataAccessLayer;
 
 namespace Company.MyName;
 
-/// <summary>日志</summary>
+/// <summary>日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除</summary>
 [Serializable]
 [DataObject]
-[Description("日志")]
+[Description("日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除")]
 [BindIndex("IX_Log_Action_Category_ID", false, "Action,Category,ID")]
 [BindIndex("IX_Log_Category_LinkID_ID", false, "Category,LinkID,ID")]
 [BindIndex("IX_Log_CreateUserID_ID", false, "CreateUserID,ID")]
-[BindTable("Log", Description = "日志", ConnName = "MyConn", DbType = DatabaseType.None)]
+[BindTable("Log", Description = "日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除", ConnName = "MyConn", DbType = DatabaseType.None)]
 public partial class Log
 {
     #region 属性

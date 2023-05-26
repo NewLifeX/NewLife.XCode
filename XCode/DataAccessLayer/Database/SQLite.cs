@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
@@ -496,58 +492,14 @@ internal class SQLiteMetaData : FileDbMetaData
             table.DbType = Database.Type;
 
             sql = dts.Get<String>(dr, "sql");
-            var p1 = sql.IndexOf('(');
-            var p2 = sql.LastIndexOf(')');
-            if (p1 < 0 || p2 < 0) continue;
-            sql = sql.Substring(p1 + 1, p2 - p1 - 1);
+            //var p1 = sql.IndexOf('(');
+            //var p2 = sql.LastIndexOf(')');
+            //if (p1 < 0 || p2 < 0) continue;
+            //sql = sql.Substring(p1 + 1, p2 - p1 - 1);
             if (sql.IsNullOrEmpty()) continue;
 
-            var sqls = sql.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
-
-            #region 字段
-            //GetTbFields(table);
-            foreach (var line in sqls)
-            {
-                if (line.IsNullOrEmpty() || line.StartsWithIgnoreCase("CREATE")) continue;
-
-                // 处理外键设置
-                if (line.Contains("CONSTRAINT") && line.Contains("FOREIGN KEY")) continue;
-
-                var fs = line.Trim().Split(' ');
-                var field = table.CreateColumn();
-
-                field.ColumnName = fs[0].TrimStart('[', '"').TrimEnd(']', '"');
-
-                if (line.Contains("AUTOINCREMENT")) field.Identity = true;
-                if (line.Contains("Primary Key")) field.PrimaryKey = true;
-
-                if (line.Contains("NOT NULL"))
-                    field.Nullable = false;
-                else if (line.Contains(" NULL "))
-                    field.Nullable = true;
-
-                field.RawType = fs.Length > 1 ? fs[1] : "nvarchar(50)";
-                field.Length = field.RawType.Substring("(", ")").ToInt();
-                field.DataType = GetDataType(field.RawType);
-
-                // SQLite的字段长度、精度等，都是由类型决定，固定值
-
-                // 如果数据库里面是integer或者autoincrement，识别类型是Int64，又是自增，则改为Int32，保持与大多数数据库的兼容
-                if (field.Identity && field.DataType == typeof(Int64) && field.RawType.EqualIgnoreCase("integer", "autoincrement"))
-                {
-                    field.DataType = typeof(Int32);
-                }
-
-                if (field.DataType == null)
-                {
-                    if (field.RawType.StartsWithIgnoreCase("varchar2", "nvarchar2")) field.DataType = typeof(String);
-                }
-
-                field.Fix();
-
-                table.Columns.Add(field);
-            }
-            #endregion
+            //var sqls = sql.Split(", ").ToList();
+            ParseColumns(table, sql);
 
             #region 索引
             var dis2 = Select(dis, "tbl_name", name);
@@ -567,8 +519,6 @@ internal class SQLiteMetaData : FileDbMetaData
             }
             #endregion
 
-            //FixTable(table, dr, data);
-
             // 修正关系数据
             table.Fix();
 
@@ -576,6 +526,71 @@ internal class SQLiteMetaData : FileDbMetaData
         }
 
         return list;
+    }
+
+    static readonly Regex _reg = new(@"(\[\w+\]|\w+)
+\s+(\w+(?:\(\d+(?:,\s*\d+)?\))?)
+(\s+not\s+null)?
+(\s+primary\s+key)?
+(\s+autoincrement)?
+(\s+default\s+[\w\']+)?
+(?:,|\s*\)?$)",
+        RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.IgnoreCase);
+    public void ParseColumns(IDataTable table, String sqlCreateTable)
+    {
+        var ms = _reg.Matches(sqlCreateTable);
+        foreach (Match m in ms)
+        {
+            //if (line.IsNullOrEmpty() || line.StartsWithIgnoreCase("CREATE")) continue;
+
+            //// 处理外键设置
+            //if (line.Contains("CONSTRAINT") && line.Contains("FOREIGN KEY")) continue;
+
+            //var fs = line.Trim().Split(' ');
+            var field = table.CreateColumn();
+
+            field.ColumnName = m.Groups[1].Value.TrimStart('[', '"').TrimEnd(']', '"');
+
+            if (m.Groups[5].Value.EqualIgnoreCase(" AUTOINCREMENT")) field.Identity = true;
+            if (m.Groups[4].Value.EqualIgnoreCase(" Primary Key")) field.PrimaryKey = true;
+
+            var str = m.Groups[3].Value?.Trim();
+            if (str.EqualIgnoreCase("NOT NULL"))
+                field.Nullable = false;
+            else if (str.EqualIgnoreCase("NULL"))
+                field.Nullable = true;
+
+            str = m.Groups[2].Value?.Trim();
+            field.RawType = str ?? "nvarchar(50)";
+            field.DataType = GetDataType(field.RawType);
+            //field.Length = field.RawType.Substring("(", ")").ToInt();
+
+            // SQLite的字段长度、精度等，都是由类型决定，固定值
+            var ns = field.RawType.Substring("(", ")").SplitAsInt(",");
+            if (ns != null && ns.Length > 0)
+            {
+                field.Length = ns[0];
+                if (ns.Length > 1)
+                {
+                    field.Precision = ns[0];
+                    field.Scale = ns[1];
+                }
+            }
+
+            // 如果数据库里面是integer或者autoincrement，识别类型是Int64，又是自增，则改为Int32，保持与大多数数据库的兼容
+            if (field.Identity && field.DataType == typeof(Int64) && field.RawType.EqualIgnoreCase("integer", "autoincrement"))
+            {
+                field.DataType = typeof(Int32);
+            }
+
+            if (field.DataType == null)
+            {
+                if (field.RawType.StartsWithIgnoreCase("varchar2", "nvarchar2")) field.DataType = typeof(String);
+            }
+            field.Fix();
+
+            table.Columns.Add(field);
+        }
     }
 
     /// <summary>

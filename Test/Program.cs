@@ -74,7 +74,7 @@ public class Program
             try
             {
 #endif
-            Test1();
+                Test1();
 #if !DEBUG
             }
             catch (Exception ex)
@@ -95,11 +95,24 @@ public class Program
 
     private static void Test1()
     {
-        var dal = DAL.Create("srm");
+        foreach (var item in "data/".AsDirectory().GetFiles("*.db"))
+        {
+            var name = item.Name;
+            XTrace.WriteLine(name);
 
-        var tables = dal.Tables;
-        var xml = DAL.Export(tables.Where(e => e.Name.EqualIgnoreCase("PurchaseOrder")));
-        XTrace.WriteLine(xml);
+            if (!DAL.ConnStrs.ContainsKey(name))
+                DAL.AddConnStr(name, $"data source={item.FullName}", null, "Sqlite");
+
+            var dal = DAL.Create(name);
+
+            var tables = dal.Tables;
+            var xml = DAL.Export(tables);
+            //var xml = DAL.Export(tables.Where(e => e.Name.EqualIgnoreCase("PurchaseOrder")));
+            if (xml.Contains("COLLATE"))
+                XTrace.WriteLine("COLLATE");
+            else
+                XTrace.WriteLine(xml);
+        }
     }
 
     private static void Test2()

@@ -528,13 +528,9 @@ internal class SQLiteMetaData : FileDbMetaData
         return list;
     }
 
-    static readonly Regex _reg = new(@"(\[\w+\]|\w+)
+    static readonly Regex _reg = new(@"[\(,]\s*(\[\w+\]|\w+)
 \s+(\w+(?:\(\d+(?:,\s*\d+)?\))?)
-(\s+not\s+null)?
-(\s+primary\s+key)?
-(\s+autoincrement)?
-(\s+default\s+[\w\']+)?
-(?:,|\s*\)?$)",
+\s*([^,]*)?",
         RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.IgnoreCase);
     public void ParseColumns(IDataTable table, String sqlCreateTable)
     {
@@ -551,13 +547,13 @@ internal class SQLiteMetaData : FileDbMetaData
 
             field.ColumnName = m.Groups[1].Value.TrimStart('[', '"').TrimEnd(']', '"');
 
-            if (m.Groups[5].Value.EqualIgnoreCase(" AUTOINCREMENT")) field.Identity = true;
-            if (m.Groups[4].Value.EqualIgnoreCase(" Primary Key")) field.PrimaryKey = true;
+            var str = m.Groups[3].Value;
+            if (str.Contains("AUTOINCREMENT")) field.Identity = true;
+            if (str.Contains("Primary Key")) field.PrimaryKey = true;
 
-            var str = m.Groups[3].Value?.Trim();
-            if (str.EqualIgnoreCase("NOT NULL"))
+            if (str.Contains("NOT NULL"))
                 field.Nullable = false;
-            else if (str.EqualIgnoreCase("NULL"))
+            else if (str.Contains("NULL"))
                 field.Nullable = true;
 
             str = m.Groups[2].Value?.Trim();

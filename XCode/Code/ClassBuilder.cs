@@ -275,7 +275,11 @@ public class ClassBuilder
     {
         // 引用命名空间
         var us = Option.Usings;
-        if (Option.HasIModel && !us.Contains("NewLife.Data")) us.Add("NewLife.Data");
+        if (Option.HasIModel)
+        {
+            if (!us.Contains("NewLife.Data")) us.Add("NewLife.Data");
+            if (!us.Contains("NewLife.Reflection")) us.Add("NewLife.Reflection");
+        }
 
         us = us.Distinct().OrderBy(e => e.StartsWith("System") ? 0 : 1).ThenBy(e => e).ToArray();
         foreach (var item in us)
@@ -449,7 +453,7 @@ public class ClassBuilder
                 WriteLine("\"{0}\" => {0},", column.Name);
             }
             //WriteLine("default: throw new KeyNotFoundException($\"{name} not found\");");
-            WriteLine("_ => null");
+            WriteLine("_ => this.GetValue(name),");
             WriteLine("};");
         }
         WriteLine("}");
@@ -471,9 +475,6 @@ public class ClassBuilder
 
                 if (!type.IsNullOrEmpty())
                 {
-                    if (!type.Contains("."))
-                    {
-                    }
                     if (!type.Contains(".") && conv.GetMethod("To" + type, new Type[] { typeof(Object) }) != null)
                     {
                         switch (type)
@@ -523,6 +524,7 @@ public class ClassBuilder
                 }
             }
             //WriteLine("default: throw new KeyNotFoundException($\"{name} not found\");");
+            WriteLine("default: this.SetValue(name, value); break;");
             WriteLine("}");
         }
         WriteLine("}");

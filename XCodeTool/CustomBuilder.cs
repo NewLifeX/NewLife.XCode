@@ -73,7 +73,7 @@ public class CustomBuilder : EntityBuilder
     /// <summary>为Xml模型文件生成实体类</summary>
     /// <param name="tables">模型文件</param>
     /// <param name="option">生成可选项</param>
-    public static Int32 BuildTables(IList<IDataTable> tables, CustomBuilderOption option)
+    public static Int32 BuildTables(IList<IDataTable> tables, CustomBuilderOption option, ILog log = null)
     {
         if (tables == null || tables.Count == 0) return 0;
 
@@ -83,12 +83,9 @@ public class CustomBuilder : EntityBuilder
             option = option.Clone() as CustomBuilderOption;
         option.Partial = true;
 
-        if (Debug)
-        {
-            var output = option.Output;
-            if (output.IsNullOrEmpty()) output = ".";
-            XTrace.WriteLine("生成实体类 {0}", output.GetBasePath());
-        }
+        var output = option.Output;
+        if (output.IsNullOrEmpty()) output = ".";
+        log?.Info("生成实体类 {0}", output.GetBasePath());
 
         var count = 0;
         foreach (var item in tables)
@@ -101,8 +98,8 @@ public class CustomBuilder : EntityBuilder
             {
                 AllTables = tables,
                 Option = option.Clone(),
+                Log = log
             };
-            if (Debug) builder.Log = XTrace.Log;
 
             if (option.ModelNameForToModel.IsNullOrEmpty())
             {

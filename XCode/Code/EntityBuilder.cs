@@ -32,7 +32,8 @@ public class EntityBuilder : ClassBuilder
     /// <param name="option"></param>
     /// <param name="atts"></param>
     /// <param name="tables"></param>
-    public static void FixModelFile(String xmlFile, BuilderOption option, IDictionary<String, String> atts, IList<IDataTable> tables)
+    /// <param name="log"></param>
+    public static void FixModelFile(String xmlFile, BuilderOption option, IDictionary<String, String> atts, IList<IDataTable> tables, ILog log = null)
     {
         // 保存文件名
         if (xmlFile.IsNullOrEmpty()) xmlFile = atts["ModelFile"];
@@ -79,7 +80,7 @@ public class EntityBuilder : ClassBuilder
         //if (Enum.TryParse<NameFormats>(atts["NameFormat"], true, out var format) && format > NameFormats.Default)
         if (option is EntityBuilderOption opt && opt.NameFormat > NameFormats.Default)
         {
-            XTrace.WriteLine("处理表名字段名为：{0}", opt.NameFormat);
+            log?.Info("处理表名字段名为：{0}", opt.NameFormat);
 
             var resolve = ModelResolver.Current;
             foreach (var dt in tables)
@@ -114,7 +115,7 @@ public class EntityBuilder : ClassBuilder
         var xml2 = ModelHelper.ToXml(tables, option, atts);
         if (xmlContent != xml2)
         {
-            if (Debug) XTrace.WriteLine("修正模型：{0}", xmlFile);
+            log?.Info("修正模型：{0}", xmlFile);
 
             File.WriteAllText(xmlFile, xml2, Encoding.UTF8);
         }
@@ -123,7 +124,8 @@ public class EntityBuilder : ClassBuilder
     /// <summary>为Xml模型文件生成实体类</summary>
     /// <param name="tables">模型文件</param>
     /// <param name="option">生成可选项</param>
-    public static Int32 BuildTables(IList<IDataTable> tables, EntityBuilderOption option)
+    /// <param name="log"></param>
+    public static Int32 BuildTables(IList<IDataTable> tables, EntityBuilderOption option, ILog log = null)
     {
         if (tables == null || tables.Count == 0) return 0;
 
@@ -133,12 +135,9 @@ public class EntityBuilder : ClassBuilder
             option = option.Clone() as EntityBuilderOption;
         option.Partial = true;
 
-        if (Debug)
-        {
-            var output = option.Output;
-            if (output.IsNullOrEmpty()) output = ".";
-            XTrace.WriteLine("生成实体类 {0}", output.GetBasePath());
-        }
+        var output = option.Output;
+        if (output.IsNullOrEmpty()) output = ".";
+        log?.Info("生成实体类 {0}", output.GetBasePath());
 
         var count = 0;
         foreach (var item in tables)
@@ -151,8 +150,8 @@ public class EntityBuilder : ClassBuilder
             {
                 AllTables = tables,
                 Option = option.Clone(),
+                Log = log
             };
-            if (Debug) builder.Log = XTrace.Log;
 
             if (option.ModelNameForToModel.IsNullOrEmpty())
             {

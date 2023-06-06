@@ -98,7 +98,16 @@ class Program
     {
         XTrace.WriteLine("正在处理：{0}", modelFile);
 
-        EntityBuilder.Debug = true;
+        var log = XTrace.Log;
+        log.Level = LogLevel.All;
+        if (log is CompositeLog clog)
+        {
+            // 使用绝对路径目录，避免在子目录中生成日志文件
+            var textFileLog = clog.Get<TextFileLog>();
+            if (textFileLog != null)
+                textFileLog.LogPath = textFileLog.LogPath.GetBasePath();
+        }
+        //EntityBuilder.Debug = true;
 
         // 设置当前工作目录
         PathHelper.BasePath = Path.GetDirectoryName(modelFile);
@@ -108,8 +117,8 @@ class Program
 
         // 加载模型文件，得到数据表
         var option = new CubeBuilderOption();
-        var tables = ClassBuilder.LoadModels(modelFile, option, out var atts);
-        EntityBuilder.FixModelFile(modelFile, option, atts, tables);
+        var tables = ClassBuilder.LoadModels(modelFile, option, out var atts, log);
+        EntityBuilder.FixModelFile(modelFile, option, atts, tables, log);
 
         XTrace.WriteLine("共有模型：{0}", tables.Count);
 
@@ -142,7 +151,7 @@ class Program
             {
                 opt.ModelNameForCopy = modelClass;
             }
-            EntityBuilder.BuildTables(tables, opt);
+            EntityBuilder.BuildTables(tables, opt, log);
         }
 
         // 生成简易模型类
@@ -158,14 +167,14 @@ class Program
             opt.Partial = true;
             if (!modelClass.IsNullOrEmpty())
             {
-                ClassBuilder.BuildModels(tables, opt);
+                ClassBuilder.BuildModels(tables, opt, log);
             }
             else
             {
                 var ts = tables.Where(e => !e.Properties["ModelClass"].IsNullOrEmpty()).ToList();
                 if (ts.Count > 0)
                 {
-                    ClassBuilder.BuildModels(ts, opt);
+                    ClassBuilder.BuildModels(ts, opt, log);
                 }
             }
         }
@@ -184,14 +193,14 @@ class Program
             opt.Partial = true;
             if (!modelInterface.IsNullOrEmpty())
             {
-                ClassBuilder.BuildInterfaces(tables, opt);
+                ClassBuilder.BuildInterfaces(tables, opt, log);
             }
             else
             {
                 var ts = tables.Where(e => !e.Properties["ModelInterface"].IsNullOrEmpty()).ToList();
                 if (ts.Count > 0)
                 {
-                    ClassBuilder.BuildInterfaces(ts, opt);
+                    ClassBuilder.BuildInterfaces(ts, opt, log);
                 }
             }
         }
@@ -199,7 +208,7 @@ class Program
         // 生成数据字典
         {
             var opt = option.Clone();
-            HtmlBuilder.BuildDataDictionary(tables, opt);
+            HtmlBuilder.BuildDataDictionary(tables, opt, log);
         }
 
         // 生成魔方区域和控制器
@@ -211,9 +220,9 @@ class Program
                 //opt.Namespace = null;
 
                 opt.Output = opt.CubeOutput;
-                CubeBuilder.BuildArea(opt);
+                CubeBuilder.BuildArea(opt, log);
 
-                CubeBuilder.BuildControllers(tables, opt);
+                CubeBuilder.BuildControllers(tables, opt, log);
             }
         }
     }

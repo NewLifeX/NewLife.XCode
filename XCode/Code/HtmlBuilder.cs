@@ -50,8 +50,9 @@ public class HtmlBuilder : ClassBuilder
     /// <summary>生成数据字典</summary>
     /// <param name="tables">表集合</param>
     /// <param name="option">可选项</param>
+    /// <param name="log"></param>
     /// <returns></returns>
-    public static Int32 BuildDataDictionary(IList<IDataTable> tables, BuilderOption option = null)
+    public static Int32 BuildDataDictionary(IList<IDataTable> tables, BuilderOption option = null, ILog log = null)
     {
         if (option == null)
             option = new BuilderOption();
@@ -63,7 +64,7 @@ public class HtmlBuilder : ClassBuilder
         file += ".htm";
         file = file.GetBasePath();
 
-        if (Debug) XTrace.WriteLine("生成数据字典 {0}", file);
+        log?.Info("生成数据字典 {0}", file);
 
         var count = 0;
         var writer = new StringWriter();
@@ -90,8 +91,8 @@ public class HtmlBuilder : ClassBuilder
                 Writer = writer,
                 Table = item,
                 Option = option.Clone(),
+                Log = log
             };
-            if (Debug) builder.Log = XTrace.Log;
 
             builder.Load(item);
 

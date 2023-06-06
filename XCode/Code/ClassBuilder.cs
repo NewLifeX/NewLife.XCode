@@ -33,8 +33,9 @@ public class ClassBuilder
     /// <param name="xmlFile">Xml模型文件</param>
     /// <param name="option">生成可选项</param>
     /// <param name="atts">扩展属性字典</param>
+    /// <param name="log"></param>
     /// <returns></returns>
-    public static IList<IDataTable> LoadModels(String xmlFile, BuilderOption option, out IDictionary<String, String> atts)
+    public static IList<IDataTable> LoadModels(String xmlFile, BuilderOption option, out IDictionary<String, String> atts, ILog log = null)
     {
         if (xmlFile.IsNullOrEmpty())
         {
@@ -59,7 +60,7 @@ public class ClassBuilder
             ["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2023.xsd"
         };
 
-        if (Debug) XTrace.WriteLine("导入模型：{0}", xmlFile);
+        log?.Info("导入模型：{0}", xmlFile);
 
         // 导入模型
         var tables = ModelHelper.FromXml(xmlContent, DAL.CreateTable, option, atts);
@@ -119,8 +120,9 @@ public class ClassBuilder
     /// <summary>生成简易版模型</summary>
     /// <param name="tables">表集合</param>
     /// <param name="option">可选项</param>
+    /// <param name="log"></param>
     /// <returns></returns>
-    public static Int32 BuildModels(IList<IDataTable> tables, BuilderOption option = null)
+    public static Int32 BuildModels(IList<IDataTable> tables, BuilderOption option = null, ILog log = null)
     {
         if (option == null)
             option = new BuilderOption();
@@ -130,7 +132,7 @@ public class ClassBuilder
         option.Pure = true;
         //option.Partial = true;
 
-        if (Debug) XTrace.WriteLine("生成简易模型类 {0}", option.Output.GetBasePath());
+        log?.Info("生成简易模型类 {0}", option.Output.GetBasePath());
 
         var count = 0;
         foreach (var item in tables)
@@ -143,8 +145,8 @@ public class ClassBuilder
             {
                 Table = item,
                 Option = option.Clone(),
+                Log = log
             };
-            if (Debug) builder.Log = XTrace.Log;
 
             builder.Load(item);
 
@@ -170,8 +172,9 @@ public class ClassBuilder
     /// <summary>生成简易版实体接口</summary>
     /// <param name="tables">表集合</param>
     /// <param name="option">可选项</param>
+    /// <param name="log"></param>
     /// <returns></returns>
-    public static Int32 BuildInterfaces(IList<IDataTable> tables, BuilderOption option = null)
+    public static Int32 BuildInterfaces(IList<IDataTable> tables, BuilderOption option = null, ILog log = null)
     {
         if (option == null)
             option = new BuilderOption();
@@ -181,7 +184,7 @@ public class ClassBuilder
         option.Interface = true;
         //option.Partial = true;
 
-        if (Debug) XTrace.WriteLine("生成简易接口 {0}", option.Output.GetBasePath());
+        log?.Info("生成简易接口 {0}", option.Output.GetBasePath());
 
         var count = 0;
         foreach (var item in tables)
@@ -194,8 +197,8 @@ public class ClassBuilder
             {
                 Table = item,
                 Option = option.Clone(),
+                Log = log
             };
-            if (Debug) builder.Log = XTrace.Log;
 
             builder.Load(item);
 
@@ -710,8 +713,8 @@ public class ClassBuilder
         return Char.ToLower(name[0]) + name[1..];
     }
 
-    /// <summary>是否调试</summary>
-    public static Boolean Debug { get; set; }
+    ///// <summary>是否调试</summary>
+    //public static Boolean Debug { get; set; }
 
     /// <summary>日志</summary>
     public ILog Log { get; set; } = Logger.Null;

@@ -110,7 +110,7 @@ public class CubeBuilder : ClassBuilder
     /// <summary>生成魔方区域</summary>
     /// <param name="option">可选项</param>
     /// <returns></returns>
-    public static Int32 BuildArea(CubeBuilderOption option)
+    public static Int32 BuildArea(CubeBuilderOption option, ILog log = null)
     {
         if (option == null)
             option = new CubeBuilderOption();
@@ -137,7 +137,7 @@ public class CubeBuilder : ClassBuilder
         var root = FindProjectRootNamespace(option.Output);
         if (root.IsNullOrEmpty()) root = option.ConnName + "Web";
 
-        if (Debug) XTrace.WriteLine("生成魔方区域 {0} {1}", areaName, file);
+        log?.Info("生成魔方区域 {0} {1}", areaName, file);
 
         var builder = new CubeBuilder
         {
@@ -162,7 +162,7 @@ public class CubeBuilder : ClassBuilder
     /// <param name="tables">表集合</param>
     /// <param name="option">可选项</param>
     /// <returns></returns>
-    public static Int32 BuildControllers(IList<IDataTable> tables, CubeBuilderOption option = null)
+    public static Int32 BuildControllers(IList<IDataTable> tables, CubeBuilderOption option = null, ILog log = null)
     {
         if (option == null)
             option = new CubeBuilderOption();
@@ -181,7 +181,7 @@ public class CubeBuilder : ClassBuilder
 
         option.Output = option.Output.CombinePath("Controllers");
 
-        if (Debug) XTrace.WriteLine("生成控制器 {0}", option.Output.GetBasePath());
+        log?.Info("生成控制器 {0}", option.Output.GetBasePath());
 
         var count = 0;
         var n = tables.Count;
@@ -199,8 +199,8 @@ public class CubeBuilder : ClassBuilder
                 AreaName = areaName,
                 RootNamespace = root,
                 Sort = n * 10,
+                Log = log
             };
-            if (Debug) builder.Log = XTrace.Log;
 
             if (builder.Option.BaseClass.IsNullOrEmpty())
             {

@@ -138,16 +138,15 @@ class Program
         {
             var opt = option.Clone() as EntityBuilderOption;
             //opt.BaseClass = null;
-            opt.ClassNameTemplate = null;
-            opt.ModelNameForCopy = null;
-            opt.ModelNameForToModel = modelClass;
+            //opt.ClassNameTemplate = null;
+            //opt.ModelNameForCopy = null;
+            //opt.ModelNameForToModel = modelClass;
             if (!modelInterface.IsNullOrEmpty())
             {
                 opt.BaseClass = modelInterface;
-                //opt.ModelNameForCopy = modelInterface;
+                opt.ModelNameForCopy = modelInterface;
             }
-            //else
-            if (!modelClass.IsNullOrEmpty())
+            else if (!modelClass.IsNullOrEmpty())
             {
                 opt.ModelNameForCopy = modelClass;
             }
@@ -160,10 +159,10 @@ class Program
             //opt.Items.TryGetValue("ModelsOutput", out var output);
             var output = option.ModelsOutput ?? @".\Models\";
             opt.Output = opt.Output.CombinePath(output);
-            opt.BaseClass = null;
+            opt.BaseClass = modelInterface;
             opt.ClassNameTemplate = modelClass;
             opt.ModelNameForCopy = !modelInterface.IsNullOrEmpty() ? modelInterface : modelClass;
-            opt.HasIModel = true;
+            //opt.HasIModel = true;
             opt.Partial = true;
             if (!modelClass.IsNullOrEmpty())
             {

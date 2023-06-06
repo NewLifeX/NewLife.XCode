@@ -74,7 +74,7 @@ public class Program
             try
             {
 #endif
-            Test1();
+            Test17();
 #if !DEBUG
             }
             catch (Exception ex)
@@ -91,6 +91,31 @@ public class Program
             var key = Console.ReadKey(true);
             if (key.Key != ConsoleKey.C) break;
         }
+    }
+
+    private static void Test17()
+    {
+        var find = Role.FindByID(1);
+        find.Ex1 = 3;
+        find.Update();
+        XTrace.WriteLine(find.ToJson());
+        var newRole = new Role() { ID = 1, Name = "Yann" };
+        var b = newRole.Update();
+
+        find = Role.FindByID(1);
+        XTrace.WriteLine(find.ToJson());
+        var aaa = ";";
+
+        var list = new List<Role>();
+        for (int i = 0; i < 5; i++)
+        {
+            var s = new Role() { ID = i + 1, Name = $"{i}" };
+            list.Add(s);
+        }
+
+        list.Update();
+
+
     }
 
     private static void Test1()

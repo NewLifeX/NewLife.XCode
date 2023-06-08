@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
+using NewLife.Log;
 using NewLife.Reflection;
 using NewLife.Serialization;
 using XCode.Common;
@@ -959,8 +960,16 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
         else
         {
+            var dt = Meta.Table;
+            using var span = DAL.GlobalTracer?.NewSpan($"db:{dt.ConnName}:{dt.TableName}:AutoShard", "自动分页查询");
+
+            // 先生成查询语句
+            var builder = CreateBuilder(where, order, selects);
+            if (order.IsNullOrEmpty()) order = builder.OrderBy;
+
             // 根据分页字段排序分页表
             shards = FixOrder(shards, order);
+            span?.AppendTag($"分库分表：{shards.Join(", ", e => $"[{e.ConnName}]{e.TableName}")}");
 
             // 分表查询，需要跳过前面的表
             var row = startRowIndex;
@@ -978,24 +987,33 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
                 // 分表查询
                 session = EntitySession<TEntity>.Create(connName, tableName);
+                span?.AppendTag($"使用 [{connName}]{tableName} 查询({row}, {max})");
 
-                var builder = CreateBuilder(where, order, selects);
                 builder.Table = session.FormatedTableName;
                 var list2 = LoadData(session.Query(builder, row, max));
                 if (list2.Count > 0) rs.AddRange(list2);
 
                 // 总数已满足要求，返回
                 if (maximumRows > 0 && rs.Count >= maximumRows) return rs;
+                span?.AppendTag($"当前表[{rs.Count}]无法凑齐数据[{maximumRows}]，需要使用下一分表");
 
                 // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
                 var skipCount = 0;
-                if (row > 0 && i < shards.Length - 1) skipCount = session.QueryCount(builder);
+                if (row > 0 && i < shards.Length - 1)
+                {
+                    skipCount = session.QueryCount(builder);
+                    span?.AppendTag($"当前表满足条件总行数[{skipCount}]，将在下一分表中跳过");
+                }
 
                 max -= list2.Count;
                 // 后边表索引记录数应该是减去前张表查询出来的记录总数，有可能负数
                 row -= skipCount;
                 if (row < 0) row = 0;
             }
+
+#if DEBUG
+            if (span != null) XTrace.WriteLine(span.Tag);
+#endif
 
             return rs;
         }

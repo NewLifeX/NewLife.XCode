@@ -277,13 +277,13 @@ public class SqlTests
         Assert.StartsWith($"[test_{time:yyyy}] Delete From Log2_{time:yyyyMMdd} Where", sqls[^1]);
 
         var list = Log2.Search(null, null, -1, null, -1, time.AddHours(-24), time, null, new PageParameter { PageSize = 100 });
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time:yyyyMMdd} Where", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time:yyyyMMdd} Where", sqls[^3]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^1]);
 
         list = Log2.Search(null, null, -1, null, -1, time.AddHours(-24), time, null, new PageParameter { PageIndex = 2, PageSize = 100 });
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^3]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time:yyyyMMdd} Where", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time:yyyyMMdd} Where", sqls[^3]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time:yyyyMMdd} Where", sqls[^2]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^1]);
 
         // logs.Delete();
         // 恢复现场，避免影响其它测试用例

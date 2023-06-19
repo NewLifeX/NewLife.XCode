@@ -95,7 +95,7 @@ public class CubeBuilder : ClassBuilder
             protected override IEnumerable<{EntityName}> Search(Pager p)
             {
                 //var deviceId = p["deviceId"].ToInt(-1);
-                //var enable = p["enable"]?.Boolean();
+                //var enable = p["enable"]?.ToBoolean();
         
                 var start = p["dtStart"].ToDateTime();
                 var end = p["dtEnd"].ToDateTime();

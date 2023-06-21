@@ -103,7 +103,7 @@ public class CustomBuilder : EntityBuilder
 
             if (option.ModelNameForToModel.IsNullOrEmpty())
             {
-                option.ModelNameForToModel = item.Name;
+                builder.EntityOption.ModelNameForToModel = item.Name;
             }
 
             builder.Load(item);

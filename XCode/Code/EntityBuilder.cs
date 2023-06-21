@@ -155,7 +155,7 @@ public class EntityBuilder : ClassBuilder
 
             if (option.ModelNameForToModel.IsNullOrEmpty())
             {
-                option.ModelNameForToModel = item.Name;
+                builder.EntityOption.ModelNameForToModel = item.Name;
             }
 
             builder.Load(item);

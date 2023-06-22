@@ -153,7 +153,12 @@ public class EntityBuilder : ClassBuilder
                 Log = log
             };
 
-            if (option.ModelNameForToModel.IsNullOrEmpty())
+            // 不能对option赋值，否则所有table的ModelNameForToModel就相同了
+            //if (option.ModelNameForToModel.IsNullOrEmpty())
+            //{
+            //    option.ModelNameForToModel = item.Name;
+            //}
+            if (builder.EntityOption.ModelNameForToModel.IsNullOrEmpty())
             {
                 builder.EntityOption.ModelNameForToModel = item.Name;
             }

@@ -292,5 +292,13 @@ public partial class User : Entity<User>
     #endregion
 
     #region 业务操作
+    public IUser ToModel()
+    {
+        var model = new User();
+        model.Copy(this);
+
+        return model;
+    }
+
     #endregion
 }

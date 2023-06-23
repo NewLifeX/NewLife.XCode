@@ -882,7 +882,7 @@ public class EntityBuilder : ClassBuilder
                 WriteLine("// 按天分表");
                 WriteLine("//Meta.ShardPolicy = new TimeShardPolicy(nameof({0}), Meta.Factory)", dc.Name);
                 WriteLine("//{");
-                WriteLine("//    TablePolicy = \"{{0}}_{{1:yyyyMMdd}}\",");
+                WriteLine("//    TablePolicy = \"{0}_{1:yyyyMMdd}\",");
                 WriteLine("//    Step = TimeSpan.FromDays(1),");
                 WriteLine("//};");
             }

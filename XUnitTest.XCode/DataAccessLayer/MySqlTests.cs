@@ -131,7 +131,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.True(count > 0);
 
             var list = Role.FindAll();
-            Assert.Equal(4, list.Count);
+            Assert.Equal(5, list.Count);
 
             var list2 = Role.FindAll(Role._.Name == "管理员");
             Assert.Equal(1, list2.Count);
@@ -174,7 +174,7 @@ namespace XUnitTest.XCode.DataAccessLayer
             Assert.True(count > 0);
 
             var list = Role.FindAll();
-            Assert.Equal(4, list.Count);
+            Assert.Equal(5, list.Count);
 
             var list2 = Role.FindAll(Role._.Name == "管理员");
             Assert.Equal(1, list2.Count);

@@ -39,7 +39,7 @@ public partial class Log : Entity<Log>
         // 按天分表
         //Meta.ShardPolicy = new TimeShardPolicy(nameof(ID), Meta.Factory)
         //{
-        //    TablePolicy = "{{0}}_{{1:yyyyMMdd}}",
+        //    TablePolicy = "{0}_{1:yyyyMMdd}",
         //    Step = TimeSpan.FromDays(1),
         //};
 
@@ -226,7 +226,7 @@ public partial class Log : Entity<Log>
     #region 业务操作
     public ILog ToModel()
     {
-        var model = new User();
+        var model = new Log();
         model.Copy(this);
 
         return model;

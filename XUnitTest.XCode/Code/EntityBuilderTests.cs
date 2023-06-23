@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using NewLife;
 using NewLife.Log;
 using XCode.Code;
 using XCode.DataAccessLayer;

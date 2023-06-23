@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Text;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -677,7 +677,14 @@ public partial class Area : Entity<Area>
 
                 var name = ss[5];
                 var p3 = name.LastIndexOf('>');
-                if (p3 >= 0) name = name[(p3 + 1)..];
+                if (p3 >= 0)
+                {
+                    var ns = name.Split("<span", "</span>");
+                    if (ns.Length > 1)
+                        name = ns.FirstOrDefault(e => !e.Contains(">"));
+                    else
+                        name = name[(p3 + 1)..];
+                }
 
                 if (!id.IsNullOrEmpty() && id.ToInt() > 10_00_00 && !name.IsNullOrEmpty())
                 {
@@ -737,6 +744,7 @@ public partial class Area : Entity<Area>
     public static IList<Area> ParseAndSave(String html)
     {
         var all = Parse(html).ToList();
+        //File.WriteAllText("area.csv", all.Join("\r\n", e => $"{e.ID},{e.FullName}"));
 
         // 预备好所有三级数据
         var list = FindAll(_.ID > 10_00_00 & _.ID < 99_99_99);
@@ -817,11 +825,13 @@ public partial class Area : Entity<Area>
     }
 
     /// <summary>抓取并保存数据</summary>
-    /// <param name="url">民政局。http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html</param>
+    /// <param name="url">民政局行政区划统计数据</param>
     /// <returns></returns>
     public static Int32 FetchAndSave(String url = null)
     {
-        if (url.IsNullOrEmpty()) url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
+        //if (url.IsNullOrEmpty()) url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
+        //if (url.IsNullOrEmpty()) url = "https://www.mca.gov.cn/mzsj/xzqh/2022/202201xzqh.html";
+        if (url.IsNullOrEmpty()) url = "https://x.newlifex.com/202201xzqh.htm";
 
         var http = new HttpClient();
         var html = Task.Run(() => http.GetStringAsync(url)).Result;
@@ -829,6 +839,8 @@ public partial class Area : Entity<Area>
 
         var rs = ParseAndSave(html);
         var count = rs.Count;
+
+        //File.WriteAllText("area.csv", rs.Join("\r\n", e => $"{e.ID},{e.FullName}"));
 
         Meta.Session.ClearCache("FetchAndSave", false);
 
@@ -870,8 +882,9 @@ public partial class Area : Entity<Area>
     /// <summary>合并三级地区的数据</summary>
     /// <param name="list">外部数据源</param>
     /// <param name="addLose">是否添加缺失数据</param>
+    /// <param name="enable">新增节点是否启用</param>
     /// <returns></returns>
-    public static Int32 MergeLevel3(IList<Area> list, Boolean addLose)
+    public static Int32 MergeLevel3(IList<Area> list, Boolean addLose, Boolean enable)
     {
         XTrace.WriteLine("合并三级地址：{0:n0}", list.Count);
 
@@ -880,7 +893,7 @@ public partial class Area : Entity<Area>
         //var first = rs.Count == 0;
 
         var count = 0;
-        var bs=new List<Area>();
+        var bs = new List<Area>();
         foreach (var r in list)
         {
             if (r.ID is < 10_00_00 or > 99_99_99) continue;
@@ -914,6 +927,11 @@ public partial class Area : Entity<Area>
                     r.Name = r.FullName = "直辖镇";
                     r.ParentID = 620200;
                     r.Enable = true;
+                }
+                else
+                {
+                    // 三沙和港澳台强制启用
+                    r.Enable = enable || r.ParentID == 460300 || r.ParentID > 700000 || r.Name.StartsWith("直辖");
                 }
 
                 XTrace.Log.Debug("新增 {0} {1} {2}", r.ID, r.Name, r.FullName);
@@ -968,8 +986,9 @@ public partial class Area : Entity<Area>
     /// <summary>合并四级地区的数据</summary>
     /// <param name="list">外部数据源</param>
     /// <param name="addLose">是否添加缺失数据</param>
+    /// <param name="enable">新增节点是否启用</param>
     /// <returns></returns>
-    public static Int32 MergeLevel4(IList<Area> list, Boolean addLose)
+    public static Int32 MergeLevel4(IList<Area> list, Boolean addLose, Boolean enable)
     {
         XTrace.WriteLine("合并四级地址：{0:n0}", list.Count);
 
@@ -992,7 +1011,7 @@ public partial class Area : Entity<Area>
 
                 r.PinYin = null;
                 r.JianPin = null;
-                r.Enable = true;
+                r.Enable = enable;
                 r.CreateTime = DateTime.Now;
                 r.UpdateTime = DateTime.Now;
                 r.Valid(true);
@@ -1034,8 +1053,9 @@ public partial class Area : Entity<Area>
     /// <param name="csvFile">Csv文件</param>
     /// <param name="addLose">是否添加缺失数据</param>
     /// <param name="level">需要导入的最高等级</param>
+    /// <param name="enable">新增节点是否启用</param>
     /// <returns></returns>
-    public static Int32 Import(String csvFile, Boolean addLose, Int32 level = 4)
+    public static Int32 Import(String csvFile, Boolean addLose, Int32 level, Boolean enable)
     {
         var list = new List<Area>();
 
@@ -1054,7 +1074,7 @@ public partial class Area : Entity<Area>
             list.LoadCsv(csvFile);
 
         var count = 0;
-        count += MergeLevel3(list, addLose);
+        count += MergeLevel3(list, addLose, enable);
 
         Meta.Session.ClearCache("Import", false);
 
@@ -1062,7 +1082,7 @@ public partial class Area : Entity<Area>
         var retry = 20;
         while (retry-- > 0 && Area.FindCount() < 3639) Thread.Sleep(500);
 
-        if (level >= 4) count += MergeLevel4(list, addLose);
+        if (level >= 4) count += MergeLevel4(list, addLose, enable);
 
         Meta.Session.ClearCache("Import", false);
 

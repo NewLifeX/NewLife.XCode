@@ -370,6 +370,15 @@ public class SQLiteTests
         md.Invoke("ParseColumns", table, sql);
 
         Assert.Equal(41, table.Columns.Count);
+
+        Assert.Equal("Id", table.Columns[0].Name);
+        Assert.Equal("integer", table.Columns[0].RawType);
+
+        Assert.Equal("TenantId", table.Columns[1].Name);
+        Assert.Equal("int", table.Columns[1].RawType);
+
+        Assert.Equal("ConsigneeUserAddress", table.Columns[^1].Name);
+        Assert.Equal("nvarchar(50)", table.Columns[^1].RawType);
     }
 
     [Fact]
@@ -428,5 +437,14 @@ public class SQLiteTests
         md.Invoke("ParseColumns", table, sql);
 
         Assert.Equal(41, table.Columns.Count);
+
+        Assert.Equal("Id", table.Columns[0].Name);
+        Assert.Equal("integer", table.Columns[0].RawType);
+
+        Assert.Equal("TenantId", table.Columns[1].Name);
+        Assert.Equal("int", table.Columns[1].RawType);
+
+        Assert.Equal("ConsigneeUserAddress", table.Columns[^1].Name);
+        Assert.Equal("nvarchar(50)", table.Columns[^1].RawType);
     }
 }

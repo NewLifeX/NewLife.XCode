@@ -528,12 +528,21 @@ internal class SQLiteMetaData : FileDbMetaData
         return list;
     }
 
-    static readonly Regex _reg = new(@"[\(,]\s*(\[\w+\]|\w+)
-\s+(\w+(?:\(\d+(?:,\s*\d+)?\))?)
-\s*([^,]*)?",
+    static readonly Regex _reg = new("""
+        (?:^|,)\s*(\[\w+\]|\w+)
+        \s+(\w+(?:\(\d+(?:,\s*\d+)?\))?)
+        \s*([^,]*)?
+        """,
         RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.IgnoreCase);
     public void ParseColumns(IDataTable table, String sqlCreateTable)
     {
+        if (sqlCreateTable.StartsWithIgnoreCase("create table"))
+        {
+            var p1 = sqlCreateTable.IndexOf('(');
+            var p2 = sqlCreateTable.LastIndexOf(')');
+            if (p1 > 0 && p2 > 0) sqlCreateTable = sqlCreateTable.Substring(p1 + 1, p2 - p1 - 1);
+        }
+
         var ms = _reg.Matches(sqlCreateTable);
         foreach (Match m in ms)
         {

@@ -29,5 +29,5 @@ public enum PermissionFlags
 
     /// <summary>所有权限</summary>
     [Description("所有")]
-    All = 0xFF,
+    All = 0x7FFFFFFF,
 }

@@ -2020,9 +2020,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         foreach (var item in Meta.Fields)
         {
             var change = !CheckEqual(this[item.Name], entity[item.Name]);
-            if (Dirtys[item.Name] != change)
+            if (change)
             {
-                Dirtys[item.Name] = change;
+                Dirtys.Add(item.Name, entity[item.Name]);
                 rs++;
             }
         }

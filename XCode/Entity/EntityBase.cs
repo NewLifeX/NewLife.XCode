@@ -97,8 +97,8 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
         {
             // OnPropertyChanging中根据新旧值是否相同来影响脏数据
             // SetItem作为必定影响脏数据的代替者
+            //Dirtys.Add(name, this[name]);
             this[name] = value;
-            Dirtys[name] = true;
         }
         return b;
     }
@@ -155,8 +155,8 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
                 else
                 {
                     // 如果没有该字段，则写入到扩展属性里面去
+                    if (setDirty) Dirtys.Add(item, src[item]);
                     src[item] = entity[item];
-                    if (setDirty) Dirtys[item] = true;
                 }
 
                 n++;

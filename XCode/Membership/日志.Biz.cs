@@ -138,7 +138,7 @@ public partial class Log : Entity<Log>
     /// <param name="key"></param>
     /// <param name="p"></param>
     /// <returns></returns>
-    public static IList<Log> Search(String category, String action, Int32 linkId, Boolean? success, Int32 userid, DateTime start, DateTime end, String key, PageParameter p)
+    public static IList<Log> Search(String category, String action, Int64 linkId, Boolean? success, Int32 userid, DateTime start, DateTime end, String key, PageParameter p)
     {
         var exp = new WhereExpression();
 

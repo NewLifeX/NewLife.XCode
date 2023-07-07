@@ -225,9 +225,9 @@ public class WhereBuilder
             switch (model.Action)
             {
                 case "==":
-                case "=": return Equals(eval, val);
+                case "=": return EntityBase.CheckEqual(eval, val);
                 case "!=":
-                case "<>": return !Equals(eval, val);
+                case "<>": return !EntityBase.CheckEqual(eval, val);
                 case " in":
                     {
                         if (val is String s)
@@ -238,7 +238,7 @@ public class WhereBuilder
                         {
                             foreach (var item in e)
                             {
-                                if (Equals(item, eval)) return true;
+                                if (EntityBase.CheckEqual(item, eval)) return true;
                             }
                             return false;
                         }

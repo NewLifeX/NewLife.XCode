@@ -23,6 +23,9 @@ public class AreaTests
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         IpResolver.Register();
+
+        // 预热IP数据
+        "116.233.20.228".IPToAddress();
     }
 
     [TestOrder(20)]
@@ -359,12 +362,15 @@ public class AreaTests
         var list = Area.SearchIP(ip, 1);
 
         Assert.True(list.Count > 0);
-        Assert.Equal(areaId, list[list.Count - 1].ID);
+
+        var ar = list[^1];
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
+        Assert.Equal(areaId, ar.ID);
     }
 
     [TestOrder(80)]
     [Theory]
-    [InlineData("182.90.206.131", 450400)]
+    [InlineData("112.32.148.126", 340100)]
     [InlineData("116.234.90.174", 310113)]
     [InlineData("116.233.20.228", 310104)]
     [InlineData("122.231.253.198", 330400)]
@@ -373,12 +379,15 @@ public class AreaTests
         var list = Area.SearchIP(ip, 2);
 
         Assert.True(list.Count > 0);
-        Assert.Equal(areaId, list[list.Count - 1].ID);
+
+        var ar = list[^1];
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
+        Assert.Equal(areaId, ar.ID);
     }
 
     [TestOrder(80)]
     [Theory]
-    [InlineData("182.90.206.131", 450400)]
+    [InlineData("112.32.148.126", 340100)]
     [InlineData("116.234.90.174", 310113)]
     [InlineData("116.233.20.228", 310104)]
     [InlineData("122.231.253.198", 330424)]
@@ -387,7 +396,10 @@ public class AreaTests
         var list = Area.SearchIP(ip, 3);
 
         Assert.True(list.Count > 0);
-        Assert.Equal(areaId, list[list.Count - 1].ID);
+
+        var ar = list[^1];
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
+        Assert.Equal(areaId, ar.ID);
     }
 
     [TestOrder(90)]
@@ -398,6 +410,9 @@ public class AreaTests
         var list = Area.SearchIP(ip, 3);
 
         Assert.True(list.Count > 0);
-        Assert.Equal(areaId, list[list.Count - 1].ID);
+
+        var ar = list[^1];
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
+        Assert.Equal(areaId, ar.ID);
     }
 }

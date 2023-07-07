@@ -49,13 +49,13 @@ public partial class Log
     [BindColumn("Action", "操作", "")]
     public String Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
 
-    private Int32 _LinkID;
+    private Int64 _LinkID;
     /// <summary>链接</summary>
     [DisplayName("链接")]
     [Description("链接")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("LinkID", "链接", "")]
-    public Int32 LinkID { get => _LinkID; set { if (OnPropertyChanging("LinkID", value)) { _LinkID = value; OnPropertyChanged("LinkID"); } } }
+    public Int64 LinkID { get => _LinkID; set { if (OnPropertyChanging("LinkID", value)) { _LinkID = value; OnPropertyChanged("LinkID"); } } }
 
     private Boolean _Success;
     /// <summary>成功</summary>
@@ -214,7 +214,7 @@ public partial class Log
                 case "ID": _ID = value.ToLong(); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Action": _Action = Convert.ToString(value); break;
-                case "LinkID": _LinkID = value.ToInt(); break;
+                case "LinkID": _LinkID = value.ToLong(); break;
                 case "Success": _Success = value.ToBoolean(); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;

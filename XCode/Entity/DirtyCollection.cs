@@ -130,14 +130,17 @@ public class DirtyCollection : IEnumerable<String>
 
     /// <summary>获取字典枚举</summary>
     /// <returns></returns>
-    public IEnumerator<KeyValuePair<String, Object>> GetDictionary()
+    public IDictionary<String, Object> GetDictionary()
     {
+        var dic = new Dictionary<String, Object>();
         var len = _length;
         var ms = _keys;
         if (len > ms.Length) len = ms.Length;
         for (var i = 0; i < len; i++)
         {
-            if (ms[i] != null) yield return new KeyValuePair<String, Object>(ms[i], _values[i]);
+            if (ms[i] != null) dic[ms[i]] = _values[i];
         }
+
+        return dic;
     }
 }

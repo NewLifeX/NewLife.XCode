@@ -22,7 +22,7 @@ public partial class LogModel : IModel
     public String Action { get; set; }
 
     /// <summary>链接</summary>
-    public Int32 LinkID { get; set; }
+    public Int64 LinkID { get; set; }
 
     /// <summary>成功</summary>
     public Boolean Success { get; set; }
@@ -105,7 +105,7 @@ public partial class LogModel : IModel
                 case "ID": ID = value.ToLong(); break;
                 case "Category": Category = Convert.ToString(value); break;
                 case "Action": Action = Convert.ToString(value); break;
-                case "LinkID": LinkID = value.ToInt(); break;
+                case "LinkID": LinkID = value.ToLong(); break;
                 case "Success": Success = value.ToBoolean(); break;
                 case "UserName": UserName = Convert.ToString(value); break;
                 case "Ex1": Ex1 = value.ToInt(); break;

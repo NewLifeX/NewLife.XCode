@@ -21,7 +21,7 @@ public partial interface ILog
     String Action { get; set; }
 
     /// <summary>链接</summary>
-    Int32 LinkID { get; set; }
+    Int64 LinkID { get; set; }
 
     /// <summary>成功</summary>
     Boolean Success { get; set; }

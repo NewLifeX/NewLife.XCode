@@ -1,4 +1,4 @@
-using NewLife;
+﻿using NewLife;
 using NewLife.Data;
 using XCode.Cache;
 
@@ -205,7 +205,7 @@ public partial class Log : Entity<Log>
     /// <param name="category">类别</param>
     /// <param name="linkId">链接</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCategoryAndLinkID(String category, Int32 linkId)
+    public static IList<Log> FindAllByCategoryAndLinkID(String category, Int64 linkId)
     {
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.LinkID == linkId);

@@ -346,7 +346,7 @@ public partial class Role : LogEntity<Role>, IRole
 
     /// <summary>当前角色拥有的资源</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public Int32[] Resources { get { return Permissions.Keys.ToArray(); } }
+    public Int32[] Resources => Permissions.Keys.ToArray();
     #endregion
 
     #region 业务

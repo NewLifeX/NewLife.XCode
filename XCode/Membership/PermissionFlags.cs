@@ -5,7 +5,7 @@ namespace XCode.Membership;
 /// <summary>操作权限</summary>
 [Flags]
 [Description("操作权限")]
-public enum PermissionFlags
+public enum PermissionFlags : UInt32
 {
     /// <summary>无权限</summary>
     [Description("无权限")]
@@ -29,5 +29,5 @@ public enum PermissionFlags
 
     /// <summary>所有权限</summary>
     [Description("所有")]
-    All = 0x7FFFFFFF,
+    All = 0xFFFFFFFF,
 }

@@ -559,6 +559,15 @@ namespace XCode.DataAccessLayer
 
             // 引擎和编码
             //sb.Append(" ENGINE=InnoDB");
+            if (table.Properties != null)
+            {
+                if (table.Properties.TryGetValue("Engine", out var str))
+                    sb.AppendFormat(" ENGINE={0}", str);
+                if (table.Properties.TryGetValue("ROW_FORMAT", out str))
+                    sb.AppendFormat(" ROW_FORMAT={0}", str);
+                if (table.Properties.TryGetValue("KEY_BLOCK_SIZE", out str))
+                    sb.AppendFormat(" KEY_BLOCK_SIZE={0}", str);
+            }
             sb.Append(" DEFAULT CHARSET=utf8mb4");
             sb.Append(';');
 

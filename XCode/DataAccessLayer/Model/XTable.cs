@@ -226,6 +226,11 @@ class XTable : IDataTable, ICloneable, IXmlSerializable
         {
             table.Indexes.Add(item.Clone(table));
         }
+        table.Properties = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in Properties)
+        {
+            table.Properties.Add(item.Key, item.Value);
+        }
         return table;
     }
     #endregion

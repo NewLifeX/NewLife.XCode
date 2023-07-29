@@ -434,6 +434,17 @@ public class MySqlTests
         dal.SetTables(table);
 
         Assert.Contains(dal.Tables, t => t.TableName == table.TableName);
+
+        // Log表自带压缩表能力
+        table = Log.Meta.Table.DataTable.Clone() as IDataTable;
+        table.DbType = DatabaseType.MySql;
+        Assert.Equal("COMPRESSED", table.Properties["ROW_FORMAT"]);
+        Assert.Equal("4", table.Properties["KEY_BLOCK_SIZE"]);
+
+        sql = meta.GetSchemaSQL(DDLSchema.CreateTable, table);
+
+        Assert.Contains(" ROW_FORMAT=COMPRESSED", sql);
+        Assert.Contains(" KEY_BLOCK_SIZE=4", sql);
     }
 
     [Fact]

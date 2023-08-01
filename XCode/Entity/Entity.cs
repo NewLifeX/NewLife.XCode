@@ -386,6 +386,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="isNew">是否新数据</param>
     public override void Valid(Boolean isNew)
     {
+        var factory = Meta.Factory;
         // 校验字符串长度，超长时抛出参数异常
         foreach (var fi in factory.Fields)
         {

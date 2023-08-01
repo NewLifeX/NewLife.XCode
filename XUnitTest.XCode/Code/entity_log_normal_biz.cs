@@ -40,7 +40,7 @@ public partial class Log : Entity<Log>
         // 按天分表
         //Meta.ShardPolicy = new TimeShardPolicy(nameof(ID), Meta.Factory)
         //{
-        //    TablePolicy = "{{0}}_{{1:yyyyMMdd}}",
+        //    TablePolicy = "{0}_{1:yyyyMMdd}",
         //    Step = TimeSpan.FromDays(1),
         //};
 
@@ -118,6 +118,110 @@ public partial class Log : Entity<Log>
     //{
     //    return base.OnDelete();
     //}
+    #endregion
+
+    #region 扩展属性
+    #endregion
+
+    #region 扩展查询
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static Log FindByID(Int64 id)
+    {
+        if (id <= 0) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.ID == id);
+    }
+
+    /// <summary>根据操作、类别查找</summary>
+    /// <param name="action">操作</param>
+    /// <param name="category">类别</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByActionAndCategory(String action, String category)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Action.EqualIgnoreCase(action) && e.Category.EqualIgnoreCase(category));
+
+        return FindAll(_.Action == action & _.Category == category);
+    }
+
+    /// <summary>根据类别、链接查找</summary>
+    /// <param name="category">类别</param>
+    /// <param name="linkId">链接</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByCategoryAndLinkID(String category, Int64 linkId)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.LinkID == linkId);
+
+        return FindAll(_.Category == category & _.LinkID == linkId);
+    }
+
+    /// <summary>根据创建用户查找</summary>
+    /// <param name="createUserId">创建用户</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByCreateUserID(Int32 createUserId)
+    {
+        if (createUserId <= 0) return new List<Log>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserID == createUserId);
+
+        return FindAll(_.CreateUserID == createUserId);
+    }
+    #endregion
+
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="category">类别</param>
+    /// <param name="action">操作</param>
+    /// <param name="linkId">链接</param>
+    /// <param name="createUserId">创建用户</param>
+    /// <param name="start">时间开始</param>
+    /// <param name="end">时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> Search(String category, String action, Int64 linkId, Int32 createUserId, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+        if (!action.IsNullOrEmpty()) exp &= _.Action == action;
+        if (linkId >= 0) exp &= _.LinkID == linkId;
+        if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
+        exp &= _.CreateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= _.Category.Contains(key) | _.Action.Contains(key) | _.UserName.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.TraceId.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.Remark.Contains(key);
+
+        return FindAll(exp, page);
+    }
+
+    // Select Count(Id) as Id,Action From Log Where CreateTime>'2020-01-24 00:00:00' Group By Action Order By Id Desc limit 20
+    static readonly FieldCache<Log> _ActionCache = new FieldCache<Log>(nameof(Action))
+    {
+        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+    };
+
+    /// <summary>获取操作列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+    /// <returns></returns>
+    public static IDictionary<String, String> GetActionList() => _ActionCache.FindAllName();
+
+    // Select Count(Id) as Id,Category From Log Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
+    static readonly FieldCache<Log> _CategoryCache = new FieldCache<Log>(nameof(Category))
+    {
+        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+    };
+
+    /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+    /// <returns></returns>
+    public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
     #endregion
 
     #region 业务操作

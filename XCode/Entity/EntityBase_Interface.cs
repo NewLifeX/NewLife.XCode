@@ -24,6 +24,7 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
         if (IsFromDatabase && CheckEqual(this[fieldName], newValue)) return false;
         //if (CheckEqual(this[fieldName], newValue)) return false;
 
+        Dirtys.Add(fieldName, this[fieldName]);
         //Dirtys[fieldName] = true;
         //OnPropertyChanged(fieldName);
 
@@ -68,7 +69,7 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
     /// <param name="fieldName">字段名</param>
     protected virtual void OnPropertyChanged(String fieldName)
     {
-        Dirtys[fieldName] = true;
+        //Dirtys[fieldName] = true;
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(fieldName));
     }

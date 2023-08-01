@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using NewLife;
 using NewLife.Caching;
@@ -15,6 +10,7 @@ using NewLife.Configuration;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
+using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Threading;
 
@@ -41,9 +37,17 @@ public partial class DAL
 
     /// <summary>连接字符串</summary>
     /// <remarks>
+    /// 内部密码字段可能处于加密状态。
     /// 修改连接字符串将会清空<see cref="Db"/>
     /// </remarks>
     public String ConnStr { get; private set; }
+
+    /// <summary>数据保护者</summary>
+    /// <remarks>
+    /// 用于保护连接字符串中的密码字段，在向IDatabase设置连接字符串前解密。
+    /// 默认保护密码可通过环境变量或者配置文件的ProtectedKey项进行设置。
+    /// </remarks>
+    public ProtectedKey ProtectedKey { get; set; } = ProtectedKey.Instance;
 
     private IDatabase _Db;
     /// <summary>数据库。所有数据库操作在此统一管理，强烈建议不要直接使用该属性，在不同版本中IDatabase可能有较大改变</summary>
@@ -105,7 +109,7 @@ public partial class DAL
             if (!css.ContainsKey(connName))
             {
                 var cfg = NewLife.Setting.Current;
-                var set = Setting.Current;
+                var set = XCodeSetting.Current;
                 var connstr = "Data Source=" + cfg.DataPath.CombinePath(connName + ".db");
                 if (set.Migration <= Migration.On) connstr += ";Migration=On";
                 WriteLog("自动为[{0}]设置SQLite连接字符串：{1}", connName, connstr);
@@ -527,9 +531,11 @@ public partial class DAL
     /// <remarks>Base64=>UTF8字节=>明文</remarks>
     /// <param name="connstr"></param>
     /// <returns></returns>
-    private static String DecodeConnStr(String connstr)
+    private String DecodeConnStr(String connstr)
     {
         if (String.IsNullOrEmpty(connstr)) return connstr;
+
+        connstr = ProtectedKey.Unprotect(connstr);
 
         // 如果包含任何非Base64编码字符，直接返回
         foreach (var c in connstr)

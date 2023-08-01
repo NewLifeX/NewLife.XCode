@@ -49,7 +49,7 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
     /// <summary>实例化实体缓存</summary>
     public EntityCache()
     {
-        var exp = Setting.Current.EntityCacheExpire;
+        var exp = XCodeSetting.Current.EntityCacheExpire;
         if (exp <= 0) exp = 10;
 
         Expire = exp;

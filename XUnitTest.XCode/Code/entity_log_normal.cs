@@ -14,14 +14,14 @@ using XCode.DataAccessLayer;
 
 namespace Company.MyName;
 
-/// <summary>日志</summary>
+/// <summary>日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除</summary>
 [Serializable]
 [DataObject]
-[Description("日志")]
+[Description("日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除")]
 [BindIndex("IX_Log_Action_Category_ID", false, "Action,Category,ID")]
 [BindIndex("IX_Log_Category_LinkID_ID", false, "Category,LinkID,ID")]
 [BindIndex("IX_Log_CreateUserID_ID", false, "CreateUserID,ID")]
-[BindTable("Log", Description = "日志", ConnName = "MyConn", DbType = DatabaseType.None)]
+[BindTable("Log", Description = "日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除", ConnName = "MyConn", DbType = DatabaseType.None)]
 public partial class Log
 {
     #region 属性
@@ -49,13 +49,13 @@ public partial class Log
     [BindColumn("Action", "操作", "")]
     public String Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
 
-    private Int32 _LinkID;
+    private Int64 _LinkID;
     /// <summary>链接</summary>
     [DisplayName("链接")]
     [Description("链接")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("LinkID", "链接", "")]
-    public Int32 LinkID { get => _LinkID; set { if (OnPropertyChanging("LinkID", value)) { _LinkID = value; OnPropertyChanged("LinkID"); } } }
+    public Int64 LinkID { get => _LinkID; set { if (OnPropertyChanging("LinkID", value)) { _LinkID = value; OnPropertyChanged("LinkID"); } } }
 
     private Boolean _Success;
     /// <summary>成功</summary>
@@ -214,7 +214,7 @@ public partial class Log
                 case "ID": _ID = value.ToLong(); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Action": _Action = Convert.ToString(value); break;
-                case "LinkID": _LinkID = value.ToInt(); break;
+                case "LinkID": _LinkID = value.ToLong(); break;
                 case "Success": _Success = value.ToBoolean(); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
@@ -240,86 +240,6 @@ public partial class Log
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public User MyCreateUser => Extends.Get(nameof(MyCreateUser), k => User.FindById(CreateUserID));
 
-    #endregion
-
-    #region 扩展属性
-    #endregion
-
-    #region 扩展查询
-    /// <summary>根据编号查找</summary>
-    /// <param name="id">编号</param>
-    /// <returns>实体对象</returns>
-    public static Log FindByID(Int64 id)
-    {
-        if (id <= 0) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
-
-        // 单对象缓存
-        return Meta.SingleCache[id];
-
-        //return Find(_.ID == id);
-    }
-
-    /// <summary>根据创建用户、编号查找</summary>
-    /// <param name="createUserId">创建用户</param>
-    /// <param name="id">编号</param>
-    /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCreateUserIDAndID(Int32 createUserId, Int64 id)
-    {
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserID == createUserId && e.ID == id);
-
-        return FindAll(_.CreateUserID == createUserId & _.ID == id);
-    }
-    #endregion
-
-    #region 高级查询
-    /// <summary>高级查询</summary>
-    /// <param name="category">类别</param>
-    /// <param name="action">操作</param>
-    /// <param name="linkId">链接</param>
-    /// <param name="createUserId">创建用户</param>
-    /// <param name="start">时间开始</param>
-    /// <param name="end">时间结束</param>
-    /// <param name="key">关键字</param>
-    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
-    /// <returns>实体列表</returns>
-    public static IList<Log> Search(String category, String action, Int32 linkId, Int32 createUserId, DateTime start, DateTime end, String key, PageParameter page)
-    {
-        var exp = new WhereExpression();
-
-        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
-        if (!action.IsNullOrEmpty()) exp &= _.Action == action;
-        if (linkId >= 0) exp &= _.LinkID == linkId;
-        if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
-        exp &= _.CreateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Category.Contains(key) | _.Action.Contains(key) | _.UserName.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.TraceId.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.Remark.Contains(key);
-
-        return FindAll(exp, page);
-    }
-
-    // Select Count(Id) as Id,Action From Log Where CreateTime>'2020-01-24 00:00:00' Group By Action Order By Id Desc limit 20
-    static readonly FieldCache<Log> _ActionCache = new FieldCache<Log>(nameof(Action))
-    {
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-    };
-
-    /// <summary>获取操作列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-    /// <returns></returns>
-    public static IDictionary<String, String> GetActionList() => _ActionCache.FindAllName();
-
-    // Select Count(Id) as Id,Category From Log Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-    static readonly FieldCache<Log> _CategoryCache = new FieldCache<Log>(nameof(Category))
-    {
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-    };
-
-    /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-    /// <returns></returns>
-    public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
     #endregion
 
     #region 字段名

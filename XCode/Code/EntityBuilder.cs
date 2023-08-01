@@ -12,16 +12,17 @@ namespace XCode.Code;
 public class EntityBuilder : ClassBuilder
 {
     #region 属性
-
-    /// <summary>自定义业务类，仅生成一次</summary>
-    public Boolean CustomBusiness { get; set; }
-
     /// <summary>业务类</summary>
     public Boolean Business { get; set; }
+
+    /// <summary>合并业务类，当业务类已存在时。默认true</summary>
+    public Boolean MergeBusiness { get; set; } = true;
 
     /// <summary>所有表类型名。用于扩展属性</summary>
     public IList<IDataTable> AllTables { get; set; } = new List<IDataTable>();
 
+    /// <summary>实体类生成选型</summary>
+    public EntityBuilderOption EntityOption => Option as EntityBuilderOption;
     #endregion 属性
 
     #region 静态快速
@@ -31,20 +32,36 @@ public class EntityBuilder : ClassBuilder
     /// <param name="option"></param>
     /// <param name="atts"></param>
     /// <param name="tables"></param>
-    public static void FixModelFile(String xmlFile, BuilderOption option, IDictionary<String, String> atts, IList<IDataTable> tables)
+    /// <param name="log"></param>
+    public static void FixModelFile(String xmlFile, BuilderOption option, IDictionary<String, String> atts, IList<IDataTable> tables, ILog log = null)
     {
         // 保存文件名
         if (xmlFile.IsNullOrEmpty()) xmlFile = atts["ModelFile"];
 
+        // 给默认字段赋值
+        var def = option.GetType().CreateInstance() as BuilderOption;
+        foreach (var pi in option.GetType().GetProperties(true))
+        {
+            var val = option.GetValue(pi);
+            if (pi.PropertyType == typeof(String) && val is String str)
+            {
+                if (str.IsNullOrEmpty()) option.SetValue(pi, def.GetValue(pi));
+            }
+            else
+            {
+                if (val == null) option.SetValue(pi, def.GetValue(pi));
+            }
+        }
+
         // 反哺。确保输出空特性
-        atts["Output"] = option.Output + "";
-        atts["NameSpace"] = option.Namespace + "";
-        atts["ConnName"] = option.ConnName + "";
-        atts["DisplayName"] = option.DisplayName + "";
-        atts["BaseClass"] = option.BaseClass + "";
+        //atts["Output"] = option.Output + "";
+        //atts["NameSpace"] = option.Namespace + "";
+        //atts["ConnName"] = option.ConnName + "";
+        //atts["DisplayName"] = option.DisplayName + "";
+        //atts["BaseClass"] = option.BaseClass + "";
 
         // 生成决定是否生成魔方代码
-        atts["CubeOutput"] = option.Items?["CubeOutput"];
+        //atts["CubeOutput"] = option.Items?["CubeOutput"];
         //atts["CubeProject"] = option.Items?["CubeProject"];
 
         // 清理不再使用的历史配置项
@@ -60,39 +77,45 @@ public class EntityBuilder : ClassBuilder
         }
 
         // 格式化处理字段名
-        if (Enum.TryParse<NameFormats>(atts["NameFormat"], true, out var format) && format > NameFormats.Default)
+        //if (Enum.TryParse<NameFormats>(atts["NameFormat"], true, out var format) && format > NameFormats.Default)
+        if (option is EntityBuilderOption opt && opt.NameFormat > NameFormats.Default)
         {
-            XTrace.WriteLine("处理表名字段名为：{0}", format);
+            log?.Info("处理表名字段名为：{0}", opt.NameFormat);
 
             var resolve = ModelResolver.Current;
             foreach (var dt in tables)
             {
                 if (dt.TableName.IsNullOrEmpty() || dt.TableName == dt.Name)
-                    dt.TableName = resolve.GetDbName(dt.Name, format);
+                    dt.TableName = resolve.GetDbName(dt.Name, opt.NameFormat);
 
                 foreach (var col in dt.Columns)
                 {
                     if (col.ColumnName.IsNullOrEmpty() || col.ColumnName == col.Name)
-                        col.ColumnName = resolve.GetDbName(col.Name, format);
+                        col.ColumnName = resolve.GetDbName(col.Name, opt.NameFormat);
                 }
             }
         }
 
         // 更新xsd
-        atts["xmlns"] = "https://newlifex.com/Model2022.xsd";
-        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2022.xsd";
+        atts["xmlns"] = "https://newlifex.com/Model2023.xsd";
+        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2023.xsd";
 
         // 版本和教程
         var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
-        atts["Version"] = asm.FileVersion + "";
-        atts["Document"] = "https://newlifex.com/xcode/model";
+        //atts["Version"] = asm.FileVersion + "";
+        //atts["Document"] = "https://newlifex.com/xcode/model";
+        if (option is EntityBuilderOption opt2)
+        {
+            opt2.Version = asm.FileVersion + "";
+            opt2.Document = "https://newlifex.com/xcode/model";
+        }
 
         // 保存模型文件
         var xmlContent = File.ReadAllText(xmlFile);
-        var xml2 = ModelHelper.ToXml(tables, atts);
+        var xml2 = ModelHelper.ToXml(tables, option, atts);
         if (xmlContent != xml2)
         {
-            if (Debug) XTrace.WriteLine("修正模型：{0}", xmlFile);
+            log?.Info("修正模型：{0}", xmlFile);
 
             File.WriteAllText(xmlFile, xml2, Encoding.UTF8);
         }
@@ -101,22 +124,20 @@ public class EntityBuilder : ClassBuilder
     /// <summary>为Xml模型文件生成实体类</summary>
     /// <param name="tables">模型文件</param>
     /// <param name="option">生成可选项</param>
-    public static Int32 BuildTables(IList<IDataTable> tables, BuilderOption option)
+    /// <param name="log"></param>
+    public static Int32 BuildTables(IList<IDataTable> tables, EntityBuilderOption option, ILog log = null)
     {
         if (tables == null || tables.Count == 0) return 0;
 
         if (option == null)
-            option = new BuilderOption();
+            option = new EntityBuilderOption();
         else
-            option = option.Clone();
+            option = option.Clone() as EntityBuilderOption;
         option.Partial = true;
 
-        if (Debug)
-        {
-            var output = option.Output;
-            if (output.IsNullOrEmpty()) output = ".";
-            XTrace.WriteLine("生成实体类 {0}", output.GetBasePath());
-        }
+        var output = option.Output;
+        if (output.IsNullOrEmpty()) output = ".";
+        log?.Info("生成实体类 {0}", output.GetBasePath());
 
         var count = 0;
         foreach (var item in tables)
@@ -129,12 +150,17 @@ public class EntityBuilder : ClassBuilder
             {
                 AllTables = tables,
                 Option = option.Clone(),
+                Log = log
             };
-            if (Debug) builder.Log = XTrace.Log;
 
-            if (option.ModelNameForToModel.IsNullOrEmpty())
+            // 不能对option赋值，否则所有table的ModelNameForToModel就相同了
+            //if (option.ModelNameForToModel.IsNullOrEmpty())
+            //{
+            //    option.ModelNameForToModel = item.Name;
+            //}
+            if (builder.EntityOption.ModelNameForToModel.IsNullOrEmpty())
             {
-                option.ModelNameForToModel = item.Name;
+                builder.EntityOption.ModelNameForToModel = item.Name;
             }
 
             builder.Load(item);
@@ -145,16 +171,7 @@ public class EntityBuilder : ClassBuilder
             builder.Clear();
             builder.Business = true;
             builder.Execute();
-            builder.Save(null, option.OverwriteBizFile, option.ChineseFileName);
-            if (option.CreateCustomBizFile)
-            {
-                //新增自定义业务文件,仅生成一次
-                builder.Clear();
-                builder.CustomBusiness = true;
-                builder.Execute();
-                builder.Save(null, false, option.ChineseFileName);
-                count++;
-            }
+            builder.Save(null, false, option.ChineseFileName);
         }
 
         return count;
@@ -170,7 +187,7 @@ public class EntityBuilder : ClassBuilder
     {
         Table = table;
 
-        var option = Option;
+        var option = EntityOption;
 
         base.Load(table);
 
@@ -250,7 +267,7 @@ public class EntityBuilder : ClassBuilder
     protected override String GetBaseClass()
     {
         var baseClass = Option.BaseClass;
-        if (Option.HasIndex)
+        if (Option.HasIModel)
         {
             if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
             baseClass += "IModel";
@@ -280,7 +297,7 @@ public class EntityBuilder : ClassBuilder
             }
 
             // 数据类不要实体基类
-            bs = bs.Where(e => !e.StartsWithIgnoreCase("Entity<", "EntityBase<")).ToList();
+            bs = bs.Where(e => e != "Entity" && !e.StartsWithIgnoreCase("Entity<", "EntityBase<")).ToList();
             if (bs.Count > 0) name = bs.Distinct().Join(", ");
         }
 
@@ -298,12 +315,136 @@ public class EntityBuilder : ClassBuilder
             ext = ".Biz.cs";
             //overwrite = false;
         }
-        if (CustomBusiness)
+
+        // Biz业务文件已存在时，部分覆盖
+        if (Business && !overwrite && MergeBusiness)
         {
-            ext = ".CusBiz.cs";
-            //overwrite = false;
+            var fileName = GetFileName(ext, chineseFileName);
+            if (File.Exists(fileName))
+            {
+                Merge(fileName);
+                return fileName;
+            }
         }
+
         return base.Save(ext, overwrite, chineseFileName); ;
+    }
+
+    /// <summary>合并当前生成内容到旧文件中</summary>
+    /// <param name="fileName"></param>
+    public void Merge(String fileName)
+    {
+        // 新旧代码分组
+        var newLines = ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+        var oldLines = File.ReadAllLines(fileName).ToList();
+
+        var changed = 0;
+
+        // 合并扩展属性
+        {
+            var sname = "#region 扩展属性";
+            var newNs = Find(newLines, sname, "#endregion");
+            var oldNs = Find(oldLines, sname, "#endregion");
+
+            // 两个都有才合并
+            if (newNs != null && oldNs != null)
+            {
+                // endregion 所在行
+                var p = oldNs.Start + oldNs.Count - 1;
+                foreach (var item in newNs.Sections)
+                {
+                    // 如果旧文件中不存在，则插入
+                    if (!oldNs.Sections.Any(e => e.Name == item.Name))
+                    {
+                        // 前面有变化，需要插入空行
+                        if (changed > 0 || oldNs.Sections.Count > 0) oldLines.Insert(p++, "");
+
+                        foreach (var elm in item.Lines)
+                        {
+                            oldLines.Insert(p++, elm);
+                        }
+                        changed++;
+                    }
+                }
+            }
+        }
+
+        // 合并扩展查询
+        {
+            var sname = "#region 扩展查询";
+            var newNs = Find(newLines, sname, "#endregion");
+            var oldNs = Find(oldLines, sname, "#endregion");
+
+            // 两个都有才合并
+            if (newNs != null && oldNs != null)
+            {
+                // endregion 所在行
+                var p = oldNs.Start + oldNs.Count - 1;
+                foreach (var item in newNs.Sections)
+                {
+                    // 如果旧文件中不存在，则插入
+                    //if (!oldNs.Sections.Any(e => e.Name == item.Name))
+                    // 可能参数名大小写不一致
+                    if (!oldNs.Sections.Any(e => e.Name.EqualIgnoreCase(item.Name)))
+                    {
+                        // 前面有变化，需要插入空行
+                        if (changed > 0 || oldNs.Sections.Count > 0) oldLines.Insert(p++, "");
+
+                        foreach (var elm in item.Lines)
+                        {
+                            oldLines.Insert(p++, elm);
+                        }
+                        changed++;
+                    }
+                }
+            }
+        }
+
+        if (changed > 0) File.WriteAllText(fileName, oldLines.Join(Environment.NewLine).Trim());
+    }
+
+    class MyRange
+    {
+        public Int32 Start { get; set; }
+        public Int32 Count { get; set; }
+        public IList<MemberSection> Sections { get; set; }
+    }
+
+    MyRange Find(IList<String> lines, String start, String end)
+    {
+        var s = -1;
+        var e = -1;
+        var flag = 0;
+        for (var i = 0; i < lines.Count && flag < 2; i++)
+        {
+            if (flag == 0)
+            {
+                if (lines[i].Contains(start))
+                {
+                    s = i;
+                    flag = 1;
+                }
+            }
+            else if (flag == 1)
+            {
+                if (lines[i].Contains(end))
+                {
+                    e = i;
+                    flag = 2;
+                }
+            }
+        }
+
+        if (s < 0 || e < 0) return null;
+
+        var ns = lines.Skip(s).Take(e - s + 1).ToArray();
+        var list = MemberSection.Parse(ns);
+        foreach (var item in list)
+        {
+            item.StartLine += s;
+        }
+
+        return new MyRange { Start = s, Count = e - s + 1, Sections = list };
     }
 
     /// <summary>生成尾部</summary>
@@ -327,15 +468,11 @@ public class EntityBuilder : ClassBuilder
     /// <summary>生成主体</summary>
     protected override void BuildItems()
     {
-        if (CustomBusiness)
-        {
-            BuildCustomBizDescription();
-        }
-        else if (Business)
+        if (Business)
         {
             BuildAction();
 
-            if (!Option.ExtendOnData)
+            //if (!EntityOption.ExtendOnData)
             {
                 WriteLine();
                 BuildExtendProperty();
@@ -360,17 +497,17 @@ public class EntityBuilder : ClassBuilder
             WriteLine();
             BuildMap();
 
-            if (Option.ExtendOnData)
-            {
-                WriteLine();
-                BuildExtendProperty();
+            //if (EntityOption.ExtendOnData)
+            //{
+            //    WriteLine();
+            //    BuildExtendProperty();
 
-                WriteLine();
-                BuildExtendSearch();
+            //    WriteLine();
+            //    BuildExtendSearch();
 
-                WriteLine();
-                BuildSearch();
-            }
+            //    WriteLine();
+            //    BuildSearch();
+            //}
 
             WriteLine();
             BuildFieldName();
@@ -398,9 +535,9 @@ public class EntityBuilder : ClassBuilder
             WriteLine("[BindIndex(\"{0}\", {1}, \"{2}\")]", item.Name, item.Unique.ToString().ToLower(), item.Columns.Join());
         }
 
-        var cn = dt.Properties["ConnName"];
-        if (cn.IsNullOrEmpty()) cn = Option.ConnName;
-        WriteLine("[BindTable(\"{0}\", Description = \"{1}\", ConnName = \"{2}\", DbType = DatabaseType.{3})]", dt.TableName, dt.Description, cn, dt.DbType);
+        var connName = dt.Properties["ConnName"];
+        if (connName.IsNullOrEmpty()) connName = EntityOption.ConnName;
+        WriteLine("[BindTable(\"{0}\", Description = \"{1}\", ConnName = \"{2}\", DbType = DatabaseType.{3})]", dt.TableName, dt.Description, connName, dt.DbType);
     }
 
     /// <summary>生成每一项</summary>
@@ -693,17 +830,6 @@ public class EntityBuilder : ClassBuilder
 
     #region 业务类
 
-    /// <summary>自定义业务逻辑文件说明信息</summary>
-    protected virtual void BuildCustomBizDescription()
-    {
-        WriteLine($"//生成时间:{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}");
-        WriteLine("//自定义业务逻辑写在本文件中");
-        WriteLine("//本文件由代码生成器初次生成后不再重新生成");
-        WriteLine("#region 自定义业务逻辑生成");
-        WriteLine();
-        WriteLine("#endregion");
-    }
-
     /// <summary>对象操作</summary>
     protected virtual void BuildAction()
     {
@@ -756,7 +882,7 @@ public class EntityBuilder : ClassBuilder
                 WriteLine("// 按天分表");
                 WriteLine("//Meta.ShardPolicy = new TimeShardPolicy(nameof({0}), Meta.Factory)", dc.Name);
                 WriteLine("//{");
-                WriteLine("//    TablePolicy = \"{{0}}_{{1:yyyyMMdd}}\",");
+                WriteLine("//    TablePolicy = \"{0}_{1:yyyyMMdd}\",");
                 WriteLine("//    Step = TimeSpan.FromDays(1),");
                 WriteLine("//};");
             }
@@ -964,6 +1090,7 @@ public class EntityBuilder : ClassBuilder
     {
         WriteLine("#region 扩展属性");
 
+        var first = true;
         foreach (var column in Table.Columns)
         {
             // 跳过排除项
@@ -988,6 +1115,12 @@ public class EntityBuilder : ClassBuilder
 
                 var pk = dt.PrimaryKeys[0];
 
+                if (!first)
+                {
+                    WriteLine();
+                    first = true;
+                }
+
                 WriteLine("/// <summary>{0}</summary>", dis);
                 WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
                 WriteLine("public {1} {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
@@ -995,7 +1128,7 @@ public class EntityBuilder : ClassBuilder
                 // 主字段
                 var master = dt.Master ?? dt.GetColumn("Name");
                 // 扩展属性有可能恰巧跟已有字段同名
-                if (master != null && !master.PrimaryKey && !dt.Columns.Any(e => e.Name.EqualIgnoreCase(pname + master.Name)))
+                if (master != null && !master.PrimaryKey && !Table.Columns.Any(e => e.Name.EqualIgnoreCase(pname + master.Name)))
                 {
                     WriteLine();
                     WriteLine("/// <summary>{0}</summary>", dis);
@@ -1008,7 +1141,7 @@ public class EntityBuilder : ClassBuilder
                         WriteLine("public {2} {0}{1} => {0} != null ? {0}.{1} : 0;", pname, master.Name, master.DataType.Name);
                 }
 
-                WriteLine();
+                //WriteLine();
             }
         }
 
@@ -1020,6 +1153,8 @@ public class EntityBuilder : ClassBuilder
     {
         WriteLine("#region 扩展查询");
 
+        var names = new List<String>();
+
         // 主键
         IDataColumn pk = null;
         if (Table.PrimaryKeys.Length == 1)
@@ -1027,10 +1162,16 @@ public class EntityBuilder : ClassBuilder
             pk = Table.PrimaryKeys[0];
             var name = pk.CamelName();
 
+            var type = pk.Properties["Type"];
+            if (type.IsNullOrEmpty()) type = pk.DataType?.Name;
+
+            var methodName = $"FindBy{pk.Name}";
+            names.Add(methodName);
+
             WriteLine("/// <summary>根据{0}查找</summary>", pk.DisplayName);
             WriteLine("/// <param name=\"{0}\">{1}</param>", name, pk.DisplayName);
             WriteLine("/// <returns>实体对象</returns>");
-            WriteLine("public static {3} FindBy{0}({1} {2})", pk.Name, pk.DataType.Name, name, ClassName);
+            WriteLine("public static {3} {0}({1} {2})", methodName, type, name, ClassName);
             WriteLine("{");
             {
                 if (pk.DataType.IsInt())
@@ -1061,14 +1202,41 @@ public class EntityBuilder : ClassBuilder
             // 跳过主键
             if (di.Columns.Length == 1 && pk != null && di.Columns[0].EqualIgnoreCase(pk.Name, pk.ColumnName)) continue;
 
-            // 超过2字段索引，不要生成查询函数
-            if (di.Columns.Length > 2) continue;
+            // 超过3字段索引，不要生成查询函数
+            if (di.Columns.Length > 3) continue;
 
             var cs = Table.GetColumns(di.Columns);
             if (cs == null || cs.Length != di.Columns.Length) continue;
 
+            // 索引最后一个字段如果是主键Id，则该不参与生成查询方法
+            if (pk != null && cs[cs.Length - 1].ColumnName.EqualIgnoreCase(pk.ColumnName))
+            {
+                cs = cs.Take(cs.Length - 1).ToArray();
+            }
+
             // 只有整数和字符串能生成查询函数
-            if (!cs.All(e => e.DataType.IsInt() || e.DataType == typeof(String))) continue;
+            var flag = true;
+            foreach (var dc in cs)
+            {
+                if (dc.DataType.IsInt() || dc.DataType == typeof(String))
+                {
+                    flag = true;
+                }
+                else if (dc.DataType == typeof(DateTime))
+                {
+                    if (dc.Name.EqualIgnoreCase("CreateTime", "UpdateTime"))
+                    {
+                        flag = false;
+                    }
+                }
+                else
+                {
+                    flag = false;
+                }
+
+                if (!flag) break;
+            }
+            if (!flag) continue;
 
             WriteLine();
             WriteLine("/// <summary>根据{0}查找</summary>", cs.Select(e => e.DisplayName).Join("、"));
@@ -1077,11 +1245,27 @@ public class EntityBuilder : ClassBuilder
                 WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.DisplayName);
             }
 
+            var ps = new Dictionary<String, String>();
+            foreach (var dc in cs)
+            {
+                var type = dc.Properties["Type"];
+                if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+
+                ps[dc.CamelName()] = type;
+            }
+            var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
+
+            // 如果方法名已存在，则不生成
+            var methodName = cs.Select(e => e.Name).Join("And");
+            methodName = di.Unique ? $"FindBy{methodName}" : $"FindAllBy{methodName}";
+            if (names.Contains(methodName)) continue;
+            names.Add(methodName);
+
             // 返回类型
             if (di.Unique)
             {
                 WriteLine("/// <returns>{0}</returns>", di.Unique ? "实体对象" : "实体列表");
-                WriteLine("public static {2} FindBy{0}({1})", cs.Select(e => e.Name).Join("And"), cs.Select(e => e.DataType.Name + " " + e.CamelName()).Join(", "), ClassName);
+                WriteLine("public static {2} {0}({1})", methodName, args, ClassName);
                 WriteLine("{");
                 {
                     if (cs.Length == 1)
@@ -1107,7 +1291,7 @@ public class EntityBuilder : ClassBuilder
                             wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
                     }
 
-                    WriteLine();
+                    if (cs.Length == 1) WriteLine();
                     WriteLine("// 实体缓存");
                     WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => {0});", wh);
 
@@ -1127,7 +1311,7 @@ public class EntityBuilder : ClassBuilder
             else
             {
                 WriteLine("/// <returns>{0}</returns>", di.Unique ? "实体对象" : "实体列表");
-                WriteLine("public static IList<{2}> FindAllBy{0}({1})", cs.Select(e => e.Name).Join("And"), cs.Select(e => e.DataType.Name + " " + e.CamelName()).Join(", "), ClassName);
+                WriteLine("public static IList<{2}> {0}({1})", methodName, args, ClassName);
                 WriteLine("{");
                 {
                     if (cs.Length == 1)
@@ -1153,7 +1337,7 @@ public class EntityBuilder : ClassBuilder
                             wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
                     }
 
-                    WriteLine();
+                    if (cs.Length == 1) WriteLine();
                     WriteLine("// 实体缓存");
                     WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => {0});", wh);
 
@@ -1226,13 +1410,19 @@ public class EntityBuilder : ClassBuilder
             {
                 if (pis.Length > 0) pis.Append(", ");
 
+                var type = dc.Properties["Type"];
+                if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+
                 if (dc.DataType == typeof(Boolean))
-                    pis.Append($"{dc.DataType.Name}? {dc.CamelName()}");
+                    pis.Append($"{type}? {dc.CamelName()}");
                 else
-                    pis.Append($"{dc.DataType.Name} {dc.CamelName()}");
+                    pis.Append($"{type} {dc.CamelName()}");
             }
             var piTime = dcTime == null ? "" : "DateTime start, DateTime end, ";
-            WriteLine("public static IList<{0}> Search({1}, {2}String key, PageParameter page)", returnName, pis, piTime);
+            if (pis.Length > 0)
+                WriteLine("public static IList<{0}> Search({1}, {2}String key, PageParameter page)", returnName, pis, piTime);
+            else
+                WriteLine("public static IList<{0}> Search({2}String key, PageParameter page)", returnName, pis, piTime);
             WriteLine("{");
             {
                 WriteLine("var exp = new WhereExpression();");
@@ -1327,10 +1517,11 @@ public class EntityBuilder : ClassBuilder
     protected virtual void BuildBusiness()
     {
         WriteLine("#region 业务操作");
-        var toModel = Option.ModelNameForToModel;
-        if (!toModel.IsNullOrEmpty() && !Option.ModelNameForCopy.IsNullOrEmpty())
+        var toModel = EntityOption.ModelNameForToModel;
+        var model = Option.ModelNameForCopy;
+        if (!toModel.IsNullOrEmpty() && !model.IsNullOrEmpty())
         {
-            BuildToModel(toModel.Replace("{name}", ClassName), Option.ModelNameForCopy.Replace("{name}", ClassName));
+            BuildToModel(toModel.Replace("{name}", ClassName), model.Replace("{name}", ClassName));
             WriteLine("");
         }
         WriteLine("#endregion");

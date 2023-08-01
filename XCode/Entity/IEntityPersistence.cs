@@ -517,9 +517,15 @@ public class EntityPersistence : IEntityPersistence
             if (entity.IsFromDatabase || entity.IsDirty(fi.Name))
             {
             }
-            // 2，没有脏数据但默认值
+            // 2，没有脏数据但有默认值
             else if (!fi.Column.DefaultValue.IsNullOrEmpty())
             {
+                // 字符串和时间日期在有默认值且不允许空时，不参与构造Sql。建表时用户需要自己在数据表中指定默认值，反向工程不支持
+                if ((fi.Type == typeof(String) || fi.Type == typeof(DateTime)) && !fi.IsNullable)
+                {
+                    if (!fullInsert) continue;
+                }
+
                 value = fi.Column.DefaultValue.ChangeType(fi.Type);
             }
             // 3，没有脏数据，允许空的字段不参与

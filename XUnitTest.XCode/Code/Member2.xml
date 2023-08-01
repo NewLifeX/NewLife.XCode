@@ -1,5 +1,41 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Tables xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2022.xsd" NameSpace="XCode.Membership" ConnName="Membership" Output="" BaseClass="Entity" ModelClass="{name}Model" ModelInterface="I{name}" Version="11.8.2023.0407" Document="https://newlifex.com/xcode/model" DisplayName="" CubeOutput="" NameFormat="underline" xmlns="https://newlifex.com/Model2022.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2023.xsd" xmlns="https://newlifex.com/Model2023.xsd">
+  <Option>
+    <!--输出目录-->
+    <Output>..\..\XUnitTest.XCode\Code</Output>
+    <!--是否使用中文文件名。默认false-->
+    <ChineseFileName>True</ChineseFileName>
+    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
+    <BaseClass>Entity</BaseClass>
+    <!--命名空间-->
+    <Namespace>XCode.Membership</Namespace>
+    <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
+    <ClassNameTemplate />
+    <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
+    <DisplayNameTemplate />
+    <!--用于生成拷贝函数的模型类。例如{name}或I{name}-->
+    <ModelNameForCopy />
+    <!--带有索引器。实现IModel接口-->
+    <HasIModel>False</HasIModel>
+    <!--模型类模版-->
+    <ModelClass>{name}Model</ModelClass>
+    <!--模型接口模版-->
+    <ModelInterface>I{name}</ModelInterface>
+    <!--数据库连接名-->
+    <ConnName>Membership</ConnName>
+    <!--模型类输出目录。默认当前目录的Models子目录-->
+    <ModelsOutput>.\Models\</ModelsOutput>
+    <!--模型接口输出目录。默认当前目录的Interfaces子目录-->
+    <InterfacesOutput>.\Interfaces\</InterfacesOutput>
+    <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->
+    <ModelNameForToModel />
+    <!--命名格式。Default/Upper/Lower/Underline-->
+    <NameFormat>Underline</NameFormat>
+    <!--生成器版本-->
+    <Version>11.9.2023.0801</Version>
+    <!--帮助文档-->
+    <Document>https://newlifex.com/xcode/model</Document>
+  </Option>
   <Table Name="User" Description="用户。用户帐号信息">
     <Columns>
       <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
@@ -14,7 +50,7 @@
       <Column Name="Avatar" DataType="String" ItemType="image" Length="200" Description="头像" />
       <Column Name="RoleID" ColumnName="role_id" DataType="Int32" Map="Role@Id@Name" DefaultValue="3" Description="角色。主要角色" Category="登录信息" />
       <Column Name="RoleIds" ColumnName="role_ids" DataType="String" Length="200" Description="角色组。次要角色集合" Category="登录信息" />
-      <Column Name="DepartmentID" ColumnName="department_id" DataType="Int32" Map="Department@Id@Name" Description="部门。组织机构" Category="登录信息" />
+      <Column Name="DepartmentID" ColumnName="department_id" DataType="Int32" Description="部门。组织机构" Category="登录信息" />
       <Column Name="Online" DataType="Boolean" Description="在线" Category="登录信息" />
       <Column Name="Enable" DataType="Boolean" Description="启用" Category="登录信息" />
       <Column Name="Age" DataType="Int32" Description="年龄。周岁" />
@@ -280,4 +316,4 @@
       <Index Name="IX_TenantUser_UserId" Columns="UserId" />
     </Indexes>
   </Table>
-</Tables>
+</EntityModel>

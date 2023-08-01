@@ -120,7 +120,7 @@ public static class EntityExtension
         var session2 = session ?? fact.Session;
 
         // Oracle/MySql批量插入
-        if (session2.Dal.SupportBatch)
+        if (session2.Dal.SupportBatch && list.Count() > 1)
         {
             DefaultSpan.Current?.AppendTag("SupportBatch");
 
@@ -174,7 +174,7 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle批量更新
-        return session.Dal.DbType == DatabaseType.Oracle
+        return session.Dal.DbType == DatabaseType.Oracle && list.Count() > 1
             ? BatchUpdate(list.Valid(false), null, null, null, session)
             : DoAction(list, useTransition, e => e.Update(), session);
     }
@@ -202,7 +202,7 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
-        if (session.Dal.SupportBatch)
+        if (session.Dal.SupportBatch && list.Count() > 1)
         {
             // 根据是否来自数据库，拆分为两组
             var ts = Split(list);
@@ -229,7 +229,7 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
-        if (session.Dal.SupportBatch)
+        if (session.Dal.SupportBatch && list.Count() > 1)
         {
             // 根据是否来自数据库，拆分为两组
             var ts = Split(list);
@@ -305,12 +305,13 @@ public static class EntityExtension
         var entity = list.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
-        // 单一主键，采用批量操作
         var fact = entity.GetType().AsFactory();
+        session ??= fact.Session;
+
+        // 单一主键，采用批量操作
         var pks = fact.Table.PrimaryKeys;
-        if (pks != null && pks.Length == 1)
+        if (pks != null && pks.Length == 1 && list.Count() > 1)
         {
-            session ??= fact.Session;
             var pk = pks[0];
             var count = 0;
             var rs = 0;
@@ -343,8 +344,6 @@ public static class EntityExtension
 
     private static Int32 DoAction<T>(this IEnumerable<T> list, Boolean? useTransition, Func<T, Int32> func, IEntitySession session) where T : IEntity
     {
-        if (session == null) throw new ArgumentNullException(nameof(session));
-
         if (!list.Any()) return 0;
 
         // 避免列表内实体对象为空
@@ -364,6 +363,8 @@ public static class EntityExtension
         var count = 0;
         if (useTransition != null && useTransition.Value)
         {
+            if (session == null) throw new ArgumentNullException(nameof(session));
+
             using var trans = session.CreateTrans();
             count = DoAction(list, func, count);
 

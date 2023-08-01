@@ -51,7 +51,7 @@ namespace XCode.Common
         /// <param name="count"></param>
         public void Run(Int32 count)
         {
-            var set = XCode.Setting.Current;
+            var set = XCode.XCodeSetting.Current;
             set.TraceSQLTime = 0;
 
             var fact = Factory;

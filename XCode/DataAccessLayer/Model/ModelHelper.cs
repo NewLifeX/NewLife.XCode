@@ -186,9 +186,10 @@ public static class ModelHelper
     #region 序列化扩展
     /// <summary>导出模型</summary>
     /// <param name="tables"></param>
+    /// <param name="option">写在前面的扩展对象，一般用于存储配置</param>
     /// <param name="atts">附加属性</param>
     /// <returns></returns>
-    public static String ToXml(IEnumerable<IDataTable> tables, IDictionary<String, String> atts = null)
+    public static String ToXml(IEnumerable<IDataTable> tables, Object option = null, IDictionary<String, String> atts = null)
     {
         var ms = new MemoryStream();
 
@@ -204,9 +205,9 @@ public static class ModelHelper
         var hasAttr = atts != null && atts.Count > 0;
         // 如果含有命名空间则添加
         if (hasAttr && atts.TryGetValue("xmlns", out var xmlns))
-            writer.WriteStartElement("Tables", xmlns);
+            writer.WriteStartElement("EntityModel", xmlns);
         else
-            writer.WriteStartElement("Tables");
+            writer.WriteStartElement("EntityModel");
 
         // 写入版本
         //writer.WriteAttributeString("Version", Assembly.GetExecutingAssembly().GetName().Version.ToString());
@@ -229,6 +230,21 @@ public static class ModelHelper
                 //writer.WriteElementString(item.Key, item.Value);
             }
         }
+        if (option != null)
+        {
+            writer.WriteStartElement("Option");
+            foreach (var pi in option.GetType().GetProperties(true))
+            {
+                if (pi.PropertyType.GetTypeCode() == TypeCode.Object) continue;
+
+                var des = pi.GetDescription() ?? pi.GetDisplayName();
+                if (!des.IsNullOrEmpty()) writer.WriteComment(des);
+
+                var v = pi.GetValue(option, null);
+                writer.WriteElementString(pi.Name, v + "");
+            }
+            writer.WriteEndElement();
+        }
         foreach (var item in tables)
         {
             writer.WriteStartElement("Table");
@@ -245,9 +261,10 @@ public static class ModelHelper
     /// <summary>导入模型</summary>
     /// <param name="xml"></param>
     /// <param name="createTable">用于创建<see cref="IDataTable"/>实例的委托</param>
+    /// <param name="option">写在前面的扩展对象，一般用于存储配置</param>
     /// <param name="atts">附加属性</param>
     /// <returns></returns>
-    public static List<IDataTable> FromXml(String xml, Func<IDataTable> createTable, IDictionary<String, String> atts = null)
+    public static List<IDataTable> FromXml(String xml, Func<IDataTable> createTable, Object option = null, IDictionary<String, String> atts = null)
     {
         if (xml.IsNullOrEmpty()) return null;
         if (createTable == null) throw new ArgumentNullException(nameof(createTable));
@@ -281,6 +298,13 @@ public static class ModelHelper
                 (table as IXmlSerializable).ReadXml(reader);
                 list.Add(table);
             }
+            else if (reader.Name.EqualIgnoreCase("Option") && option != null)
+            {
+                if (option is IXmlSerializable xml2)
+                    xml2.ReadXml(reader);
+                else
+                    ReadXml(reader, option);
+            }
             else if (atts != null)
             {
                 var name = reader.Name;
@@ -310,7 +334,7 @@ public static class ModelHelper
         if (reader.HasAttributes)
         {
             reader.MoveToFirstAttribute();
-            ReadXml(reader, table);
+            ReadXmlAttribute(reader, table);
         }
 
         reader.ReadStartElement();
@@ -422,6 +446,32 @@ public static class ModelHelper
     /// <param name="reader"></param>
     /// <param name="value">数值</param>
     public static void ReadXml(XmlReader reader, Object value)
+    {
+        reader.ReadStartElement();
+
+        var pis = value.GetType().GetProperties(true);
+        while (reader.IsStartElement())
+        {
+            var pi = pis.FirstOrDefault(e => e.Name.EqualIgnoreCase(reader.Name));
+            if (pi != null)
+            {
+                var val = reader.ReadElementContentAsString();
+                value.SetValue(pi, val);
+            }
+            else
+            {
+                // 这里必须处理，否则加载特殊Xml文件时将会导致死循环
+                reader.Skip();
+            }
+        }
+
+        if (reader.NodeType == XmlNodeType.EndElement) reader.ReadEndElement();
+    }
+
+    /// <summary>读取</summary>
+    /// <param name="reader"></param>
+    /// <param name="value">数值</param>
+    public static void ReadXmlAttribute(XmlReader reader, Object value)
     {
         var pis = value.GetType().GetProperties(true);
         var names = new HashSet<String>(StringComparer.OrdinalIgnoreCase);

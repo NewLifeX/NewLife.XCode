@@ -7,10 +7,10 @@ using System.Xml.Serialization;
 
 namespace XCode.Code;
 
-/// <summary>用户。用户帐号信息</summary>
+/// <summary>用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户</summary>
 [Serializable]
 [DataObject]
-[Description("用户。用户帐号信息")]
+[Description("用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户")]
 public class User : MyEntityBase
 {
     #region 属性
@@ -39,18 +39,18 @@ public class User : MyEntityBase
     [DisplayName("性别")]
     public XCode.Membership.SexKinds Sex { get; set; }
 
-    /// <summary>邮件</summary>
-    [Description("邮件")]
+    /// <summary>邮件。支持登录</summary>
+    [Description("邮件。支持登录")]
     [DisplayName("邮件")]
     public String Mail { get; set; }
 
-    /// <summary>手机</summary>
-    [Description("手机")]
+    /// <summary>手机。支持登录</summary>
+    [Description("手机。支持登录")]
     [DisplayName("手机")]
     public String Mobile { get; set; }
 
-    /// <summary>代码。身份证、员工编号等</summary>
-    [Description("代码。身份证、员工编号等")]
+    /// <summary>代码。身份证、员工编码等，支持登录</summary>
+    [Description("代码。身份证、员工编码等，支持登录")]
     [DisplayName("代码")]
     public String Code { get; set; }
 
@@ -124,8 +124,8 @@ public class User : MyEntityBase
     [DisplayName("注册IP")]
     public String RegisterIP { get; set; }
 
-    /// <summary>在线时间。累计在线总时间，秒</summary>
-    [Description("在线时间。累计在线总时间，秒")]
+    /// <summary>在线时间。累计在线总时间，单位秒</summary>
+    [Description("在线时间。累计在线总时间，单位秒")]
     [DisplayName("在线时间")]
     public Int32 OnlineTime { get; set; }
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using NewLife.Configuration;
 using XCode.DataAccessLayer;
@@ -9,9 +8,13 @@ using XCode.DataAccessLayer;
 namespace XCode;
 
 /// <summary>XCode设置</summary>
+[Obsolete("=>XCodeSetting")]
+public class Setting : XCodeSetting { }
+
+/// <summary>XCode设置</summary>
 [DisplayName("XCode设置")]
 [Config("XCode")]
-public class Setting : Config<Setting>
+public class XCodeSetting : Config<XCodeSetting>
 {
     #region 属性
     /// <summary>是否启用调试。默认启用</summary>

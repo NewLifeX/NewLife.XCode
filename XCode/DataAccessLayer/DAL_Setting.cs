@@ -19,7 +19,7 @@ partial class DAL
 
     #region Sql日志输出
     /// <summary>是否调试</summary>
-    public static Boolean Debug { get; set; } = Setting.Current.Debug;
+    public static Boolean Debug { get; set; } = XCodeSetting.Current.Debug;
 
     /// <summary>输出日志</summary>
     /// <param name="format"></param>
@@ -52,7 +52,7 @@ partial class DAL
         // 输出当前版本
         System.Reflection.Assembly.GetExecutingAssembly().WriteVersion();
 
-        if (Setting.Current.ShowSQL)
+        if (XCodeSetting.Current.ShowSQL)
             XTrace.WriteLine("当前配置为输出SQL日志，如果觉得日志过多，可以修改配置关闭[Config/XCode.config:ShowSQL=false]。");
     }
     #endregion

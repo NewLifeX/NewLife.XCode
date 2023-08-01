@@ -5,10 +5,11 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;
+using NewLife.Reflection;
 
 namespace XCode.Code;
 
-/// <summary>用户模型。帐号信息</summary>
+/// <summary>用户模型。帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户</summary>
 public class ExtendUser2 : IModel
 {
     #region 属性
@@ -27,13 +28,13 @@ public class ExtendUser2 : IModel
     /// <summary>性别。未知、男、女</summary>
     public XCode.Membership.SexKinds Sex { get; set; }
 
-    /// <summary>邮件</summary>
+    /// <summary>邮件。支持登录</summary>
     public String Mail { get; set; }
 
-    /// <summary>手机</summary>
+    /// <summary>手机。支持登录</summary>
     public String Mobile { get; set; }
 
-    /// <summary>代码。身份证、员工编号等</summary>
+    /// <summary>代码。身份证、员工编码等，支持登录</summary>
     public String Code { get; set; }
 
     /// <summary>地区。省市区</summary>
@@ -78,7 +79,7 @@ public class ExtendUser2 : IModel
     /// <summary>注册IP</summary>
     public String RegisterIP { get; set; }
 
-    /// <summary>在线时间。累计在线总时间，秒</summary>
+    /// <summary>在线时间。累计在线总时间，单位秒</summary>
     public Int32 OnlineTime { get; set; }
 
     /// <summary>扩展1</summary>
@@ -143,7 +144,7 @@ public class ExtendUser2 : IModel
                 "Ex5" => Ex5,
                 "Ex6" => Ex6,
                 "Remark" => Remark,
-                _ => null
+                _ => this.GetValue(name),
             };
         }
         set
@@ -180,6 +181,7 @@ public class ExtendUser2 : IModel
                 case "Ex5": Ex5 = Convert.ToString(value); break;
                 case "Ex6": Ex6 = Convert.ToString(value); break;
                 case "Remark": Remark = Convert.ToString(value); break;
+                default: this.SetValue(name, value); break;
             }
         }
     }

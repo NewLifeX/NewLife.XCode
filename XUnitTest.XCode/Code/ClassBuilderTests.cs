@@ -131,7 +131,7 @@ public class ClassBuilderTests
         var option = new BuilderOption
         {
             Pure = true,
-            HasIndex = true,
+            HasIModel = true,
             BaseClass = "Object, Ixx{name}",
             ClassNameTemplate = "Extend{name}",
             ModelNameForCopy = "Extend{name}",
@@ -158,7 +158,7 @@ public class ClassBuilderTests
         var option = new BuilderOption
         {
             Pure = true,
-            HasIndex = true,
+            HasIModel = true,
             BaseClass = null,
             ClassNameTemplate = "Extend{name}2",
             DisplayNameTemplate = "{displayName}模型",
@@ -227,7 +227,8 @@ public class ClassBuilderTests
         var option = new BuilderOption
         {
             Output = dir,
-            ClassNameTemplate = "{name}Model"
+            ClassNameTemplate = "{name}Model",
+            Partial = true,
         };
 
         ClassBuilder.BuildModels(_tables, option);
@@ -269,6 +270,7 @@ public class ClassBuilderTests
         {
             Output = dir,
             ClassNameTemplate = "{name}Dto",
+            Partial = true,
         };
 
         ClassBuilder.BuildModels(_tables, option);

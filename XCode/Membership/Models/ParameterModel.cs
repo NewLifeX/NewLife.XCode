@@ -8,7 +8,7 @@ using NewLife.Data;
 
 namespace XCode.Membership;
 
-/// <summary>字典参数</summary>
+/// <summary>字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合</summary>
 public partial class ParameterModel : IModel
 {
     #region 属性

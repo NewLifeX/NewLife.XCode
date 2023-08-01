@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using NewLife.Log;
 using XCode.Code;
 using XCode.DataAccessLayer;
 using Xunit;
@@ -34,7 +35,7 @@ public class EntityBuilderTests
     [Fact]
     public void Normal()
     {
-        var option = new BuilderOption
+        var option = new EntityBuilderOption
         {
             ConnName = "MyConn",
             Namespace = "Company.MyName",
@@ -72,12 +73,12 @@ public class EntityBuilderTests
     [Fact]
     public void ExtendOnData()
     {
-        var option = new BuilderOption
+        var option = new EntityBuilderOption
         {
             ConnName = "MyConn",
             Namespace = "Company.MyName",
             Partial = true,
-            ExtendOnData = true
+            //ExtendOnData = true
         };
         option.Usings.Add("NewLife.Remoting");
 
@@ -111,7 +112,7 @@ public class EntityBuilderTests
     [Fact]
     public void Exclude()
     {
-        var option = new BuilderOption
+        var option = new EntityBuilderOption
         {
             ConnName = "MyConn",
             Namespace = "Company.MyName",
@@ -188,7 +189,10 @@ public class EntityBuilderTests
 
         // 加载模型文件，得到数据表
         var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
-        var option = new BuilderOption();
+        var option = new EntityBuilderOption
+        {
+            Partial = true,
+        };
         var tables = ClassBuilder.LoadModels(file, option, out var atts);
         EntityBuilder.FixModelFile(file, option, atts, tables);
 
@@ -262,7 +266,10 @@ public class EntityBuilderTests
 
         // 加载模型文件，得到数据表
         var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
-        var option = new BuilderOption();
+        var option = new EntityBuilderOption
+        {
+            Partial = true,
+        };
         var tables = ClassBuilder.LoadModels(file, option, out var atts);
         EntityBuilder.FixModelFile(file, option, atts, tables);
 
@@ -315,15 +322,59 @@ public class EntityBuilderTests
     {
         // 加载模型文件，得到数据表
         var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
-        var option = new BuilderOption();
+        var option = new EntityBuilderOption();
         var tables = ClassBuilder.LoadModels(file, option, out var atts);
         EntityBuilder.FixModelFile(file, option, atts, tables);
 
-        atts["NameFormat"] = "underline";
+        //atts["NameFormat"] = "underline";
+        option.NameFormat = NameFormats.Underline;
         file = @"..\..\XUnitTest.XCode\Code\Member2.xml";
         EntityBuilder.FixModelFile(file, option, atts, tables);
 
         var xml = File.ReadAllText(file);
         Assert.Contains("Name", xml);
+    }
+
+    [Fact]
+    public void Merge()
+    {
+        // 加载模型文件，得到数据表
+        var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
+        var option = new EntityBuilderOption();
+        var tables = ClassBuilder.LoadModels(file, option, out var atts);
+
+        // 生成实体类
+        option.Output = @".\Entity\";
+
+        var builder = new EntityBuilder
+        {
+            AllTables = tables,
+            Option = option.Clone(),
+            Log = XTrace.Log,
+        };
+
+        builder.Load(tables.FirstOrDefault(e => e.Name == "User"));
+
+        builder.Business = true;
+        builder.Execute();
+        //builder.Save(null, false, option.ChineseFileName);
+
+        var fileName = "Code\\Entity\\用户.Biz2.cs".GetBasePath();
+        builder.Merge(fileName);
+
+        {
+            var rs = File.ReadAllText("Code\\Entity\\用户.Biz2.cs".GetFullPath());
+            var target = ReadTarget("Code\\Entity\\用户.Biz.cs", rs);
+            //Assert.Equal(target, rs);
+
+            // 扩展查询部分，由于插入在后面，无法进行相等比较
+            var p1 = rs.IndexOf("#region 扩展查询");
+            var p2 = target.IndexOf("#region 扩展查询");
+            var str1 = rs.Substring(0, p1);
+            var str2 = target.Substring(0, p2);
+            Assert.Equal(str2, str1);
+            Assert.Contains("FindByName(String name)", rs);
+            Assert.Contains("FindAllByMail(String mail)", rs);
+        }
     }
 }

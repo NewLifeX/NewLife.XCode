@@ -1,4 +1,4 @@
-﻿using System.Runtime.Serialization;
+using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
@@ -122,6 +122,24 @@ public partial class TenantUser : Entity<TenantUser>
 
     /// <summary>根据用户查找</summary>
     /// <param name="userId">用户</param>
+    /// <param name="isAll">是否包含停用(默认不包含停用)</param>
+    /// <returns>实体列表</returns>
+    public static IList<TenantUser> FindAllByUserId(Int32 userId, Boolean isAll = false)
+    {
+        if (userId <= 0) return new List<TenantUser>();
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return isAll ? Meta.Cache.FindAll(e => e.UserId == userId) : Meta.Cache.FindAll(e => e.UserId == userId && e.Enable);
+
+        var exp = new WhereExpression();
+        exp &= _.UserId == userId;
+        if (!isAll) exp &= _.Enable == true;
+
+        return FindAll(exp);
+    }
+
+    /// <summary>根据用户查找</summary>
+    /// <param name="userId">用户</param>
     /// <returns>实体列表</returns>
     public static IList<TenantUser> FindAllByUserId(Int32 userId)
     {
@@ -138,8 +156,8 @@ public partial class TenantUser : Entity<TenantUser>
     /// <summary>高级查询</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="userId">用户</param>
-    /// <param name="roleId"></param>
-    /// <param name="enable"></param>
+    /// <param name="roleId">角色</param>
+    /// <param name="enable">是否启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
@@ -149,9 +167,9 @@ public partial class TenantUser : Entity<TenantUser>
     {
         var exp = new WhereExpression();
 
-        if (tenantId >= 0) exp &= _.TenantId == tenantId;
-        if (userId >= 0) exp &= _.UserId == userId;
-        if (roleId >= 0) exp &= _.RoleId == roleId;
+        if (tenantId > 0) exp &= _.TenantId == tenantId;
+        if (userId > 0) exp &= _.UserId == userId;
+        if (roleId > 0) exp &= _.RoleId == roleId;
         if (enable != null) exp &= _.Enable == enable;
 
         exp &= _.UpdateTime.Between(start, end);

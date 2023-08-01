@@ -542,7 +542,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         if (ps != null && ps.Length > 0) cmd.Parameters.AddRange(ps);
 
         var timeout = Database.CommandTimeout;
-        if (timeout <= 0) timeout = Setting.Current.CommandTimeout;
+        if (timeout <= 0) timeout = XCodeSetting.Current.CommandTimeout;
         if (timeout > 0) cmd.CommandTimeout = timeout;
 
         return cmd;
@@ -942,7 +942,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
         if (!ShowSQL) return;
 
-        var sqlpath = Setting.Current.SQLPath;
+        var sqlpath = XCodeSetting.Current.SQLPath;
         if (String.IsNullOrEmpty(sqlpath))
             Log?.Info(sql);
         else

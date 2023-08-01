@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using NewLife.Data;
 using NewLife.Log;
@@ -18,6 +17,9 @@ public class ShardTests
 {
     public ShardTests()
     {
+        var tracer = new DefaultTracer { MaxSamples = 1000, Log = XTrace.Log };
+        DAL.GlobalTracer ??= tracer;
+
         DAL.AddConnStr("mysql", "Server=.;Port=3306;Database=membership;Uid=root;Pwd=root", null, "mysql");
         DAL.AddConnStr("mysql_underline", "Server=.;Port=3306;Database=membership_underline;Uid=root;Pwd=root;NameFormat=underline", null, "mysql");
     }
@@ -132,18 +134,19 @@ public class ShardTests
         Assert.StartsWith($"[test_{time:yyyy}] Delete From Log2_{time:yyyyMMdd} Where", sqls[^1]);
 
         var list = Log2.Search(null, null, -1, null, -1, time.AddHours(-24), time, null, new PageParameter { PageSize = 100 });
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time:yyyyMMdd} Where", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-00):yyyyMMdd} Where", sqls[^3]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^1]);
 
         list = Log2.Search(null, null, -1, null, -1, time.AddHours(-24), time, null, new PageParameter { PageIndex = 2, PageSize = 100 });
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^3]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time:yyyyMMdd} Where", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-00):yyyyMMdd} Where", sqls[^3]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddHours(-00):yyyyMMdd} Where", sqls[^2]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^1]);
 
         // 恢复现场，避免影响其它测试用例
         Log2.Meta.ShardPolicy = null;
     }
 
+    [TestOrder(30)]
     [Fact]
     public void FindById()
     {
@@ -179,6 +182,7 @@ public class ShardTests
         Log2.Meta.ShardPolicy = null;
     }
 
+    [TestOrder(40)]
     [Fact]
     public void SearchDates()
     {
@@ -208,29 +212,41 @@ public class ShardTests
 
         var time = DateTime.Now;
         var start = time.AddDays(-3);
-        XTrace.WriteLine("AutoShard start={0} end={1}", start, time);
+
+        // 遍历分表查询
+        XTrace.WriteLine("AutoShard FindCount ({0}, {1})", start, time);
         Log2.Meta.AutoShard(start, time, () => Log2.FindCount()).ToArray();
         Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-3):yyyyMMdd}", sqls[^4]);
         Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-2):yyyyMMdd}", sqls[^3]);
         Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-1):yyyyMMdd}", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(0):yyyyMMdd}", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-0):yyyyMMdd}", sqls[^1]);
 
-        XTrace.WriteLine("Search");
+        // 在多表中进行分页查询
+        XTrace.WriteLine("Search Page");
         var list = Log2.Search(null, null, -1, null, -1, start, time, null, new PageParameter { PageSize = 10000 });
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where ID>=", sqls[^4]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^3]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^2]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^1]);
+
+        // 查询第二页
+        XTrace.WriteLine("Search Page2");
+        list = Log2.Search(null, null, -1, null, -1, start, time, null, new PageParameter { PageIndex = 2, PageSize = 10000 });
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where ID>=", sqls[^7]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-0):yyyyMMdd} Where ID>=", sqls[^6]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^5]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^4]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^3]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^2]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^1]);
+
+        // 在多表中进行分页查询（倒序）
+        XTrace.WriteLine("Search Page Reverse");
+        list = Log2.Search(null, null, -1, null, -1, start, time, null, new PageParameter { PageSize = 10000, Sort = "id" });
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^4]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^3]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where ID>=", sqls[^1]);
-
-        XTrace.WriteLine("SearchPage");
-        list = Log2.Search(null, null, -1, null, -1, start, time, null, new PageParameter { PageIndex = 2, PageSize = 10000 });
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^7]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^6]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^5]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^4]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^3]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where ID>=", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where ID>=", sqls[^1]);
 
         // 日期倒序
         time = DateTime.Today;
@@ -246,7 +262,7 @@ public class ShardTests
         time = time.AddSeconds(1);
         XTrace.WriteLine("AutoShard start={0} end={1}", time, start);
         Log2.Meta.AutoShard(time, start, () => Log2.FindCount()).ToArray();
-        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(0):yyyyMMdd}", sqls[^4]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-0):yyyyMMdd}", sqls[^4]);
         Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-1):yyyyMMdd}", sqls[^3]);
         Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-2):yyyyMMdd}", sqls[^2]);
         Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-3):yyyyMMdd}", sqls[^1]);
@@ -255,6 +271,7 @@ public class ShardTests
         Log2.Meta.ShardPolicy = null;
     }
 
+    [TestOrder(110)]
     [Fact]
     public void SearchAutoShard()
     {
@@ -269,11 +286,11 @@ public class ShardTests
         // 插入一点数据
         var snow = Log2.Meta.Factory.Snow;
         var now = DateTime.Now;
-        var log = new Log2 { ID = snow.NewId(now.AddDays(-2)) };
+        var log = new Log2 { ID = snow.NewId(now.AddDays(-2)), Success = true };
         log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-1)) };
+        log = new Log2 { ID = snow.NewId(now.AddDays(-1)), Success = true };
         log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-0)) };
+        log = new Log2 { ID = snow.NewId(now.AddDays(-0)), Success = true };
         log.Insert();
 
         // 拦截Sql，仅为了断言，非业务代码
@@ -283,12 +300,21 @@ public class ShardTests
         var time = DateTime.Now;
         var start = time.AddDays(-2);
 
+        // 自动分表查询，在指定时间区间内执行多次查询
+        XTrace.WriteLine("AutoShard FindAll ({0}, {1})", start, time);
         var list = Log2.Meta.AutoShard(start, time, () => Log2.FindAll(Log2._.Success == true)).SelectMany(e => e).ToList();
-        XTrace.WriteLine("count={0}", list.Count);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^3]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^2]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^1]);
 
+        // 倒序查询
+        XTrace.WriteLine("AutoShard FindAll ({0}, {1})", time, start);
+        list = Log2.Meta.AutoShard(time, start, () => Log2.FindAll(Log2._.Success == true)).SelectMany(e => e).ToList();
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^3]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^2]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^1]);
+
+        // 枚举数查询，只有在遍历时才真正执行查询
         var idx = 1;
         XTrace.WriteLine("AutoShard Start");
         var es = Log2.Meta.AutoShard(start, time, () => Log2.FindAll(Log2._.Success == true));
@@ -303,6 +329,7 @@ public class ShardTests
         Log2.Meta.ShardPolicy = null;
     }
 
+    [TestOrder(120)]
     [Fact]
     public void SearchAutoShard2()
     {
@@ -314,44 +341,42 @@ public class ShardTests
         };
         Log2.Meta.ShardPolicy = shard;
 
-        // 插入一点数据
-        var snow = Log2.Meta.Factory.Snow;
-        var now = DateTime.Now;
-        var log = new Log2 { ID = snow.NewId(now.AddDays(-2)) };
-        log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-1)) };
-        log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-0)) };
-        log.Insert();
-
         // 拦截Sql，仅为了断言，非业务代码
         var sqls = new List<String>();
         DAL.LocalFilter = s => sqls.Add(s);
 
         var time = DateTime.Now;
         var start = time.AddDays(-2);
-        XTrace.WriteLine("start={0} end={1}", start, time);
+
+        // SelectCount遍历
+        XTrace.WriteLine("AutoShard SelectCount({0}, {1})", start, time);
         Log2.Meta.AutoShard(start, time, () => Log2.FindCount()).ToArray();
         Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-2):yyyyMMdd}", sqls[^3]);
         Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-1):yyyyMMdd}", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(0):yyyyMMdd}", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-0):yyyyMMdd}", sqls[^1]);
 
+        // 第一个命中，不查后面
         XTrace.WriteLine("FirstOrDefault");
         var list = Log2.Meta.AutoShard(start, time, () => Log2.FindAll(Log2._.Success == true)).FirstOrDefault(e => e.Count > 0);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^3]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^1]);
 
+        // 倒过来查第一个命中
+        XTrace.WriteLine("FirstOrDefault");
+        list = Log2.Meta.AutoShard(time, start, () => Log2.FindAll(Log2._.Success == true)).FirstOrDefault(e => e.Count > 0);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^1]);
+
+        // 查所有
         XTrace.WriteLine("SelectMany");
         list = Log2.Meta.AutoShard(start, time, () => Log2.FindAll(Log2._.Success == true)).SelectMany(e => e).ToList();
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^3]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where Success=1 Order By ID Desc", sqls[^1]);
 
         // 恢复现场，避免影响其它测试用例
         Log2.Meta.ShardPolicy = null;
     }
 
+    [TestOrder(130)]
     [Fact]
     public void SearchAutoShard3()
     {
@@ -363,31 +388,24 @@ public class ShardTests
         };
         Log2.Meta.ShardPolicy = shard;
 
-        // 插入一点数据
-        var snow = Log2.Meta.Factory.Snow;
-        var now = DateTime.Now;
-        var log = new Log2 { ID = snow.NewId(now.AddDays(-2)) };
-        log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-1)) };
-        log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-0)) };
-        log.Insert();
-
         // 拦截Sql，仅为了断言，非业务代码
         var sqls = new List<String>();
         DAL.LocalFilter = s => sqls.Add(s);
 
         var time = DateTime.Now;
         var start = time.AddDays(-2);
-        XTrace.WriteLine("start={0} end={1}", time, start);
+
+        // 遍历SelectCount
+        XTrace.WriteLine("AutoShard SelectCount({0}, {1})", start, time);
         Log2.Meta.AutoShard(start, time, () => Log2.FindCount()).ToArray();
         Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-2):yyyyMMdd}", sqls[^3]);
         Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-1):yyyyMMdd}", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(0):yyyyMMdd}", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddDays(-0):yyyyMMdd}", sqls[^1]);
 
-        XTrace.WriteLine("AutoShard FindAll");
+        // 倒序FindAll
+        XTrace.WriteLine("AutoShard FindAll({0}, {1})", time, start);
         var list = Log2.Meta.AutoShard(time, start, () => Log2.FindAll(Log2._.Success == true)).SelectMany(e => e).ToList();
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where Success=1", sqls[^3]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where Success=1", sqls[^3]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where Success=1", sqls[^2]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where Success=1", sqls[^1]);
 

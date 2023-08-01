@@ -74,7 +74,7 @@ public class Program
             try
             {
 #endif
-                Test7();
+            Test17();
 #if !DEBUG
             }
             catch (Exception ex)
@@ -93,34 +93,51 @@ public class Program
         }
     }
 
+    private static void Test17()
+    {
+        var find = Role.FindByID(1);
+        find.Ex1 = 3;
+        find.Update();
+        XTrace.WriteLine(find.ToJson());
+        var newRole = new Role() { ID = 1, Name = "Yann" };
+        var b = newRole.Update();
+
+        find = Role.FindByID(1);
+        XTrace.WriteLine(find.ToJson());
+        var aaa = ";";
+
+        var list = new List<Role>();
+        for (int i = 0; i < 5; i++)
+        {
+            var s = new Role() { ID = i + 1, Name = $"{i}" };
+            list.Add(s);
+        }
+
+        list.Update();
+
+
+    }
+
     private static void Test1()
     {
-        //var td = DAL.Create("tdengine");
-        //var tables = td.Tables;
-        //XTrace.WriteLine(tables.ToJson(true));
+        foreach (var item in "data/".AsDirectory().GetFiles("*.db"))
+        {
+            var name = item.Name;
+            XTrace.WriteLine(name);
 
-        //var dt = td.Query("select * from t;");
-        //XTrace.WriteLine(dt.Total + "");
+            if (!DAL.ConnStrs.ContainsKey(name))
+                DAL.AddConnStr(name, $"data source={item.FullName}", null, "Sqlite");
 
-        var guid = new Guid("00ac7f06-4612-4791-9c84-e221a2d963ad");
-        var buf = guid.ToByteArray();
-        XTrace.WriteLine(buf.ToHex());
+            var dal = DAL.Create(name);
 
-        var dal = DAL.Create("test");
-
-        var rs = dal.RestoreAll($"../dbbak.zip", null);
-
-        //var tables = DAL.Import(File.ReadAllText("../data/lawyer.xml".GetFullPath()));
-        //var table = tables.FirstOrDefault(e => e.Name == "SpringSession");
-        //var dc1 = table.Columns[0];
-        //var dc2 = table.Columns[1];
-        //dc1.DataType = typeof(Guid);
-        //dc2.DataType = typeof(Guid);
-        //dal.Restore($"../data/SpringSession.table", table);
-
-        //var dt = dal.Query("select * from spring_session");
-        //XTrace.WriteLine("字段[{0}]：{1}", dt.Columns.Length, dt.Columns.Join());
-        //XTrace.WriteLine("类型[{0}]：{1}", dt.Types.Length, dt.Types.Join(",", e => e?.Name));
+            var tables = dal.Tables;
+            var xml = DAL.Export(tables);
+            //var xml = DAL.Export(tables.Where(e => e.Name.EqualIgnoreCase("PurchaseOrder")));
+            if (xml.Contains("COLLATE"))
+                XTrace.WriteLine("COLLATE");
+            else
+                XTrace.WriteLine(xml);
+        }
     }
 
     private static void Test2()
@@ -146,7 +163,7 @@ public class Program
         DAL.SetConfig(config);
         //DAL.GetConfig = config.GetConfig;
 
-        XCode.Setting.Current.Migration = Migration.Full;
+        XCode.XCodeSetting.Current.Migration = Migration.Full;
         //Role.Meta.Session.Dal.Db.Migration = Migration.Full;
         //DAL.AddConnStr("membership", "Server=10.0.0.3;Port=3306;Database=Membership;Uid=root;Pwd=Pass@word;", null, "mysql");
 
@@ -236,7 +253,7 @@ public class Program
     /// <summary>测试序列化</summary>
     private static void Test12()
     {
-        var option = new BuilderOption();
+        var option = new EntityBuilderOption();
         var tables = ClassBuilder.LoadModels("../../NewLife.Cube/CubeDemoNC/Areas/School/Models/Model.xml", option, out var atts);
         EntityBuilder.BuildTables(tables, option);
     }

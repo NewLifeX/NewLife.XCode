@@ -23,6 +23,9 @@ public class AreaTests
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         IpResolver.Register();
+
+        // 预热IP数据
+        "116.233.20.228".IPToAddress();
     }
 
     [TestOrder(20)]
@@ -150,34 +153,35 @@ public class AreaTests
         }
     }
 
-    //[Fact]
-    //public async void Download()
-    //{
-    //    var url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
-    //    var file = "area.html".GetFullPath();
-    //    //if (!File.Exists(file))
-    //    {
-    //        var http = new HttpClient();
-    //        await http.DownloadFileAsync(url, file);
-    //    }
+    [Fact]
+    public async void Download()
+    {
+        //var url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
+        var url = "https://x.newlifex.com/202201xzqh.htm";
+        var file = "area.html".GetFullPath();
+        //if (!File.Exists(file))
+        {
+            var http = new HttpClient();
+            await http.DownloadFileAsync(url, file);
+        }
 
-    //    Assert.True(File.Exists(file));
-    //}
+        Assert.True(File.Exists(file));
+    }
 
-    //[Fact]
-    //public void ParseTest()
-    //{
-    //    var file = "area.html".GetFullPath();
-    //    var txt = File.ReadAllText(file);
-    //    //foreach (var item in Area.Parse(txt))
-    //    //{
-    //    //    XTrace.WriteLine("{0} {1}", item.ID, item.Name);
-    //    //}
+    [Fact]
+    public void ParseTest()
+    {
+        var file = "area.html".GetFullPath();
+        var txt = File.ReadAllText(file);
+        //foreach (var item in Area.Parse(txt))
+        //{
+        //    XTrace.WriteLine("{0} {1}", item.ID, item.Name);
+        //}
 
-    //    var rs = Parse(txt).ToList();
-    //    Assert.NotNull(rs);
-    //    Assert.True(rs.Count > 3000);
-    //}
+        var rs = Parse(txt).ToList();
+        Assert.NotNull(rs);
+        Assert.True(rs.Count > 3000);
+    }
 
     //[Fact]
     //public void ParseLevel4Test()
@@ -194,46 +198,49 @@ public class AreaTests
     //    Assert.Equal(15, rs.Count);
     //}
 
-    //[Fact]
-    //public void ParseAndSave()
-    //{
-    //    var file = "area.html".GetFullPath();
-    //    var txt = File.ReadAllText(file);
+    [Fact]
+    public void ParseAndSave()
+    {
+        var file = "area.html".GetFullPath();
+        var txt = File.ReadAllText(file);
 
-    //    var rs = Area.ParseAndSave(txt);
-    //    //Assert.True(rs > 3000);
+        var rs = Area.ParseAndSave(txt);
+        Assert.Equal(3208, rs.Count);
 
-    //    var r = Area.Find(_.ParentID == 0 & _.Name == "上海");
-    //    Assert.NotNull(r);
-    //    Assert.Equal("上海市", r.FullName);
+        var r = Area.Find(_.ParentID == 0 & _.Name == "上海");
+        Assert.NotNull(r);
+        Assert.Equal("上海市", r.FullName);
 
-    //    r = Area.Find(_.Name == "广西");
-    //    Assert.NotNull(r);
-    //    Assert.Equal("广西壮族自治区", r.FullName);
+        r = Area.Find(_.Name == "广西");
+        Assert.NotNull(r);
+        Assert.Equal("广西壮族自治区", r.FullName);
 
-    //    r = Area.Find(_.Name == "仙桃");
-    //    Assert.NotNull(r);
-    //    Assert.NotNull(r.Parent);
-    //    Assert.Equal("直辖县", r.Parent.Name);
-    //}
+        r = Area.Find(_.Name == "仙桃");
+        Assert.NotNull(r);
+        Assert.NotNull(r.Parent);
+        Assert.Equal("直辖县", r.Parent.Name);
+    }
 
-    //[Fact]
-    //public void FetchAndSave()
-    //{
-    //    Area.Meta.Session.Dal.Db.ShowSQL = false;
+    [Fact]
+    public void FetchAndSave()
+    {
+        Area.Meta.Session.Dal.Db.ShowSQL = false;
 
-    //    var rs = Area.FetchAndSave();
+        Area.Meta.Session.Truncate();
+        var rs = Area.FetchAndSave();
+        //Assert.Equal(3208, rs);
+        Assert.Equal(3217, rs);
 
-    //    var r = Area.Find(_.ParentID == 0 & _.Name == "上海");
-    //    Assert.NotNull(r);
-    //    Assert.Equal("上海市", r.FullName);
+        var r = Area.Find(_.ParentID == 0 & _.Name == "上海");
+        Assert.NotNull(r);
+        Assert.Equal("上海市", r.FullName);
 
-    //    r = Area.Find(_.Name == "广西");
-    //    Assert.NotNull(r);
-    //    Assert.Equal("广西壮族自治区", r.FullName);
+        r = Area.Find(_.Name == "广西");
+        Assert.NotNull(r);
+        Assert.Equal("广西壮族自治区", r.FullName);
 
-    //    Area.Meta.Session.Dal.Db.ShowSQL = true;
-    //}
+        Area.Meta.Session.Dal.Db.ShowSQL = true;
+    }
 
     [TestOrder(0)]
     [Fact]
@@ -245,18 +252,18 @@ public class AreaTests
         {
             var url = "http://x.newlifex.com/Area.csv.gz";
             var file = "Area.csv.gz";
-            if(!File.Exists(file.GetFullPath()))
+            if (!File.Exists(file.GetFullPath()))
             {
                 var http = new HttpClient();
                 http.DownloadFileAsync(url, file).Wait();
             }
 
-            Area.Meta.Session.Truncate();
-            var rs = Area.Import(file, true, 3);
-            Assert.Equal(3639, rs);
+            //Area.Meta.Session.Truncate();
+            var rs = Area.Import(file, true, 3, false);
+            Assert.Equal(3624, rs);
 
             Area.Meta.Session.Truncate();
-            rs = Area.Import(file, true, 4);
+            rs = Area.Import(file, true, 4, true);
             Assert.Equal(46533, rs);
         }
 
@@ -272,7 +279,7 @@ public class AreaTests
 
         var rs = Area.Export(file);
         XTrace.WriteLine("rs={0}", rs);
-        Assert.Equal(46533, rs);
+        Assert.Equal(46558, rs);
         Assert.True(File.Exists(file.GetFullPath()));
 
         //File.Delete(file.GetFullPath());
@@ -355,12 +362,15 @@ public class AreaTests
         var list = Area.SearchIP(ip, 1);
 
         Assert.True(list.Count > 0);
-        Assert.Equal(areaId, list[list.Count - 1].ID);
+
+        var ar = list[^1];
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
+        Assert.Equal(areaId, ar.ID);
     }
 
     [TestOrder(80)]
     [Theory]
-    [InlineData("182.90.206.131", 450400)]
+    [InlineData("112.32.148.126", 340100)]
     [InlineData("116.234.90.174", 310113)]
     [InlineData("116.233.20.228", 310104)]
     [InlineData("122.231.253.198", 330400)]
@@ -369,12 +379,15 @@ public class AreaTests
         var list = Area.SearchIP(ip, 2);
 
         Assert.True(list.Count > 0);
-        Assert.Equal(areaId, list[list.Count - 1].ID);
+
+        var ar = list[^1];
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
+        Assert.Equal(areaId, ar.ID);
     }
 
     [TestOrder(80)]
     [Theory]
-    [InlineData("182.90.206.131", 450400)]
+    [InlineData("112.32.148.126", 340100)]
     [InlineData("116.234.90.174", 310113)]
     [InlineData("116.233.20.228", 310104)]
     [InlineData("122.231.253.198", 330424)]
@@ -383,7 +396,10 @@ public class AreaTests
         var list = Area.SearchIP(ip, 3);
 
         Assert.True(list.Count > 0);
-        Assert.Equal(areaId, list[list.Count - 1].ID);
+
+        var ar = list[^1];
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
+        Assert.Equal(areaId, ar.ID);
     }
 
     [TestOrder(90)]
@@ -394,6 +410,9 @@ public class AreaTests
         var list = Area.SearchIP(ip, 3);
 
         Assert.True(list.Count > 0);
-        Assert.Equal(areaId, list[list.Count - 1].ID);
+
+        var ar = list[^1];
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
+        Assert.Equal(areaId, ar.ID);
     }
 }

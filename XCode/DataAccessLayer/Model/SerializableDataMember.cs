@@ -11,7 +11,7 @@ namespace XCode.DataAccessLayer
 
         void IXmlSerializable.ReadXml(XmlReader reader)
         {
-            ModelHelper.ReadXml(reader, this);
+            ModelHelper.ReadXmlAttribute(reader, this);
 
             // 跳过当前节点
             reader.Skip();

@@ -131,7 +131,7 @@ public class EntityQueue : DisposeBase
             var now = TimerX.Now;
             foreach (var item in ds)
             {
-                if (item.Value < now) list.Add(item.Key);
+                if (item.Value < now && !list.Contains(item.Key)) list.Add(item.Key);
 
                 n++;
             }
@@ -148,7 +148,11 @@ public class EntityQueue : DisposeBase
         {
             // 为了速度，不拷贝，直接创建一个新的集合
             Entities = new ConcurrentDictionary<IEntity, IEntity>();
-            list.AddRange(es.Keys);
+            //list.AddRange(es.Keys);
+            foreach (var item in es)
+            {
+                if (!list.Contains(item.Key)) list.Add(item.Key);
+            }
 
             n += es.Count;
         }

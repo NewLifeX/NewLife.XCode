@@ -13,12 +13,12 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Membership;
 
-/// <summary>角色</summary>
+/// <summary>角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限</summary>
 [Serializable]
 [DataObject]
-[Description("角色")]
+[Description("角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限")]
 [BindIndex("IU_Role_Name", true, "Name")]
-[BindTable("Role", Description = "角色", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("Role", Description = "角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class Role : IRole, IEntity<RoleModel>
 {
     #region 属性

@@ -172,10 +172,23 @@ internal partial class DbMetaData
         else
         {
             var onlyCreate = mode < Migration.Full;
-            var sql = CheckColumnsChange(entitytable, dbtable, @readonly, onlyCreate);
-            if (!String.IsNullOrEmpty(sql)) sql += ";";
-            sql += CheckTableDescriptionAndIndex(entitytable, dbtable, mode);
-            if (!sql.IsNullOrEmpty()) WriteLog($"DDL模式[{mode}]，请手工修改表：{Environment.NewLine}{sql}");
+            var sb = new StringBuilder();
+
+            var sql = CheckTableDescription(entitytable, dbtable, mode);
+            Append(sb, ';', sql);
+
+            // 先删除索引，后面才有可能删除字段
+            sql = CheckDeleteIndex(entitytable, dbtable, mode);
+            Append(sb, ';', sql);
+
+            sql = CheckColumnsChange(entitytable, dbtable, @readonly, onlyCreate);
+            Append(sb, ';', sql);
+
+            // 新增字段后，可能需要删除索引
+            sql = CheckAddIndex(entitytable, dbtable, mode);
+            Append(sb, ';', sql);
+
+            if (sb.Length > 0) WriteLog($"DDL模式[{mode}]，请手工修改表：{Environment.NewLine}{sb}");
         }
     }
 
@@ -253,15 +266,16 @@ internal partial class DbMetaData
         {
             if (!dbdic.TryGetValue(item.ColumnName, out var dbf)) continue;
 
+            // 对于修改列，只读或者只创建，都只要sql
             if (IsColumnTypeChanged(item, dbf))
             {
                 WriteLog("字段{0}.{1}类型需要由数据库的{2}改变为实体的{3}", entitytable.Name, item.Name, dbf.DataType, item.DataType);
-                PerformSchema(sb, onlyCreate, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
             }
             else if (IsColumnLengthChanged(item, dbf, entityDb))
-                PerformSchema(sb, @readonly, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
             else if (IsColumnChanged(item, dbf, entityDb))
-                PerformSchema(sb, onlyCreate, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
 
             //if (item.Description + "" != dbf.Description + "")
             if (FormatDescription(item.Description) != FormatDescription(dbf.Description))
@@ -270,7 +284,7 @@ internal partial class DbMetaData
                 //if (dbf.Description != null) PerformSchema(sb, noDelete, DDLSchema.DropColumnDescription, dbf);
 
                 // 加上新注释
-                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, @readonly, DDLSchema.AddColumnDescription, item);
+                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AddColumnDescription, item);
             }
         }
         #endregion
@@ -283,10 +297,9 @@ internal partial class DbMetaData
     /// <param name="dbtable"></param>
     /// <param name="mode"></param>
     /// <returns>返回未执行语句</returns>
-    protected virtual String CheckTableDescriptionAndIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    protected virtual String CheckTableDescription(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
         var @readonly = mode <= Migration.ReadOnly;
-        var onlyCreate = mode < Migration.Full;
 
         var sb = new StringBuilder();
 
@@ -302,27 +315,22 @@ internal partial class DbMetaData
         }
         #endregion
 
-        #region 删除索引
-        var dbdis = dbtable.Indexes;
-        if (dbdis != null)
-        {
-            foreach (var item in dbdis.ToArray())
-            {
-                // 主键的索引不能删
-                if (item.PrimaryKey) continue;
+        if (!@readonly) return null;
 
-                // 实体类中索引列名可能是属性名而不是字段名，需要转换
-                var dcs = entitytable.GetColumns(item.Columns);
+        return sb.ToString();
+    }
 
-                var di = ModelHelper.GetIndex(entitytable, dcs.Select(e => e.ColumnName).ToArray());
-                if (di == null)
-                {
-                    PerformSchema(sb, onlyCreate, DDLSchema.DropIndex, item);
-                    dbdis.Remove(item);
-                }
-            }
-        }
-        #endregion
+    /// <summary>检查新增索引</summary>
+    /// <param name="entitytable"></param>
+    /// <param name="dbtable"></param>
+    /// <param name="mode"></param>
+    /// <returns>返回未执行语句</returns>
+    protected virtual String CheckAddIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    {
+        var @readonly = mode <= Migration.ReadOnly;
+        var onlyCreate = mode < Migration.Full;
+
+        var sb = new StringBuilder();
 
         #region 新增索引
         var edis = entitytable.Indexes;
@@ -358,6 +366,45 @@ internal partial class DbMetaData
                     edis.Add(item.Clone(dbtable));
                 //else
                 //    di.Computed = false;
+            }
+        }
+        #endregion
+
+        if (!@readonly) return null;
+
+        return sb.ToString();
+    }
+
+    /// <summary>检查删除索引</summary>
+    /// <param name="entitytable"></param>
+    /// <param name="dbtable"></param>
+    /// <param name="mode"></param>
+    /// <returns>返回未执行语句</returns>
+    protected virtual String CheckDeleteIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    {
+        var @readonly = mode <= Migration.ReadOnly;
+        var onlyCreate = mode < Migration.Full;
+
+        var sb = new StringBuilder();
+
+        #region 删除索引
+        var dbdis = dbtable.Indexes;
+        if (dbdis != null)
+        {
+            foreach (var item in dbdis.ToArray())
+            {
+                // 主键的索引不能删
+                if (item.PrimaryKey) continue;
+
+                // 实体类中索引列名可能是属性名而不是字段名，需要转换
+                var dcs = entitytable.GetColumns(item.Columns);
+
+                var di = ModelHelper.GetIndex(entitytable, dcs.Select(e => e.ColumnName).ToArray());
+                if (di == null)
+                {
+                    PerformSchema(sb, onlyCreate, DDLSchema.DropIndex, item);
+                    dbdis.Remove(item);
+                }
             }
         }
         #endregion
@@ -863,15 +910,15 @@ internal partial class DbMetaData
     protected virtual String GetDefault(IDataColumn field, Boolean onlyDefine)
     {
         if (field.DataType.IsInt() || field.DataType.IsEnum)
-            return " DEFAULT 0";
+            return $" DEFAULT {field.DefaultValue.ToInt()}";
         else if (field.DataType == typeof(Boolean))
-            return " DEFAULT 0";
+            return $" DEFAULT {(field.DefaultValue.ToBoolean() ? 1 : 0)}";
         else if (field.DataType == typeof(Double) || field.DataType == typeof(Single) || field.DataType == typeof(Decimal))
-            return " DEFAULT 0";
+            return $" DEFAULT {field.DefaultValue.ToDouble()}";
         else if (field.DataType == typeof(DateTime))
-            return " DEFAULT '0001-01-01'";
-        else if (field.DataType == typeof(String))
-            return " DEFAULT ''";
+            return $" DEFAULT {field.DefaultValue ?? "'0001-01-01'"}";
+        else if (field.DataType == typeof(String) && field.Length > 0)
+            return $" DEFAULT {field.DefaultValue ?? "''"}";
 
         return null;
     }

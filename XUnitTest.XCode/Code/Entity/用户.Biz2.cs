@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -15,7 +15,6 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Model;
 using NewLife.Reflection;
-using NewLife.Remoting;
 using NewLife.Threading;
 using NewLife.Web;
 using XCode;
@@ -25,7 +24,7 @@ using XCode.DataAccessLayer;
 using XCode.Membership;
 using XCode.Shards;
 
-namespace Company.MyName;
+namespace XCode.Membership;
 
 public partial class User : Entity<User>
 {
@@ -56,7 +55,6 @@ public partial class User : Entity<User>
 
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
-        if (UpdateUser.IsNullOrEmpty()) throw new ArgumentNullException(nameof(UpdateUser), "更新者不能为空！");
 
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);
@@ -158,35 +156,6 @@ public partial class User : Entity<User>
         //return Find(_.ID == id);
     }
 
-    /// <summary>根据名称查找</summary>
-    /// <param name="name">名称</param>
-    /// <returns>实体对象</returns>
-    public static User FindByName(String name)
-    {
-        if (name.IsNullOrEmpty()) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
-
-        // 单对象缓存
-        //return Meta.SingleCache.GetItemWithSlaveKey(name) as User;
-
-        return Find(_.Name == name);
-    }
-
-    /// <summary>根据邮件查找</summary>
-    /// <param name="mail">邮件</param>
-    /// <returns>实体列表</returns>
-    public static IList<User> FindAllByMail(String mail)
-    {
-        if (mail.IsNullOrEmpty()) return new List<User>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mail.EqualIgnoreCase(mail));
-
-        return FindAll(_.Mail == mail);
-    }
-
     /// <summary>根据手机查找</summary>
     /// <param name="mobile">手机</param>
     /// <returns>实体列表</returns>
@@ -230,9 +199,9 @@ public partial class User : Entity<User>
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="name">名称。登录用户名</param>
-    /// <param name="mail">邮件。支持登录</param>
-    /// <param name="mobile">手机。支持登录</param>
-    /// <param name="code">代码。身份证、员工编码等，支持登录</param>
+    /// <param name="mail">邮件</param>
+    /// <param name="mobile">手机</param>
+    /// <param name="code">代码。身份证、员工编号等</param>
     /// <param name="roleId">角色。主要角色</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>

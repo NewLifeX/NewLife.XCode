@@ -17,8 +17,20 @@ public class DAL_Backup_Tests
         var dal = User.Meta.Session.Dal;
         var table = User.Meta.Table.DataTable;
 
-        dal.Backup(table, $"data/{table.Name}.table");
-        dal.Backup(table, $"data/{table.Name}.gz");
+        {
+            var file = $"data/{table.Name}.table";
+            dal.Backup(table, file);
+            var fi = file.AsFile();
+            Assert.True(fi.Exists);
+            Assert.True(fi.Length > 0);
+        }
+        {
+            var file = $"data/{table.Name}.gz";
+            dal.Backup(table, file);
+            var fi = file.AsFile();
+            Assert.True(fi.Exists);
+            Assert.True(fi.Length > 0);
+        }
     }
 
     [Fact]

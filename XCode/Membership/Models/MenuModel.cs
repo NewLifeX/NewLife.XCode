@@ -8,7 +8,7 @@ using NewLife.Data;
 
 namespace XCode.Membership;
 
-/// <summary>菜单</summary>
+/// <summary>菜单。功能权限，大多数时候也是可见页面</summary>
 public partial class MenuModel : IModel
 {
     #region 属性

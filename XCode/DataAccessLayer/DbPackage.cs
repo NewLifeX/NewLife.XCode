@@ -643,8 +643,9 @@ public class DbPackage
         /// 接收消息，写入文件
         /// </summary>
         /// <param name="context"></param>
+        /// <param name="cancellationToken">取消通知</param>
         /// <returns></returns>
-        protected override async Task ReceiveAsync(ActorContext context)
+        protected override async Task ReceiveAsync(ActorContext context, CancellationToken cancellationToken)
         {
             var dt = context.Message as DbTable;
             var bn = _Binary;
@@ -713,8 +714,9 @@ public class DbPackage
         /// 接收消息，批量插入
         /// </summary>
         /// <param name="context"></param>
+        /// <param name="cancellationToken">取消通知</param>
         /// <returns></returns>
-        protected override Task ReceiveAsync(ActorContext context)
+        protected override Task ReceiveAsync(ActorContext context, CancellationToken cancellationToken)
         {
             if (context.Message is not DbTable dt)
             {

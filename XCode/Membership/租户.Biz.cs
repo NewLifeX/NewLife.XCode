@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Common;
 using NewLife.Data;
 
@@ -34,6 +34,11 @@ public partial class Tenant : Entity<Tenant>
     #endregion
 
     #region 扩展属性
+
+    /// <summary>角色组名</summary>
+    [Map(__.RoleIds)]
+    public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
+
     #endregion
 
     #region 扩展查询
@@ -63,13 +68,26 @@ public partial class Tenant : Entity<Tenant>
 
         return FindAll(_.Name == name);
     }
+
+    /// <summary>根据编码查找</summary>
+    /// <param name="code">编码</param>
+    /// <returns>实体对象</returns>
+    public static Tenant FindByCode(String code)
+    {
+        if (code.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Code.EqualIgnoreCase(code));
+
+        return Find(_.Code == code);
+    }
     #endregion
 
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="name">名称</param>
-    /// <param name="managerId"></param>
-    /// <param name="enable"></param>
+    /// <param name="managerId">租户管理员</param>
+    /// <param name="enable">是否启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
@@ -80,7 +98,7 @@ public partial class Tenant : Entity<Tenant>
         var exp = new WhereExpression();
 
         if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-        if (managerId >= 0) exp &= _.ManagerId == managerId;
+        if (managerId > 0) exp &= _.ManagerId == managerId;
         if (enable != null) exp &= _.Enable == enable;
 
         exp &= _.UpdateTime.Between(start, end);

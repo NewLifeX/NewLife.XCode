@@ -24,88 +24,101 @@ public class CubeBuilder : ClassBuilder
     public Int32 Sort { get; set; }
 
     /// <summary>区域模版</summary>
-    public String AreaTemplate { get; set; } = @"using System.ComponentModel;
-using NewLife;
-using NewLife.Cube;
+    public String AreaTemplate { get; set; } = """
+        using System.ComponentModel;
+        using NewLife;
+        using NewLife.Cube;
 
-namespace {RootNamespace}.Areas.{Name}
-{
-    [DisplayName(""{DisplayName}"")]
-    public class {Name}Area : AreaBase
-    {
-        public {Name}Area() : base(nameof({Name}Area).TrimEnd(""Area"")) { }
-    }
-}";
+        namespace {RootNamespace}.Areas.{Name};
+        
+        [DisplayName("{DisplayName}")]
+        public class {Name}Area : AreaBase
+        {
+            public {Name}Area() : base(nameof({Name}Area).TrimEnd("Area")) { }
+        }
+        """;
 
     /// <summary>控制器模版</summary>
-    public String ControllerTemplate { get; set; } = @"using {EntityNamespace};
-using NewLife;
-using NewLife.Cube;
-using NewLife.Cube.Extensions;
-using NewLife.Cube.ViewModels;
-using NewLife.Web;
-using XCode.Membership;
+    public String ControllerTemplate { get; set; } = """
+        using Microsoft.AspNetCore.Mvc;
+        using {EntityNamespace};
+        using NewLife;
+        using NewLife.Cube;
+        using NewLife.Cube.Extensions;
+        using NewLife.Cube.ViewModels;
+        using NewLife.Log;
+        using NewLife.Web;
+        using XCode.Membership;
+        using static {EntityNamespace}.{EntityName};
 
-namespace {RootNamespace}.Areas.{Name}.Controllers
-{
-    /// <summary>{DisplayName}</summary>
-    [Menu({Sort}, true, Icon = ""fa-table"")]
-    [{Name}Area]
-    public class {ClassName} : {BaseClass}<{EntityName}>
-    {
-        static {ClassName}()
+        namespace {RootNamespace}.Areas.{Name}.Controllers;
+        
+        /// <summary>{DisplayName}</summary>
+        [Menu({Sort}, true, Icon = "fa-table")]
+        [{Name}Area]
+        public class {ClassName} : {BaseClass}<{EntityName}>
         {
-            //LogOnChange = true;
+            static {ClassName}()
+            {
+                //LogOnChange = true;
 
-            //ListFields.RemoveField(""Id"", ""Creator"");
-            ListFields.RemoveCreateField().RemoveRemarkField();
+                //ListFields.RemoveField("Id", "Creator");
+                ListFields.RemoveCreateField().RemoveRemarkField();
 
+                //{
+                //    var df = ListFields.GetField("Code") as ListField;
+                //    df.Url = "?code={Code}";
+                //}
+                //{
+                //    var df = ListFields.AddListField("devices", null, "Onlines");
+                //    df.DisplayName = "查看设备";
+                //    df.Url = "Device?groupId={Id}";
+                //    df.DataVisible = e => (e as {EntityName}).Devices > 0;
+                //}
+                //{
+                //    var df = ListFields.GetField("Kind") as ListField;
+                //    df.GetValue = e => ((Int32)(e as {EntityName}).Kind).ToString("X4");
+                //}
+                //ListFields.TraceUrl("TraceId");
+            }
+
+            //private readonly ITracer _tracer;
+
+            //public {ClassName}(ITracer tracer)
             //{
-            //    var df = ListFields.GetField(""Code"") as ListField;
-            //    df.Url = ""?code={Code}"";
+            //    _tracer = tracer;
             //}
-            //{
-            //    var df = ListFields.AddListField(""devices"", null, ""Onlines"");
-            //    df.DisplayName = ""查看设备"";
-            //    df.Url = ""Device?groupId={Id}"";
-            //    df.DataVisible = e => (e as {EntityName}).Devices > 0;
-            //}
-            //{
-            //    var df = ListFields.GetField(""Kind"") as ListField;
-            //    df.GetValue = e => ((Int32)(e as {EntityName}).Kind).ToString(""X4"");
-            //}
-            //ListFields.TraceUrl(""TraceId"");
+
+            /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
+            /// <param name="p">分页器。包含分页排序参数，以及Http请求参数</param>
+            /// <returns></returns>
+            protected override IEnumerable<{EntityName}> Search(Pager p)
+            {
+                //var deviceId = p["deviceId"].ToInt(-1);
+                //var enable = p["enable"]?.ToBoolean();
+        
+                var start = p["dtStart"].ToDateTime();
+                var end = p["dtEnd"].ToDateTime();
+
+                return {EntityName}.Search(start, end, p["Q"], p);
+            }
         }
-
-        /// <summary>高级搜索。列表页查询、导出Excel、导出Json、分享页等使用</summary>
-        /// <param name=""p"">分页器。包含分页排序参数，以及Http请求参数</param>
-        /// <returns></returns>
-        protected override IEnumerable<{EntityName}> Search(Pager p)
-        {
-            //var deviceId = p[""deviceId""].ToInt(-1);
-
-            var start = p[""dtStart""].ToDateTime();
-            var end = p[""dtEnd""].ToDateTime();
-
-            return {EntityName}.Search(start, end, p[""Q""], p);
-        }
-    }
-}";
+        """;
     #endregion
 
     #region 静态
     /// <summary>生成魔方区域</summary>
     /// <param name="option">可选项</param>
     /// <returns></returns>
-    public static Int32 BuildArea(BuilderOption option)
+    public static Int32 BuildArea(CubeBuilderOption option, ILog log = null)
     {
         if (option == null)
-            option = new BuilderOption();
+            option = new CubeBuilderOption();
         else
-            option = option.Clone();
+            option = option.Clone() as CubeBuilderOption;
 
         // 自动识别并修正区域名（主要是大小写）
-        var areaName = FindAreaName(option.Output);
+        var areaName = FindAreaName(option.Output.GetBasePath());
         if (!areaName.IsNullOrEmpty()) return 0;
 
         // 优先使用路径最后一段作为区域名，其次再用连接名
@@ -124,7 +137,7 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
         var root = FindProjectRootNamespace(option.Output);
         if (root.IsNullOrEmpty()) root = option.ConnName + "Web";
 
-        if (Debug) XTrace.WriteLine("生成魔方区域 {0} {1}", areaName, file);
+        log?.Info("生成魔方区域 {0} {1}", areaName, file);
 
         var builder = new CubeBuilder
         {
@@ -149,12 +162,12 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
     /// <param name="tables">表集合</param>
     /// <param name="option">可选项</param>
     /// <returns></returns>
-    public static Int32 BuildControllers(IList<IDataTable> tables, BuilderOption option = null)
+    public static Int32 BuildControllers(IList<IDataTable> tables, CubeBuilderOption option = null, ILog log = null)
     {
         if (option == null)
-            option = new BuilderOption();
+            option = new CubeBuilderOption();
         else
-            option = option.Clone();
+            option = option.Clone() as CubeBuilderOption;
 
         // 根命名空间
         var root = FindProjectRootNamespace(option.Output);
@@ -168,7 +181,7 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
 
         option.Output = option.Output.CombinePath("Controllers");
 
-        if (Debug) XTrace.WriteLine("生成控制器 {0}", option.Output.GetBasePath());
+        log?.Info("生成控制器 {0}", option.Output.GetBasePath());
 
         var count = 0;
         var n = tables.Count;
@@ -186,8 +199,8 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
                 AreaName = areaName,
                 RootNamespace = root,
                 Sort = n * 10,
+                Log = log
             };
-            if (Debug) builder.Log = XTrace.Log;
 
             if (builder.Option.BaseClass.IsNullOrEmpty())
             {
@@ -211,7 +224,7 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
 
     static String FindAreaName(String dir)
     {
-        var di = dir.AsDirectory();
+        var di = dir.GetBasePath().AsDirectory();
         if (!di.Exists) return null;
 
         foreach (var fi in di.GetFiles("*Area.cs"))
@@ -232,58 +245,26 @@ namespace {RootNamespace}.Areas.{Name}.Controllers
     /// <returns></returns>
     static String FindProjectRootNamespace(String dir)
     {
-        var di = dir.AsDirectory();
-        if (di.Exists)
+        var di = dir.GetBasePath().AsDirectory();
+        for (var i = 0; i < 3; i++)
         {
-            foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
+            if (di.Exists)
             {
-                var ns = Path.GetFileNameWithoutExtension(fi.FullName);
-
-                var xml = File.ReadAllText(fi.FullName);
-                if (!xml.IsNullOrEmpty())
+                foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
                 {
-                    var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
-                    if (!str.IsNullOrEmpty()) ns = str;
+                    var ns = Path.GetFileNameWithoutExtension(fi.FullName);
+
+                    var xml = File.ReadAllText(fi.FullName);
+                    if (!xml.IsNullOrEmpty())
+                    {
+                        var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
+                        if (!str.IsNullOrEmpty()) ns = str;
+                    }
+
+                    if (!ns.IsNullOrEmpty()) return ns;
                 }
-
-                if (!ns.IsNullOrEmpty()) return ns;
             }
-        }
-
-        di = di.Parent;
-        if (di.Exists)
-        {
-            foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
-            {
-                var ns = Path.GetFileNameWithoutExtension(fi.FullName);
-
-                var xml = File.ReadAllText(fi.FullName);
-                if (!xml.IsNullOrEmpty())
-                {
-                    var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
-                    if (!str.IsNullOrEmpty()) ns = str;
-                }
-
-                if (!ns.IsNullOrEmpty()) return ns;
-            }
-        }
-
-        di = di.Parent;
-        if (di.Exists)
-        {
-            foreach (var fi in di.GetFiles("*.csproj", SearchOption.TopDirectoryOnly))
-            {
-                var ns = Path.GetFileNameWithoutExtension(fi.FullName);
-
-                var xml = File.ReadAllText(fi.FullName);
-                if (!xml.IsNullOrEmpty())
-                {
-                    var str = xml.Substring("<RootNamespace>", "</RootNamespace>");
-                    if (!str.IsNullOrEmpty()) ns = str;
-                }
-
-                if (!ns.IsNullOrEmpty()) return ns;
-            }
+            di = di.Parent;
         }
 
         return null;

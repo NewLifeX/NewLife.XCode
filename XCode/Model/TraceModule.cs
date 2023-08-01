@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using NewLife;
 using NewLife.Log;
 
@@ -45,8 +46,32 @@ public class TraceModule : EntityModule
         {
             var fs = GetFields(entity.GetType());
 
+            // 多编码合并
+            var old = entity[__.TraceId] as String;
+            var ss = old?.Split(',').ToList();
+            if (ss != null && ss.Count > 0 && !ss.Contains(traceId))
+            {
+                ss.Add(traceId);
+
+                // 最大长度
+                var fs2 = fs.Where(e => e.Length > 0).ToList();
+                var len = fs2.Count > 0 ? fs2.Min(e => e.Length) : 50;
+
+                // 倒序取最后若干项
+                var rs = "";
+                for (var i = ss.Count - 1; i >= 0; i--)
+                {
+                    var str = ss.Skip(i).Join(",");
+                    if (str.Length > len) break;
+
+                    rs = str;
+                }
+
+                if (!rs.IsNullOrEmpty()) traceId = rs;
+            }
+
             // 不管新建还是更新，都改变更新
-            SetNoDirtyItem(fs, entity, __.TraceId, traceId);
+            if (!traceId.IsNullOrEmpty()) SetNoDirtyItem(fs, entity, __.TraceId, traceId);
         }
 
         return true;

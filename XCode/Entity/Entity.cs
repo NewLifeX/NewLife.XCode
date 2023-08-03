@@ -396,6 +396,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                     throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
             }
         }
+
+        AutoFillSnowIDPrimaryKey();
     }
 
     /// <summary>

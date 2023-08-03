@@ -79,6 +79,11 @@ public interface IDbSession : IDisposable2
     DataSet Query(DbCommand cmd);
 
     /// <summary>执行SQL查询，返回记录集</summary>
+    /// <param name="builder">查询生成器</param>
+    /// <returns>总记录数</returns>
+    DbTable Query(SelectBuilder builder);
+
+    /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>

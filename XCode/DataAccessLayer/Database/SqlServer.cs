@@ -489,8 +489,8 @@ internal class SqlServer : RemoteDb
         // fix 2023.03.22
         // LIKE 构建SQL语句 中 [ ] % 会循环转义 ,只转_比较合适
         if (value.IndexOfAny(_likeKeys) >= 0)
-              value = value
-                   .Replace("_", "[_]");
+            value = value
+                 .Replace("_", "[_]");
         return base.FormatLike(column, format, value);
     }
     #endregion
@@ -504,6 +504,21 @@ internal class SqlServerSession : RemoteDbSession
     #endregion
 
     #region 查询
+    /// <summary>执行SQL查询，返回记录集</summary>
+    /// <param name="builder">查询生成器</param>
+    /// <returns>总记录数</returns>
+    public override DbTable Query(SelectBuilder builder)
+    {
+        if (Transaction != null)
+        {
+            builder = builder.Clone();
+            builder.Table += " WITH (UPDLOCK, HOLDLOCK)";
+        }
+        var sql = builder.ToString();
+
+        return Query(sql, builder.Parameters.ToArray());
+    }
+
     protected override DbTable OnFill(DbDataReader dr)
     {
         var dt = new DbTable();

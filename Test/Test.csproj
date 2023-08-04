@@ -40,7 +40,7 @@
     <PackageReference Include="NewLife.Redis" Version="5.4.2023.624-beta0342" />
     <PackageReference Include="NewLife.Remoting" Version="2.2.2023.707" />
     <PackageReference Include="NewLife.Stardust" Version="2.9.2023.704-beta0219" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.100" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.110" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>
   <ItemGroup>

@@ -78,7 +78,7 @@ partial class DAL
         return QueryByCache(builder, startRowIndex, maximumRows, (sb, start, max) =>
         {
             sb = PageSplit(sb, start, max);
-            return Session.Query(sb.ToString(), sb.Parameters.ToArray());
+            return Session.Query(sb);
         }, nameof(Query));
     }
 

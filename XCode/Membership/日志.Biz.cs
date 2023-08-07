@@ -22,6 +22,11 @@ public partial class Log : Entity<Log>
         // 关闭SQL日志
         ThreadPool.UnsafeQueueUserWorkItem(s => { Meta.Session.Dal.Db.ShowSQL = false; }, null);
 #endif
+
+        // 针对Mysql启用压缩表
+        var table = Meta.Table.DataTable;
+        table.Properties["ROW_FORMAT"] = "COMPRESSED";
+        table.Properties["KEY_BLOCK_SIZE"] = "4";
     }
 
     /// <summary>已重载。记录当前管理员</summary>

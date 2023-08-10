@@ -1053,7 +1053,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
     #region SQL时间跟踪
     private Stopwatch _swSql;
-    private static readonly HashSet<String> _trace_sqls = new(StringComparer.OrdinalIgnoreCase);
+    //private static readonly HashSet<String> _trace_sqls = new(StringComparer.OrdinalIgnoreCase);
 
     protected void BeginTrace()
     {
@@ -1078,15 +1078,15 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         if (sql.IsNullOrEmpty()) sql = GetSql(cmd);
         if (sql.IsNullOrEmpty()) return;
 
-        // 同一个SQL只需要报警一次
-        if (_trace_sqls.Contains(sql)) return;
-        lock (_trace_sqls)
-        {
-            if (_trace_sqls.Contains(sql)) return;
+        //// 同一个SQL只需要报警一次
+        //if (_trace_sqls.Contains(sql)) return;
+        //lock (_trace_sqls)
+        //{
+        //    if (_trace_sqls.Contains(sql)) return;
 
-            if (_trace_sqls.Count >= 1000) _trace_sqls.Clear();
-            _trace_sqls.Add(sql);
-        }
+        //    if (_trace_sqls.Count >= 1000) _trace_sqls.Clear();
+        //    _trace_sqls.Add(sql);
+        //}
 
         XTrace.WriteLine("慢SQL[{0:n0}ms] {1}", _swSql.ElapsedMilliseconds, sql);
     }

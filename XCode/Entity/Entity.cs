@@ -210,6 +210,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             if (!rt) return 0;
         }
 
+        AutoFillSnowIDPrimaryKey();
+
         // 自动分库分表
         using var split = Meta.CreateShard(this as TEntity);
 
@@ -371,6 +373,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             if (!rt) return Task.FromResult(0);
         }
 
+        AutoFillSnowIDPrimaryKey();
+
         return func();
     }
 
@@ -383,6 +387,25 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     public override void Valid(Boolean isNew)
     {
         var factory = Meta.Factory;
+        // 校验字符串长度，超长时抛出参数异常
+        foreach (var fi in factory.Fields)
+        {
+            if (fi.Type == typeof(String) && fi.Length > 0)
+            {
+                if (this[fi.Name] is String str && str.Length > fi.Length)
+                    throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
+            }
+        }
+
+        AutoFillSnowIDPrimaryKey();
+    }
+
+    /// <summary>
+    /// 雪花Id生成器。Int64主键非自增时，自动填充
+    /// </summary>
+    private void AutoFillSnowIDPrimaryKey()
+    {
+        var factory = Meta.Factory;
 
         // 雪花Id生成器。Int64主键非自增时，自动填充
         var pks = factory.Table.PrimaryKeys;
@@ -392,16 +415,6 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             if (!pk.IsIdentity && pk.Type == typeof(Int64) && this[pk.Name].ToLong() == 0)
             {
                 SetItem(pk.Name, factory.Snow.NewId());
-            }
-        }
-
-        // 校验字符串长度，超长时抛出参数异常
-        foreach (var fi in factory.Fields)
-        {
-            if (fi.Type == typeof(String) && fi.Length > 0)
-            {
-                if (this[fi.Name] is String str && str.Length > fi.Length)
-                    throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
             }
         }
     }

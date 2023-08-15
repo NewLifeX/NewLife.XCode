@@ -355,6 +355,11 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
+    /// <param name="builder">查询生成器</param>
+    /// <returns>总记录数</returns>
+    public virtual DbTable Query(SelectBuilder builder) => Query(builder.ToString(), builder.Parameters.ToArray());
+
+    /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
@@ -1048,7 +1053,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
     #region SQL时间跟踪
     private Stopwatch _swSql;
-    private static readonly HashSet<String> _trace_sqls = new(StringComparer.OrdinalIgnoreCase);
+    //private static readonly HashSet<String> _trace_sqls = new(StringComparer.OrdinalIgnoreCase);
 
     protected void BeginTrace()
     {
@@ -1073,15 +1078,15 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         if (sql.IsNullOrEmpty()) sql = GetSql(cmd);
         if (sql.IsNullOrEmpty()) return;
 
-        // 同一个SQL只需要报警一次
-        if (_trace_sqls.Contains(sql)) return;
-        lock (_trace_sqls)
-        {
-            if (_trace_sqls.Contains(sql)) return;
+        //// 同一个SQL只需要报警一次
+        //if (_trace_sqls.Contains(sql)) return;
+        //lock (_trace_sqls)
+        //{
+        //    if (_trace_sqls.Contains(sql)) return;
 
-            if (_trace_sqls.Count >= 1000) _trace_sqls.Clear();
-            _trace_sqls.Add(sql);
-        }
+        //    if (_trace_sqls.Count >= 1000) _trace_sqls.Clear();
+        //    _trace_sqls.Add(sql);
+        //}
 
         XTrace.WriteLine("慢SQL[{0:n0}ms] {1}", _swSql.ElapsedMilliseconds, sql);
     }

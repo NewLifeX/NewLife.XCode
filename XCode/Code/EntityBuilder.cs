@@ -557,7 +557,14 @@ public class EntityBuilder : ClassBuilder
 
         // 附加特性
         if (dc.Properties.TryGetValue("Attribute", out var att))
-            WriteLine("[{0}]", att.Replace("{name}", dc.Name));
+        {
+            // 兼容支持新旧两种格式
+            var str = att.Replace("{name}", dc.Name);
+            if (str[0] != '[')
+                WriteLine("[{0}]", str);
+            else
+                WriteLine("{0}", str);//lps 2023-07-22 去掉两边的方括号，以便支持多个验证。例如：<Column Name="TestQuantity" DataType="Int32" Description="测试数量" Attribute="[Required(ErrorMessage = &quot;{0}必须填写&quot;)][Range(1, 100,ErrorMessage =&quot;超出范围&quot;)]" />
+        }
 
         // 分类特性
         if (dc.Properties.TryGetValue("Category", out att) && !att.IsNullOrEmpty())

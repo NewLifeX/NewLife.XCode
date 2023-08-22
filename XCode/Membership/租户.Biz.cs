@@ -1,10 +1,10 @@
-using NewLife;
+﻿using NewLife;
 using NewLife.Common;
 using NewLife.Data;
 
 namespace XCode.Membership;
 
-public partial class Tenant : Entity<Tenant>
+public partial class Tenant : Entity<Tenant>, ITenantSource
 {
     #region 对象操作
     static Tenant()
@@ -30,6 +30,9 @@ public partial class Tenant : Entity<Tenant>
         base.Valid(isNew);
 
         if (Code.IsNullOrEmpty()) Code = PinYin.GetFirst(Name);
+
+        // 管理者
+        if (isNew && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
     }
     #endregion
 
@@ -38,6 +41,8 @@ public partial class Tenant : Entity<Tenant>
     /// <summary>角色组名</summary>
     [Map(__.RoleIds)]
     public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
+
+    Int32 ITenantSource.TenantId { get => Id; set => Id = value; }
 
     #endregion
 

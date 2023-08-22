@@ -26,6 +26,7 @@ public partial class Department : Entity<Department>, ITenantSource
         Meta.Modules.Add<UserModule>();
         Meta.Modules.Add<TimeModule>();
         Meta.Modules.Add<IPModule>();
+        Meta.Modules.Add<TenantModule>();
     }
 
     /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>

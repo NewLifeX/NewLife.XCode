@@ -28,6 +28,9 @@ public class TenantContext
 #endif
     /// <summary>当前租户上下文</summary>
     public static TenantContext Current { get => _Current.Value; set => _Current.Value = value; }
+
+    /// <summary>当前租户标识。无效时返回0</summary>
+    public static Int32 CurrentId => Current?.TenantId ?? 0;
 }
 
 /// <summary>多租户助手</summary>

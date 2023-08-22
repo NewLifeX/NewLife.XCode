@@ -714,7 +714,11 @@ internal partial class DbMetaData
         return true;
     }
 
-    protected virtual void CreateTable(StringBuilder sb, IDataTable table, Boolean onlySql)
+    /// <summary>创建数据表，包括注释与索引</summary>
+    /// <param name="sb"></param>
+    /// <param name="table"></param>
+    /// <param name="onlySql"></param>
+    public virtual void CreateTable(StringBuilder sb, IDataTable table, Boolean onlySql)
     {
         // 创建表失败后，不再处理注释和索引
         if (!PerformSchema(sb, onlySql, DDLSchema.CreateTable, table)) return;
@@ -732,7 +736,11 @@ internal partial class DbMetaData
         CreateIndexes(sb, table, onlySql);
     }
 
-    void CreateIndexes(StringBuilder sb, IDataTable table, Boolean onlySql)
+    /// <summary>创建索引</summary>
+    /// <param name="sb"></param>
+    /// <param name="table"></param>
+    /// <param name="onlySql"></param>
+    public void CreateIndexes(StringBuilder sb, IDataTable table, Boolean onlySql)
     {
         if (table.Indexes != null)
         {

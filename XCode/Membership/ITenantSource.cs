@@ -40,7 +40,7 @@ public static class TenantSourceHelper
 }
 
 /// <summary>租户过滤器。添加修改时自动设置租户标识</summary>
-public class TenantFilter : EntityModule
+public class TenantModule : EntityModule
 {
     /// <summary>初始化。检查是否匹配</summary>
     /// <param name="entityType"></param>

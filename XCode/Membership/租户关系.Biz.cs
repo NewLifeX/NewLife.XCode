@@ -1,4 +1,4 @@
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
@@ -113,7 +113,6 @@ public partial class TenantUser : Entity<TenantUser>
     /// <returns>实体对象</returns>
     public static TenantUser FindByTenantIdAndUserId(Int32 tenantId, Int32 userId)
     {
-
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.UserId == userId);
 
@@ -149,6 +148,18 @@ public partial class TenantUser : Entity<TenantUser>
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserId == userId);
 
         return FindAll(_.UserId == userId);
+    }
+
+    /// <summary>根据租户查询用户id</summary>
+    /// <param name="tenantId"></param>
+    /// <returns></returns>
+    public static IList<TenantUser> FindAllByTenantId(Int32 tenantId)
+    {
+        if (tenantId <= 0) return new List<TenantUser>();
+
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
+
+        return FindAll(_.TenantId == tenantId);
     }
     #endregion
 

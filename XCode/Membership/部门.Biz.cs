@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -26,6 +26,7 @@ public partial class Department : Entity<Department>, ITenantSource
         Meta.Modules.Add<UserModule>();
         Meta.Modules.Add<TimeModule>();
         Meta.Modules.Add<IPModule>();
+        Meta.Modules.Add<TenantModule>();
     }
 
     /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
@@ -39,6 +40,9 @@ public partial class Department : Entity<Department>, ITenantSource
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
 
         if (Code.IsNullOrEmpty()) Code = PinYin.GetFirst(Name);
+
+        // 管理者
+        if (isNew && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
     }
 
     /// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>

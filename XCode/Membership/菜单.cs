@@ -115,7 +115,7 @@ public partial class Menu : IMenu, IEntity<MenuModel>
     /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
     [DisplayName("权限子项")]
     [Description("权限子项。逗号分隔，每个权限子项名值竖线分隔")]
-    [DataObjectField(false, false, true, 200)]
+    [DataObjectField(false, false, true, 2000)]
     [BindColumn("Permission", "权限子项。逗号分隔，每个权限子项名值竖线分隔", "")]
     public String Permission { get => _Permission; set { if (OnPropertyChanging("Permission", value)) { _Permission = value; OnPropertyChanged("Permission"); } } }
 

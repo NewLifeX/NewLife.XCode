@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using NewLife;
 
 namespace XCode;
 
@@ -83,7 +84,7 @@ public class DirtyCollection : IEnumerable<String>
         if (len > ms.Length) len = ms.Length;
         for (var i = 0; i < len; i++)
         {
-            if (ms[i] == item)
+            if (ms[i].EqualIgnoreCase(item))
             {
                 ms[i] = null;
 
@@ -99,7 +100,7 @@ public class DirtyCollection : IEnumerable<String>
         if (len > ms.Length) len = ms.Length;
         for (var i = 0; i < len; i++)
         {
-            if (ms[i] == item) return true;
+            if (ms[i].EqualIgnoreCase(item)) return true;
         }
 
         return false;

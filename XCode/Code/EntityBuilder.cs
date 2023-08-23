@@ -905,6 +905,8 @@ public class EntityBuilder : ClassBuilder
                 WriteLine("Meta.Modules.Add<IPModule>();");
             if (ns.Contains("TraceId"))
                 WriteLine("Meta.Modules.Add<TraceModule>();");
+            if (ns.Contains("TenantId"))
+                WriteLine("Meta.Modules.Add<TenantModule>();");
 
             // 唯一索引不是主键，又刚好是Master，使用单对象缓存从键
             var di = Table.Indexes.FirstOrDefault(e => e.Unique && e.Columns.Length == 1 && Table.GetColumn(e.Columns[0]).Master);

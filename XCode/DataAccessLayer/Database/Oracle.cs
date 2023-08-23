@@ -11,9 +11,10 @@ using XCode.Common;
 
 namespace XCode.DataAccessLayer;
 
-class Oracle : RemoteDb
+internal class Oracle : RemoteDb
 {
     #region 属性
+
     /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
     public override DatabaseType Type => DatabaseType.Oracle;
 
@@ -48,18 +49,22 @@ class Oracle : RemoteDb
             builder.TryAdd("Data Source", str);
         }
     }
-    #endregion
+
+    #endregion 属性
 
     #region 构造
+
     /// <summary>实例化</summary>
     public Oracle()
     {
         //// Oracle强制关闭反向工程，无视配置文件设置，但代码设置和连接字符串设置有效
         //Migration = Migration.Off;
     }
-    #endregion
+
+    #endregion 构造
 
     #region 方法
+
     /// <summary>创建数据库会话</summary>
     /// <returns></returns>
     protected override IDbSession OnCreateSession() => new OracleSession(this);
@@ -76,9 +81,11 @@ class Oracle : RemoteDb
 
         return false;
     }
-    #endregion
+
+    #endregion 方法
 
     #region 分页
+
     /// <summary>已重写。获取分页 2012.9.26 HUIYUE修正分页BUG</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="startRowIndex">开始行，0表示第一行</param>
@@ -121,7 +128,7 @@ class Oracle : RemoteDb
          * 导致排序字段有相同值时无法在多次查询中保持顺序，（Oracle算法参数会改变）。
          * 其一，可以在排序字段后加上主键，确保排序内容唯一；
          * 其二，可以在第二层提前取得rownum，然后在第三层外使用；
-         * 
+         *
          * 原分页算法始于2005年，只有在特殊情况下遇到分页出现重复数据的BUG：
          * 排序、排序字段不包含主键且不唯一、排序字段拥有相同数值的数据行刚好被分到不同页上
          */
@@ -150,9 +157,11 @@ class Oracle : RemoteDb
 
         return builder;
     }
-    #endregion
+
+    #endregion 分页
 
     #region 数据库特性
+
     /// <summary>已重载。格式化时间</summary>
     /// <param name="dt"></param>
     /// <returns></returns>
@@ -187,7 +196,7 @@ class Oracle : RemoteDb
     ///// <returns></returns>
     //public override String FormatIdentity(IDataColumn field, Object value) => String.Format("SEQ_{0}.nextval", field.Table.TableName);
 
-    internal protected override String ParamPrefix => ":";
+    protected internal override String ParamPrefix => ":";
 
     /// <summary>字符串相加</summary>
     /// <param name="left"></param>
@@ -235,9 +244,11 @@ class Oracle : RemoteDb
 
         return dp;
     }
-    #endregion
+
+    #endregion 数据库特性
 
     #region 关键字
+
     protected override String ReservedWordsStr
     {
         get
@@ -277,10 +288,13 @@ class Oracle : RemoteDb
     //    else
     //        return FormatKeyWord(name);
     //}
-    #endregion
+
+    #endregion 关键字
 
     #region 辅助
-    readonly Dictionary<String, DateTime> cache = new();
+
+    private readonly Dictionary<String, DateTime> cache = new();
+
     public Boolean NeedAnalyzeStatistics(String tableName)
     {
         var owner = Owner;
@@ -304,7 +318,8 @@ class Oracle : RemoteDb
 
         return true;
     }
-    #endregion
+
+    #endregion 辅助
 }
 
 /// <summary>Oracle数据库</summary>
@@ -318,10 +333,15 @@ internal class OracleSession : RemoteDbSession
     }
 
     #region 构造函数
-    public OracleSession(IDatabase db) : base(db) { }
-    #endregion
+
+    public OracleSession(IDatabase db) : base(db)
+    {
+    }
+
+    #endregion 构造函数
 
     #region 基本方法 查询/执行
+
     /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="builder">查询生成器</param>
     /// <returns>总记录数</returns>
@@ -330,7 +350,7 @@ internal class OracleSession : RemoteDbSession
         if (Transaction != null)
         {
             builder = builder.Clone();
-            builder.Limit = " For Update " + builder.Limit;
+            builder.Limit += " For Update ";
         }
         var sql = builder.ToString();
 
@@ -403,7 +423,8 @@ internal class OracleSession : RemoteDbSession
         return ExecuteScalar<Int64>(sql);
     }
 
-    static readonly Regex reg_SEQ = new(@"\b(\w+)\.nextval\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly Regex reg_SEQ = new(@"\b(\w+)\.nextval\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     /// <summary>执行插入语句并返回新增行的自动编号</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型，默认SQL文本</param>
@@ -496,9 +517,11 @@ internal class OracleSession : RemoteDbSession
 
         return cmd;
     }
-    #endregion
+
+    #endregion 基本方法 查询/执行
 
     #region 批量操作
+
     public override Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
     {
         var ps = new HashSet<String>();
@@ -653,11 +676,12 @@ internal class OracleSession : RemoteDbSession
 
         return Execute(sql, CommandType.Text, dps);
     }
-    #endregion
+
+    #endregion 批量操作
 }
 
 /// <summary>Oracle元数据</summary>
-class OracleMeta : RemoteDbMetaData
+internal class OracleMeta : RemoteDbMetaData
 {
     public OracleMeta() => Types = _DataTypes;
 
@@ -848,7 +872,7 @@ class OracleMeta : RemoteDbMetaData
     //    return drs != null && drs.Length > 0;
     //}
 
-    String GetTableComment(String name, IDictionary<String, DataTable> data)
+    private String GetTableComment(String name, IDictionary<String, DataTable> data)
     {
         var dt = data?["TableComment"];
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
@@ -882,7 +906,7 @@ class OracleMeta : RemoteDbMetaData
         return list;
     }
 
-    const String KEY_OWNER = "OWNER";
+    private const String KEY_OWNER = "OWNER";
 
     protected override List<IDataColumn> GetFields(IDataTable table, DataRow[] rows)
     {
@@ -900,7 +924,7 @@ class OracleMeta : RemoteDbMetaData
         return base.GetFields(table, list.ToArray());
     }
 
-    String GetColumnComment(String tableName, String columnName, IDictionary<String, DataTable> data)
+    private String GetColumnComment(String tableName, String columnName, IDictionary<String, DataTable> data)
     {
         var dt = data?["ColumnComment"];
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
@@ -982,31 +1006,38 @@ class OracleMeta : RemoteDbMetaData
         {
             case TypeCode.Boolean:
                 return "NUMBER(1, 0)";
+
             case TypeCode.Int16:
             case TypeCode.UInt16:
                 if (precision <= 0) precision = 5;
                 return $"NUMBER({precision}, 0)";
+
             case TypeCode.Int32:
             case TypeCode.UInt32:
                 //if (precision <= 0) precision = 10;
                 if (precision <= 0) return "NUMBER";
                 return $"NUMBER({precision}, 0)";
+
             case TypeCode.Int64:
             case TypeCode.UInt64:
                 if (precision <= 0) precision = 20;
                 return $"NUMBER({precision}, 0)";
+
             case TypeCode.Single:
                 if (precision <= 0) precision = 5;
                 if (scale <= 0) scale = 1;
                 return $"NUMBER({precision}, {scale})";
+
             case TypeCode.Double:
                 if (precision <= 0) precision = 10;
                 if (scale <= 0) scale = 2;
                 return $"NUMBER({precision}, {scale})";
+
             case TypeCode.Decimal:
                 if (precision <= 0) precision = 20;
                 if (scale <= 0) scale = 4;
                 return $"NUMBER({precision}, {scale})";
+
             default:
                 break;
         }
@@ -1039,6 +1070,7 @@ class OracleMeta : RemoteDbMetaData
     };
 
     #region 架构定义
+
     //public override Object SetSchema(DDLSchema schema, params Object[] values)
     //{
     //    var session = Database.CreateSession();
@@ -1137,14 +1169,14 @@ class OracleMeta : RemoteDbMetaData
         //     * Oracle从 11.2.0.1 版本开始，提供了一个“延迟段创建”特性：
         //     * 当我们创建了新的表(table)和序列(sequence)，在插入(insert)语句时，序列会跳过第一个值(1)。
         //     * 所以结果是插入的序列值从 2(序列的第二个值) 开始， 而不是 1开始。
-        //     * 
+        //     *
         //     * 更改数据库的“延迟段创建”特性为false（需要有相应的权限）
-        //     * ALTER SYSTEM SET deferred_segment_creation=FALSE; 
-        //     * 
+        //     * ALTER SYSTEM SET deferred_segment_creation=FALSE;
+        //     *
         //     * 第二种解决办法
-        //     * 创建表时让seqment立即执行，如： 
+        //     * 创建表时让seqment立即执行，如：
         //     * CREATE TABLE tbl_test(
-        //     *   test_id NUMBER PRIMARY KEY, 
+        //     *   test_id NUMBER PRIMARY KEY,
         //     *   test_name VARCHAR2(20)
         //     * )
         //     * SEGMENT CREATION IMMEDIATE;
@@ -1178,5 +1210,6 @@ class OracleMeta : RemoteDbMetaData
     public override String AddColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is '{field.Description}'";
 
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is ''";
-    #endregion
+
+    #endregion 架构定义
 }

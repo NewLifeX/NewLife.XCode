@@ -89,6 +89,8 @@ public partial class TenantUser : Entity<TenantUser>
     [Map(__.RoleIds)]
     public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
 
+    //public virtual String RoleName => Extends.Get(nameof(RoleName), k => ManageProvider.Get<IRole>()?.FindByID(k).Name);
+
     #endregion
 
     #region 扩展查询

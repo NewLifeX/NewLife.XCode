@@ -11,6 +11,7 @@ namespace XCode.DataAccessLayer;
 internal class PostgreSQL : RemoteDb
 {
     #region 属性
+
     /// <summary>返回数据库类型。</summary>
     public override DatabaseType Type => DatabaseType.PostgreSQL;
 
@@ -18,7 +19,8 @@ internal class PostgreSQL : RemoteDb
     /// <returns></returns>
     protected override DbProviderFactory CreateFactory() => GetProviderFactory("Npgsql.dll", "Npgsql.NpgsqlFactory");
 
-    const String Server_Key = "Server";
+    private const String Server_Key = "Server";
+
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
         base.OnSetConnectionString(builder);
@@ -32,9 +34,11 @@ internal class PostgreSQL : RemoteDb
 
         //if (builder.TryGetValue("Database", out var db) && db != db.ToLower()) builder["Database"] = db.ToLower();
     }
-    #endregion
+
+    #endregion 属性
 
     #region 方法
+
     /// <summary>创建数据库会话</summary>
     /// <returns></returns>
     protected override IDbSession OnCreateSession() => new PostgreSQLSession(this);
@@ -52,9 +56,11 @@ internal class PostgreSQL : RemoteDb
 
         return false;
     }
-    #endregion
+
+    #endregion 方法
 
     #region 数据库特性
+
     protected override String ReservedWordsStr
     {
         get
@@ -127,9 +133,11 @@ internal class PostgreSQL : RemoteDb
 
         return $"\"{name}\"";
     }
-    #endregion
+
+    #endregion 数据库特性
 
     #region 分页
+
     /// <summary>已重写。获取分页</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="startRowIndex">开始行，0表示第一行</param>
@@ -182,17 +190,23 @@ internal class PostgreSQL : RemoteDb
         builder.Limit = $"offset {startRowIndex} limit {maximumRows}";
         return builder;
     }
-    #endregion
+
+    #endregion 分页
 }
 
 /// <summary>PostgreSQL数据库</summary>
 internal class PostgreSQLSession : RemoteDbSession
 {
     #region 构造函数
-    public PostgreSQLSession(IDatabase db) : base(db) { }
-    #endregion
+
+    public PostgreSQLSession(IDatabase db) : base(db)
+    {
+    }
+
+    #endregion 构造函数
 
     #region 基本方法 查询/执行
+
     /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="builder">查询生成器</param>
     /// <returns>总记录数</returns>
@@ -201,7 +215,7 @@ internal class PostgreSQLSession : RemoteDbSession
         if (Transaction != null)
         {
             builder = builder.Clone();
-            builder.Limit = " For Update " + builder.Limit;
+            builder.Limit += " For Update ";
         }
         var sql = builder.ToString();
 
@@ -224,16 +238,18 @@ internal class PostgreSQLSession : RemoteDbSession
         sql += " RETURNING id";
         return base.InsertAndGetIdentityAsync(sql, type, ps);
     }
-    #endregion
+
+    #endregion 基本方法 查询/执行
 
     #region 批量操作
+
     /*
-    insert into stat (siteid,statdate,`count`,cost,createtime,updatetime) values 
+    insert into stat (siteid,statdate,`count`,cost,createtime,updatetime) values
     (1,'2018-08-11 09:34:00',1,123,now(),now()),
     (2,'2018-08-11 09:34:00',1,456,now(),now()),
     (3,'2018-08-11 09:34:00',1,789,now(),now()),
     (2,'2018-08-11 09:34:00',1,456,now(),now())
-    on duplicate key update 
+    on duplicate key update
     `count`=`count`+values(`count`),cost=cost+values(cost),
     updatetime=values(updatetime);
      */
@@ -268,7 +284,8 @@ internal class PostgreSQLSession : RemoteDbSession
         var sql = GetBatchSql("Insert Into", table, columns, updateColumns, addColumns, list);
         return Execute(sql);
     }
-    #endregion
+
+    #endregion 批量操作
 }
 
 /// <summary>PostgreSQL元数据</summary>
@@ -277,6 +294,7 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     public PostgreSQLMetaData() => Types = _DataTypes;
 
     #region 数据类型
+
     protected override List<KeyValuePair<Type, Type>> FieldTypeMaps
     {
         get
@@ -305,7 +323,8 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "date" } },
         { typeof(String), new String[] { "varchar({0})", "character varying", "text" } },
     };
-    #endregion
+
+    #endregion 数据类型
 
     protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable> data)
     {
@@ -380,6 +399,7 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     }
 
     #region 架构定义
+
     //public override object SetSchema(DDLSchema schema, params object[] values)
     //{
     //    if (schema == DDLSchema.DatabaseExist)
@@ -439,9 +459,6 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     public override String AddColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is '{field.Description}'";
 
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is ''";
-    #endregion
 
-    #region 辅助函数
-
-    #endregion
+    #endregion 架构定义
 }

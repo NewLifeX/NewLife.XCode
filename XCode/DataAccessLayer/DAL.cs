@@ -817,5 +817,21 @@ public partial class DAL
             }
         }
     }
+
+    /// <summary>获取建表语句</summary>
+    /// <param name="tables"></param>
+    /// <returns></returns>
+    public String GetCreateTableSql(params IDataTable[] tables)
+    {
+        var sb = new StringBuilder();
+        var md = Db.CreateMetaData() as DbMetaData;
+        foreach (var item in tables)
+        {
+            md.CreateTable(sb, item, true);
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
+    }
     #endregion
 }

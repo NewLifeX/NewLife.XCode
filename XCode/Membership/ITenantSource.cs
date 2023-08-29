@@ -28,6 +28,9 @@ public class TenantContext
 #endif
     /// <summary>当前租户上下文</summary>
     public static TenantContext Current { get => _Current.Value; set => _Current.Value = value; }
+
+    /// <summary>当前租户标识。无效时返回0</summary>
+    public static Int32 CurrentId => Current?.TenantId ?? 0;
 }
 
 /// <summary>多租户助手</summary>
@@ -40,7 +43,7 @@ public static class TenantSourceHelper
 }
 
 /// <summary>租户过滤器。添加修改时自动设置租户标识</summary>
-public class TenantFilter : EntityModule
+public class TenantModule : EntityModule
 {
     /// <summary>初始化。检查是否匹配</summary>
     /// <param name="entityType"></param>

@@ -680,7 +680,7 @@ public class EntityPersistence : IEntityPersistence
             foreach (var item in ps)
             {
                 // 防止重复添加参数，某些参数在前面已经添加过了
-                if (!dps.Any(e => e.ParameterName.EqualIgnoreCase(item.Key)))
+                if (!dps.Any(e => e.SourceColumn.EqualIgnoreCase(item.Key)))
                 {
                     var dp = db.CreateParameter(item.Key, item.Value, factory.Table.FindByName(item.Key)?.Field);
 

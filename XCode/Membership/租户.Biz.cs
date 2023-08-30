@@ -87,6 +87,18 @@ public partial class Tenant : Entity<Tenant>, ITenantSource
 
         return Find(_.Code == code);
     }
+
+    /// <summary>根据管理员编号查询</summary>
+    /// <param name="managerId"></param>
+    /// <returns></returns>
+    public static Tenant FindByManagerId(Int32 managerId)
+    {
+        if (managerId <= 0) return null;
+
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ManagerId == managerId);
+
+        return Find(_.ManagerId == managerId);
+    }
     #endregion
 
     #region 高级查询

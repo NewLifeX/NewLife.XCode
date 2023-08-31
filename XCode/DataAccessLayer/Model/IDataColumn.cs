@@ -51,6 +51,8 @@ public interface IDataColumn
 
     /// <summary>显示名。如果有Description则使用Description，否则使用Name</summary>
     String DisplayName { get; }
+    /// <summary>元素参数默认值</summary>
+    String ItemDefaultValue { get; set; }
 
     /// <summary>说明</summary>
     String Description { get; set; }

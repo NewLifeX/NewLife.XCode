@@ -98,6 +98,13 @@ class XField : SerializableDataMember, IDataColumn, ICloneable
     [Description("默认值")]
     public String DefaultValue { get; set; }
 
+
+    /// <summary>元素参数默认值</summary>
+    [XmlAttribute]
+    [DisplayName("元素参数默认值")]
+    [Description("元素参数默认值")]
+    public String ItemDefaultValue { get; set; }
+
     private String _Description;
     /// <summary>描述</summary>
     [XmlAttribute]

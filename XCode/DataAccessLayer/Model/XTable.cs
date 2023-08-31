@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Xml;
@@ -81,6 +82,12 @@ class XTable : IDataTable, ICloneable, IXmlSerializable
     [Description("基类")]
     public String BaseType { get; set; }
 
+
+    /// <summary>是否日志记录表</summary>
+    [XmlAttribute]
+    [DisplayName("是否日志记录表")]
+    [Description("是否日志记录表")]
+    public Boolean IsHistory { get; set; }
     /// <summary>仅插入的日志型数据</summary>
     [XmlAttribute]
     [DisplayName("只写")]

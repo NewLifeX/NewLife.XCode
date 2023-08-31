@@ -2,12 +2,14 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Log;
@@ -245,7 +247,8 @@ public static class ModelHelper
             }
             writer.WriteEndElement();
         }
-        foreach (var item in tables)
+        //回写xml模型,排除IsHistory=true的表单，仅仅保留原始表单
+        foreach (var item in tables.Where(x => x.IsHistory != true))
         {
             writer.WriteStartElement("Table");
             (item as IXmlSerializable).WriteXml(writer);
@@ -286,7 +289,6 @@ public static class ModelHelper
                 atts[reader.Name] = reader.Value;
             } while (reader.MoveToNextAttribute());
         }
-
         reader.ReadStartElement();
 
         var list = new List<IDataTable>();
@@ -296,6 +298,38 @@ public static class ModelHelper
             {
                 var table = createTable();
                 (table as IXmlSerializable).ReadXml(reader);
+                //判断是否存在属性NeedHistory设置且为true
+                var NeedHistory = table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
+                if (Convert.ToBoolean(NeedHistory.Value)  ==true)
+                {
+
+                    IDataTable historydataTable = (IDataTable)table.Clone();
+                    //设置是历史表,用于标识,不用反写生成相关xml
+                    historydataTable.IsHistory = true;
+                    //获取最后出现"。"字符串,返回其位置,无返回字符串长度---
+                    int Des = table.Description.LastIndexOf("。") == -1 ? table.Description.Length : table.Description.LastIndexOf("。");
+
+                    historydataTable.Description = table.Description.Substring(0, Des) + "历史" + table.Description.Substring(Des, table.Description.Length - Des);
+                    historydataTable.Name = table.Name + "History";
+                    historydataTable.TableName = table.Name + "History";
+                    //历史表的所有index都必须允许重复
+                    historydataTable.Indexes?.ForEach(k =>
+                    {
+                        k.Unique = false;
+                    });
+                    historydataTable.Properties.Remove("NeedHistory");
+                    var col = table.CreateColumn();
+                    col.Description = table.Description.Substring(0, Des) + "信息";
+                    col.ColumnName = table.Name + "ID";
+                    col.DataType = typeof(DateTime);
+                    col.Name = table.Name + "ID";
+                    col.DataType = typeof(Int32);
+                    //Customer @Id@$
+                    col.Map = table.Name+"@ID@$";
+                    historydataTable.Columns.Insert(1, col);
+                    //将标准映射添加到                 
+                    list.Add(historydataTable);
+                }
                 list.Add(table);
             }
             else if (reader.Name.EqualIgnoreCase("Option") && option != null)

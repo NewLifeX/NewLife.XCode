@@ -32,6 +32,9 @@ namespace XCode.Configuration
         /// <summary>备注</summary>
         public String Description { get; set; }
 
+        /// <summary>元素默认参数值</summary>
+        public String ItemDefaultValue { get; set; }
+
         private String _dis;
         /// <summary>说明</summary>
         public String DisplayName
@@ -207,7 +210,7 @@ namespace XCode.Configuration
         /// <summary>填充到XField中去</summary>
         /// <param name="field">字段</param>
         public void Fill(IDataColumn field)
-        {
+        {       
             Field = field;
 
             if (field == null) return;
@@ -222,12 +225,14 @@ namespace XCode.Configuration
 
             var col = _Column;
             if (col != null)
-            {
+            {              
                 dc.RawType = col.RawType;
                 dc.ItemType = col.ItemType;
                 dc.Precision = col.Precision;
                 dc.Scale = col.Scale;
                 dc.DefaultValue = col.DefaultValue;
+                dc.ItemDefaultValue = col.ItemDefaultValue;
+
             }
 
             // 特别处理，兼容旧版本

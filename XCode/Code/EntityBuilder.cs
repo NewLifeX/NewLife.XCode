@@ -1107,7 +1107,7 @@ public class EntityBuilder : ClassBuilder
     protected virtual void BuildHistory()
     {
         //判断生成的表是否包含历史记录表,包含需要添加历史记录信息表
-        var NeedHistory = Table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
+        var NeedHistory = Table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory")); 
         if (Convert.ToBoolean(NeedHistory.Value) == true)
         {
             WriteLine("/// <summary>重写添加历史记录信息/summary>");
@@ -1151,10 +1151,11 @@ public class EntityBuilder : ClassBuilder
             WriteLine("{");
             var History = Table.Name + "History" + " entityHistory = new " + Table.Name + "History();";
             WriteLine(History);
-
+            var tablePrimaryKey = Table.PrimaryKeys?.Where(o => o.Name.ToUpper().Contains("ID"));
+            var primaryKey = tablePrimaryKey.Count() > 0 ? tablePrimaryKey.FirstOrDefault()?.Name : "ID";
             WriteLine("DataConversion.CopyProperty(entity, entityHistory);");
-            WriteLine("entityHistory.Id = 0;  ");
-            WriteLine($"entityHistory.{Table.Name}ID = entity.Id;  ");
+            WriteLine($"entityHistory.{primaryKey} = 0;  ");
+            WriteLine($"entityHistory.{Table.Name}ID = entity.{primaryKey};  ");
             WriteLine("return entityHistory.Insert();  ");
             WriteLine("}");
         }

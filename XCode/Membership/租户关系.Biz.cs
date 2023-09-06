@@ -6,9 +6,11 @@ using NewLife.Data;
 
 namespace XCode.Membership;
 
+[ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
 public partial class TenantUser : Entity<TenantUser>
 {
     #region 对象操作
+
     static TenantUser()
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
@@ -42,9 +44,11 @@ public partial class TenantUser : Entity<TenantUser>
             RoleIds = str;
         }
     }
-    #endregion
+
+    #endregion 对象操作
 
     #region 扩展属性
+
     ///// <summary>租户</summary>
     //[XmlIgnore, IgnoreDataMember]
     ////[ScriptIgnore]
@@ -91,9 +95,10 @@ public partial class TenantUser : Entity<TenantUser>
 
     //public virtual String RoleName => Extends.Get(nameof(RoleName), k => ManageProvider.Get<IRole>()?.FindByID(k).Name);
 
-    #endregion
+    #endregion 扩展属性
 
     #region 扩展查询
+
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
@@ -164,9 +169,11 @@ public partial class TenantUser : Entity<TenantUser>
 
         return FindAll(_.TenantId == tenantId);
     }
-    #endregion
+
+    #endregion 扩展查询
 
     #region 高级查询
+
     /// <summary>高级查询</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="userId">用户</param>
@@ -201,9 +208,11 @@ public partial class TenantUser : Entity<TenantUser>
     ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
     ///// <returns></returns>
     //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
-    #endregion
+
+    #endregion 高级查询
 
     #region 业务操作
+
     /// <summary>转模型</summary>
     /// <returns></returns>
     public TenantUserModel ToModel()
@@ -245,7 +254,8 @@ public partial class TenantUser : Entity<TenantUser>
 
         return false;
     }
-    #endregion
+
+    #endregion 业务操作
 }
 
 /// <summary>租户关系</summary>

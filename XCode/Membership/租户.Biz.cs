@@ -4,9 +4,11 @@ using NewLife.Data;
 
 namespace XCode.Membership;
 
+[ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
 public partial class Tenant : Entity<Tenant>, ITenantSource
 {
     #region 对象操作
+
     static Tenant()
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
@@ -35,7 +37,8 @@ public partial class Tenant : Entity<Tenant>, ITenantSource
         // 管理者
         if (isNew && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
     }
-    #endregion
+
+    #endregion 对象操作
 
     #region 扩展属性
 
@@ -45,9 +48,10 @@ public partial class Tenant : Entity<Tenant>, ITenantSource
 
     Int32 ITenantSource.TenantId { get => Id; set => Id = value; }
 
-    #endregion
+    #endregion 扩展属性
 
     #region 扩展查询
+
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
@@ -99,9 +103,11 @@ public partial class Tenant : Entity<Tenant>, ITenantSource
 
         return Find(_.ManagerId == managerId);
     }
-    #endregion
+
+    #endregion 扩展查询
 
     #region 高级查询
+
     /// <summary>高级查询</summary>
     /// <param name="name">名称</param>
     /// <param name="managerId">租户管理员</param>
@@ -134,9 +140,11 @@ public partial class Tenant : Entity<Tenant>, ITenantSource
     ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
     ///// <returns></returns>
     //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
-    #endregion
+
+    #endregion 高级查询
 
     #region 业务操作
+
     /// <summary>转模型</summary>
     /// <returns></returns>
     public TenantModel ToModel()
@@ -146,5 +154,6 @@ public partial class Tenant : Entity<Tenant>, ITenantSource
 
         return model;
     }
-    #endregion
+
+    #endregion 业务操作
 }

@@ -12,6 +12,7 @@ namespace XCode.Membership;
 public partial class Role : LogEntity<Role>, IRole
 {
     #region 对象操作
+
     static Role()
     {
         //Meta.Factory.FullInsert = false;
@@ -23,7 +24,7 @@ public partial class Role : LogEntity<Role>, IRole
 
     /// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal protected override void InitData()
+    protected internal override void InitData()
     {
         if (Meta.Count > 0)
         {
@@ -47,7 +48,7 @@ public partial class Role : LogEntity<Role>, IRole
             if (XTrace.Debug) XTrace.WriteLine("开始初始化{0}角色数据……", typeof(Role).Name);
 
             Add("管理员", true, "默认拥有全部最高权限，由系统工程师使用，安装配置整个系统");
-            Add("租户管理员", false, "SAAS平台租户管理员");
+            //Add("租户管理员", false, "SAAS平台租户管理员");
             Add("高级用户", false, "业务管理人员，可以管理业务模块，可以分配授权用户等级");
             Add("普通用户", false, "普通业务人员，可以使用系统常规业务模块功能");
             Add("游客", false, "新注册默认属于游客");
@@ -191,9 +192,11 @@ public partial class Role : LogEntity<Role>, IRole
 
         if (fieldName == __.Permission) LoadPermission();
     }
-    #endregion
+
+    #endregion 对象操作
 
     #region 扩展查询
+
     /// <summary>根据编号查找角色</summary>
     /// <param name="id"></param>
     /// <returns></returns>
@@ -218,10 +221,13 @@ public partial class Role : LogEntity<Role>, IRole
 
         return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
     }
-    #endregion
+
+    #endregion 扩展查询
 
     #region 扩展权限
+
     private IDictionary<Int32, PermissionFlags> _Permissions;
+
     /// <summary>本角色权限集合</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     public IDictionary<Int32, PermissionFlags> Permissions => _Permissions ??= new Dictionary<Int32, PermissionFlags>();
@@ -239,7 +245,7 @@ public partial class Role : LogEntity<Role>, IRole
         return pf.Has(flag);
     }
 
-    void Remove(Int32 resid)
+    private void Remove(Int32 resid)
     {
         if (Permissions.ContainsKey(resid)) Permissions.Remove(resid);
     }
@@ -303,7 +309,7 @@ public partial class Role : LogEntity<Role>, IRole
         return count == ps.Count;
     }
 
-    void LoadPermission()
+    private void LoadPermission()
     {
         Permissions.Clear();
         if (String.IsNullOrEmpty(Permission)) return;
@@ -316,7 +322,7 @@ public partial class Role : LogEntity<Role>, IRole
         }
     }
 
-    void SavePermission()
+    private void SavePermission()
     {
         var ps = _Permissions;
         if (ps == null) return;
@@ -347,9 +353,11 @@ public partial class Role : LogEntity<Role>, IRole
     /// <summary>当前角色拥有的资源</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     public Int32[] Resources => Permissions.Keys.ToArray();
-    #endregion
+
+    #endregion 扩展权限
 
     #region 业务
+
     /// <summary>根据名称查找角色，若不存在则创建</summary>
     /// <param name="name"></param>
     /// <returns></returns>
@@ -392,7 +400,8 @@ public partial class Role : LogEntity<Role>, IRole
 
         return entity;
     }
-    #endregion
+
+    #endregion 业务
 }
 
 /// <summary>角色</summary>

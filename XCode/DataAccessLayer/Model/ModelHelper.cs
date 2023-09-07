@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
-using System.Xml.Linq;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Log;
@@ -25,12 +20,7 @@ public static class ModelHelper
     /// <param name="table"></param>
     /// <param name="name">名称</param>
     /// <returns></returns>
-    public static IDataColumn GetColumn(this IDataTable table, String name)
-    {
-        if (String.IsNullOrEmpty(name)) return null;
-
-        return table.Columns.FirstOrDefault(c => c.Is(name));
-    }
+    public static IDataColumn GetColumn(this IDataTable table, String name) => String.IsNullOrEmpty(name) ? null : table.Columns.FirstOrDefault(c => c.Is(name));
 
     /// <summary>根据字段名数组获取字段数组</summary>
     /// <param name="table"></param>
@@ -85,23 +75,13 @@ public static class ModelHelper
     /// <param name="table"></param>
     /// <param name="name">名称</param>
     /// <returns></returns>
-    public static Boolean Is(this IDataTable table, String name)
-    {
-        if (String.IsNullOrEmpty(name)) return false;
-
-        return name.EqualIgnoreCase(table.TableName, table.Name);
-    }
+    public static Boolean Is(this IDataTable table, String name) => !String.IsNullOrEmpty(name) && name.EqualIgnoreCase(table.TableName, table.Name);
 
     /// <summary>判断字段是否等于指定名字</summary>
     /// <param name="column"></param>
     /// <param name="name">名称</param>
     /// <returns></returns>
-    public static Boolean Is(this IDataColumn column, String name)
-    {
-        if (String.IsNullOrEmpty(name)) return false;
-
-        return name.EqualIgnoreCase(column.ColumnName, column.Name);
-    }
+    public static Boolean Is(this IDataColumn column, String name) => !String.IsNullOrEmpty(name) && name.EqualIgnoreCase(column.ColumnName, column.Name);
 
     //private static Boolean EqualIgnoreCase(this String[] src, String[] des)
     //{
@@ -298,38 +278,16 @@ public static class ModelHelper
             {
                 var table = createTable();
                 (table as IXmlSerializable).ReadXml(reader);
-                //判断是否存在属性NeedHistory设置且为true
-                var NeedHistory = table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
-                if (Convert.ToBoolean(NeedHistory.Value)  ==true)
+
+                // 判断是否存在属性NeedHistory设置且为true
+                var needHistory = table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
+                if (Convert.ToBoolean(needHistory.Value))
                 {
-
-                    IDataTable historydataTable = (IDataTable)table.Clone();
-                    //设置是历史表,用于标识,不用反写生成相关xml
-                    historydataTable.IsHistory = true;
-                    //获取最后出现"。"字符串,返回其位置,无返回字符串长度---
-                    int Des = table.Description.LastIndexOf("。") == -1 ? table.Description.Length : table.Description.LastIndexOf("。");
-
-                    historydataTable.Description = table.Description.Substring(0, Des) + "历史" + table.Description.Substring(Des, table.Description.Length - Des);
-                    historydataTable.Name = table.Name + "History";
-                    historydataTable.TableName = table.Name + "History";
-                    //历史表的所有index都必须允许重复
-                    historydataTable.Indexes?.ForEach(k =>
-                    {
-                        k.Unique = false;
-                    });
-                    historydataTable.Properties.Remove("NeedHistory");
-                    var col = table.CreateColumn();
-                    col.Description = table.Description.Substring(0, Des) + "信息";
-                    col.ColumnName = table.Name + "ID";
-                    col.DataType = typeof(DateTime);
-                    col.Name = table.Name + "ID";
-                    col.DataType = typeof(Int32);
-                    //Customer @Id@$
-                    col.Map = table.Name+"@ID@$";
-                    historydataTable.Columns.Insert(1, col);
-                    //将标准映射添加到                 
+                    // 将标准映射添加到
+                    var historydataTable = ProcessNeedHistory(table);
                     list.Add(historydataTable);
                 }
+
                 list.Add(table);
             }
             else if (reader.Name.EqualIgnoreCase("Option") && option != null)
@@ -356,6 +314,36 @@ public static class ModelHelper
             }
         }
         return list;
+    }
+
+    static IDataTable ProcessNeedHistory(IDataTable table)
+    {
+        var historydataTable = (IDataTable)table.Clone();
+        //设置是历史表,用于标识,不用反写生成相关xml
+        historydataTable.IsHistory = true;
+        //获取最后出现"。"字符串,返回其位置,无返回字符串长度---
+        var Des = table.Description.LastIndexOf("。") == -1 ? table.Description.Length : table.Description.LastIndexOf("。");
+
+        historydataTable.Description = table.Description.Substring(0, Des) + "历史" + table.Description.Substring(Des, table.Description.Length - Des);
+        historydataTable.Name = table.Name + "History";
+        historydataTable.TableName = table.Name + "History";
+        //历史表的所有index都必须允许重复
+        historydataTable.Indexes?.ForEach(k =>
+        {
+            k.Unique = false;
+        });
+        historydataTable.Properties.Remove("NeedHistory");
+        var col = table.CreateColumn();
+        col.Description = table.Description.Substring(0, Des) + "信息";
+        col.ColumnName = table.Name + "ID";
+        col.DataType = typeof(DateTime);
+        col.Name = table.Name + "ID";
+        col.DataType = typeof(Int32);
+        //Customer @Id@$
+        col.Map = table.Name + "@ID@$";
+        historydataTable.Columns.Insert(1, col);
+
+        return historydataTable;
     }
 
     /// <summary>读取</summary>
@@ -768,10 +756,7 @@ public static class ModelHelper
                     dc.RawType = $"nvarchar({len})";
 
                     // 新建默认长度50，写入忽略50的长度，其它长度不能忽略
-                    if (len == 50)
-                        dc.Length = 50;
-                    else
-                        dc.Length = 0;
+                    dc.Length = len == 50 ? 50 : 0;
                 }
                 else
                 {

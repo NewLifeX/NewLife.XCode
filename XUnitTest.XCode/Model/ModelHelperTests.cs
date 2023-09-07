@@ -13,10 +13,16 @@ public class ModelHelperTests
     public void Import2012()
     {
         var file = "Model/Member2012.xml";
+        var tables = DAL.ImportFrom(file);
+
+        Assert.NotNull(tables);
+        Assert.NotEmpty(tables);
+        Assert.Equal(9, tables.Count);
+
         var option = new EntityBuilderOption();
         var atts = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
         var xml = File.ReadAllText(file.GetFullPath());
-        var tables = ModelHelper.FromXml(xml, DAL.CreateTable, option, atts);
+        tables = ModelHelper.FromXml(xml, DAL.CreateTable, option, atts);
 
         Assert.NotNull(tables);
         Assert.NotEmpty(tables);
@@ -60,11 +66,17 @@ public class ModelHelperTests
     public void Import2023()
     {
         var file = "Model/Member2023.xml";
+        var tables = DAL.ImportFrom(file);
+
+        Assert.NotNull(tables);
+        Assert.NotEmpty(tables);
+        Assert.Equal(9, tables.Count);
+
         var option = new EntityBuilderOption();
         var atts = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
         var xml = File.ReadAllText(file.GetFullPath());
 
-        var tables = ModelHelper.FromXml(xml, DAL.CreateTable, option, atts);
+        tables = ModelHelper.FromXml(xml, DAL.CreateTable, option, atts);
         Assert.NotNull(tables);
         Assert.NotEmpty(tables);
         Assert.Equal(9, tables.Count);

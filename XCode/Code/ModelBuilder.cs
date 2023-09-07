@@ -37,9 +37,10 @@ public class ModelBuilder : ClassBuilder
             if (option.Excludes.Contains(item.Name)) continue;
             if (option.Excludes.Contains(item.TableName)) continue;
 
-            var builder = new ClassBuilder
+            var builder = new ModelBuilder
             {
                 Table = item,
+                Pure = true,
                 Option = option.Clone(),
                 Log = log
             };

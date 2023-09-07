@@ -12,7 +12,7 @@ namespace Company.MyName;
 [Serializable]
 [DataObject]
 [Description("用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户")]
-public class User
+public partial class User
 {
     #region 属性
     /// <summary>编号</summary>
@@ -159,26 +159,6 @@ public class User
     [Description("扩展6")]
     [DisplayName("扩展6")]
     public String Ex6 { get; set; }
-
-    /// <summary>更新者</summary>
-    [Description("更新者")]
-    [DisplayName("更新者")]
-    public String UpdateUser { get; set; }
-
-    /// <summary>更新用户</summary>
-    [Description("更新用户")]
-    [DisplayName("更新用户")]
-    public Int32 UpdateUserID { get; set; }
-
-    /// <summary>更新地址</summary>
-    [Description("更新地址")]
-    [DisplayName("更新地址")]
-    public String UpdateIP { get; set; }
-
-    /// <summary>更新时间</summary>
-    [Description("更新时间")]
-    [DisplayName("更新时间")]
-    public DateTime UpdateTime { get; set; }
 
     /// <summary>备注</summary>
     [Description("备注")]

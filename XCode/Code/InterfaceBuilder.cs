@@ -31,7 +31,7 @@ public class InterfaceBuilder : ClassBuilder
             if (option.Excludes.Contains(item.Name)) continue;
             if (option.Excludes.Contains(item.TableName)) continue;
 
-            var builder = new ClassBuilder
+            var builder = new InterfaceBuilder
             {
                 Table = item,
                 Option = option.Clone(),

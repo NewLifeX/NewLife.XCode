@@ -140,7 +140,7 @@ public class ClassBuilderTests
             ModelNameForCopy = "Extend{name}",
         };
 
-        var builder = new ClassBuilder
+        var builder = new ModelBuilder
         {
             Table = _table,
             Option = option,
@@ -171,7 +171,7 @@ public class ClassBuilderTests
         option.Excludes.Add("UpdateIP");
         option.Excludes.Add("UpdateTime");
 
-        var builder = new ClassBuilder
+        var builder = new ModelBuilder
         {
             Table = _table,
             Option = option,
@@ -189,7 +189,7 @@ public class ClassBuilderTests
     [Fact]
     public void Save()
     {
-        var builder = new ClassBuilder
+        var builder = new ModelBuilder
         {
             Table = _table,
         };

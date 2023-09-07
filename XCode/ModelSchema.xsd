@@ -46,6 +46,13 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
+      <xs:element name="ClassNameTemplate" type="xs:string">
+        <xs:annotation>
+          <xs:documentation xml:lang="zh-cn">
+            类名模板
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="Namespace" type="xs:string">
         <xs:annotation>
           <xs:documentation xml:lang="zh-cn">

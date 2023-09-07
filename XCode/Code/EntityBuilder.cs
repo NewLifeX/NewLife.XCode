@@ -4,7 +4,6 @@ using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Reflection;
-using XCode.Common;
 using XCode.DataAccessLayer;
 
 namespace XCode.Code;
@@ -236,8 +235,8 @@ public class EntityBuilder : ClassBuilder
         us.Add("XCode.Cache");
         us.Add("XCode.Configuration");
         us.Add("XCode.DataAccessLayer");
-        us.Add("XCode.Common");      
-        if (Business) us.Add("XCode.Shards");      
+        //us.Add("XCode.Common");
+        if (Business) us.Add("XCode.Shards");
 
         if (Business && !Option.Pure)
         {
@@ -862,10 +861,13 @@ public class EntityBuilder : ClassBuilder
 
         WriteLine("#endregion");
 
-        WriteLine();
-        WriteLine("#region  添加历史记录");
-        BuildHistory();
-        WriteLine("#endregion");
+        if (Table.Properties["NeedHistory"].ToBoolean())
+        {
+            WriteLine();
+            WriteLine("#region  添加历史记录");
+            BuildHistory();
+            WriteLine("#endregion");
+        }
     }
 
     /// <summary>生成静态构造函数</summary>
@@ -889,7 +891,7 @@ public class EntityBuilder : ClassBuilder
                 WriteLine("//var df = Meta.Factory.AdditionalFields;");
                 WriteLine("//df.Add(nameof({0}));", dc.Name);
             }
-          
+
             // 自动分表
             dc = Table.Columns.FirstOrDefault(e => !e.Identity && e.PrimaryKey && e.DataType == typeof(Int64));
             if (dc != null)
@@ -1088,27 +1090,27 @@ public class EntityBuilder : ClassBuilder
     protected virtual void BuildOverride()
     {
         WriteLine("///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>");
-            WriteLine("///// <summary>已重载CESHI。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>");
-            WriteLine("///// <returns></returns>");
-            WriteLine("//public override Int32 Insert()");
-            WriteLine("//{");
-            WriteLine("//    return base.Insert();");
-            WriteLine("//}");
-            WriteLine();
-            WriteLine("///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>");
-            WriteLine("///// <returns></returns>");
-            WriteLine("//protected override Int32 OnDelete()");
-            WriteLine("//{");
-            WriteLine("//    return base.OnDelete();");
-            WriteLine("//}");
-             
+        WriteLine("///// <returns></returns>");
+        WriteLine("//public override Int32 Insert()");
+        WriteLine("//{");
+        WriteLine("//    return base.Insert();");
+        WriteLine("//}");
+        WriteLine();
+        WriteLine("///// <summary>已重载。在事务保护范围内处理业务，位于Valid之后</summary>");
+        WriteLine("///// <returns></returns>");
+        WriteLine("//protected override Int32 OnDelete()");
+        WriteLine("//{");
+        WriteLine("//    return base.OnDelete();");
+        WriteLine("//}");
+
     }
+
     /// <summary>添删改添加历史记录</summary>
     protected virtual void BuildHistory()
     {
         //判断生成的表是否包含历史记录表,包含需要添加历史记录信息表
-        var NeedHistory = Table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory")); 
-        if (Convert.ToBoolean(NeedHistory.Value) == true)
+        var needHistory = Table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
+        if (Convert.ToBoolean(needHistory.Value))
         {
             WriteLine("/// <summary>重写添加历史记录信息/summary>");
             WriteLine("/// <returns></returns>");
@@ -1149,17 +1151,19 @@ public class EntityBuilder : ClassBuilder
             WriteLine("/// <returns></returns>");
             WriteLine($"private int AddHistory({Table.Name} entity) ");
             WriteLine("{");
-            var History = Table.Name + "History" + " entityHistory = new " + Table.Name + "History();";
-            WriteLine(History);
-            var tablePrimaryKey = Table.PrimaryKeys?.Where(o => o.Name.ToUpper().Contains("ID"));
-            var primaryKey = tablePrimaryKey.Count() > 0 ? tablePrimaryKey.FirstOrDefault()?.Name : "ID";
-            WriteLine("DataConversion.CopyProperty(entity, entityHistory);");
-            WriteLine($"entityHistory.{primaryKey} = 0;  ");
-            WriteLine($"entityHistory.{Table.Name}ID = entity.{primaryKey};  ");
-            WriteLine("return entityHistory.Insert();  ");
+            {
+                var History = Table.Name + "History" + " entityHistory = new " + Table.Name + "History();";
+                WriteLine(History);
+                var tablePrimaryKey = Table.PrimaryKeys?.Where(o => o.Name.ToUpper().Contains("ID"));
+                var primaryKey = tablePrimaryKey.Count() > 0 ? tablePrimaryKey.FirstOrDefault()?.Name : "ID";
+                WriteLine("XCode.Common.DataConversion.CopyProperty(entity, entityHistory);");
+                WriteLine($"entityHistory.{primaryKey} = 0;  ");
+                WriteLine($"entityHistory.{Table.Name}ID = entity.{primaryKey};  ");
+                WriteLine("return entityHistory.Insert();  ");
+            }
             WriteLine("}");
         }
-      
+
     }
 
     /// <summary>扩展属性</summary>

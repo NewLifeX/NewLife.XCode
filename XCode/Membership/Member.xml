@@ -1,30 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model2023.xsd" xmlns="https://newlifex.com/Model2023.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202309.xsd" xmlns="https://newlifex.com/Model202309.xsd">
   <Option>
-    <!--输出目录-->
-    <Output>.\</Output>
-    <!--是否使用中文文件名。默认false-->
-    <ChineseFileName>True</ChineseFileName>
-    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
-    <BaseClass>Entity</BaseClass>
-    <!--命名空间-->
-    <Namespace>XCode.Membership</Namespace>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
     <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
     <DisplayNameTemplate />
-    <!--用于生成拷贝函数的模型类。例如{name}或I{name}-->
-    <ModelNameForCopy>I{name}</ModelNameForCopy>
+    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
+    <BaseClass>Entity</BaseClass>
+    <!--命名空间-->
+    <Namespace>XCode.Membership</Namespace>
+    <!--输出目录-->
+    <Output>.\</Output>
+    <!--是否使用中文文件名。默认false-->
+    <ChineseFileName>True</ChineseFileName>
+    <!--用于生成Copy函数的参数类型。例如{name}或I{name}-->
+    <ModelNameForCopy>{name}Model</ModelNameForCopy>
     <!--带有索引器。实现IModel接口-->
-    <HasIModel>False</HasIModel>
-    <!--模型类模版-->
-    <ModelClass>{name}Model</ModelClass>
-    <!--模型接口模版-->
-    <ModelInterface>I{name}</ModelInterface>
+    <HasIModel>True</HasIModel>
     <!--数据库连接名-->
     <ConnName>Membership</ConnName>
+    <!--模型类模版。设置后生成模型类，用于接口数据传输，例如{name}Model-->
+    <ModelClass>{name}Model</ModelClass>
     <!--模型类输出目录。默认当前目录的Models子目录-->
     <ModelsOutput>.\Models\</ModelsOutput>
+    <!--模型接口模版。设置后生成模型接口，用于约束模型类和实体类，例如I{name}-->
+    <ModelInterface>I{name}</ModelInterface>
     <!--模型接口输出目录。默认当前目录的Interfaces子目录-->
     <InterfacesOutput>.\Interfaces\</InterfacesOutput>
     <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->

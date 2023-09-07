@@ -79,7 +79,28 @@ public class ModelBuilder : ClassBuilder
                 ClassName = Table.Name;
         }
 
+        var us = Option.Usings;
+        if (Option.HasIModel)
+        {
+            if (!us.Contains("NewLife.Data")) us.Add("NewLife.Data");
+            if (!us.Contains("NewLife.Reflection")) us.Add("NewLife.Reflection");
+        }
+
         base.OnExecuting();
+    }
+
+    /// <summary>获取基类</summary>
+    /// <returns></returns>
+    protected override String GetBaseClass()
+    {
+        var baseClass = Option.BaseClass?.Replace("{name}", Table.Name);
+        if (Option.HasIModel)
+        {
+            if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
+            baseClass += "IModel";
+        }
+
+        return baseClass;
     }
 
     /// <summary>实体类头部</summary>
@@ -106,7 +127,24 @@ public class ModelBuilder : ClassBuilder
     /// <summary>生成主体</summary>
     protected override void BuildItems()
     {
-        base.BuildItems();
+        WriteLine("#region 属性");
+        for (var i = 0; i < Table.Columns.Count; i++)
+        {
+            var column = Table.Columns[i];
+
+            // 跳过排除项
+            if (!ValidColumn(column)) continue;
+
+            if (i > 0) WriteLine();
+            BuildItem(column);
+        }
+        WriteLine("#endregion");
+
+        if (Option.HasIModel)
+        {
+            WriteLine();
+            BuildIndexItems();
+        }
 
         // 生成拷贝函数。需要有基类
         //var bs = Option.BaseClass.Split(",").Select(e => e.Trim()).ToArray();

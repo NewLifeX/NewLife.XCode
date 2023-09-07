@@ -266,12 +266,12 @@ public class EntityBuilder : ClassBuilder
     /// <returns></returns>
     protected override String GetBaseClass()
     {
-        var baseClass = Option.BaseClass?.Replace("{name}", Table.Name);
-        if (Option.HasIModel)
-        {
-            if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
-            baseClass += "IModel";
-        }
+        var baseClass = Option.BaseClass;
+        //if (Option.HasIModel)
+        //{
+        //    if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
+        //    baseClass += "IModel";
+        //}
 
         var bs = baseClass?.Split(',').Select(e => e.Trim()).ToList() ?? new List<String>();
 

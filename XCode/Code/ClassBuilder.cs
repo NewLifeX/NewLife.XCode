@@ -179,11 +179,11 @@ public class ClassBuilder
 
         // 引用命名空间
         var us = Option.Usings;
-        if (Option.HasIModel)
-        {
-            if (!us.Contains("NewLife.Data")) us.Add("NewLife.Data");
-            if (!us.Contains("NewLife.Reflection")) us.Add("NewLife.Reflection");
-        }
+        //if (Option.HasIModel)
+        //{
+        //    if (!us.Contains("NewLife.Data")) us.Add("NewLife.Data");
+        //    if (!us.Contains("NewLife.Reflection")) us.Add("NewLife.Reflection");
+        //}
 
         us = us.Distinct().OrderBy(e => e.StartsWith("System") ? 0 : 1).ThenBy(e => e).ToArray();
         foreach (var item in us)
@@ -226,11 +226,11 @@ public class ClassBuilder
     protected virtual String GetBaseClass()
     {
         var baseClass = Option.BaseClass?.Replace("{name}", Table.Name);
-        if (Option.HasIModel)
-        {
-            if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
-            baseClass += "IModel";
-        }
+        //if (Option.HasIModel)
+        //{
+        //    if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
+        //    baseClass += "IModel";
+        //}
 
         return baseClass;
     }
@@ -276,11 +276,11 @@ public class ClassBuilder
         }
         WriteLine("#endregion");
 
-        if (Option.HasIModel)
-        {
-            WriteLine();
-            BuildIndexItems();
-        }
+        //if (Option.HasIModel)
+        //{
+        //    WriteLine();
+        //    BuildIndexItems();
+        //}
     }
 
     /// <summary>生成每一项</summary>
@@ -306,7 +306,8 @@ public class ClassBuilder
         WriteLine("public {0} {1} {{ get; set; }}", type, dc.Name);
     }
 
-    private void BuildIndexItems()
+    /// <summary>生成索引访问器</summary>
+    protected virtual void BuildIndexItems()
     {
         WriteLine("#region 获取/设置 字段值");
         WriteLine("/// <summary>获取/设置 字段值</summary>");

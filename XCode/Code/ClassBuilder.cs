@@ -28,7 +28,6 @@ public class ClassBuilder
     #endregion 属性
 
     #region 静态快速
-
     /// <summary>加载模型文件</summary>
     /// <param name="xmlFile">Xml模型文件</param>
     /// <param name="option">生成可选项</param>
@@ -55,9 +54,9 @@ public class ClassBuilder
         var xmlContent = File.ReadAllText(xmlFile);
         atts = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase)
         {
-            ["xmlns"] = "https://newlifex.com/Model2023.xsd",
+            ["xmlns"] = "https://newlifex.com/Model202309.xsd",
             ["xmlns:xs"] = "http://www.w3.org/2001/XMLSchema-instance",
-            ["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2023.xsd"
+            ["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202309.xsd"
         };
 
         log?.Info("导入模型：{0}", xmlFile);
@@ -116,106 +115,6 @@ public class ClassBuilder
 
         return tables;
     }
-
-    /// <summary>生成简易版模型</summary>
-    /// <param name="tables">表集合</param>
-    /// <param name="option">可选项</param>
-    /// <param name="log"></param>
-    /// <returns></returns>
-    public static Int32 BuildModels(IList<IDataTable> tables, BuilderOption option = null, ILog log = null)
-    {
-        if (option == null)
-            option = new BuilderOption();
-        else
-            option = option.Clone();
-
-        option.Pure = true;
-        //option.Partial = true;
-
-        log?.Info("生成简易模型类 {0}", option.Output.GetBasePath());
-
-        var count = 0;
-        foreach (var item in tables)
-        {
-            // 跳过排除项
-            if (option.Excludes.Contains(item.Name)) continue;
-            if (option.Excludes.Contains(item.TableName)) continue;
-
-            var builder = new ClassBuilder
-            {
-                Table = item,
-                Option = option.Clone(),
-                Log = log
-            };
-
-            builder.Load(item);
-
-            // 自定义模型
-            var modelClass = item.Properties["ModelClass"];
-            var modelInterface = item.Properties["ModelInterface"];
-            if (!modelClass.IsNullOrEmpty()) builder.Option.ClassNameTemplate = modelClass;
-            if (!modelInterface.IsNullOrEmpty())
-            {
-                builder.Option.BaseClass = modelInterface;
-                builder.Option.ModelNameForCopy = modelInterface;
-            }
-
-            builder.Execute();
-            builder.Save(null, true, false);
-
-            count++;
-        }
-
-        return count;
-    }
-
-    /// <summary>生成简易版实体接口</summary>
-    /// <param name="tables">表集合</param>
-    /// <param name="option">可选项</param>
-    /// <param name="log"></param>
-    /// <returns></returns>
-    public static Int32 BuildInterfaces(IList<IDataTable> tables, BuilderOption option = null, ILog log = null)
-    {
-        if (option == null)
-            option = new BuilderOption();
-        else
-            option = option.Clone();
-
-        option.Interface = true;
-        //option.Partial = true;
-
-        log?.Info("生成简易接口 {0}", option.Output.GetBasePath());
-
-        var count = 0;
-        foreach (var item in tables)
-        {
-            // 跳过排除项
-            if (option.Excludes.Contains(item.Name)) continue;
-            if (option.Excludes.Contains(item.TableName)) continue;
-
-            var builder = new ClassBuilder
-            {
-                Table = item,
-                Option = option.Clone(),
-                Log = log
-            };
-
-            builder.Load(item);
-
-            // 自定义模型
-            //var modelInterface = item.Properties["ModelInterface"];
-            var modelInterface = option.ModelInterface;
-            if (!modelInterface.IsNullOrEmpty()) builder.Option.ClassNameTemplate = modelInterface;
-
-            builder.Execute();
-            builder.Save(null, true, false);
-
-            count++;
-        }
-
-        return count;
-    }
-
     #endregion 静态快速
 
     #region 方法
@@ -254,13 +153,6 @@ public class ClassBuilder
         }
 
         var option = Option;
-        if (ClassName.IsNullOrEmpty())
-        {
-            if (!option.ClassNameTemplate.IsNullOrEmpty())
-                ClassName = option.ClassNameTemplate.Replace("{name}", Table.Name);
-            else
-                ClassName = option.Interface ? ("I" + Table.Name) : Table.Name;
-        }
         WriteLog("生成 {0} {1} {2}", Table.Name, Table.DisplayName, new { option.ClassNameTemplate, option.BaseClass, option.ModelNameForCopy, option.Namespace }.ToJson(false, false, false));
 
         //Clear();
@@ -276,6 +168,15 @@ public class ClassBuilder
     /// <summary>生成头部</summary>
     protected virtual void OnExecuting()
     {
+        var option = Option;
+        if (ClassName.IsNullOrEmpty())
+        {
+            if (!option.ClassNameTemplate.IsNullOrEmpty())
+                ClassName = option.ClassNameTemplate.Replace("{name}", Table.Name);
+            else
+                ClassName = Table.Name;
+        }
+
         // 引用命名空间
         var us = Option.Usings;
         if (Option.HasIModel)
@@ -313,13 +214,10 @@ public class ClassBuilder
         if (!baseClass.IsNullOrEmpty()) baseClass = " : " + baseClass;
 
         // 分部类
-        var partialClass = Option.Partial ? " partial" : "";
+        var partialClass = " partial";
 
         // 类接口
-        if (Option.Interface)
-            WriteLine("public{2} interface {0}{1}", ClassName, baseClass, partialClass);
-        else
-            WriteLine("public{2} class {0}{1}", ClassName, baseClass, partialClass);
+        WriteLine("public{2} class {0}{1}", ClassName, baseClass, partialClass);
         WriteLine("{");
     }
 
@@ -348,14 +246,6 @@ public class ClassBuilder
             des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
         }
         WriteLine("/// <summary>{0}</summary>", des);
-
-        if (!Option.Pure && !Option.Interface)
-        {
-            WriteLine("[Serializable]");
-            WriteLine("[DataObject]");
-
-            if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
-        }
     }
 
     /// <summary>生成尾部</summary>
@@ -391,46 +281,29 @@ public class ClassBuilder
             WriteLine();
             BuildIndexItems();
         }
-
-        // 生成拷贝函数。需要有基类
-        //var bs = Option.BaseClass.Split(",").Select(e => e.Trim()).ToArray();
-        //var model = bs.FirstOrDefault(e => e[0] == 'I' && e.Contains("{name}"));
-        var model = Option.ModelNameForCopy;
-        if (!Option.Interface && !model.IsNullOrEmpty())
-        {
-            WriteLine();
-            BuildCopy(model.Replace("{name}", Table.Name));
-        }
     }
 
     /// <summary>生成每一项</summary>
     protected virtual void BuildItem(IDataColumn column)
     {
         var dc = column;
-        //BuildItemAttribute(column);
+
         // 注释
         var des = dc.Description;
         WriteLine("/// <summary>{0}</summary>", des);
 
-        //// 分类特性
-        //if (dc.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
-        //    WriteLine("[Category(\"{0}\")]", att);
+        //if (!Option.Pure)
+        //{
+        //    if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
 
-        if (!Option.Pure && !Option.Interface)
-        {
-            if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
-
-            var dis = dc.DisplayName;
-            if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
-        }
+        //    var dis = dc.DisplayName;
+        //    if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
+        //}
 
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
 
-        if (Option.Interface)
-            WriteLine("{0} {1} {{ get; set; }}", type, dc.Name);
-        else
-            WriteLine("public {0} {1} {{ get; set; }}", type, dc.Name);
+        WriteLine("public {0} {1} {{ get; set; }}", type, dc.Name);
     }
 
     private void BuildIndexItems()
@@ -646,9 +519,7 @@ public class ClassBuilder
         else if (!ext.Contains("."))
             ext += ".cs";
 
-        if (Option.Interface)
-            p = p.CombinePath(ClassName + ext);
-        else if (chineseFileName && !Table.DisplayName.IsNullOrEmpty())
+        if (chineseFileName && !Table.DisplayName.IsNullOrEmpty())
             p = p.CombinePath(Table.DisplayName + ext);
         else
             p = p.CombinePath(ClassName + ext);
@@ -683,7 +554,7 @@ public class ClassBuilder
     {
         if (Option.Excludes.Contains(column.Name)) return false;
         if (Option.Excludes.Contains(column.ColumnName)) return false;
-        if ((validModel || Option.Pure || Option.Interface) && column.Properties["Model"] == "False")
+        if (validModel && column.Properties["Model"] == "False")
             return false;
 
         return true;

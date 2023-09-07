@@ -35,9 +35,7 @@ public class CustomBuilder : EntityBuilder
         else if (!ext.Contains("."))
             ext += ".cs";
 
-        if (Option.Interface)
-            p = p.CombinePath(ClassName + ext);
-        else if (chineseFileName && !Table.DisplayName.IsNullOrEmpty())
+        if (chineseFileName && !Table.DisplayName.IsNullOrEmpty())
             p = p.CombinePath(Table.DisplayName + ext);
         else
             p = p.CombinePath(ClassName + ext);
@@ -81,7 +79,7 @@ public class CustomBuilder : EntityBuilder
             option = new CustomBuilderOption();
         else
             option = option.Clone() as CustomBuilderOption;
-        option.Partial = true;
+        //option.Partial = true;
 
         var output = option.Output;
         if (output.IsNullOrEmpty()) output = ".";

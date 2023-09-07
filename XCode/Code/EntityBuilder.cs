@@ -97,8 +97,8 @@ public class EntityBuilder : ClassBuilder
         }
 
         // 更新xsd
-        atts["xmlns"] = "https://newlifex.com/Model2023.xsd";
-        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2023.xsd";
+        atts["xmlns"] = "https://newlifex.com/Model202309.xsd";
+        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202309.xsd";
 
         // 版本和教程
         var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
@@ -133,7 +133,7 @@ public class EntityBuilder : ClassBuilder
             option = new EntityBuilderOption();
         else
             option = option.Clone() as EntityBuilderOption;
-        option.Partial = true;
+        //option.Partial = true;
 
         var output = option.Output;
         if (output.IsNullOrEmpty()) output = ".";
@@ -238,7 +238,7 @@ public class EntityBuilder : ClassBuilder
         //us.Add("XCode.Common");
         if (Business) us.Add("XCode.Shards");
 
-        if (Business && !Option.Pure)
+        if (Business)
         {
             us.Add("System.IO");
             us.Add("System.Linq");
@@ -266,7 +266,7 @@ public class EntityBuilder : ClassBuilder
     /// <returns></returns>
     protected override String GetBaseClass()
     {
-        var baseClass = Option.BaseClass;
+        var baseClass = Option.BaseClass?.Replace("{name}", Table.Name);
         if (Option.HasIModel)
         {
             if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
@@ -491,6 +491,16 @@ public class EntityBuilder : ClassBuilder
         {
             base.BuildItems();
 
+            // 生成拷贝函数。需要有基类
+            //var bs = Option.BaseClass.Split(",").Select(e => e.Trim()).ToArray();
+            //var model = bs.FirstOrDefault(e => e[0] == 'I' && e.Contains("{name}"));
+            var model = Option.ModelNameForCopy;
+            if (!model.IsNullOrEmpty())
+            {
+                WriteLine();
+                BuildCopy(model.Replace("{name}", Table.Name));
+            }
+
             WriteLine();
             BuildIndexItems();
 
@@ -527,7 +537,18 @@ public class EntityBuilder : ClassBuilder
             return;
         }
 
-        base.BuildAttribute();
+        // 注释
+        var des = Table.Description;
+        if (!Option.DisplayNameTemplate.IsNullOrEmpty())
+        {
+            des = Table.Description.TrimStart(Table.DisplayName, "。");
+            des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
+        }
+        WriteLine("/// <summary>{0}</summary>", des);
+        WriteLine("[Serializable]");
+        WriteLine("[DataObject]");
+
+        if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
 
         var dt = Table;
         foreach (var item in dt.Indexes)
@@ -570,7 +591,7 @@ public class EntityBuilder : ClassBuilder
         if (dc.Properties.TryGetValue("Category", out att) && !att.IsNullOrEmpty())
             WriteLine("[Category(\"{0}\")]", att);
 
-        if (!Option.Pure)
+        //if (!Option.Pure)
         {
             var dis = dc.DisplayName;
             if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
@@ -598,10 +619,7 @@ public class EntityBuilder : ClassBuilder
 
         WriteLine(sb.Put(true));
 
-        if (Option.Interface)
-            WriteLine("{0} {1} {{ get; set; }}", type, dc.Name);
-        else
-            WriteLine("public {0} {1} {{ get => _{1}; set {{ if (OnPropertyChanging(\"{1}\", value)) {{ _{1} = value; OnPropertyChanged(\"{1}\"); }} }} }}", type, dc.Name);
+        WriteLine("public {0} {1} {{ get => _{1}; set {{ if (OnPropertyChanging(\"{1}\", value)) {{ _{1} = value; OnPropertyChanged(\"{1}\"); }} }} }}", type, dc.Name);
     }
 
     private void BuildIndexItems()

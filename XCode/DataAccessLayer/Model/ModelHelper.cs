@@ -305,12 +305,19 @@ public static class ModelHelper
                 ReadTable(reader, createTable, list);
             }
             // 2023版和202309版，Option放在第二层
-            else if (reader.Name.EqualIgnoreCase("Option") && option != null)
+            else if (reader.Name.EqualIgnoreCase("Option"))
             {
-                if (option is IXmlSerializable xml2)
-                    xml2.ReadXml(reader);
+                if (option != null)
+                {
+                    if (option is IXmlSerializable xml2)
+                        xml2.ReadXml(reader);
+                    else
+                        ReadXml(reader, option);
+                }
                 else
-                    ReadXml(reader, option);
+                {
+                    reader.Skip();
+                }
             }
             // 2012版，顶级元素带有特性
             else if (atts != null)

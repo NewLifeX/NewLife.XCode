@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -227,13 +228,21 @@ public static class ModelHelper
             }
             writer.WriteEndElement();
         }
-        //回写xml模型,排除IsHistory=true的表单，仅仅保留原始表单
-        foreach (var item in tables.Where(x => x.IsHistory != true))
+
         {
-            writer.WriteStartElement("Table");
-            (item as IXmlSerializable).WriteXml(writer);
+            writer.WriteStartElement("Tables");
+
+            // 回写xml模型,排除IsHistory=true的表单，仅仅保留原始表单
+            foreach (var item in tables.Where(x => !x.IsHistory))
+            {
+                writer.WriteStartElement("Table");
+                (item as IXmlSerializable).WriteXml(writer);
+                writer.WriteEndElement();
+            }
+
             writer.WriteEndElement();
         }
+
         writer.WriteEndElement();
         writer.WriteEndDocument();
         writer.Flush();
@@ -274,22 +283,28 @@ public static class ModelHelper
         var list = new List<IDataTable>();
         while (reader.IsStartElement())
         {
-            if (reader.Name.EqualIgnoreCase("Table"))
+            // 202309起，新版让Tables作为第二层
+            if (reader.Name.EqualIgnoreCase("Tables"))
             {
-                var table = createTable();
-                (table as IXmlSerializable).ReadXml(reader);
-
-                // 判断是否存在属性NeedHistory设置且为true
-                var needHistory = table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
-                if (Convert.ToBoolean(needHistory.Value))
+                while (reader.IsStartElement())
                 {
-                    // 将标准映射添加到
-                    var historydataTable = ProcessNeedHistory(table);
-                    list.Add(historydataTable);
+                    if (reader.Name.EqualIgnoreCase("Table"))
+                    {
+                        ReadTable(reader, createTable, list);
+                    }
+                    else
+                    {
+                        // 这里必须处理，否则加载特殊Xml文件时将会导致死循环
+                        reader.Read();
+                    }
                 }
-
-                list.Add(table);
             }
+            // 2012版和2023版，Table都放在第二层
+            else if (reader.Name.EqualIgnoreCase("Table"))
+            {
+                ReadTable(reader, createTable, list);
+            }
+            // 2023版和202309版，Option放在第二层
             else if (reader.Name.EqualIgnoreCase("Option") && option != null)
             {
                 if (option is IXmlSerializable xml2)
@@ -297,6 +312,7 @@ public static class ModelHelper
                 else
                     ReadXml(reader, option);
             }
+            // 2012版，顶级元素带有特性
             else if (atts != null)
             {
                 var name = reader.Name;
@@ -314,6 +330,23 @@ public static class ModelHelper
             }
         }
         return list;
+    }
+
+    static void ReadTable(XmlReader reader, Func<IDataTable> createTable, IList<IDataTable> list)
+    {
+        var table = createTable();
+        (table as IXmlSerializable).ReadXml(reader);
+
+        // 判断是否存在属性NeedHistory设置且为true
+        var needHistory = table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
+        if (Convert.ToBoolean(needHistory.Value))
+        {
+            // 将标准映射添加到
+            var historydataTable = ProcessNeedHistory(table);
+            list.Add(historydataTable);
+        }
+
+        list.Add(table);
     }
 
     static IDataTable ProcessNeedHistory(IDataTable table)

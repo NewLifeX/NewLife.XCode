@@ -1563,6 +1563,7 @@ public class EntityBuilder : ClassBuilder
 
             // 遍历索引，第一个字段是字符串类型，则为其生成下拉选择
             var count = 0;
+            var names = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
             foreach (var di in idx)
             {
                 if (di.Columns == null || di.Columns.Length == 0) continue;
@@ -1573,7 +1574,10 @@ public class EntityBuilder : ClassBuilder
                 var dc = Table.GetColumn(di.Columns[0]);
                 if (dc == null || dc.DataType != typeof(String) || dc.Master) continue;
 
+                // 有可能多个索引第一字段相同，不需要重复生成
                 var name = dc.Name;
+                if (names.Contains(name)) continue;
+                names.Add(name);
 
                 WriteLine();
                 WriteLine($"// Select Count({pname}) as {pname},{name} From {Table.TableName} Where {tname}>'2020-01-24 00:00:00' Group By {name} Order By {pname} Desc limit 20");

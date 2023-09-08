@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;
+using NewLife.Reflection;
 
 namespace XCode.Membership;
 
@@ -143,7 +144,7 @@ public partial class UserModel : IModel
                 "Ex5" => Ex5,
                 "Ex6" => Ex6,
                 "Remark" => Remark,
-                _ => null
+                _ => this.GetValue(name),
             };
         }
         set
@@ -180,6 +181,7 @@ public partial class UserModel : IModel
                 case "Ex5": Ex5 = Convert.ToString(value); break;
                 case "Ex6": Ex6 = Convert.ToString(value); break;
                 case "Remark": Remark = Convert.ToString(value); break;
+                default: this.SetValue(name, value); break;
             }
         }
     }

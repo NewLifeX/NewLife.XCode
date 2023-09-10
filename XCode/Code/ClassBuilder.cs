@@ -159,6 +159,8 @@ public class ClassBuilder
         //Clear();
         Writer ??= new StringWriter();
 
+        Prepare();
+
         OnExecuting();
 
         BuildItems();
@@ -166,8 +168,8 @@ public class ClassBuilder
         OnExecuted();
     }
 
-    /// <summary>生成头部</summary>
-    protected virtual void OnExecuting()
+    /// <summary>生成前的准备工作。计算类型以及命名空间等</summary>
+    protected virtual void Prepare()
     {
         var option = Option;
         if (ClassName.IsNullOrEmpty())
@@ -177,7 +179,11 @@ public class ClassBuilder
             else
                 ClassName = Table.Name;
         }
+    }
 
+    /// <summary>生成头部</summary>
+    protected virtual void OnExecuting()
+    {
         // 引用命名空间
         var us = Option.Usings;
         //if (Option.HasIModel)

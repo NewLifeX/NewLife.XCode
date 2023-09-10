@@ -67,18 +67,9 @@ public class ModelBuilder : ClassBuilder
     }
     #endregion 静态快速
 
-    /// <summary>执行前，生成头部</summary>
-    protected override void OnExecuting()
+    /// <summary>生成前的准备工作。计算类型以及命名空间等</summary>
+    protected override void Prepare()
     {
-        var option = Option;
-        if (ClassName.IsNullOrEmpty())
-        {
-            if (!option.ClassNameTemplate.IsNullOrEmpty())
-                ClassName = option.ClassNameTemplate.Replace("{name}", Table.Name);
-            else
-                ClassName = Table.Name;
-        }
-
         var us = Option.Usings;
         if (Option.HasIModel)
         {
@@ -86,7 +77,7 @@ public class ModelBuilder : ClassBuilder
             if (!us.Contains("NewLife.Reflection")) us.Add("NewLife.Reflection");
         }
 
-        base.OnExecuting();
+        base.Prepare();
     }
 
     /// <summary>获取基类</summary>

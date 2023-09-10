@@ -214,14 +214,13 @@ public class EntityBuilder : ClassBuilder
     #endregion 方法
 
     #region 基础
-
-    /// <summary>执行生成</summary>
-    protected override void OnExecuting()
+    /// <summary>生成前的准备工作。计算类型以及命名空间等</summary>
+    protected override void Prepare()
     {
         // 增加常用命名空间
         AddNameSpace();
 
-        base.OnExecuting();
+        base.Prepare();
     }
 
     /// <summary>增加常用命名空间</summary>

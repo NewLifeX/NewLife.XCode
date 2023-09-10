@@ -54,8 +54,8 @@ public class InterfaceBuilder : ClassBuilder
     }
     #endregion 静态快速
 
-    /// <summary>执行前，生成头部</summary>
-    protected override void OnExecuting()
+    /// <summary>生成前的准备工作。计算类型以及命名空间等</summary>
+    protected override void Prepare()
     {
         var option = Option;
         if (ClassName.IsNullOrEmpty())
@@ -66,7 +66,7 @@ public class InterfaceBuilder : ClassBuilder
                 ClassName = "I" + Table.Name;
         }
 
-        base.OnExecuting();
+        base.Prepare();
     }
 
     /// <summary>实体类头部</summary>

@@ -68,12 +68,14 @@ public class CubeBuilder : ClassBuilder
                 //{
                 //    var df = ListFields.GetField("Code") as ListField;
                 //    df.Url = "?code={Code}";
+                //    df.Target = "_blank";
                 //}
                 //{
                 //    var df = ListFields.AddListField("devices", null, "Onlines");
                 //    df.DisplayName = "查看设备";
                 //    df.Url = "Device?groupId={Id}";
                 //    df.DataVisible = e => (e as {EntityName}).Devices > 0;
+                //    df.Target = "_frame";
                 //}
                 //{
                 //    var df = ListFields.GetField("Kind") as ListField;

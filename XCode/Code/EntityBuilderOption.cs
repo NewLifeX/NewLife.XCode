@@ -38,11 +38,11 @@ public class EntityBuilderOption : BuilderOption
     [Description("命名格式。Default/Upper/Lower/Underline")]
     public NameFormats NameFormat { get; set; }
 
-    /// <summary>生成器版本</summary>
-    [Description("生成器版本")]
-    public String Version { get; set; }
+    ///// <summary>生成器版本</summary>
+    //[Description("生成器版本")]
+    //public String Version { get; set; }
 
-    /// <summary>帮助文档</summary>
-    [Description("帮助文档")]
-    public String Document { get; set; }
+    ///// <summary>帮助文档</summary>
+    //[Description("帮助文档")]
+    //public String Document { get; set; }
 }

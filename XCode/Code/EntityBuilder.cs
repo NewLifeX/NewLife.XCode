@@ -101,14 +101,14 @@ public class EntityBuilder : ClassBuilder
         atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202309.xsd";
 
         // 版本和教程
-        var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
+        //var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
         //atts["Version"] = asm.FileVersion + "";
-        //atts["Document"] = "https://newlifex.com/xcode/model";
-        if (option is EntityBuilderOption opt2)
-        {
-            opt2.Version = asm.FileVersion + "";
-            opt2.Document = "https://newlifex.com/xcode/model";
-        }
+        atts["Document"] = "https://newlifex.com/xcode/model";
+        //if (option is EntityBuilderOption opt2)
+        //{
+        //    opt2.Version = asm.FileVersion + "";
+        //    opt2.Document = "https://newlifex.com/xcode/model";
+        //}
 
         // 保存模型文件
         var xmlContent = File.ReadAllText(xmlFile);

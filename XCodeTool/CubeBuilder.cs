@@ -68,12 +68,14 @@ public class CubeBuilder : ClassBuilder
                 //{
                 //    var df = ListFields.GetField("Code") as ListField;
                 //    df.Url = "?code={Code}";
+                //    df.Target = "_blank";
                 //}
                 //{
                 //    var df = ListFields.AddListField("devices", null, "Onlines");
                 //    df.DisplayName = "查看设备";
                 //    df.Url = "Device?groupId={Id}";
                 //    df.DataVisible = e => (e as {EntityName}).Devices > 0;
+                //    df.Target = "_frame";
                 //}
                 //{
                 //    var df = ListFields.GetField("Kind") as ListField;
@@ -272,6 +274,23 @@ public class CubeBuilder : ClassBuilder
     #endregion
 
     #region 方法
+    /// <summary>加载数据表</summary>
+    /// <param name="table"></param>
+    public override void Load(IDataTable table)
+    {
+        Table = table;
+
+        var option = Option;
+
+        // 命名空间
+        var str = table.Properties["Namespace"];
+        if (!str.IsNullOrEmpty()) option.Namespace = str;
+
+        // 输出目录
+        str = table.Properties["CubeOutput"];
+        if (!str.IsNullOrEmpty()) option.Output = str.GetBasePath();
+    }
+
     /// <summary>生成前</summary>
     protected override void OnExecuting()
     {

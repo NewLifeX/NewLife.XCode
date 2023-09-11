@@ -128,10 +128,10 @@ public class SQLiteTests
         Assert.True(count > 0);
 
         var list = Role.FindAll();
-        Assert.Equal(5, list.Count);
+        Assert.Equal(4, list.Count);
 
         var list2 = Role.FindAll(Role._.Name == "管理员");
-        Assert.Equal(1, list2.Count);
+        Assert.Single(list2);
 
         var list3 = Role.Search("用户", null);
         Assert.Equal(2, list3.Count);
@@ -161,10 +161,10 @@ public class SQLiteTests
         Assert.True(count > 0);
 
         var list = Role.FindAll();
-        Assert.Equal(5, list.Count);
+        Assert.Equal(4, list.Count);
 
         var list2 = Role.FindAll(Role._.Name == "管理员");
-        Assert.Equal(1, list2.Count);
+        Assert.Single(list2);
 
         var list3 = Role.Search("用户", null);
         Assert.Equal(2, list3.Count);

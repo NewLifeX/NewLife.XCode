@@ -13,8 +13,8 @@ public class CustomBuilderOption : EntityBuilderOption
     public Boolean CreateCustomBizFile { get; set; } = false;
 
     /// <summary>
-    /// 是否在生成.biz.cs文件时复盖已存在的文件
+    /// 是否在生成.biz.cs文件时覆盖已存在的文件
     /// </summary>
-    [Description("是否在生成.biz.cs文件时复盖已存在的文件")]
+    [Description("是否在生成.biz.cs文件时覆盖已存在的文件")]
     public Boolean OverwriteBizFile { get; set; } = false;
 }

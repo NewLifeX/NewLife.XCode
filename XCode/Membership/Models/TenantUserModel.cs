@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;
+using NewLife.Reflection;
 
 namespace XCode.Membership;
 
@@ -51,7 +52,7 @@ public partial class TenantUserModel : IModel
                 "RoleId" => RoleId,
                 "RoleIds" => RoleIds,
                 "Remark" => Remark,
-                _ => null
+                _ => this.GetValue(name),
             };
         }
         set
@@ -65,6 +66,7 @@ public partial class TenantUserModel : IModel
                 case "RoleId": RoleId = value.ToInt(); break;
                 case "RoleIds": RoleIds = Convert.ToString(value); break;
                 case "Remark": Remark = Convert.ToString(value); break;
+                default: this.SetValue(name, value); break;
             }
         }
     }

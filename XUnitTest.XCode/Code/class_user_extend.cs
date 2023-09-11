@@ -10,7 +10,7 @@ using NewLife.Reflection;
 namespace XCode.Code;
 
 /// <summary>用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户</summary>
-public class ExtendUser : Object, IxxUser, IModel
+public partial class ExtendUser : Object, IxxUser, IModel
 {
     #region 属性
     /// <summary>编号</summary>

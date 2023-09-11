@@ -97,18 +97,18 @@ public class EntityBuilder : ClassBuilder
         }
 
         // 更新xsd
-        atts["xmlns"] = "https://newlifex.com/Model2023.xsd";
-        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2023.xsd";
+        atts["xmlns"] = "https://newlifex.com/Model202309.xsd";
+        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202309.xsd";
 
         // 版本和教程
-        var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
+        //var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
         //atts["Version"] = asm.FileVersion + "";
-        //atts["Document"] = "https://newlifex.com/xcode/model";
-        if (option is EntityBuilderOption opt2)
-        {
-            opt2.Version = asm.FileVersion + "";
-            opt2.Document = "https://newlifex.com/xcode/model";
-        }
+        atts["Document"] = "https://newlifex.com/xcode/model";
+        //if (option is EntityBuilderOption opt2)
+        //{
+        //    opt2.Version = asm.FileVersion + "";
+        //    opt2.Document = "https://newlifex.com/xcode/model";
+        //}
 
         // 保存模型文件
         var xmlContent = File.ReadAllText(xmlFile);
@@ -133,7 +133,7 @@ public class EntityBuilder : ClassBuilder
             option = new EntityBuilderOption();
         else
             option = option.Clone() as EntityBuilderOption;
-        option.Partial = true;
+        //option.Partial = true;
 
         var output = option.Output;
         if (output.IsNullOrEmpty()) output = ".";
@@ -214,14 +214,13 @@ public class EntityBuilder : ClassBuilder
     #endregion 方法
 
     #region 基础
-
-    /// <summary>执行生成</summary>
-    protected override void OnExecuting()
+    /// <summary>生成前的准备工作。计算类型以及命名空间等</summary>
+    protected override void Prepare()
     {
         // 增加常用命名空间
         AddNameSpace();
 
-        base.OnExecuting();
+        base.Prepare();
     }
 
     /// <summary>增加常用命名空间</summary>
@@ -235,10 +234,10 @@ public class EntityBuilder : ClassBuilder
         us.Add("XCode.Cache");
         us.Add("XCode.Configuration");
         us.Add("XCode.DataAccessLayer");
-
+        //us.Add("XCode.Common");
         if (Business) us.Add("XCode.Shards");
 
-        if (Business && !Option.Pure)
+        if (Business)
         {
             us.Add("System.IO");
             us.Add("System.Linq");
@@ -267,11 +266,11 @@ public class EntityBuilder : ClassBuilder
     protected override String GetBaseClass()
     {
         var baseClass = Option.BaseClass;
-        if (Option.HasIModel)
-        {
-            if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
-            baseClass += "IModel";
-        }
+        //if (Option.HasIModel)
+        //{
+        //    if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
+        //    baseClass += "IModel";
+        //}
 
         var bs = baseClass?.Split(',').Select(e => e.Trim()).ToList() ?? new List<String>();
 
@@ -491,6 +490,16 @@ public class EntityBuilder : ClassBuilder
         {
             base.BuildItems();
 
+            // 生成拷贝函数。需要有基类
+            //var bs = Option.BaseClass.Split(",").Select(e => e.Trim()).ToArray();
+            //var model = bs.FirstOrDefault(e => e[0] == 'I' && e.Contains("{name}"));
+            var model = Option.ModelNameForCopy;
+            if (!model.IsNullOrEmpty())
+            {
+                WriteLine();
+                BuildCopy(model.Replace("{name}", Table.Name));
+            }
+
             WriteLine();
             BuildIndexItems();
 
@@ -527,7 +536,18 @@ public class EntityBuilder : ClassBuilder
             return;
         }
 
-        base.BuildAttribute();
+        // 注释
+        var des = Table.Description;
+        if (!Option.DisplayNameTemplate.IsNullOrEmpty())
+        {
+            des = Table.Description.TrimStart(Table.DisplayName, "。");
+            des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
+        }
+        WriteLine("/// <summary>{0}</summary>", des);
+        WriteLine("[Serializable]");
+        WriteLine("[DataObject]");
+
+        if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
 
         var dt = Table;
         foreach (var item in dt.Indexes)
@@ -570,7 +590,7 @@ public class EntityBuilder : ClassBuilder
         if (dc.Properties.TryGetValue("Category", out att) && !att.IsNullOrEmpty())
             WriteLine("[Category(\"{0}\")]", att);
 
-        if (!Option.Pure)
+        //if (!Option.Pure)
         {
             var dis = dc.DisplayName;
             if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
@@ -589,6 +609,8 @@ public class EntityBuilder : ClassBuilder
         if (dc.Precision > 0 || dc.Scale > 0) sb.AppendFormat(", Precision = {0}, Scale = {1}", dc.Precision, dc.Scale);
 
         if (!dc.DefaultValue.IsNullOrEmpty()) sb.AppendFormat(", DefaultValue = \"{0}\"", dc.DefaultValue);
+        //添加自定义控件默认值
+        if (!dc.ItemDefaultValue.IsNullOrEmpty()) sb.AppendFormat(", ItemDefaultValue = \"{0}\"", dc.ItemDefaultValue);
 
         if (dc.Master) sb.Append(", Master = true");
 
@@ -596,10 +618,7 @@ public class EntityBuilder : ClassBuilder
 
         WriteLine(sb.Put(true));
 
-        if (Option.Interface)
-            WriteLine("{0} {1} {{ get; set; }}", type, dc.Name);
-        else
-            WriteLine("public {0} {1} {{ get => _{1}; set {{ if (OnPropertyChanging(\"{1}\", value)) {{ _{1} = value; OnPropertyChanged(\"{1}\"); }} }} }}", type, dc.Name);
+        WriteLine("public {0} {1} {{ get => _{1}; set {{ if (OnPropertyChanging(\"{1}\", value)) {{ _{1} = value; OnPropertyChanged(\"{1}\"); }} }} }}", type, dc.Name);
     }
 
     private void BuildIndexItems()
@@ -858,6 +877,14 @@ public class EntityBuilder : ClassBuilder
         BuildOverride();
 
         WriteLine("#endregion");
+
+        if (Table.Properties["NeedHistory"].ToBoolean())
+        {
+            WriteLine();
+            WriteLine("#region  添加历史记录");
+            BuildHistory();
+            WriteLine("#endregion");
+        }
     }
 
     /// <summary>生成静态构造函数</summary>
@@ -1092,6 +1119,68 @@ public class EntityBuilder : ClassBuilder
         WriteLine("//{");
         WriteLine("//    return base.OnDelete();");
         WriteLine("//}");
+
+    }
+
+    /// <summary>添删改添加历史记录</summary>
+    protected virtual void BuildHistory()
+    {
+        //判断生成的表是否包含历史记录表,包含需要添加历史记录信息表
+        var needHistory = Table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
+        if (Convert.ToBoolean(needHistory.Value))
+        {
+            WriteLine("/// <summary>重写添加历史记录信息/summary>");
+            WriteLine("/// <returns></returns>");
+            WriteLine("public override Int32 Insert()");
+            WriteLine("{");
+            WriteLine($"using var tran = Entity<{Table.Name}>.Meta.CreateTrans(); ");
+            WriteLine("var list = new List<IEntity>();  ");
+            WriteLine("var ires = base.OnInsert();  ");
+            WriteLine("if (ires > 0) AddHistory(this);  ");
+            WriteLine("tran.Commit();  ");
+            WriteLine("return ires;  ");
+            WriteLine("}");
+            WriteLine();
+            WriteLine("/// <summary>重写删除历史记录信息</summary>");
+            WriteLine("/// <returns></returns>");
+            WriteLine("protected override Int32 OnDelete()");
+            WriteLine("{");
+            WriteLine($"using var tran = Entity<{Table.Name}>.Meta.CreateTrans(); ");
+            WriteLine("var list = new List<IEntity>();  ");
+            WriteLine("var ires = base.OnDelete();  ");
+            WriteLine("if (ires > 0) AddHistory(this);  ");
+            WriteLine("tran.Commit();  ");
+            WriteLine("return ires;  ");
+            WriteLine("}");
+            WriteLine("/// <summary>重写更新历史记录信息</summary>");
+            WriteLine("/// <returns></returns>");
+            WriteLine("protected override Int32 OnUpdate()");
+            WriteLine("{");
+            WriteLine($"using var tran = Entity<{Table.Name}>.Meta.CreateTrans(); ");
+            WriteLine("var list = new List<IEntity>();  ");
+            WriteLine("var ires = base.OnUpdate();  ");
+            WriteLine("if (ires > 0) AddHistory(this);  ");
+            WriteLine("tran.Commit();  ");
+            WriteLine("return ires;  ");
+            WriteLine("}");
+
+            WriteLine("/// <summary>添加历史记录信息</summary>");
+            WriteLine("/// <returns></returns>");
+            WriteLine($"private int AddHistory({Table.Name} entity) ");
+            WriteLine("{");
+            {
+                var History = Table.Name + "History" + " entityHistory = new " + Table.Name + "History();";
+                WriteLine(History);
+                var tablePrimaryKey = Table.PrimaryKeys?.Where(o => o.Name.ToUpper().Contains("ID"));
+                var primaryKey = tablePrimaryKey.Count() > 0 ? tablePrimaryKey.FirstOrDefault()?.Name : "ID";
+                WriteLine("XCode.Common.DataConversion.CopyProperty(entity, entityHistory);");
+                WriteLine($"entityHistory.{primaryKey} = 0;  ");
+                WriteLine($"entityHistory.{Table.Name}ID = entity.{primaryKey};  ");
+                WriteLine("return entityHistory.Insert();  ");
+            }
+            WriteLine("}");
+        }
+
     }
 
     /// <summary>扩展属性</summary>
@@ -1473,6 +1562,7 @@ public class EntityBuilder : ClassBuilder
 
             // 遍历索引，第一个字段是字符串类型，则为其生成下拉选择
             var count = 0;
+            var names = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
             foreach (var di in idx)
             {
                 if (di.Columns == null || di.Columns.Length == 0) continue;
@@ -1483,7 +1573,10 @@ public class EntityBuilder : ClassBuilder
                 var dc = Table.GetColumn(di.Columns[0]);
                 if (dc == null || dc.DataType != typeof(String) || dc.Master) continue;
 
+                // 有可能多个索引第一字段相同，不需要重复生成
                 var name = dc.Name;
+                if (names.Contains(name)) continue;
+                names.Add(name);
 
                 WriteLine();
                 WriteLine($"// Select Count({pname}) as {pname},{name} From {Table.TableName} Where {tname}>'2020-01-24 00:00:00' Group By {name} Order By {pname} Desc limit 20");

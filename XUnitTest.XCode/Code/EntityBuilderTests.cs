@@ -39,7 +39,7 @@ public class EntityBuilderTests
         {
             ConnName = "MyConn",
             Namespace = "Company.MyName",
-            Partial = true,
+            //Partial = true,
         };
         option.Usings.Add("NewLife.Remoting");
 
@@ -77,7 +77,7 @@ public class EntityBuilderTests
         {
             ConnName = "MyConn",
             Namespace = "Company.MyName",
-            Partial = true,
+            //Partial = true,
             //ExtendOnData = true
         };
         option.Usings.Add("NewLife.Remoting");
@@ -116,7 +116,7 @@ public class EntityBuilderTests
         {
             ConnName = "MyConn",
             Namespace = "Company.MyName",
-            Partial = true,
+            //Partial = true,
         };
         option.Usings.Add("NewLife.Remoting");
 
@@ -191,7 +191,7 @@ public class EntityBuilderTests
         var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
         var option = new EntityBuilderOption
         {
-            Partial = true,
+            //Partial = true,
         };
         var tables = ClassBuilder.LoadModels(file, option, out var atts);
         EntityBuilder.FixModelFile(file, option, atts, tables);
@@ -207,13 +207,13 @@ public class EntityBuilderTests
         option.Output = @"Output\EntityModels\";
         option.ClassNameTemplate = "{name}Model";
         option.ModelNameForCopy = "I{name}";
-        ClassBuilder.BuildModels(tables, option);
+        ModelBuilder.BuildModels(tables, option);
 
         // 生成简易接口
         option.BaseClass = null;
         option.ClassNameTemplate = null;
         option.Output = @"Output\EntityInterfaces\";
-        ClassBuilder.BuildInterfaces(tables, option);
+        InterfaceBuilder.BuildInterfaces(tables, option);
 
         // 精确控制生成
         /*foreach (var item in tables)
@@ -268,7 +268,7 @@ public class EntityBuilderTests
         var file = @"..\..\XUnitTest.XCode\Code\Member.xml";
         var option = new EntityBuilderOption
         {
-            Partial = true,
+            //Partial = true,
         };
         var tables = ClassBuilder.LoadModels(file, option, out var atts);
         EntityBuilder.FixModelFile(file, option, atts, tables);
@@ -284,13 +284,13 @@ public class EntityBuilderTests
         option.Output = @"Output\EntityModels\";
         option.ClassNameTemplate = "{name}Model";
         option.ModelNameForCopy = "I{name}";
-        ClassBuilder.BuildModels(tables, option);
+        ModelBuilder.BuildModels(tables, option);
 
         // 生成简易接口
         option.BaseClass = null;
         option.ClassNameTemplate = null;
         option.Output = @"Output\EntityInterfaces\";
-        ClassBuilder.BuildInterfaces(tables, option);
+        InterfaceBuilder.BuildInterfaces(tables, option);
 
         {
             var rs = File.ReadAllText("Entity\\日志.cs".GetFullPath());

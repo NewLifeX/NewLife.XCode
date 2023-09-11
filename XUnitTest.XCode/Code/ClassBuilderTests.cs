@@ -34,9 +34,10 @@ public class ClassBuilderTests
     [Fact]
     public void Normal()
     {
-        var builder = new ClassBuilder
+        var builder = new ModelBuilder
         {
             Table = _table,
+            Pure = false,
         };
         builder.Option.Namespace = "Company.MyName";
         builder.Option.Usings.Add("NewLife.Remoting");
@@ -53,12 +54,13 @@ public class ClassBuilderTests
     [Fact]
     public void BaseClass()
     {
-        var builder = new ClassBuilder
+        var builder = new ModelBuilder
         {
             Table = _table,
+            Pure = false,
         };
         builder.Option.BaseClass = "MyEntityBase";
-        builder.Option.Partial = false;
+        //builder.Option.Partial = false;
 
         builder.Execute();
 
@@ -74,17 +76,18 @@ public class ClassBuilderTests
     {
         var option = new BuilderOption
         {
-            Pure = true,
-            Partial = true,
+            //Pure = true,
+            //Partial = true,
             ClassNameTemplate = "Pure{name}",
             BaseClass = "Object, Ixx{name}",
             ModelNameForCopy = "Ixx{name}",
         };
 
-        var builder = new ClassBuilder
+        var builder = new ModelBuilder
         {
             Table = _table,
             Option = option,
+            Pure = true,
         };
 
         builder.Execute();
@@ -101,7 +104,7 @@ public class ClassBuilderTests
     {
         var option = new BuilderOption
         {
-            Interface = true,
+            //Interface = true,
             BaseClass = "NewLife.Data.IModel",
             ClassNameTemplate = "Ixx{name}",
         };
@@ -110,7 +113,7 @@ public class ClassBuilderTests
         option.Excludes.Add("UpdateIP");
         option.Excludes.Add("UpdateTime");
 
-        var builder = new ClassBuilder
+        var builder = new InterfaceBuilder
         {
             Table = _table,
             Option = option,
@@ -130,14 +133,14 @@ public class ClassBuilderTests
     {
         var option = new BuilderOption
         {
-            Pure = true,
+            //Pure = true,
             HasIModel = true,
             BaseClass = "Object, Ixx{name}",
             ClassNameTemplate = "Extend{name}",
             ModelNameForCopy = "Extend{name}",
         };
 
-        var builder = new ClassBuilder
+        var builder = new ModelBuilder
         {
             Table = _table,
             Option = option,
@@ -157,7 +160,7 @@ public class ClassBuilderTests
     {
         var option = new BuilderOption
         {
-            Pure = true,
+            //Pure = true,
             HasIModel = true,
             BaseClass = null,
             ClassNameTemplate = "Extend{name}2",
@@ -168,7 +171,7 @@ public class ClassBuilderTests
         option.Excludes.Add("UpdateIP");
         option.Excludes.Add("UpdateTime");
 
-        var builder = new ClassBuilder
+        var builder = new ModelBuilder
         {
             Table = _table,
             Option = option,
@@ -186,12 +189,12 @@ public class ClassBuilderTests
     [Fact]
     public void Save()
     {
-        var builder = new ClassBuilder
+        var builder = new ModelBuilder
         {
             Table = _table,
         };
         var option = builder.Option;
-        option.Pure = true;
+        //option.Pure = true;
         option.Output = ".\\Output\\Save";
 
         if (Directory.Exists(option.Output.GetFullPath())) Directory.Delete(option.Output.GetFullPath(), true);
@@ -228,13 +231,13 @@ public class ClassBuilderTests
         {
             Output = dir,
             ClassNameTemplate = "{name}Model",
-            Partial = true,
+            //Partial = true,
         };
 
-        ClassBuilder.BuildModels(_tables, option);
+        ModelBuilder.BuildModels(_tables, option);
 
         option.ClassNameTemplate = "I{name}Model";
-        ClassBuilder.BuildInterfaces(_tables, option);
+        InterfaceBuilder.BuildInterfaces(_tables, option);
 
         foreach (var item in _tables)
         {
@@ -270,13 +273,13 @@ public class ClassBuilderTests
         {
             Output = dir,
             ClassNameTemplate = "{name}Dto",
-            Partial = true,
+            //Partial = true,
         };
 
-        ClassBuilder.BuildModels(_tables, option);
+        ModelBuilder.BuildModels(_tables, option);
 
         option.ClassNameTemplate = null;
-        ClassBuilder.BuildInterfaces(_tables, option);
+        InterfaceBuilder.BuildInterfaces(_tables, option);
 
         foreach (var item in _tables)
         {
@@ -317,10 +320,11 @@ public class ClassBuilderTests
         // 测试Built.tt
         foreach (var item in _tables)
         {
-            var builder = new ClassBuilder
+            var builder = new ModelBuilder
             {
                 Table = item,
                 Option = option,
+                Pure = false,
             };
             builder.Execute();
             builder.Save(null, true, false);

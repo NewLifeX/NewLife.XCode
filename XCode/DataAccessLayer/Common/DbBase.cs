@@ -876,6 +876,7 @@ abstract class DbBase : DisposeBase, IDatabase
 
         var dp = Factory.CreateParameter();
         dp.ParameterName = FormatParameterName(name);
+        dp.SourceColumn = name;
         dp.Direction = ParameterDirection.Input;
 
         try

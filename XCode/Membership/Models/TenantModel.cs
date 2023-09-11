@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;
+using NewLife.Reflection;
 
 namespace XCode.Membership;
 
@@ -67,7 +68,7 @@ public partial class TenantModel : IModel
                 "TableName" => TableName,
                 "Expired" => Expired,
                 "Remark" => Remark,
-                _ => null
+                _ => this.GetValue(name),
             };
         }
         set
@@ -85,6 +86,7 @@ public partial class TenantModel : IModel
                 case "TableName": TableName = Convert.ToString(value); break;
                 case "Expired": Expired = value.ToDateTime(); break;
                 case "Remark": Remark = Convert.ToString(value); break;
+                default: this.SetValue(name, value); break;
             }
         }
     }

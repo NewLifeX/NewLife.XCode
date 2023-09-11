@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;
+using NewLife.Reflection;
 
 namespace XCode.Membership;
 
@@ -95,7 +96,7 @@ public partial class LogModel : IModel
                 "CreateIP" => CreateIP,
                 "CreateTime" => CreateTime,
                 "Remark" => Remark,
-                _ => null
+                _ => this.GetValue(name),
             };
         }
         set
@@ -120,6 +121,7 @@ public partial class LogModel : IModel
                 case "CreateIP": CreateIP = Convert.ToString(value); break;
                 case "CreateTime": CreateTime = value.ToDateTime(); break;
                 case "Remark": Remark = Convert.ToString(value); break;
+                default: this.SetValue(name, value); break;
             }
         }
     }

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Principal;
 using System.Web.Script.Serialization;
@@ -607,6 +607,16 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     /// <returns></returns>
     public virtual Int32[] GetRoleIDs()
     {
+        var tenantId = (TenantContext.Current?.TenantId).ToInt(-1);
+        if (tenantId > 0)
+        {
+            var tuEntity = TenantUser.FindByTenantIdAndUserId(tenantId, ID);
+            var idlist = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
+            if (tuEntity != null && tuEntity.RoleId > 0) idlist.Insert(0, tuEntity.RoleId);
+
+            return idlist.Distinct().ToArray();
+        }
+
         var ids = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
         if (RoleID > 0) ids.Insert(0, RoleID);
 

@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;
+using NewLife.Reflection;
 
 namespace XCode.Membership;
 
@@ -127,7 +128,7 @@ public partial class DepartmentModel : IModel
                 "UpdateIP" => UpdateIP,
                 "UpdateTime" => UpdateTime,
                 "Remark" => Remark,
-                _ => null
+                _ => this.GetValue(name),
             };
         }
         set
@@ -160,6 +161,7 @@ public partial class DepartmentModel : IModel
                 case "UpdateIP": UpdateIP = Convert.ToString(value); break;
                 case "UpdateTime": UpdateTime = value.ToDateTime(); break;
                 case "Remark": Remark = Convert.ToString(value); break;
+                default: this.SetValue(name, value); break;
             }
         }
     }

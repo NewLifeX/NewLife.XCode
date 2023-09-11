@@ -53,6 +53,10 @@ public class XCodeSetting : Config<XCodeSetting>
     //[Description("备份目录。备份数据库时存放的目录")]
     //public String BackupPath { get; set; } = "";
 
+    /// <summary>批大小。用于批量操作数据，抽取、删除、备份、恢复，默认5000</summary>
+    [Description("批大小。用于批量操作数据，抽取、删除、备份、恢复，默认5000")]
+    public Int32 BatchSize { get; set; } = 5_000;
+
     /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
     [Description("命令超时。查询执行超时时间，默认0秒不限制")]
     public Int32 CommandTimeout { get; set; }

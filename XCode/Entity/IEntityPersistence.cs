@@ -410,13 +410,20 @@ public class EntityPersistence : IEntityPersistence
         // MySql 支持分批删除
         if (session.Dal.DbType == DatabaseType.MySql)
         {
+            var batchSize = session.Dal.Db.BatchSize;
+            if (batchSize <= 0) batchSize = XCodeSetting.Current.BatchSize;
+            if (batchSize <= 0) batchSize = 10_000;
+
             var rs = 0;
             while (true)
             {
-                var rows = session.Dal.Execute(sql + " limit 100000", 5 * 60);
+                var rows = session.Dal.Execute($"{sql} limit {batchSize}", 5 * 60);
                 rs += rows;
 
-                if (rows < 100000) break;
+                if (rows < batchSize) break;
+
+                // 延迟一点，避免太快影响数据库性能
+                Thread.Sleep(100);
             }
 
             return rs;

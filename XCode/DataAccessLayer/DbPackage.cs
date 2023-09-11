@@ -343,7 +343,9 @@ public class DbPackage
             WriteLog("类型[{0}]：{1}", ts.Length, ts.Join(",", e => e?.Name));
 
             var row = 0;
-            var pageSize = BatchSize > 0 ? BatchSize : Dal.Db.BatchSize;
+            var pageSize = BatchSize;
+            if (pageSize <= 0) pageSize = Dal.Db.BatchSize;
+            if (pageSize <= 0) pageSize = XCodeSetting.Current.BatchSize;
             while (true)
             {
                 //修复总行数是pageSize的倍数无法退出循环的情况

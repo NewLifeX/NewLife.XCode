@@ -874,7 +874,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         // 如下优化，避免了每次都调用Meta.Count而导致形成一次查询，虽然这次查询时间损耗不大
         // 但是绝大多数查询，都不需要进行类似的海量数据优化，显然，这个startRowIndex将会挡住99%以上的浪费
         Int64 count;
-        if (startRowIndex > 500000 && (count = session.LongCount) > 1000000)
+        if (startRowIndex > 500_000 && (count = session.LongCount) > 1_000_000)
         {
             //// 计算本次查询的结果行数
             //var wh = where?.GetString(null);
@@ -1201,7 +1201,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         // 如下优化，避免了每次都调用Meta.Count而导致形成一次查询，虽然这次查询时间损耗不大
         // 但是绝大多数查询，都不需要进行类似的海量数据优化，显然，这个startRowIndex将会挡住99%以上的浪费
         Int64 count;
-        if (startRowIndex > 500000 && (count = session.LongCount) > 1000000)
+        if (startRowIndex > 500_000 && (count = session.LongCount) > 1_000_000)
         {
             //// 计算本次查询的结果行数
             //var wh = where?.GetString(null);

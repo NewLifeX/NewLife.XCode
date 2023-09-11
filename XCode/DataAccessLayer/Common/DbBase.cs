@@ -205,6 +205,7 @@ abstract class DbBase : DisposeBase, IDatabase
         if (builder.TryGetAndRemove(nameof(DataCache), out value) && !value.IsNullOrEmpty()) DataCache = value.ToInt();
         // 反向工程生成sql中表名和字段名称大小写
         if (builder.TryGetAndRemove(nameof(NameFormat), out value) && !value.IsNullOrEmpty()) NameFormat = (NameFormats)Enum.Parse(typeof(NameFormats), value, true);
+        if (builder.TryGetAndRemove(nameof(BatchSize), out value) && !value.IsNullOrEmpty()) BatchSize = value.ToInt();
         if (builder.TryGetAndRemove(nameof(CommandTimeout), out value) && !value.IsNullOrEmpty()) CommandTimeout = value.ToInt();
 
         // 连接字符串去掉provider，可能有些数据库不支持这个属性
@@ -264,8 +265,8 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>反向工程表名、字段名大小写设置</summary>
     public NameFormats NameFormat { get; set; }
 
-    /// <summary>批大小。用于批量操作数据，默认5000</summary>
-    public Int32 BatchSize { get; set; } = 5_000;
+    /// <summary>批大小。用于批量操作数据，抽取、删除、备份、恢复</summary>
+    public Int32 BatchSize { get; set; }
 
     /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
     public Int32 CommandTimeout { get; set; }

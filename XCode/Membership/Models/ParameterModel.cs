@@ -116,7 +116,7 @@ public partial class ParameterModel : IModel
                 "UpdateIP" => UpdateIP,
                 "UpdateTime" => UpdateTime,
                 "Remark" => Remark,
-                _ => this.GetValue(name),
+                _ => this.GetValue(name, false),
             };
         }
         set

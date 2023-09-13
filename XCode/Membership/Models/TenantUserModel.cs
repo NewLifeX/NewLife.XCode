@@ -52,7 +52,7 @@ public partial class TenantUserModel : IModel
                 "RoleId" => RoleId,
                 "RoleIds" => RoleIds,
                 "Remark" => Remark,
-                _ => this.GetValue(name),
+                _ => this.GetValue(name, false),
             };
         }
         set

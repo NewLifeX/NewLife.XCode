@@ -96,7 +96,7 @@ public partial class LogModel : IModel
                 "CreateIP" => CreateIP,
                 "CreateTime" => CreateTime,
                 "Remark" => Remark,
-                _ => this.GetValue(name),
+                _ => this.GetValue(name, false),
             };
         }
         set

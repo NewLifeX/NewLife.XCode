@@ -68,7 +68,7 @@ public partial class TenantModel : IModel
                 "TableName" => TableName,
                 "Expired" => Expired,
                 "Remark" => Remark,
-                _ => this.GetValue(name),
+                _ => this.GetValue(name, false),
             };
         }
         set

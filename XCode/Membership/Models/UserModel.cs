@@ -144,7 +144,7 @@ public partial class UserModel : IModel
                 "Ex5" => Ex5,
                 "Ex6" => Ex6,
                 "Remark" => Remark,
-                _ => this.GetValue(name),
+                _ => this.GetValue(name, false),
             };
         }
         set

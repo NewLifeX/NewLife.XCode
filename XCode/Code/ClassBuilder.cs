@@ -337,7 +337,7 @@ public class ClassBuilder
                 WriteLine("\"{0}\" => {0},", column.Name);
             }
             //WriteLine("default: throw new KeyNotFoundException($\"{name} not found\");");
-            WriteLine("_ => this.GetValue(name),");
+            WriteLine("_ => this.GetValue(name, false),");
             WriteLine("};");
         }
         WriteLine("}");

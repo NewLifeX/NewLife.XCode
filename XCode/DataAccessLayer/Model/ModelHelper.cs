@@ -379,8 +379,7 @@ public static class ModelHelper
         col.DataType = typeof(DateTime);
         col.Name = table.Name + "ID";
         col.DataType = typeof(Int32);
-        //Customer @Id@$
-        col.Map = table.Name + "@ID@$";
+        col.Map = $"{table.Name}@ID@$@{table.Name}Info";
         historydataTable.Columns.Insert(1, col);
 
         return historydataTable;

@@ -12,7 +12,7 @@ namespace XCode;
 public class DirtyCollection : IEnumerable<String>
 {
     private String[] _keys = new String[8];
-    private Object[] _values = new Object[8];
+    private Object[] _values = new Object?[8];
 
     /// <summary>数据长度</summary>
     /// <remarks>
@@ -45,7 +45,7 @@ public class DirtyCollection : IEnumerable<String>
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public Boolean Add(String key, Object value)
+    public Boolean Add(String key, Object? value)
     {
         if (Contains(key)) return false;
 

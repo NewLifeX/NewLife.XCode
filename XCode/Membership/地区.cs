@@ -35,21 +35,21 @@ public partial class Area : IArea, IEntity<AreaModel>
     [BindColumn("ID", "编码。行政区划编码", "")]
     public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
-    private String _Name;
+    private String? _Name;
     /// <summary>名称</summary>
     [DisplayName("名称")]
     [Description("名称")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Name", "名称", "", Master = true)]
-    public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+    public String? Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
-    private String _FullName;
+    private String? _FullName;
     /// <summary>全名</summary>
     [DisplayName("全名")]
     [Description("全名")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("FullName", "全名", "", Master = true)]
-    public String FullName { get => _FullName; set { if (OnPropertyChanging("FullName", value)) { _FullName = value; OnPropertyChanged("FullName"); } } }
+    public String? FullName { get => _FullName; set { if (OnPropertyChanging("FullName", value)) { _FullName = value; OnPropertyChanged("FullName"); } } }
 
     private Int32 _ParentID;
     /// <summary>父级</summary>
@@ -67,53 +67,53 @@ public partial class Area : IArea, IEntity<AreaModel>
     [BindColumn("Level", "层级", "")]
     public Int32 Level { get => _Level; set { if (OnPropertyChanging("Level", value)) { _Level = value; OnPropertyChanged("Level"); } } }
 
-    private String _Kind;
+    private String? _Kind;
     /// <summary>类型。省市县，自治州等</summary>
     [DisplayName("类型")]
     [Description("类型。省市县，自治州等")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Kind", "类型。省市县，自治州等", "")]
-    public String Kind { get => _Kind; set { if (OnPropertyChanging("Kind", value)) { _Kind = value; OnPropertyChanged("Kind"); } } }
+    public String? Kind { get => _Kind; set { if (OnPropertyChanging("Kind", value)) { _Kind = value; OnPropertyChanged("Kind"); } } }
 
-    private String _English;
+    private String? _English;
     /// <summary>英文名</summary>
     [DisplayName("英文名")]
     [Description("英文名")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("English", "英文名", "")]
-    public String English { get => _English; set { if (OnPropertyChanging("English", value)) { _English = value; OnPropertyChanged("English"); } } }
+    public String? English { get => _English; set { if (OnPropertyChanging("English", value)) { _English = value; OnPropertyChanged("English"); } } }
 
-    private String _PinYin;
+    private String? _PinYin;
     /// <summary>拼音</summary>
     [DisplayName("拼音")]
     [Description("拼音")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("PinYin", "拼音", "")]
-    public String PinYin { get => _PinYin; set { if (OnPropertyChanging("PinYin", value)) { _PinYin = value; OnPropertyChanged("PinYin"); } } }
+    public String? PinYin { get => _PinYin; set { if (OnPropertyChanging("PinYin", value)) { _PinYin = value; OnPropertyChanged("PinYin"); } } }
 
-    private String _JianPin;
+    private String? _JianPin;
     /// <summary>简拼</summary>
     [DisplayName("简拼")]
     [Description("简拼")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("JianPin", "简拼", "")]
-    public String JianPin { get => _JianPin; set { if (OnPropertyChanging("JianPin", value)) { _JianPin = value; OnPropertyChanged("JianPin"); } } }
+    public String? JianPin { get => _JianPin; set { if (OnPropertyChanging("JianPin", value)) { _JianPin = value; OnPropertyChanged("JianPin"); } } }
 
-    private String _TelCode;
+    private String? _TelCode;
     /// <summary>区号。电话区号</summary>
     [DisplayName("区号")]
     [Description("区号。电话区号")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("TelCode", "区号。电话区号", "")]
-    public String TelCode { get => _TelCode; set { if (OnPropertyChanging("TelCode", value)) { _TelCode = value; OnPropertyChanged("TelCode"); } } }
+    public String? TelCode { get => _TelCode; set { if (OnPropertyChanging("TelCode", value)) { _TelCode = value; OnPropertyChanged("TelCode"); } } }
 
-    private String _ZipCode;
+    private String? _ZipCode;
     /// <summary>邮编。邮政编码</summary>
     [DisplayName("邮编")]
     [Description("邮编。邮政编码")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("ZipCode", "邮编。邮政编码", "")]
-    public String ZipCode { get => _ZipCode; set { if (OnPropertyChanging("ZipCode", value)) { _ZipCode = value; OnPropertyChanged("ZipCode"); } } }
+    public String? ZipCode { get => _ZipCode; set { if (OnPropertyChanging("ZipCode", value)) { _ZipCode = value; OnPropertyChanged("ZipCode"); } } }
 
     private Double _Longitude;
     /// <summary>经度</summary>
@@ -131,13 +131,13 @@ public partial class Area : IArea, IEntity<AreaModel>
     [BindColumn("Latitude", "纬度", "")]
     public Double Latitude { get => _Latitude; set { if (OnPropertyChanging("Latitude", value)) { _Latitude = value; OnPropertyChanged("Latitude"); } } }
 
-    private String _GeoHash;
+    private String? _GeoHash;
     /// <summary>地址编码。字符串前缀相同越多，地理距离越近，8位精度19米，6位610米</summary>
     [DisplayName("地址编码")]
     [Description("地址编码。字符串前缀相同越多，地理距离越近，8位精度19米，6位610米")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("GeoHash", "地址编码。字符串前缀相同越多，地理距离越近，8位精度19米，6位610米", "")]
-    public String GeoHash { get => _GeoHash; set { if (OnPropertyChanging("GeoHash", value)) { _GeoHash = value; OnPropertyChanged("GeoHash"); } } }
+    public String? GeoHash { get => _GeoHash; set { if (OnPropertyChanging("GeoHash", value)) { _GeoHash = value; OnPropertyChanged("GeoHash"); } } }
 
     private Boolean _Enable;
     /// <summary>启用</summary>
@@ -165,14 +165,14 @@ public partial class Area : IArea, IEntity<AreaModel>
     [BindColumn("UpdateTime", "更新时间", "")]
     public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
 
-    private String _Remark;
+    private String? _Remark;
     /// <summary>备注</summary>
     [Category("扩展")]
     [DisplayName("备注")]
     [Description("备注")]
     [DataObjectField(false, false, true, 500)]
     [BindColumn("Remark", "备注", "")]
-    public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
+    public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
     #region 拷贝
@@ -205,7 +205,7 @@ public partial class Area : IArea, IEntity<AreaModel>
     /// <summary>获取/设置 字段值</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public override Object this[String name]
+    public override Object? this[String name]
     {
         get => name switch
         {

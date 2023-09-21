@@ -20,16 +20,16 @@ public partial class ParameterModel : IModel
     public Int32 UserID { get; set; }
 
     /// <summary>类别</summary>
-    public String Category { get; set; }
+    public String? Category { get; set; }
 
     /// <summary>名称</summary>
-    public String Name { get; set; }
+    public String? Name { get; set; }
 
     /// <summary>数值</summary>
-    public String Value { get; set; }
+    public String? Value { get; set; }
 
     /// <summary>长数值</summary>
-    public String LongValue { get; set; }
+    public String? LongValue { get; set; }
 
     /// <summary>种类。0普通，21列表，22名值</summary>
     public XCode.Membership.ParameterKinds Kind { get; set; }
@@ -47,47 +47,47 @@ public partial class ParameterModel : IModel
     public Double Ex3 { get; set; }
 
     /// <summary>扩展4</summary>
-    public String Ex4 { get; set; }
+    public String? Ex4 { get; set; }
 
     /// <summary>扩展5</summary>
-    public String Ex5 { get; set; }
+    public String? Ex5 { get; set; }
 
     /// <summary>扩展6</summary>
-    public String Ex6 { get; set; }
+    public String? Ex6 { get; set; }
 
     /// <summary>创建者</summary>
-    public String CreateUser { get; set; }
+    public String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
     public Int32 CreateUserID { get; set; }
 
     /// <summary>创建地址</summary>
-    public String CreateIP { get; set; }
+    public String? CreateIP { get; set; }
 
     /// <summary>创建时间</summary>
     public DateTime CreateTime { get; set; }
 
     /// <summary>更新者</summary>
-    public String UpdateUser { get; set; }
+    public String? UpdateUser { get; set; }
 
     /// <summary>更新用户</summary>
     public Int32 UpdateUserID { get; set; }
 
     /// <summary>更新地址</summary>
-    public String UpdateIP { get; set; }
+    public String? UpdateIP { get; set; }
 
     /// <summary>更新时间</summary>
     public DateTime UpdateTime { get; set; }
 
     /// <summary>备注</summary>
-    public String Remark { get; set; }
+    public String? Remark { get; set; }
     #endregion
 
     #region 获取/设置 字段值
     /// <summary>获取/设置 字段值</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public virtual Object this[String name]
+    public virtual Object? this[String name]
     {
         get
         {

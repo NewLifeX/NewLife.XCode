@@ -838,7 +838,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns>实体集</returns>
-    public static IList<TEntity> FindAll(String where, String order, String selects, Int64 startRowIndex, Int64 maximumRows)
+    public static IList<TEntity> FindAll(String? where, String? order, String? selects, Int64 startRowIndex, Int64 maximumRows)
     {
         var session = Meta.Session;
         var needOrderByID = startRowIndex > 0 || maximumRows > 0;
@@ -862,7 +862,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns>实体集</returns>
-    public static IList<TEntity> FindAll(Expression where, String order, String selects, Int64 startRowIndex, Int64 maximumRows)
+    public static IList<TEntity> FindAll(Expression where, String? order, String? selects, Int64 startRowIndex, Int64 maximumRows)
     {
         var session = Meta.Session;
 
@@ -1719,7 +1719,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return builder;
     }
 
-    private static SelectBuilder CreateBuilder(String where, String order, String selects, Boolean needOrderByID)
+    private static SelectBuilder CreateBuilder(String? where, String? order, String? selects, Boolean needOrderByID)
     {
         var factory = Meta.Factory;
         var session = Meta.Session;
@@ -1831,7 +1831,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// </remarks>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public override Object this[String name]
+    public override Object? this[String name]
     {
         get
         {

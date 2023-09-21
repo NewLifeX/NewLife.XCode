@@ -244,7 +244,7 @@ public class AreaTests
 
     [TestOrder(0)]
     [Fact]
-    public void Import()
+    public async void Import()
     {
         Area.Meta.Session.Dal.Db.ShowSQL = false;
 
@@ -255,7 +255,7 @@ public class AreaTests
             if (!File.Exists(file.GetFullPath()))
             {
                 var http = new HttpClient();
-                http.DownloadFileAsync(url, file).Wait();
+                await http.DownloadFileAsync(url, file);
             }
 
             //Area.Meta.Session.Truncate();

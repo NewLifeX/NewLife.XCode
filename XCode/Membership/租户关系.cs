@@ -63,13 +63,13 @@ public partial class TenantUser : ITenantUser, IEntity<TenantUserModel>
     [BindColumn("RoleId", "角色。用户在该租户所对应的主要角色，替换用户自身的角色组", "")]
     public Int32 RoleId { get => _RoleId; set { if (OnPropertyChanging("RoleId", value)) { _RoleId = value; OnPropertyChanged("RoleId"); } } }
 
-    private String _RoleIds;
+    private String? _RoleIds;
     /// <summary>角色组。次要角色集合</summary>
     [DisplayName("角色组")]
     [Description("角色组。次要角色集合")]
     [DataObjectField(false, false, true, 200)]
     [BindColumn("RoleIds", "角色组。次要角色集合", "")]
-    public String RoleIds { get => _RoleIds; set { if (OnPropertyChanging("RoleIds", value)) { _RoleIds = value; OnPropertyChanged("RoleIds"); } } }
+    public String? RoleIds { get => _RoleIds; set { if (OnPropertyChanging("RoleIds", value)) { _RoleIds = value; OnPropertyChanged("RoleIds"); } } }
 
     private Int32 _CreateUserId;
     /// <summary>创建者</summary>
@@ -89,14 +89,14 @@ public partial class TenantUser : ITenantUser, IEntity<TenantUserModel>
     [BindColumn("CreateTime", "创建时间", "")]
     public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
 
-    private String _CreateIP;
+    private String? _CreateIP;
     /// <summary>创建地址</summary>
     [Category("扩展")]
     [DisplayName("创建地址")]
     [Description("创建地址")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("CreateIP", "创建地址", "")]
-    public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
+    public String? CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
 
     private Int32 _UpdateUserId;
     /// <summary>更新者</summary>
@@ -116,23 +116,23 @@ public partial class TenantUser : ITenantUser, IEntity<TenantUserModel>
     [BindColumn("UpdateTime", "更新时间", "")]
     public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
 
-    private String _UpdateIP;
+    private String? _UpdateIP;
     /// <summary>更新地址</summary>
     [Category("扩展")]
     [DisplayName("更新地址")]
     [Description("更新地址")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("UpdateIP", "更新地址", "")]
-    public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
+    public String? UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
 
-    private String _Remark;
+    private String? _Remark;
     /// <summary>描述</summary>
     [Category("扩展")]
     [DisplayName("描述")]
     [Description("描述")]
     [DataObjectField(false, false, true, 500)]
     [BindColumn("Remark", "描述", "")]
-    public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
+    public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
     #region 拷贝
@@ -154,7 +154,7 @@ public partial class TenantUser : ITenantUser, IEntity<TenantUserModel>
     /// <summary>获取/设置 字段值</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public override Object this[String name]
+    public override Object? this[String name]
     {
         get => name switch
         {
@@ -199,27 +199,27 @@ public partial class TenantUser : ITenantUser, IEntity<TenantUserModel>
     #region 关联映射
     /// <summary>租户</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+    public Tenant? Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
 
     /// <summary>租户</summary>
     [Map(nameof(TenantId), typeof(Tenant), "Id")]
-    public String TenantName => Tenant?.ToString();
+    public String? TenantName => Tenant?.ToString();
 
     /// <summary>用户</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public User User => Extends.Get(nameof(User), k => User.FindByID(UserId));
+    public User? User => Extends.Get(nameof(User), k => User.FindByID(UserId));
 
     /// <summary>用户</summary>
     [Map(nameof(UserId), typeof(User), "ID")]
-    public String UserName => User?.ToString();
+    public String? UserName => User?.ToString();
 
     /// <summary>角色</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Role Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleId));
+    public Role? Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleId));
 
     /// <summary>角色</summary>
     [Map(nameof(RoleId), typeof(Role), "ID")]
-    public String RoleName => Role?.Name;
+    public String? RoleName => Role?.Name;
 
     #endregion
 

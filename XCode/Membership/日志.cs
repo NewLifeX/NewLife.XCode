@@ -32,21 +32,21 @@ public partial class Log : ILog, IEntity<LogModel>
     [BindColumn("ID", "编号", "")]
     public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
-    private String _Category;
+    private String? _Category;
     /// <summary>类别</summary>
     [DisplayName("类别")]
     [Description("类别")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Category", "类别", "")]
-    public String Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
+    public String? Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
-    private String _Action;
+    private String? _Action;
     /// <summary>操作</summary>
     [DisplayName("操作")]
     [Description("操作")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Action", "操作", "")]
-    public String Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
+    public String? Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
 
     private Int64 _LinkID;
     /// <summary>链接</summary>
@@ -64,13 +64,13 @@ public partial class Log : ILog, IEntity<LogModel>
     [BindColumn("Success", "成功", "")]
     public Boolean Success { get => _Success; set { if (OnPropertyChanging("Success", value)) { _Success = value; OnPropertyChanged("Success"); } } }
 
-    private String _UserName;
+    private String? _UserName;
     /// <summary>用户名</summary>
     [DisplayName("用户名")]
     [Description("用户名")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("UserName", "用户名", "")]
-    public String UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
+    public String? UserName { get => _UserName; set { if (OnPropertyChanging("UserName", value)) { _UserName = value; OnPropertyChanged("UserName"); } } }
 
     private Int32 _Ex1;
     /// <summary>扩展1</summary>
@@ -99,49 +99,49 @@ public partial class Log : ILog, IEntity<LogModel>
     [BindColumn("Ex3", "扩展3", "")]
     public Double Ex3 { get => _Ex3; set { if (OnPropertyChanging("Ex3", value)) { _Ex3 = value; OnPropertyChanged("Ex3"); } } }
 
-    private String _Ex4;
+    private String? _Ex4;
     /// <summary>扩展4</summary>
     [Category("扩展")]
     [DisplayName("扩展4")]
     [Description("扩展4")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Ex4", "扩展4", "")]
-    public String Ex4 { get => _Ex4; set { if (OnPropertyChanging("Ex4", value)) { _Ex4 = value; OnPropertyChanged("Ex4"); } } }
+    public String? Ex4 { get => _Ex4; set { if (OnPropertyChanging("Ex4", value)) { _Ex4 = value; OnPropertyChanged("Ex4"); } } }
 
-    private String _Ex5;
+    private String? _Ex5;
     /// <summary>扩展5</summary>
     [Category("扩展")]
     [DisplayName("扩展5")]
     [Description("扩展5")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Ex5", "扩展5", "")]
-    public String Ex5 { get => _Ex5; set { if (OnPropertyChanging("Ex5", value)) { _Ex5 = value; OnPropertyChanged("Ex5"); } } }
+    public String? Ex5 { get => _Ex5; set { if (OnPropertyChanging("Ex5", value)) { _Ex5 = value; OnPropertyChanged("Ex5"); } } }
 
-    private String _Ex6;
+    private String? _Ex6;
     /// <summary>扩展6</summary>
     [Category("扩展")]
     [DisplayName("扩展6")]
     [Description("扩展6")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Ex6", "扩展6", "")]
-    public String Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
+    public String? Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
 
-    private String _TraceId;
+    private String? _TraceId;
     /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
     [DisplayName("性能追踪")]
     [Description("性能追踪。用于APM性能追踪定位，还原该事件的调用链")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("TraceId", "性能追踪。用于APM性能追踪定位，还原该事件的调用链", "")]
-    public String TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
+    public String? TraceId { get => _TraceId; set { if (OnPropertyChanging("TraceId", value)) { _TraceId = value; OnPropertyChanged("TraceId"); } } }
 
-    private String _CreateUser;
+    private String? _CreateUser;
     /// <summary>创建者</summary>
     [Category("扩展")]
     [DisplayName("创建者")]
     [Description("创建者")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("CreateUser", "创建者", "")]
-    public String CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
+    public String? CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
 
     private Int32 _CreateUserID;
     /// <summary>创建用户</summary>
@@ -152,14 +152,14 @@ public partial class Log : ILog, IEntity<LogModel>
     [BindColumn("CreateUserID", "创建用户", "")]
     public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
-    private String _CreateIP;
+    private String? _CreateIP;
     /// <summary>创建地址</summary>
     [Category("扩展")]
     [DisplayName("创建地址")]
     [Description("创建地址")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("CreateIP", "创建地址", "")]
-    public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
+    public String? CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
 
     private DateTime _CreateTime;
     /// <summary>时间</summary>
@@ -169,13 +169,13 @@ public partial class Log : ILog, IEntity<LogModel>
     [BindColumn("CreateTime", "时间", "")]
     public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
 
-    private String _Remark;
+    private String? _Remark;
     /// <summary>详细信息</summary>
     [DisplayName("详细信息")]
     [Description("详细信息")]
     [DataObjectField(false, false, true, 2000)]
     [BindColumn("Remark", "详细信息", "")]
-    public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
+    public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
     #region 拷贝
@@ -208,7 +208,7 @@ public partial class Log : ILog, IEntity<LogModel>
     /// <summary>获取/设置 字段值</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public override Object this[String name]
+    public override Object? this[String name]
     {
         get => name switch
         {
@@ -263,12 +263,12 @@ public partial class Log : ILog, IEntity<LogModel>
     #region 关联映射
     /// <summary>创建用户</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public User MyCreateUser => Extends.Get(nameof(MyCreateUser), k => User.FindByID(CreateUserID));
+    public User? MyCreateUser => Extends.Get(nameof(MyCreateUser), k => User.FindByID(CreateUserID));
 
     /// <summary>创建用户</summary>
     [Map(nameof(CreateUserID), typeof(User), "ID")]
     [Category("扩展")]
-    public String CreateUserName => MyCreateUser?.ToString();
+    public String? CreateUserName => MyCreateUser?.ToString();
 
     #endregion
 

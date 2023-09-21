@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -21,7 +20,7 @@ public static class ModelHelper
     /// <param name="table"></param>
     /// <param name="name">名称</param>
     /// <returns></returns>
-    public static IDataColumn GetColumn(this IDataTable table, String name) => String.IsNullOrEmpty(name) ? null : table.Columns.FirstOrDefault(c => c.Is(name));
+    public static IDataColumn? GetColumn(this IDataTable table, String name) => name.IsNullOrEmpty() ? null : table.Columns.FirstOrDefault(c => c.Is(name));
 
     /// <summary>根据字段名数组获取字段数组</summary>
     /// <param name="table"></param>
@@ -172,7 +171,7 @@ public static class ModelHelper
     /// <param name="option">写在前面的扩展对象，一般用于存储配置</param>
     /// <param name="atts">附加属性</param>
     /// <returns></returns>
-    public static String ToXml(IEnumerable<IDataTable> tables, Object option = null, IDictionary<String, String> atts = null)
+    public static String ToXml(IEnumerable<IDataTable> tables, Object? option = null, IDictionary<String, String>? atts = null)
     {
         var ms = new MemoryStream();
 
@@ -256,9 +255,9 @@ public static class ModelHelper
     /// <param name="option">写在前面的扩展对象，一般用于存储配置</param>
     /// <param name="atts">附加属性</param>
     /// <returns></returns>
-    public static List<IDataTable> FromXml(String xml, Func<IDataTable> createTable, Object option = null, IDictionary<String, String> atts = null)
+    public static IList<IDataTable> FromXml(String xml, Func<IDataTable> createTable, Object? option = null, IDictionary<String, String>? atts = null)
     {
-        if (xml.IsNullOrEmpty()) return null;
+        if (xml.IsNullOrEmpty()) return new IDataTable[0];
         if (createTable == null) throw new ArgumentNullException(nameof(createTable));
 
         var settings = new XmlReaderSettings

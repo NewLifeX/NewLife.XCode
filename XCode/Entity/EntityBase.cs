@@ -79,13 +79,13 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     /// <summary>获取/设置 字段值，不影响脏数据</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public abstract Object this[String name] { get; set; }
+    public abstract Object? this[String name] { get; set; }
 
     /// <summary>设置字段值，该方法影响脏数据。</summary>
     /// <param name="name">字段名</param>
     /// <param name="value">值</param>
     /// <returns>返回是否成功设置了数据</returns>
-    public Boolean SetItem(String name, Object value)
+    public Boolean SetItem(String name, Object? value)
     {
         var fact = GetType().AsFactory();
         FieldItem fi = fact.Table.FindByName(name);

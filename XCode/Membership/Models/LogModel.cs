@@ -17,10 +17,10 @@ public partial class LogModel : IModel
     public Int64 ID { get; set; }
 
     /// <summary>类别</summary>
-    public String Category { get; set; }
+    public String? Category { get; set; }
 
     /// <summary>操作</summary>
-    public String Action { get; set; }
+    public String? Action { get; set; }
 
     /// <summary>链接</summary>
     public Int64 LinkID { get; set; }
@@ -29,7 +29,7 @@ public partial class LogModel : IModel
     public Boolean Success { get; set; }
 
     /// <summary>用户名</summary>
-    public String UserName { get; set; }
+    public String? UserName { get; set; }
 
     /// <summary>扩展1</summary>
     public Int32 Ex1 { get; set; }
@@ -41,38 +41,38 @@ public partial class LogModel : IModel
     public Double Ex3 { get; set; }
 
     /// <summary>扩展4</summary>
-    public String Ex4 { get; set; }
+    public String? Ex4 { get; set; }
 
     /// <summary>扩展5</summary>
-    public String Ex5 { get; set; }
+    public String? Ex5 { get; set; }
 
     /// <summary>扩展6</summary>
-    public String Ex6 { get; set; }
+    public String? Ex6 { get; set; }
 
     /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
-    public String TraceId { get; set; }
+    public String? TraceId { get; set; }
 
     /// <summary>创建者</summary>
-    public String CreateUser { get; set; }
+    public String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
     public Int32 CreateUserID { get; set; }
 
     /// <summary>创建地址</summary>
-    public String CreateIP { get; set; }
+    public String? CreateIP { get; set; }
 
     /// <summary>时间</summary>
     public DateTime CreateTime { get; set; }
 
     /// <summary>详细信息</summary>
-    public String Remark { get; set; }
+    public String? Remark { get; set; }
     #endregion
 
     #region 获取/设置 字段值
     /// <summary>获取/设置 字段值</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public virtual Object this[String name]
+    public virtual Object? this[String name]
     {
         get
         {

@@ -29,17 +29,17 @@ public partial class TenantUserModel : IModel
     public Int32 RoleId { get; set; }
 
     /// <summary>角色组。次要角色集合</summary>
-    public String RoleIds { get; set; }
+    public String? RoleIds { get; set; }
 
     /// <summary>描述</summary>
-    public String Remark { get; set; }
+    public String? Remark { get; set; }
     #endregion
 
     #region 获取/设置 字段值
     /// <summary>获取/设置 字段值</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public virtual Object this[String name]
+    public virtual Object? this[String name]
     {
         get
         {

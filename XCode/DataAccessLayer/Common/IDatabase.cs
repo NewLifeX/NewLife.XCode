@@ -61,7 +61,7 @@ namespace XCode.DataAccessLayer
         String ConnectionString { get; set; }
 
         /// <summary>数据库提供者。用于选择驱动</summary>
-        String Provider { get; set; }
+        String? Provider { get; set; }
 
         ///// <summary>连接池</summary>
         //ConnectionPool Pool { get; }

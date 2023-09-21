@@ -15,7 +15,7 @@ public partial interface IRole
     Int32 ID { get; set; }
 
     /// <summary>名称</summary>
-    String Name { get; set; }
+    String? Name { get; set; }
 
     /// <summary>启用</summary>
     Boolean Enable { get; set; }
@@ -24,7 +24,7 @@ public partial interface IRole
     Boolean IsSystem { get; set; }
 
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
-    String Permission { get; set; }
+    String? Permission { get; set; }
 
     /// <summary>排序</summary>
     Int32 Sort { get; set; }
@@ -39,39 +39,39 @@ public partial interface IRole
     Double Ex3 { get; set; }
 
     /// <summary>扩展4</summary>
-    String Ex4 { get; set; }
+    String? Ex4 { get; set; }
 
     /// <summary>扩展5</summary>
-    String Ex5 { get; set; }
+    String? Ex5 { get; set; }
 
     /// <summary>扩展6</summary>
-    String Ex6 { get; set; }
+    String? Ex6 { get; set; }
 
     /// <summary>创建者</summary>
-    String CreateUser { get; set; }
+    String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
     Int32 CreateUserID { get; set; }
 
     /// <summary>创建地址</summary>
-    String CreateIP { get; set; }
+    String? CreateIP { get; set; }
 
     /// <summary>创建时间</summary>
     DateTime CreateTime { get; set; }
 
     /// <summary>更新者</summary>
-    String UpdateUser { get; set; }
+    String? UpdateUser { get; set; }
 
     /// <summary>更新用户</summary>
     Int32 UpdateUserID { get; set; }
 
     /// <summary>更新地址</summary>
-    String UpdateIP { get; set; }
+    String? UpdateIP { get; set; }
 
     /// <summary>更新时间</summary>
     DateTime UpdateTime { get; set; }
 
     /// <summary>备注</summary>
-    String Remark { get; set; }
+    String? Remark { get; set; }
     #endregion
 }

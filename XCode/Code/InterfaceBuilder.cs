@@ -99,6 +99,7 @@ public class InterfaceBuilder : ClassBuilder
 
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+        if (type == "String") type = "String?";
 
         WriteLine("{0} {1} {{ get; set; }}", type, dc.Name);
     }

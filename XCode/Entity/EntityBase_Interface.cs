@@ -7,16 +7,16 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
 {
     #region INotifyPropertyChanged接口
     /// <summary>属性将要改变时</summary>
-    public event PropertyChangingEventHandler PropertyChanging;
+    public event PropertyChangingEventHandler? PropertyChanging;
 
     /// <summary>属性改变事件</summary>
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>属性改变。重载时记得调用基类的该方法，以设置脏数据属性，否则数据将无法Update到数据库。</summary>
     /// <param name="fieldName">字段名</param>
     /// <param name="newValue">新属性值</param>
     /// <returns>是否允许改变</returns>
-    protected virtual Boolean OnPropertyChanging(String fieldName, Object newValue)
+    protected virtual Boolean OnPropertyChanging(String fieldName, Object? newValue)
     {
         PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(fieldName));
 
@@ -35,7 +35,7 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
     /// <param name="v1"></param>
     /// <param name="v2"></param>
     /// <returns></returns>
-    internal static Boolean CheckEqual(Object v1, Object v2)
+    internal static Boolean CheckEqual(Object? v1, Object? v2)
     {
         if (v1 == null || v2 == null) return Equals(v1, v2);
 

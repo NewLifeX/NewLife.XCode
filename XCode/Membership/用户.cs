@@ -35,29 +35,29 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("ID", "编号", "")]
     public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
-    private String _Name;
+    private String? _Name;
     /// <summary>名称。登录用户名</summary>
     [DisplayName("名称")]
     [Description("名称。登录用户名")]
     [DataObjectField(false, false, false, 50)]
     [BindColumn("Name", "名称。登录用户名", "", Master = true)]
-    public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+    public String? Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
-    private String _Password;
+    private String? _Password;
     /// <summary>密码</summary>
     [DisplayName("密码")]
     [Description("密码")]
     [DataObjectField(false, false, true, 200)]
     [BindColumn("Password", "密码", "")]
-    public String Password { get => _Password; set { if (OnPropertyChanging("Password", value)) { _Password = value; OnPropertyChanged("Password"); } } }
+    public String? Password { get => _Password; set { if (OnPropertyChanging("Password", value)) { _Password = value; OnPropertyChanged("Password"); } } }
 
-    private String _DisplayName;
+    private String? _DisplayName;
     /// <summary>昵称</summary>
     [DisplayName("昵称")]
     [Description("昵称")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("DisplayName", "昵称", "")]
-    public String DisplayName { get => _DisplayName; set { if (OnPropertyChanging("DisplayName", value)) { _DisplayName = value; OnPropertyChanged("DisplayName"); } } }
+    public String? DisplayName { get => _DisplayName; set { if (OnPropertyChanging("DisplayName", value)) { _DisplayName = value; OnPropertyChanged("DisplayName"); } } }
 
     private XCode.Membership.SexKinds _Sex;
     /// <summary>性别。未知、男、女</summary>
@@ -67,29 +67,29 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("Sex", "性别。未知、男、女", "")]
     public XCode.Membership.SexKinds Sex { get => _Sex; set { if (OnPropertyChanging("Sex", value)) { _Sex = value; OnPropertyChanged("Sex"); } } }
 
-    private String _Mail;
+    private String? _Mail;
     /// <summary>邮件。支持登录</summary>
     [DisplayName("邮件")]
     [Description("邮件。支持登录")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Mail", "邮件。支持登录", "", ItemType = "mail")]
-    public String Mail { get => _Mail; set { if (OnPropertyChanging("Mail", value)) { _Mail = value; OnPropertyChanged("Mail"); } } }
+    public String? Mail { get => _Mail; set { if (OnPropertyChanging("Mail", value)) { _Mail = value; OnPropertyChanged("Mail"); } } }
 
-    private String _Mobile;
+    private String? _Mobile;
     /// <summary>手机。支持登录</summary>
     [DisplayName("手机")]
     [Description("手机。支持登录")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Mobile", "手机。支持登录", "", ItemType = "mobile")]
-    public String Mobile { get => _Mobile; set { if (OnPropertyChanging("Mobile", value)) { _Mobile = value; OnPropertyChanged("Mobile"); } } }
+    public String? Mobile { get => _Mobile; set { if (OnPropertyChanging("Mobile", value)) { _Mobile = value; OnPropertyChanged("Mobile"); } } }
 
-    private String _Code;
+    private String? _Code;
     /// <summary>代码。身份证、员工编码等，支持登录</summary>
     [DisplayName("代码")]
     [Description("代码。身份证、员工编码等，支持登录")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Code", "代码。身份证、员工编码等，支持登录", "")]
-    public String Code { get => _Code; set { if (OnPropertyChanging("Code", value)) { _Code = value; OnPropertyChanged("Code"); } } }
+    public String? Code { get => _Code; set { if (OnPropertyChanging("Code", value)) { _Code = value; OnPropertyChanged("Code"); } } }
 
     private Int32 _AreaId;
     /// <summary>地区。省市区</summary>
@@ -99,13 +99,13 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("AreaId", "地区。省市区", "")]
     public Int32 AreaId { get => _AreaId; set { if (OnPropertyChanging("AreaId", value)) { _AreaId = value; OnPropertyChanged("AreaId"); } } }
 
-    private String _Avatar;
+    private String? _Avatar;
     /// <summary>头像</summary>
     [DisplayName("头像")]
     [Description("头像")]
     [DataObjectField(false, false, true, 200)]
     [BindColumn("Avatar", "头像", "", ItemType = "image")]
-    public String Avatar { get => _Avatar; set { if (OnPropertyChanging("Avatar", value)) { _Avatar = value; OnPropertyChanged("Avatar"); } } }
+    public String? Avatar { get => _Avatar; set { if (OnPropertyChanging("Avatar", value)) { _Avatar = value; OnPropertyChanged("Avatar"); } } }
 
     private Int32 _RoleID;
     /// <summary>角色。主要角色</summary>
@@ -116,14 +116,14 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("RoleID", "角色。主要角色", "", DefaultValue = "3")]
     public Int32 RoleID { get => _RoleID; set { if (OnPropertyChanging("RoleID", value)) { _RoleID = value; OnPropertyChanged("RoleID"); } } }
 
-    private String _RoleIds;
+    private String? _RoleIds;
     /// <summary>角色组。次要角色集合</summary>
     [Category("登录信息")]
     [DisplayName("角色组")]
     [Description("角色组。次要角色集合")]
     [DataObjectField(false, false, true, 200)]
     [BindColumn("RoleIds", "角色组。次要角色集合", "")]
-    public String RoleIds { get => _RoleIds; set { if (OnPropertyChanging("RoleIds", value)) { _RoleIds = value; OnPropertyChanged("RoleIds"); } } }
+    public String? RoleIds { get => _RoleIds; set { if (OnPropertyChanging("RoleIds", value)) { _RoleIds = value; OnPropertyChanged("RoleIds"); } } }
 
     private Int32 _DepartmentID;
     /// <summary>部门。组织机构</summary>
@@ -186,14 +186,14 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("LastLogin", "最后登录", "")]
     public DateTime LastLogin { get => _LastLogin; set { if (OnPropertyChanging("LastLogin", value)) { _LastLogin = value; OnPropertyChanged("LastLogin"); } } }
 
-    private String _LastLoginIP;
+    private String? _LastLoginIP;
     /// <summary>最后登录IP</summary>
     [Category("登录信息")]
     [DisplayName("最后登录IP")]
     [Description("最后登录IP")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("LastLoginIP", "最后登录IP", "")]
-    public String LastLoginIP { get => _LastLoginIP; set { if (OnPropertyChanging("LastLoginIP", value)) { _LastLoginIP = value; OnPropertyChanged("LastLoginIP"); } } }
+    public String? LastLoginIP { get => _LastLoginIP; set { if (OnPropertyChanging("LastLoginIP", value)) { _LastLoginIP = value; OnPropertyChanged("LastLoginIP"); } } }
 
     private DateTime _RegisterTime;
     /// <summary>注册时间</summary>
@@ -204,14 +204,14 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("RegisterTime", "注册时间", "")]
     public DateTime RegisterTime { get => _RegisterTime; set { if (OnPropertyChanging("RegisterTime", value)) { _RegisterTime = value; OnPropertyChanged("RegisterTime"); } } }
 
-    private String _RegisterIP;
+    private String? _RegisterIP;
     /// <summary>注册IP</summary>
     [Category("登录信息")]
     [DisplayName("注册IP")]
     [Description("注册IP")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("RegisterIP", "注册IP", "")]
-    public String RegisterIP { get => _RegisterIP; set { if (OnPropertyChanging("RegisterIP", value)) { _RegisterIP = value; OnPropertyChanged("RegisterIP"); } } }
+    public String? RegisterIP { get => _RegisterIP; set { if (OnPropertyChanging("RegisterIP", value)) { _RegisterIP = value; OnPropertyChanged("RegisterIP"); } } }
 
     private Int32 _OnlineTime;
     /// <summary>在线时间。累计在线总时间，单位秒</summary>
@@ -249,25 +249,25 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("Ex3", "扩展3", "")]
     public Double Ex3 { get => _Ex3; set { if (OnPropertyChanging("Ex3", value)) { _Ex3 = value; OnPropertyChanged("Ex3"); } } }
 
-    private String _Ex4;
+    private String? _Ex4;
     /// <summary>扩展4</summary>
     [Category("扩展")]
     [DisplayName("扩展4")]
     [Description("扩展4")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Ex4", "扩展4", "")]
-    public String Ex4 { get => _Ex4; set { if (OnPropertyChanging("Ex4", value)) { _Ex4 = value; OnPropertyChanged("Ex4"); } } }
+    public String? Ex4 { get => _Ex4; set { if (OnPropertyChanging("Ex4", value)) { _Ex4 = value; OnPropertyChanged("Ex4"); } } }
 
-    private String _Ex5;
+    private String? _Ex5;
     /// <summary>扩展5</summary>
     [Category("扩展")]
     [DisplayName("扩展5")]
     [Description("扩展5")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Ex5", "扩展5", "")]
-    public String Ex5 { get => _Ex5; set { if (OnPropertyChanging("Ex5", value)) { _Ex5 = value; OnPropertyChanged("Ex5"); } } }
+    public String? Ex5 { get => _Ex5; set { if (OnPropertyChanging("Ex5", value)) { _Ex5 = value; OnPropertyChanged("Ex5"); } } }
 
-    private String _Ex6;
+    private String? _Ex6;
     /// <summary>扩展6</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     [Category("扩展")]
@@ -275,16 +275,16 @@ public partial class User : IUser, IEntity<UserModel>
     [Description("扩展6")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Ex6", "扩展6", "")]
-    public String Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
+    public String? Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
 
-    private String _UpdateUser;
+    private String? _UpdateUser;
     /// <summary>更新者</summary>
     [Category("扩展")]
     [DisplayName("更新者")]
     [Description("更新者")]
     [DataObjectField(false, false, false, 50)]
     [BindColumn("UpdateUser", "更新者", "", DefaultValue = "''")]
-    public String UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
+    public String? UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
 
     private Int32 _UpdateUserID;
     /// <summary>更新用户</summary>
@@ -295,14 +295,14 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("UpdateUserID", "更新用户", "")]
     public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
 
-    private String _UpdateIP;
+    private String? _UpdateIP;
     /// <summary>更新地址</summary>
     [Category("扩展")]
     [DisplayName("更新地址")]
     [Description("更新地址")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("UpdateIP", "更新地址", "")]
-    public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
+    public String? UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
 
     private DateTime _UpdateTime;
     /// <summary>更新时间</summary>
@@ -313,14 +313,14 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("UpdateTime", "更新时间", "")]
     public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
 
-    private String _Remark;
+    private String? _Remark;
     /// <summary>备注</summary>
     [Category("扩展")]
     [DisplayName("备注")]
     [Description("备注")]
     [DataObjectField(false, false, true, 500)]
     [BindColumn("Remark", "备注", "")]
-    public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
+    public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
     #region 拷贝
@@ -365,7 +365,7 @@ public partial class User : IUser, IEntity<UserModel>
     /// <summary>获取/设置 字段值</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public override Object this[String name]
+    public override Object? this[String name]
     {
         get => name switch
         {
@@ -452,29 +452,29 @@ public partial class User : IUser, IEntity<UserModel>
     #region 关联映射
     /// <summary>地区</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public XCode.Membership.Area Area => Extends.Get(nameof(Area), k => XCode.Membership.Area.FindByID(AreaId));
+    public XCode.Membership.Area? Area => Extends.Get(nameof(Area), k => XCode.Membership.Area.FindByID(AreaId));
 
     /// <summary>地区</summary>
     [Map(nameof(AreaId), typeof(XCode.Membership.Area), "ID")]
-    public String AreaPath => Area?.Path;
+    public String? AreaPath => Area?.Path;
 
     /// <summary>角色</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Role Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleID));
+    public Role? Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleID));
 
     /// <summary>角色</summary>
     [Map(nameof(RoleID), typeof(Role), "ID")]
     [Category("登录信息")]
-    public String RoleName => Role?.Name;
+    public String? RoleName => Role?.Name;
 
     /// <summary>部门</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
+    public Department? Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
 
     /// <summary>部门</summary>
     [Map(nameof(DepartmentID), typeof(Department), "ID")]
     [Category("登录信息")]
-    public String DepartmentName => Department?.Name;
+    public String? DepartmentName => Department?.Name;
 
     #endregion
 

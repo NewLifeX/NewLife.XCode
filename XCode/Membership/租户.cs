@@ -30,21 +30,21 @@ public partial class Tenant : ITenant, IEntity<TenantModel>
     [BindColumn("Id", "编号", "")]
     public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private String _Code;
+    private String? _Code;
     /// <summary>编码。唯一编码</summary>
     [DisplayName("编码")]
     [Description("编码。唯一编码")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Code", "编码。唯一编码", "")]
-    public String Code { get => _Code; set { if (OnPropertyChanging("Code", value)) { _Code = value; OnPropertyChanged("Code"); } } }
+    public String? Code { get => _Code; set { if (OnPropertyChanging("Code", value)) { _Code = value; OnPropertyChanged("Code"); } } }
 
-    private String _Name;
+    private String? _Name;
     /// <summary>名称。显示名称</summary>
     [DisplayName("名称")]
     [Description("名称。显示名称")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Name", "名称。显示名称", "", Master = true)]
-    public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+    public String? Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
     private Boolean _Enable;
     /// <summary>启用</summary>
@@ -62,37 +62,37 @@ public partial class Tenant : ITenant, IEntity<TenantModel>
     [BindColumn("ManagerId", "管理者", "")]
     public Int32 ManagerId { get => _ManagerId; set { if (OnPropertyChanging("ManagerId", value)) { _ManagerId = value; OnPropertyChanged("ManagerId"); } } }
 
-    private String _RoleIds;
+    private String? _RoleIds;
     /// <summary>角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同</summary>
     [DisplayName("角色组")]
     [Description("角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同")]
     [DataObjectField(false, false, true, 200)]
     [BindColumn("RoleIds", "角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同", "")]
-    public String RoleIds { get => _RoleIds; set { if (OnPropertyChanging("RoleIds", value)) { _RoleIds = value; OnPropertyChanged("RoleIds"); } } }
+    public String? RoleIds { get => _RoleIds; set { if (OnPropertyChanging("RoleIds", value)) { _RoleIds = value; OnPropertyChanged("RoleIds"); } } }
 
-    private String _Logo;
+    private String? _Logo;
     /// <summary>图标。附件路径</summary>
     [DisplayName("图标")]
     [Description("图标。附件路径")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Logo", "图标。附件路径", "", ItemType = "image")]
-    public String Logo { get => _Logo; set { if (OnPropertyChanging("Logo", value)) { _Logo = value; OnPropertyChanged("Logo"); } } }
+    public String? Logo { get => _Logo; set { if (OnPropertyChanging("Logo", value)) { _Logo = value; OnPropertyChanged("Logo"); } } }
 
-    private String _DatabaseName;
+    private String? _DatabaseName;
     /// <summary>数据库。分库用的数据库名</summary>
     [DisplayName("数据库")]
     [Description("数据库。分库用的数据库名")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("DatabaseName", "数据库。分库用的数据库名", "")]
-    public String DatabaseName { get => _DatabaseName; set { if (OnPropertyChanging("DatabaseName", value)) { _DatabaseName = value; OnPropertyChanged("DatabaseName"); } } }
+    public String? DatabaseName { get => _DatabaseName; set { if (OnPropertyChanging("DatabaseName", value)) { _DatabaseName = value; OnPropertyChanged("DatabaseName"); } } }
 
-    private String _TableName;
+    private String? _TableName;
     /// <summary>数据表。分表用的数据表前缀</summary>
     [DisplayName("数据表")]
     [Description("数据表。分表用的数据表前缀")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("TableName", "数据表。分表用的数据表前缀", "")]
-    public String TableName { get => _TableName; set { if (OnPropertyChanging("TableName", value)) { _TableName = value; OnPropertyChanged("TableName"); } } }
+    public String? TableName { get => _TableName; set { if (OnPropertyChanging("TableName", value)) { _TableName = value; OnPropertyChanged("TableName"); } } }
 
     private DateTime _Expired;
     /// <summary>过期时间。达到该时间后，自动禁用租户，空表示永不过期</summary>
@@ -120,14 +120,14 @@ public partial class Tenant : ITenant, IEntity<TenantModel>
     [BindColumn("CreateTime", "创建时间", "")]
     public DateTime CreateTime { get => _CreateTime; set { if (OnPropertyChanging("CreateTime", value)) { _CreateTime = value; OnPropertyChanged("CreateTime"); } } }
 
-    private String _CreateIP;
+    private String? _CreateIP;
     /// <summary>创建地址</summary>
     [Category("扩展")]
     [DisplayName("创建地址")]
     [Description("创建地址")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("CreateIP", "创建地址", "")]
-    public String CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
+    public String? CreateIP { get => _CreateIP; set { if (OnPropertyChanging("CreateIP", value)) { _CreateIP = value; OnPropertyChanged("CreateIP"); } } }
 
     private Int32 _UpdateUserId;
     /// <summary>更新者</summary>
@@ -147,23 +147,23 @@ public partial class Tenant : ITenant, IEntity<TenantModel>
     [BindColumn("UpdateTime", "更新时间", "")]
     public DateTime UpdateTime { get => _UpdateTime; set { if (OnPropertyChanging("UpdateTime", value)) { _UpdateTime = value; OnPropertyChanged("UpdateTime"); } } }
 
-    private String _UpdateIP;
+    private String? _UpdateIP;
     /// <summary>更新地址</summary>
     [Category("扩展")]
     [DisplayName("更新地址")]
     [Description("更新地址")]
     [DataObjectField(false, false, true, 50)]
     [BindColumn("UpdateIP", "更新地址", "")]
-    public String UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
+    public String? UpdateIP { get => _UpdateIP; set { if (OnPropertyChanging("UpdateIP", value)) { _UpdateIP = value; OnPropertyChanged("UpdateIP"); } } }
 
-    private String _Remark;
+    private String? _Remark;
     /// <summary>描述</summary>
     [Category("扩展")]
     [DisplayName("描述")]
     [Description("描述")]
     [DataObjectField(false, false, true, 500)]
     [BindColumn("Remark", "描述", "")]
-    public String Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
+    public String? Remark { get => _Remark; set { if (OnPropertyChanging("Remark", value)) { _Remark = value; OnPropertyChanged("Remark"); } } }
     #endregion
 
     #region 拷贝
@@ -189,7 +189,7 @@ public partial class Tenant : ITenant, IEntity<TenantModel>
     /// <summary>获取/设置 字段值</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public override Object this[String name]
+    public override Object? this[String name]
     {
         get => name switch
         {
@@ -242,11 +242,11 @@ public partial class Tenant : ITenant, IEntity<TenantModel>
     #region 关联映射
     /// <summary>管理者</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public User Manager => Extends.Get(nameof(Manager), k => User.FindByID(ManagerId));
+    public User? Manager => Extends.Get(nameof(Manager), k => User.FindByID(ManagerId));
 
     /// <summary>管理者</summary>
     [Map(nameof(ManagerId), typeof(User), "ID")]
-    public String ManagerName => Manager?.ToString();
+    public String? ManagerName => Manager?.ToString();
 
     #endregion
 

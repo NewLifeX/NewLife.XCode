@@ -18,16 +18,16 @@ public partial interface IParameter
     Int32 UserID { get; set; }
 
     /// <summary>类别</summary>
-    String Category { get; set; }
+    String? Category { get; set; }
 
     /// <summary>名称</summary>
-    String Name { get; set; }
+    String? Name { get; set; }
 
     /// <summary>数值</summary>
-    String Value { get; set; }
+    String? Value { get; set; }
 
     /// <summary>长数值</summary>
-    String LongValue { get; set; }
+    String? LongValue { get; set; }
 
     /// <summary>种类。0普通，21列表，22名值</summary>
     XCode.Membership.ParameterKinds Kind { get; set; }
@@ -45,39 +45,39 @@ public partial interface IParameter
     Double Ex3 { get; set; }
 
     /// <summary>扩展4</summary>
-    String Ex4 { get; set; }
+    String? Ex4 { get; set; }
 
     /// <summary>扩展5</summary>
-    String Ex5 { get; set; }
+    String? Ex5 { get; set; }
 
     /// <summary>扩展6</summary>
-    String Ex6 { get; set; }
+    String? Ex6 { get; set; }
 
     /// <summary>创建者</summary>
-    String CreateUser { get; set; }
+    String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
     Int32 CreateUserID { get; set; }
 
     /// <summary>创建地址</summary>
-    String CreateIP { get; set; }
+    String? CreateIP { get; set; }
 
     /// <summary>创建时间</summary>
     DateTime CreateTime { get; set; }
 
     /// <summary>更新者</summary>
-    String UpdateUser { get; set; }
+    String? UpdateUser { get; set; }
 
     /// <summary>更新用户</summary>
     Int32 UpdateUserID { get; set; }
 
     /// <summary>更新地址</summary>
-    String UpdateIP { get; set; }
+    String? UpdateIP { get; set; }
 
     /// <summary>更新时间</summary>
     DateTime UpdateTime { get; set; }
 
     /// <summary>备注</summary>
-    String Remark { get; set; }
+    String? Remark { get; set; }
     #endregion
 }

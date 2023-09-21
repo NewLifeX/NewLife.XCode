@@ -82,7 +82,7 @@ public class ModelBuilder : ClassBuilder
 
     /// <summary>获取基类</summary>
     /// <returns></returns>
-    protected override String GetBaseClass()
+    protected override String? GetBaseClass()
     {
         var baseClass = Option.BaseClass?.Replace("{name}", Table.Name);
         if (Option.HasIModel)
@@ -167,6 +167,7 @@ public class ModelBuilder : ClassBuilder
 
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+        if (type == "String") type = "String?";
 
         WriteLine("public {0} {1} {{ get; set; }}", type, dc.Name);
     }

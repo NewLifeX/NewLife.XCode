@@ -114,7 +114,7 @@ public interface IEntityFactory
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns>实体数组</returns>
-    IList<IEntity> FindAll(String where, String order, String selects, Int64 startRowIndex, Int64 maximumRows);
+    IList<IEntity> FindAll(String? where, String? order, String? selects, Int64 startRowIndex, Int64 maximumRows);
 
     /// <summary>
     /// 查询并返回实体对象集合。
@@ -126,7 +126,7 @@ public interface IEntityFactory
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns>实体数组</returns>
-    IList<IEntity> FindAll(Expression where, String order, String selects, Int64 startRowIndex, Int64 maximumRows);
+    IList<IEntity> FindAll(Expression where, String? order, String? selects, Int64 startRowIndex, Int64 maximumRows);
     #endregion
 
     #region 缓存查询

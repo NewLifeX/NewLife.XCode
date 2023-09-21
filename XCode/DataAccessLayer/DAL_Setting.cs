@@ -24,7 +24,7 @@ partial class DAL
     /// <summary>输出日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public static void WriteLog(String format, params Object[] args)
+    public static void WriteLog(String format, params Object?[] args)
     {
         if (!Debug) return;
 
@@ -36,7 +36,7 @@ partial class DAL
     /// <param name="format"></param>
     /// <param name="args"></param>
     [Conditional("DEBUG")]
-    public static void WriteDebugLog(String format, params Object[] args)
+    public static void WriteDebugLog(String format, params Object?[] args)
     {
         if (!Debug) return;
 
@@ -66,7 +66,7 @@ partial class DAL
     public ITracer Tracer { get; set; } = GlobalTracer;
 
     /// <summary>全局APM跟踪器</summary>
-    public static ITracer GlobalTracer { get; set; } = DefaultTracer.Instance;
+    public static ITracer? GlobalTracer { get; set; } = DefaultTracer.Instance;
     #endregion
 
     #region 辅助函数
@@ -76,7 +76,7 @@ partial class DAL
 
     /// <summary>建立数据表对象</summary>
     /// <returns></returns>
-    internal static IDataTable CreateTable() => ObjectContainer.Current.Resolve<IDataTable>();
+    internal static IDataTable CreateTable() => ObjectContainer.Current.Resolve<IDataTable>() ?? throw new InvalidDataException($"未注册[IDataTable]");
 
     /// <summary>是否支持批操作</summary>
     /// <returns></returns>

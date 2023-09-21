@@ -14,13 +14,13 @@ public class ClassBuilder
     #region 属性
 
     /// <summary>写入器</summary>
-    public TextWriter Writer { get; set; }
+    public TextWriter Writer { get; set; } = null!;
 
     /// <summary>数据表</summary>
-    public IDataTable Table { get; set; }
+    public IDataTable Table { get; set; } = null!;
 
     /// <summary>类名。默认Table.Name</summary>
-    public String ClassName { get; set; }
+    public String? ClassName { get; set; }
 
     /// <summary>生成器选项</summary>
     public BuilderOption Option { get; set; } = new BuilderOption();
@@ -34,7 +34,7 @@ public class ClassBuilder
     /// <param name="atts">扩展属性字典</param>
     /// <param name="log"></param>
     /// <returns></returns>
-    public static IList<IDataTable> LoadModels(String xmlFile, BuilderOption option, out IDictionary<String, String> atts, ILog log = null)
+    public static IList<IDataTable> LoadModels(String? xmlFile, BuilderOption option, out IDictionary<String, String> atts, ILog? log = null)
     {
         if (xmlFile.IsNullOrEmpty())
         {
@@ -230,7 +230,7 @@ public class ClassBuilder
 
     /// <summary>获取基类</summary>
     /// <returns></returns>
-    protected virtual String GetBaseClass()
+    protected virtual String? GetBaseClass()
     {
         var baseClass = Option.BaseClass?.Replace("{name}", Table.Name);
         //if (Option.HasIModel)
@@ -309,6 +309,7 @@ public class ClassBuilder
 
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+        if (type == "String") type = "String?";
 
         WriteLine("public {0} {1} {{ get; set; }}", type, dc.Name);
     }
@@ -320,7 +321,7 @@ public class ClassBuilder
         WriteLine("/// <summary>获取/设置 字段值</summary>");
         WriteLine("/// <param name=\"name\">字段名</param>");
         WriteLine("/// <returns></returns>");
-        WriteLine("public virtual Object this[String name]");
+        WriteLine("public virtual Object? this[String name]");
         WriteLine("{");
 
         // get
@@ -455,7 +456,7 @@ public class ClassBuilder
 
     #region 写入缩进方法
 
-    private String _Indent;
+    private String? _Indent;
 
     /// <summary>设置缩进</summary>
     /// <param name="add"></param>
@@ -469,7 +470,7 @@ public class ClassBuilder
 
     /// <summary>写入</summary>
     /// <param name="value"></param>
-    protected virtual void WriteLine(String value = null)
+    protected virtual void WriteLine(String? value = null)
     {
         if (value.IsNullOrEmpty())
         {
@@ -490,7 +491,7 @@ public class ClassBuilder
     /// <summary>写入</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    protected virtual void WriteLine(String format, params Object[] args)
+    protected virtual void WriteLine(String format, params Object?[] args)
     {
         if (!_Indent.IsNullOrEmpty()) format = _Indent + format;
 
@@ -519,7 +520,7 @@ public class ClassBuilder
     /// <param name="ext"></param>
     /// <param name="chineseFileName"></param>
     /// <returns></returns>
-    protected virtual String GetFileName(String ext = null, Boolean chineseFileName = true)
+    protected virtual String GetFileName(String? ext = null, Boolean chineseFileName = true)
     {
         var p = Option.Output;
         if (ext.IsNullOrEmpty())
@@ -541,7 +542,7 @@ public class ClassBuilder
     /// <param name="ext">扩展名，默认.cs</param>
     /// <param name="overwrite">是否覆盖目标文件</param>
     /// <param name="chineseFileName">是否使用中文名</param>
-    public virtual String Save(String ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
+    public virtual String Save(String? ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
     {
         var p = GetFileName(ext, chineseFileName);
 
@@ -569,7 +570,7 @@ public class ClassBuilder
     }
 
     /// <summary>C#版本</summary>
-    public Version CSharp { get; set; }
+    public Version? CSharp { get; set; }
 
     /// <summary>nameof</summary>
     /// <param name="name"></param>

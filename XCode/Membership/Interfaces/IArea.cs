@@ -15,10 +15,10 @@ public partial interface IArea
     Int32 ID { get; set; }
 
     /// <summary>名称</summary>
-    String Name { get; set; }
+    String? Name { get; set; }
 
     /// <summary>全名</summary>
-    String FullName { get; set; }
+    String? FullName { get; set; }
 
     /// <summary>父级</summary>
     Int32 ParentID { get; set; }
@@ -27,22 +27,22 @@ public partial interface IArea
     Int32 Level { get; set; }
 
     /// <summary>类型。省市县，自治州等</summary>
-    String Kind { get; set; }
+    String? Kind { get; set; }
 
     /// <summary>英文名</summary>
-    String English { get; set; }
+    String? English { get; set; }
 
     /// <summary>拼音</summary>
-    String PinYin { get; set; }
+    String? PinYin { get; set; }
 
     /// <summary>简拼</summary>
-    String JianPin { get; set; }
+    String? JianPin { get; set; }
 
     /// <summary>区号。电话区号</summary>
-    String TelCode { get; set; }
+    String? TelCode { get; set; }
 
     /// <summary>邮编。邮政编码</summary>
-    String ZipCode { get; set; }
+    String? ZipCode { get; set; }
 
     /// <summary>经度</summary>
     Double Longitude { get; set; }
@@ -51,7 +51,7 @@ public partial interface IArea
     Double Latitude { get; set; }
 
     /// <summary>地址编码。字符串前缀相同越多，地理距离越近，8位精度19米，6位610米</summary>
-    String GeoHash { get; set; }
+    String? GeoHash { get; set; }
 
     /// <summary>启用</summary>
     Boolean Enable { get; set; }
@@ -63,6 +63,6 @@ public partial interface IArea
     DateTime UpdateTime { get; set; }
 
     /// <summary>备注</summary>
-    String Remark { get; set; }
+    String? Remark { get; set; }
     #endregion
 }

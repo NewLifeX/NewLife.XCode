@@ -10,27 +10,27 @@ public class BuilderOption
     #region 属性
     /// <summary>类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等</summary>
     [Description("类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等")]
-    public String ClassNameTemplate { get; set; }
+    public String? ClassNameTemplate { get; set; }
 
     /// <summary>显示名模板。其中{displayName}替换为Table.DisplayName</summary>
     [Description("显示名模板。其中{displayName}替换为Table.DisplayName")]
-    public String DisplayNameTemplate { get; set; }
+    public String? DisplayNameTemplate { get; set; }
 
     /// <summary>基类。可能包含基类和接口，其中{name}替换为Table.Name</summary>
     [Description("基类。可能包含基类和接口，其中{name}替换为Table.Name")]
-    public String BaseClass { get; set; }
+    public String? BaseClass { get; set; }
 
     /// <summary>命名空间</summary>
     [Description("命名空间")]
-    public String Namespace { get; set; }
+    public String? Namespace { get; set; }
 
     /// <summary>输出目录</summary>
     [Description("输出目录")]
-    public String Output { get; set; } = @".\";
+    public String? Output { get; set; } = @".\";
 
     /// <summary>是否使用中文文件名。默认false</summary>
     [Description("是否使用中文文件名。默认false")]
-    public Boolean ChineseFileName { get; set; } 
+    public Boolean ChineseFileName { get; set; }
 
     ///// <summary>是否分部类</summary>
     //[Description("是否分部类")]
@@ -39,7 +39,7 @@ public class BuilderOption
 
     /// <summary>用于生成Copy函数的参数类型。例如{name}或I{name}</summary>
     [Description("用于生成Copy函数的参数类型。例如{name}或I{name}")]
-    public String ModelNameForCopy { get; set; }
+    public String? ModelNameForCopy { get; set; }
 
     /// <summary>带有索引器。实现IModel接口</summary>
     [Description("带有索引器。实现IModel接口")]
@@ -62,7 +62,7 @@ public class BuilderOption
     public ICollection<String> Excludes { get; set; } = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>扩展数据</summary>
-    public IDictionary<String, String> Items { get; set; }
+    public IDictionary<String, String> Items { get; set; } = new Dictionary<String, String>();
 
     #endregion 属性
 
@@ -94,7 +94,7 @@ public class BuilderOption
     /// <returns></returns>
     public virtual BuilderOption Clone()
     {
-        var option = MemberwiseClone() as BuilderOption;
+        var option = (MemberwiseClone() as BuilderOption)!;
 
         option.Usings = new List<String>(Usings);
         option.Excludes = new HashSet<String>(Excludes, StringComparer.OrdinalIgnoreCase);

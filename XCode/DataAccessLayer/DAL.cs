@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Xml;
 using NewLife;
@@ -30,7 +31,7 @@ public partial class DAL
     public String ConnName { get; }
 
     /// <summary>实现了IDatabase接口的数据库类型</summary>
-    public Type ProviderType { get; private set; }
+    public Type? ProviderType { get; private set; }
 
     /// <summary>数据库类型</summary>
     public DatabaseType DbType { get; private set; }
@@ -40,7 +41,7 @@ public partial class DAL
     /// 内部密码字段可能处于加密状态。
     /// 修改连接字符串将会清空<see cref="Db"/>
     /// </remarks>
-    public String ConnStr { get; private set; }
+    public String ConnStr { get; private set; } = null!;
 
     /// <summary>数据保护者</summary>
     /// <remarks>
@@ -49,7 +50,7 @@ public partial class DAL
     /// </remarks>
     public ProtectedKey ProtectedKey { get; set; } = ProtectedKey.Instance;
 
-    private IDatabase _Db;
+    private IDatabase? _Db;
     /// <summary>数据库。所有数据库操作在此统一管理，强烈建议不要直接使用该属性，在不同版本中IDatabase可能有较大改变</summary>
     public IDatabase Db
     {
@@ -63,9 +64,9 @@ public partial class DAL
                 var type = ProviderType ?? throw new XCodeException("无法识别{0}的数据提供者！", ConnName);
 
                 //!!! 重量级更新：经常出现链接字符串为127/master的连接错误，非常有可能是因为这里线程冲突，A线程创建了实例但未来得及赋值连接字符串，就被B线程使用了
-                var db = type.CreateInstance() as IDatabase;
+                var db = type.CreateInstance() as IDatabase ?? throw new XCodeException("[{0}]提供者类型异常", ConnName);
                 if (!ConnName.IsNullOrEmpty()) db.ConnName = ConnName;
-                if (_infos.TryGetValue(ConnName, out var info)) db.Provider = info.Provider;
+                if (_infos!.TryGetValue(ConnName, out var info)) db.Provider = info.Provider;
                 if (db is DbBase dbBase) dbBase.Tracer = Tracer;
 
                 // 设置连接字符串时，可能触发内部的一系列动作，因此放在最后
@@ -82,9 +83,9 @@ public partial class DAL
     public IDbSession Session => Db.CreateSession();
 
     /// <summary>数据库会话。为异步操作而准备，将来可能移除</summary>
-    public IAsyncDbSession AsyncSession => (Db as DbBase).CreateSessionForAsync();
+    public IAsyncDbSession AsyncSession => (Db as DbBase)!.CreateSessionForAsync();
 
-    private String _mapTo;
+    private String? _mapTo;
     private readonly ICache _cache = new MemoryCache();
     #endregion
 
@@ -102,7 +103,7 @@ public partial class DAL
             if (_inited) return;
 
             var connName = ConnName;
-            var css = ConnStrs;
+            var css = ConnStrs!;
             //if (!css.ContainsKey(connName)) throw new XCodeException("请在使用数据库前设置[" + connName + "]连接字符串");
             if (!css.ContainsKey(connName)) GetFromConfigCenter(connName);
             if (!css.ContainsKey(connName)) OnResolve?.Invoke(this, new ResolveEventArgs(connName));
@@ -123,7 +124,7 @@ public partial class DAL
             var vs = ConnStr.SplitAsDictionary("=", ",", true);
             if (vs.TryGetValue("MapTo", out var map) && !map.IsNullOrEmpty()) _mapTo = map;
 
-            if (_infos.TryGetValue(connName, out var t))
+            if (_infos!.TryGetValue(connName, out var t) && t.Type != null)
             {
                 ProviderType = t.Type;
                 DbType = DbFactory.GetDefault(t.Type)?.Type ?? DatabaseType.None;
@@ -178,7 +179,8 @@ public partial class DAL
         Init();
     }
 
-    private static ConcurrentDictionary<String, DbInfo> _infos;
+    private static ConcurrentDictionary<String, DbInfo>? _infos;
+    [MemberNotNull(nameof(ConnStrs), nameof(_infos))]
     private static void InitConnections()
     {
         var ds = new ConcurrentDictionary<String, DbInfo>(StringComparer.OrdinalIgnoreCase);
@@ -227,7 +229,8 @@ public partial class DAL
         var cs = new ConcurrentDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
         foreach (var item in ds)
         {
-            cs.TryAdd(item.Key, item.Value.ConnectionString);
+            if (!item.Value.ConnectionString.IsNullOrEmpty())
+                cs.TryAdd(item.Key, item.Value.ConnectionString);
         }
 
         ConnStrs = cs;
@@ -239,7 +242,7 @@ public partial class DAL
     /// 如果需要添加连接字符串，应该使用AddConnStr，MapTo连接字符串除外（可以直接ConnStrs.TryAdd添加）；
     /// 如果需要修改一个DAL的连接字符串，不应该修改这里，而是修改DAL实例的<see cref="ConnStr"/>属性。
     /// </remarks>
-    public static ConcurrentDictionary<String, String> ConnStrs { get; private set; }
+    public static ConcurrentDictionary<String, String>? ConnStrs { get; private set; }
 
     internal static void LoadConfig(IDictionary<String, DbInfo> ds)
     {
@@ -301,7 +304,7 @@ public partial class DAL
             text = JsonConfigProvider.TrimComment(text);
 
             var dic = JsonParser.Decode(text);
-            dic = dic?["ConnectionStrings"] as IDictionary<String, Object>;
+            dic = dic?["ConnectionStrings"] as IDictionary<String, Object?>;
             if (dic != null && dic.Count > 0)
             {
                 foreach (var item in dic)
@@ -361,7 +364,7 @@ public partial class DAL
                 if (type == null)
                 {
                     WriteLog("环境变量[{0}]设置连接[{1}]时，未通过provider指定数据库类型，使用默认类型SQLite", key, connName);
-                    type = DbFactory.Create(DatabaseType.SQLite).GetType();
+                    type = DbFactory.Create(DatabaseType.SQLite)?.GetType();
                 }
 
                 var dic = value.SplitAsDictionary("=", ";");
@@ -384,10 +387,12 @@ public partial class DAL
     /// <param name="connStr">连接字符串</param>
     /// <param name="type">实现了IDatabase接口的数据库类型</param>
     /// <param name="provider">数据库提供者，如果没有指定数据库类型，则有提供者判断使用哪一种内置类型</param>
-    public static void AddConnStr(String connName, String connStr, Type type, String provider)
+    public static void AddConnStr(String connName, String connStr, Type? type, String? provider)
     {
         if (connName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(connName));
         if (connStr.IsNullOrEmpty()) return;
+        if (_infos == null) throw new InvalidDataException();
+        if (ConnStrs == null) throw new InvalidDataException();
 
         //2016.01.04 @宁波-小董，加锁解决大量分表分库多线程带来的提供者无法识别错误
         lock (_infos)
@@ -428,12 +433,12 @@ public partial class DAL
 
     /// <summary>找不到连接名时调用。支持用户自定义默认连接</summary>
     [Obsolete]
-    public static event EventHandler<ResolveEventArgs> OnResolve;
+    public static event EventHandler<ResolveEventArgs>? OnResolve;
 
     /// <summary>获取连接字符串的委托。可以二次包装在连接名前后加上标识，存放在配置中心</summary>
-    public static GetConfigCallback GetConfig { get; set; }
+    public static GetConfigCallback? GetConfig { get; set; }
 
-    private static IConfigProvider _configProvider;
+    private static IConfigProvider? _configProvider;
     /// <summary>设置配置提供者。可对接配置中心，DAL内部自动从内置对象容器中取得星尘配置提供者</summary>
     /// <param name="configProvider"></param>
     public static void SetConfig(IConfigProvider configProvider)
@@ -445,7 +450,7 @@ public partial class DAL
     }
 
     private static readonly ConcurrentHashSet<String> _conns = new();
-    private static TimerX _timerGetConfig;
+    private static TimerX? _timerGetConfig;
     /// <summary>从配置中心加载连接字符串，并支持定时刷新</summary>
     /// <param name="connName"></param>
     /// <returns></returns>
@@ -546,7 +551,7 @@ public partial class DAL
                 c == '+' || c == '/' || c == '=')) return connstr;
         }
 
-        Byte[] bts = null;
+        Byte[]? bts = null;
         try
         {
             // 尝试Base64解码，如果解码失败，估计就是连接字符串，直接返回
@@ -559,7 +564,7 @@ public partial class DAL
     #endregion
 
     #region 正向工程
-    private IList<IDataTable> _Tables;
+    private IList<IDataTable>? _Tables;
     /// <summary>取得所有表和视图的构架信息（异步缓存延迟1秒）。设为null可清除缓存</summary>
     /// <remarks>
     /// 如果不存在缓存，则获取后返回；否则使用线程池线程获取，而主线程返回缓存。
@@ -607,7 +612,7 @@ public partial class DAL
     /// <summary>
     /// 获取所有表名，带缓存，不区分大小写
     /// </summary>
-    public ICollection<String> TableNames => _cache.GetOrAdd("tableNames", k => new HashSet<String>(GetTableNames(), StringComparer.OrdinalIgnoreCase), 60);
+    public ICollection<String> TableNames => _cache.GetOrAdd("tableNames", k => new HashSet<String>(GetTableNames(), StringComparer.OrdinalIgnoreCase), 60) ?? new HashSet<String>();
 
     /// <summary>
     /// 快速获取所有表名，无缓存，区分大小写
@@ -634,7 +639,7 @@ public partial class DAL
 
     /// <summary>导出模型</summary>
     /// <returns></returns>
-    public String Export()
+    public String? Export()
     {
         var list = Tables;
 
@@ -651,9 +656,9 @@ public partial class DAL
     /// <summary>导入模型</summary>
     /// <param name="xml"></param>
     /// <returns></returns>
-    public static List<IDataTable> Import(String xml)
+    public static IList<IDataTable> Import(String xml)
     {
-        if (String.IsNullOrEmpty(xml)) return null;
+        if (xml.IsNullOrEmpty()) return new IDataTable[0];
 
         return ModelHelper.FromXml(xml, CreateTable);
     }
@@ -661,12 +666,12 @@ public partial class DAL
     /// <summary>导入模型文件</summary>
     /// <param name="xmlFile"></param>
     /// <returns></returns>
-    public static List<IDataTable> ImportFrom(String xmlFile)
+    public static IList<IDataTable> ImportFrom(String xmlFile)
     {
-        if (xmlFile.IsNullOrEmpty()) return null;
+        if (xmlFile.IsNullOrEmpty()) return new IDataTable[0];
 
         xmlFile = xmlFile.GetFullPath();
-        if (!File.Exists(xmlFile)) return null;
+        if (!File.Exists(xmlFile)) return new IDataTable[0];
 
         return ModelHelper.FromXml(File.ReadAllText(xmlFile), CreateTable);
     }

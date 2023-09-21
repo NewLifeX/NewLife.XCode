@@ -26,7 +26,7 @@ partial class DAL
     public static Int32 ExecuteTimes => _ExecuteTimes;
 
     /// <summary>只读实例。读写分离时，读取操作分走</summary>
-    public DAL ReadOnly { get; set; }
+    public DAL? ReadOnly { get; set; }
 
     /// <summary>读写分离策略。忽略时间区间和表名</summary>
     public ReadWriteStrategy Strategy { get; set; } = new ReadWriteStrategy();
@@ -345,7 +345,7 @@ partial class DAL
 
     #region 缓存
     /// <summary>缓存存储</summary>
-    public ICache Store { get; set; }
+    public ICache? Store { get; set; }
 
     /// <summary>数据层缓存。默认10秒</summary>
     public Int32 Expire { get; set; }
@@ -359,7 +359,7 @@ partial class DAL
     /// <summary>埋点上下文信息。用于附加在埋点标签后的上下文信息</summary>
     public static void SetSpanTag(String value) => _SpanTag.Value = value;
 
-    private ICache GetCache()
+    private ICache? GetCache()
     {
         var st = Store;
         if (st != null) return st;
@@ -373,7 +373,8 @@ partial class DAL
 
         lock (this)
         {
-            if (Store == null)
+            st = Store;
+            if (st == null)
             {
                 var p = exp / 2;
                 if (p < 30) p = 30;

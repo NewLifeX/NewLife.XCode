@@ -263,7 +263,7 @@ public class EntityBuilder : ClassBuilder
 
     /// <summary>获取基类</summary>
     /// <returns></returns>
-    protected override String GetBaseClass()
+    protected override String? GetBaseClass()
     {
         var baseClass = Option.BaseClass;
         //if (Option.HasIModel)
@@ -307,7 +307,7 @@ public class EntityBuilder : ClassBuilder
     /// <param name="ext"></param>
     /// <param name="overwrite"></param>
     /// <param name="chineseFileName"></param>
-    public override String Save(String ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
+    public override String Save(String? ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
     {
         if (ext.IsNullOrEmpty() && Business)
         {
@@ -406,7 +406,7 @@ public class EntityBuilder : ClassBuilder
     {
         public Int32 Start { get; set; }
         public Int32 Count { get; set; }
-        public IList<MemberSection> Sections { get; set; }
+        public IList<MemberSection>? Sections { get; set; }
     }
 
     MyRange Find(IList<String> lines, String start, String end)
@@ -567,6 +567,7 @@ public class EntityBuilder : ClassBuilder
 
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+        if (type == "String") type = "String?";
 
         // 字段
         WriteLine("private {0} _{1};", type, dc.Name);
@@ -621,13 +622,14 @@ public class EntityBuilder : ClassBuilder
         WriteLine("public {0} {1} {{ get => _{1}; set {{ if (OnPropertyChanging(\"{1}\", value)) {{ _{1} = value; OnPropertyChanged(\"{1}\"); }} }} }}", type, dc.Name);
     }
 
-    private void BuildIndexItems()
+    /// <summary>生成索引访问器</summary>
+    protected override void BuildIndexItems()
     {
         WriteLine("#region 获取/设置 字段值");
         WriteLine("/// <summary>获取/设置 字段值</summary>");
         WriteLine("/// <param name=\"name\">字段名</param>");
         WriteLine("/// <returns></returns>");
-        WriteLine("public override Object this[String name]");
+        WriteLine("public override Object? this[String name]");
         WriteLine("{");
 
         // get
@@ -790,13 +792,13 @@ public class EntityBuilder : ClassBuilder
             var mapTable = AllTables.FirstOrDefault(e => className.EqualIgnoreCase(e.Name, e.TableName));
             //if (mapTable == null) continue;
 
-            IDataColumn mapId = null;
+            IDataColumn? mapId = null;
             if (mapTable != null)
                 mapId = ss.Length > 1 ? mapTable.GetColumn(ss[1]) : mapTable.PrimaryKeys.FirstOrDefault();
             //if (mapId == null) continue;
             var mapIdName = mapId?.Name ?? ss[1];
 
-            IDataColumn mapName = null;
+            IDataColumn? mapName = null;
             if (mapTable != null)
             {
                 mapName = ss.Length > 2 && ss[2] != "$" ? mapTable.GetColumn(ss[2]) : null;
@@ -819,7 +821,7 @@ public class EntityBuilder : ClassBuilder
 
             WriteLine("/// <summary>{0}</summary>", dis);
             WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
-            WriteLine("public {0} {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapIdName, column.Name);
+            WriteLine("public {0}? {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapIdName, column.Name);
 
             var myName = ss.Length > 3 ? ss[3] : null;
             if (myName.IsNullOrEmpty())
@@ -837,13 +839,16 @@ public class EntityBuilder : ClassBuilder
                 if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
                     WriteLine("[Category(\"{0}\")]", att);
                 if (ss.Length > 2 && ss[2] == "$")
-                    WriteLine("public String {0} => {1}?.ToString();", myName, name);
-                else if (ss.Length > 2 && mapName.DataType == typeof(String))
-                    WriteLine("public String {0} => {1}?.{2};", myName, name, ss[2]);
-                else if (mapName.DataType == typeof(String))
-                    WriteLine("public String {0} => {1}?.{2};", myName, name, mapName.Name);
-                else
-                    WriteLine("public {3} {0} => {1} != null ? {1}.{2} : 0;", myName, name, mapName.Name, mapName.DataType.Name);
+                    WriteLine("public String? {0} => {1}?.ToString();", myName, name);
+                else if (mapName != null)
+                {
+                    if (ss.Length > 2 && mapName.DataType == typeof(String))
+                        WriteLine("public String? {0} => {1}?.{2};", myName, name, ss[2]);
+                    else if (mapName.DataType == typeof(String))
+                        WriteLine("public String? {0} => {1}?.{2};", myName, name, mapName.Name);
+                    else
+                        WriteLine("public {3} {0} => {1} != null ? {1}.{2} : 0;", myName, name, mapName.Name, mapName.DataType.Name);
+                }
             }
 
             WriteLine();
@@ -1221,7 +1226,7 @@ public class EntityBuilder : ClassBuilder
 
                 WriteLine("/// <summary>{0}</summary>", dis);
                 WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
-                WriteLine("public {1} {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
+                WriteLine("public {1}? {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
 
                 // 主字段
                 var master = dt.Master ?? dt.GetColumn("Name");
@@ -1234,7 +1239,7 @@ public class EntityBuilder : ClassBuilder
                     if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
                         WriteLine("[Category(\"{0}\")]", att);
                     if (master.DataType == typeof(String))
-                        WriteLine("public {2} {0}{1} => {0}?.{1};", pname, master.Name, master.DataType.Name);
+                        WriteLine("public {2}? {0}{1} => {0}?.{1};", pname, master.Name, master.DataType.Name);
                     else
                         WriteLine("public {2} {0}{1} => {0} != null ? {0}.{1} : 0;", pname, master.Name, master.DataType.Name);
                 }

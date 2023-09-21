@@ -17,10 +17,10 @@ public partial class TenantModel : IModel
     public Int32 Id { get; set; }
 
     /// <summary>编码。唯一编码</summary>
-    public String Code { get; set; }
+    public String? Code { get; set; }
 
     /// <summary>名称。显示名称</summary>
-    public String Name { get; set; }
+    public String? Name { get; set; }
 
     /// <summary>启用</summary>
     public Boolean Enable { get; set; }
@@ -29,29 +29,29 @@ public partial class TenantModel : IModel
     public Int32 ManagerId { get; set; }
 
     /// <summary>角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同</summary>
-    public String RoleIds { get; set; }
+    public String? RoleIds { get; set; }
 
     /// <summary>图标。附件路径</summary>
-    public String Logo { get; set; }
+    public String? Logo { get; set; }
 
     /// <summary>数据库。分库用的数据库名</summary>
-    public String DatabaseName { get; set; }
+    public String? DatabaseName { get; set; }
 
     /// <summary>数据表。分表用的数据表前缀</summary>
-    public String TableName { get; set; }
+    public String? TableName { get; set; }
 
     /// <summary>过期时间。达到该时间后，自动禁用租户，空表示永不过期</summary>
     public DateTime Expired { get; set; }
 
     /// <summary>描述</summary>
-    public String Remark { get; set; }
+    public String? Remark { get; set; }
     #endregion
 
     #region 获取/设置 字段值
     /// <summary>获取/设置 字段值</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public virtual Object this[String name]
+    public virtual Object? this[String name]
     {
         get
         {

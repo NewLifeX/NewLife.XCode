@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Net.Http;
 using System.Text;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -827,7 +828,7 @@ public partial class Area : Entity<Area>
     /// <summary>抓取并保存数据</summary>
     /// <param name="url">民政局行政区划统计数据</param>
     /// <returns></returns>
-    public static Int32 FetchAndSave(String url = null)
+    public static Int32 FetchAndSave(String? url = null)
     {
         //if (url.IsNullOrEmpty()) url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
         //if (url.IsNullOrEmpty()) url = "https://www.mca.gov.cn/mzsj/xzqh/2022/202201xzqh.html";

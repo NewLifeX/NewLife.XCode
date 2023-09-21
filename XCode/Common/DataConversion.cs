@@ -1,84 +1,82 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 
-namespace XCode.Common
+namespace XCode.Common;
+
+/// <summary>数据转换</summary>
+public class DataConversion
 {
-    /// <summary>数据转换</summary>
-    public class DataConversion
+    private static BindingFlags _bf = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+    /// <summary>拷贝</summary>
+    /// <param name="objSource"></param>
+    /// <param name="objTarjet"></param>
+    /// <param name="ignoreTarjetProperties"></param>
+    public static void CopyProperty(Object objSource, Object objTarjet, List<String>? ignoreTarjetProperties = null)
     {
-        public static BindingFlags bf = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-        public static void CopyProperty(object objSource, object objTarjet, List<string> ignoreTarjetProperties = null)
+        Object? obj = null;
+        var empty = String.Empty;
+        try
         {
-            object obj = null;
-            string empty = string.Empty;
-            try
+            var properties = GetProperties(objSource);
+            var properties2 = GetProperties(objTarjet);
+            if (properties2 == null)
             {
-                PropertyInfo[] properties = GetProperties(objSource);
-                PropertyInfo[] properties2 = GetProperties(objTarjet);
-                if (properties2 == null)
+                return;
+            }
+
+            var array = properties2;
+            foreach (var propertyInfo in array)
+            {
+                if (properties == null)
                 {
-                    return;
+                    continue;
                 }
 
-                PropertyInfo[] array = properties2;
-                foreach (PropertyInfo propertyInfo in array)
+                var array2 = properties;
+                foreach (var propertyInfo2 in array2)
                 {
-                    if (properties == null)
+                    if (propertyInfo.Name == "Items")
+                    {
+                    }
+
+                    if (propertyInfo.Name == "PrintInsideLabelInfo")
+                    {
+                    }
+
+                    if (!(propertyInfo.Module.Name != "XCode.dll") || !(propertyInfo.Name == propertyInfo2.Name) || !(propertyInfo.Name != "Item") || !(propertyInfo.Name != "Items"))
                     {
                         continue;
                     }
 
-                    PropertyInfo[] array2 = properties;
-                    foreach (PropertyInfo propertyInfo2 in array2)
+                    empty = propertyInfo.Name;
+                    obj = propertyInfo2.GetValue(objSource, null);
+                    if (!propertyInfo.CanWrite)
                     {
-                        if (propertyInfo.Name == "Items")
-                        {
-                        }
+                        continue;
+                    }
 
-                        if (propertyInfo.Name == "PrintInsideLabelInfo")
-                        {
-                        }
-
-                        if (!(propertyInfo.Module.Name != "XCode.dll") || !(propertyInfo.Name == propertyInfo2.Name) || !(propertyInfo.Name != "Item") || !(propertyInfo.Name != "Items"))
-                        {
-                            continue;
-                        }
-
-                        empty = propertyInfo.Name;
-                        obj = propertyInfo2.GetValue(objSource, null);
-                        if (!propertyInfo.CanWrite)
-                        {
-                            continue;
-                        }
-
-                        if (ignoreTarjetProperties != null)
-                        {
-                            if (!ignoreTarjetProperties.Contains(propertyInfo.Name))
-                            {
-                                propertyInfo.SetValue(objTarjet, obj, null);
-                            }
-                        }
-                        else
+                    if (ignoreTarjetProperties != null)
+                    {
+                        if (!ignoreTarjetProperties.Contains(propertyInfo.Name))
                         {
                             propertyInfo.SetValue(objTarjet, obj, null);
                         }
                     }
+                    else
+                    {
+                        propertyInfo.SetValue(objTarjet, obj, null);
+                    }
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
         }
-
-
-        public static PropertyInfo[] GetProperties(object obj, bool withBindingFlags = false)
+        catch (Exception ex)
         {
-            return withBindingFlags ? obj.GetType().GetProperties(bf) : obj.GetType().GetProperties();
+            Console.WriteLine(ex.ToString());
         }
     }
+
+    /// <summary>获取属性</summary>
+    /// <param name="obj"></param>
+    /// <param name="withBindingFlags"></param>
+    /// <returns></returns>
+    public static PropertyInfo[] GetProperties(Object obj, Boolean withBindingFlags = false) => withBindingFlags ? obj.GetType().GetProperties(_bf) : obj.GetType().GetProperties();
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -139,12 +140,12 @@ public partial class User : Entity<User>
     #region 扩展属性
     /// <summary>部门</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
+    public Department? Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
 
     /// <summary>部门</summary>
     [Map(nameof(DepartmentID), typeof(Department), "ID")]
     [Category("登录信息")]
-    public String DepartmentName => Department?.Name;
+    public String? DepartmentName => Department?.Name;
     #endregion
 
     #region 扩展查询

@@ -15,37 +15,37 @@ public partial interface IUser
     Int32 ID { get; set; }
 
     /// <summary>名称。登录用户名</summary>
-    String Name { get; set; }
+    String? Name { get; set; }
 
     /// <summary>密码</summary>
-    String Password { get; set; }
+    String? Password { get; set; }
 
     /// <summary>昵称</summary>
-    String DisplayName { get; set; }
+    String? DisplayName { get; set; }
 
     /// <summary>性别。未知、男、女</summary>
     XCode.Membership.SexKinds Sex { get; set; }
 
     /// <summary>邮件。支持登录</summary>
-    String Mail { get; set; }
+    String? Mail { get; set; }
 
     /// <summary>手机。支持登录</summary>
-    String Mobile { get; set; }
+    String? Mobile { get; set; }
 
     /// <summary>代码。身份证、员工编码等，支持登录</summary>
-    String Code { get; set; }
+    String? Code { get; set; }
 
     /// <summary>地区。省市区</summary>
     Int32 AreaId { get; set; }
 
     /// <summary>头像</summary>
-    String Avatar { get; set; }
+    String? Avatar { get; set; }
 
     /// <summary>角色。主要角色</summary>
     Int32 RoleID { get; set; }
 
     /// <summary>角色组。次要角色集合</summary>
-    String RoleIds { get; set; }
+    String? RoleIds { get; set; }
 
     /// <summary>部门。组织机构</summary>
     Int32 DepartmentID { get; set; }
@@ -69,13 +69,13 @@ public partial interface IUser
     DateTime LastLogin { get; set; }
 
     /// <summary>最后登录IP</summary>
-    String LastLoginIP { get; set; }
+    String? LastLoginIP { get; set; }
 
     /// <summary>注册时间</summary>
     DateTime RegisterTime { get; set; }
 
     /// <summary>注册IP</summary>
-    String RegisterIP { get; set; }
+    String? RegisterIP { get; set; }
 
     /// <summary>在线时间。累计在线总时间，单位秒</summary>
     Int32 OnlineTime { get; set; }
@@ -90,15 +90,15 @@ public partial interface IUser
     Double Ex3 { get; set; }
 
     /// <summary>扩展4</summary>
-    String Ex4 { get; set; }
+    String? Ex4 { get; set; }
 
     /// <summary>扩展5</summary>
-    String Ex5 { get; set; }
+    String? Ex5 { get; set; }
 
     /// <summary>扩展6</summary>
-    String Ex6 { get; set; }
+    String? Ex6 { get; set; }
 
     /// <summary>备注</summary>
-    String Remark { get; set; }
+    String? Remark { get; set; }
     #endregion
 }

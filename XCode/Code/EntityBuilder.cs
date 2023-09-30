@@ -234,12 +234,12 @@ public class EntityBuilder : ClassBuilder
         us.Add("XCode.Cache");
         us.Add("XCode.Configuration");
         us.Add("XCode.DataAccessLayer");
-        us.Add("System.ComponentModel.DataAnnotations");//属性验证
         //us.Add("XCode.Common");
         if (Business) us.Add("XCode.Shards");
 
         if (Business)
         {
+            us.Add("System.ComponentModel.DataAnnotations");//属性验证
             us.Add("System.IO");
             us.Add("System.Linq");
             us.Add("System.Reflection");

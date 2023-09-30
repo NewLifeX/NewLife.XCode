@@ -238,7 +238,7 @@ public partial class Log
     #region 关联映射
     /// <summary>创建用户</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public User MyCreateUser => Extends.Get(nameof(MyCreateUser), k => User.FindById(CreateUserID));
+    public User? MyCreateUser => Extends.Get(nameof(MyCreateUser), k => User.FindById(CreateUserID));
 
     #endregion
 

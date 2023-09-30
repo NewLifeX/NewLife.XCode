@@ -134,7 +134,7 @@ public class EntityPersistence : IEntityPersistence
         // 添加数据前，处理Guid
         SetGuidField(factory.AutoSetGuidField, entity);
 
-        IDataParameter[] dps = null;
+        IDataParameter[]? dps = null;
         var sql = SQL(session, entity, DataObjectMethodType.Insert, ref dps);
         if (String.IsNullOrEmpty(sql)) return 0;
 
@@ -490,7 +490,7 @@ public class EntityPersistence : IEntityPersistence
             DataObjectMethodType.Insert => InsertSQL(session, entity, ref parameters),
             DataObjectMethodType.Update => UpdateSQL(session, entity, ref parameters),
             DataObjectMethodType.Delete => DeleteSQL(session, entity, ref parameters),
-            _ => null,
+            _ => throw new NotSupportedException(),
         };
     }
 

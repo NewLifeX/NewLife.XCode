@@ -87,7 +87,7 @@ public interface IDbSession : IDisposable2
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    DbTable Query(String sql, IDataParameter[] ps);
+    DbTable Query(String sql, IDataParameter[]? ps);
 
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="sql">SQL语句</param>
@@ -195,6 +195,6 @@ public interface IDbSession : IDisposable2
     /// <param name="collectionName">指定要返回的架构的名称。</param>
     /// <param name="restrictionValues">为请求的架构指定一组限制值。</param>
     /// <returns></returns>
-    DataTable GetSchema(DbConnection conn, String collectionName, String[] restrictionValues);
+    DataTable GetSchema(DbConnection? conn, String collectionName, String[]? restrictionValues);
     #endregion
 }

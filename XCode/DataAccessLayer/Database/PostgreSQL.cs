@@ -87,7 +87,7 @@ internal class PostgreSQL : RemoteDb
     /// <param name="field">字段</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    public override String FormatValue(IDataColumn field, Object value)
+    public override String FormatValue(IDataColumn field, Object? value)
     {
         if (field.DataType == typeof(String))
         {

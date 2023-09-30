@@ -22,7 +22,7 @@ public partial class DAL
     /// <param name="table">数据表</param>
     /// <param name="file">文件。.gz后缀时采用压缩</param>
     /// <returns></returns>
-    public Int32 Backup(IDataTable table, String file = null)
+    public Int32 Backup(IDataTable table, String? file = null)
     {
         var dpk = new DbPackage { Dal = this, Tracer = Tracer ?? GlobalTracer, Log = XTrace.Log };
         return dpk.Backup(table, file);
@@ -69,7 +69,7 @@ public partial class DAL
     /// <param name="setSchema">是否设置数据表模型，自动建表</param>
     /// <param name="ignoreError">忽略错误，继续下一张表</param>
     /// <returns></returns>
-    public IDataTable[] RestoreAll(String file, IDataTable[] tables = null, Boolean setSchema = true, Boolean ignoreError = true)
+    public IDataTable[]? RestoreAll(String file, IDataTable[]? tables = null, Boolean setSchema = true, Boolean ignoreError = true)
     {
         var dpk = new DbPackage { Dal = this, IgnoreError = ignoreError, Tracer = Tracer ?? GlobalTracer, Log = XTrace.Log };
         return dpk.RestoreAll(file, tables, setSchema);

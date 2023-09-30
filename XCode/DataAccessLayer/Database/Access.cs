@@ -84,9 +84,9 @@ class Access : FileDbBase
     /// <param name="field">字段</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    public override String FormatValue(IDataColumn field, Object value)
+    public override String FormatValue(IDataColumn field, Object? value)
     {
-        if (field != null && field.DataType == typeof(Boolean) || value != null && value.GetType() == typeof(Boolean))
+        if (/*field != null &&*/ field.DataType == typeof(Boolean) || value != null && value.GetType() == typeof(Boolean))
         {
             if (value == null) return field.Nullable ? "null" : "";
 
@@ -110,7 +110,7 @@ class Access : FileDbBase
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">唯一键。用于not in分页</param>
     /// <returns>分页SQL</returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn)
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
     {
         // 从第一行开始，不需要分页
         if (startRowIndex <= 0 && maximumRows < 1) return sql;
@@ -166,10 +166,10 @@ internal class AccessSession : FileDbSession
 class AccessMetaData : FileDbMetaData
 {
     #region 构架
-    protected override List<IDataTable> OnGetTables(String[] names)
+    protected override List<IDataTable> OnGetTables(String[]? names)
     {
         var dt = GetSchema(_.Tables, null);
-        if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
+        if (dt?.Rows == null || dt.Rows.Count <= 0) return new List<IDataTable>();
 
         // 默认列出所有字段
         var rows = dt.Select($"TABLE_TYPE='Table' Or TABLE_TYPE='View'");
@@ -207,7 +207,7 @@ class AccessMetaData : FileDbMetaData
     protected override List<IDataIndex> GetIndexes(IDataTable table, DataTable indexes, DataTable indexColumns)
     {
         var list = base.GetIndexes(table, indexes, indexColumns);
-        if (list != null && list.Count > 0)
+        if (/*list != null &&*/ list.Count > 0)
         {
             // Access的索引直接以索引字段的方式排布，所以需要重新组合起来
             var dic = new Dictionary<String, IDataIndex>();
@@ -282,7 +282,7 @@ class AccessMetaData : FileDbMetaData
     #endregion
 
     #region 数据类型
-    protected override String GetFieldType(IDataColumn field)
+    protected override String? GetFieldType(IDataColumn field)
     {
         var typeName = base.GetFieldType(field);
 

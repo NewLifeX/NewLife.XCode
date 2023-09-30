@@ -832,7 +832,7 @@ public partial class DAL
         var md = Db.CreateMetaData() as DbMetaData;
         foreach (var item in tables)
         {
-            md.CreateTable(sb, item, true);
+            md!.CreateTable(sb, item, true);
             sb.AppendLine();
         }
 

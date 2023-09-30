@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Data;
 
@@ -16,7 +13,7 @@ public interface IAsyncDbSession : IDisposable2
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    Task<DbTable> QueryAsync(String sql, IDataParameter[] ps);
+    Task<DbTable> QueryAsync(String sql, IDataParameter[]? ps);
 
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="sql">SQL语句</param>

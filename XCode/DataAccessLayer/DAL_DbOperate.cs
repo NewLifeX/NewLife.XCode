@@ -55,7 +55,7 @@ partial class DAL
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
-    /// <param name="builder">SQL语句</param>
+    /// <param name="builder">SQL语句</param> 
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns></returns>
@@ -86,7 +86,7 @@ partial class DAL
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public DbTable Query(String sql, IDictionary<String, Object> ps = null)
+    public DbTable Query(String sql, IDictionary<String, Object>? ps = null)
     {
         return QueryByCache(sql, ps, "", (s, p, k3) => Session.Query(s, Db.CreateParameters(p)), nameof(Query));
     }
@@ -220,7 +220,7 @@ partial class DAL
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public Task<DbTable> QueryAsync(String sql, IDictionary<String, Object> ps = null)
+    public Task<DbTable> QueryAsync(String sql, IDictionary<String, Object>? ps = null)
     {
         return QueryByCacheAsync(sql, ps, "", (s, p, k3) => AsyncSession.QueryAsync(s, Db.CreateParameters(p)), nameof(QueryAsync));
     }
@@ -389,7 +389,7 @@ partial class DAL
     private TResult QueryByCache<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, TResult> callback, String action)
     {
         // 读写分离
-        if (Strategy != null)
+        if (Strategy != null && ReadOnly != null)
         {
             if (Strategy.Validate(this, k1 + "", action)) return ReadOnly.QueryByCache(k1, k2, k3, callback, action);
         }
@@ -502,7 +502,7 @@ partial class DAL
     private async Task<TResult> QueryByCacheAsync<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, Task<TResult>> callback, String action)
     {
         // 读写分离
-        if (Strategy != null)
+        if (Strategy != null && ReadOnly != null)
         {
             if (Strategy.Validate(this, k1 + "", action)) return await ReadOnly.QueryByCacheAsync(k1, k2, k3, callback, action);
         }
@@ -632,7 +632,7 @@ partial class DAL
         return list.ToArray();
     }
 
-    private static void Append(StringBuilder sb, Object value)
+    private static void Append(StringBuilder sb, Object? value)
     {
         if (value == null) return;
 

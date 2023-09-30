@@ -81,7 +81,7 @@ partial class DbMetaData
 
     /// <summary>取得所有表构架</summary>
     /// <returns></returns>
-    protected virtual List<IDataTable> OnGetTables(String[] names)
+    protected virtual List<IDataTable> OnGetTables(String[]? names)
     {
         var list = new List<IDataTable>();
 
@@ -99,7 +99,7 @@ partial class DbMetaData
     /// <param name="names">指定表名</param>
     /// <param name="data">扩展</param>
     /// <returns></returns>
-    protected List<IDataTable> GetTables(DataRow[] rows, String[] names, IDictionary<String, DataTable> data = null)
+    protected List<IDataTable> GetTables(DataRow[]? rows, String[]? names, IDictionary<String, DataTable>? data = null)
     {
         if (rows == null || rows.Length == 0) return new List<IDataTable>();
 
@@ -387,7 +387,7 @@ partial class DbMetaData
     /// <summary>取字段类型</summary>
     /// <param name="field">字段</param>
     /// <returns></returns>
-    protected virtual String GetFieldType(IDataColumn field)
+    protected virtual String? GetFieldType(IDataColumn field)
     {
         var type = field.DataType;
         if (type == null) return null;

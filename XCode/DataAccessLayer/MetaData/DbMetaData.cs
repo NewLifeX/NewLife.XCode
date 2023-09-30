@@ -75,7 +75,7 @@ abstract partial class DbMetaData : DisposeBase, IMetaData
     /// <param name="collectionName">指定要返回的架构的名称。</param>
     /// <param name="restrictionValues">为请求的架构指定一组限制值。</param>
     /// <returns></returns>
-    public DataTable GetSchema(String collectionName, String[] restrictionValues)
+    public DataTable? GetSchema(String collectionName, String[]? restrictionValues)
     {
         // 如果不是MetaDataCollections，并且MetaDataCollections中没有该集合，则返回空
         if (!collectionName.EqualIgnoreCase(DbMetaDataCollectionNames.MetaDataCollections))
@@ -233,6 +233,6 @@ abstract partial class DbMetaData : DisposeBase, IMetaData
     /// <summary>输出日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public static void WriteLog(String format, params Object[] args) => DAL.WriteLog(format, args);
+    public static void WriteLog(String format, params Object?[] args) => DAL.WriteLog(format, args);
     #endregion
 }

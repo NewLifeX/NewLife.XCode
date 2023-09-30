@@ -63,7 +63,7 @@ partial class DAL
     public static Action<String> LocalFilter { get => _filter.Value; set => _filter.Value = value; }
 
     /// <summary>APM跟踪器</summary>
-    public ITracer Tracer { get; set; } = GlobalTracer;
+    public ITracer? Tracer { get; set; } = GlobalTracer;
 
     /// <summary>全局APM跟踪器</summary>
     public static ITracer? GlobalTracer { get; set; } = DefaultTracer.Instance;

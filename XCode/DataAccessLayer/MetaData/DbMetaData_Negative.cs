@@ -121,7 +121,7 @@ internal partial class DbMetaData
 
     private void CheckAllTables(IDataTable[] tables, Migration mode, Boolean dbExit)
     {
-        IList<IDataTable> dbtables = null;
+        IList<IDataTable>? dbtables = null;
         if (dbExit)
         {
             var tableNames = tables.Select(e => FormatName(e, false)).ToArray();
@@ -847,7 +847,7 @@ internal partial class DbMetaData
         // 字段名
         sb.AppendFormat("{0} ", FormatName(field));
 
-        String typeName = null;
+        String? typeName = null;
         // 如果还是原来的数据库类型，则直接使用
         //if (Database.DbType == field.Table.DbType) typeName = field.RawType;
         // 每种数据库的自增差异太大，理应由各自处理，而不采用原始值
@@ -875,7 +875,7 @@ internal partial class DbMetaData
         // 字段名
         sb.AppendFormat("{0} ", FormatName(field));
 
-        String typeName = null;
+        String? typeName = null;
         // 如果还是原来的数据库类型，则直接使用
         //if (Database.DbType == field.Table.DbType) typeName = field.RawType;
         // 每种数据库的自增差异太大，理应由各自处理，而不采用原始值

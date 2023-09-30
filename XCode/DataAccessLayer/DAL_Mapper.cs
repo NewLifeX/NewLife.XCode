@@ -32,7 +32,7 @@ public partial class DAL
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public IEnumerable<T> Query<T>(String sql, Object param = null)
+    public IEnumerable<T> Query<T>(String sql, Object? param = null)
     {
         if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
@@ -97,14 +97,14 @@ public partial class DAL
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public T QuerySingle<T>(String sql, Object param = null) => Query<T>(sql, param).FirstOrDefault();
+    public T QuerySingle<T>(String sql, Object? param = null) => Query<T>(sql, param).FirstOrDefault();
 
     /// <summary>查询Sql并映射为结果集</summary>
     /// <typeparam name="T">实体类</typeparam>
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public async Task<IEnumerable<T>> QueryAsync<T>(String sql, Object param = null)
+    public async Task<IEnumerable<T>> QueryAsync<T>(String sql, Object? param = null)
     {
         if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
@@ -124,7 +124,7 @@ public partial class DAL
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public async Task<T> QuerySingleAsync<T>(String sql, Object param = null) => (await QueryAsync<T>(sql, param)).FirstOrDefault();
+    public async Task<T> QuerySingleAsync<T>(String sql, Object? param = null) => (await QueryAsync<T>(sql, param)).FirstOrDefault();
 
     private static Boolean IsValueTuple(Type type)
     {
@@ -139,7 +139,7 @@ public partial class DAL
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public Int32 Execute(String sql, Object param = null) =>
+    public Int32 Execute(String sql, Object? param = null) =>
         //var ps = param?.ToDictionary();
         ExecuteByCache(sql, "", param, (s, t, p) => Session.Execute(s, CommandType.Text, Db.CreateParameters(p)));
 
@@ -147,7 +147,7 @@ public partial class DAL
     /// <param name="sql"></param>
     /// <param name="param"></param>
     /// <returns></returns>
-    public IDataReader ExecuteReader(String sql, Object param = null)
+    public IDataReader ExecuteReader(String sql, Object? param = null)
     {
         var traceName = $"db:{ConnName}:ExecuteReader";
         if (Tracer != null)
@@ -176,21 +176,21 @@ public partial class DAL
     /// <param name="sql">SQL语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public T ExecuteScalar<T>(String sql, Object param = null) =>
+    public T ExecuteScalar<T>(String sql, Object? param = null) =>
         QueryByCache(sql, param, "", (s, p, k3) => Session.ExecuteScalar<T>(s, CommandType.Text, Db.CreateParameters(p)), nameof(ExecuteScalar));
 
     /// <summary>执行Sql</summary>
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public Task<Int32> ExecuteAsync(String sql, Object param = null) =>
+    public Task<Int32> ExecuteAsync(String sql, Object? param = null) =>
         ExecuteByCacheAsync(sql, "", param, (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, Db.CreateParameters(p)));
 
     /// <summary>执行Sql并返回数据读取器</summary>
     /// <param name="sql"></param>
     /// <param name="param"></param>
     /// <returns></returns>
-    public Task<DbDataReader> ExecuteReaderAsync(String sql, Object param = null)
+    public Task<DbDataReader> ExecuteReaderAsync(String sql, Object? param = null)
     {
         var traceName = $"db:{ConnName}:ExecuteReaderAsync";
         if (Tracer != null)
@@ -218,11 +218,11 @@ public partial class DAL
     /// <param name="sql">SQL语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public Task<T> ExecuteScalarAsync<T>(String sql, Object param = null) =>
+    public Task<T> ExecuteScalarAsync<T>(String sql, Object? param = null) =>
         QueryByCacheAsync(sql, param, "", (s, p, k3) => AsyncSession.ExecuteScalarAsync<T>(s, CommandType.Text, Db.CreateParameters(p)), nameof(ExecuteScalarAsync));
 
     private ConcurrentDictionary<Type, String> _tableMaps = new();
-    private String OnGetTableName(Type type)
+    private String? OnGetTableName(Type type)
     {
         if (GetTableName == null) return null;
 
@@ -241,7 +241,7 @@ public partial class DAL
     /// <param name="data">实体对象</param>
     /// <param name="tableName">表名</param>
     /// <returns></returns>
-    public Int32 Insert(Object data, String tableName = null)
+    public Int32 Insert(Object data, String? tableName = null)
     {
         if (tableName.IsNullOrEmpty() && GetTableName != null) tableName = OnGetTableName(data.GetType());
         if (tableName.IsNullOrEmpty()) tableName = data.GetType().Name;
@@ -261,7 +261,7 @@ public partial class DAL
     /// <param name="data">数据对象</param>
     /// <param name="mode">保存模式，默认Insert</param>
     /// <returns></returns>
-    public Int32 Insert(DbTable data, IDataTable table, IDataColumn[] columns = null, SaveModes mode = SaveModes.Insert)
+    public Int32 Insert(DbTable data, IDataTable table, IDataColumn[]? columns = null, SaveModes mode = SaveModes.Insert)
     {
         var rs = 0;
         foreach (var row in data)
@@ -277,7 +277,7 @@ public partial class DAL
     /// <param name="data">数据对象</param>
     /// <param name="mode">保存模式，默认Insert</param>
     /// <returns></returns>
-    public Int32 Insert(IModel data, IDataTable table, IDataColumn[] columns = null, SaveModes mode = SaveModes.Insert)
+    public Int32 Insert(IModel data, IDataTable table, IDataColumn[]? columns = null, SaveModes mode = SaveModes.Insert)
     {
         var builder = new InsertBuilder
         {
@@ -294,7 +294,7 @@ public partial class DAL
     /// <param name="where">查询条件。默认使用Id字段</param>
     /// <param name="tableName">表名</param>
     /// <returns></returns>
-    public Int32 Update(Object data, Object where, String tableName = null)
+    public Int32 Update(Object data, Object where, String? tableName = null)
     {
         if (tableName.IsNullOrEmpty() && GetTableName != null) tableName = OnGetTableName(data.GetType());
         if (tableName.IsNullOrEmpty()) tableName = data.GetType().Name;
@@ -387,7 +387,7 @@ public partial class DAL
     /// <param name="data">实体对象</param>
     /// <param name="tableName">表名</param>
     /// <returns></returns>
-    public Task<Int32> InsertAsync(Object data, String tableName = null)
+    public Task<Int32> InsertAsync(Object data, String? tableName = null)
     {
         if (tableName.IsNullOrEmpty() && GetTableName != null) tableName = OnGetTableName(data.GetType());
         if (tableName.IsNullOrEmpty()) tableName = data.GetType().Name;
@@ -406,7 +406,7 @@ public partial class DAL
     /// <param name="where">查询条件。默认使用Id字段</param>
     /// <param name="tableName">表名</param>
     /// <returns></returns>
-    public Task<Int32> UpdateAsync(Object data, Object where, String tableName = null)
+    public Task<Int32> UpdateAsync(Object data, Object where, String? tableName = null)
     {
         if (tableName.IsNullOrEmpty() && GetTableName != null) tableName = OnGetTableName(data.GetType());
         if (tableName.IsNullOrEmpty()) tableName = data.GetType().Name;

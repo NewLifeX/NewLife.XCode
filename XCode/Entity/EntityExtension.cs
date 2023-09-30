@@ -110,7 +110,7 @@ public static class EntityExtension
     /// <param name="useTransition">是否使用事务保护</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns></returns>
-    public static Int32 Insert<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession session = null) where T : IEntity
+    public static Int32 Insert<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
         var entity = list.FirstOrDefault(e => e != null);
@@ -164,7 +164,7 @@ public static class EntityExtension
     /// <param name="useTransition">是否使用事务保护</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns></returns>
-    public static Int32 Update<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession session = null) where T : IEntity
+    public static Int32 Update<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
         var entity = list.FirstOrDefault(e => e != null);
@@ -184,7 +184,7 @@ public static class EntityExtension
     /// <param name="useTransition">是否使用事务保护</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns></returns>
-    public static Int32 Save<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession session = null) where T : IEntity
+    public static Int32 Save<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         /*
        * Save的几个场景：
@@ -218,7 +218,7 @@ public static class EntityExtension
     /// <param name="useTransition">是否使用事务保护</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns></returns>
-    public static Int32 SaveWithoutValid<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession session = null) where T : IEntity
+    public static Int32 SaveWithoutValid<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
         var entity = list.FirstOrDefault(e => e != null);
@@ -299,7 +299,7 @@ public static class EntityExtension
     /// <param name="useTransition">是否使用事务保护</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns></returns>
-    public static Int32 Delete<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession session = null) where T : IEntity
+    public static Int32 Delete<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
         var entity = list.FirstOrDefault(e => e != null);
@@ -425,7 +425,7 @@ public static class EntityExtension
     /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
     /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
     /// </returns>
-    public static Int32 BatchInsert<T>(this IEnumerable<T> list, IDataColumn[] columns = null, IEntitySession session = null) where T : IEntity
+    public static Int32 BatchInsert<T>(this IEnumerable<T> list, IDataColumn[]? columns = null, IEntitySession? session = null) where T : IEntity
     {
         if (list == null || !list.Any()) return 0;
 
@@ -494,7 +494,7 @@ public static class EntityExtension
     /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
     /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
     /// </returns>
-    public static Int32 BatchInsertIgnore<T>(this IEnumerable<T> list, IDataColumn[] columns = null, IEntitySession session = null) where T : IEntity
+    public static Int32 BatchInsertIgnore<T>(this IEnumerable<T> list, IDataColumn[]? columns = null, IEntitySession? session = null) where T : IEntity
     {
         if (list == null || !list.Any()) return 0;
 
@@ -557,7 +557,7 @@ public static class EntityExtension
     /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
     /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
     /// </returns>
-    public static Int32 BatchReplace<T>(this IEnumerable<T> list, IDataColumn[] columns = null, IEntitySession session = null) where T : IEntity
+    public static Int32 BatchReplace<T>(this IEnumerable<T> list, IDataColumn[]? columns = null, IEntitySession? session = null) where T : IEntity
     {
         if (list == null || !list.Any()) return 0;
 
@@ -624,7 +624,7 @@ public static class EntityExtension
     /// <param name="addColumns">要累加更新的字段，默认累加</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns></returns>
-    public static Int32 BatchUpdate<T>(this IEnumerable<T> list, IDataColumn[] columns = null, ICollection<String> updateColumns = null, ICollection<String> addColumns = null, IEntitySession session = null) where T : IEntity
+    public static Int32 BatchUpdate<T>(this IEnumerable<T> list, IDataColumn[]? columns = null, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null) where T : IEntity
     {
         if (list == null || !list.Any()) return 0;
 
@@ -689,7 +689,7 @@ public static class EntityExtension
     /// 简单来说：对于一行记录，如果Insert 成功则返回1，如果需要执行的是update 则返回2
     /// Oracle返回值：无论是插入还是更新返回的都始终为-1
     /// </returns>
-    public static Int32 Upsert<T>(this IEnumerable<T> list, IDataColumn[] columns = null, ICollection<String> updateColumns = null, ICollection<String> addColumns = null, IEntitySession session = null) where T : IEntity
+    public static Int32 Upsert<T>(this IEnumerable<T> list, IDataColumn[]? columns = null, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null) where T : IEntity
     {
         if (list == null || !list.Any()) return 0;
 
@@ -805,7 +805,7 @@ public static class EntityExtension
     /// do update success =2次(insert 1次+update 1次)，
     /// 简单来说：如果Insert 成功则返回1，如果需要执行的是update 则返回2，
     /// </returns>
-    public static Int32 Upsert(this IEntity entity, IDataColumn[] columns = null, ICollection<String> updateColumns = null, ICollection<String> addColumns = null, IEntitySession session = null)
+    public static Int32 Upsert(this IEntity entity, IDataColumn[]? columns = null, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null)
     {
         var fact = entity.GetType().AsFactory();
         if (columns == null)
@@ -954,7 +954,7 @@ public static class EntityExtension
     /// <param name="fields">要导出的字段列表</param>
     /// <param name="displayfields">要导出的中文字段列表</param>
     /// <returns></returns>
-    public static Int64 SaveCsv<T>(this IEnumerable<T> list, Stream stream, String[] fields = null, String[] displayfields = null) where T : IEntity
+    public static Int64 SaveCsv<T>(this IEnumerable<T> list, Stream stream, String[]? fields = null, String[]? displayfields = null) where T : IEntity
     {
         if (list == null) return 0;
 
@@ -987,7 +987,7 @@ public static class EntityExtension
     /// <param name="fields">要导出的字段列表</param>
     /// <param name="displayfields">中文字段列表</param>
     /// <returns></returns>
-    public static Int64 SaveCsv<T>(this IEnumerable<T> list, String file, String[] fields, String[] displayfields = null) where T : IEntity
+    public static Int64 SaveCsv<T>(this IEnumerable<T> list, String file, String[] fields, String[]? displayfields = null) where T : IEntity
     {
         if (list == null) return 0;
 

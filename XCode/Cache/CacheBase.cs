@@ -70,7 +70,7 @@ public abstract class CacheBase : DisposeBase
 #endif
     }
 
-    internal void WriteLog(String format, params Object[] args)
+    internal void WriteLog(String format, params Object?[] args)
     {
         if (Debug) XTrace.WriteLine(LogPrefix + format, args);
     }

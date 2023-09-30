@@ -172,7 +172,7 @@ internal class Oracle : RemoteDb
         return $"To_Date('{dt:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
     }
 
-    public override String FormatValue(IDataColumn field, Object value)
+    public override String FormatValue(IDataColumn field, Object? value)
     {
         var code = System.Type.GetTypeCode(field.DataType);
         var isNullable = field.Nullable;
@@ -456,7 +456,7 @@ internal class OracleSession : RemoteDbSession
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public override Task<DbTable> QueryAsync(String sql, IDataParameter[] ps)
+    public override Task<DbTable> QueryAsync(String sql, IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, CommandType.Text, ps);
         return ExecuteAsync(cmd, true, async cmd2 =>
@@ -991,7 +991,7 @@ internal class OracleMeta : RemoteDbMetaData
         base.FixField(field, drColumn);
     }
 
-    protected override String GetFieldType(IDataColumn field)
+    protected override String? GetFieldType(IDataColumn field)
     {
         var precision = 0;
         var scale = 0;

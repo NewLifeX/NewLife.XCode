@@ -204,7 +204,7 @@ internal class SQLite : FileDbBase
         //return keyWord;
     }
 
-    public override String FormatValue(IDataColumn field, Object value)
+    public override String FormatValue(IDataColumn field, Object? value)
     {
         if (field.DataType == typeof(Byte[]))
         {
@@ -650,9 +650,10 @@ internal class SQLiteMetaData : FileDbMetaData
         }
     }
 
-    protected override String GetFieldType(IDataColumn field)
+    protected override String? GetFieldType(IDataColumn field)
     {
         var typeName = base.GetFieldType(field);
+        if (typeName.IsNullOrEmpty()) return typeName;
 
         // 自增字段必须是integer
         // 云飞扬2017-07-19 修改为也支持长整型转成integer
@@ -660,6 +661,7 @@ internal class SQLiteMetaData : FileDbMetaData
         //云飞扬 2017-07-05
         //因为SQLite的text长度比较小，这里设置为默认值
         if (typeName.Contains("text")) return "text";
+
         return typeName;
     }
 

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
@@ -112,7 +108,7 @@ internal class MySql : RemoteDb
     /// <param name="field">字段</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    public override String FormatValue(IDataColumn field, Object value)
+    public override String FormatValue(IDataColumn field, Object? value)
     {
         var code = System.Type.GetTypeCode(field.DataType);
         if (code == TypeCode.String)
@@ -527,7 +523,7 @@ internal class MySqlMetaData : RemoteDbMetaData
         return list;
     }
 
-    protected override String GetFieldType(IDataColumn field)
+    protected override String? GetFieldType(IDataColumn field)
     {
         //field.Length = field.Length > 255 ? 255 : field.Length;
         if (field.DataType == null && field.RawType == "datetimeoffset")

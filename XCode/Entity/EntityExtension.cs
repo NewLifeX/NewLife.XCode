@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using NewLife;
 using NewLife.Data;
@@ -8,6 +9,7 @@ using NewLife.Reflection;
 using NewLife.Serialization;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
+using XCode.Model;
 
 namespace XCode;
 
@@ -20,7 +22,7 @@ public static class EntityExtension
     /// <param name="valueField">作为Value部分的字段，默认为空表示整个实体对象为值</param>
     /// <returns></returns>
     //[Obsolete("将来不再支持实体列表，请改用Linq")]
-    public static IDictionary ToDictionary<T>(this IEnumerable<T> list, String valueField = null) where T : IEntity
+    public static IDictionary ToDictionary<T>(this IEnumerable<T> list, String? valueField = null) where T : IEntity
     {
         if (list == null || !list.Any()) return new Dictionary<String, String>();
 
@@ -40,6 +42,8 @@ public static class EntityExtension
 
         // 创建字典
         var dic = typeof(Dictionary<,>).MakeGenericType(ktype, type).CreateInstance() as IDictionary;
+        if (dic == null) throw new InvalidOperationException();
+
         foreach (var item in list)
         {
             var k = item[key.Name];
@@ -148,12 +152,12 @@ public static class EntityExtension
                 foreach (var item in dic)
                 {
                     var ss = item.Key;
-                    rs += BatchInsert(item.ToList(), null, ss);
+                    rs += BatchInsert(item.ToList(), option: null, ss);
                 }
                 return rs;
             }
 
-            return BatchInsert(list, null, session2);
+            return BatchInsert(list, option: null, session2);
         }
 
         return DoAction(list, useTransition, e => e.Insert(), session2);
@@ -175,7 +179,7 @@ public static class EntityExtension
 
         // Oracle批量更新
         return session.Dal.DbType == DatabaseType.Oracle && list.Count() > 1
-            ? BatchUpdate(list.Valid(false), null, null, null, session)
+            ? BatchUpdate(list.Valid(false), null, session)
             : DoAction(list, useTransition, e => e.Update(), session);
     }
 
@@ -278,18 +282,18 @@ public static class EntityExtension
             }
             list = upserts;
 
-            if (inserts.Count > 0) rs += BatchInsert(inserts, null, session);
+            if (inserts.Count > 0) rs += BatchInsert(inserts, option: null, session);
             if (updates.Count > 0)
             {
                 // 只有Oracle支持批量Update
                 if (session.Dal.DbType == DatabaseType.Oracle)
-                    rs += BatchUpdate(updates, null, null, null, session);
+                    rs += BatchUpdate(updates, null, session);
                 else
                     upserts.AddRange(upserts);
             }
         }
 
-        if (list.Any()) rs += Upsert(list, null, null, null, session);
+        if (list.Any()) rs += BatchUpsert(list, null, session);
 
         return rs;
     }
@@ -319,7 +323,10 @@ public static class EntityExtension
             var sql = $"Delete From {session.FormatedTableName} Where ";
             foreach (var item in list)
             {
-                ks.Add(item[pk.Name]);
+                var val = item[pk.Name];
+                if (val == null) continue;
+
+                ks.Add(val);
                 count++;
 
                 // 分批执行
@@ -422,18 +429,35 @@ public static class EntityExtension
     /// <param name="columns">要插入的字段，默认所有字段</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns>
-    /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
-    /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
+    /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
+    /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
     /// </returns>
-    public static Int32 BatchInsert<T>(this IEnumerable<T> list, IDataColumn[]? columns = null, IEntitySession? session = null) where T : IEntity
+    public static Int32 BatchInsert<T>(this IEnumerable<T> list, IDataColumn[] columns, IEntitySession? session = null) where T : IEntity
+    {
+        var option = new BatchOption { Columns = columns };
+        return BatchInsert(list, option, session);
+    }
+
+    /// <summary>批量插入</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="list">实体列表</param>
+    /// <param name="option">批操作选项</param>
+    /// <param name="session">指定会话，分表分库时必用</param>
+    /// <returns>
+    /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
+    /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
+    /// </returns>
+    public static Int32 BatchInsert<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
         if (list == null || !list.Any()) return 0;
 
+        option ??= new BatchOption();
+
         var entity = list.First();
         var fact = entity.GetType().AsFactory();
-        if (columns == null)
+        if (option.Columns == null)
         {
-            columns = fact.Fields.Select(e => e.Field).ToArray();
+            var columns = fact.Fields.Select(e => e.Field).ToArray();
 
             // 第一列数据包含非零自增，表示要插入自增值
             var id = columns.FirstOrDefault(e => e.Identity);
@@ -448,11 +472,13 @@ public static class EntityExtension
             //    columns = columns.Where(e => e.Nullable || dirtys.Contains(e.Name)).ToArray();
             //else
             //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
-            if (!fact.FullInsert)
+            if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
                 columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             }
+
+            option.Columns = columns;
         }
 
         session ??= fact.Session;
@@ -468,7 +494,7 @@ public static class EntityExtension
         {
             if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
-            var rs = dal.Session.Insert(session.Table, columns, list.Cast<IModel>());
+            var rs = dal.Session.Insert(session.Table, option.Columns, list.Cast<IModel>());
 
             // 清除脏数据，避免重复提交保存
             foreach (var item in list)
@@ -491,18 +517,35 @@ public static class EntityExtension
     /// <param name="columns">要插入的字段，默认所有字段</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns>
-    /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
-    /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
+    /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
+    /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
     /// </returns>
-    public static Int32 BatchInsertIgnore<T>(this IEnumerable<T> list, IDataColumn[]? columns = null, IEntitySession? session = null) where T : IEntity
+    public static Int32 BatchInsertIgnore<T>(this IEnumerable<T> list, IDataColumn[] columns, IEntitySession? session = null) where T : IEntity
+    {
+        var option = new BatchOption { Columns = columns };
+        return BatchInsertIgnore(list, option, session);
+    }
+
+    /// <summary>批量忽略插入</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="list">实体列表</param>
+    /// <param name="option">批操作选项</param>
+    /// <param name="session">指定会话，分表分库时必用</param>
+    /// <returns>
+    /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
+    /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
+    /// </returns>
+    public static Int32 BatchInsertIgnore<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
         if (list == null || !list.Any()) return 0;
 
+        option ??= new BatchOption();
+
         var entity = list.First();
         var fact = entity.GetType().AsFactory();
-        if (columns == null)
+        if (option.Columns == null)
         {
-            columns = fact.Fields.Select(e => e.Field).ToArray();
+            var columns = fact.Fields.Select(e => e.Field).ToArray();
 
             // 第一列数据包含非零自增，表示要插入自增值
             var id = columns.FirstOrDefault(e => e.Identity);
@@ -512,11 +555,12 @@ public static class EntityExtension
             }
 
             // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
-            if (!fact.FullInsert)
+            if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
                 columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             }
+            option.Columns = columns;
         }
 
         session ??= fact.Session;
@@ -531,7 +575,7 @@ public static class EntityExtension
         {
             if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
-            var rs = dal.Session.InsertIgnore(session.Table, columns, list.Cast<IModel>());
+            var rs = dal.Session.InsertIgnore(session.Table, option.Columns, list.Cast<IModel>());
 
             // 清除脏数据，避免重复提交保存
             foreach (var item in list)
@@ -554,18 +598,35 @@ public static class EntityExtension
     /// <param name="columns">要插入的字段，默认所有字段</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns>
-    /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
-    /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事物）
+    /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
+    /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
     /// </returns>
-    public static Int32 BatchReplace<T>(this IEnumerable<T> list, IDataColumn[]? columns = null, IEntitySession? session = null) where T : IEntity
+    public static Int32 BatchReplace<T>(this IEnumerable<T> list, IDataColumn[] columns, IEntitySession? session = null) where T : IEntity
+    {
+        var option = new BatchOption { Columns = columns };
+        return BatchReplace(list, option, session);
+    }
+
+    /// <summary>批量替换</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="list">实体列表</param>
+    /// <param name="option">批操作选项</param>
+    /// <param name="session">指定会话，分表分库时必用</param>
+    /// <returns>
+    /// Oracle：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
+    /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
+    /// </returns>
+    public static Int32 BatchReplace<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
         if (list == null || !list.Any()) return 0;
 
+        option ??= new BatchOption();
+
         var entity = list.First();
         var fact = entity.GetType().AsFactory();
-        if (columns == null)
+        if (option.Columns == null)
         {
-            columns = fact.Fields.Select(e => e.Field).ToArray();
+            var columns = fact.Fields.Select(e => e.Field).ToArray();
 
             // 第一列数据包含非零自增，表示要插入自增值
             var id = columns.FirstOrDefault(e => e.Identity);
@@ -575,11 +636,13 @@ public static class EntityExtension
             }
 
             // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
-            if (!fact.FullInsert)
+            if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
                 columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             }
+
+            option.Columns = columns;
         }
 
         session ??= fact.Session;
@@ -594,7 +657,7 @@ public static class EntityExtension
         {
             if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
-            var rs = dal.Session.Replace(session.Table, columns, list.Cast<IModel>());
+            var rs = dal.Session.Replace(session.Table, option.Columns, list.Cast<IModel>());
 
             // 清除脏数据，避免重复提交保存
             foreach (var item in list)
@@ -624,24 +687,44 @@ public static class EntityExtension
     /// <param name="addColumns">要累加更新的字段，默认累加</param>
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns></returns>
-    public static Int32 BatchUpdate<T>(this IEnumerable<T> list, IDataColumn[]? columns = null, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null) where T : IEntity
+    public static Int32 BatchUpdate<T>(this IEnumerable<T> list, IDataColumn[] columns, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null) where T : IEntity
+    {
+        var option = new BatchOption { Columns = columns, UpdateColumns = updateColumns, AddColumns = addColumns };
+        return BatchUpdate(list, option, session);
+    }
+
+    /// <summary>批量更新</summary>
+    /// <remarks>
+    /// 注意类似：XCode.Exceptions.XSqlException: ORA-00933: SQL 命令未正确结束
+    /// [SQL:Update tablen_Name Set FieldName=:FieldName W [:FieldName=System.Int32[]]][DB:AAA/Oracle]
+    /// 建议是优先检查表是否存在主键，如果由于没有主键导致，即使通过try...cache 依旧无法正常保存。
+    /// </remarks>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="list">实体列表</param>
+    /// <param name="option">批操作选项</param>
+    /// <param name="session">指定会话，分表分库时必用</param>
+    /// <returns></returns>
+    public static Int32 BatchUpdate<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
         if (list == null || !list.Any()) return 0;
 
+        option ??= new BatchOption();
+
         var entity = list.First();
         var fact = entity.GetType().AsFactory();
-        columns ??= fact.Fields.Select(e => e.Field).Where(e => !e.Identity).ToArray();
+        option.Columns ??= fact.Fields.Select(e => e.Field).Where(e => !e.Identity).ToArray();
         //if (updateColumns == null) updateColumns = entity.Dirtys.Keys;
-        if (updateColumns == null)
+        if (option.UpdateColumns == null)
         {
             // 所有实体对象的脏字段作为更新字段
             var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
             // 创建时间等字段不参与Update
             dirtys = dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).ToArray();
 
-            if (dirtys.Length > 0) updateColumns = dirtys;
+            if (dirtys.Length > 0) option.UpdateColumns = dirtys;
         }
-        addColumns ??= fact.AdditionalFields;
+        var updateColumns = option.UpdateColumns;
+        var addColumns = option.AddColumns ??= fact.AdditionalFields;
 
         if ((updateColumns == null || updateColumns.Count <= 0) && (addColumns == null || addColumns.Count <= 0)) return 0;
 
@@ -658,7 +741,7 @@ public static class EntityExtension
         {
             if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
-            var rs = dal.Session.Update(session.Table, columns, updateColumns, addColumns, list.Cast<IModel>());
+            var rs = dal.Session.Update(session.Table, option.Columns, updateColumns, addColumns, list.Cast<IModel>());
 
             // 清除脏数据，避免重复提交保存
             foreach (var item in list)
@@ -689,20 +772,40 @@ public static class EntityExtension
     /// 简单来说：对于一行记录，如果Insert 成功则返回1，如果需要执行的是update 则返回2
     /// Oracle返回值：无论是插入还是更新返回的都始终为-1
     /// </returns>
-    public static Int32 Upsert<T>(this IEnumerable<T> list, IDataColumn[]? columns = null, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null) where T : IEntity
+    public static Int32 Upsert<T>(this IEnumerable<T> list, IDataColumn[] columns, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null) where T : IEntity
+    {
+        var option = new BatchOption { Columns = columns, UpdateColumns = updateColumns, AddColumns = addColumns };
+        return BatchUpsert(list, option, session);
+    }
+
+    /// <summary>批量插入或更新</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="list">实体列表</param>
+    /// <param name="option">批操作选项</param>
+    /// <param name="session">指定会话，分表分库时必用</param>
+    /// <returns>
+    /// MySQL返回值：返回值相当于流程执行次数，及时insert失败也会累计一次执行（所以不建议通过该返回值确定操作记录数）
+    /// do insert success = 1次; 
+    /// do update success =2次(insert 1次+update 1次)，
+    /// 简单来说：对于一行记录，如果Insert 成功则返回1，如果需要执行的是update 则返回2
+    /// Oracle返回值：无论是插入还是更新返回的都始终为-1
+    /// </returns>
+    public static Int32 BatchUpsert<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
         if (list == null || !list.Any()) return 0;
+
+        option ??= new BatchOption();
 
         var entity = list.First();
         var fact = entity.GetType().AsFactory();
         session ??= fact.Session;
 
         // 批量Upsert需要主键参与，哪怕是自增，构建update的where时用到主键
-        if (columns == null)
+        if (option.Columns == null)
         {
-            columns = fact.Fields.Select(e => e.Field).ToArray();
+            var columns = fact.Fields.Select(e => e.Field).ToArray();
 
-            if (!fact.FullInsert)
+            if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
                 columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
@@ -715,11 +818,11 @@ public static class EntityExtension
                 // 如果所有自增字段都是0，则不参与批量Upsert
                 if (list.All(e => e[uk.Name].ToLong() == 0))
                     columns = columns.Where(e => !e.Identity).ToArray();
-                else if (list.All(e => e[uk.Name].ToLong() != 0))
-                { }
-                else
+                else if (list.Any(e => e[uk.Name].ToLong() == 0))
                     throw new NotSupportedException($"Upsert遇到自增字段，且部分为0部分不为0，无法同时支持Insert和Update");
             }
+
+            option.Columns = columns;
 
             //var dbt = session.Dal.DbType;
             //if (dbt is DatabaseType.SqlServer or DatabaseType.Oracle)
@@ -750,16 +853,17 @@ public static class EntityExtension
             //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
         }
         //if (updateColumns == null) updateColumns = entity.Dirtys.Keys;
-        if (updateColumns == null)
+        if (option.UpdateColumns == null)
         {
             // 所有实体对象的脏字段作为更新字段
             var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
             // 创建时间等字段不参与Update
             dirtys = dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).ToArray();
 
-            if (dirtys.Length > 0) updateColumns = dirtys;
+            if (dirtys.Length > 0) option.UpdateColumns = dirtys;
         }
-        addColumns ??= fact.AdditionalFields;
+        var updateColumns = option.UpdateColumns;
+        var addColumns = option.AddColumns ??= fact.AdditionalFields;
         // 没有任何数据变更则直接返回0
         if ((updateColumns == null || updateColumns.Count <= 0) && (addColumns == null || addColumns.Count <= 0)) return 0;
 
@@ -776,7 +880,7 @@ public static class EntityExtension
         {
             if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
-            var rs = dal.Session.Upsert(session.Table, columns, updateColumns, addColumns, list.Cast<IModel>());
+            var rs = dal.Session.Upsert(session.Table, option.Columns, updateColumns, addColumns, list.Cast<IModel>());
 
             // 清除脏数据，避免重复提交保存
             foreach (var item in list)
@@ -805,12 +909,30 @@ public static class EntityExtension
     /// do update success =2次(insert 1次+update 1次)，
     /// 简单来说：如果Insert 成功则返回1，如果需要执行的是update 则返回2，
     /// </returns>
-    public static Int32 Upsert(this IEntity entity, IDataColumn[]? columns = null, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null)
+    public static Int32 Upsert(this IEntity entity, IDataColumn[] columns, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null)
     {
+        var option = new BatchOption { Columns = columns, UpdateColumns = updateColumns, AddColumns = addColumns };
+        return Upsert(entity, option, session);
+    }
+
+    /// <summary>批量插入或更新</summary>
+    /// <param name="entity">实体对象</param>
+    /// <param name="option">批操作选项</param>
+    /// <param name="session">指定会话，分表分库时必用</param>
+    /// <returns>
+    /// MySQL返回值：返回值相当于流程执行次数，及时insert失败也会累计一次执行（所以不建议通过该返回值确定操作记录数）
+    /// do insert success = 1次; 
+    /// do update success =2次(insert 1次+update 1次)，
+    /// 简单来说：如果Insert 成功则返回1，如果需要执行的是update 则返回2，
+    /// </returns>
+    public static Int32 Upsert(this IEntity entity, BatchOption? option = null, IEntitySession? session = null)
+    {
+        option ??= new BatchOption();
+
         var fact = entity.GetType().AsFactory();
-        if (columns == null)
+        if (option.Columns == null)
         {
-            columns = fact.Fields.Select(e => e.Field).Where(e => !e.Identity).ToArray();
+            var columns = fact.Fields.Select(e => e.Field).Where(e => !e.Identity).ToArray();
 
             // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
             //var dirtys = GetDirtyColumns(fact, new[] { entity });
@@ -818,14 +940,15 @@ public static class EntityExtension
             //    columns = columns.Where(e => e.Nullable || dirtys.Contains(e.Name)).ToArray();
             //else
             //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
-            if (!fact.FullInsert)
+            if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, new[] { entity });
                 columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
             }
+            option.Columns = columns;
         }
-        updateColumns ??= entity.Dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).Distinct().ToArray();
-        addColumns ??= fact.AdditionalFields;
+        option.UpdateColumns ??= entity.Dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).Distinct().ToArray();
+        option.AddColumns ??= fact.AdditionalFields;
 
         session ??= fact.Session;
         session.InitData();
@@ -840,7 +963,7 @@ public static class EntityExtension
         {
             if (span != null) span.Tag = $"{session.TableName}[{entity}]";
 
-            return dal.Session.Upsert(session.Table, columns, updateColumns, addColumns, new[] { entity as IModel });
+            return dal.Session.Upsert(session.Table, option.Columns, option.UpdateColumns, option.AddColumns, new[] { entity as IModel });
         }
         catch (Exception ex)
         {
@@ -880,9 +1003,9 @@ public static class EntityExtension
     public static DbTable ToTable<T>(this IEnumerable<T> list) where T : IEntity
     {
         var entity = list.FirstOrDefault();
-        if (entity == null) return null;
+        //if (entity == null) return null;
 
-        var fact = entity.GetType().AsFactory();
+        var fact = (entity?.GetType() ?? typeof(T)).AsFactory();
         var fs = fact.Fields;
 
         var count = fs.Length;
@@ -890,7 +1013,7 @@ public static class EntityExtension
         {
             Columns = new String[count],
             Types = new Type[count],
-            Rows = new List<Object[]>(),
+            Rows = new List<Object?[]>(),
         };
         for (var i = 0; i < fs.Length; i++)
         {
@@ -901,7 +1024,7 @@ public static class EntityExtension
 
         foreach (var item in list)
         {
-            var dr = new Object[count];
+            var dr = new Object?[count];
             for (var i = 0; i < fs.Length; i++)
             {
                 var fi = fs[i];
@@ -922,9 +1045,9 @@ public static class EntityExtension
         if (list == null) return 0;
 
         var p = stream.Position;
-        foreach (var item in list)
+        foreach (var entity in list)
         {
-            (item as IAccessor).Write(stream, null);
+            if (entity is IAccessor acc) acc.Write(stream, null);
         }
 
         return stream.Position - p;
@@ -941,9 +1064,9 @@ public static class EntityExtension
         var compressed = file.EndsWithIgnoreCase(".gz");
         return file.AsFile().OpenWrite(compressed, fs =>
         {
-            foreach (var item in list)
+            foreach (var entity in list)
             {
-                (item as IAccessor).Write(fs, null);
+                if (entity is IAccessor acc) acc.Write(fs, null);
             }
         });
     }
@@ -1027,7 +1150,7 @@ public static class EntityExtension
         while (stream.Position < stream.Length)
         {
             var entity = (T)fact.Create();
-            (entity as IAccessor).Read(stream, null);
+            if (entity is IAccessor acc) acc.Read(stream, null);
 
             list.Add(entity);
         }
@@ -1047,7 +1170,7 @@ public static class EntityExtension
         while (stream.Position < stream.Length)
         {
             var entity = (T)fact.Create();
-            (entity as IAccessor).Read(stream, null);
+            if (entity is IAccessor acc) acc.Read(stream, null);
 
             list.Add(entity);
 
@@ -1072,7 +1195,7 @@ public static class EntityExtension
             while (fs.Position < fs.Length)
             {
                 var entity = (T)fact.Create();
-                (entity as IAccessor).Read(fs, null);
+                if (entity is IAccessor acc) acc.Read(fs, null);
 
                 list.Add(entity);
             }
@@ -1092,6 +1215,8 @@ public static class EntityExtension
 
         // 匹配字段
         var names = csv.ReadLine();
+        if (names == null || names.Length == 0) return list;
+
         var fields = new FieldItem[names.Length];
         for (var i = 0; i < names.Length; i++)
         {
@@ -1140,12 +1265,12 @@ public static class EntityExtension
     /// <returns></returns>
     public static DataTable ToDataTable<T>(this IEnumerable<T> list) where T : IEntity
     {
+        var dt = new DataTable();
         var entity = list.FirstOrDefault();
-        if (entity == null) return null;
+        if (entity == null) return dt;
 
         var fact = entity.GetType().AsFactory();
 
-        var dt = new DataTable();
         foreach (var fi in fact.Fields)
         {
             var dc = new DataColumn

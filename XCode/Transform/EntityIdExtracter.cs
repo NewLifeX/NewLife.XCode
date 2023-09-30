@@ -23,8 +23,8 @@ public class EntityIdExtracter
     #endregion
 
     #region 构造
-    /// <summary>实例化数据抽取器</summary>
-    public EntityIdExtracter() { }
+    ///// <summary>实例化数据抽取器</summary>
+    //public EntityIdExtracter() { }
 
     /// <summary>实例化数据抽取器</summary>
     /// <param name="factory"></param>
@@ -59,7 +59,10 @@ public class EntityIdExtracter
             if (list.Count < BatchSize) break;
 
             // 自增分割时，取最后一行
-            Row = (Int64)list.Last()[IdField.Name];
+            var rs = list.Last()[IdField.Name];
+            if (rs == null) break;
+
+            Row = (Int64)rs;
         }
     }
     #endregion

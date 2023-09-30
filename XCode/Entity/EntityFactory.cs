@@ -184,13 +184,13 @@ namespace XCode
         /// <param name="connName">连接名</param>
         public static void InitConnection(String connName) => Init(connName, null);
 
-        private static void Init(String connName, IList<Type> types)
+        private static void Init(String connName, IList<Type>? types)
         {
             using var span = DefaultTracer.Instance?.NewSpan($"db:{connName}:InitConnection", connName);
             try
             {
                 // 加载所有实体类
-                if (types == null) types = typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType.IsGenericType).ToList();
+                types ??= typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType.IsGenericType).ToList();
 
                 // 初始化工厂
                 var facts = new List<IEntityFactory>();
@@ -216,9 +216,9 @@ namespace XCode
                     {
                         // 克隆一份，防止修改
                         var table = item.Table.DataTable;
-                        table = table.Clone() as IDataTable;
+                        table = (table.Clone() as IDataTable)!;
 
-                        if (table != null && table.TableName != item.TableName)
+                        if (/*table != null &&*/ table.TableName != item.TableName)
                         {
                             // 表名去掉前缀
                             var name = item.TableName;

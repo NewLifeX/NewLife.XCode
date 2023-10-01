@@ -264,7 +264,7 @@ partial class DAL
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public Task<Int32> ExecuteAsync(String sql, CommandType type, params IDataParameter[] ps)
+    public Task<Int32> ExecuteAsync(String sql, CommandType type, params IDataParameter[]? ps)
     {
         return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteAsync(s, t, p));
     }
@@ -274,7 +274,7 @@ partial class DAL
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type, params IDataParameter[] ps)
+    public Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type, params IDataParameter[]? ps)
     {
         return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.InsertAndGetIdentityAsync(s, t, p));
     }
@@ -412,7 +412,7 @@ partial class DAL
             Append(sb, k3);
             key = sb.Put(true);
 
-            if (cache.TryGetValue<TResult>(key, out var value)) return value;
+            if (cache.TryGetValue<TResult>(key, out var value)) return value!;
         }
 
         Interlocked.Increment(ref _QueryTimes);
@@ -525,7 +525,7 @@ partial class DAL
             Append(sb, k3);
             key = sb.Put(true);
 
-            if (cache.TryGetValue<TResult>(key, out var value)) return value;
+            if (cache.TryGetValue<TResult>(key, out var value)) return value!;
         }
 
         Interlocked.Increment(ref _QueryTimes);

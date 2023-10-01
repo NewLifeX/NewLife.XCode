@@ -272,7 +272,7 @@ abstract class DbBase : DisposeBase, IDatabase
     public Int32 CommandTimeout { get; set; }
 
     /// <summary>性能追踪器</summary>
-    public ITracer Tracer { get; set; }
+    public ITracer? Tracer { get; set; }
     #endregion
 
     #region 方法

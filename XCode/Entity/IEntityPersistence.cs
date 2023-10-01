@@ -122,6 +122,12 @@ public class EntityPersistence : IEntityPersistence
     public IEntityFactory Factory { get; set; }
     #endregion
 
+    #region 构造
+    /// <summary>实例化</summary>
+    /// <param name="factory"></param>
+    public EntityPersistence(IEntityFactory factory) => Factory = factory;
+    #endregion
+
     #region 添删改方法
     /// <summary>插入</summary>
     /// <param name="session">实体会话</param>
@@ -195,7 +201,7 @@ public class EntityPersistence : IEntityPersistence
         // 没有脏数据，不需要更新
         if (!entity.HasDirty) return 0;
 
-        IDataParameter[] dps = null;
+        IDataParameter[]? dps = null;
         var sql = "";
 
         // 双锁判断脏数据
@@ -223,7 +229,7 @@ public class EntityPersistence : IEntityPersistence
     /// <returns></returns>
     public virtual Int32 Delete(IEntitySession session, IEntity entity)
     {
-        IDataParameter[] dps = null;
+        IDataParameter[]? dps = null;
         var sql = SQL(session, entity, DataObjectMethodType.Delete, ref dps);
         if (String.IsNullOrEmpty(sql)) return 0;
 
@@ -246,7 +252,7 @@ public class EntityPersistence : IEntityPersistence
         // 添加数据前，处理Guid
         SetGuidField(factory.AutoSetGuidField, entity);
 
-        IDataParameter[] dps = null;
+        IDataParameter[]? dps = null;
         var sql = SQL(session, entity, DataObjectMethodType.Insert, ref dps);
         if (String.IsNullOrEmpty(sql)) return 0;
 
@@ -483,7 +489,7 @@ public class EntityPersistence : IEntityPersistence
     /// <param name="methodType"></param>
     /// <param name="parameters">参数数组</param>
     /// <returns>SQL字符串</returns>
-    String SQL(IEntitySession session, IEntity entity, DataObjectMethodType methodType, ref IDataParameter[] parameters)
+    String SQL(IEntitySession session, IEntity entity, DataObjectMethodType methodType, ref IDataParameter[]? parameters)
     {
         return methodType switch
         {
@@ -494,7 +500,7 @@ public class EntityPersistence : IEntityPersistence
         };
     }
 
-    String InsertSQL(IEntitySession session, IEntity entity, ref IDataParameter[] parameters)
+    String InsertSQL(IEntitySession session, IEntity entity, ref IDataParameter[]? parameters)
     {
         var factory = Factory;
         var db = session.Dal.Db;
@@ -581,7 +587,7 @@ public class EntityPersistence : IEntityPersistence
         if (!fi.IsIdentity) return false;
 
         // 有些时候需要向自增字段插入数据，这里特殊处理
-        String idv = null;
+        String? idv = null;
         var factory = Factory;
         if (factory.AllowInsertIdentity)
             idv = "" + value;
@@ -599,7 +605,7 @@ public class EntityPersistence : IEntityPersistence
         return true;
     }
 
-    String UpdateSQL(IEntitySession session, IEntity entity, ref IDataParameter[] parameters)
+    String UpdateSQL(IEntitySession session, IEntity entity, ref IDataParameter[]? parameters)
     {
         /*
          * 实体更新原则：
@@ -700,7 +706,7 @@ public class EntityPersistence : IEntityPersistence
         return $"Update {session.FormatedTableName} Set {str} Where {def}";
     }
 
-    String DeleteSQL(IEntitySession session, IEntity entity, ref IDataParameter[] parameters)
+    String DeleteSQL(IEntitySession session, IEntity entity, ref IDataParameter[]? parameters)
     {
         var factory = Factory;
         var db = session.Dal.Db;

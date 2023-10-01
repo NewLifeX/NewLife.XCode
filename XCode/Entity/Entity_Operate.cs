@@ -60,7 +60,7 @@ public partial class Entity<TEntity>
         public DefaultEntityFactory()
         {
             //MasterTime = GetMasterTime();
-            Persistence = new EntityPersistence { Factory = this };
+            Persistence = new EntityPersistence(this);
             Accessor = new DataRowEntityAccessor();
         }
         #endregion

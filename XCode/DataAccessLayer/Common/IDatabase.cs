@@ -216,7 +216,7 @@ public interface IDatabase : IDisposable2
     /// <summary>创建参数数组</summary>
     /// <param name="ps"></param>
     /// <returns></returns>
-    IDataParameter[] CreateParameters(IDictionary<String, Object> ps);
+    IDataParameter[] CreateParameters(IDictionary<String, Object>? ps);
 
     /// <summary>根据对象成员创建参数数组</summary>
     /// <param name="model"></param>

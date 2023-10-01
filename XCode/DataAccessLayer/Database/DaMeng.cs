@@ -101,7 +101,7 @@ class DaMeng : RemoteDb
     /// <param name="value">值</param>
     /// <param name="type">类型</param>
     /// <returns></returns>
-    public override IDataParameter CreateParameter(String name, Object value, Type type = null)
+    public override IDataParameter CreateParameter(String name, Object? value, Type? type = null)
     {
         //var type = field?.DataType;
         if (type == null)
@@ -232,8 +232,8 @@ internal class DaMengSession : RemoteDbSession
         if (p >= 0 && p < tableName.Length - 1) tableName = tableName[(p + 1)..];
         tableName = tableName.ToUpper();
 
-        var owner = (Database as DaMeng).Owner;
-        if (owner.IsNullOrEmpty()) owner = (Database as DaMeng).User;
+        var owner = (Database as DaMeng)!.Owner;
+        if (owner.IsNullOrEmpty()) owner = (Database as DaMeng)!.User;
         owner = owner.ToUpper();
 
         // 某些表没有聚集索引，导致查出来的函数为零
@@ -241,7 +241,7 @@ internal class DaMengSession : RemoteDbSession
         return ExecuteScalarAsync<Int64>(sql);
     }
 
-    public override async Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override async Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         BeginTransaction(IsolationLevel.Serializable);
         try
@@ -264,16 +264,16 @@ internal class DaMengSession : RemoteDbSession
     /// <param name="type"></param>
     /// <param name="ps"></param>
     /// <returns></returns>
-    protected override DbCommand OnCreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    protected override DbCommand OnCreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         var cmd = base.OnCreateCommand(sql, type, ps);
-        if (cmd == null) return null;
+        //if (cmd == null) return null;
 
         // 如果参数Value都是数组，那么就是批量操作
         if (ps != null && ps.Length > 0 && ps.All(p => p.Value is IList))
         {
-            var arr = ps.First().Value as IList;
-            cmd.SetValue("ArrayBindCount", arr.Count);
+            if (ps.First().Value is IList arr)
+                cmd.SetValue("ArrayBindCount", arr.Count);
             cmd.SetValue("BindByName", true);
 
             // 超时时间放大10倍
@@ -456,20 +456,20 @@ class DaMengMeta : RemoteDbMetaData
         get
         {
             var owner = Database.Owner;
-            if (owner.IsNullOrEmpty()) owner = (Database as DaMeng).User;
+            if (owner.IsNullOrEmpty()) owner = (Database as DaMeng)!.User;
 
             return owner;
         }
     }
 
     /// <summary>用户名</summary>
-    public String UserID => (Database as DaMeng).User.ToUpper();
+    public String UserID => (Database as DaMeng)!.User.ToUpper();
 
     /// <summary>取得所有表构架</summary>
     /// <returns></returns>
     protected override List<IDataTable> OnGetTables(String[] names)
     {
-        DataTable dt = null;
+        DataTable? dt = null;
 
         // 不缺分大小写，并且不是保留字，才转大写
         if (names != null)
@@ -480,7 +480,7 @@ class DaMengMeta : RemoteDbMetaData
         }
 
         // 采用集合过滤，提高效率
-        String tableName = null;
+        String? tableName = null;
         if (names != null && names.Length == 1) tableName = names.FirstOrDefault();
         if (tableName.IsNullOrEmpty()) tableName = null;
 

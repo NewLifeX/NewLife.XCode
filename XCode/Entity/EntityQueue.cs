@@ -41,10 +41,10 @@ public class EntityQueue : DisposeBase
     public Int32 Speed { get; private set; }
 
     /// <summary>链路追踪</summary>
-    public ITracer Tracer { get; set; } = DAL.GlobalTracer;
+    public ITracer? Tracer { get; set; } = DAL.GlobalTracer;
 
-    private TimerX _Timer;
-    private String _lastTraceId;
+    private TimerX? _Timer;
+    private String? _lastTraceId;
     #endregion
 
     #region 构造
@@ -119,7 +119,7 @@ public class EntityQueue : DisposeBase
     /// <summary>当前缓存个数</summary>
     private Int32 _count;
 
-    private void Work(Object state)
+    private void Work(Object? state)
     {
         var list = new List<IEntity>();
         var n = 0;
@@ -181,6 +181,8 @@ public class EntityQueue : DisposeBase
     private void Process(Object state)
     {
         var list = state as ICollection<IEntity>;
+        if (list == null) return;
+
         var ss = Session;
 
         var speed = Speed;
@@ -233,7 +235,7 @@ public class EntityQueue : DisposeBase
         // 最大间隔
         if (p > 5000) p = 5000;
 
-        if (p != Period)
+        if (p != Period && _Timer != null)
         {
             Period = p;
             _Timer.Period = p;
@@ -249,7 +251,7 @@ public class EntityQueue : DisposeBase
         }
 
         // 马上再来一次，以便于连续处理数据
-        _Timer.SetNext(-1);
+        _Timer?.SetNext(-1);
     }
 
     /// <summary>处理一批数据。插入或更新</summary>

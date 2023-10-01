@@ -524,7 +524,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual DbCommand CreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual DbCommand CreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         var cmd = OnCreateCommand(sql, type, ps);
         Transaction?.Check(cmd, true);
@@ -540,7 +540,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     protected virtual DbCommand OnCreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         var cmd = Database.Factory?.CreateCommand();
-        if (cmd == null) return null;
+        if (cmd == null) throw new InvalidOperationException();
 
         cmd.CommandType = type;
         cmd.CommandText = sql;
@@ -624,7 +624,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public virtual Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
 
@@ -643,7 +643,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Task<T> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual Task<T> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
         return ExecuteAsync(cmd, true, async cmd2 =>

@@ -230,7 +230,7 @@ public partial class DAL
     }
 
     private ConcurrentDictionary<Type, String> _keyMaps = new();
-    private String OnGetKeyName(Type type)
+    private String? OnGetKeyName(Type type)
     {
         if (GetKeyName == null) return null;
 
@@ -285,6 +285,7 @@ public partial class DAL
             UseParameter = true
         };
         var sql = builder.GetSql(Db, table, columns, data);
+        if (sql.IsNullOrEmpty()) return 0;
 
         return ExecuteByCache(sql, "", builder.Parameters, (s, t, p) => Session.Execute(s, CommandType.Text, p));
     }

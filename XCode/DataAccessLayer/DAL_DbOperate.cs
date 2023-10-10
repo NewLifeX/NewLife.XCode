@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Collections;
@@ -177,7 +173,7 @@ partial class DAL
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
     /// <param name="sql">SQL语句</param>
-    /// <param name="commandTimeout">命令超时时间，一般用于需要长时间执行的命令</param>
+    /// <param name="commandTimeout">命令超时时间，一般用于需要长时间执行的命令。单位秒</param>
     /// <returns></returns>
     public Int32 Execute(String sql, Int32 commandTimeout)
     {

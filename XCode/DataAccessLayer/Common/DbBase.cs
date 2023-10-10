@@ -957,7 +957,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>创建参数数组</summary>
     /// <param name="ps"></param>
     /// <returns></returns>
-    public virtual IDataParameter[] CreateParameters(IDictionary<String, Object> ps) => ps.Select(e => CreateParameter(e.Key, e.Value)).ToArray();
+    public virtual IDataParameter[] CreateParameters(IDictionary<String, Object>? ps) => ps?.Select(e => CreateParameter(e.Key, e.Value)).ToArray() ?? new IDataParameter[0];
 
     /// <summary>根据对象成员创建参数数组</summary>
     /// <param name="model"></param>

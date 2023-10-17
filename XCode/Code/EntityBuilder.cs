@@ -957,6 +957,7 @@ public class EntityBuilder : ClassBuilder
         WriteLine("}");
     }
 
+    static String[] _validExcludes = new[] { "CreateUser", "CreateUserIP", "UpdateUser", "UpdateUserIP", "TraceId" };
     /// <summary>数据验证</summary>
     protected virtual void BuildValid()
     {
@@ -968,15 +969,35 @@ public class EntityBuilder : ClassBuilder
             WriteLine("// 如果没有脏数据，则不需要进行任何处理");
             WriteLine("if (!HasDirty) return;");
 
-            // 非空判断
-            var cs = Table.Columns.Where(e => !e.Nullable && e.DataType == typeof(String)).ToArray();
+            // 非空判断，字符串且没有默认值
+            var cs = Table.Columns.Where(e => !e.Nullable && e.DataType == typeof(String) && e.DefaultValue.IsNullOrEmpty()).ToArray();
+            // 剔除CreateUser/UpdateUser等特殊字段
+            cs = cs.Where(e => !e.Name.EqualIgnoreCase(_validExcludes)).ToArray();
             if (cs.Length > 0)
             {
+                // 有索引的字段判断Empty，不允许空字符串（不利于索引），其它判断null
+                var ds = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+                foreach (var di in Table.Indexes)
+                {
+                    foreach (var item in Table.GetColumns(di.Columns))
+                    {
+                        if (!ds.Contains(item.Name)) ds.Add(item.Name);
+                    }
+                }
+                // 主要字段也判断
+                foreach (var item in Table.Columns)
+                {
+                    if (item.Master && !ds.Contains(item.Name)) ds.Add(item.Name);
+                }
+
                 WriteLine();
                 WriteLine("// 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框");
                 foreach (var item in cs)
                 {
-                    WriteLine("if ({0}.IsNullOrEmpty()) throw new ArgumentNullException({1}, \"{2}不能为空！\");", item.Name, NameOf(item.Name), item.DisplayName ?? item.Name);
+                    if (ds.Contains(item.Name))
+                        WriteLine("if ({0}.IsNullOrEmpty()) throw new ArgumentNullException({1}, \"{2}不能为空！\");", item.Name, NameOf(item.Name), item.DisplayName ?? item.Name);
+                    else
+                        WriteLine("if ({0} == null) throw new ArgumentNullException({1}, \"{2}不能为空！\");", item.Name, NameOf(item.Name), item.DisplayName ?? item.Name);
                 }
             }
 

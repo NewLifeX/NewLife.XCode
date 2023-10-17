@@ -35,13 +35,13 @@ public partial class User : IUser, IEntity<IUser>
     [BindColumn("ID", "编号", "")]
     public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
-    private String? _Name;
+    private String _Name = null!;
     /// <summary>名称。登录用户名</summary>
     [DisplayName("名称")]
     [Description("名称。登录用户名")]
     [DataObjectField(false, false, false, 50)]
     [BindColumn("Name", "名称。登录用户名", "", Master = true)]
-    public String? Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+    public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
     private String? _Password;
     /// <summary>密码</summary>

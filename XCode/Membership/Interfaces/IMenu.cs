@@ -15,7 +15,7 @@ public partial interface IMenu
     Int32 ID { get; set; }
 
     /// <summary>名称</summary>
-    String? Name { get; set; }
+    String Name { get; set; }
 
     /// <summary>显示名</summary>
     String? DisplayName { get; set; }

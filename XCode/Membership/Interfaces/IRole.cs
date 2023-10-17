@@ -15,7 +15,7 @@ public partial interface IRole
     Int32 ID { get; set; }
 
     /// <summary>名称</summary>
-    String? Name { get; set; }
+    String Name { get; set; }
 
     /// <summary>启用</summary>
     Boolean Enable { get; set; }

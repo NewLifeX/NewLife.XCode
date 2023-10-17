@@ -309,9 +309,24 @@ public class ClassBuilder
 
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
-        if (type == "String") type = "String?";
-
-        WriteLine("public {0} {1} {{ get; set; }}", type, dc.Name);
+        if (type == "String")
+        {
+            if (Option.Nullable)
+            {
+                if (column.Nullable)
+                    WriteLine("public String? {0} {{ get; set; }}", dc.Name);
+                else
+                    WriteLine("public String {0} {{ get; set; }} = null!;", dc.Name);
+            }
+            else
+            {
+                WriteLine("public String {0} {{ get; set; }}", dc.Name);
+            }
+        }
+        else
+        {
+            WriteLine("public {0} {1} {{ get; set; }}", type, dc.Name);
+        }
     }
 
     /// <summary>生成索引访问器</summary>

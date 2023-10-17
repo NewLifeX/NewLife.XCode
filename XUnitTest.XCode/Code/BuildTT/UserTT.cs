@@ -22,17 +22,17 @@ public partial class UserTT
     /// <summary>名称。登录用户名</summary>
     [Description("名称。登录用户名")]
     [DisplayName("名称")]
-    public String? Name { get; set; }
+    public String Name { get; set; }
 
     /// <summary>密码</summary>
     [Description("密码")]
     [DisplayName("密码")]
-    public String? Password { get; set; }
+    public String Password { get; set; }
 
     /// <summary>昵称</summary>
     [Description("昵称")]
     [DisplayName("昵称")]
-    public String? DisplayName { get; set; }
+    public String DisplayName { get; set; }
 
     /// <summary>性别。未知、男、女</summary>
     [Description("性别。未知、男、女")]
@@ -42,17 +42,17 @@ public partial class UserTT
     /// <summary>邮件。支持登录</summary>
     [Description("邮件。支持登录")]
     [DisplayName("邮件")]
-    public String? Mail { get; set; }
+    public String Mail { get; set; }
 
     /// <summary>手机。支持登录</summary>
     [Description("手机。支持登录")]
     [DisplayName("手机")]
-    public String? Mobile { get; set; }
+    public String Mobile { get; set; }
 
     /// <summary>代码。身份证、员工编码等，支持登录</summary>
     [Description("代码。身份证、员工编码等，支持登录")]
     [DisplayName("代码")]
-    public String? Code { get; set; }
+    public String Code { get; set; }
 
     /// <summary>地区。省市区</summary>
     [Description("地区。省市区")]
@@ -62,7 +62,7 @@ public partial class UserTT
     /// <summary>头像</summary>
     [Description("头像")]
     [DisplayName("头像")]
-    public String? Avatar { get; set; }
+    public String Avatar { get; set; }
 
     /// <summary>角色。主要角色</summary>
     [Description("角色。主要角色")]
@@ -72,7 +72,7 @@ public partial class UserTT
     /// <summary>角色组。次要角色集合</summary>
     [Description("角色组。次要角色集合")]
     [DisplayName("角色组")]
-    public String? RoleIds { get; set; }
+    public String RoleIds { get; set; }
 
     /// <summary>部门。组织机构</summary>
     [Description("部门。组织机构")]
@@ -112,7 +112,7 @@ public partial class UserTT
     /// <summary>最后登录IP</summary>
     [Description("最后登录IP")]
     [DisplayName("最后登录IP")]
-    public String? LastLoginIP { get; set; }
+    public String LastLoginIP { get; set; }
 
     /// <summary>注册时间</summary>
     [Description("注册时间")]
@@ -122,7 +122,7 @@ public partial class UserTT
     /// <summary>注册IP</summary>
     [Description("注册IP")]
     [DisplayName("注册IP")]
-    public String? RegisterIP { get; set; }
+    public String RegisterIP { get; set; }
 
     /// <summary>在线时间。累计在线总时间，单位秒</summary>
     [Description("在线时间。累计在线总时间，单位秒")]
@@ -147,21 +147,21 @@ public partial class UserTT
     /// <summary>扩展4</summary>
     [Description("扩展4")]
     [DisplayName("扩展4")]
-    public String? Ex4 { get; set; }
+    public String Ex4 { get; set; }
 
     /// <summary>扩展5</summary>
     [Description("扩展5")]
     [DisplayName("扩展5")]
-    public String? Ex5 { get; set; }
+    public String Ex5 { get; set; }
 
     /// <summary>扩展6</summary>
     [Description("扩展6")]
     [DisplayName("扩展6")]
-    public String? Ex6 { get; set; }
+    public String Ex6 { get; set; }
 
     /// <summary>备注</summary>
     [Description("备注")]
     [DisplayName("备注")]
-    public String? Remark { get; set; }
+    public String Remark { get; set; }
     #endregion
 }

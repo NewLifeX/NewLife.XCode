@@ -45,6 +45,10 @@ public class BuilderOption
     [Description("带有索引器。实现IModel接口")]
     public Boolean HasIModel { get; set; }
 
+    /// <summary>可为null上下文。生成String?等</summary>
+    [Description("可为null上下文。生成String?等")]
+    public Boolean Nullable { get; set; }
+
     /// <summary>引用命名空间。区分大小写</summary>
     [XmlIgnore, IgnoreDataMember]
     public ICollection<String> Usings { get; set; } = new List<String>();

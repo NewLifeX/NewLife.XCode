@@ -40,6 +40,7 @@ public class EntityBuilderTests
             ConnName = "MyConn",
             Namespace = "Company.MyName",
             //Partial = true,
+            Nullable = true,
         };
         option.Usings.Add("NewLife.Remoting");
 
@@ -79,6 +80,7 @@ public class EntityBuilderTests
             Namespace = "Company.MyName",
             //Partial = true,
             //ExtendOnData = true
+            Nullable = true,
         };
         option.Usings.Add("NewLife.Remoting");
 
@@ -117,6 +119,7 @@ public class EntityBuilderTests
             ConnName = "MyConn",
             Namespace = "Company.MyName",
             //Partial = true,
+            Nullable = true,
         };
         option.Usings.Add("NewLife.Remoting");
 
@@ -196,6 +199,8 @@ public class EntityBuilderTests
         var tables = ClassBuilder.LoadModels(file, option, out var atts);
         EntityBuilder.FixModelFile(file, option, atts, tables);
 
+        option.Nullable = true;
+
         // 生成实体类
         option.Output = @".\Entity\";
         option.BaseClass = "I{name}";
@@ -272,6 +277,8 @@ public class EntityBuilderTests
         };
         var tables = ClassBuilder.LoadModels(file, option, out var atts);
         EntityBuilder.FixModelFile(file, option, atts, tables);
+
+        option.Nullable = true;
 
         // 生成实体类
         option.Output = @".\Entity\";

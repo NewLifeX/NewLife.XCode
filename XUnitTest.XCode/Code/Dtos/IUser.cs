@@ -15,7 +15,7 @@ public partial interface IUser
     Int32 ID { get; set; }
 
     /// <summary>名称。登录用户名</summary>
-    String? Name { get; set; }
+    String Name { get; set; }
 
     /// <summary>密码</summary>
     String? Password { get; set; }

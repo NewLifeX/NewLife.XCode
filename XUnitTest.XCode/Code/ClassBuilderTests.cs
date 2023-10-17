@@ -107,6 +107,7 @@ public class ClassBuilderTests
             //Interface = true,
             BaseClass = "NewLife.Data.IModel",
             ClassNameTemplate = "Ixx{name}",
+            Nullable = true,
         };
         option.Excludes.Add("UpdateUser");
         option.Excludes.Add("UpdateUserID");
@@ -232,6 +233,7 @@ public class ClassBuilderTests
             Output = dir,
             ClassNameTemplate = "{name}Model",
             //Partial = true,
+            Nullable = true,
         };
 
         ModelBuilder.BuildModels(_tables, option);
@@ -274,6 +276,7 @@ public class ClassBuilderTests
             Output = dir,
             ClassNameTemplate = "{name}Dto",
             //Partial = true,
+            Nullable = true,
         };
 
         ModelBuilder.BuildModels(_tables, option);

@@ -99,9 +99,24 @@ public class InterfaceBuilder : ClassBuilder
 
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
-        if (type == "String") type = "String?";
-
-        WriteLine("{0} {1} {{ get; set; }}", type, dc.Name);
+        if (type == "String")
+        {
+            if (Option.Nullable)
+            {
+                if (column.Nullable)
+                    WriteLine("String? {0} {{ get; set; }}", dc.Name);
+                else
+                    WriteLine("String {0} {{ get; set; }}", dc.Name);
+            }
+            else
+            {
+                WriteLine("String {0} {{ get; set; }}", dc.Name);
+            }
+        }
+        else
+        {
+            WriteLine("{0} {1} {{ get; set; }}", type, dc.Name);
+        }
     }
 
     /// <summary>验证字段是否可用于生成</summary>

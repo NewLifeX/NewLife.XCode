@@ -17,7 +17,7 @@ public partial class MenuModel : IModel
     public Int32 ID { get; set; }
 
     /// <summary>名称</summary>
-    public String? Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>显示名</summary>
     public String? DisplayName { get; set; }

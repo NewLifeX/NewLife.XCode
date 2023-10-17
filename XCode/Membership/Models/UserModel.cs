@@ -17,7 +17,7 @@ public partial class UserModel : IModel
     public Int32 ID { get; set; }
 
     /// <summary>名称。登录用户名</summary>
-    public String? Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>密码</summary>
     public String? Password { get; set; }

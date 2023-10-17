@@ -35,13 +35,13 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("ID", "编号", "")]
     public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
-    private String? _Name;
+    private String _Name = null!;
     /// <summary>名称。登录用户名</summary>
     [DisplayName("名称")]
     [Description("名称。登录用户名")]
     [DataObjectField(false, false, false, 50)]
     [BindColumn("Name", "名称。登录用户名", "", Master = true)]
-    public String? Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+    public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
     private String? _Password;
     /// <summary>密码</summary>
@@ -277,14 +277,14 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("Ex6", "扩展6", "")]
     public String? Ex6 { get => _Ex6; set { if (OnPropertyChanging("Ex6", value)) { _Ex6 = value; OnPropertyChanged("Ex6"); } } }
 
-    private String? _UpdateUser;
+    private String _UpdateUser = null!;
     /// <summary>更新者</summary>
     [Category("扩展")]
     [DisplayName("更新者")]
     [Description("更新者")]
     [DataObjectField(false, false, false, 50)]
     [BindColumn("UpdateUser", "更新者", "", DefaultValue = "''")]
-    public String? UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
+    public String UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
 
     private Int32 _UpdateUserID;
     /// <summary>更新用户</summary>

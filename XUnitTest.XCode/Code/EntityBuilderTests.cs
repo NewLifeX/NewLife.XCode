@@ -352,6 +352,7 @@ public class EntityBuilderTests
 
         // 生成实体类
         option.Output = @".\Entity\";
+        option.Nullable = true;
 
         var builder = new EntityBuilder
         {

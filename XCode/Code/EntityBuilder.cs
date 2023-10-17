@@ -573,7 +573,7 @@ public class EntityBuilder : ClassBuilder
         // 字段
         if (type == "String" && Option.Nullable)
         {
-            if(column.Nullable)
+            if (column.Nullable)
                 WriteLine("private {0} _{1};", type, dc.Name);
             else
                 WriteLine("private {0} _{1} = null!;", type, dc.Name);
@@ -638,7 +638,10 @@ public class EntityBuilder : ClassBuilder
         WriteLine("/// <summary>获取/设置 字段值</summary>");
         WriteLine("/// <param name=\"name\">字段名</param>");
         WriteLine("/// <returns></returns>");
-        WriteLine("public override Object? this[String name]");
+        if (Option.Nullable)
+            WriteLine("public override Object? this[String name]");
+        else
+            WriteLine("public override Object this[String name]");
         WriteLine("{");
 
         // get
@@ -830,7 +833,10 @@ public class EntityBuilder : ClassBuilder
 
             WriteLine("/// <summary>{0}</summary>", dis);
             WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
-            WriteLine("public {0}? {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapIdName, column.Name);
+            if (Option.Nullable)
+                WriteLine("public {0}? {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapIdName, column.Name);
+            else
+                WriteLine("public {0} {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapIdName, column.Name);
 
             var myName = ss.Length > 3 ? ss[3] : null;
             if (myName.IsNullOrEmpty())
@@ -1258,7 +1264,10 @@ public class EntityBuilder : ClassBuilder
 
                 WriteLine("/// <summary>{0}</summary>", dis);
                 WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
-                WriteLine("public {1}? {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
+                if (Option.Nullable)
+                    WriteLine("public {1}? {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
+                else
+                    WriteLine("public {1} {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
 
                 // 主字段
                 var master = dt.Master ?? dt.GetColumn("Name");
@@ -1271,7 +1280,12 @@ public class EntityBuilder : ClassBuilder
                     if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
                         WriteLine("[Category(\"{0}\")]", att);
                     if (master.DataType == typeof(String))
-                        WriteLine("public {2}? {0}{1} => {0}?.{1};", pname, master.Name, master.DataType.Name);
+                    {
+                        if (Option.Nullable)
+                            WriteLine("public {2}? {0}{1} => {0}?.{1};", pname, master.Name, master.DataType.Name);
+                        else
+                            WriteLine("public {2} {0}{1} => {0}?.{1};", pname, master.Name, master.DataType.Name);
+                    }
                     else
                         WriteLine("public {2} {0}{1} => {0} != null ? {0}.{1} : 0;", pname, master.Name, master.DataType.Name);
                 }

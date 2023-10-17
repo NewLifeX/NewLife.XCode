@@ -336,7 +336,10 @@ public class ClassBuilder
         WriteLine("/// <summary>获取/设置 字段值</summary>");
         WriteLine("/// <param name=\"name\">字段名</param>");
         WriteLine("/// <returns></returns>");
-        WriteLine("public virtual Object? this[String name]");
+        if (Option.Nullable)
+            WriteLine("public virtual Object? this[String name]");
+        else
+            WriteLine("public virtual Object this[String name]");
         WriteLine("{");
 
         // get

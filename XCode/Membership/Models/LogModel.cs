@@ -20,7 +20,7 @@ public partial class LogModel : IModel
     public String? Category { get; set; }
 
     /// <summary>操作</summary>
-    public String? Action { get; set; }
+    public String Action { get; set; } = null!;
 
     /// <summary>链接</summary>
     public Int64 LinkID { get; set; }

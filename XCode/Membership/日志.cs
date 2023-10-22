@@ -40,13 +40,13 @@ public partial class Log : ILog, IEntity<LogModel>
     [BindColumn("Category", "类别", "")]
     public String? Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
-    private String? _Action;
+    private String _Action = null!;
     /// <summary>操作</summary>
     [DisplayName("操作")]
     [Description("操作")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, false, 50)]
     [BindColumn("Action", "操作", "")]
-    public String? Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
+    public String Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
 
     private Int64 _LinkID;
     /// <summary>链接</summary>

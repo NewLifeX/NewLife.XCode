@@ -48,13 +48,13 @@ public partial class Parameter : IParameter, IEntity<ParameterModel>
     [BindColumn("Category", "类别", "")]
     public String? Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
-    private String? _Name;
+    private String _Name = null!;
     /// <summary>名称</summary>
     [DisplayName("名称")]
     [Description("名称")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, false, 50)]
     [BindColumn("Name", "名称", "", Master = true)]
-    public String? Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+    public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
     private String? _Value;
     /// <summary>数值</summary>

@@ -38,10 +38,10 @@
   <ItemGroup>
     <PackageReference Include="IBM.Data.DB2.Core" Version="3.1.0.600" />
     <PackageReference Include="MySql.Data" Version="8.1.0" />
-    <PackageReference Include="NewLife.Redis" Version="5.5.2023.803" />
-    <PackageReference Include="NewLife.Remoting" Version="2.3.2023.907" />
-    <PackageReference Include="NewLife.Stardust" Version="2.9.2023.801" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.110" />
+    <PackageReference Include="NewLife.Redis" Version="5.5.2023.1001" />
+    <PackageReference Include="NewLife.Remoting" Version="2.4.2023.1001" />
+    <PackageReference Include="NewLife.Stardust" Version="2.9.2023.1001" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.120" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
   </ItemGroup>
   <ItemGroup>

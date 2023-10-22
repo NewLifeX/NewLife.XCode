@@ -17,7 +17,7 @@ public partial class AreaModel : IModel
     public Int32 ID { get; set; }
 
     /// <summary>名称</summary>
-    public String? Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>全名</summary>
     public String? FullName { get; set; }

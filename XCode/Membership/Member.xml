@@ -190,7 +190,7 @@
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="UserID" DataType="Int32" Map="User@Id@$" Description="用户。按用户区分参数，用户0表示系统级" />
         <Column Name="Category" DataType="String" Description="类别" />
-        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="Value" DataType="String" Length="200" Description="数值" />
         <Column Name="LongValue" DataType="String" Length="2000" Description="长数值" />
         <Column Name="Kind" DataType="Int32" Description="种类。0普通，21列表，22名值" Type="XCode.Membership.ParameterKinds" />
@@ -220,7 +220,7 @@
     <Table Name="Area" Description="地区。行政区划数据，最高支持四级地址，9位数字">
       <Columns>
         <Column Name="ID" DataType="Int32" PrimaryKey="True" Description="编码。行政区划编码" />
-        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="FullName" DataType="String" Master="True" Description="全名" />
         <Column Name="ParentID" DataType="Int32" Description="父级" />
         <Column Name="Level" DataType="Int32" Description="层级" />
@@ -251,7 +251,7 @@
       <Columns>
         <Column Name="ID" DataType="Int64" PrimaryKey="True" Description="编号" />
         <Column Name="Category" DataType="String" Description="类别" />
-        <Column Name="Action" DataType="String" Description="操作" />
+        <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
         <Column Name="LinkID" DataType="Int64" Description="链接" />
         <Column Name="Success" DataType="Boolean" Description="成功" />
         <Column Name="UserName" DataType="String" Description="用户名" />
@@ -278,7 +278,7 @@
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Code" DataType="String" Description="编码。唯一编码" />
-        <Column Name="Name" DataType="String" Master="True" Description="名称。显示名称" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。显示名称" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="ManagerId" DataType="Int32" Map="User@Id@$" Description="管理者" />
         <Column Name="RoleIds" DataType="String" Length="200" Description="角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同" />

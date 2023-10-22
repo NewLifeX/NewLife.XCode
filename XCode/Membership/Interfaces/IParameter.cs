@@ -21,7 +21,7 @@ public partial interface IParameter
     String? Category { get; set; }
 
     /// <summary>名称</summary>
-    String? Name { get; set; }
+    String Name { get; set; }
 
     /// <summary>数值</summary>
     String? Value { get; set; }

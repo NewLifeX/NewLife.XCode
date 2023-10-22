@@ -337,15 +337,33 @@ public class AreaTests
     [InlineData("上海市华新中学", 310118107, "上海/青浦/华新")]
     [InlineData("广西容县杨梅镇", 450921102, "广西/玉林/容县/杨梅")]
     [InlineData("湖北神农木鱼", 429021102, "湖北/神农架/木鱼")]
-    public void SearchAddress(String address, Int32 rid, String target)
+    public void MatchAddress(String address, Int32 rid, String target)
     {
-        XTrace.WriteLine("SearchAddress=>: {0}", address);
-        var set = Area.SearchAddress(address);
-        XTrace.WriteLine("SearchAddress<=: {0}", set.Join(",", e => $"[{e.Value:n2}]{e.Key.Path}"));
+        XTrace.WriteLine("MatchAddress=>: {0}", address);
+        var set = Area.MatchAddress(address);
+        XTrace.WriteLine("MatchAddress<=: {0}", set.Join(",", e => $"[{e.Value:n2}]{e.Key.Path}"));
 
         if (set.Count > 0)
         {
             var r = set[0].Key;
+            Assert.Equal(rid, r.ID);
+            Assert.Equal(target, r.Path);
+        }
+    }
+
+    [TestOrder(70)]
+    [Theory]
+    [InlineData("上海市虹梅路2588弄", 310104012, "上海/徐汇/虹梅路")]
+    [InlineData("上海市华新中学", 310118107, "上海/青浦/华新")]
+    [InlineData("广西容县杨梅镇", 450921102, "广西/玉林/容县/杨梅")]
+    [InlineData("湖北神农木鱼", 429021102, "湖北/神农架/木鱼")]
+    public void SearchAddress(String address, Int32 rid, String target)
+    {
+        var rs = Area.SearchAddress(address, 4);
+
+        if (rs.Count > 0)
+        {
+            var r = rs.LastOrDefault();
             Assert.Equal(rid, r.ID);
             Assert.Equal(target, r.Path);
         }

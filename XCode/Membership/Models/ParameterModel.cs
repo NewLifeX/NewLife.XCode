@@ -23,7 +23,7 @@ public partial class ParameterModel : IModel
     public String? Category { get; set; }
 
     /// <summary>名称</summary>
-    public String? Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>数值</summary>
     public String? Value { get; set; }

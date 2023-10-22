@@ -18,7 +18,7 @@ public partial interface ILog
     String? Category { get; set; }
 
     /// <summary>操作</summary>
-    String? Action { get; set; }
+    String Action { get; set; }
 
     /// <summary>链接</summary>
     Int64 LinkID { get; set; }

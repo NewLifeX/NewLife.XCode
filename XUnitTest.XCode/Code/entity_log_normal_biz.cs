@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -58,6 +57,9 @@ public partial class Log : Entity<Log>
     {
         // 如果没有脏数据，则不需要进行任何处理
         if (!HasDirty) return;
+
+        // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
+        if (Action.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Action), "操作不能为空！");
 
         // 建议先调用基类方法，基类方法会做一些统一处理
         base.Valid(isNew);

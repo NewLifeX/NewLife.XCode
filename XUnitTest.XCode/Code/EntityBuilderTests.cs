@@ -367,11 +367,12 @@ public class EntityBuilderTests
         builder.Execute();
         //builder.Save(null, false, option.ChineseFileName);
 
+        // 该文件需要手工维护，ReadTarget并不会回写
         var fileName = "Code\\Entity\\用户.Biz2.cs".GetBasePath();
         builder.Merge(fileName);
 
         {
-            var rs = File.ReadAllText("Code\\Entity\\用户.Biz2.cs".GetFullPath());
+            var rs = File.ReadAllText(fileName);
             var target = ReadTarget("Code\\Entity\\用户.Biz.cs", rs);
             //Assert.Equal(target, rs);
 

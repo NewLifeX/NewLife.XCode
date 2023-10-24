@@ -239,7 +239,7 @@ public class EntityBuilder : ClassBuilder
 
         if (Business)
         {
-            us.Add("System.ComponentModel.DataAnnotations");//属性验证
+            //us.Add("System.ComponentModel.DataAnnotations");//属性验证
             us.Add("System.IO");
             us.Add("System.Linq");
             us.Add("System.Reflection");

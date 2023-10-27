@@ -55,7 +55,7 @@ using XCode.DataAccessLayer;
 namespace XCode;
 
 /// <summary>实体会话。每个实体类、连接名和表名形成一个实体会话</summary>
-public class EntitySession<TEntity> :DisposeBase, IEntitySession where TEntity : Entity<TEntity>, new()
+public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity : Entity<TEntity>, new()
 {
     #region 属性
     /// <summary>连接名</summary>
@@ -930,6 +930,6 @@ public class EntitySession<TEntity> :DisposeBase, IEntitySession where TEntity :
 
     #region 队列
     /// <summary>实体队列</summary>
-    public EntityQueue Queue { get; private set; }
+    public EntityQueue Queue { get; set; }
     #endregion
 }

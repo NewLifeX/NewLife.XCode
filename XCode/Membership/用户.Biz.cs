@@ -88,9 +88,14 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
         if (ids.Length > 0)
         {
             RoleID = ids[0];
-            var str = ids.Skip(1).Join();
-            if (!str.IsNullOrEmpty()) str = "," + str + ",";
-            RoleIds = str;
+            if (ids.Length == 1)
+                RoleIds = null;
+            else
+            {
+                var str = ids.Skip(1).Join();
+                if (!str.IsNullOrEmpty()) str = "," + str + ",";
+                RoleIds = str;
+            }
         }
 
         // 自动计算年龄
@@ -607,15 +612,15 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     /// <returns></returns>
     public virtual Int32[] GetRoleIDs()
     {
-        var tenantId = (TenantContext.Current?.TenantId).ToInt(-1);
-        if (tenantId > 0)
-        {
-            var tuEntity = TenantUser.FindByTenantIdAndUserId(tenantId, ID);
-            var idlist = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
-            if (tuEntity != null && tuEntity.RoleId > 0) idlist.Insert(0, tuEntity.RoleId);
+        //var tenantId = (TenantContext.Current?.TenantId).ToInt(-1);
+        //if (tenantId > 0)
+        //{
+        //    var tuEntity = TenantUser.FindByTenantIdAndUserId(tenantId, ID);
+        //    var idlist = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
+        //    if (tuEntity != null && tuEntity.RoleId > 0) idlist.Insert(0, tuEntity.RoleId);
 
-            return idlist.Distinct().ToArray();
-        }
+        //    return idlist.Distinct().ToArray();
+        //}
 
         var ids = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
         if (RoleID > 0) ids.Insert(0, RoleID);

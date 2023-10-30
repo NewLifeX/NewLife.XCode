@@ -474,7 +474,8 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         }
 
         // 查真实记录数，修正FastCount不够准确的情况
-        if (/*count >= 0 &&*/ count < 10_000_000)
+        var fastCountMin = XCodeSetting.Current.FastCountMin;
+        if (count < fastCountMin)
         {
             var builder = new SelectBuilder
             {

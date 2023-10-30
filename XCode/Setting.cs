@@ -88,6 +88,10 @@ public class XCodeSetting : Config<XCodeSetting>
     /// <summary></summary>
     [Description("表名称、字段名大小写格式。Default 根据模型生成;Upper 全大写;Lower 全小写;Underline下划线")]
     public NameFormats NameFormat { get; set; } = NameFormats.Default;
+
+    /// <summary>快速统计最小数据量</summary>
+    [Description("快速统计最小数据量。默认一千万，在对数据表进行无条件 count 时，先进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。")]
+    public int FastCountMin { get; set; } = 10_000_000;
     #endregion
 
     #region 方法

@@ -2,6 +2,7 @@
 using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Serialization;
+using NewLife;
 using NewLife.Collections;
 
 namespace XCode.DataAccessLayer;
@@ -18,37 +19,37 @@ class XField : SerializableDataMember, IDataColumn, ICloneable
     [XmlAttribute]
     [DisplayName("名称")]
     [Description("名称")]
-    public String Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>列名</summary>
     [XmlAttribute]
     [DisplayName("列名")]
     [Description("列名")]
-    public String ColumnName { get; set; }
+    public String ColumnName { get; set; } = null!;
 
     /// <summary>数据类型</summary>
     [XmlAttribute]
     [DisplayName("数据类型")]
     [Description("数据类型")]
-    public Type DataType { get; set; }
+    public Type DataType { get; set; } = null!;
 
     /// <summary>原始数据类型</summary>
     [XmlAttribute]
     [DisplayName("原始类型")]
     [Description("原始类型")]
-    public String RawType { get; set; }
+    public String? RawType { get; set; }
 
     /// <summary>元素类型</summary>
     [XmlAttribute]
     [DisplayName("元素类型")]
     [Description("元素类型")]
-    public String ItemType { get; set; }
+    public String? ItemType { get; set; }
 
     /// <summary>映射，表间关联，格式Role.Id.Name</summary>
     [XmlAttribute]
     [DisplayName("映射")]
     [Description("映射，表间关联")]
-    public String Map { get; set; }
+    public String? Map { get; set; }
 
     /// <summary>标识</summary>
     [XmlAttribute]
@@ -96,26 +97,26 @@ class XField : SerializableDataMember, IDataColumn, ICloneable
     [XmlAttribute]
     [DisplayName("默认值")]
     [Description("默认值")]
-    public String DefaultValue { get; set; }
+    public String? DefaultValue { get; set; }
 
 
     /// <summary>元素参数默认值</summary>
     [XmlAttribute]
     [DisplayName("元素参数默认值")]
     [Description("元素参数默认值")]
-    public String ItemDefaultValue { get; set; }
+    public String? ItemDefaultValue { get; set; }
 
-    private String _Description;
+    private String? _Description;
     /// <summary>描述</summary>
     [XmlAttribute]
     [DisplayName("描述")]
     [Description("描述")]
-    public String Description
+    public String? Description
     {
         get { return _Description; }
         set
         {
-            if (!String.IsNullOrEmpty(value)) value = value.Replace("\r\n", "。").Replace("\r", " ").Replace("\n", " ");
+            if (!value.IsNullOrEmpty()) value = value.Replace("\r\n", "。").Replace("\r", " ").Replace("\n", " ");
             _Description = value;
         }
     }
@@ -124,14 +125,14 @@ class XField : SerializableDataMember, IDataColumn, ICloneable
     #region 扩展属性
     /// <summary>表</summary>
     [XmlIgnore, IgnoreDataMember]
-    public IDataTable Table { get; set; }
+    public IDataTable Table { get; set; } = null!;
 
-    private String _DisplayName;
+    private String? _DisplayName;
     /// <summary>显示名</summary>
     [XmlAttribute]
     [DisplayName("显示名")]
     [Description("显示名")]
-    public String DisplayName
+    public String? DisplayName
     {
         get
         {

@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using NewLife;
@@ -74,7 +74,7 @@ public partial class Parameter : Entity<Parameter>
     /// <param name="userId">用户</param>
     /// <param name="category">分类</param>
     /// <returns>实体列表</returns>
-    public static IList<Parameter> FindAllByUserID(Int32 userId, String category)
+    public static IList<Parameter> FindAllByUserID(Int32 userId, String? category)
     {
         // 实体缓存
         return Meta.Session.Count < 1000

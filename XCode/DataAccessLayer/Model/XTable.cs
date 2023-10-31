@@ -1,10 +1,10 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using NewLife;
 using NewLife.Collections;
 using NewLife.Xml;
 
@@ -37,17 +37,17 @@ class XTable : IDataTable, ICloneable, IXmlSerializable
     [Description("表名")]
     public String TableName { get; set; }
 
-    private String _Description;
+    private String? _Description;
     /// <summary>描述</summary>
     [XmlAttribute]
     [DisplayName("描述")]
     [Description("描述")]
-    public String Description
+    public String? Description
     {
         get { return _Description; }
         set
         {
-            if (!String.IsNullOrEmpty(value)) value = value.Replace("\r\n", "。").Replace("\r", " ").Replace("\n", " ");
+            if (!value.IsNullOrEmpty()) value = value.Replace("\r\n", "。").Replace("\r", " ").Replace("\n", " ");
             _Description = value;
         }
     }
@@ -62,13 +62,13 @@ class XTable : IDataTable, ICloneable, IXmlSerializable
     [XmlAttribute]
     [DisplayName("所有者")]
     [Description("所有者")]
-    public String Owner { get; set; }
+    public String? Owner { get; set; }
 
     /// <summary>连接名</summary>
     [XmlAttribute]
     [DisplayName("连接名")]
     [Description("连接名")]
-    public String ConnName { get; set; }
+    public String? ConnName { get; set; }
 
     /// <summary>数据库类型</summary>
     [XmlAttribute]
@@ -80,14 +80,14 @@ class XTable : IDataTable, ICloneable, IXmlSerializable
     [XmlAttribute]
     [DisplayName("基类")]
     [Description("基类")]
-    public String BaseType { get; set; }
-
+    public String? BaseType { get; set; }
 
     /// <summary>是否日志记录表</summary>
     [XmlAttribute]
     [DisplayName("是否日志记录表")]
     [Description("是否日志记录表")]
     public Boolean IsHistory { get; set; }
+
     /// <summary>仅插入的日志型数据</summary>
     [XmlAttribute]
     [DisplayName("只写")]
@@ -118,16 +118,16 @@ class XTable : IDataTable, ICloneable, IXmlSerializable
     [XmlIgnore, IgnoreDataMember]
     public IDataColumn[] PrimaryKeys => Columns.FindAll(item => item.PrimaryKey).ToArray();
 
-    private String _DisplayName;
+    private String? _DisplayName;
     /// <summary>显示名</summary>
     [XmlAttribute]
     [DisplayName("显示名")]
     [Description("显示名")]
-    public String DisplayName
+    public String? DisplayName
     {
         get
         {
-            if (String.IsNullOrEmpty(_DisplayName)) _DisplayName = ModelResolver.Current.GetDisplayName(Name, _Description);
+            if (_DisplayName.IsNullOrEmpty()) _DisplayName = ModelResolver.Current.GetDisplayName(Name, _Description);
             return _DisplayName;
         }
         //set

@@ -249,8 +249,13 @@ public class ClassBuilder
         var des = Table.Description;
         if (!Option.DisplayNameTemplate.IsNullOrEmpty())
         {
-            des = Table.Description.TrimStart(Table.DisplayName, "。");
-            des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
+            var dis = Table.DisplayName;
+            if (!des.IsNullOrEmpty())
+            {
+                if (!dis.IsNullOrEmpty()) des = des.TrimStart(dis);
+                des = des.TrimStart("。");
+            }
+            des = Option.DisplayNameTemplate.Replace("{displayName}", dis) + "。" + des;
         }
         WriteLine("/// <summary>{0}</summary>", des);
     }

@@ -11,15 +11,15 @@ public interface IDataTable : ICloneable
     String TableName { get; set; }
 
     /// <summary>基类</summary>
-    String BaseType { get; set; }
+    String? BaseType { get; set; }
 
     /// <summary>所有者</summary>
-    String Owner { get; set; }
+    String? Owner { get; set; }
 
     /// <summary>连接名</summary>
-    String ConnName { get; set; }
+    String? ConnName { get; set; }
 
-    //<summary>是否历史记录表</summary>
+    /// <summary>是否历史记录表</summary>
     Boolean IsHistory { get; set; }
 
     /// <summary>
@@ -32,10 +32,10 @@ public interface IDataTable : ICloneable
     Boolean IsView { get; set; }
 
     /// <summary>显示名。如果有Description则使用Description，否则使用Name</summary>
-    String DisplayName { get; }
+    String? DisplayName { get; }
 
     /// <summary>说明</summary>
-    String Description { get; set; }
+    String? Description { get; set; }
 
     /// <summary>仅插入的日志型数据</summary>
     Boolean InsertOnly { get; set; }

@@ -30,8 +30,8 @@ public class FieldItem
     /// <summary>备注</summary>
     public String? Description { get; set; }
 
-    /// <summary>元素默认参数值</summary>
-    public String? ItemDefaultValue { get; set; }
+    ///// <summary>元素默认参数值</summary>
+    //public String? ItemDefaultValue { get; set; }
 
     private String? _dis;
     /// <summary>说明</summary>
@@ -229,8 +229,7 @@ public class FieldItem
             dc.Precision = col.Precision;
             dc.Scale = col.Scale;
             dc.DefaultValue = col.DefaultValue;
-            dc.ItemDefaultValue = col.ItemDefaultValue;
-
+            //dc.ItemDefaultValue = col.ItemDefaultValue;
         }
 
         // 特别处理，兼容旧版本

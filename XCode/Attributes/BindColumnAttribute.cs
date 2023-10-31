@@ -32,8 +32,8 @@ public sealed class BindColumnAttribute : Attribute
     /// <summary>默认值</summary>
     public String? DefaultValue { get; set; }
 
-    /// <summary>元素参数默认值</summary>
-    public String? ItemDefaultValue { get; set; }
+    ///// <summary>元素参数默认值</summary>
+    //public String? ItemDefaultValue { get; set; }
 
     /// <summary>是否主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
     public Boolean Master { get; set; }

@@ -619,8 +619,9 @@ public class EntityBuilder : ClassBuilder
         if (dc.Precision > 0 || dc.Scale > 0) sb.AppendFormat(", Precision = {0}, Scale = {1}", dc.Precision, dc.Scale);
 
         if (!dc.DefaultValue.IsNullOrEmpty()) sb.AppendFormat(", DefaultValue = \"{0}\"", dc.DefaultValue);
-        //添加自定义控件默认值
-        if (!dc.ItemDefaultValue.IsNullOrEmpty()) sb.AppendFormat(", ItemDefaultValue = \"{0}\"", dc.ItemDefaultValue);
+
+        ////添加自定义控件默认值
+        //if (!dc.ItemDefaultValue.IsNullOrEmpty()) sb.AppendFormat(", ItemDefaultValue = \"{0}\"", dc.ItemDefaultValue);
 
         if (dc.Master) sb.Append(", Master = true");
 

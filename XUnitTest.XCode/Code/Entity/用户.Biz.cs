@@ -60,6 +60,10 @@ public partial class User : Entity<User>
         base.Valid(isNew);
 
         // 在新插入数据或者修改了指定字段时进行修正
+
+        // 保留6位小数
+        //Ex3 = Math.Round(Ex3, 6);
+
         // 处理当前已登录用户信息，可以由UserModule过滤器代劳
         /*var user = ManageProvider.User;
         if (user != null)

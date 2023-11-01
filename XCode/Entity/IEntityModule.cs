@@ -108,7 +108,7 @@ public class EntityModules : IEnumerable<IEntityModule>
             if (!item.Valid(entity, isNew)) return false;
         }
 
-        if (this != Global) Global.Valid(entity, isNew);
+        if (this != Global) return Global.Valid(entity, isNew);
 
         return true;
     }

@@ -244,7 +244,7 @@ public partial class Entity<TEntity>
         #endregion
 
         #region 模块
-        internal static EntityModules _Modules = new(typeof(TEntity));
+        private static EntityModules _Modules = new(typeof(TEntity));
         /// <summary>实体模块集合</summary>
         public static EntityModules Modules => _Modules;
         #endregion

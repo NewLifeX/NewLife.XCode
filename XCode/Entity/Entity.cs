@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Text.RegularExpressions;
 using NewLife;
@@ -51,7 +52,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         // Activator.CreateInstance()有缓存功能，而泛型的那个没有
         //return Activator.CreateInstance(typeof(TEntity)) as TEntity;
         //var entity = typeof(TEntity).CreateInstance() as TEntity;
-        Meta._Modules.Create(entity, forEdit);
+        Meta.Modules.Create(entity, forEdit);
 
         return entity;
     }
@@ -197,20 +198,20 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         if (enableValid)
         {
-            Boolean rt;
+            var rt = true;
             if (isnew != null)
             {
                 Valid(isnew.Value);
-                rt = Meta._Modules.Valid(this, isnew.Value);
+                //rt = Meta.Modules.Valid(this, isnew.Value);
             }
             else
-                rt = Meta._Modules.Delete(this);
+                rt = Meta.Modules.Delete(this);
 
             // 没有更新任何数据
             if (!rt) return 0;
         }
 
-        AutoFillSnowIDPrimaryKey();
+        AutoFillSnowIdPrimaryKey();
 
         // 自动分库分表
         using var split = Meta.CreateShard(this as TEntity);
@@ -249,7 +250,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (db.SupportBatch)
         {
             Valid(isnew);
-            if (!Meta.Modules.Valid(this, isnew)) return -1;
+            //if (!Meta.Modules.Valid(this, isnew)) return -1;
 
             // 自动分库分表
             using var split = Meta.CreateShard(this as TEntity);
@@ -290,7 +291,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (enableValid)
         {
             Valid(isnew);
-            Meta._Modules.Valid(this, isnew);
+            //Meta.Modules.Valid(this, isnew);
         }
         // 自动分库分表，影响后面的Meta.Session
         using var split = Meta.CreateShard(this as TEntity);
@@ -360,20 +361,20 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         if (enableValid)
         {
-            Boolean rt;
+            var rt = true;
             if (isnew != null)
             {
                 Valid(isnew.Value);
-                rt = Meta._Modules.Valid(this, isnew.Value);
+                //rt = Meta.Modules.Valid(this, isnew.Value);
             }
             else
-                rt = Meta._Modules.Delete(this);
+                rt = Meta.Modules.Delete(this);
 
             // 没有更新任何数据
             if (!rt) return Task.FromResult(0);
         }
 
-        AutoFillSnowIDPrimaryKey();
+        AutoFillSnowIdPrimaryKey();
 
         return func();
     }
@@ -388,6 +389,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         // 2017-8-17 实体基类不再自动根据唯一索引判断唯一性，一切由用户自己解决
 
+        var rs = Meta.Modules.Valid(this, isNew);
+        if (!rs) throw new InvalidDataException($"[{this}]验证失败！");
+
         var factory = Meta.Factory;
         // 校验字符串长度，超长时抛出参数异常
         foreach (var fi in factory.Fields)
@@ -399,13 +403,13 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
         }
 
-        AutoFillSnowIDPrimaryKey();
+        AutoFillSnowIdPrimaryKey();
     }
 
     /// <summary>
     /// 雪花Id生成器。Int64主键非自增时，自动填充
     /// </summary>
-    private void AutoFillSnowIDPrimaryKey()
+    private void AutoFillSnowIdPrimaryKey()
     {
         var factory = Meta.Factory;
 

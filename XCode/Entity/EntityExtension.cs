@@ -136,7 +136,7 @@ public static class EntityExtension
             foreach (IEntity item in es.ToArray())
             {
                 if (item is EntityBase entity2) entity2.Valid(item.IsNullKey);
-                if (!fact.Modules.Valid(item, item.IsNullKey)) es.Remove((T)item);
+                //if (!fact.Modules.Valid(item, item.IsNullKey)) es.Remove((T)item);
             }
 
             // 如果未指定会话，需要支持自动分表，并且需要考虑实体列表可能落入不同库表
@@ -419,7 +419,8 @@ public static class EntityExtension
         foreach (IEntity item in list)
         {
             if (item is EntityBase entity2) entity2.Valid(isNew);
-            if (modules.Valid(item, isNew)) rs.Add((T)item);
+            //if (modules.Valid(item, isNew)) rs.Add((T)item);
+            rs.Add((T)item);
         }
 
         return rs;

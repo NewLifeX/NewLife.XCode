@@ -330,9 +330,9 @@ partial class DbMetaData
 
     #region 数据类型
     /// <summary>类型映射</summary>
-    protected IDictionary<Type, String[]> Types { get; set; }
+    protected IDictionary<Type, String[]> Types { get; set; } = null!;
 
-    protected List<KeyValuePair<Type, Type>> _FieldTypeMaps;
+    protected List<KeyValuePair<Type, Type>>? _FieldTypeMaps;
     /// <summary>字段类型映射</summary>
     protected virtual List<KeyValuePair<Type, Type>> FieldTypeMaps
     {

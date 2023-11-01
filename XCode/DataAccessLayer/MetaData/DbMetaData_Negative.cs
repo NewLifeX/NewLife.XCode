@@ -273,7 +273,7 @@ internal partial class DbMetaData
                 PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
             }
             else if (IsColumnLengthChanged(item, dbf, entityDb))
-                PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly, DDLSchema.AlterColumn, item, dbf);
             else if (IsColumnChanged(item, dbf, entityDb))
                 PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
 
@@ -441,10 +441,22 @@ internal partial class DbMetaData
         // 是否已改变
         var isChanged = false;
 
+        // 仅针对字符串类型比较长度
+        if (!isChanged && entityColumn.DataType == typeof(String) && entityColumn.Length != dbColumn.Length)
+        {
+            isChanged = true;
+
+            // 如果是大文本类型，长度可能不等
+            if ((entityColumn.Length > Database.LongTextLength || entityColumn.Length <= 0)
+                && (entityDb != null && dbColumn.Length > entityDb.LongTextLength || dbColumn.Length <= 0)
+                || dbColumn.RawType.EqualIgnoreCase("ntext", "text", "sysname"))
+                isChanged = false;
+        }
+
         return isChanged;
     }
 
-    /// <summary>检查字段是否有改变，除了默认值和备注以外</summary>
+    /// <summary>检查字段长度是否扩大</summary>
     /// <param name="entityColumn"></param>
     /// <param name="dbColumn"></param>
     /// <param name="entityDb"></param>
@@ -455,7 +467,7 @@ internal partial class DbMetaData
         var isChanged = false;
 
         // 仅针对字符串类型比较长度
-        if (!isChanged && entityColumn.DataType == typeof(String) && entityColumn.Length != dbColumn.Length)
+        if (!isChanged && entityColumn.DataType == typeof(String) && entityColumn.Length > dbColumn.Length)
         {
             isChanged = true;
 

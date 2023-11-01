@@ -208,18 +208,22 @@ abstract partial class DbMetaData : DisposeBase, IMetaData
 
     static StringBuilder Append(StringBuilder sb, String separator, String value)
     {
+        if (value.IsNullOrEmpty()) return sb;
+
         if (sb.Length > 0) sb.Append(separator);
 
-        if (value != null) sb.Append(value);
+        sb.Append(value);
 
         return sb;
     }
 
     static StringBuilder Append(StringBuilder sb, Char separator, String value)
     {
+        if (value.IsNullOrEmpty()) return sb;
+
         if (sb.Length > 0) sb.Append(separator);
 
-        if (value != null) sb.Append(value);
+        sb.Append(value);
 
         return sb;
     }

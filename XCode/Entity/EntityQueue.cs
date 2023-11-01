@@ -86,7 +86,7 @@ public class EntityQueue : DisposeBase
                 _Timer ??= new TimerX(Work, null, Period, Period, "EQ")
                 {
                     Async = true,
-                    CanExecute = () => DelayEntities.Any() || Entities.Any()
+                    //CanExecute = () => DelayEntities.Any() || Entities.Any()
                 };
             }
         }

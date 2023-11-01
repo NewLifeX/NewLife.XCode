@@ -232,10 +232,10 @@ public static class ModelHelper
             writer.WriteStartElement("Tables");
 
             // 回写xml模型,排除IsHistory=true的表单，仅仅保留原始表单
-            foreach (var item in tables.Where(x => !x.IsHistory))
+            foreach (var item in tables.Where(x => x is not XTable xt || !xt.IsHistory))
             {
                 writer.WriteStartElement("Table");
-                (item as IXmlSerializable).WriteXml(writer);
+                (item as IXmlSerializable)!.WriteXml(writer);
                 writer.WriteEndElement();
             }
 
@@ -357,13 +357,16 @@ public static class ModelHelper
 
     static IDataTable ProcessNeedHistory(IDataTable table)
     {
-        var historydataTable = (IDataTable)table.Clone();
         //设置是历史表,用于标识,不用反写生成相关xml
+        var historydataTable = (table.Clone() as XTable)!;
         historydataTable.IsHistory = true;
-        //获取最后出现"。"字符串,返回其位置,无返回字符串长度---
-        var Des = table.Description.LastIndexOf("。") == -1 ? table.Description.Length : table.Description.LastIndexOf("。");
 
-        historydataTable.Description = table.Description.Substring(0, Des) + "历史" + table.Description.Substring(Des, table.Description.Length - Des);
+        //获取最后出现"。"字符串,返回其位置,无返回字符串长度---
+        var des = table.Description + "";
+        var p = des.LastIndexOf("。");
+        if (p < 0) p = des.Length;
+
+        historydataTable.Description = des.Substring(0, p) + "历史" + des.Substring(p, des.Length - p);
         historydataTable.Name = table.Name + "History";
         historydataTable.TableName = table.Name + "History";
         //历史表的所有index都必须允许重复
@@ -372,8 +375,9 @@ public static class ModelHelper
             k.Unique = false;
         });
         historydataTable.Properties.Remove("NeedHistory");
+
         var col = table.CreateColumn();
-        col.Description = table.Description.Substring(0, Des) + "信息";
+        col.Description = des.Substring(0, p) + "信息";
         col.ColumnName = table.Name + "ID";
         col.DataType = typeof(DateTime);
         col.Name = table.Name + "ID";

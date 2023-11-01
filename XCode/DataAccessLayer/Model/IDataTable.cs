@@ -19,8 +19,8 @@ public interface IDataTable : ICloneable
     /// <summary>连接名</summary>
     String? ConnName { get; set; }
 
-    /// <summary>是否历史记录表</summary>
-    Boolean IsHistory { get; set; }
+    ///// <summary>是否历史记录表</summary>
+    //Boolean IsHistory { get; set; }
 
     /// <summary>
     /// 数据库类型。

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
@@ -304,8 +300,23 @@ public partial class DAL
         sb.Append("Update ");
         sb.Append(tableName);
 
+        var dic = data as IDictionary<String, Object>;
         var dps = new List<IDataParameter>();
         // Set参数
+        if (dic != null)
+        {
+            sb.Append(" Set ");
+            var i = 0;
+            foreach (var item in dic)
+            {
+                if (i++ > 0) sb.Append(',');
+
+                var p = Db.CreateParameter(item.Key, item.Value, item.Value?.GetType());
+                dps.Add(p);
+                sb.AppendFormat("{0}={1}", item.Key, p.ParameterName);
+            }
+        }
+        else
         {
             sb.Append(" Set ");
             var i = 0;
@@ -337,14 +348,27 @@ public partial class DAL
             var name = OnGetKeyName(data.GetType());
             if (name.IsNullOrEmpty()) name = "Id";
 
-            var pi = data.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            if (pi == null) throw new XCodeException($"更新实体对象时未标记主键且未设置where");
+            if (dic != null)
+            {
+                if (!dic.TryGetValue(name, out var val)) throw new XCodeException($"更新实体对象时未标记主键且未设置where");
 
-            sb.Append(" Where ");
+                sb.Append(" Where ");
 
-            var p = Db.CreateParameter(pi.Name, pi.GetValue(data, null), pi.PropertyType);
-            dps.Add(p);
-            sb.AppendFormat("{0}={1}", pi.Name, p.ParameterName);
+                var p = Db.CreateParameter(name, val, val?.GetType());
+                dps.Add(p);
+                sb.AppendFormat("{0}={1}", name, p.ParameterName);
+            }
+            else
+            {
+                var pi = data.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                if (pi == null) throw new XCodeException($"更新实体对象时未标记主键且未设置where");
+
+                sb.Append(" Where ");
+
+                var p = Db.CreateParameter(pi.Name, pi.GetValue(data, null), pi.PropertyType);
+                dps.Add(p);
+                sb.AppendFormat("{0}={1}", pi.Name, p.ParameterName);
+            }
         }
 
         var sql = sb.Put(true);

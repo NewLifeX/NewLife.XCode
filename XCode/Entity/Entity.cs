@@ -383,7 +383,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     private Boolean enableValid = true;
 
     /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <remarks>建议重写者调用基类的实现，因为基类自动填充雪花Id并验证字符串字段是否超长。</remarks>
+    /// <remarks>建议重写者调用基类的实现，因为基类自动生成雪花Id、填充创建更新信息以及验证字符串字段是否超长。</remarks>
     /// <param name="isNew">是否新数据</param>
     public override void Valid(Boolean isNew)
     {

@@ -90,7 +90,7 @@ public class XCodeSetting : Config<XCodeSetting>
     public NameFormats NameFormat { get; set; } = NameFormats.Default;
 
     /// <summary>快速统计最小数据量</summary>
-    [Description("快速统计最小数据量。默认一千万，在对数据表进行无条件 count 时，先进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。")]
+    [Description("快速统计最小数据量。默认1000万，在对数据表进行无条件 count 时，先进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。")]
     public int FastCountMin { get; set; } = 10_000_000;
     #endregion
 

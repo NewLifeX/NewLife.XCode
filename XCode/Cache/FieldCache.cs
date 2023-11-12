@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
-using XCode.Configuration;
+﻿using System.ComponentModel;
 using NewLife;
+using XCode.Configuration;
 
 namespace XCode.Cache;
 
@@ -14,14 +10,17 @@ namespace XCode.Cache;
 public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<TEntity>, new()
 {
     private readonly String _fieldName;
-    private FieldItem _field;
-    private FieldItem _Unique;
+    private FieldItem? _field;
+    private FieldItem? _Unique;
 
     /// <summary>最大行数。默认50</summary>
     public Int32 MaxRows { get; set; } = 50;
 
     /// <summary>数据源条件</summary>
-    public WhereExpression Where { get; set; }
+    public WhereExpression? Where { get; set; }
+
+    /// <summary>排序子句。默认按照分组计数降序</summary>
+    public String OrderBy { get; set; } = "group_count desc";
 
     /// <summary>获取显示名的委托</summary>
     public Func<TEntity, String> GetDisplay { get; set; }
@@ -63,7 +62,7 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
         }
     }
 
-    private IList<TEntity> Search() => Entity<TEntity>.FindAll(Where.GroupBy(_field), "group_count desc", _Unique.Count("group_count") & _field, 0, MaxRows);
+    private IList<TEntity> Search() => Entity<TEntity>.FindAll(Where.GroupBy(_field), OrderBy, _Unique.Count("group_count") & _field, 0, MaxRows);
 
     private IDictionary<String, String> GetAll()
     {

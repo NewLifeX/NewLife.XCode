@@ -19,7 +19,7 @@ class DB2 : RemoteDb
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory() => GetProviderFactory("IBM.Data.DB2.Core.dll", "IBM.Data.DB2.Core.DB2Factory");
+    protected override DbProviderFactory CreateFactory() => GetProviderFactory("IBM.Data.DB2", "IBM.Data.DB2.Core.dll", "IBM.Data.DB2.Core.DB2Factory");
 
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {

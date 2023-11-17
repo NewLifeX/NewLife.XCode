@@ -36,7 +36,7 @@ internal class SqlServer : RemoteDb
 
         // 找不到驱动时，再到线上下载
         {
-            var factory = GetProviderFactory("System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
+            var factory = GetProviderFactory(null, "System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
 
             return factory;
         }

@@ -19,7 +19,7 @@ class DaMeng : RemoteDb
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory() => GetProviderFactory("DmProvider.dll", "Dm.DmClientFactory");
+    protected override DbProviderFactory CreateFactory() => GetProviderFactory(null, "DmProvider.dll", "Dm.DmClientFactory");
 
     const String Server_Key = "Server";
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)

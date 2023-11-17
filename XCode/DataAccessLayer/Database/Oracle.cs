@@ -20,7 +20,7 @@ internal class Oracle : RemoteDb
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory() => GetProviderFactory("Oracle.ManagedDataAccess.dll", "Oracle.ManagedDataAccess.Client.OracleClientFactory");
+    protected override DbProviderFactory CreateFactory() => GetProviderFactory(null, "Oracle.ManagedDataAccess.dll", "Oracle.ManagedDataAccess.Client.OracleClientFactory");
 
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {

@@ -50,15 +50,18 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
             var id = tb.Identity;
             if (id == null && tb.PrimaryKeys.Length == 1) id = tb.PrimaryKeys[0];
             _Unique = id ?? throw new Exception($"{tb.TableName}缺少唯一主键，无法使用缓存");
+        }
 
-            // 数据量较大时，扩大有效期
-            var count = Entity<TEntity>.Meta.Count;
-            if (count > 1_000_000)
-                Expire *= 60;
-            else if (count > 10_000)
-                Expire *= 10;
-            else
-                Expire *= 3;
+        // 数据量较小时，缓存时间较短
+        var count = Entity<TEntity>.Meta.Count;
+        if (count < 100_000)
+            Expire = 600;
+        else
+        {
+            var exp = XCodeSetting.Current.FieldCacheExpire;
+            if (exp <= 0) exp = 3600;
+
+            Expire = exp;
         }
     }
 

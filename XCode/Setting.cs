@@ -81,6 +81,10 @@ public class XCodeSetting : Config<XCodeSetting>
     [Description("扩展属性过期。扩展属性Extends缓存，默认10秒")]
     public Int32 ExtendExpire { get; set; } = 10;
 
+    /// <summary>字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒</summary>
+    [Description("字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒")]
+    public Int32 FieldCacheExpire { get; set; } = 3600;
+
     /// <summary>反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除</summary>
     [Description("反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除")]
     public Migration Migration { get; set; } = Migration.On;

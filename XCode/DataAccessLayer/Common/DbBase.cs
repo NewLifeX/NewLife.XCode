@@ -388,10 +388,10 @@ abstract class DbBase : DisposeBase, IDatabase
     #endregion
 
     #region 下载驱动
-    protected static IList<String> GetLinkNames(String assemblyFile, Boolean strict = false)
+    protected static IList<String> GetLinkNames(String name, Boolean strict = false)
     {
         var links = new List<String>();
-        var name = Path.GetFileNameWithoutExtension(assemblyFile);
+        //var name = Path.GetFileNameWithoutExtension(assemblyFile);
         if (!name.IsNullOrEmpty())
         {
 #if !NETFRAMEWORK
@@ -431,16 +431,18 @@ abstract class DbBase : DisposeBase, IDatabase
     }
 
     /// <summary>获取提供者工厂</summary>
+    /// <param name="name"></param>
     /// <param name="assemblyFile"></param>
     /// <param name="className"></param>
     /// <param name="strict"></param>
     /// <param name="ignoreError"></param>
     /// <returns></returns>
-    public static DbProviderFactory GetProviderFactory(String assemblyFile, String className, Boolean strict = false, Boolean ignoreError = false)
+    public static DbProviderFactory GetProviderFactory(String? name, String assemblyFile, String className, Boolean strict = false, Boolean ignoreError = false)
     {
         try
         {
-            var links = GetLinkNames(assemblyFile, strict);
+            if(name.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(assemblyFile);
+            var links = GetLinkNames(name, strict);
             var type = PluginHelper.LoadPlugin(className, null, assemblyFile, links.Join(","));
 
             var factory = GetProviderFactory(type);

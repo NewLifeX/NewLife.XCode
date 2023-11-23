@@ -53,6 +53,10 @@ public enum DatabaseType
     [Description("TDengine数据库")]
     TDengine = 11,
 
+    /// <summary>Hana数据库</summary>
+    [Description("Hana数据库")]
+    Hana = 12,
+
     ///// <summary>网络虚拟数据库</summary>
     //[Description("网络虚拟数据库")]
     //Network = 100,

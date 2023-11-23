@@ -21,8 +21,8 @@ internal class MySql : RemoteDb
         //_Factory = GetProviderFactory("NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory") ??
         //           GetProviderFactory("MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
         // MewLife.MySql 在开发过程中，数据驱动下载站点没有它的包，暂时不支持下载
-        return GetProviderFactory(null, "NewLife.MySql.MySqlClientFactory", true, true) ??
-            GetProviderFactory("MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
+        return GetProviderFactory("NewLife.MySql", null, "NewLife.MySql.MySqlClientFactory", true, true) ??
+            GetProviderFactory(null, "MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
     }
 
     private const String Server_Key = "Server";

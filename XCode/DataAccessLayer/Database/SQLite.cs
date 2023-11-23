@@ -24,15 +24,15 @@ internal class SQLite : FileDbBase
     {
         // Mono有自己的驱动，因为SQLite是混合编译，里面的C++代码与平台相关，不能通用;注意大小写问题
         if (Runtime.Mono)
-            return GetProviderFactory("Mono.Data.Sqlite.dll", "System.Data.SqliteFactory");
+            return GetProviderFactory(null, "Mono.Data.Sqlite.dll", "System.Data.SqliteFactory");
 
         var type =
             PluginHelper.LoadPlugin("Microsoft.Data.Sqlite.SqliteFactory", null, "Microsoft.Data.Sqlite.dll", null) ??
             PluginHelper.LoadPlugin("System.Data.SQLite.SQLiteFactory", null, "System.Data.SQLite.dll", null);
 
         return GetProviderFactory(type) ??
-            GetProviderFactory("Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true) ??
-            GetProviderFactory("System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false);
+            GetProviderFactory(null, "Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true) ??
+            GetProviderFactory(null, "System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false);
     }
 
     /// <summary>是否内存数据库</summary>

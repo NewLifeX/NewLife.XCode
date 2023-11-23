@@ -17,7 +17,7 @@ internal class PostgreSQL : RemoteDb
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory() => GetProviderFactory("Npgsql.dll", "Npgsql.NpgsqlFactory");
+    protected override DbProviderFactory CreateFactory() => GetProviderFactory(null, "Npgsql.dll", "Npgsql.NpgsqlFactory");
 
     private const String Server_Key = "Server";
 

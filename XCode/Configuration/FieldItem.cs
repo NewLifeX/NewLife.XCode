@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using NewLife;
 using XCode.DataAccessLayer;
@@ -113,10 +114,10 @@ public class FieldItem
     public Boolean ReadOnly { get; set; }
 
     /// <summary>表</summary>
-    public TableItem? Table { get; internal protected set; }
+    public TableItem Table { get; internal protected set; } = null!;
 
     /// <summary>字段</summary>
-    public IDataColumn? Field { get; private set; }
+    public IDataColumn Field { get; private set; } = null!;
 
     /// <summary>实体操作者</summary>
     public IEntityFactory? Factory
@@ -503,6 +504,7 @@ public class FieldItem
     /// <summary>类型转换</summary>
     /// <param name="obj"></param>
     /// <returns></returns>
+    [return: NotNullIfNotNull(nameof(obj))]
     public static implicit operator String?(FieldItem obj) => !obj.Equals(null) ? obj.ColumnName : null;
     #endregion
 }
@@ -556,6 +558,7 @@ public class Field : FieldItem
     /// <summary>类型转换</summary>
     /// <param name="obj"></param>
     /// <returns></returns>
-    public static implicit operator String?(Field obj) => !Equals(obj, null) && !obj.Equals(null) ? obj.ColumnName : null;
+    [return: NotNullIfNotNull(nameof(obj))]
+    public static implicit operator String?(Field? obj) => !Equals(obj, null) && !ReferenceEquals(obj, null) ? obj.ColumnName : null;
     #endregion
 }

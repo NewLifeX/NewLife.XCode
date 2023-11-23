@@ -217,7 +217,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
 
     #region 扩展属性
     [NonSerialized]
-    internal EntityExtend _Extends;
+    internal EntityExtend? _Extends;
     /// <summary>扩展属性。避免在序列化中出现</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     protected EntityExtend Extends { get => _Extends ??= new EntityExtend(); set => _Extends = value; }
@@ -226,15 +226,15 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     EntityExtend IEntity.Extends => Extends;
 
     [NonSerialized]
-    internal IDictionary<String, Object> _Items;
+    internal IDictionary<String, Object?>? _Items;
     /// <summary>扩展字段。存放未能映射到实体属性的数据库字段</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    IDictionary<String, Object> IExtend.Items => _Items ??= new Dictionary<String, Object>();
+    IDictionary<String, Object?> IExtend.Items => _Items ??= new Dictionary<String, Object?>();
 
     /// <summary>仅用于扩展数据的索引器</summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    Object IExtend.this[String key] { get => _Items?[key]; set => (this as IExtend).Items[key] = value; }
+    Object? IExtend.this[String key] { get => _Items?[key]; set => (this as IExtend).Items[key] = value; }
 
     ///// <summary>扩展数据键集合</summary>
     //IEnumerable<String> IExtend2.Keys => _Items?.Keys;

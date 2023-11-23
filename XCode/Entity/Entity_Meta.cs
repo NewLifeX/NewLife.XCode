@@ -178,17 +178,17 @@ public partial class Entity<TEntity>
         /// <summary>针对实体对象自动分库分表</summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public static IDisposable CreateShard(TEntity entity)
+        public static IDisposable? CreateShard(TEntity entity)
         {
             // 使用自动分表分库策略
             var model = ShardPolicy?.Shard(entity);
-            return model != null ? new SplitPackge(model.ConnName, model.TableName) : (IDisposable)null;
+            return model != null ? new SplitPackge(model.ConnName, model.TableName) : null;
         }
 
         /// <summary>为实体对象、时间、雪花Id等计算分表分库</summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static IDisposable CreateShard(Object value)
+        public static IDisposable? CreateShard(Object value)
         {
             // 使用自动分表分库策略
             var model = ShardPolicy?.Shard(value);

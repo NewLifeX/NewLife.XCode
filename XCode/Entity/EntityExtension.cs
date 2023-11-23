@@ -914,7 +914,7 @@ public static class EntityExtension
     /// do update success =2次(insert 1次+update 1次)，
     /// 简单来说：如果Insert 成功则返回1，如果需要执行的是update 则返回2，
     /// </returns>
-    public static Int32 Upsert(this IEntity entity, IDataColumn[] columns, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null)
+    public static Int32 Upsert(this IEntity entity, IDataColumn[]? columns, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null)
     {
         var option = new BatchOption { Columns = columns, UpdateColumns = updateColumns, AddColumns = addColumns };
         return Upsert(entity, option, session);

@@ -59,7 +59,7 @@ namespace XCode
         /// <param name="builder"></param>
         /// <param name="ps">参数字典</param>
         /// <returns></returns>
-        public override void GetString(IDatabase db, StringBuilder builder, IDictionary<String, Object> ps)
+        public override void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object>? ps)
         {
             if (IsEmpty) return;
 
@@ -89,7 +89,7 @@ namespace XCode
             builder.Append(sb.Put(true));
         }
 
-        private void GetString(IDatabase db, StringBuilder builder, IDictionary<String, Object> ps, Expression exp)
+        private void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object> ps, Expression exp)
         {
             exp = Flatten(exp);
             if (exp == null || exp.IsEmpty) return;

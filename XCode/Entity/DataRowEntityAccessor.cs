@@ -57,11 +57,17 @@ class DataRowEntityAccessor : IDataRowEntityAccessor
         {
             // 由实体操作者创建实体对象，因为实体操作者可能更换
             var entity = Entity<T>.Meta.Factory.Create() as T;
+            if (entity == null) continue;
+
             foreach (var item in ps)
+            {
                 SetValue(entity, item.Value.Name, item.Value.Type, dr[item.Key]);
+            }
 
             foreach (var item in exts)
+            {
                 SetValue(entity, item.Value, null, dr[item.Key]);
+            }
 
             list.Add(entity);
         }
@@ -75,7 +81,8 @@ class DataRowEntityAccessor : IDataRowEntityAccessor
     {
         // 准备好实体列表
         var list = new List<T>();
-        if (ds?.Rows == null || ds.Rows.Count == 0) return list;
+        if (ds == null || ds.Rows == null || ds.Rows.Count == 0) return list;
+        if (ds.Columns == null || ds.Columns.Length == 0) return list;
 
         // 对应数据表中字段的实体字段
         var ps = new Dictionary<Int32, FieldItem>();
@@ -96,11 +103,17 @@ class DataRowEntityAccessor : IDataRowEntityAccessor
         {
             // 由实体操作者创建实体对象，因为实体操作者可能更换
             var entity = Entity<T>.Meta.Factory.Create() as T;
+            if (entity == null) continue;
+
             foreach (var item in ps)
+            {
                 SetValue(entity, item.Value.Name, item.Value.Type, dr[item.Key]);
+            }
 
             foreach (var item in exts)
-                SetValue(entity, item.Value, ds.Types[item.Key], dr[item.Key]);
+            {
+                SetValue(entity, item.Value, ds.Types?[item.Key], dr[item.Key]);
+            }
 
             list.Add(entity);
         }
@@ -116,7 +129,7 @@ class DataRowEntityAccessor : IDataRowEntityAccessor
         var list = new List<T>();
         if (dr == null) return list;
 
-        var dr2 = dr as DbDataReader;
+        if (dr is not DbDataReader dr2) return list;
 
         // 对应数据表中字段的实体字段
         var ps = new Dictionary<Int32, FieldItem>();
@@ -137,11 +150,17 @@ class DataRowEntityAccessor : IDataRowEntityAccessor
         {
             // 由实体操作者创建实体对象，因为实体操作者可能更换
             var entity = Entity<T>.Meta.Factory.Create() as T;
+            if (entity == null) continue;
+
             foreach (var item in ps)
+            {
                 SetValue(entity, item.Value.Name, item.Value.Type, dr[item.Key]);
+            }
 
             foreach (var item in exts)
+            {
                 SetValue(entity, item.Value, null, dr[item.Key]);
+            }
 
             list.Add(entity);
         }
@@ -150,17 +169,19 @@ class DataRowEntityAccessor : IDataRowEntityAccessor
     #endregion
 
     #region 方法
-    static readonly String[] TrueString = new String[] { "true", "y", "yes", "1" };
-    static readonly String[] FalseString = new String[] { "false", "n", "no", "0" };
-    static readonly String[] IgnoreFields = new[] { "rowNumber" };
+    static readonly String[] TrueString = ["true", "y", "yes", "1"];
+    static readonly String[] FalseString = ["false", "n", "no", "0"];
+    static readonly String[] IgnoreFields = ["rowNumber"];
 
-    private void SetValue(IEntity entity, String name, Type type, Object value)
+    private void SetValue(IEntity entity, String name, Type? type, Object? value)
     {
         // 注意：name并不一定是实体类的成员，随便读取原数据可能会造成不必要的麻烦
-        Object oldValue = null;
+        Object? oldValue = null;
         if (type != null)
+        {
             // 仅对精确匹配的字段进行读取旧值
             oldValue = entity[name];
+        }
         //else
         //{
         //    type = value?.GetType();

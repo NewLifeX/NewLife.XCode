@@ -40,7 +40,7 @@ public class EntityModules : IEnumerable<IEntityModule>
 
     #region 属性
     /// <summary>实体类型</summary>
-    public Type EntityType { get; set; }
+    public Type? EntityType { get; set; }
 
     /// <summary>模块集合</summary>
     public IEntityModule[] Modules { get; set; } = new IEntityModule[0];
@@ -49,7 +49,7 @@ public class EntityModules : IEnumerable<IEntityModule>
     #region 构造
     /// <summary>实例化实体模块集合</summary>
     /// <param name="entityType"></param>
-    public EntityModules(Type entityType) => EntityType = entityType;
+    public EntityModules(Type? entityType) => EntityType = entityType;
     #endregion
 
     #region 方法
@@ -58,10 +58,19 @@ public class EntityModules : IEnumerable<IEntityModule>
     /// <returns></returns>
     public virtual void Add(IEntityModule module)
     {
+        // 未指定实体类型表示全局模块，不需要初始化
+        var type = EntityType;
+        if (type != null)
+        {
+            // 提前设置字段，加速初始化过程，避免实体模块里面获取字段时，被当前实体类的静态构造函数阻塞
+            var fs = type.AsFactory()?.Fields;
+            if (fs != null) EntityModule.SetFields(type, fs);
+        }
+
         // 异步添加实体模块，避免死锁。实体类一般在静态构造函数里面添加模块，如果这里同步初始化会非常危险
         //ThreadPool.UnsafeQueueUserWorkItem(s => AddAsync(s as IEntityModule), module);
         var task = Task.Run(() => AddAsync(module));
-        task.Wait(1_000);
+        task.Wait(100);
     }
 
     /// <summary>添加实体模块</summary>
@@ -257,13 +266,21 @@ public abstract class EntityModule : IEntityModule
         return entity.SetItem(name, value);
     }
 
-    private static readonly ConcurrentDictionary<Type, FieldItem[]> _fieldNames = new();
+    private static readonly ConcurrentDictionary<Type, FieldItem[]> _fields = new();
     /// <summary>获取实体类的字段名。带缓存</summary>
     /// <param name="entityType"></param>
     /// <returns></returns>
     protected static FieldItem[] GetFields(Type entityType)
     {
-        return _fieldNames.GetOrAdd(entityType, t => t.AsFactory().Fields);
+        return _fields.GetOrAdd(entityType, t => t.AsFactory().Fields);
+    }
+
+    /// <summary>提前设置字段，加速初始化过程</summary>
+    /// <param name="entityType"></param>
+    /// <param name="fields"></param>
+    public static void SetFields(Type entityType, FieldItem[] fields)
+    {
+        _fields.TryAdd(entityType, fields);
     }
     #endregion
 }

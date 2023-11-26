@@ -170,8 +170,39 @@ namespace XCode
                     if (ti == null || connNames.Contains(ti.ConnName) || ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
                     connNames.Add(ti.ConnName);
 
-                    Init(ti.ConnName, types);
+                    Init(ti.ConnName, types, true);
                 }
+            }
+            catch (Exception ex)
+            {
+                span?.SetError(ex, null);
+                throw;
+            }
+        }
+
+        /// <summary>初始化所有数据库连接的实体类和数据表</summary>
+        public static async Task InitAllAsync()
+        {
+            using var span = DefaultTracer.Instance?.NewSpan("db:InitAll");
+            try
+            {
+                DAL.WriteLog("异步初始化所有数据库连接的实体类和数据表");
+
+                var ts = new List<Task>();
+
+                // 加载所有实体类
+                var types = typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType.IsGenericType).ToList();
+                var connNames = new List<String>();
+                foreach (var item in types)
+                {
+                    var ti = TableItem.Create(item);
+                    if (ti == null || connNames.Contains(ti.ConnName) || ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
+                    connNames.Add(ti.ConnName);
+
+                    ts.Add(Task.Run(() => Init(ti.ConnName, types, false)));
+                }
+
+                await Task.WhenAll(ts);
             }
             catch (Exception ex)
             {
@@ -182,9 +213,9 @@ namespace XCode
 
         /// <summary>初始化指定连接，执行反向工程检查，初始化数据</summary>
         /// <param name="connName">连接名</param>
-        public static void InitConnection(String connName) => Init(connName, null);
+        public static void InitConnection(String connName) => Init(connName, null, true);
 
-        private static void Init(String connName, IList<Type>? types)
+        private static void Init(String connName, IList<Type>? types, Boolean throwOnError)
         {
             using var span = DefaultTracer.Instance?.NewSpan($"db:{connName}:InitConnection", connName);
             try
@@ -205,7 +236,7 @@ namespace XCode
                 }
 
                 var dal = DAL.Create(connName);
-                DAL.WriteLog("初始化数据库：{0}/{1} 实体类：{2}", connName, dal.DbType, facts.Join(",", e => e.EntityType.Name));
+                DAL.WriteLog("初始化数据库：{0}/{1} 实体类[{3}]：{2}", connName, dal.DbType, facts.Join(",", e => e.EntityType.Name), facts.Count);
 
                 // 反向工程检查
                 if (dal.Db.Migration > Migration.Off)
@@ -245,7 +276,8 @@ namespace XCode
             catch (Exception ex)
             {
                 span?.SetError(ex, null);
-                throw;
+
+                if (throwOnError) throw;
             }
         }
 

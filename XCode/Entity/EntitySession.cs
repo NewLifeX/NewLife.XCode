@@ -478,7 +478,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
 
         // 查真实记录数，修正FastCount不够准确的情况
         var fastCountMin = XCodeSetting.Current.FastCountMin;
-        if (count < fastCountMin && now < _NextFullCount)
+        if (count < fastCountMin && now >= _NextFullCount)
         {
             // 根据数据量大小不同，使用不同的缓存时间
             var exp = count switch

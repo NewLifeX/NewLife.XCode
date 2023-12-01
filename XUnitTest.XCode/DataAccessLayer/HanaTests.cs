@@ -193,13 +193,13 @@ public class HanaTests
     private IDisposable CreateForBatch(String action)
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership_Batch;");
-        DAL.AddConnStr("Membership_Batch", connStr, null, "Hana");
+        DAL.AddConnStr("Membership_Batch_hana", connStr, null, "Hana");
 
         var dt = Role2.Meta.Table.DataTable.Clone() as IDataTable;
         dt.TableName = $"Role2_{action}";
 
         // 分表
-        var split = Role2.Meta.CreateSplit("Membership_Batch", dt.TableName);
+        var split = Role2.Meta.CreateSplit("Membership_Batch_hana", dt.TableName);
 
         var session = Role2.Meta.Session;
         session.Dal.SetTables(dt);
@@ -305,8 +305,8 @@ public class HanaTests
     [Fact]
     public void GetTables()
     {
-        DAL.AddConnStr("member", _ConnStr.Replace("Database=sys", "Database=membership"), null, "Hana");
-        var dal = DAL.Create("member");
+        DAL.AddConnStr("member_hana", _ConnStr.Replace("Database=sys", "Database=membership"), null, "Hana");
+        var dal = DAL.Create("member_hana");
         var tables = dal.Tables;
 
         Assert.True(tables.Count > 0);

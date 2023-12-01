@@ -123,7 +123,7 @@ namespace XUnitTest.XCode
             pager.OrderBy = null;
             pager.Sort = $"{History._.CreateTime} desc,{History._.Action} asc";
             var query = History.FindAll(null, pager);
-            Assert.True(str.ToLower().Contains($"{History._.ID}".ToLower()), "多Sort出错");
+            Assert.True(str.ToLower().Contains($"{History._.Action}".ToLower()), "多Sort出错");
         }
 
         [Fact(DisplayName = "单复杂OrderBy")]

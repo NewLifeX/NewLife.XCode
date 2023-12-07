@@ -60,6 +60,13 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
+      <xs:element name="BaseClass" type="xs:string">
+        <xs:annotation>
+          <xs:documentation xml:lang="zh-cn">
+            基类。可能包含基类和接口，其中{name}替换为Table.Name
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="Namespace" type="xs:string">
         <xs:annotation>
           <xs:documentation xml:lang="zh-cn">
@@ -78,13 +85,6 @@
         <xs:annotation>
           <xs:documentation xml:lang="zh-cn">
             输出目录，绝对或相对地址，相对模型文件所在目录
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="BaseClass" type="xs:string">
-        <xs:annotation>
-          <xs:documentation xml:lang="zh-cn">
-            实体类的基类
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -113,20 +113,6 @@
         <xs:annotation>
           <xs:documentation xml:lang="zh-cn">
             是否使用中文作为实体类文件名
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="OverwriteBizFile" type="BooleanType">
-        <xs:annotation>
-          <xs:documentation xml:lang="zh-cn">
-            是否在生成.biz.cs文件时覆盖已存在的文件
-          </xs:documentation>
-        </xs:annotation>
-      </xs:element>
-      <xs:element name="CreateCustomBizFile" type="BooleanType">
-        <xs:annotation>
-          <xs:documentation xml:lang="zh-cn">
-            是否创建用户自定义业务文件
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -391,7 +377,7 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="DefaultValue" type="BooleanType">
+    <xs:attribute name="DefaultValue" type="xs:string">
       <xs:annotation>
         <xs:documentation>
           默认值
@@ -436,7 +422,7 @@
     <xs:attribute name="Map" type="xs:string">
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">
-          映射，表间关联，用于生成扩展属性
+          映射，表间关联，用于生成扩展属性，例如 XCode.Membership.Area@Id@Path@AreaPath，又如 Tenant@Id@$
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

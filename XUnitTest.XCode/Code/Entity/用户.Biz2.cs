@@ -36,12 +36,17 @@ public partial class User : Entity<User>
         //df.Add(nameof(Sex));
 
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add<UserModule>();
+        Meta.Modules.Add(new UserModule { AllowEmpty = false });
         Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add<IPModule>();
+        Meta.Modules.Add(new IPModule { AllowEmpty = false });
+
+        // 实体缓存
+        // var ec = Meta.Cache;
+        // ec.Expire = 60;
 
         // 单对象缓存
         var sc = Meta.SingleCache;
+        // sc.Expire = 60;
         sc.FindSlaveKeyMethod = k => Find(_.Name == k);
         sc.GetSlaveKeyMethod = e => e.Name;
     }

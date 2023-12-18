@@ -23,7 +23,7 @@ public partial class Department : Entity<Department>, ITenantSource
         //df.Add(__.ParentID);
 
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add<UserModule>();
+        Meta.Modules.Add(new UserModule { AllowEmpty = false });
         Meta.Modules.Add<TimeModule>();
         Meta.Modules.Add<IPModule>();
         Meta.Modules.Add<TenantModule>();

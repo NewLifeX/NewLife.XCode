@@ -202,9 +202,13 @@ public partial class Entity<TEntity>
         /// <summary>是否自增获取自增返回值。默认启用</summary>
         public Boolean AutoIdentity { get; set; } = true;
 
+#if NET45
         private readonly ThreadLocal<Boolean> _AllowInsertIdentity = new();
+#else
+        private readonly AsyncLocal<Boolean> _AllowInsertIdentity = new();
+#endif
         /// <summary>是否允许向自增列插入数据。为免冲突，仅本线程有效</summary>
-        public virtual Boolean AllowInsertIdentity { get => _AllowInsertIdentity.IsValueCreated && _AllowInsertIdentity.Value; set => _AllowInsertIdentity.Value = value; }
+        public virtual Boolean AllowInsertIdentity { get => _AllowInsertIdentity.Value; set => _AllowInsertIdentity.Value = value; }
 
         /// <summary>自动设置Guid的字段。对实体类有效，可在实体类类型构造函数里面设置</summary>
         public virtual FieldItem AutoSetGuidField { get; set; }

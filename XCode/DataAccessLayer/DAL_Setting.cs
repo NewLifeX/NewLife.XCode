@@ -58,7 +58,11 @@ partial class DAL
     #endregion
 
     #region SQL拦截器
+#if NET45
     private static readonly ThreadLocal<Action<String>> _filter = new();
+#else
+    private static readonly AsyncLocal<Action<String>> _filter = new();
+#endif
     /// <summary>本地过滤器（本线程SQL拦截）</summary>
     public static Action<String> LocalFilter { get => _filter.Value; set => _filter.Value = value; }
 

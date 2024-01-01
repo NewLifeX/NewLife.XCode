@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using NewLife;
 using NewLife.Threading;
 using XCode.Configuration;
@@ -29,14 +26,17 @@ public class UserModule : EntityModule
     }
     #endregion
 
-    #region 提供者
+    #region 属性
     /// <summary>当前用户提供者</summary>
-    public IManageProvider Provider { get; set; }
+    public IManageProvider? Provider { get; set; }
+
+    /// <summary>允许空内容。在没有当前用户信息时，是否允许填充空内容，若允许可能是清空上一次更新人。默认false</summary>
+    public Boolean AllowEmpty { get; set; }
     #endregion
 
     #region 构造函数
     /// <summary>实例化</summary>
-    public UserModule() : this(null) { }
+    public UserModule() { }
 
     /// <summary>实例化</summary>
     /// <param name="provider"></param>
@@ -104,7 +104,7 @@ public class UserModule : EntityModule
         {
             // 在没有当前登录用户的场合，把更新者清零
             SetNoDirtyItem(fs, entity, __.UpdateUserID, 0);
-            SetNoDirtyItem(fs, entity, __.UpdateUser, "");
+            if (AllowEmpty) SetNoDirtyItem(fs, entity, __.UpdateUser, "");
         }
 
         return true;
@@ -190,6 +190,12 @@ public class IPModule : EntityModule
     }
     #endregion
 
+    #region 属性
+
+    /// <summary>允许空内容。在没有当前IP信息时，是否允许填充空内容，若允许可能是清空上一次更新IP。默认false</summary>
+    public Boolean AllowEmpty { get; set; }
+    #endregion
+
     /// <summary>初始化。检查是否匹配</summary>
     /// <param name="entityType"></param>
     /// <returns></returns>
@@ -215,14 +221,14 @@ public class IPModule : EntityModule
     {
         if (!isNew && !entity.HasDirty) return true;
 
+        var fs = GetFields(entity.GetType());
+
         var ip = ManageProvider.UserHost;
         if (!ip.IsNullOrEmpty())
         {
             // 如果不是IPv6，去掉后面端口
             if (ip.Contains("://")) ip = ip.Substring("://", null);
             //if (ip.Contains(":") && !ip.Contains("::")) ip = ip.Substring(null, ":");
-
-            var fs = GetFields(entity.GetType());
 
             if (isNew)
             {
@@ -244,6 +250,11 @@ public class IPModule : EntityModule
                 // 不管新建还是更新，都改变更新
                 SetNoDirtyItem(fs, entity, __.UpdateIP, ip);
             }
+        }
+        else if (AllowEmpty)
+        {
+            // 不管新建还是更新，都改变更新
+            SetNoDirtyItem(fs, entity, __.UpdateIP, ip);
         }
 
         return true;

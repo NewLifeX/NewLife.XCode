@@ -101,15 +101,27 @@ public abstract class ManageProvider : IManageProvider
 {
     #region 静态实例
     /// <summary>当前管理提供者</summary>
-    public static IManageProvider Provider { get; set; }
+    public static IManageProvider? Provider { get; set; }
 
     /// <summary>当前登录用户</summary>
-    public static IUser User { get => Provider?.Current as IUser; set => Provider.Current = value as IManageUser; }
+    public static IUser? User
+    {
+        get => Provider?.Current as IUser;
+        set
+        {
+            if (Provider != null && value is IManageUser user)
+                Provider.Current = user;
+        }
+    }
 
     /// <summary>菜单工厂</summary>
-    public static IMenuFactory Menu => GetFactory<IMenu>() as IMenuFactory;
+    public static IMenuFactory? Menu => GetFactory<IMenu>() as IMenuFactory;
 
+#if NET45
     private static readonly ThreadLocal<String> _UserHost = new();
+#else
+    private static readonly AsyncLocal<String> _UserHost = new();
+#endif
     /// <summary>用户主机</summary>
     public static String UserHost { get => _UserHost.Value; set => _UserHost.Value = value; }
     #endregion

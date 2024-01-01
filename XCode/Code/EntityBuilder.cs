@@ -948,27 +948,41 @@ public class EntityBuilder : ClassBuilder
             WriteLine();
             WriteLine("// 过滤器 UserModule、TimeModule、IPModule");
             if (ns.Contains("CreateUserID") || ns.Contains("CreateUser") || ns.Contains("UpdateUserID") || ns.Contains("UpdateUser"))
-                WriteLine("Meta.Modules.Add<UserModule>();");
+                WriteLine("Meta.Modules.Add(new UserModule { AllowEmpty = false });");
             if (ns.Contains("CreateTime") || ns.Contains("UpdateTime"))
                 WriteLine("Meta.Modules.Add<TimeModule>();");
             if (ns.Contains("CreateIP") || ns.Contains("UpdateIP"))
-                WriteLine("Meta.Modules.Add<IPModule>();");
+                WriteLine("Meta.Modules.Add(new IPModule { AllowEmpty = false });");
             if (ns.Contains("TraceId"))
                 WriteLine("Meta.Modules.Add<TraceModule>();");
             if (ns.Contains("TenantId"))
                 WriteLine("Meta.Modules.Add<TenantModule>();");
 
-            // 唯一索引不是主键，又刚好是Master，使用单对象缓存从键
-            var di = Table.Indexes.FirstOrDefault(e => e.Unique && e.Columns.Length == 1 && Table.GetColumn(e.Columns[0]).Master);
-            if (di != null)
+            if (!Table.InsertOnly && !Table.Name.EndsWith("Log") && !Table.Name.EndsWith("History") && !Table.Name.EndsWith("Record"))
             {
-                dc = Table.GetColumn(di.Columns[0]);
+                // 实体缓存
+                {
+                    WriteLine();
+                    WriteLine("// 实体缓存");
+                    WriteLine("// var ec = Meta.Cache;");
+                    WriteLine("// ec.Expire = 60;");
+                }
 
-                WriteLine();
-                WriteLine("// 单对象缓存");
-                WriteLine("var sc = Meta.SingleCache;");
-                WriteLine("sc.FindSlaveKeyMethod = k => Find(_.{0} == k);", dc.Name);
-                WriteLine("sc.GetSlaveKeyMethod = e => e.{0};", dc.Name);
+                // 唯一索引不是主键，又刚好是Master，使用单对象缓存从键
+                var di = Table.Indexes.FirstOrDefault(e => e.Unique && e.Columns.Length == 1 && (Table.GetColumn(e.Columns[0])?.Master ?? false));
+                if (di != null)
+                {
+                    dc = Table.GetColumn(di.Columns[0]);
+                    if (dc != null)
+                    {
+                        WriteLine();
+                        WriteLine("// 单对象缓存");
+                        WriteLine("var sc = Meta.SingleCache;");
+                        WriteLine("// sc.Expire = 60;");
+                        WriteLine("sc.FindSlaveKeyMethod = k => Find(_.{0} == k);", dc.Name);
+                        WriteLine("sc.GetSlaveKeyMethod = e => e.{0};", dc.Name);
+                    }
+                }
             }
         }
         WriteLine("}");

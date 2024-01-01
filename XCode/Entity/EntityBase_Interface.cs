@@ -37,6 +37,12 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
     /// <returns></returns>
     internal static Boolean CheckEqual(Object? v1, Object? v2)
     {
+        if (v1 == null && v2 == null) return true;
+
+        // 字符串允许空值和空串相等，优先对比
+        if (v1 is String s1 && s1 == "" && v2 == null) return true;
+        if (v2 is String s2 && s2 == "" && v1 == null) return true;
+
         if (v1 == null || v2 == null) return Equals(v1, v2);
 
         switch (Type.GetTypeCode(v1.GetType()))

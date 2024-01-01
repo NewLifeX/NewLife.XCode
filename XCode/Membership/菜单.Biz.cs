@@ -1,11 +1,8 @@
-using System.Reflection;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Collections;
-using NewLife.Log;
-using NewLife.Reflection;
 
 namespace XCode.Membership;
 

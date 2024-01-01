@@ -967,6 +967,8 @@ internal class SQLiteMetaData : FileDbMetaData
             case DDLSchema.AddColumnDescription:
             case DDLSchema.DropColumnDescription:
                 return true;
+            case DDLSchema.AlterColumn:
+                return base.PerformSchema(sb, true, schema, values);
             default:
                 break;
         }

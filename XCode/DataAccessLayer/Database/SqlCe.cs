@@ -293,7 +293,7 @@ class SqlCeMetaData : FileDbMetaData
         return sb.ToString();
     }
 
-    protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
         // 非定义时（修改字段），主键字段没有约束
         if (!onlyDefine && field.PrimaryKey) return null;

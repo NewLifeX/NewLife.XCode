@@ -417,7 +417,7 @@ internal partial class DbMetaData
     /// <summary>格式化注释，去除所有非单词字符</summary>
     /// <param name="str"></param>
     /// <returns></returns>
-    private String FormatDescription(String str)
+    private String? FormatDescription(String? str)
     {
         if (str.IsNullOrWhiteSpace()) return null;
 
@@ -907,7 +907,7 @@ internal partial class DbMetaData
     /// <param name="field">字段</param>
     /// <param name="onlyDefine">仅仅定义</param>
     /// <returns></returns>
-    protected virtual String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected virtual String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
         if (field.PrimaryKey && field.Table.PrimaryKeys.Length <= 1) return " Primary Key";
 

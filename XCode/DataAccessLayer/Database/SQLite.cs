@@ -429,9 +429,10 @@ internal class SQLiteMetaData : FileDbMetaData
             if (_FieldTypeMaps == null)
             {
                 var list = base.FieldTypeMaps;
+
                 // SQLite自增字段有时是Int64，需要到Int32的映射
                 if (!list.Any(e => e.Key == typeof(Int64) && e.Value == typeof(Int32)))
-                    list.Add(new KeyValuePair<Type, Type>(typeof(Int64), typeof(Int32)));
+                    list.Add(new(typeof(Int64), typeof(Int32)));
             }
             return base.FieldTypeMaps;
         }
@@ -665,7 +666,7 @@ internal class SQLiteMetaData : FileDbMetaData
         return typeName;
     }
 
-    protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
         // SQLite要求自增必须是主键
         if (field.Identity && !field.PrimaryKey)

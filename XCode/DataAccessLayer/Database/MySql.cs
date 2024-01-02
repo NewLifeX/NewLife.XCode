@@ -355,7 +355,7 @@ internal class MySqlMetaData : RemoteDbMetaData
             {
                 var list = base.FieldTypeMaps;
                 if (!list.Any(e => e.Key == typeof(Byte) && e.Value == typeof(Boolean)))
-                    list.Add(new KeyValuePair<Type, Type>(typeof(Byte), typeof(Boolean)));
+                    list.Add(new(typeof(Byte), typeof(Boolean)));
             }
             return base.FieldTypeMaps;
         }
@@ -387,7 +387,7 @@ internal class MySqlMetaData : RemoteDbMetaData
 
     #region 架构
 
-    protected override List<IDataTable> OnGetTables(String[] names)
+    protected override List<IDataTable> OnGetTables(String[]? names)
     {
         var ss = Database.CreateSession();
         var db = Database.DatabaseName;
@@ -399,7 +399,7 @@ internal class MySqlMetaData : RemoteDbMetaData
         {
             var sql = $"SHOW TABLE STATUS FROM `{db}`";
             var dt = ss.Query(sql, null);
-            if (dt.Rows.Count == 0) return null;
+            if (dt.Rows == null || dt.Rows.Count == 0) return list;
 
             var hs = new HashSet<String>(names ?? new String[0], StringComparer.OrdinalIgnoreCase);
 
@@ -456,16 +456,22 @@ internal class MySqlMetaData : RemoteDbMetaData
                 {
                     var dname = dr2["Key_name"] + "";
                     var di = table.Indexes.FirstOrDefault(e => e.Name == dname) ?? table.CreateIndex();
-                    di.Name = dname;
+                    //di.Name = dname;
                     di.Unique = dr2.Get<Int32>("Non_unique") == 0;
 
                     var cname = dr2.Get<String>("Column_name");
+                    if (cname.IsNullOrEmpty()) continue;
+
                     var cs = new List<String>();
                     if (di.Columns != null && di.Columns.Length > 0) cs.AddRange(di.Columns);
                     cs.Add(cname);
                     di.Columns = cs.ToArray();
 
-                    table.Indexes.Add(di);
+                    if (di.Name == null)
+                    {
+                        di.Name = dname;
+                        table.Indexes.Add(di);
+                    }
                 }
 
                 #endregion 索引
@@ -482,7 +488,7 @@ internal class MySqlMetaData : RemoteDbMetaData
         }
 
         // 找到使用枚举作为布尔型的旧表
-        var es = (Database as MySql).EnumTables;
+        var es = (Database as MySql)!.EnumTables;
         foreach (var table in list)
         {
             if (!es.Contains(table.TableName))
@@ -511,7 +517,7 @@ internal class MySqlMetaData : RemoteDbMetaData
 
         var sql = $"SHOW TABLE STATUS FROM `{Database.DatabaseName}`";
         var dt = base.Database.CreateSession().Query(sql, null);
-        if (dt.Rows.Count == 0) return list;
+        if (dt.Rows == null || dt.Rows.Count == 0) return list;
 
         // 所有表
         foreach (var dr in dt)
@@ -549,9 +555,9 @@ internal class MySqlMetaData : RemoteDbMetaData
         return sql;
     }
 
-    protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
-        String str = null;
+        String? str = null;
         if (!field.Nullable) str = " NOT NULL";
 
         // 默认值

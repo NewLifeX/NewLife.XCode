@@ -236,7 +236,7 @@ class AccessMetaData : FileDbMetaData
         return list;
     }
 
-    protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
         var str = base.GetFieldConstraints(field, onlyDefine);
 

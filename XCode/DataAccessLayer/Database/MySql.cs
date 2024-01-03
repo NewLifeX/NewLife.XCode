@@ -424,7 +424,6 @@ internal class MySqlMetaData : RemoteDbMetaData
 
                     field.ColumnName = dc["Field"] + "";
                     field.RawType = dc["Type"] + "";
-                    field.DataType = GetDataType(field.RawType);
                     field.Description = dc["Comment"] + "";
 
                     if (dc["Extra"] + "" == "auto_increment") field.Identity = true;
@@ -432,6 +431,7 @@ internal class MySqlMetaData : RemoteDbMetaData
                     if (dc["Null"] + "" == "YES") field.Nullable = true;
 
                     field.Length = field.RawType.Substring("(", ")").ToInt();
+                    field.DataType = GetDataType(field);
 
                     if (field.DataType == null)
                     {
@@ -527,6 +527,23 @@ internal class MySqlMetaData : RemoteDbMetaData
         }
 
         return list;
+    }
+
+    protected override Type? GetDataType(IDataColumn field)
+    {
+        // tinyint根据不同宽度判断所属类型
+        if (!field.RawType.IsNullOrEmpty() && field.RawType.StartsWithIgnoreCase("tinyint("))
+        {
+            return field.Length switch
+            {
+                1 => typeof(Boolean),
+                <= 2 => typeof(Byte),
+                <= 4 => typeof(Int16),
+                _ => typeof(Int32)
+            };
+        }
+
+        return base.GetDataType(field);
     }
 
     protected override String? GetFieldType(IDataColumn field)

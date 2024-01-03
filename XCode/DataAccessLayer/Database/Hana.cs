@@ -396,7 +396,6 @@ internal class HanaMetaData : RemoteDbMetaData
 
                     field.ColumnName = dc["Field"] + "";
                     field.RawType = dc["Type"] + "";
-                    field.DataType = GetDataType(field.RawType);
                     field.Description = dc["Comment"] + "";
 
                     if (dc["Extra"] + "" == "auto_increment") field.Identity = true;
@@ -404,6 +403,7 @@ internal class HanaMetaData : RemoteDbMetaData
                     if (dc["Null"] + "" == "YES") field.Nullable = true;
 
                     field.Length = field.RawType.Substring("(", ")").ToInt();
+                    field.DataType = GetDataType(field);
 
                     if (field.DataType == null)
                     {

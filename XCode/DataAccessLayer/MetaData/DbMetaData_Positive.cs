@@ -347,16 +347,20 @@ partial class DbMetaData
                     //list.Add(new KeyValuePair<Type, Type>(typeof(SByte), typeof(Int16)));
                     // 因为等价，字节需要能够互相映射
                     new(typeof(Byte), typeof(SByte)),
+                    new(typeof(Byte), typeof(Boolean)),
 
                     new(typeof(UInt16), typeof(Int16)),
                     new(typeof(Int16), typeof(UInt16)),
                     //list.Add(new KeyValuePair<Type, Type>(typeof(UInt16), typeof(Int32)));
                     //list.Add(new KeyValuePair<Type, Type>(typeof(Int16), typeof(Int32)));
+                    new(typeof(Int16), typeof(Int32)),
+                    new(typeof(Int16), typeof(Boolean)),
 
                     new(typeof(UInt32), typeof(Int32)),
                     new(typeof(Int32), typeof(UInt32)),
                     //// 因为自增的原因，某些字段需要被映射到Int32里面来
                     //list.Add(new KeyValuePair<Type, Type>(typeof(SByte), typeof(Int32)));
+                    new(typeof(Int32), typeof(Boolean)),
 
                     new(typeof(UInt64), typeof(Int64)),
                     new(typeof(Int64), typeof(UInt64)),
@@ -365,6 +369,7 @@ partial class DbMetaData
 
                     // 数据库使用Double，实体类使用Decimal
                     new(typeof(Double), typeof(Decimal)),
+                    new(typeof(Decimal), typeof(Double)),
 
                     //// 根据常用行，从不常用到常用排序，然后配对进入映射表
                     //var types = new Type[] { typeof(SByte), typeof(Byte), typeof(UInt16), typeof(Int16), typeof(UInt64), typeof(Int64), typeof(UInt32), typeof(Int32) };
@@ -414,7 +419,7 @@ partial class DbMetaData
         return typeName;
     }
 
-    /// <summary>获取数据类型</summary>
+    /// <summary>获取Net数据类型</summary>
     /// <param name="field"></param>
     /// <returns></returns>
     protected virtual Type? GetDataType(IDataColumn field)
@@ -439,18 +444,18 @@ partial class DbMetaData
             }
             if (!dbtype.IsNullOrEmpty())
             {
-                // 修正原始类型
-                if (dbtype.Contains("{0}"))
-                {
-                    // 某些字段有精度需要格式化
-                    if (dbtype.Contains("{1}"))
-                    {
-                        if (field is XField xf)
-                            field.RawType = String.Format(dbtype, xf.Precision, xf.Scale);
-                    }
-                    else
-                        field.RawType = String.Format(dbtype, field.Length);
-                }
+                //// 修正原始类型
+                //if (dbtype.Contains("{0}"))
+                //{
+                //    // 某些字段有精度需要格式化
+                //    if (dbtype.Contains("{1}"))
+                //    {
+                //        if (field is XField xf)
+                //            field.RawType = String.Format(dbtype, xf.Precision, xf.Scale);
+                //    }
+                //    else
+                //        field.RawType = String.Format(dbtype, field.Length);
+                //}
 
                 return item.Key;
             }
@@ -459,29 +464,29 @@ partial class DbMetaData
         return null;
     }
 
-    /// <summary>获取数据类型</summary>
-    /// <param name="rawType"></param>
-    /// <returns></returns>
-    public virtual Type? GetDataType(String rawType)
-    {
-        if (rawType.Contains("(")) rawType = rawType.Substring(null, "(");
-        var rawType2 = rawType + "(";
+    ///// <summary>获取数据类型</summary>
+    ///// <param name="rawType"></param>
+    ///// <returns></returns>
+    //public virtual Type? GetDataType(String rawType)
+    //{
+    //    if (rawType.Contains("(")) rawType = rawType.Substring(null, "(");
+    //    var rawType2 = rawType + "(";
 
-        foreach (var item in Types)
-        {
-            String? dbtype = null;
-            if (rawType.EqualIgnoreCase(item.Value))
-            {
-                dbtype = item.Value[0];
-            }
-            else
-            {
-                dbtype = item.Value.FirstOrDefault(e => e.StartsWithIgnoreCase(rawType2));
-            }
-            if (!dbtype.IsNullOrEmpty()) return item.Key;
-        }
+    //    foreach (var item in Types)
+    //    {
+    //        String? dbtype = null;
+    //        if (rawType.EqualIgnoreCase(item.Value))
+    //        {
+    //            dbtype = item.Value[0];
+    //        }
+    //        else
+    //        {
+    //            dbtype = item.Value.FirstOrDefault(e => e.StartsWithIgnoreCase(rawType2));
+    //        }
+    //        if (!dbtype.IsNullOrEmpty()) return item.Key;
+    //    }
 
-        return null;
-    }
+    //    return null;
+    //}
     #endregion
 }

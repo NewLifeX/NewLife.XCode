@@ -269,7 +269,7 @@ internal partial class DbMetaData
             // 对于修改列，只读或者只创建，都只要sql
             if (IsColumnTypeChanged(item, dbf))
             {
-                WriteLog("字段{0}.{1}类型需要由数据库的{2}改变为实体的{3}", entitytable.Name, item.Name, dbf.DataType, item.DataType);
+                WriteLog("字段[{0}.{1}]类型需要由数据库的[{2}]改变为实体的[{3}]，RawType={4}", entitytable.Name, item.Name, dbf.DataType.Name, item.DataType.FullName.TrimStart("System."), dbf.RawType);
                 PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
             }
             else if (IsColumnLengthChanged(item, dbf, entityDb))
@@ -665,8 +665,8 @@ internal partial class DbMetaData
                 }
             }
 
-            IDataColumn dc = null;
-            IDataTable dt = null;
+            IDataColumn? dc = null;
+            IDataTable? dt = null;
             if (values != null && values.Length > 0)
             {
                 dc = values[0] as IDataColumn;
@@ -810,7 +810,7 @@ internal partial class DbMetaData
     /// <param name="schema">数据定义模式</param>
     /// <param name="values">其它信息</param>
     /// <returns></returns>
-    public virtual Object SetSchema(DDLSchema schema, params Object[] values)
+    public virtual Object? SetSchema(DDLSchema schema, params Object[]? values)
     {
         var db = Database as DbBase;
         using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);

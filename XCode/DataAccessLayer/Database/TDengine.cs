@@ -290,9 +290,9 @@ class TDengineMetaData : RemoteDbMetaData
 
                     field.ColumnName = dc["Field"] + "";
                     field.RawType = dc["Type"] + "";
-                    field.DataType = GetDataType(field.RawType);
                     field.Length = dc["Length"].ToInt();
                     field.Master = dc["Note"] as String == "TAGS";
+                    field.DataType = GetDataType(field);
 
                     field.Fix();
 

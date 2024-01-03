@@ -18,7 +18,7 @@ public class ModelBuilder : ClassBuilder
     /// <param name="option">可选项</param>
     /// <param name="log"></param>
     /// <returns></returns>
-    public static Int32 BuildModels(IList<IDataTable> tables, BuilderOption option = null, ILog log = null)
+    public static Int32 BuildModels(IList<IDataTable> tables, BuilderOption? option = null, ILog? log = null)
     {
         if (option == null)
             option = new BuilderOption();
@@ -28,7 +28,7 @@ public class ModelBuilder : ClassBuilder
         //option.Pure = true;
         //option.Partial = true;
 
-        log?.Info("生成简易模型类 {0}", option.Output.GetBasePath());
+        log?.Info("生成简易模型类 {0}", option.Output?.GetBasePath());
 
         var count = 0;
         foreach (var item in tables)
@@ -42,10 +42,13 @@ public class ModelBuilder : ClassBuilder
                 Table = item,
                 Pure = true,
                 Option = option.Clone(),
-                Log = log
+                //Log = log
             };
+            if (log != null) builder.Log = log;
 
             builder.Load(item);
+
+            if (!option.Output.IsNullOrEmpty()) builder.Option.Output = option.Output;
 
             // 自定义模型
             var modelClass = item.Properties["ModelClass"];

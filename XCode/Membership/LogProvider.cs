@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Collections;
+using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Model;
@@ -19,7 +20,7 @@ public class LogProvider
     /// <param name="name">名称</param>
     /// <param name="ip">地址</param>
     [Obsolete]
-    public virtual void WriteLog(String category, String action, String remark, Int32 userid = 0, String name = null, String ip = null) => WriteLog(category, action, true, remark, userid, name, ip);
+    public virtual void WriteLog(String category, String action, String remark, Int32 userid = 0, String? name = null, String? ip = null) => WriteLog(category, action, true, remark, userid, name, ip);
 
     /// <summary>写日志</summary>
     /// <param name="type">类型</param>
@@ -29,7 +30,7 @@ public class LogProvider
     /// <param name="name">名称</param>
     /// <param name="ip">地址</param>
     [Obsolete]
-    public virtual void WriteLog(Type type, String action, String remark, Int32 userid = 0, String name = null, String ip = null) => WriteLog(type, action, true, remark, userid, name, ip);
+    public virtual void WriteLog(Type type, String action, String remark, Int32 userid = 0, String? name = null, String? ip = null) => WriteLog(type, action, true, remark, userid, name, ip);
 
     /// <summary>创建日志，未写入</summary>
     /// <param name="category">类型</param>
@@ -39,12 +40,12 @@ public class LogProvider
     /// <param name="userid">用户</param>
     /// <param name="name">名称</param>
     /// <param name="ip">地址</param>
-    public virtual Log CreateLog(String category, String action, Boolean success, String remark, Int32 userid = 0, String name = null, String ip = null)
+    public virtual Log CreateLog(String category, String action, Boolean success, String remark, Int32 userid = 0, String? name = null, String? ip = null)
     {
         if (category.IsNullOrEmpty()) throw new ArgumentNullException(nameof(category));
 
         var factory = EntityFactory.CreateFactory(typeof(Log));
-        var log = factory.Create() as Log;
+        var log = (factory.Create() as Log)!;
         log.Category = category;
         log.Action = action;
         log.Success = success;
@@ -91,7 +92,7 @@ public class LogProvider
     /// <param name="name">名称</param>
     /// <param name="ip">地址</param>
     /// <param name="linkid">关联编号</param>
-    public virtual Log CreateLog(Type type, String action, Boolean success, String remark, Int32 userid = 0, String name = null, String ip = null, Int64 linkid = 0)
+    public virtual Log CreateLog(Type type, String action, Boolean success, String remark, Int32 userid = 0, String? name = null, String? ip = null, Int64 linkid = 0)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
 
@@ -117,7 +118,7 @@ public class LogProvider
     /// <param name="userid">用户</param>
     /// <param name="name">名称</param>
     /// <param name="ip">地址</param>
-    public virtual void WriteLog(String category, String action, Boolean success, String remark, Int32 userid = 0, String name = null, String ip = null)
+    public virtual void WriteLog(String category, String action, Boolean success, String remark, Int32 userid = 0, String? name = null, String? ip = null)
     {
         if (!Enable) return;
 
@@ -134,7 +135,7 @@ public class LogProvider
     /// <param name="userid">用户</param>
     /// <param name="name">名称</param>
     /// <param name="ip">地址</param>
-    public virtual void WriteLog(Type type, String action, Boolean success, String remark, Int32 userid = 0, String name = null, String ip = null)
+    public virtual void WriteLog(Type type, String action, Boolean success, String remark, Int32 userid = 0, String? name = null, String? ip = null)
     {
         if (!Enable) return;
 
@@ -147,7 +148,7 @@ public class LogProvider
     /// <param name="action">操作</param>
     /// <param name="entity">实体</param>
     /// <param name="error">错误信息</param>
-    public void WriteLog(String action, IEntity entity, String error = null)
+    public void WriteLog(String action, IEntity entity, String? error = null)
     {
         if (!Enable) return;
 
@@ -176,8 +177,16 @@ public class LogProvider
                     // 日志里面不要出现密码
                     if (fi.Name.EqualIgnoreCase("pass", "password")) v1 = v2 = null;
 
-                    if (v1 is DateTime dt1) v1 = dt1.ToFullString();
-                    if (v2 is DateTime dt2) v2 = dt2.ToFullString();
+                    if (v1 is DateTime dt1)
+                        v1 = dt1.ToFullString();
+                    else if (v1 is IList list)
+                        v1 = list.Join(",");
+
+                    if (v2 is DateTime dt2)
+                        v2 = dt2.ToFullString();
+                    else if (v2 is IList list)
+                        v2 = list.Join(",");
+
                     sb.Separate(",").AppendFormat("{0}={1} -> {2}", fi.Name, v1, v2);
                 }
             }
@@ -199,7 +208,11 @@ public class LogProvider
                 // 日志里面不要出现密码
                 if (fi.Name.EqualIgnoreCase("pass", "password")) v = null;
 
-                if (v is DateTime dt2) v = dt2.ToFullString();
+                if (v is DateTime dt2)
+                    v = dt2.ToFullString();
+                else if (v is IList list)
+                    v = list.Join(",");
+
                 sb.Separate(",").AppendFormat("{0}={1}", fi.Name, v);
             }
         }
@@ -239,10 +252,11 @@ public class LogProvider
 
     class DbLog : Logger
     {
-        public LogProvider Provider { get; set; }
-        public String Category { get; set; }
+        public LogProvider? Provider { get; set; }
 
-        protected override void OnWrite(LogLevel level, String format, params Object[] args)
+        public String? Category { get; set; }
+
+        protected override void OnWrite(LogLevel level, String format, params Object?[] args)
         {
             var msg = String.Format(format, args);
             var act = "";
@@ -256,7 +270,7 @@ public class LogProvider
             // 从参数里提取用户对象
             var user = args.FirstOrDefault(e => e is IManageUser) as IManageUser;
 
-            Provider.WriteLog(Category, act, true, msg, user?.ID ?? 0, user + "");
+            Provider?.WriteLog(Category!, act, true, msg, user?.ID ?? 0, user + "");
         }
     }
     #endregion

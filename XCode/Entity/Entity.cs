@@ -231,9 +231,15 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public override Int32 SaveWithoutValid()
     {
-        enableValid = false;
-        try { return Save(); }
-        finally { enableValid = true; }
+        _enableValid = false;
+        try
+        {
+            return Save();
+        }
+        finally
+        {
+            _enableValid = true;
+        }
     }
 
     /// <summary>异步保存。实现延迟保存，大事务保存。主要面向日志表和频繁更新的在线记录表</summary>
@@ -255,7 +261,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             isnew = true;
 
         // 提前执行Valid，让它提前准备好验证数据
-        if (enableValid)
+        if (_enableValid)
         {
             if (!Valid(isnew ? DataMethod.Insert : DataMethod.Update)) return false;
         }
@@ -327,10 +333,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
         }
 
-        // 自动分库分表
-        using var split = Meta.CreateShard((this as TEntity)!);
-
-        if (enableValid)
+        if (_enableValid)
         {
             var rt = Valid(method);
 
@@ -340,11 +343,14 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         AutoFillSnowIdPrimaryKey();
 
+        // 自动分库分表
+        using var split = Meta.CreateShard((this as TEntity)!);
+
         return func();
     }
 
     [NonSerialized]
-    private Boolean enableValid = true;
+    private Boolean _enableValid = true;
 
     /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
     /// <remarks>建议重写者调用基类的实现，因为基类自动生成雪花Id、填充创建更新信息以及验证字符串字段是否超长。</remarks>

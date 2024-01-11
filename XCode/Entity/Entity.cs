@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Data;
 using System.Text.RegularExpressions;
 using NewLife;
@@ -140,9 +139,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     #region 操作
     private static IEntityPersistence Persistence => Meta.Factory.Persistence;
 
-    /// <summary>插入数据，<see cref="Valid"/>后，在事务中调用<see cref="OnInsert"/>。</summary>
+    /// <summary>插入数据，Valid后，在事务中调用<see cref="OnInsert"/>。</summary>
     /// <returns></returns>
-    public override Int32 Insert() => DoAction(OnInsert, true);
+    public override Int32 Insert() => DoAction(OnInsert, DataMethod.Insert);
 
     /// <summary>把该对象持久化到数据库，添加/更新实体缓存。</summary>
     /// <returns></returns>
@@ -159,9 +158,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return rs;
     }
 
-    /// <summary>更新数据，<see cref="Valid"/>后，在事务中调用<see cref="OnUpdate"/>。</summary>
+    /// <summary>更新数据，Valid后，在事务中调用<see cref="OnUpdate"/>。</summary>
     /// <returns></returns>
-    public override Int32 Update() => DoAction(OnUpdate, false);
+    public override Int32 Update() => DoAction(OnUpdate, DataMethod.Update);
 
     /// <summary>更新数据库，同时更新实体缓存</summary>
     /// <returns></returns>
@@ -182,42 +181,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// 如果需要避开该机制，请清空脏数据。
     /// </remarks>
     /// <returns></returns>
-    public override Int32 Delete() => DoAction(OnDelete, null);
+    public override Int32 Delete() => DoAction(OnDelete, DataMethod.Delete);
 
     /// <summary>从数据库中删除该对象，同时从实体缓存中删除</summary>
     /// <returns></returns>
     protected virtual Int32 OnDelete() => Meta.Session.Delete(this);
-
-    private Int32 DoAction(Func<Int32> func, Boolean? isnew)
-    {
-        if (Meta.Table.DataTable.InsertOnly)
-        {
-            if (isnew == null) throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止删除！");
-            if (!isnew.Value) throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止修改！");
-        }
-
-        if (enableValid)
-        {
-            var rt = true;
-            if (isnew != null)
-            {
-                Valid(isnew.Value);
-                //rt = Meta.Modules.Valid(this, isnew.Value);
-            }
-            else
-                rt = Meta.Modules.Delete(this);
-
-            // 没有更新任何数据
-            if (!rt) return 0;
-        }
-
-        AutoFillSnowIdPrimaryKey();
-
-        // 自动分库分表
-        using var split = Meta.CreateShard((this as TEntity)!);
-
-        return func();
-    }
 
     /// <summary>保存。Insert/Update/Upsert</summary>
     /// <remarks>
@@ -300,9 +268,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return Meta.Session.Queue.Add(this, msDelay);
     }
 
-    /// <summary>插入数据，<see cref="Valid"/>后，在事务中调用<see cref="OnInsert"/>。</summary>
+    /// <summary>插入数据，Valid后调用<see cref="OnInsertAsync"/>。</summary>
     /// <returns></returns>
-    public override Task<Int32> InsertAsync() => DoAction(OnInsertAsync, true);
+    public override Task<Int32> InsertAsync() => DoAction(OnInsertAsync, DataMethod.Insert);
 
     /// <summary>把该对象持久化到数据库，添加/更新实体缓存。</summary>
     /// <returns></returns>
@@ -319,9 +287,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return rs;
     }
 
-    /// <summary>更新数据，<see cref="Valid"/>后，在事务中调用<see cref="OnUpdate"/>。</summary>
+    /// <summary>更新数据，Valid后调用<see cref="OnUpdateAsync"/>。</summary>
     /// <returns></returns>
-    public override Task<Int32> UpdateAsync() => DoAction(OnUpdateAsync, false);
+    public override Task<Int32> UpdateAsync() => DoAction(OnUpdateAsync, DataMethod.Update);
 
     /// <summary>更新数据库，同时更新实体缓存</summary>
     /// <returns></returns>
@@ -335,25 +303,30 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return rs;
     }
 
-    /// <summary>删除数据，通过在事务中调用OnDelete实现。</summary>
+    /// <summary>删除数据，Valid后调用<see cref="OnDeleteAsync"/>。</summary>
     /// <remarks>
     /// 删除时，如果有且仅有主键有脏数据，则可能是ObjectDataSource之类的删除操作。
     /// 该情况下，实体类没有完整的信息（仅有主键信息），将会导致无法通过扩展属性删除附属数据。
     /// 如果需要避开该机制，请清空脏数据。
     /// </remarks>
     /// <returns></returns>
-    public override Task<Int32> DeleteAsync() => DoAction(OnDeleteAsync, null);
+    public override Task<Int32> DeleteAsync() => DoAction(OnDeleteAsync, DataMethod.Delete);
 
     /// <summary>从数据库中删除该对象，同时从实体缓存中删除</summary>
     /// <returns></returns>
     protected virtual Task<Int32> OnDeleteAsync() => Meta.Session.DeleteAsync(this);
 
-    private Task<Int32> DoAction(Func<Task<Int32>> func, Boolean? isnew)
+    private TResult DoAction<TResult>(Func<TResult> func, DataMethod method)
     {
         if (Meta.Table.DataTable.InsertOnly)
         {
-            if (isnew == null) throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止删除！");
-            if (!isnew.Value) throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止修改！");
+            switch (method)
+            {
+                case DataMethod.Update:
+                    throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止修改！");
+                case DataMethod.Delete:
+                    throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止删除！");
+            }
         }
 
         // 自动分库分表
@@ -361,17 +334,23 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         if (enableValid)
         {
-            var rt = true;
-            if (isnew != null)
+            var rt = Valid(method);
+            switch (method)
             {
-                Valid(isnew.Value);
-                //rt = Meta.Modules.Valid(this, isnew.Value);
+                case DataMethod.Insert:
+                    Valid(true);
+                    break;
+                case DataMethod.Update:
+                    Valid(false);
+                    break;
+                case DataMethod.Delete:
+                    break;
+                default:
+                    break;
             }
-            else
-                rt = Meta.Modules.Delete(this);
 
             // 没有更新任何数据
-            if (!rt) return Task.FromResult(0);
+            if (!rt) return typeof(TResult) == typeof(Task<Int32>) ? (TResult)(Object)Task.FromResult(0) : (TResult)(Object)0;
         }
 
         AutoFillSnowIdPrimaryKey();
@@ -389,8 +368,25 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         // 2017-8-17 实体基类不再自动根据唯一索引判断唯一性，一切由用户自己解决
 
-        var rs = Meta.Modules.Valid(this, isNew);
-        if (!rs) throw new InvalidDataException($"[{this}]验证失败！");
+        var factory = Meta.Factory;
+        // 校验字符串长度，超长时抛出参数异常
+        foreach (var fi in factory.Fields)
+        {
+            if (fi.Type == typeof(String) && fi.Length > 0)
+            {
+                if (this[fi.Name] is String str && str.Length > fi.Length && Dirtys[fi.Name])
+                    throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
+            }
+        }
+    }
+
+    /// <summary>验证数据，支持添删改，通过返回值表示验证失败</summary>
+    /// <param name="method"></param>
+    /// <returns></returns>
+    public override Boolean Valid(DataMethod method)
+    {
+        //var rs = Meta.Modules.Valid(this, method);
+        //if (!rs) return false;
 
         var factory = Meta.Factory;
         // 校验字符串长度，超长时抛出参数异常
@@ -398,12 +394,12 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         {
             if (fi.Type == typeof(String) && fi.Length > 0)
             {
-                if (this[fi.Name] is String str && str.Length > fi.Length)
+                if (this[fi.Name] is String str && str.Length > fi.Length && Dirtys[fi.Name])
                     throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
             }
         }
 
-        AutoFillSnowIdPrimaryKey();
+        return true;
     }
 
     /// <summary>

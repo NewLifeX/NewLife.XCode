@@ -21,13 +21,9 @@ public interface IEntityModule
 
     /// <summary>验证实体对象</summary>
     /// <param name="entity"></param>
-    /// <param name="isNew"></param>
+    /// <param name="method"></param>
     /// <returns></returns>
-    Boolean Valid(IEntity entity, Boolean isNew);
-
-    /// <summary>删除实体对象</summary>
-    /// <param name="entity"></param>
-    Boolean Delete(IEntity entity);
+    Boolean Valid(IEntity entity, DataMethod method);
 }
 
 /// <summary>实体模块集合</summary>
@@ -108,32 +104,18 @@ public class EntityModules : IEnumerable<IEntityModule>
         if (this != Global) Global.Create(entity, forEdit);
     }
 
-    /// <summary>添加更新实体时验证</summary>
+    /// <summary>添删改实体时验证</summary>
     /// <param name="entity"></param>
-    /// <param name="isNew"></param>
+    /// <param name="method"></param>
     /// <returns></returns>
-    public Boolean Valid(IEntity entity, Boolean isNew)
+    public Boolean Valid(IEntity entity, DataMethod method)
     {
         foreach (var item in Modules)
         {
-            if (!item.Valid(entity, isNew)) return false;
+            if (!item.Valid(entity, method)) return false;
         }
 
-        if (this != Global) return Global.Valid(entity, isNew);
-
-        return true;
-    }
-
-    /// <summary>删除实体对象</summary>
-    /// <param name="entity"></param>
-    public Boolean Delete(IEntity entity)
-    {
-        foreach (var item in Modules)
-        {
-            if (!item.Delete(entity)) return false;
-        }
-
-        if (this != Global) Global.Delete(entity);
+        if (this != Global) return Global.Valid(entity, method);
 
         return true;
     }
@@ -182,7 +164,11 @@ public abstract class EntityModule : IEntityModule
     /// <summary>创建实体对象</summary>
     /// <param name="entity"></param>
     /// <param name="forEdit"></param>
-    public void Create(IEntity entity, Boolean forEdit) { if (Init(entity?.GetType())) OnCreate(entity, forEdit); }
+    public void Create(IEntity entity, Boolean forEdit)
+    {
+        if (entity != null && Init(entity.GetType()))
+            OnCreate(entity, forEdit);
+    }
 
     /// <summary>创建实体对象</summary>
     /// <param name="entity"></param>
@@ -191,34 +177,20 @@ public abstract class EntityModule : IEntityModule
 
     /// <summary>验证实体对象</summary>
     /// <param name="entity"></param>
-    /// <param name="isNew"></param>
+    /// <param name="method"></param>
     /// <returns></returns>
-    public Boolean Valid(IEntity entity, Boolean isNew)
+    public Boolean Valid(IEntity entity, DataMethod method)
     {
-        if (!Init(entity?.GetType())) return true;
+        if (entity == null || !Init(entity.GetType())) return true;
 
-        return OnValid(entity, isNew);
+        return OnValid(entity, method);
     }
 
     /// <summary>验证实体对象</summary>
     /// <param name="entity"></param>
-    /// <param name="isNew"></param>
+    /// <param name="method"></param>
     /// <returns></returns>
-    protected virtual Boolean OnValid(IEntity entity, Boolean isNew) => true;
-
-    /// <summary>删除实体对象</summary>
-    /// <param name="entity"></param>
-    public Boolean Delete(IEntity entity)
-    {
-        if (!Init(entity?.GetType())) return true;
-
-        return OnDelete(entity);
-    }
-
-    /// <summary>删除实体对象</summary>
-    /// <param name="entity"></param>
-    /// <returns></returns>
-    protected virtual Boolean OnDelete(IEntity entity) => true;
+    protected virtual Boolean OnValid(IEntity entity, DataMethod method) => true;
     #endregion
 
     #region 辅助
@@ -270,17 +242,11 @@ public abstract class EntityModule : IEntityModule
     /// <summary>获取实体类的字段名。带缓存</summary>
     /// <param name="entityType"></param>
     /// <returns></returns>
-    protected static FieldItem[] GetFields(Type entityType)
-    {
-        return _fields.GetOrAdd(entityType, t => t.AsFactory().Fields);
-    }
+    protected static FieldItem[] GetFields(Type entityType) => _fields.GetOrAdd(entityType, t => t.AsFactory().Fields);
 
     /// <summary>提前设置字段，加速初始化过程</summary>
     /// <param name="entityType"></param>
     /// <param name="fields"></param>
-    public static void SetFields(Type entityType, FieldItem[] fields)
-    {
-        _fields.TryAdd(entityType, fields);
-    }
+    public static void SetFields(Type entityType, FieldItem[] fields) => _fields.TryAdd(entityType, fields);
     #endregion
 }

@@ -64,10 +64,13 @@ public class TenantModule : EntityModule
 
     /// <summary>验证数据，自动加上创建和更新的信息</summary>
     /// <param name="entity"></param>
-    /// <param name="isNew"></param>
-    protected override Boolean OnValid(IEntity entity, Boolean isNew)
+    /// <param name="method"></param>
+    protected override Boolean OnValid(IEntity entity, DataMethod method)
     {
         if (entity is not ITenantSource tenant) return true;
+
+        if (method == DataMethod.Delete) return true;
+        if (method == DataMethod.Update && !entity.HasDirty) return true;
 
         var ctx = TenantContext.Current;
         if (ctx == null) return true;

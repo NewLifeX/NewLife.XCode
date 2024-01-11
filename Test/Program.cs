@@ -153,6 +153,13 @@ public class Program
 
     private static void Test3()
     {
+        var p = new Parameter
+        {
+            Name = "test",
+            Value = "NewLife",
+        };
+        p.Insert();
+
         var db = DbFactory.Create(DatabaseType.Hana);
         var type = db.Factory.GetType();
         XTrace.WriteLine(type.FullName);

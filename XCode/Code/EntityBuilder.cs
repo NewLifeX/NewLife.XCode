@@ -992,13 +992,14 @@ public class EntityBuilder : ClassBuilder
     /// <summary>数据验证</summary>
     protected virtual void BuildValid()
     {
-        WriteLine("/// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>");
-        WriteLine("/// <param name=\"isNew\">是否插入</param>");
-        WriteLine("public override void Valid(Boolean isNew)");
+        WriteLine("/// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>");
+        WriteLine("/// <param name=\"method\">添删改方法</param>");
+        WriteLine("public override Boolean Valid(DataMethod method)");
         WriteLine("{");
         {
+            WriteLine("//if (method == DataMethod.Delete) return true;");
             WriteLine("// 如果没有脏数据，则不需要进行任何处理");
-            WriteLine("if (!HasDirty) return;");
+            WriteLine("if (!HasDirty) return true;");
 
             // 非空判断，字符串且没有默认值
             var cs = Table.Columns.Where(e => !e.Nullable && e.DataType == typeof(String) && e.DefaultValue.IsNullOrEmpty()).ToArray();
@@ -1034,7 +1035,7 @@ public class EntityBuilder : ClassBuilder
 
             WriteLine();
             WriteLine("// 建议先调用基类方法，基类方法会做一些统一处理");
-            WriteLine("base.Valid(isNew);");
+            WriteLine("if (!base.Valid(method)) return false;");
 
             WriteLine();
             WriteLine("// 在新插入数据或者修改了指定字段时进行修正");
@@ -1044,10 +1045,10 @@ public class EntityBuilder : ClassBuilder
             if (cs.Length > 0)
             {
                 WriteLine();
-                WriteLine("// 保留6位小数");
+                WriteLine("// 保留2位小数");
                 foreach (var item in cs)
                 {
-                    WriteLine("//{0} = Math.Round({0}, 6);", item.Name);
+                    WriteLine("//{0} = Math.Round({0}, 2);", item.Name);
                 }
             }
 
@@ -1063,7 +1064,7 @@ public class EntityBuilder : ClassBuilder
                 foreach (var item in cs)
                 {
                     if (item.Name.EqualIgnoreCase("CreateUserID"))
-                        WriteLine("if (isNew && !Dirtys[{0}]) {1} = user.ID;", NameOf(item.Name), item.Name);
+                        WriteLine("if (method == DataMethod.Insert && !Dirtys[{0}]) {1} = user.ID;", NameOf(item.Name), item.Name);
                     else
                         WriteLine("if (!Dirtys[{0}]) {1} = user.ID;", NameOf(item.Name), item.Name);
                 }
@@ -1071,13 +1072,13 @@ public class EntityBuilder : ClassBuilder
             }
 
             var dc = Table.Columns.FirstOrDefault(e => e.Name.EqualIgnoreCase("CreateTime"));
-            if (dc != null) WriteLine("//if (isNew && !Dirtys[{0}]) {1} = DateTime.Now;", NameOf(dc.Name), dc.Name);
+            if (dc != null) WriteLine("//if (method == DataMethod.Insert && !Dirtys[{0}]) {1} = DateTime.Now;", NameOf(dc.Name), dc.Name);
 
             dc = Table.Columns.FirstOrDefault(e => e.Name.EqualIgnoreCase("UpdateTime"));
             if (dc != null) WriteLine("//if (!Dirtys[{0}]) {1} = DateTime.Now;", NameOf(dc.Name), dc.Name);
 
             dc = Table.Columns.FirstOrDefault(e => e.Name.EqualIgnoreCase("CreateIP"));
-            if (dc != null) WriteLine("//if (isNew && !Dirtys[{0}]) {1} = ManageProvider.UserHost;", NameOf(dc.Name), dc.Name);
+            if (dc != null) WriteLine("//if (method == DataMethod.Insert && !Dirtys[{0}]) {1} = ManageProvider.UserHost;", NameOf(dc.Name), dc.Name);
 
             dc = Table.Columns.FirstOrDefault(e => e.Name.EqualIgnoreCase("UpdateIP"));
             if (dc != null) WriteLine("//if (!Dirtys[{0}]) {1} = ManageProvider.UserHost;", NameOf(dc.Name), dc.Name);
@@ -1091,9 +1092,11 @@ public class EntityBuilder : ClassBuilder
                 foreach (var item in dis)
                 {
                     //WriteLine("if (!_IsFromDatabase) CheckExist(isNew, {0});", Table.GetColumns(item.Columns).Select(e => "__." + e.Name).Join(", "));
-                    WriteLine("// CheckExist(isNew, {0});", Table.GetColumns(item.Columns).Select(e => $"nameof({e.Name})").Join(", "));
+                    WriteLine("// CheckExist(method == DataMethod.Insert, {0});", Table.GetColumns(item.Columns).Select(e => $"nameof({e.Name})").Join(", "));
                 }
             }
+            WriteLine();
+            WriteLine("return true;");
         }
         WriteLine("}");
     }

@@ -135,7 +135,11 @@ public static class EntityExtension
             if (list is not IList<T> es) es = list.ToList();
             foreach (IEntity item in es.ToArray())
             {
-                if (item is EntityBase entity2) entity2.Valid(item.IsNullKey);
+                if (item is EntityBase entity2)
+                {
+                    entity2.Valid(DataMethod.Insert);
+                    entity2.Valid(true);
+                }
                 //if (!fact.Modules.Valid(item, item.IsNullKey)) es.Remove((T)item);
             }
 
@@ -418,7 +422,11 @@ public static class EntityExtension
         // 验证对象
         foreach (IEntity item in list)
         {
-            if (item is EntityBase entity2) entity2.Valid(isNew);
+            if (item is EntityBase entity2)
+            {
+                entity2.Valid(isNew ? DataMethod.Insert : DataMethod.Update);
+                entity2.Valid(isNew);
+            }
             //if (modules.Valid(item, isNew)) rs.Add((T)item);
             rs.Add((T)item);
         }

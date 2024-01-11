@@ -217,8 +217,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var db = Meta.Session.Dal;
         if (db.SupportBatch)
         {
-            Valid(isnew);
-            //if (!Meta.Modules.Valid(this, isnew)) return -1;
+            if (!Valid(isnew ? DataMethod.Insert : DataMethod.Update)) return -1;
 
             // 自动分库分表
             using var split = Meta.CreateShard((this as TEntity)!);
@@ -258,8 +257,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         // 提前执行Valid，让它提前准备好验证数据
         if (enableValid)
         {
-            Valid(isnew);
-            //Meta.Modules.Valid(this, isnew);
+            if (!Valid(isnew ? DataMethod.Insert : DataMethod.Update)) return false;
         }
         // 自动分库分表，影响后面的Meta.Session
         using var split = Meta.CreateShard((this as TEntity)!);
@@ -335,19 +333,6 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (enableValid)
         {
             var rt = Valid(method);
-            switch (method)
-            {
-                case DataMethod.Insert:
-                    Valid(true);
-                    break;
-                case DataMethod.Update:
-                    Valid(false);
-                    break;
-                case DataMethod.Delete:
-                    break;
-                default:
-                    break;
-            }
 
             // 没有更新任何数据
             if (!rt) return typeof(TResult) == typeof(Task<Int32>) ? (TResult)(Object)Task.FromResult(0) : (TResult)(Object)0;
@@ -368,25 +353,36 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         // 2017-8-17 实体基类不再自动根据唯一索引判断唯一性，一切由用户自己解决
 
-        var factory = Meta.Factory;
-        // 校验字符串长度，超长时抛出参数异常
-        foreach (var fi in factory.Fields)
-        {
-            if (fi.Type == typeof(String) && fi.Length > 0)
-            {
-                if (this[fi.Name] is String str && str.Length > fi.Length && Dirtys[fi.Name])
-                    throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
-            }
-        }
+        //var factory = Meta.Factory;
+        //// 校验字符串长度，超长时抛出参数异常
+        //foreach (var fi in factory.Fields)
+        //{
+        //    if (fi.Type == typeof(String) && fi.Length > 0)
+        //    {
+        //        if (this[fi.Name] is String str && str.Length > fi.Length && Dirtys[fi.Name])
+        //            throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
+        //    }
+        //}
     }
 
-    /// <summary>验证数据，支持添删改，通过返回值表示验证失败</summary>
+    /// <summary>验证数据，支持添删改，通过返回值表示验证失败。基类实现字符串字段长度检查</summary>
     /// <param name="method"></param>
     /// <returns></returns>
     public override Boolean Valid(DataMethod method)
     {
-        //var rs = Meta.Modules.Valid(this, method);
-        //if (!rs) return false;
+        switch (method)
+        {
+            case DataMethod.Insert:
+                Valid(true);
+                break;
+            case DataMethod.Update:
+                Valid(false);
+                break;
+            case DataMethod.Delete:
+                break;
+            default:
+                break;
+        }
 
         var factory = Meta.Factory;
         // 校验字符串长度，超长时抛出参数异常
@@ -398,6 +394,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                     throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
             }
         }
+
+        var rs = Meta.Modules.Valid(this, method);
+        if (!rs) return false;
 
         return true;
     }
@@ -405,7 +404,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <summary>
     /// 雪花Id生成器。Int64主键非自增时，自动填充
     /// </summary>
-    private void AutoFillSnowIdPrimaryKey()
+    protected void AutoFillSnowIdPrimaryKey()
     {
         var factory = Meta.Factory;
 

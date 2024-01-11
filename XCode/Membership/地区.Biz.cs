@@ -2,7 +2,6 @@
 using System.Net.Http;
 using System.Text;
 using System.Web.Script.Serialization;
-using System.Xml.Linq;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Caching;
@@ -42,12 +41,11 @@ public partial class Area : Entity<Area>
         ec.FillListMethod = () => FindAll(_.ID >= 100000 & _.ID <= 999999, _.ID.Asc(), null, 0, 0);
     }
 
-    /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <param name="isNew">是否插入</param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
-        //// 如果没有脏数据，则不需要进行任何处理
-        //if (!HasDirty) return;
+        if (method == DataMethod.Delete) return true;
 
         FixLevel();
 
@@ -69,11 +67,13 @@ public partial class Area : Entity<Area>
 
         // 坐标
         //if (Longitude != 0 || Latitude != 0) GeoHash = NewLife.Data.GeoHash.Encode(Longitude, Latitude);
-        if (isNew || Dirtys[nameof(Longitude)] || Dirtys[nameof(Latitude)])
+        if (method == DataMethod.Insert || Dirtys[nameof(Longitude)] || Dirtys[nameof(Latitude)])
         {
             if (Math.Abs(Longitude) > 0.001 || Math.Abs(Latitude) > 0.001)
                 GeoHash = NewLife.Data.GeoHash.Encode(Longitude, Latitude);
         }
+
+        return base.Valid(method);
     }
 
     /// <summary>初始化数据</summary>
@@ -1003,7 +1003,7 @@ public partial class Area : Entity<Area>
                 //r.Enable = first;
                 r.CreateTime = DateTime.Now;
                 r.UpdateTime = DateTime.Now;
-                r.Valid(true);
+                r.Valid(DataMethod.Insert);
                 //r.SaveAsync();
 
                 bs.Add(r);
@@ -1075,7 +1075,7 @@ public partial class Area : Entity<Area>
                 r.Enable = enable;
                 r.CreateTime = DateTime.Now;
                 r.UpdateTime = DateTime.Now;
-                r.Valid(true);
+                r.Valid(DataMethod.Insert);
                 r.SaveAsync();
 
                 count++;

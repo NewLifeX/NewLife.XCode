@@ -137,8 +137,7 @@ public static class EntityExtension
             {
                 if (item is EntityBase entity2)
                 {
-                    entity2.Valid(DataMethod.Insert);
-                    entity2.Valid(true);
+                    if (!entity2.Valid(DataMethod.Insert)) es.Remove((T)item);
                 }
                 //if (!fact.Modules.Valid(item, item.IsNullKey)) es.Remove((T)item);
             }
@@ -424,11 +423,10 @@ public static class EntityExtension
         {
             if (item is EntityBase entity2)
             {
-                entity2.Valid(isNew ? DataMethod.Insert : DataMethod.Update);
-                entity2.Valid(isNew);
+                if (entity2.Valid(isNew ? DataMethod.Insert : DataMethod.Update)) rs.Add((T)item);
             }
-            //if (modules.Valid(item, isNew)) rs.Add((T)item);
-            rs.Add((T)item);
+            else
+                rs.Add((T)item);
         }
 
         return rs;

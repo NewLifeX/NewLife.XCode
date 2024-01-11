@@ -22,20 +22,21 @@ public partial class Tenant : Entity<Tenant>, ITenantSource
         Meta.Modules.Add<TenantModule>();
     }
 
-    /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <param name="isNew">是否插入</param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
-        // 如果没有脏数据，则不需要进行任何处理
-        if (!HasDirty) return;
+        if (method == DataMethod.Delete) return true;
 
-        // 建议先调用基类方法，基类方法会做一些统一处理
-        base.Valid(isNew);
+        // 如果没有脏数据，则不需要进行任何处理
+        if (!HasDirty) return true;
 
         if (Code.IsNullOrEmpty()) Code = PinYin.GetFirst(Name);
 
         // 管理者
-        if (isNew && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
+        if (method == DataMethod.Insert && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
+
+        return base.Valid(method);
     }
 
     #endregion 对象操作

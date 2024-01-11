@@ -57,11 +57,14 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
         if (XTrace.Debug) XTrace.WriteLine("完成初始化{0}用户数据！", typeof(User).Name);
     }
 
-    /// <summary>验证</summary>
-    /// <param name="isNew"></param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
-        base.Valid(isNew);
+        if (method == DataMethod.Delete) return true;
+
+        // 如果没有脏数据，则不需要进行任何处理
+        if (!HasDirty) return true;
 
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, "用户名不能为空！");
         //if (RoleID < 1) throw new ArgumentNullException(__.RoleID, "没有指定角色！");
@@ -102,6 +105,8 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
         if (Birthday.Year > 1000) Age = (Int32)((DateTime.Now - Birthday).TotalDays / 365);
 
         //if (AreaId <= 0) FixArea(LastLoginIP);
+
+        return base.Valid(method);
     }
 
     /// <summary>删除用户</summary>

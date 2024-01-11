@@ -29,12 +29,14 @@ public partial class Department : Entity<Department>, ITenantSource
         Meta.Modules.Add<TenantModule>();
     }
 
-    /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <param name="isNew">是否插入</param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
+        if (method == DataMethod.Delete) return true;
+
         // 如果没有脏数据，则不需要进行任何处理
-        if (!HasDirty) return;
+        if (!HasDirty) return true;
 
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
@@ -42,7 +44,11 @@ public partial class Department : Entity<Department>, ITenantSource
         if (Code.IsNullOrEmpty()) Code = PinYin.GetFirst(Name);
 
         // 管理者
-        if (isNew && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
+        if (method == DataMethod.Insert && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
+
+        if (!base.Valid(method)) return false;
+
+        return base.Valid(method);
     }
 
     /// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>

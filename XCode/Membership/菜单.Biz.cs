@@ -25,17 +25,22 @@ public partial class Menu : EntityTree<Menu>, IMenu
         Meta.Modules.Add<IPModule>();
     }
 
-    /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <param name="isNew">是否新数据</param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
-        if (String.IsNullOrEmpty(Name)) throw new ArgumentNullException(__.Name, _.Name.DisplayName + "不能为空！");
+        if (method == DataMethod.Delete) return true;
 
-        base.Valid(isNew);
+        // 如果没有脏数据，则不需要进行任何处理
+        if (!HasDirty) return true;
+
+        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, _.Name.DisplayName + "不能为空！");
 
         if (Icon == "&#xe63f;") Icon = null;
 
         SavePermission();
+
+        return base.Valid(method);
     }
 
     /// <summary>已重载。调用Save时写日志，而调用Insert和Update时不写日志</summary>

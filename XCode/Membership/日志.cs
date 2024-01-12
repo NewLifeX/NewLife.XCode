@@ -28,7 +28,7 @@ public partial class Log : ILog, IEntity<LogModel>
     /// <summary>编号</summary>
     [DisplayName("编号")]
     [Description("编号")]
-    [DataObjectField(true, true, false, 0)]
+    [DataObjectField(true, false, false, 0)]
     [BindColumn("ID", "编号", "")]
     public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 

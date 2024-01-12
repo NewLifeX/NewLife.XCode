@@ -369,6 +369,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         //            throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
         //    }
         //}
+
+        //!!! 自动填充雪花Id，用户可能直接调用Valid
+        AutoFillSnowIdPrimaryKey();
     }
 
     /// <summary>验证数据，支持添删改，通过返回值表示验证失败。基类实现字符串字段长度检查</summary>
@@ -403,6 +406,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         var rs = Meta.Modules.Valid(this, method);
         if (!rs) return false;
+
+        //!!! 自动填充雪花Id，用户可能直接调用Valid
+        AutoFillSnowIdPrimaryKey();
 
         return true;
     }

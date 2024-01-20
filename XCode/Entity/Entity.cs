@@ -2094,18 +2094,21 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="find">查找函数</param>
     /// <param name="create">创建对象</param>
     /// <returns></returns>
-    public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, TEntity> find, Func<TKey, TEntity> create)
+    public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, TEntity?> find, Func<TKey, TEntity> create)
     {
-        if (key == null) return null;
+        //if (key == null) return null;
 
-        var entity = find != null ? find(key, true) : FindByKey(key);
+        var entity = find != null ? find(key, true) : FindByKey(key!);
         if (entity != null) return entity;
 
         // 加锁，避免同一个key并发新增
         var keyLock = $"{typeof(TEntity).FullName}-{key}";
         lock (keyLock)
         {
-            entity = find != null ? find(key, false) : FindByKey(key);
+            // 打开事务，提升可靠性也避免读写分离造成数据不一致
+            using var trans = Meta.CreateTrans();
+
+            entity = find != null ? find(key, false) : FindByKey(key!);
             if (entity != null) return entity;
 
             if (create != null)
@@ -2123,9 +2126,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
             catch (Exception ex)
             {
-                entity = find != null ? find(key, false) : FindByKey(key);
+                entity = find != null ? find(key, false) : FindByKey(key!);
                 if (entity == null) throw ex.GetTrue();
             }
+
+            trans.Commit();
 
             return entity;
         }
@@ -2139,21 +2144,29 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, TEntity> find, Func<TKey, TEntity> create)
     {
-        if (key == null) return null;
-        if (find == null) throw new ArgumentNullException(nameof(find));
+        //if (key == null) return null;
+        //if (find == null) throw new ArgumentNullException(nameof(find));
 
-        var entity = find(key);
+        var entity = find != null ? find(key) : FindByKey(key!);
         if (entity != null) return entity;
 
         // 加锁，避免同一个key并发新增
         var keyLock = $"{typeof(TEntity).FullName}-{key}";
         lock (keyLock)
         {
-            entity = find(key);
+            // 打开事务，提升可靠性也避免读写分离造成数据不一致
+            using var trans = Meta.CreateTrans();
+
+            entity = find != null ? find(key) : FindByKey(key!);
             if (entity != null) return entity;
 
-            if (create == null) throw new ArgumentNullException(nameof(create));
-            entity = create(key);
+            if (create != null)
+                entity = create(key);
+            else
+            {
+                entity = new TEntity();
+                entity.SetItem(Meta.Factory.Unique.Name, key);
+            }
 
             // 插入失败时，再次查询
             try
@@ -2162,9 +2175,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
             catch (Exception ex)
             {
-                entity = find(key);
+                entity = find != null ? find(key) : FindByKey(key!);
                 if (entity == null) throw ex.GetTrue();
             }
+
+            trans.Commit();
 
             return entity;
         }

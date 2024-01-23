@@ -66,7 +66,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <returns></returns>
     protected virtual XSqlException OnException(Exception ex, DbCommand cmd, String sql)
     {
-        if (sql.IsNullOrEmpty()) sql = GetSql(cmd);
+        if (sql.IsNullOrEmpty()) sql = GetSql(cmd)!;
         if (ex != null)
             return new XSqlException(sql, this, ex);
         else
@@ -934,7 +934,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <summary>日志</summary>
     public ILog Log { get; set; } = XTrace.Log;
 
-    private static ILog logger;
+    private static ILog? logger;
 
     /// <summary>写入SQL到文本中</summary>
     /// <param name="sql"></param>
@@ -957,9 +957,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         }
     }
 
-    private String GetSql(DbCommand cmd)
+    private String? GetSql(DbCommand cmd)
     {
-        var max = (Database as DbBase).SQLMaxLength;
+        var max = (Database as DbBase)!.SQLMaxLength;
         try
         {
             var sql = cmd.CommandText;
@@ -979,9 +979,8 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                     if (i > 0) sb.Append(", ");
                     var v = ps[i].Value;
                     var sv = "";
-                    if (v is Byte[])
+                    if (v is Byte[] bv)
                     {
-                        var bv = v as Byte[];
                         if (bv.Length > 8)
                             sv = $"[{bv.Length}]0x{BitConverter.ToString(bv, 0, 8)}...";
                         else
@@ -998,9 +997,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
             }
 
             // 截断超长字符串
-            if (max > 0)
+            if (max > 0 && sql.Length > max)
             {
-                if (sql.Length > max && sql.StartsWithIgnoreCase("Insert")) sql = sql[..(max / 2)] + "..." + sql[^(max / 2)..];
+                if (sql.StartsWithIgnoreCase("Insert")) sql = sql[..(max / 2)] + "..." + sql[^(max / 2)..];
             }
 
             return sql;

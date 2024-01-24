@@ -1129,17 +1129,21 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         // 验证排序字段，避免非法
         var orderby = page.OrderBy;
-        if (!page.Sort.IsNullOrEmpty())
+        if (!page.Sort.IsNullOrEmpty() && orderby.StartsWithIgnoreCase(page.Sort))
         {
             var st = Meta.Table.FindByName(page.Sort);
             if (!ReferenceEquals(st, null))
             {
-                page.OrderBy = null;
-                page.Sort = session.Dal.Db.FormatName(st);
-                orderby = page.OrderBy;
+                //page.OrderBy = null;
+                //page.Sort = session.Dal.Db.FormatName(st);
+                //orderby = page.OrderBy;
 
-                //!!! 恢复排序字段，否则属性名和字段名不一致时前台无法降序
-                page.Sort = st.Name;
+                ////!!! 恢复排序字段，否则属性名和字段名不一致时前台无法降序
+                //page.Sort = st.Name;
+
+                // 保持排序字段不要修改，否则属性名和字段名不一致时前台无法降序
+                orderby = session.Dal.Db.FormatName(st);
+                if (page.Desc) orderby += " Desc";
             }
         }
 

@@ -1067,6 +1067,10 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
     }
 
+    /// <summary>根据排序字段调整查询多表（分表）时的顺序</summary>
+    /// <param name="shards"></param>
+    /// <param name="order"></param>
+    /// <returns></returns>
     static ShardModel[] FixOrder(ShardModel[] shards, String? order)
     {
         // 根据分页字段排序分页表
@@ -1127,25 +1131,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             page.TotalCount = rows;
         }
 
-        // 验证排序字段，避免非法
-        var orderby = page.OrderBy;
-        if (!page.Sort.IsNullOrEmpty() && orderby.StartsWithIgnoreCase(page.Sort))
-        {
-            var st = Meta.Table.FindByName(page.Sort);
-            if (!ReferenceEquals(st, null))
-            {
-                //page.OrderBy = null;
-                //page.Sort = session.Dal.Db.FormatName(st);
-                //orderby = page.OrderBy;
-
-                ////!!! 恢复排序字段，否则属性名和字段名不一致时前台无法降序
-                //page.Sort = st.Name;
-
-                // 保持排序字段不要修改，否则属性名和字段名不一致时前台无法降序
-                orderby = session.Dal.Db.FormatName(st);
-                if (page.Desc) orderby += " Desc";
-            }
-        }
+        // 验证排序字段，避免非法注入
+        var orderby = SqlBuilder.BuildOrder(page, Meta.Factory);
 
         // 采用起始行还是分页
         IList<TEntity> list;
@@ -1420,18 +1407,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             page.TotalCount = rows;
         }
 
-        // 验证排序字段，避免非法
-        var orderby = page.OrderBy;
-        if (!page.Sort.IsNullOrEmpty())
-        {
-            var st = Meta.Table.FindByName(page.Sort);
-            page.OrderBy = null;
-            page.Sort = session.Dal.Db.FormatName(st);
-            orderby = page.OrderBy;
-
-            //!!! 恢复排序字段，否则属性名和字段名不一致时前台无法降序
-            page.Sort = st?.Name;
-        }
+        // 验证排序字段，避免非法注入
+        var orderby = SqlBuilder.BuildOrder(page, Meta.Factory);
 
         // 采用起始行还是分页
         IList<TEntity> list;

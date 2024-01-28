@@ -153,6 +153,9 @@ public class Program
 
     private static void Test3()
     {
+        var list = User.FindAll();
+        XTrace.WriteLine(list.ToJson());
+
         var p = new Parameter
         {
             Name = "test",

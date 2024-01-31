@@ -333,7 +333,7 @@ partial class DbMetaData
     protected IDictionary<Type, String[]> Types { get; set; } = null!;
 
     protected List<KeyValuePair<Type, Type>>? _FieldTypeMaps;
-    /// <summary>字段类型映射</summary>
+    /// <summary>字段类型映射（数据库-实体类）</summary>
     protected virtual List<KeyValuePair<Type, Type>> FieldTypeMaps
     {
         get
@@ -348,6 +348,8 @@ partial class DbMetaData
                     // 因为等价，字节需要能够互相映射
                     new(typeof(Byte), typeof(SByte)),
                     new(typeof(Byte), typeof(Boolean)),
+                    new(typeof(Boolean), typeof(Byte)),
+                    new(typeof(Byte), typeof(Int32)),
 
                     new(typeof(UInt16), typeof(Int16)),
                     new(typeof(Int16), typeof(UInt16)),
@@ -366,6 +368,7 @@ partial class DbMetaData
                     new(typeof(Int64), typeof(UInt64)),
                     //list.Add(new KeyValuePair<Type, Type>(typeof(UInt64), typeof(Int32)));
                     //list.Add(new KeyValuePair<Type, Type>(typeof(Int64), typeof(Int32)));
+                    new(typeof(Int64), typeof(Int32)),
 
                     // 数据库使用Double，实体类使用Decimal
                     new(typeof(Double), typeof(Decimal)),

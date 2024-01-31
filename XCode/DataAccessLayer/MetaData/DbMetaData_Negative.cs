@@ -175,18 +175,18 @@ internal partial class DbMetaData
             var sb = new StringBuilder();
 
             var sql = CheckTableDescription(entitytable, dbtable, mode);
-            Append(sb, ';', sql);
+            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
 
             // 先删除索引，后面才有可能删除字段
             sql = CheckDeleteIndex(entitytable, dbtable, mode);
-            Append(sb, ';', sql);
+            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
 
             sql = CheckColumnsChange(entitytable, dbtable, @readonly, onlyCreate);
-            Append(sb, ';', sql);
+            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
 
             // 新增字段后，可能需要删除索引
             sql = CheckAddIndex(entitytable, dbtable, mode);
-            Append(sb, ';', sql);
+            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
 
             if (sb.Length > 0) WriteLog($"DDL模式[{mode}]，请手工修改表：{Environment.NewLine}{sb}");
         }
@@ -297,7 +297,7 @@ internal partial class DbMetaData
     /// <param name="dbtable"></param>
     /// <param name="mode"></param>
     /// <returns>返回未执行语句</returns>
-    protected virtual String CheckTableDescription(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    protected virtual String? CheckTableDescription(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
         var @readonly = mode <= Migration.ReadOnly;
 
@@ -325,7 +325,7 @@ internal partial class DbMetaData
     /// <param name="dbtable"></param>
     /// <param name="mode"></param>
     /// <returns>返回未执行语句</returns>
-    protected virtual String CheckAddIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    protected virtual String? CheckAddIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
         var @readonly = mode <= Migration.ReadOnly;
         var onlyCreate = mode < Migration.Full;
@@ -380,7 +380,7 @@ internal partial class DbMetaData
     /// <param name="dbtable"></param>
     /// <param name="mode"></param>
     /// <returns>返回未执行语句</returns>
-    protected virtual String CheckDeleteIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    protected virtual String? CheckDeleteIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
         var @readonly = mode <= Migration.ReadOnly;
         var onlyCreate = mode < Migration.Full;
@@ -484,9 +484,12 @@ internal partial class DbMetaData
     protected virtual Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)
     {
         var type = entityColumn.DataType;
-        if (type.IsEnum) type = typeof(Int32);
+        //if (type.IsEnum) type = typeof(Int32);
+        if (type.IsEnum && (dbColumn.DataType.IsInt() || dbColumn.DataType == typeof(Boolean))) return false;
         if (type == dbColumn.DataType) return false;
-        if (Nullable.GetUnderlyingType(type) == dbColumn.DataType) return false;
+
+        var type2 = Nullable.GetUnderlyingType(type);
+        if (type2 == dbColumn.DataType) return false;
 
         //// 整型不做改变
         //if (type.IsInt() && dbColumn.DataType.IsInt()) return false;
@@ -496,7 +499,7 @@ internal partial class DbMetaData
         {
             //if (entityColumn.DataType == item.Key && dbColumn.DataType == item.Value) return false;
             // 把不常用的类型映射到常用类型，比如数据库SByte映射到实体类Byte，UInt32映射到Int32，而不需要重新修改数据库
-            if (dbColumn.DataType == item.Key && type == item.Value) return false;
+            if (dbColumn.DataType == item.Key && (type == item.Value || type2 == item.Value)) return false;
         }
 
         return true;

@@ -223,19 +223,19 @@ class TDengineMetaData : RemoteDbMetaData
     public TDengineMetaData() => Types = _DataTypes;
 
     #region 数据类型
-    protected override List<KeyValuePair<Type, Type>> FieldTypeMaps
-    {
-        get
-        {
-            if (_FieldTypeMaps == null)
-            {
-                var list = base.FieldTypeMaps;
-                if (!list.Any(e => e.Key == typeof(Byte) && e.Value == typeof(Boolean)))
-                    list.Add(new KeyValuePair<Type, Type>(typeof(Byte), typeof(Boolean)));
-            }
-            return base.FieldTypeMaps;
-        }
-    }
+    //protected override List<KeyValuePair<Type, Type>> FieldTypeMaps
+    //{
+    //    get
+    //    {
+    //        if (_FieldTypeMaps == null)
+    //        {
+    //            var list = base.FieldTypeMaps;
+    //            if (!list.Any(e => e.Key == typeof(Byte) && e.Value == typeof(Boolean)))
+    //                list.Add(new(typeof(Byte), typeof(Boolean)));
+    //        }
+    //        return base.FieldTypeMaps;
+    //    }
+    //}
 
     /// <summary>数据类型映射</summary>
     private static readonly Dictionary<Type, String[]> _DataTypes = new()

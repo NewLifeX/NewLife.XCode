@@ -86,4 +86,18 @@ public class DALTests
         Assert.Equal("XCode.DataAccessLayer.PostgreSQL", di.Type.FullName);
         Assert.Equal("PostgreSql", di.Provider);
     }
+
+    [Fact]
+    public void NullableType()
+    {
+        var type = typeof(Int32?);
+        Assert.Equal(typeof(Int32?), type);
+        Assert.NotEqual(typeof(Int32), type);
+
+        var type2 = Nullable.GetUnderlyingType(type);
+        Assert.Equal(typeof(Int32), type2);
+
+        var type3 = Nullable.GetUnderlyingType(type2);
+        Assert.Null(type3);
+    }
 }

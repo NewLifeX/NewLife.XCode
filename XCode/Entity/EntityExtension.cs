@@ -783,7 +783,7 @@ public static class EntityExtension
     /// 简单来说：对于一行记录，如果Insert 成功则返回1，如果需要执行的是update 则返回2
     /// Oracle返回值：无论是插入还是更新返回的都始终为-1
     /// </returns>
-    public static Int32 Upsert<T>(this IEnumerable<T> list, IDataColumn[] columns, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null) where T : IEntity
+    public static Int32 Upsert<T>(this IEnumerable<T> list, IDataColumn[]? columns, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null) where T : IEntity
     {
         var option = new BatchOption { Columns = columns, UpdateColumns = updateColumns, AddColumns = addColumns };
         return BatchUpsert(list, option, session);

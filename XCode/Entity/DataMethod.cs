@@ -11,4 +11,10 @@ public enum DataMethod
 
     /// <summary>删除</summary>
     Delete = 3,
+
+    /// <summary>[专用]插入或更新</summary>
+    Upsert = 11,
+
+    /// <summary>[专用]替换</summary>
+    Replace = 12,
 }

@@ -7,7 +7,7 @@ using XCode.DataAccessLayer;
 
 namespace XCode;
 
-/// <summary>实体队列</summary>
+/// <summary>实体队列。支持凑批更新数据，包括Insert/Update/Delete/Upsert</summary>
 public class EntityQueue : DisposeBase
 {
     #region 属性
@@ -25,6 +25,9 @@ public class EntityQueue : DisposeBase
 
     /// <summary>是否仅插入。默认false</summary>
     public Boolean InsertOnly { get; set; }
+
+    /// <summary>数据更新方法。Insert/Update/Delete/Upsert/Replace</summary>
+    public DataMethod Method { get; set; }
 
     /// <summary>
     /// 是否显示SQL
@@ -260,11 +263,38 @@ public class EntityQueue : DisposeBase
     {
         var ss = Session;
 
-        // 实体队列SaveAsync异步保存时，如果只插入表，直接走批量Insert，而不是Upsert
-        if (InsertOnly)
-            batch.Insert(null, ss);
+        if (Method > 0)
+        {
+            switch (Method)
+            {
+                case DataMethod.Insert:
+                    batch.Insert(null, ss);
+                    break;
+                case DataMethod.Update:
+                    batch.Update(null, ss);
+                    break;
+                case DataMethod.Delete:
+                    batch.Delete(null, ss);
+                    break;
+                case DataMethod.Upsert:
+                    batch.Upsert(null, null, null, ss);
+                    break;
+                case DataMethod.Replace:
+                    batch.BatchReplace(option: null, ss);
+                    break;
+                default:
+                    batch.SaveWithoutValid(null, ss);
+                    break;
+            }
+        }
         else
-            batch.SaveWithoutValid(null, ss);
+        {
+            // 实体队列SaveAsync异步保存时，如果只插入表，直接走批量Insert，而不是Upsert
+            if (InsertOnly)
+                batch.Insert(null, ss);
+            else
+                batch.SaveWithoutValid(null, ss);
+        }
     }
 
     /// <summary>发生错误</summary>

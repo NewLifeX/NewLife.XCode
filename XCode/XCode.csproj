@@ -29,7 +29,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>优化实体过滤器；优化字段缓存</PackageReleaseNotes>
+    <PackageReleaseNotes>正反向工程的字段类型匹配更宽松；新增DataMethod重构实体过滤器；实体查询默认不再自动增加主键降序</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -44,7 +44,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.7.2024.201" />
+    <PackageReference Include="NewLife.Core" Version="10.7.2024.202" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

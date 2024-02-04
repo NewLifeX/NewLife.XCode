@@ -13,7 +13,7 @@ public class BatchFinder<TKey, TEntity> where TEntity : Entity<TEntity>, new()
     /// <summary>实体工厂</summary>
     public IEntityFactory Factory { get; set; }
 
-    private readonly List<TKey> _Keys = new();
+    private readonly List<TKey> _Keys = [];
     /// <summary>主键集合</summary>
     public IList<TKey> Keys => _Keys;
 
@@ -66,7 +66,7 @@ public class BatchFinder<TKey, TEntity> where TEntity : Entity<TEntity>, new()
         if (key is String str && str.IsNullOrEmpty()) return null;
         if (!_Keys.Contains(key)) throw new ArgumentOutOfRangeException(nameof(key), key, "error");
 
-        var uk = Factory.Table.FindByName(Factory.Unique);
+        var uk = Factory.Table.FindByName(Factory.Unique) ?? throw new ArgumentNullException(nameof(Factory.Unique), "没有唯一主键");
 
         // 向前查询
         while (_index < _Keys.Count)

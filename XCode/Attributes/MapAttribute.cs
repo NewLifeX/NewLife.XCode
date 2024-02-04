@@ -12,9 +12,12 @@ public class MapAttribute : Attribute
     /// <summary>数据列</summary>
     public String Name { get; set; }
 
-    private MapProvider _Provider;
+    private MapProvider? _Provider;
     /// <summary>目标提供者</summary>
-    public MapProvider Provider { get { return _Provider ??= GetProvider(_Type, _Key); } set { _Provider = value; } }
+    public MapProvider? Provider { get { return _Provider ??= GetProvider(_Type, _Key); } set { _Provider = value; } }
+
+    private readonly Type? _Type;
+    private readonly String? _Key;
     #endregion
 
     #region 构造
@@ -29,7 +32,7 @@ public class MapAttribute : Attribute
     /// <param name="name"></param>
     /// <param name="type"></param>
     /// <param name="key"></param>
-    public MapAttribute(String name, Type type, String key = null)
+    public MapAttribute(String name, Type type, String? key = null)
     {
         Name = name;
         _Type = type;
@@ -38,10 +41,7 @@ public class MapAttribute : Attribute
     #endregion
 
     #region 方法
-    private readonly Type _Type;
-    private readonly String _Key;
-
-    private MapProvider? GetProvider(Type type, String key)
+    private MapProvider? GetProvider(Type? type, String? key)
     {
         if (type == null) return null;
 
@@ -50,8 +50,7 @@ public class MapAttribute : Attribute
 
         if (key.IsNullOrEmpty())
         {
-            var k = (type.AsFactory()?.Unique?.Name) ?? throw new ArgumentNullException(nameof(key));
-            key = k;
+            key = ((type.AsFactory()?.Unique?.Name) ?? throw new ArgumentNullException(nameof(key)));
         }
 
         return new MapProvider { EntityType = type, Key = key };
@@ -64,10 +63,10 @@ public class MapProvider
 {
     #region 属性
     /// <summary>实体类型</summary>
-    public Type EntityType { get; set; }
+    public Type? EntityType { get; set; }
 
     /// <summary>关联键</summary>
-    public String Key { get; set; }
+    public String? Key { get; set; }
     #endregion
 
     #region 方法
@@ -75,7 +74,7 @@ public class MapProvider
     /// <returns></returns>
     public virtual IDictionary<Object, String> GetDataSource()
     {
-        var fact = EntityType.AsFactory();
+        var fact = EntityType?.AsFactory() ?? throw new ArgumentNullException(nameof(EntityType));
 
         var key = Key;
         var mst = fact.Master?.Name;
@@ -94,7 +93,7 @@ public class MapProvider
         var list = fact.Session.Count < 1000 ? fact.FindAllWithCache() : fact.FindAll("", null, null, 0, 100);
 
         //return list.Where(e => e[key] != null).ToDictionary(e => e[key], e => e[mst] + "");
-        return list.Where(e => e[key] != null).ToDictionary(e => e[key], e => e.ToString());//用ToString()可以显示更多信息 2023-08-11
+        return list.Where(e => e[key] != null).ToDictionary(e => e[key]!, e => e.ToString());//用ToString()可以显示更多信息 2023-08-11
     }
     #endregion
 }

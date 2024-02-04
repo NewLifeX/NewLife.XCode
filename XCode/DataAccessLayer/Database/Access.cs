@@ -213,6 +213,8 @@ class AccessMetaData : FileDbMetaData
             var dic = new Dictionary<String, IDataIndex>();
             foreach (var item in list)
             {
+                if (item.Name.IsNullOrEmpty()) continue;
+
                 if (!dic.TryGetValue(item.Name, out var di))
                 {
                     dic.Add(item.Name, item);

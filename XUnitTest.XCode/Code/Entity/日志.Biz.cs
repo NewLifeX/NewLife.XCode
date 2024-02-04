@@ -44,31 +44,38 @@ public partial class Log : Entity<Log>
         //};
 
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add<UserModule>();
+        Meta.Modules.Add(new UserModule { AllowEmpty = false });
         Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add<IPModule>();
+        Meta.Modules.Add(new IPModule { AllowEmpty = false });
         Meta.Modules.Add<TraceModule>();
     }
 
-    /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <param name="isNew">是否插入</param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
+        //if (method == DataMethod.Delete) return true;
         // 如果没有脏数据，则不需要进行任何处理
-        if (!HasDirty) return;
+        if (!HasDirty) return true;
 
         // 建议先调用基类方法，基类方法会做一些统一处理
-        base.Valid(isNew);
+        if (!base.Valid(method)) return false;
 
         // 在新插入数据或者修改了指定字段时进行修正
+
+        // 保留2位小数
+        //Ex3 = Math.Round(Ex3, 2);
+
         // 处理当前已登录用户信息，可以由UserModule过滤器代劳
         /*var user = ManageProvider.User;
         if (user != null)
         {
-            if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
+            if (method == DataMethod.Insert && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
         }*/
-        //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
-        //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
+        //if (method == DataMethod.Insert && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
+        //if (method == DataMethod.Insert && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
+
+        return true;
     }
 
     ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>

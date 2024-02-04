@@ -26,6 +26,9 @@ public class DAL_Mapper_Tests
         var list = dal.Query<MyUser>("select * from user", null, 0, 100).ToList();
         Assert.True(list.Count > 0);
 
+        list = dal.Query<MyUser>("select * from user").ToList();
+        Assert.NotNull(list);
+
         list = dal.Query<MyUser>("select * from user where name=@name", new { Name = "admin" }).ToList();
         Assert.NotNull(list);
         Assert.Single(list);

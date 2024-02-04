@@ -14,31 +14,31 @@ public class SelectBuilder
 {
     #region 属性
     /// <summary>分页主键</summary>
-    public String Key { get; set; }
+    public String? Key { get; set; }
 
     /// <summary>选择列</summary>
-    public String Column { get; set; }
+    public String? Column { get; set; }
 
     /// <summary>数据表</summary>
-    public String Table { get; set; }
+    public String? Table { get; set; }
 
-    private String _Where;
+    private String? _Where;
     /// <summary>条件</summary>
-    public String Where { get => _Where; set => _Where = ParseWhere(value); }
+    public String? Where { get => _Where; set => _Where = ParseWhere(value); }
 
     /// <summary>分组</summary>
-    public String GroupBy { get; set; }
+    public String? GroupBy { get; set; }
 
     /// <summary>分组条件</summary>
-    public String Having { get; set; }
+    public String? Having { get; set; }
 
-    private String _OrderBy;
+    private String? _OrderBy;
     /// <summary>排序</summary>
     /// <remarks>给排序赋值时，如果没有指定分页主键，则自动采用排序中的字段</remarks>
-    public String OrderBy { get => _OrderBy; set => _OrderBy = ParseOrderBy(value); }
+    public String? OrderBy { get => _OrderBy; set => _OrderBy = ParseOrderBy(value); }
 
     /// <summary>分页用的Limit语句</summary>
-    public String Limit { get; set; }
+    public String? Limit { get; set; }
 
     /// <summary>参数集合</summary>
     public List<IDataParameter> Parameters { get; set; } = new();
@@ -93,7 +93,7 @@ $";
     }
 
     private static readonly Regex reg_gb = new(@"\bgroup\b\s*\bby\b", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-    String ParseWhere(String value)
+    String? ParseWhere(String? value)
     {
         // 里面可能含有分组
         if (!value.IsNullOrEmpty())
@@ -122,7 +122,7 @@ $";
         return value;
     }
 
-    String ParseOrderBy(String value)
+    String? ParseOrderBy(String? value)
     {
         // 分析排序字句，从中分析出分页用的主键
         if (!value.IsNullOrEmpty() && Key.IsNullOrEmpty())

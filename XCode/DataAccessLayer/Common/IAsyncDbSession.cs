@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Data;
 
@@ -16,14 +13,14 @@ public interface IAsyncDbSession : IDisposable2
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    Task<DbTable> QueryAsync(String sql, IDataParameter[] ps);
+    Task<DbTable> QueryAsync(String sql, IDataParameter[]? ps);
 
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>总记录数</returns>
-    Task<Int64> QueryCountAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps);
+    Task<Int64> QueryCountAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
 
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="builder">查询生成器</param>
@@ -40,7 +37,7 @@ public interface IAsyncDbSession : IDisposable2
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    Task<Int32> ExecuteAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps);
+    Task<Int32> ExecuteAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
 
     /// <summary>执行DbCommand，返回受影响的行数</summary>
     /// <param name="cmd">DbCommand</param>
@@ -52,7 +49,7 @@ public interface IAsyncDbSession : IDisposable2
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps);
+    Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
 
     /// <summary>执行SQL语句，返回结果中的第一行第一列</summary>
     /// <typeparam name="T">返回类型</typeparam>
@@ -60,6 +57,6 @@ public interface IAsyncDbSession : IDisposable2
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    Task<T> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps);
+    Task<T> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
     #endregion
 }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Reflection;
@@ -15,7 +13,7 @@ public class EntityExtend
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     public Int32 Expire { get; set; }
 
-    private Dictionary<String, CacheItem> _cache;
+    private Dictionary<String, CacheItem>? _cache;
 
     /// <summary>实例化一个不区分键大小写的实体扩展</summary>
     public EntityExtend()
@@ -28,7 +26,7 @@ public class EntityExtend
     /// <param name="key">键</param>
     /// <param name="func">获取值的委托，该委托以键作为参数</param>
     /// <returns></returns>
-    public virtual T Get<T>(String key, Func<String, T> func = null)
+    public virtual T? Get<T>(String key, Func<String, T>? func = null)
     {
         //if (func == null) throw new ArgumentNullException(nameof(func));
         if (key == null) return default;
@@ -59,7 +57,7 @@ public class EntityExtend
 
             var value = func(key);
 
-            if (!Equals(value, default(T))) dic[key] = new CacheItem(value, Expire);
+            if (!Equals(value, default(T))) dic[key] = new CacheItem(value!, Expire);
 
             return value;
         }

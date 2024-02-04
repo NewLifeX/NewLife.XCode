@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Principal;
 using System.Web.Script.Serialization;
@@ -57,11 +57,14 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
         if (XTrace.Debug) XTrace.WriteLine("完成初始化{0}用户数据！", typeof(User).Name);
     }
 
-    /// <summary>验证</summary>
-    /// <param name="isNew"></param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
-        base.Valid(isNew);
+        if (method == DataMethod.Delete) return true;
+
+        // 如果没有脏数据，则不需要进行任何处理
+        if (!HasDirty) return true;
 
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, "用户名不能为空！");
         //if (RoleID < 1) throw new ArgumentNullException(__.RoleID, "没有指定角色！");
@@ -88,15 +91,22 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
         if (ids.Length > 0)
         {
             RoleID = ids[0];
-            var str = ids.Skip(1).Join();
-            if (!str.IsNullOrEmpty()) str = "," + str + ",";
-            RoleIds = str;
+            if (ids.Length == 1)
+                RoleIds = null;
+            else
+            {
+                var str = ids.Skip(1).Join();
+                if (!str.IsNullOrEmpty()) str = "," + str + ",";
+                RoleIds = str;
+            }
         }
 
         // 自动计算年龄
         if (Birthday.Year > 1000) Age = (Int32)((DateTime.Now - Birthday).TotalDays / 365);
 
         //if (AreaId <= 0) FixArea(LastLoginIP);
+
+        return base.Valid(method);
     }
 
     /// <summary>删除用户</summary>
@@ -607,6 +617,16 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     /// <returns></returns>
     public virtual Int32[] GetRoleIDs()
     {
+        //var tenantId = (TenantContext.Current?.TenantId).ToInt(-1);
+        //if (tenantId > 0)
+        //{
+        //    var tuEntity = TenantUser.FindByTenantIdAndUserId(tenantId, ID);
+        //    var idlist = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
+        //    if (tuEntity != null && tuEntity.RoleId > 0) idlist.Insert(0, tuEntity.RoleId);
+
+        //    return idlist.Distinct().ToArray();
+        //}
+
         var ids = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
         if (RoleID > 0) ids.Insert(0, RoleID);
 

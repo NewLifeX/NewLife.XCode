@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
@@ -41,7 +36,7 @@ internal class SqlServer : RemoteDb
 
         // 找不到驱动时，再到线上下载
         {
-            var factory = GetProviderFactory("System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
+            var factory = GetProviderFactory(null, "System.Data.SqlClient.dll", "System.Data.SqlClient.SqlClientFactory");
 
             return factory;
         }
@@ -216,8 +211,8 @@ internal class SqlServer : RemoteDb
 
         // 如果包含分组，则必须作为子查询
         var builder1 = builder.CloneWithGroupBy("XCode_T0", true);
-        // 不必追求极致，把所有列放出来
-        builder1.Column = $"*, row_number() over(Order By {builder.OrderBy ?? builder.Key}) as rowNumber";
+        // *替换为{builder.Column}，否则会出现查询字段不一致的问题
+        builder1.Column = $"{builder.Column}, row_number() over(Order By {builder.OrderBy ?? builder.Key}) as rowNumber";
 
         var builder2 = builder1.AsChild("XCode_T1", true);
         // 结果列处理
@@ -251,7 +246,7 @@ internal class SqlServer : RemoteDb
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">唯一键。用于not in分页</param>
     /// <returns>分页SQL</returns>
-    public virtual String PageSplitByTopNotIn(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn)
+    public static String PageSplitByTopNotIn(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
     {
         // 从第一行开始，不需要分页
         if (startRowIndex <= 0 && maximumRows < 1) return sql;
@@ -431,7 +426,7 @@ internal class SqlServer : RemoteDb
     /// <summary>系统数据库名</summary>
     public override String SystemDatabaseName => "master";
 
-    public override String FormatValue(IDataColumn field, Object value)
+    public override String FormatValue(IDataColumn field, Object? value)
     {
         var isNullable = true;
         Type type = null;
@@ -1052,7 +1047,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         return base.FieldClause(field, onlyDefine);
     }
 
-    protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
         // 非定义时（修改字段），主键字段没有约束
         if (!onlyDefine && field.PrimaryKey) return null;

@@ -73,19 +73,24 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     /// <remarks>建议重写者调用基类的实现，因为基类根据数据字段的唯一索引进行数据验证。</remarks>
     /// <param name="isNew">是否新数据</param>
     public abstract void Valid(Boolean isNew);
+
+    /// <summary>验证数据，支持添删改，通过返回值表示验证失败</summary>
+    /// <param name="method"></param>
+    /// <returns></returns>
+    public abstract Boolean Valid(DataMethod method);
     #endregion
 
     #region 获取/设置 字段值
     /// <summary>获取/设置 字段值，不影响脏数据</summary>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public abstract Object this[String name] { get; set; }
+    public abstract Object? this[String name] { get; set; }
 
     /// <summary>设置字段值，该方法影响脏数据。</summary>
     /// <param name="name">字段名</param>
     /// <param name="value">值</param>
     /// <returns>返回是否成功设置了数据</returns>
-    public Boolean SetItem(String name, Object value)
+    public Boolean SetItem(String name, Object? value)
     {
         var fact = GetType().AsFactory();
         FieldItem fi = fact.Table.FindByName(name);
@@ -217,7 +222,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
 
     #region 扩展属性
     [NonSerialized]
-    internal EntityExtend _Extends;
+    internal EntityExtend? _Extends;
     /// <summary>扩展属性。避免在序列化中出现</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     protected EntityExtend Extends { get => _Extends ??= new EntityExtend(); set => _Extends = value; }
@@ -226,15 +231,15 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     EntityExtend IEntity.Extends => Extends;
 
     [NonSerialized]
-    internal IDictionary<String, Object> _Items;
+    internal IDictionary<String, Object?>? _Items;
     /// <summary>扩展字段。存放未能映射到实体属性的数据库字段</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    IDictionary<String, Object> IExtend.Items => _Items ??= new Dictionary<String, Object>();
+    IDictionary<String, Object?> IExtend.Items => _Items ??= new Dictionary<String, Object?>();
 
     /// <summary>仅用于扩展数据的索引器</summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    Object IExtend.this[String key] { get => _Items?[key]; set => (this as IExtend).Items[key] = value; }
+    Object? IExtend.this[String key] { get => _Items?[key]; set => (this as IExtend).Items[key] = value; }
 
     ///// <summary>扩展数据键集合</summary>
     //IEnumerable<String> IExtend2.Keys => _Items?.Keys;

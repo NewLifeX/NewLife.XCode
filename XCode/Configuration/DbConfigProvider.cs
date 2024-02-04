@@ -17,7 +17,7 @@ public class DbConfigProvider : ConfigProvider
     public Int32 UserId { get; set; }
 
     /// <summary>分类</summary>
-    public String Category { get; set; }
+    public String? Category { get; set; }
 
     /// <summary>本地缓存配置数据。即使网络断开，仍然能够加载使用本地数据，默认 Json</summary>
     public ConfigCacheLevel CacheLevel { get; set; } = ConfigCacheLevel.Json;
@@ -25,7 +25,7 @@ public class DbConfigProvider : ConfigProvider
     /// <summary>更新周期。默认15秒，0秒表示不做自动更新</summary>
     public Int32 Period { get; set; } = 15;
 
-    private IDictionary<String, Object> _cache;
+    private IDictionary<String, Object?>? _cache;
     #endregion
 
     #region 方法
@@ -41,7 +41,7 @@ public class DbConfigProvider : ConfigProvider
         var file = $"Config/dbConfig_{name}.json".GetFullPath();
         var old = $"Config/{name}.config".GetFullPath();
         if (!File.Exists(file)) file = old;
-        if ((Root == null || Root.Childs.Count == 0) && CacheLevel > ConfigCacheLevel.NoCache && File.Exists(file))
+        if ((Root == null || Root.Childs == null || Root.Childs.Count == 0) && CacheLevel > ConfigCacheLevel.NoCache && File.Exists(file))
         {
             XTrace.WriteLine("[{0}/{1}]加载缓存配置：{2}", Category, UserId, file);
             var txt = File.ReadAllText(file);
@@ -69,9 +69,9 @@ public class DbConfigProvider : ConfigProvider
 
     /// <summary>获取所有配置</summary>
     /// <returns></returns>
-    protected virtual IDictionary<String, Object> GetAll()
+    protected virtual IDictionary<String, Object?> GetAll()
     {
-        var dic = new Dictionary<String, Object>(StringComparer.CurrentCultureIgnoreCase);
+        var dic = new Dictionary<String, Object?>(StringComparer.CurrentCultureIgnoreCase);
 
         // 减少日志
         using var showSql = Parameter.Meta.Session.Dal.Session.SetShowSql(false);
@@ -93,7 +93,7 @@ public class DbConfigProvider : ConfigProvider
     /// <summary>加载配置字典为配置树</summary>
     /// <param name="configs"></param>
     /// <returns></returns>
-    public virtual IConfigSection Build(IDictionary<String, Object> configs)
+    public virtual IConfigSection Build(IDictionary<String, Object?> configs)
     {
         // 换个对象，避免数组元素在多次加载后重叠
         var root = new ConfigSection { };
@@ -107,9 +107,11 @@ public class DbConfigProvider : ConfigProvider
             for (var i = 0; i < ks.Length; i++)
             {
                 section = section.GetOrAddChild(ks[i]) as ConfigSection;
+                if (section == null) break;
             }
+            if (section == null) break;
 
-            if (item.Value is IDictionary<String, Object> dic)
+            if (item.Value is IDictionary<String, Object?> dic)
                 section.Childs = Build(dic).Childs;
             else
                 section.Value = item.Value + "";
@@ -150,7 +152,7 @@ public class DbConfigProvider : ConfigProvider
             else
             {
                 // 首次加载，且配置文件存在，需要保存一份回去数据库。可能是从配置文件迁移为数据库配置
-                if (Root != null && Root.Childs.Count > 0)
+                if (Root != null && Root.Childs != null && Root.Childs.Count > 0)
                 {
                     XTrace.WriteLine("[{0}/{1}]从文件保存配置到数据库", Category, UserId);
 
@@ -171,7 +173,7 @@ public class DbConfigProvider : ConfigProvider
         }
     }
 
-    private void SaveCache(IDictionary<String, Object> configs)
+    private void SaveCache(IDictionary<String, Object?> configs)
     {
         // 缓存
         _cache = configs;
@@ -205,6 +207,8 @@ public class DbConfigProvider : ConfigProvider
 
     void Save(IList<Parameter> list, IConfigSection root, String prefix)
     {
+        if (root == null || root.Childs == null) return;
+
         foreach (var section in root.Childs)
         {
             var name = prefix + section.Key;
@@ -239,7 +243,7 @@ public class DbConfigProvider : ConfigProvider
     /// <param name="model">模型实例</param>
     /// <param name="autoReload">是否自动更新。默认true</param>
     /// <param name="path">路径。配置树位置，配置中心等多对象混合使用时</param>
-    public override void Bind<T>(T model, Boolean autoReload = true, String path = null)
+    public override void Bind<T>(T model, Boolean autoReload = true, String? path = null)
     {
         base.Bind<T>(model, autoReload, path);
 

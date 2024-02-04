@@ -14,13 +14,13 @@ public class ClassBuilder
     #region 属性
 
     /// <summary>写入器</summary>
-    public TextWriter Writer { get; set; }
+    public TextWriter Writer { get; set; } = null!;
 
     /// <summary>数据表</summary>
-    public IDataTable Table { get; set; }
+    public IDataTable Table { get; set; } = null!;
 
     /// <summary>类名。默认Table.Name</summary>
-    public String ClassName { get; set; }
+    public String? ClassName { get; set; }
 
     /// <summary>生成器选项</summary>
     public BuilderOption Option { get; set; } = new BuilderOption();
@@ -28,14 +28,13 @@ public class ClassBuilder
     #endregion 属性
 
     #region 静态快速
-
     /// <summary>加载模型文件</summary>
     /// <param name="xmlFile">Xml模型文件</param>
     /// <param name="option">生成可选项</param>
     /// <param name="atts">扩展属性字典</param>
     /// <param name="log"></param>
     /// <returns></returns>
-    public static IList<IDataTable> LoadModels(String xmlFile, BuilderOption option, out IDictionary<String, String> atts, ILog log = null)
+    public static IList<IDataTable> LoadModels(String? xmlFile, BuilderOption option, out IDictionary<String, String> atts, ILog? log = null)
     {
         if (xmlFile.IsNullOrEmpty())
         {
@@ -55,9 +54,9 @@ public class ClassBuilder
         var xmlContent = File.ReadAllText(xmlFile);
         atts = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase)
         {
-            ["xmlns"] = "https://newlifex.com/Model2023.xsd",
+            ["xmlns"] = "https://newlifex.com/Model202309.xsd",
             ["xmlns:xs"] = "http://www.w3.org/2001/XMLSchema-instance",
-            ["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2023.xsd"
+            ["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202309.xsd"
         };
 
         log?.Info("导入模型：{0}", xmlFile);
@@ -116,106 +115,6 @@ public class ClassBuilder
 
         return tables;
     }
-
-    /// <summary>生成简易版模型</summary>
-    /// <param name="tables">表集合</param>
-    /// <param name="option">可选项</param>
-    /// <param name="log"></param>
-    /// <returns></returns>
-    public static Int32 BuildModels(IList<IDataTable> tables, BuilderOption option = null, ILog log = null)
-    {
-        if (option == null)
-            option = new BuilderOption();
-        else
-            option = option.Clone();
-
-        option.Pure = true;
-        //option.Partial = true;
-
-        log?.Info("生成简易模型类 {0}", option.Output.GetBasePath());
-
-        var count = 0;
-        foreach (var item in tables)
-        {
-            // 跳过排除项
-            if (option.Excludes.Contains(item.Name)) continue;
-            if (option.Excludes.Contains(item.TableName)) continue;
-
-            var builder = new ClassBuilder
-            {
-                Table = item,
-                Option = option.Clone(),
-                Log = log
-            };
-
-            builder.Load(item);
-
-            // 自定义模型
-            var modelClass = item.Properties["ModelClass"];
-            var modelInterface = item.Properties["ModelInterface"];
-            if (!modelClass.IsNullOrEmpty()) builder.Option.ClassNameTemplate = modelClass;
-            if (!modelInterface.IsNullOrEmpty())
-            {
-                builder.Option.BaseClass = modelInterface;
-                builder.Option.ModelNameForCopy = modelInterface;
-            }
-
-            builder.Execute();
-            builder.Save(null, true, false);
-
-            count++;
-        }
-
-        return count;
-    }
-
-    /// <summary>生成简易版实体接口</summary>
-    /// <param name="tables">表集合</param>
-    /// <param name="option">可选项</param>
-    /// <param name="log"></param>
-    /// <returns></returns>
-    public static Int32 BuildInterfaces(IList<IDataTable> tables, BuilderOption option = null, ILog log = null)
-    {
-        if (option == null)
-            option = new BuilderOption();
-        else
-            option = option.Clone();
-
-        option.Interface = true;
-        //option.Partial = true;
-
-        log?.Info("生成简易接口 {0}", option.Output.GetBasePath());
-
-        var count = 0;
-        foreach (var item in tables)
-        {
-            // 跳过排除项
-            if (option.Excludes.Contains(item.Name)) continue;
-            if (option.Excludes.Contains(item.TableName)) continue;
-
-            var builder = new ClassBuilder
-            {
-                Table = item,
-                Option = option.Clone(),
-                Log = log
-            };
-
-            builder.Load(item);
-
-            // 自定义模型
-            //var modelInterface = item.Properties["ModelInterface"];
-            var modelInterface = option.ModelInterface;
-            if (!modelInterface.IsNullOrEmpty()) builder.Option.ClassNameTemplate = modelInterface;
-
-            builder.Execute();
-            builder.Save(null, true, false);
-
-            count++;
-        }
-
-        return count;
-    }
-
     #endregion 静态快速
 
     #region 方法
@@ -250,21 +149,17 @@ public class ClassBuilder
 
         foreach (var dc in dt.Columns)
         {
-            if (dc.DataType == null) throw new XCodeException($"表[{dt.Name}]的字段[{dc.Name}]未指定DataType类型");
+            if (dc.DataType == null && dc.Properties["Type"].IsNullOrEmpty())
+                throw new XCodeException($"表[{dt.Name}]的字段[{dc.Name}]未指定DataType类型");
         }
 
         var option = Option;
-        if (ClassName.IsNullOrEmpty())
-        {
-            if (!option.ClassNameTemplate.IsNullOrEmpty())
-                ClassName = option.ClassNameTemplate.Replace("{name}", Table.Name);
-            else
-                ClassName = option.Interface ? ("I" + Table.Name) : Table.Name;
-        }
         WriteLog("生成 {0} {1} {2}", Table.Name, Table.DisplayName, new { option.ClassNameTemplate, option.BaseClass, option.ModelNameForCopy, option.Namespace }.ToJson(false, false, false));
 
         //Clear();
         Writer ??= new StringWriter();
+
+        Prepare();
 
         OnExecuting();
 
@@ -273,16 +168,29 @@ public class ClassBuilder
         OnExecuted();
     }
 
+    /// <summary>生成前的准备工作。计算类型以及命名空间等</summary>
+    protected virtual void Prepare()
+    {
+        var option = Option;
+        if (ClassName.IsNullOrEmpty())
+        {
+            if (!option.ClassNameTemplate.IsNullOrEmpty())
+                ClassName = option.ClassNameTemplate.Replace("{name}", Table.Name);
+            else
+                ClassName = Table.Name;
+        }
+    }
+
     /// <summary>生成头部</summary>
     protected virtual void OnExecuting()
     {
         // 引用命名空间
         var us = Option.Usings;
-        if (Option.HasIModel)
-        {
-            if (!us.Contains("NewLife.Data")) us.Add("NewLife.Data");
-            if (!us.Contains("NewLife.Reflection")) us.Add("NewLife.Reflection");
-        }
+        //if (Option.HasIModel)
+        //{
+        //    if (!us.Contains("NewLife.Data")) us.Add("NewLife.Data");
+        //    if (!us.Contains("NewLife.Reflection")) us.Add("NewLife.Reflection");
+        //}
 
         us = us.Distinct().OrderBy(e => e.StartsWith("System") ? 0 : 1).ThenBy(e => e).ToArray();
         foreach (var item in us)
@@ -313,26 +221,23 @@ public class ClassBuilder
         if (!baseClass.IsNullOrEmpty()) baseClass = " : " + baseClass;
 
         // 分部类
-        var partialClass = Option.Partial ? " partial" : "";
+        var partialClass = " partial";
 
         // 类接口
-        if (Option.Interface)
-            WriteLine("public{2} interface {0}{1}", ClassName, baseClass, partialClass);
-        else
-            WriteLine("public{2} class {0}{1}", ClassName, baseClass, partialClass);
+        WriteLine("public{2} class {0}{1}", ClassName, baseClass, partialClass);
         WriteLine("{");
     }
 
     /// <summary>获取基类</summary>
     /// <returns></returns>
-    protected virtual String GetBaseClass()
+    protected virtual String? GetBaseClass()
     {
         var baseClass = Option.BaseClass?.Replace("{name}", Table.Name);
-        if (Option.HasIModel)
-        {
-            if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
-            baseClass += "IModel";
-        }
+        //if (Option.HasIModel)
+        //{
+        //    if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
+        //    baseClass += "IModel";
+        //}
 
         return baseClass;
     }
@@ -344,18 +249,15 @@ public class ClassBuilder
         var des = Table.Description;
         if (!Option.DisplayNameTemplate.IsNullOrEmpty())
         {
-            des = Table.Description.TrimStart(Table.DisplayName, "。");
-            des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
+            var dis = Table.DisplayName;
+            if (!des.IsNullOrEmpty())
+            {
+                if (!dis.IsNullOrEmpty()) des = des.TrimStart(dis);
+                des = des.TrimStart("。");
+            }
+            des = Option.DisplayNameTemplate.Replace("{displayName}", dis) + "。" + des;
         }
         WriteLine("/// <summary>{0}</summary>", des);
-
-        if (!Option.Pure && !Option.Interface)
-        {
-            WriteLine("[Serializable]");
-            WriteLine("[DataObject]");
-
-            if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
-        }
     }
 
     /// <summary>生成尾部</summary>
@@ -386,60 +288,63 @@ public class ClassBuilder
         }
         WriteLine("#endregion");
 
-        if (Option.HasIModel)
-        {
-            WriteLine();
-            BuildIndexItems();
-        }
-
-        // 生成拷贝函数。需要有基类
-        //var bs = Option.BaseClass.Split(",").Select(e => e.Trim()).ToArray();
-        //var model = bs.FirstOrDefault(e => e[0] == 'I' && e.Contains("{name}"));
-        var model = Option.ModelNameForCopy;
-        if (!Option.Interface && !model.IsNullOrEmpty())
-        {
-            WriteLine();
-            BuildCopy(model.Replace("{name}", Table.Name));
-        }
+        //if (Option.HasIModel)
+        //{
+        //    WriteLine();
+        //    BuildIndexItems();
+        //}
     }
 
     /// <summary>生成每一项</summary>
     protected virtual void BuildItem(IDataColumn column)
     {
         var dc = column;
-        //BuildItemAttribute(column);
+
         // 注释
         var des = dc.Description;
         WriteLine("/// <summary>{0}</summary>", des);
 
-        //// 分类特性
-        //if (dc.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
-        //    WriteLine("[Category(\"{0}\")]", att);
+        //if (!Option.Pure)
+        //{
+        //    if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
 
-        if (!Option.Pure && !Option.Interface)
-        {
-            if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
-
-            var dis = dc.DisplayName;
-            if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
-        }
+        //    var dis = dc.DisplayName;
+        //    if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
+        //}
 
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
-
-        if (Option.Interface)
-            WriteLine("{0} {1} {{ get; set; }}", type, dc.Name);
+        if (type == "String")
+        {
+            if (Option.Nullable)
+            {
+                if (column.Nullable)
+                    WriteLine("public String? {0} {{ get; set; }}", dc.Name);
+                else
+                    WriteLine("public String {0} {{ get; set; }} = null!;", dc.Name);
+            }
+            else
+            {
+                WriteLine("public String {0} {{ get; set; }}", dc.Name);
+            }
+        }
         else
+        {
             WriteLine("public {0} {1} {{ get; set; }}", type, dc.Name);
+        }
     }
 
-    private void BuildIndexItems()
+    /// <summary>生成索引访问器</summary>
+    protected virtual void BuildIndexItems()
     {
         WriteLine("#region 获取/设置 字段值");
         WriteLine("/// <summary>获取/设置 字段值</summary>");
         WriteLine("/// <param name=\"name\">字段名</param>");
         WriteLine("/// <returns></returns>");
-        WriteLine("public virtual Object this[String name]");
+        if (Option.Nullable)
+            WriteLine("public virtual Object? this[String name]");
+        else
+            WriteLine("public virtual Object this[String name]");
         WriteLine("{");
 
         // get
@@ -456,7 +361,7 @@ public class ClassBuilder
                 WriteLine("\"{0}\" => {0},", column.Name);
             }
             //WriteLine("default: throw new KeyNotFoundException($\"{name} not found\");");
-            WriteLine("_ => this.GetValue(name),");
+            WriteLine("_ => this.GetValue(name, false),");
             WriteLine("};");
         }
         WriteLine("}");
@@ -574,7 +479,7 @@ public class ClassBuilder
 
     #region 写入缩进方法
 
-    private String _Indent;
+    private String? _Indent;
 
     /// <summary>设置缩进</summary>
     /// <param name="add"></param>
@@ -588,7 +493,7 @@ public class ClassBuilder
 
     /// <summary>写入</summary>
     /// <param name="value"></param>
-    protected virtual void WriteLine(String value = null)
+    protected virtual void WriteLine(String? value = null)
     {
         if (value.IsNullOrEmpty())
         {
@@ -609,7 +514,7 @@ public class ClassBuilder
     /// <summary>写入</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    protected virtual void WriteLine(String format, params Object[] args)
+    protected virtual void WriteLine(String format, params Object?[] args)
     {
         if (!_Indent.IsNullOrEmpty()) format = _Indent + format;
 
@@ -638,7 +543,7 @@ public class ClassBuilder
     /// <param name="ext"></param>
     /// <param name="chineseFileName"></param>
     /// <returns></returns>
-    protected virtual String GetFileName(String ext = null, Boolean chineseFileName = true)
+    protected virtual String GetFileName(String? ext = null, Boolean chineseFileName = true)
     {
         var p = Option.Output;
         if (ext.IsNullOrEmpty())
@@ -646,9 +551,7 @@ public class ClassBuilder
         else if (!ext.Contains("."))
             ext += ".cs";
 
-        if (Option.Interface)
-            p = p.CombinePath(ClassName + ext);
-        else if (chineseFileName && !Table.DisplayName.IsNullOrEmpty())
+        if (chineseFileName && !Table.DisplayName.IsNullOrEmpty())
             p = p.CombinePath(Table.DisplayName + ext);
         else
             p = p.CombinePath(ClassName + ext);
@@ -662,7 +565,7 @@ public class ClassBuilder
     /// <param name="ext">扩展名，默认.cs</param>
     /// <param name="overwrite">是否覆盖目标文件</param>
     /// <param name="chineseFileName">是否使用中文名</param>
-    public virtual String Save(String ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
+    public virtual String Save(String? ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
     {
         var p = GetFileName(ext, chineseFileName);
 
@@ -683,14 +586,14 @@ public class ClassBuilder
     {
         if (Option.Excludes.Contains(column.Name)) return false;
         if (Option.Excludes.Contains(column.ColumnName)) return false;
-        if ((validModel || Option.Pure || Option.Interface) && column.Properties["Model"] == "False")
+        if (validModel && column.Properties["Model"] == "False")
             return false;
 
         return true;
     }
 
     /// <summary>C#版本</summary>
-    public Version CSharp { get; set; }
+    public Version? CSharp { get; set; }
 
     /// <summary>nameof</summary>
     /// <param name="name"></param>
@@ -722,7 +625,7 @@ public class ClassBuilder
     /// <summary>写日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
+    public void WriteLog(String format, params Object?[] args) => Log?.Info(format, args);
 
     #endregion 辅助
 }

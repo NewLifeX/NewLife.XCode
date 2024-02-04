@@ -24,15 +24,15 @@ internal class SQLite : FileDbBase
     {
         // Mono有自己的驱动，因为SQLite是混合编译，里面的C++代码与平台相关，不能通用;注意大小写问题
         if (Runtime.Mono)
-            return GetProviderFactory("Mono.Data.Sqlite.dll", "System.Data.SqliteFactory");
+            return GetProviderFactory(null, "Mono.Data.Sqlite.dll", "System.Data.SqliteFactory");
 
         var type =
             PluginHelper.LoadPlugin("Microsoft.Data.Sqlite.SqliteFactory", null, "Microsoft.Data.Sqlite.dll", null) ??
             PluginHelper.LoadPlugin("System.Data.SQLite.SQLiteFactory", null, "System.Data.SQLite.dll", null);
 
         return GetProviderFactory(type) ??
-            GetProviderFactory("Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true) ??
-            GetProviderFactory("System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false);
+            GetProviderFactory(null, "Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true) ??
+            GetProviderFactory(null, "System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false);
     }
 
     /// <summary>是否内存数据库</summary>
@@ -204,7 +204,7 @@ internal class SQLite : FileDbBase
         //return keyWord;
     }
 
-    public override String FormatValue(IDataColumn field, Object value)
+    public override String FormatValue(IDataColumn field, Object? value)
     {
         if (field.DataType == typeof(Byte[]))
         {
@@ -429,9 +429,10 @@ internal class SQLiteMetaData : FileDbMetaData
             if (_FieldTypeMaps == null)
             {
                 var list = base.FieldTypeMaps;
+
                 // SQLite自增字段有时是Int64，需要到Int32的映射
                 if (!list.Any(e => e.Key == typeof(Int64) && e.Value == typeof(Int32)))
-                    list.Add(new KeyValuePair<Type, Type>(typeof(Int64), typeof(Int32)));
+                    list.Add(new(typeof(Int64), typeof(Int32)));
             }
             return base.FieldTypeMaps;
         }
@@ -567,7 +568,6 @@ internal class SQLiteMetaData : FileDbMetaData
 
             str = m.Groups[2].Value?.Trim();
             field.RawType = str ?? "nvarchar(50)";
-            field.DataType = GetDataType(field.RawType);
             //field.Length = field.RawType.Substring("(", ")").ToInt();
 
             // SQLite的字段长度、精度等，都是由类型决定，固定值
@@ -581,6 +581,7 @@ internal class SQLiteMetaData : FileDbMetaData
                     field.Scale = ns[1];
                 }
             }
+            field.DataType = GetDataType(field);
 
             // 如果数据库里面是integer或者autoincrement，识别类型是Int64，又是自增，则改为Int32，保持与大多数数据库的兼容
             if (field.Identity && field.DataType == typeof(Int64) && field.RawType.EqualIgnoreCase("integer", "autoincrement"))
@@ -640,7 +641,7 @@ internal class SQLiteMetaData : FileDbMetaData
             field.Nullable = row[3].ToInt() != 1;
             field.PrimaryKey = row[5].ToInt() == 1;
 
-            field.DataType = GetDataType(field.RawType);
+            field.DataType = GetDataType(field);
             if (field.DataType == null)
             {
                 if (field.RawType.StartsWithIgnoreCase("varchar2", "nvarchar2")) field.DataType = typeof(String);
@@ -650,9 +651,10 @@ internal class SQLiteMetaData : FileDbMetaData
         }
     }
 
-    protected override String GetFieldType(IDataColumn field)
+    protected override String? GetFieldType(IDataColumn field)
     {
         var typeName = base.GetFieldType(field);
+        if (typeName.IsNullOrEmpty()) return typeName;
 
         // 自增字段必须是integer
         // 云飞扬2017-07-19 修改为也支持长整型转成integer
@@ -660,10 +662,11 @@ internal class SQLiteMetaData : FileDbMetaData
         //云飞扬 2017-07-05
         //因为SQLite的text长度比较小，这里设置为默认值
         if (typeName.Contains("text")) return "text";
+
         return typeName;
     }
 
-    protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
         // SQLite要求自增必须是主键
         if (field.Identity && !field.PrimaryKey)
@@ -965,6 +968,8 @@ internal class SQLiteMetaData : FileDbMetaData
             case DDLSchema.AddColumnDescription:
             case DDLSchema.DropColumnDescription:
                 return true;
+            case DDLSchema.AlterColumn:
+                return base.PerformSchema(sb, true, schema, values);
             default:
                 break;
         }

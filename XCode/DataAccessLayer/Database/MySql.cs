@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
@@ -14,6 +10,7 @@ namespace XCode.DataAccessLayer;
 internal class MySql : RemoteDb
 {
     #region 属性
+
     /// <summary>返回数据库类型。</summary>
     public override DatabaseType Type => DatabaseType.MySql;
 
@@ -24,8 +21,8 @@ internal class MySql : RemoteDb
         //_Factory = GetProviderFactory("NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory") ??
         //           GetProviderFactory("MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
         // MewLife.MySql 在开发过程中，数据驱动下载站点没有它的包，暂时不支持下载
-        return GetProviderFactory(null, "NewLife.MySql.MySqlClientFactory", true, true) ??
-            GetProviderFactory("MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
+        return GetProviderFactory("NewLife.MySql", null, "NewLife.MySql.MySqlClientFactory", true, true) ??
+            GetProviderFactory(null, "MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
     }
 
     private const String Server_Key = "Server";
@@ -33,7 +30,9 @@ internal class MySql : RemoteDb
 
     //const String AllowZeroDatetime = "Allow Zero Datetime";
     private const String MaxPoolSize = "MaxPoolSize";
+
     private const String Sslmode = "Sslmode";
+
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
         base.OnSetConnectionString(builder);
@@ -63,9 +62,11 @@ internal class MySql : RemoteDb
         var version = factory?.GetType().Assembly.GetName().Version;
         if (version == null || version.Major >= 8) builder.TryAdd("AllowPublicKeyRetrieval", "true");
     }
-    #endregion
+
+    #endregion 属性
 
     #region 方法
+
     /// <summary>创建数据库会话</summary>
     /// <returns></returns>
     protected override IDbSession OnCreateSession() => new MySqlSession(this);
@@ -82,9 +83,11 @@ internal class MySql : RemoteDb
 
         return false;
     }
-    #endregion
+
+    #endregion 方法
 
     #region 数据库特性
+
     protected override String ReservedWordsStr => "ACCESSIBLE,ADD,ALL,ALTER,ANALYZE,AND,AS,ASC,ASENSITIVE,BEFORE,BETWEEN,BIGINT,BINARY,BLOB,BOTH,BY,CALL,CASCADE,CASE,CHANGE,CHAR,CHARACTER,CHECK,COLLATE,COLUMN,CONDITION,CONNECTION,CONSTRAINT,CONTINUE,CONTRIBUTORS,CONVERT,CREATE,CROSS,CURRENT_DATE,CURRENT_TIME,CURRENT_TIMESTAMP,CURRENT_USER,CURSOR,DATABASE,DATABASES,DAY_HOUR,DAY_MICROSECOND,DAY_MINUTE,DAY_SECOND,DEC,DECIMAL,DECLARE,DEFAULT,DELAYED,DELETE,DESC,DESCRIBE,DETERMINISTIC,DISTINCT,DISTINCTROW,DIV,DOUBLE,DROP,DUAL,EACH,ELSE,ELSEIF,ENCLOSED,ESCAPED,EXISTS,EXIT,EXPLAIN,FALSE,FETCH,FLOAT,FLOAT4,FLOAT8,FOR,FORCE,FOREIGN,FROM,FULLTEXT,GRANT,GROUP,HAVING,HIGH_PRIORITY,HOUR_MICROSECOND,HOUR_MINUTE,HOUR_SECOND,IF,IGNORE,IN,INDEX,INFILE,INNER,INOUT,INSENSITIVE,INSERT,INT,INT1,INT2,INT3,INT4,INT8,INTEGER,INTERVAL,INTO,IS,ITERATE,JOIN,KEY,KEYS,KILL,LEADING,LEAVE,LEFT,LIKE,LIMIT,LINEAR,LINES,LOAD,LOCALTIME,LOCALTIMESTAMP,LOCK,LONG,LONGBLOB,LONGTEXT,LOOP,LOW_PRIORITY,MATCH,MEDIUMBLOB,MEDIUMINT,MEDIUMTEXT,MIDDLEINT,MINUTE_MICROSECOND,MINUTE_SECOND,MOD,MODIFIES,NATURAL,NOT,NO_WRITE_TO_BINLOG,NULL,NUMERIC,ON,OPTIMIZE,OPTION,OPTIONALLY,OR,ORDER,OUT,OUTER,OUTFILE,PRECISION,PRIMARY,PROCEDURE,PURGE,RANGE,READ,READS,READ_ONLY,READ_WRITE,REAL,REFERENCES,REGEXP,RELEASE,RENAME,REPEAT,REPLACE,REQUIRE,RESTRICT,RETURN,REVOKE,RIGHT,RLIKE,SCHEMA,SCHEMAS,SECOND_MICROSECOND,SELECT,SENSITIVE,SEPARATOR,SET,SHOW,SMALLINT,SPATIAL,SPECIFIC,SQL,SQLEXCEPTION,SQLSTATE,SQLWARNING,SQL_BIG_RESULT,SQL_CALC_FOUND_ROWS,SQL_SMALL_RESULT,SSL,STARTING,STRAIGHT_JOIN,TABLE,TERMINATED,THEN,TINYBLOB,TINYINT,TINYTEXT,TO,TRAILING,TRIGGER,TRUE,UNDO,UNION,UNIQUE,UNLOCK,UNSIGNED,UPDATE,UPGRADE,USAGE,USE,USING,UTC_DATE,UTC_TIME,UTC_TIMESTAMP,VALUES,VARBINARY,VARCHAR,VARCHARACTER,VARYING,WHEN,WHERE,WHILE,WITH,WRITE,X509,XOR,YEAR_MONTH,ZEROFILL," +
                 "LOG,User,Role,Admin,Rank,Member,Groups,Error,MaxValue,MinValue";
 
@@ -105,7 +108,7 @@ internal class MySql : RemoteDb
     /// <param name="field">字段</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    public override String FormatValue(IDataColumn field, Object value)
+    public override String FormatValue(IDataColumn field, Object? value)
     {
         var code = System.Type.GetTypeCode(field.DataType);
         if (code == TypeCode.String)
@@ -130,6 +133,7 @@ internal class MySql : RemoteDb
     }
 
     private static readonly Char[] _likeKeys = new[] { '\\', '\'', '\"', '%', '_' };
+
     /// <summary>格式化模糊搜索的字符串。处理转义字符</summary>
     /// <param name="column">字段</param>
     /// <param name="format">格式化字符串</param>
@@ -194,22 +198,30 @@ internal class MySql : RemoteDb
     /// <param name="right"></param>
     /// <returns></returns>
     public override String StringConcat(String left, String right) => $"concat({(!String.IsNullOrEmpty(left) ? left : "\'\'")},{(!String.IsNullOrEmpty(right) ? right : "\'\'")})";
-    #endregion
+
+    #endregion 数据库特性
 
     #region 跨版本兼容
+
     /// <summary>采用枚举来表示布尔型的数据表。由正向工程赋值</summary>
     public ICollection<String> EnumTables { get; } = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
-    #endregion
+
+    #endregion 跨版本兼容
 }
 
 /// <summary>MySql数据库</summary>
 internal class MySqlSession : RemoteDbSession
 {
     #region 构造函数
-    public MySqlSession(IDatabase db) : base(db) { }
-    #endregion
+
+    public MySqlSession(IDatabase db) : base(db)
+    {
+    }
+
+    #endregion 构造函数
 
     #region 快速查询单表记录数
+
     /// <summary>快速查询单表记录数，大数据量时，稍有偏差。</summary>
     /// <param name="tableName"></param>
     /// <returns></returns>
@@ -230,9 +242,11 @@ internal class MySqlSession : RemoteDbSession
         var sql = $"select table_rows from information_schema.tables where table_schema='{db}' and table_name='{tableName}'";
         return ExecuteScalarAsync<Int64>(sql);
     }
-    #endregion
+
+    #endregion 快速查询单表记录数
 
     #region 基本方法 查询/执行
+
     /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="builder">查询生成器</param>
     /// <returns>总记录数</returns>
@@ -241,7 +255,7 @@ internal class MySqlSession : RemoteDbSession
         if (Transaction != null)
         {
             builder = builder.Clone();
-            builder.Limit = " For Update " + builder.Limit;
+            builder.Limit += " For Update ";
         }
         var sql = builder.ToString();
 
@@ -264,16 +278,18 @@ internal class MySqlSession : RemoteDbSession
         sql += ";Select LAST_INSERT_ID()";
         return base.InsertAndGetIdentityAsync(sql, type, ps);
     }
-    #endregion
+
+    #endregion 基本方法 查询/执行
 
     #region 批量操作
+
     /*
-    insert into stat (siteid,statdate,`count`,cost,createtime,updatetime) values 
+    insert into stat (siteid,statdate,`count`,cost,createtime,updatetime) values
     (1,'2018-08-11 09:34:00',1,123,now(),now()),
     (2,'2018-08-11 09:34:00',1,456,now(),now()),
     (3,'2018-08-11 09:34:00',1,789,now(),now()),
     (2,'2018-08-11 09:34:00',1,456,now(),now())
-    on duplicate key update 
+    on duplicate key update
     `count`=`count`+values(`count`),cost=cost+values(cost),
     updatetime=values(updatetime);
      */
@@ -320,7 +336,8 @@ internal class MySqlSession : RemoteDbSession
         var sql = GetBatchSql("Insert Into", table, columns, updateColumns, addColumns, list);
         return Execute(sql);
     }
-    #endregion
+
+    #endregion 批量操作
 }
 
 /// <summary>MySql元数据</summary>
@@ -329,19 +346,20 @@ internal class MySqlMetaData : RemoteDbMetaData
     public MySqlMetaData() => Types = _DataTypes;
 
     #region 数据类型
-    protected override List<KeyValuePair<Type, Type>> FieldTypeMaps
-    {
-        get
-        {
-            if (_FieldTypeMaps == null)
-            {
-                var list = base.FieldTypeMaps;
-                if (!list.Any(e => e.Key == typeof(Byte) && e.Value == typeof(Boolean)))
-                    list.Add(new KeyValuePair<Type, Type>(typeof(Byte), typeof(Boolean)));
-            }
-            return base.FieldTypeMaps;
-        }
-    }
+
+    //protected override List<KeyValuePair<Type, Type>> FieldTypeMaps
+    //{
+    //    get
+    //    {
+    //        if (_FieldTypeMaps == null)
+    //        {
+    //            var list = base.FieldTypeMaps;
+    //            if (!list.Any(e => e.Key == typeof(Byte) && e.Value == typeof(Boolean)))
+    //                list.Add(new(typeof(Byte), typeof(Boolean)));
+    //        }
+    //        return base.FieldTypeMaps;
+    //    }
+    //}
 
     /// <summary>数据类型映射</summary>
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
@@ -364,10 +382,12 @@ internal class MySqlMetaData : RemoteDbMetaData
         { typeof(String), new String[] { "VARCHAR({0})", "LONGTEXT", "TEXT", "CHAR({0})", "NCHAR({0})", "NVARCHAR({0})", "SET", "ENUM", "TINYTEXT", "TEXT", "MEDIUMTEXT" } },
         { typeof(Boolean), new String[] { "TINYINT" } },
     };
-    #endregion
+
+    #endregion 数据类型
 
     #region 架构
-    protected override List<IDataTable> OnGetTables(String[] names)
+
+    protected override List<IDataTable> OnGetTables(String[]? names)
     {
         var ss = Database.CreateSession();
         var db = Database.DatabaseName;
@@ -379,7 +399,7 @@ internal class MySqlMetaData : RemoteDbMetaData
         {
             var sql = $"SHOW TABLE STATUS FROM `{db}`";
             var dt = ss.Query(sql, null);
-            if (dt.Rows.Count == 0) return null;
+            if (dt.Rows == null || dt.Rows.Count == 0) return list;
 
             var hs = new HashSet<String>(names ?? new String[0], StringComparer.OrdinalIgnoreCase);
 
@@ -395,6 +415,7 @@ internal class MySqlMetaData : RemoteDbMetaData
                 table.DbType = Database.Type;
 
                 #region 字段
+
                 sql = $"SHOW FULL COLUMNS FROM `{db}`.`{name}`";
                 var dcs = ss.Query(sql, null);
                 foreach (var dc in dcs)
@@ -403,7 +424,6 @@ internal class MySqlMetaData : RemoteDbMetaData
 
                     field.ColumnName = dc["Field"] + "";
                     field.RawType = dc["Type"] + "";
-                    field.DataType = GetDataType(field.RawType);
                     field.Description = dc["Comment"] + "";
 
                     if (dc["Extra"] + "" == "auto_increment") field.Identity = true;
@@ -411,6 +431,7 @@ internal class MySqlMetaData : RemoteDbMetaData
                     if (dc["Null"] + "" == "YES") field.Nullable = true;
 
                     field.Length = field.RawType.Substring("(", ")").ToInt();
+                    field.DataType = GetDataType(field);
 
                     if (field.DataType == null)
                     {
@@ -424,27 +445,36 @@ internal class MySqlMetaData : RemoteDbMetaData
 
                     table.Columns.Add(field);
                 }
-                #endregion
+
+                #endregion 字段
 
                 #region 索引
+
                 sql = $"SHOW INDEX FROM `{db}`.`{name}`";
                 var dis = ss.Query(sql, null);
                 foreach (var dr2 in dis)
                 {
                     var dname = dr2["Key_name"] + "";
                     var di = table.Indexes.FirstOrDefault(e => e.Name == dname) ?? table.CreateIndex();
-                    di.Name = dname;
+                    //di.Name = dname;
                     di.Unique = dr2.Get<Int32>("Non_unique") == 0;
 
                     var cname = dr2.Get<String>("Column_name");
+                    if (cname.IsNullOrEmpty()) continue;
+
                     var cs = new List<String>();
                     if (di.Columns != null && di.Columns.Length > 0) cs.AddRange(di.Columns);
                     cs.Add(cname);
                     di.Columns = cs.ToArray();
 
-                    table.Indexes.Add(di);
+                    if (di.Name == null)
+                    {
+                        di.Name = dname;
+                        table.Indexes.Add(di);
+                    }
                 }
-                #endregion
+
+                #endregion 索引
 
                 // 修正关系数据
                 table.Fix();
@@ -458,7 +488,7 @@ internal class MySqlMetaData : RemoteDbMetaData
         }
 
         // 找到使用枚举作为布尔型的旧表
-        var es = (Database as MySql).EnumTables;
+        var es = (Database as MySql)!.EnumTables;
         foreach (var table in list)
         {
             if (!es.Contains(table.TableName))
@@ -487,7 +517,7 @@ internal class MySqlMetaData : RemoteDbMetaData
 
         var sql = $"SHOW TABLE STATUS FROM `{Database.DatabaseName}`";
         var dt = base.Database.CreateSession().Query(sql, null);
-        if (dt.Rows.Count == 0) return list;
+        if (dt.Rows == null || dt.Rows.Count == 0) return list;
 
         // 所有表
         foreach (var dr in dt)
@@ -499,7 +529,24 @@ internal class MySqlMetaData : RemoteDbMetaData
         return list;
     }
 
-    protected override String GetFieldType(IDataColumn field)
+    protected override Type? GetDataType(IDataColumn field)
+    {
+        // tinyint根据不同宽度判断所属类型
+        if (!field.RawType.IsNullOrEmpty() && field.RawType.StartsWithIgnoreCase("tinyint("))
+        {
+            return field.Length switch
+            {
+                1 => typeof(Boolean),
+                <= 2 => typeof(Byte),
+                <= 4 => typeof(Int16),
+                _ => typeof(Int32)
+            };
+        }
+
+        return base.GetDataType(field);
+    }
+
+    protected override String? GetFieldType(IDataColumn field)
     {
         //field.Length = field.Length > 255 ? 255 : field.Length;
         if (field.DataType == null && field.RawType == "datetimeoffset")
@@ -525,9 +572,9 @@ internal class MySqlMetaData : RemoteDbMetaData
         return sql;
     }
 
-    protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
-        String str = null;
+        String? str = null;
         if (!field.Nullable) str = " NOT NULL";
 
         // 默认值
@@ -540,9 +587,11 @@ internal class MySqlMetaData : RemoteDbMetaData
 
         return str;
     }
-    #endregion
+
+    #endregion 架构
 
     #region 反向工程
+
     protected override Boolean DatabaseExist(String databaseName)
     {
         var dt = GetSchema(_.Databases, new String[] { databaseName });
@@ -601,5 +650,6 @@ internal class MySqlMetaData : RemoteDbMetaData
     public override String AddColumnDescriptionSQL(IDataColumn field) =>
         // 返回String.Empty表示已经在别的SQL中处理
         String.Empty;
-    #endregion
+
+    #endregion 反向工程
 }

@@ -60,7 +60,7 @@ public partial class Entity<TEntity>
         public DefaultEntityFactory()
         {
             //MasterTime = GetMasterTime();
-            Persistence = new EntityPersistence { Factory = this };
+            Persistence = new EntityPersistence(this);
             Accessor = new DataRowEntityAccessor();
         }
         #endregion
@@ -114,7 +114,7 @@ public partial class Entity<TEntity>
         /// <param name="startRowIndex">开始行，0表示第一行</param>
         /// <param name="maximumRows">最大返回行数，0表示所有行</param>
         /// <returns>实体数组</returns>
-        public virtual IList<IEntity> FindAll(String where, String order, String selects, Int64 startRowIndex, Int64 maximumRows) => Entity<TEntity>.FindAll(where, order, selects, startRowIndex, maximumRows).Cast<IEntity>().ToList();
+        public virtual IList<IEntity> FindAll(String? where, String? order, String? selects, Int64 startRowIndex, Int64 maximumRows) => Entity<TEntity>.FindAll(where, order, selects, startRowIndex, maximumRows).Cast<IEntity>().ToList();
 
         /// <summary>查询并返回实体对象集合。
         /// 表名以及所有字段名，请使用类名以及字段对应的属性名，方法内转换为表名和列名
@@ -125,7 +125,7 @@ public partial class Entity<TEntity>
         /// <param name="startRowIndex">开始行，0表示第一行</param>
         /// <param name="maximumRows">最大返回行数，0表示所有行</param>
         /// <returns>实体数组</returns>
-        public virtual IList<IEntity> FindAll(Expression where, String order, String selects, Int64 startRowIndex, Int64 maximumRows) => Entity<TEntity>.FindAll(where, order, selects, startRowIndex, maximumRows).Cast<IEntity>().ToList();
+        public virtual IList<IEntity> FindAll(Expression where, String? order, String? selects, Int64 startRowIndex, Int64 maximumRows) => Entity<TEntity>.FindAll(where, order, selects, startRowIndex, maximumRows).Cast<IEntity>().ToList();
         #endregion
 
         #region 缓存查询
@@ -195,16 +195,20 @@ public partial class Entity<TEntity>
         /// <param name="find">查找函数</param>
         /// <param name="create">创建对象</param>
         /// <returns></returns>
-        public virtual IEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, IEntity> find, Func<TKey, IEntity> create) => Entity<TEntity>.GetOrAdd(key, (k, b) => find?.Invoke(k, b) as TEntity, k => create?.Invoke(k) as TEntity);
+        public virtual IEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, IEntity?> find, Func<TKey, IEntity> create) => Entity<TEntity>.GetOrAdd(key, (k, b) => find?.Invoke(k, b) as TEntity, k => create?.Invoke(k) as TEntity);
         #endregion
 
         #region 一些设置
         /// <summary>是否自增获取自增返回值。默认启用</summary>
         public Boolean AutoIdentity { get; set; } = true;
 
+#if NET45
         private readonly ThreadLocal<Boolean> _AllowInsertIdentity = new();
+#else
+        private readonly AsyncLocal<Boolean> _AllowInsertIdentity = new();
+#endif
         /// <summary>是否允许向自增列插入数据。为免冲突，仅本线程有效</summary>
-        public virtual Boolean AllowInsertIdentity { get => _AllowInsertIdentity.IsValueCreated && _AllowInsertIdentity.Value; set => _AllowInsertIdentity.Value = value; }
+        public virtual Boolean AllowInsertIdentity { get => _AllowInsertIdentity.Value; set => _AllowInsertIdentity.Value = value; }
 
         /// <summary>自动设置Guid的字段。对实体类有效，可在实体类类型构造函数里面设置</summary>
         public virtual FieldItem AutoSetGuidField { get; set; }
@@ -344,8 +348,8 @@ public partial class Entity<TEntity>
             }
         }
 
-        /// <summary>按照主键排序。默认查询没有指定排序字段时，是否增加主键排序，整型降序其它升序，默认true</summary>
-        public Boolean OrderByKey { get; set; } = true;
+        /// <summary>按照主键排序。默认查询没有指定排序字段时，是否增加主键排序，整型降序其它升序，默认false</summary>
+        public Boolean OrderByKey { get; set; }
 
         ///// <summary>截断超长字符串。默认false</summary>
         //public Boolean TrimExtraLongString { get; set; }

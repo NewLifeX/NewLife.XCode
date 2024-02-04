@@ -98,7 +98,7 @@ public class EntityTransaction : DisposeBase
         Session = session;
         if (session != null)
         {
-            span = DAL.GlobalTracer?.NewSpan($"db:{session.Database.ConnName}:Transaction", level);
+            span = DAL.GlobalTracer?.NewSpan($"db:{session.Database.ConnName}:Transaction", level + "");
 
             session.BeginTransaction(level);
             hasStart = true;

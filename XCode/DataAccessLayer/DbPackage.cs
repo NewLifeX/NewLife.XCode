@@ -41,15 +41,15 @@ public class DbPackage
     public SaveModes Mode { get; set; } = SaveModes.Insert;
 
     /// <summary>写文件Actor的创建回调，支持外部自定义</summary>
-    public Func<WriteFileActor> WriteFileCallback { get; set; }
+    public Func<WriteFileActor>? WriteFileCallback { get; set; }
 
     /// <summary>写数据库Actor的创建回调，支持外部自定义</summary>
-    public Func<WriteDbActor> WriteDbCallback { get; set; }
+    public Func<WriteDbActor>? WriteDbCallback { get; set; }
 
     /// <summary>
     /// 性能追踪器
     /// </summary>
-    public ITracer Tracer { get; set; } = DAL.GlobalTracer;
+    public ITracer? Tracer { get; set; } = DAL.GlobalTracer;
     #endregion
 
     #region 备份
@@ -195,7 +195,7 @@ public class DbPackage
     /// <param name="table">数据表</param>
     /// <param name="file">文件。.gz后缀时采用压缩</param>
     /// <returns></returns>
-    public Int32 Backup(IDataTable table, String file = null)
+    public Int32 Backup(IDataTable table, String? file = null)
     {
         if (file.IsNullOrEmpty()) file = table + ".table";
 
@@ -343,7 +343,9 @@ public class DbPackage
             WriteLog("类型[{0}]：{1}", ts.Length, ts.Join(",", e => e?.Name));
 
             var row = 0;
-            var pageSize = BatchSize > 0 ? BatchSize : Dal.Db.BatchSize;
+            var pageSize = BatchSize;
+            if (pageSize <= 0) pageSize = Dal.Db.BatchSize;
+            if (pageSize <= 0) pageSize = XCodeSetting.Current.BatchSize;
             while (true)
             {
                 //修复总行数是pageSize的倍数无法退出循环的情况
@@ -418,7 +420,7 @@ public class DbPackage
     /// <param name="tables">数据表。为空时从压缩包读取xml模型文件</param>
     /// <param name="setSchema">是否设置数据表模型，自动建表</param>
     /// <returns></returns>
-    public IDataTable[] RestoreAll(String file, IDataTable[] tables = null, Boolean setSchema = true)
+    public IDataTable[]? RestoreAll(String file, IDataTable[]? tables = null, Boolean setSchema = true)
     {
         if (file.IsNullOrEmpty()) throw new ArgumentNullException(nameof(file));
         //if (tables == null) throw new ArgumentNullException(nameof(tables));
@@ -798,13 +800,13 @@ public class DbPackage
     /// <summary>
     /// 日志
     /// </summary>
-    public ILog Log { get; set; }
+    public ILog Log { get; set; } = Logger.Null;
 
     /// <summary>
     /// 写日志
     /// </summary>
     /// <param name="format"></param>
     /// <param name="args"></param>
-    public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
+    public void WriteLog(String format, params Object?[] args) => Log?.Info(format, args);
     #endregion
 }

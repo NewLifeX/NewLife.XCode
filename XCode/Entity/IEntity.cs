@@ -92,7 +92,7 @@ public interface IEntity : IModel
     /// <param name="name">字段名</param>
     /// <param name="value">值</param>
     /// <returns>返回是否成功设置了数据</returns>
-    Boolean SetItem(String name, Object value);
+    Boolean SetItem(String name, Object? value);
 
     /// <summary>克隆实体。创建当前对象的克隆对象，仅拷贝基本字段</summary>
     /// <param name="setDirty">是否设置脏数据</param>

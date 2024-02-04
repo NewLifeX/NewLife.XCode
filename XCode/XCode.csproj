@@ -6,8 +6,8 @@
     <AssemblyTitle>NewLife数据中间件</AssemblyTitle>
     <Description>数据中间件，支持MySQL、SQLite、SqlServer、Oracle、Postgresql、TDengine、达梦，重点在缓存、性能、分表、自动建表。</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2023 NewLife</Copyright>
-    <VersionPrefix>11.9</VersionPrefix>
+    <Copyright>©2002-2024 NewLife</Copyright>
+    <VersionPrefix>11.10</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -16,7 +16,7 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!--<Nullable>enable</Nullable>-->
+    <Nullable>enable</Nullable>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
     <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035</NoWarn>
@@ -29,7 +29,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>更新行政区划数据；角色权限从8位提升到32位；MySql支持压缩和归档；优化代码生成器</PackageReleaseNotes>
+    <PackageReleaseNotes>正反向工程的字段类型匹配更宽松；新增DataMethod重构实体过滤器；实体查询默认不再自动增加主键降序</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -44,7 +44,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.5.2023.801" />
+    <PackageReference Include="NewLife.Core" Version="10.7.2024.202" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />
@@ -79,6 +79,7 @@
     <Compile Remove="DataAccessLayer\MSPageSplit.cs" />
     <Compile Remove="Membership\IPasswordProvider.cs" />
     <Compile Remove="Membership\MenuProvider.cs" />
+    <Compile Remove="Membership\UserTimeEntity.cs" />
     <Compile Remove="Membership\用户在线.Biz.cs" />
     <Compile Remove="Membership\用户在线.cs" />
     <Compile Remove="Membership\用户统计.Biz.cs" />
@@ -95,16 +96,11 @@
   <ItemGroup>
     <None Remove="Build.tt" />
     <None Remove="install.ps1" />
-    <None Remove="Model.xml" />
     <None Remove="Readme.MD" />
     <None Remove="UpdateInfo.txt" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
-    <Content Include="Model.xml">
-      <Pack>true</Pack>
-      <PackagePath>content\Entity\</PackagePath>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Readme.MD">

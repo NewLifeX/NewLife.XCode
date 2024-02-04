@@ -97,18 +97,18 @@ public class EntityBuilder : ClassBuilder
         }
 
         // 更新xsd
-        atts["xmlns"] = "https://newlifex.com/Model2023.xsd";
-        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model2023.xsd";
+        atts["xmlns"] = "https://newlifex.com/Model202309.xsd";
+        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202309.xsd";
 
         // 版本和教程
-        var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
+        //var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
         //atts["Version"] = asm.FileVersion + "";
-        //atts["Document"] = "https://newlifex.com/xcode/model";
-        if (option is EntityBuilderOption opt2)
-        {
-            opt2.Version = asm.FileVersion + "";
-            opt2.Document = "https://newlifex.com/xcode/model";
-        }
+        atts["Document"] = "https://newlifex.com/xcode/model";
+        //if (option is EntityBuilderOption opt2)
+        //{
+        //    opt2.Version = asm.FileVersion + "";
+        //    opt2.Document = "https://newlifex.com/xcode/model";
+        //}
 
         // 保存模型文件
         var xmlContent = File.ReadAllText(xmlFile);
@@ -133,7 +133,7 @@ public class EntityBuilder : ClassBuilder
             option = new EntityBuilderOption();
         else
             option = option.Clone() as EntityBuilderOption;
-        option.Partial = true;
+        //option.Partial = true;
 
         var output = option.Output;
         if (output.IsNullOrEmpty()) output = ".";
@@ -214,14 +214,13 @@ public class EntityBuilder : ClassBuilder
     #endregion 方法
 
     #region 基础
-
-    /// <summary>执行生成</summary>
-    protected override void OnExecuting()
+    /// <summary>生成前的准备工作。计算类型以及命名空间等</summary>
+    protected override void Prepare()
     {
         // 增加常用命名空间
         AddNameSpace();
 
-        base.OnExecuting();
+        base.Prepare();
     }
 
     /// <summary>增加常用命名空间</summary>
@@ -235,11 +234,12 @@ public class EntityBuilder : ClassBuilder
         us.Add("XCode.Cache");
         us.Add("XCode.Configuration");
         us.Add("XCode.DataAccessLayer");
-
+        //us.Add("XCode.Common");
         if (Business) us.Add("XCode.Shards");
 
-        if (Business && !Option.Pure)
+        if (Business)
         {
+            //us.Add("System.ComponentModel.DataAnnotations");//属性验证
             us.Add("System.IO");
             us.Add("System.Linq");
             us.Add("System.Reflection");
@@ -264,14 +264,14 @@ public class EntityBuilder : ClassBuilder
 
     /// <summary>获取基类</summary>
     /// <returns></returns>
-    protected override String GetBaseClass()
+    protected override String? GetBaseClass()
     {
         var baseClass = Option.BaseClass;
-        if (Option.HasIModel)
-        {
-            if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
-            baseClass += "IModel";
-        }
+        //if (Option.HasIModel)
+        //{
+        //    if (!baseClass.IsNullOrEmpty()) baseClass += ", ";
+        //    baseClass += "IModel";
+        //}
 
         var bs = baseClass?.Split(',').Select(e => e.Trim()).ToList() ?? new List<String>();
 
@@ -308,7 +308,7 @@ public class EntityBuilder : ClassBuilder
     /// <param name="ext"></param>
     /// <param name="overwrite"></param>
     /// <param name="chineseFileName"></param>
-    public override String Save(String ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
+    public override String Save(String? ext = null, Boolean overwrite = true, Boolean chineseFileName = true)
     {
         if (ext.IsNullOrEmpty() && Business)
         {
@@ -407,7 +407,7 @@ public class EntityBuilder : ClassBuilder
     {
         public Int32 Start { get; set; }
         public Int32 Count { get; set; }
-        public IList<MemberSection> Sections { get; set; }
+        public IList<MemberSection>? Sections { get; set; }
     }
 
     MyRange Find(IList<String> lines, String start, String end)
@@ -491,6 +491,16 @@ public class EntityBuilder : ClassBuilder
         {
             base.BuildItems();
 
+            // 生成拷贝函数。需要有基类
+            //var bs = Option.BaseClass.Split(",").Select(e => e.Trim()).ToArray();
+            //var model = bs.FirstOrDefault(e => e[0] == 'I' && e.Contains("{name}"));
+            var model = Option.ModelNameForCopy;
+            if (!model.IsNullOrEmpty())
+            {
+                WriteLine();
+                BuildCopy(model.Replace("{name}", Table.Name));
+            }
+
             WriteLine();
             BuildIndexItems();
 
@@ -527,7 +537,18 @@ public class EntityBuilder : ClassBuilder
             return;
         }
 
-        base.BuildAttribute();
+        // 注释
+        var des = Table.Description;
+        if (!Option.DisplayNameTemplate.IsNullOrEmpty())
+        {
+            des = Table.Description.TrimStart(Table.DisplayName, "。");
+            des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
+        }
+        WriteLine("/// <summary>{0}</summary>", des);
+        WriteLine("[Serializable]");
+        WriteLine("[DataObject]");
+
+        if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
 
         var dt = Table;
         foreach (var item in dt.Indexes)
@@ -547,9 +568,18 @@ public class EntityBuilder : ClassBuilder
 
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+        if (type == "String" && Option.Nullable && column.Nullable) type = "String?";
 
         // 字段
-        WriteLine("private {0} _{1};", type, dc.Name);
+        if (type == "String" && Option.Nullable)
+        {
+            if (column.Nullable)
+                WriteLine("private {0} _{1};", type, dc.Name);
+            else
+                WriteLine("private {0} _{1} = null!;", type, dc.Name);
+        }
+        else
+            WriteLine("private {0} _{1};", type, dc.Name);
 
         // 注释
         var des = dc.Description;
@@ -570,7 +600,7 @@ public class EntityBuilder : ClassBuilder
         if (dc.Properties.TryGetValue("Category", out att) && !att.IsNullOrEmpty())
             WriteLine("[Category(\"{0}\")]", att);
 
-        if (!Option.Pure)
+        //if (!Option.Pure)
         {
             var dis = dc.DisplayName;
             if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
@@ -590,25 +620,29 @@ public class EntityBuilder : ClassBuilder
 
         if (!dc.DefaultValue.IsNullOrEmpty()) sb.AppendFormat(", DefaultValue = \"{0}\"", dc.DefaultValue);
 
+        ////添加自定义控件默认值
+        //if (!dc.ItemDefaultValue.IsNullOrEmpty()) sb.AppendFormat(", ItemDefaultValue = \"{0}\"", dc.ItemDefaultValue);
+
         if (dc.Master) sb.Append(", Master = true");
 
         sb.Append(")]");
 
         WriteLine(sb.Put(true));
 
-        if (Option.Interface)
-            WriteLine("{0} {1} {{ get; set; }}", type, dc.Name);
-        else
-            WriteLine("public {0} {1} {{ get => _{1}; set {{ if (OnPropertyChanging(\"{1}\", value)) {{ _{1} = value; OnPropertyChanged(\"{1}\"); }} }} }}", type, dc.Name);
+        WriteLine("public {0} {1} {{ get => _{1}; set {{ if (OnPropertyChanging(\"{1}\", value)) {{ _{1} = value; OnPropertyChanged(\"{1}\"); }} }} }}", type, dc.Name);
     }
 
-    private void BuildIndexItems()
+    /// <summary>生成索引访问器</summary>
+    protected override void BuildIndexItems()
     {
         WriteLine("#region 获取/设置 字段值");
         WriteLine("/// <summary>获取/设置 字段值</summary>");
         WriteLine("/// <param name=\"name\">字段名</param>");
         WriteLine("/// <returns></returns>");
-        WriteLine("public override Object this[String name]");
+        if (Option.Nullable)
+            WriteLine("public override Object? this[String name]");
+        else
+            WriteLine("public override Object this[String name]");
         WriteLine("{");
 
         // get
@@ -771,13 +805,13 @@ public class EntityBuilder : ClassBuilder
             var mapTable = AllTables.FirstOrDefault(e => className.EqualIgnoreCase(e.Name, e.TableName));
             //if (mapTable == null) continue;
 
-            IDataColumn mapId = null;
+            IDataColumn? mapId = null;
             if (mapTable != null)
                 mapId = ss.Length > 1 ? mapTable.GetColumn(ss[1]) : mapTable.PrimaryKeys.FirstOrDefault();
             //if (mapId == null) continue;
             var mapIdName = mapId?.Name ?? ss[1];
 
-            IDataColumn mapName = null;
+            IDataColumn? mapName = null;
             if (mapTable != null)
             {
                 mapName = ss.Length > 2 && ss[2] != "$" ? mapTable.GetColumn(ss[2]) : null;
@@ -800,7 +834,10 @@ public class EntityBuilder : ClassBuilder
 
             WriteLine("/// <summary>{0}</summary>", dis);
             WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
-            WriteLine("public {0} {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapIdName, column.Name);
+            if (Option.Nullable)
+                WriteLine("public {0}? {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapIdName, column.Name);
+            else
+                WriteLine("public {0} {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapIdName, column.Name);
 
             var myName = ss.Length > 3 ? ss[3] : null;
             if (myName.IsNullOrEmpty())
@@ -812,19 +849,24 @@ public class EntityBuilder : ClassBuilder
             // 扩展属性有可能恰巧跟已有字段同名
             if (!myName.IsNullOrEmpty() && !Table.Columns.Any(e => e.Name.EqualIgnoreCase(myName)))
             {
+                var type = Option.Nullable ? "String?" : "String";
+
                 WriteLine();
                 WriteLine("/// <summary>{0}</summary>", dis);
                 WriteLine("[Map(nameof({0}), typeof({1}), \"{2}\")]", column.Name, fullName, mapIdName);
                 if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
                     WriteLine("[Category(\"{0}\")]", att);
                 if (ss.Length > 2 && ss[2] == "$")
-                    WriteLine("public String {0} => {1}?.ToString();", myName, name);
-                else if (ss.Length > 2 && mapName.DataType == typeof(String))
-                    WriteLine("public String {0} => {1}?.{2};", myName, name, ss[2]);
-                else if (mapName.DataType == typeof(String))
-                    WriteLine("public String {0} => {1}?.{2};", myName, name, mapName.Name);
-                else
-                    WriteLine("public {3} {0} => {1} != null ? {1}.{2} : 0;", myName, name, mapName.Name, mapName.DataType.Name);
+                    WriteLine("public {2} {0} => {1}?.ToString();", myName, name, type);
+                else if (mapName != null)
+                {
+                    if (ss.Length > 2 && mapName.DataType == typeof(String))
+                        WriteLine("public {3} {0} => {1}?.{2};", myName, name, ss[2], type);
+                    else if (mapName.DataType == typeof(String))
+                        WriteLine("public {3} {0} => {1}?.{2};", myName, name, mapName.Name, type);
+                    else
+                        WriteLine("public {3} {0} => {1} != null ? {1}.{2} : 0;", myName, name, mapName.Name, mapName.DataType.Name);
+                }
             }
 
             WriteLine();
@@ -858,6 +900,14 @@ public class EntityBuilder : ClassBuilder
         BuildOverride();
 
         WriteLine("#endregion");
+
+        if (Table.Properties["NeedHistory"].ToBoolean())
+        {
+            WriteLine();
+            WriteLine("#region  添加历史记录");
+            BuildHistory();
+            WriteLine("#endregion");
+        }
     }
 
     /// <summary>生成静态构造函数</summary>
@@ -898,68 +948,107 @@ public class EntityBuilder : ClassBuilder
             WriteLine();
             WriteLine("// 过滤器 UserModule、TimeModule、IPModule");
             if (ns.Contains("CreateUserID") || ns.Contains("CreateUser") || ns.Contains("UpdateUserID") || ns.Contains("UpdateUser"))
-                WriteLine("Meta.Modules.Add<UserModule>();");
+                WriteLine("Meta.Modules.Add(new UserModule { AllowEmpty = false });");
             if (ns.Contains("CreateTime") || ns.Contains("UpdateTime"))
                 WriteLine("Meta.Modules.Add<TimeModule>();");
             if (ns.Contains("CreateIP") || ns.Contains("UpdateIP"))
-                WriteLine("Meta.Modules.Add<IPModule>();");
+                WriteLine("Meta.Modules.Add(new IPModule { AllowEmpty = false });");
             if (ns.Contains("TraceId"))
                 WriteLine("Meta.Modules.Add<TraceModule>();");
+            if (ns.Contains("TenantId"))
+                WriteLine("Meta.Modules.Add<TenantModule>();");
 
-            // 唯一索引不是主键，又刚好是Master，使用单对象缓存从键
-            var di = Table.Indexes.FirstOrDefault(e => e.Unique && e.Columns.Length == 1 && Table.GetColumn(e.Columns[0]).Master);
-            if (di != null)
+            if (!Table.InsertOnly && !Table.Name.EndsWith("Log") && !Table.Name.EndsWith("History") && !Table.Name.EndsWith("Record"))
             {
-                dc = Table.GetColumn(di.Columns[0]);
+                // 实体缓存
+                {
+                    WriteLine();
+                    WriteLine("// 实体缓存");
+                    WriteLine("// var ec = Meta.Cache;");
+                    WriteLine("// ec.Expire = 60;");
+                }
 
-                WriteLine();
-                WriteLine("// 单对象缓存");
-                WriteLine("var sc = Meta.SingleCache;");
-                WriteLine("sc.FindSlaveKeyMethod = k => Find(_.{0} == k);", dc.Name);
-                WriteLine("sc.GetSlaveKeyMethod = e => e.{0};", dc.Name);
+                // 唯一索引不是主键，又刚好是Master，使用单对象缓存从键
+                var di = Table.Indexes.FirstOrDefault(e => e.Unique && e.Columns.Length == 1 && (Table.GetColumn(e.Columns[0])?.Master ?? false));
+                if (di != null)
+                {
+                    dc = Table.GetColumn(di.Columns[0]);
+                    if (dc != null)
+                    {
+                        WriteLine();
+                        WriteLine("// 单对象缓存");
+                        WriteLine("var sc = Meta.SingleCache;");
+                        WriteLine("// sc.Expire = 60;");
+                        WriteLine("sc.FindSlaveKeyMethod = k => Find(_.{0} == k);", dc.Name);
+                        WriteLine("sc.GetSlaveKeyMethod = e => e.{0};", dc.Name);
+                    }
+                }
             }
         }
         WriteLine("}");
     }
 
+    static String[] _validExcludes = new[] { "CreateUser", "CreateUserIP", "UpdateUser", "UpdateUserIP", "TraceId" };
     /// <summary>数据验证</summary>
     protected virtual void BuildValid()
     {
-        WriteLine("/// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>");
-        WriteLine("/// <param name=\"isNew\">是否插入</param>");
-        WriteLine("public override void Valid(Boolean isNew)");
+        WriteLine("/// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>");
+        WriteLine("/// <param name=\"method\">添删改方法</param>");
+        WriteLine("public override Boolean Valid(DataMethod method)");
         WriteLine("{");
         {
+            WriteLine("//if (method == DataMethod.Delete) return true;");
             WriteLine("// 如果没有脏数据，则不需要进行任何处理");
-            WriteLine("if (!HasDirty) return;");
+            WriteLine("if (!HasDirty) return true;");
 
-            // 非空判断
-            var cs = Table.Columns.Where(e => !e.Nullable && e.DataType == typeof(String)).ToArray();
+            // 非空判断，字符串且没有默认值
+            var cs = Table.Columns.Where(e => !e.Nullable && e.DataType == typeof(String) && e.DefaultValue.IsNullOrEmpty()).ToArray();
+            // 剔除CreateUser/UpdateUser等特殊字段
+            cs = cs.Where(e => !e.Name.EqualIgnoreCase(_validExcludes)).ToArray();
             if (cs.Length > 0)
             {
+                // 有索引的字段判断Empty，不允许空字符串（不利于索引），其它判断null
+                var ds = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+                foreach (var di in Table.Indexes)
+                {
+                    foreach (var item in Table.GetColumns(di.Columns))
+                    {
+                        if (!ds.Contains(item.Name)) ds.Add(item.Name);
+                    }
+                }
+                // 主要字段也判断
+                foreach (var item in Table.Columns)
+                {
+                    if (item.Master && !ds.Contains(item.Name)) ds.Add(item.Name);
+                }
+
                 WriteLine();
                 WriteLine("// 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框");
                 foreach (var item in cs)
                 {
-                    WriteLine("if ({0}.IsNullOrEmpty()) throw new ArgumentNullException({1}, \"{2}不能为空！\");", item.Name, NameOf(item.Name), item.DisplayName ?? item.Name);
+                    if (ds.Contains(item.Name))
+                        WriteLine("if ({0}.IsNullOrEmpty()) throw new ArgumentNullException({1}, \"{2}不能为空！\");", item.Name, NameOf(item.Name), item.DisplayName ?? item.Name);
+                    else
+                        WriteLine("if ({0} == null) throw new ArgumentNullException({1}, \"{2}不能为空！\");", item.Name, NameOf(item.Name), item.DisplayName ?? item.Name);
                 }
             }
 
             WriteLine();
             WriteLine("// 建议先调用基类方法，基类方法会做一些统一处理");
-            WriteLine("base.Valid(isNew);");
+            WriteLine("if (!base.Valid(method)) return false;");
 
             WriteLine();
             WriteLine("// 在新插入数据或者修改了指定字段时进行修正");
 
-            // 货币类型保留小数位数
-            cs = Table.Columns.Where(e => e.DataType == typeof(Decimal)).ToArray();
+            // 保留小数位数
+            cs = Table.Columns.Where(e => e.DataType == typeof(Double)).ToArray();
             if (cs.Length > 0)
             {
-                WriteLine("// 货币保留6位小数");
+                WriteLine();
+                WriteLine("// 保留2位小数");
                 foreach (var item in cs)
                 {
-                    WriteLine("{0} = Math.Round({0}, 6);", item.Name);
+                    WriteLine("//{0} = Math.Round({0}, 2);", item.Name);
                 }
             }
 
@@ -967,6 +1056,7 @@ public class EntityBuilder : ClassBuilder
             cs = Table.Columns.Where(e => e.DataType == typeof(Int32) && e.Name.EqualIgnoreCase("CreateUserID", "UpdateUserID")).ToArray();
             if (cs.Length > 0)
             {
+                WriteLine();
                 WriteLine("// 处理当前已登录用户信息，可以由UserModule过滤器代劳");
                 WriteLine("/*var user = ManageProvider.User;");
                 WriteLine("if (user != null)");
@@ -974,7 +1064,7 @@ public class EntityBuilder : ClassBuilder
                 foreach (var item in cs)
                 {
                     if (item.Name.EqualIgnoreCase("CreateUserID"))
-                        WriteLine("if (isNew && !Dirtys[{0}]) {1} = user.ID;", NameOf(item.Name), item.Name);
+                        WriteLine("if (method == DataMethod.Insert && !Dirtys[{0}]) {1} = user.ID;", NameOf(item.Name), item.Name);
                     else
                         WriteLine("if (!Dirtys[{0}]) {1} = user.ID;", NameOf(item.Name), item.Name);
                 }
@@ -982,13 +1072,13 @@ public class EntityBuilder : ClassBuilder
             }
 
             var dc = Table.Columns.FirstOrDefault(e => e.Name.EqualIgnoreCase("CreateTime"));
-            if (dc != null) WriteLine("//if (isNew && !Dirtys[{0}]) {1} = DateTime.Now;", NameOf(dc.Name), dc.Name);
+            if (dc != null) WriteLine("//if (method == DataMethod.Insert && !Dirtys[{0}]) {1} = DateTime.Now;", NameOf(dc.Name), dc.Name);
 
             dc = Table.Columns.FirstOrDefault(e => e.Name.EqualIgnoreCase("UpdateTime"));
             if (dc != null) WriteLine("//if (!Dirtys[{0}]) {1} = DateTime.Now;", NameOf(dc.Name), dc.Name);
 
             dc = Table.Columns.FirstOrDefault(e => e.Name.EqualIgnoreCase("CreateIP"));
-            if (dc != null) WriteLine("//if (isNew && !Dirtys[{0}]) {1} = ManageProvider.UserHost;", NameOf(dc.Name), dc.Name);
+            if (dc != null) WriteLine("//if (method == DataMethod.Insert && !Dirtys[{0}]) {1} = ManageProvider.UserHost;", NameOf(dc.Name), dc.Name);
 
             dc = Table.Columns.FirstOrDefault(e => e.Name.EqualIgnoreCase("UpdateIP"));
             if (dc != null) WriteLine("//if (!Dirtys[{0}]) {1} = ManageProvider.UserHost;", NameOf(dc.Name), dc.Name);
@@ -1002,9 +1092,11 @@ public class EntityBuilder : ClassBuilder
                 foreach (var item in dis)
                 {
                     //WriteLine("if (!_IsFromDatabase) CheckExist(isNew, {0});", Table.GetColumns(item.Columns).Select(e => "__." + e.Name).Join(", "));
-                    WriteLine("// CheckExist(isNew, {0});", Table.GetColumns(item.Columns).Select(e => $"nameof({e.Name})").Join(", "));
+                    WriteLine("// CheckExist(method == DataMethod.Insert, {0});", Table.GetColumns(item.Columns).Select(e => $"nameof({e.Name})").Join(", "));
                 }
             }
+            WriteLine();
+            WriteLine("return true;");
         }
         WriteLine("}");
     }
@@ -1090,6 +1182,68 @@ public class EntityBuilder : ClassBuilder
         WriteLine("//{");
         WriteLine("//    return base.OnDelete();");
         WriteLine("//}");
+
+    }
+
+    /// <summary>添删改添加历史记录</summary>
+    protected virtual void BuildHistory()
+    {
+        //判断生成的表是否包含历史记录表,包含需要添加历史记录信息表
+        var needHistory = Table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
+        if (Convert.ToBoolean(needHistory.Value))
+        {
+            WriteLine("/// <summary>重写添加历史记录信息/summary>");
+            WriteLine("/// <returns></returns>");
+            WriteLine("public override Int32 Insert()");
+            WriteLine("{");
+            WriteLine($"using var tran = Entity<{Table.Name}>.Meta.CreateTrans(); ");
+            WriteLine("var list = new List<IEntity>();  ");
+            WriteLine("var ires = base.OnInsert();  ");
+            WriteLine("if (ires > 0) AddHistory(this);  ");
+            WriteLine("tran.Commit();  ");
+            WriteLine("return ires;  ");
+            WriteLine("}");
+            WriteLine();
+            WriteLine("/// <summary>重写删除历史记录信息</summary>");
+            WriteLine("/// <returns></returns>");
+            WriteLine("protected override Int32 OnDelete()");
+            WriteLine("{");
+            WriteLine($"using var tran = Entity<{Table.Name}>.Meta.CreateTrans(); ");
+            WriteLine("var list = new List<IEntity>();  ");
+            WriteLine("var ires = base.OnDelete();  ");
+            WriteLine("if (ires > 0) AddHistory(this);  ");
+            WriteLine("tran.Commit();  ");
+            WriteLine("return ires;  ");
+            WriteLine("}");
+            WriteLine("/// <summary>重写更新历史记录信息</summary>");
+            WriteLine("/// <returns></returns>");
+            WriteLine("protected override Int32 OnUpdate()");
+            WriteLine("{");
+            WriteLine($"using var tran = Entity<{Table.Name}>.Meta.CreateTrans(); ");
+            WriteLine("var list = new List<IEntity>();  ");
+            WriteLine("var ires = base.OnUpdate();  ");
+            WriteLine("if (ires > 0) AddHistory(this);  ");
+            WriteLine("tran.Commit();  ");
+            WriteLine("return ires;  ");
+            WriteLine("}");
+
+            WriteLine("/// <summary>添加历史记录信息</summary>");
+            WriteLine("/// <returns></returns>");
+            WriteLine($"private int AddHistory({Table.Name} entity) ");
+            WriteLine("{");
+            {
+                var History = Table.Name + "History" + " entityHistory = new " + Table.Name + "History();";
+                WriteLine(History);
+                var tablePrimaryKey = Table.PrimaryKeys?.Where(o => o.Name.ToUpper().Contains("ID"));
+                var primaryKey = tablePrimaryKey.Count() > 0 ? tablePrimaryKey.FirstOrDefault()?.Name : "ID";
+                WriteLine("XCode.Common.DataConversion.CopyProperty(entity, entityHistory);");
+                WriteLine($"entityHistory.{primaryKey} = 0;  ");
+                WriteLine($"entityHistory.{Table.Name}ID = entity.{primaryKey};  ");
+                WriteLine("return entityHistory.Insert();  ");
+            }
+            WriteLine("}");
+        }
+
     }
 
     /// <summary>扩展属性</summary>
@@ -1130,7 +1284,10 @@ public class EntityBuilder : ClassBuilder
 
                 WriteLine("/// <summary>{0}</summary>", dis);
                 WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
-                WriteLine("public {1} {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
+                if (Option.Nullable)
+                    WriteLine("public {1}? {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
+                else
+                    WriteLine("public {1} {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
 
                 // 主字段
                 var master = dt.Master ?? dt.GetColumn("Name");
@@ -1143,7 +1300,12 @@ public class EntityBuilder : ClassBuilder
                     if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
                         WriteLine("[Category(\"{0}\")]", att);
                     if (master.DataType == typeof(String))
-                        WriteLine("public {2} {0}{1} => {0}?.{1};", pname, master.Name, master.DataType.Name);
+                    {
+                        if (Option.Nullable)
+                            WriteLine("public {2}? {0}{1} => {0}?.{1};", pname, master.Name, master.DataType.Name);
+                        else
+                            WriteLine("public {2} {0}{1} => {0}?.{1};", pname, master.Name, master.DataType.Name);
+                    }
                     else
                         WriteLine("public {2} {0}{1} => {0} != null ? {0}.{1} : 0;", pname, master.Name, master.DataType.Name);
                 }
@@ -1471,6 +1633,7 @@ public class EntityBuilder : ClassBuilder
 
             // 遍历索引，第一个字段是字符串类型，则为其生成下拉选择
             var count = 0;
+            var names = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
             foreach (var di in idx)
             {
                 if (di.Columns == null || di.Columns.Length == 0) continue;
@@ -1481,7 +1644,10 @@ public class EntityBuilder : ClassBuilder
                 var dc = Table.GetColumn(di.Columns[0]);
                 if (dc == null || dc.DataType != typeof(String) || dc.Master) continue;
 
+                // 有可能多个索引第一字段相同，不需要重复生成
                 var name = dc.Name;
+                if (names.Contains(name)) continue;
+                names.Add(name);
 
                 WriteLine();
                 WriteLine($"// Select Count({pname}) as {pname},{name} From {Table.TableName} Where {tname}>'2020-01-24 00:00:00' Group By {name} Order By {pname} Desc limit 20");

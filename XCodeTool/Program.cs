@@ -28,12 +28,6 @@ class Program
         // 在当前目录查找模型文件
         var file = "";
         if (args.Length > 0) file = args.LastOrDefault();
-        //if (file.IsNullOrEmpty())
-        //{
-        //    var di = Environment.CurrentDirectory.AsDirectory();
-        //    // 选当前目录第一个
-        //    file = di.GetFiles("*.xml", SearchOption.TopDirectoryOnly).FirstOrDefault(e => e.Name != "XCode.xml")?.FullName;
-        //}
         if (!file.IsNullOrEmpty())
         {
             if (!Path.IsPathRooted(file))
@@ -54,7 +48,6 @@ class Program
             // 遍历当前目录及子目录
             var files = new List<String>();
             var di = Environment.CurrentDirectory.AsDirectory();
-            //foreach (var fi in di.GetFiles("*.xml", SearchOption.TopDirectoryOnly))
             foreach (var fi in di.GetFiles("*.xml", SearchOption.AllDirectories))
             {
                 if (!fi.Name.EqualIgnoreCase("XCode.xml"))
@@ -63,14 +56,6 @@ class Program
                     if (txt.Contains("<Tables") || txt.Contains("<EntityModel")) files.Add(fi.FullName);
                 }
             }
-            //foreach (var item in di.GetDirectories())
-            //{
-            //    foreach (var fi in item.GetFiles("*.xml", SearchOption.TopDirectoryOnly))
-            //    {
-            //        var txt = File.ReadAllText(fi.FullName);
-            //        if (txt.Contains("<Tables") || txt.Contains("<EntityModel")) files.Add(fi.FullName);
-            //    }
-            //}
 
             if (files.Count > 0)
             {
@@ -92,7 +77,7 @@ class Program
         }
     }
 
-    /// <summary>生成实体类。调整该方法可以改变生成实体类代码的逻辑</summary>
+    /// <summary>生成实体类。用户可以调整该方法可以改变生成实体类代码的逻辑，从而得到自己的代码生成器</summary>
     /// <param name="modelFile"></param>
     static void Build(String modelFile)
     {
@@ -144,11 +129,11 @@ class Program
             if (!modelInterface.IsNullOrEmpty())
             {
                 opt.BaseClass = modelInterface;
-                opt.ModelNameForCopy = modelInterface;
+                opt.ModelNameForCopy ??= modelInterface;
             }
             else if (!modelClass.IsNullOrEmpty())
             {
-                opt.ModelNameForCopy = modelClass;
+                opt.ModelNameForCopy ??= modelClass;
             }
             EntityBuilder.BuildTables(tables, opt, log);
         }
@@ -159,21 +144,27 @@ class Program
             //opt.Items.TryGetValue("ModelsOutput", out var output);
             var output = option.ModelsOutput ?? @".\Models\";
             opt.Output = opt.Output.CombinePath(output);
-            opt.BaseClass = modelInterface;
+            //opt.BaseClass = modelInterface;
+            opt.BaseClass = null;
             opt.ClassNameTemplate = modelClass;
+            // 模型接口存在，且相同于拷贝类型，才能作为基类
+            if (!modelInterface.IsNullOrEmpty() && modelInterface == opt.ModelNameForCopy)
+                opt.BaseClass = modelInterface;
+            else
+                opt.BaseClass = null;
             opt.ModelNameForCopy = !modelInterface.IsNullOrEmpty() ? modelInterface : modelClass;
             //opt.HasIModel = true;
-            opt.Partial = true;
+            //opt.Partial = true;
             if (!modelClass.IsNullOrEmpty())
             {
-                ClassBuilder.BuildModels(tables, opt, log);
+                ModelBuilder.BuildModels(tables, opt, log);
             }
             else
             {
                 var ts = tables.Where(e => !e.Properties["ModelClass"].IsNullOrEmpty()).ToList();
                 if (ts.Count > 0)
                 {
-                    ClassBuilder.BuildModels(ts, opt, log);
+                    ModelBuilder.BuildModels(ts, opt, log);
                 }
             }
         }
@@ -189,17 +180,17 @@ class Program
             opt.ClassNameTemplate = modelInterface;
             opt.ModelNameForCopy = null;
             opt.HasIModel = false;
-            opt.Partial = true;
+            //opt.Partial = true;
             if (!modelInterface.IsNullOrEmpty())
             {
-                ClassBuilder.BuildInterfaces(tables, opt, log);
+                InterfaceBuilder.BuildInterfaces(tables, opt, log);
             }
             else
             {
                 var ts = tables.Where(e => !e.Properties["ModelInterface"].IsNullOrEmpty()).ToList();
                 if (ts.Count > 0)
                 {
-                    ClassBuilder.BuildInterfaces(ts, opt, log);
+                    InterfaceBuilder.BuildInterfaces(ts, opt, log);
                 }
             }
         }

@@ -55,7 +55,7 @@ using XCode.DataAccessLayer;
 namespace XCode;
 
 /// <summary>实体会话。每个实体类、连接名和表名形成一个实体会话</summary>
-public class EntitySession<TEntity> :DisposeBase, IEntitySession where TEntity : Entity<TEntity>, new()
+public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity : Entity<TEntity>, new()
 {
     #region 属性
     /// <summary>连接名</summary>
@@ -361,6 +361,7 @@ public class EntitySession<TEntity> :DisposeBase, IEntitySession where TEntity :
     }
 
     private DateTime _NextCount;
+    private DateTime _NextFullCount;
     /// <summary>总记录数较小时，使用静态字段，较大时增加使用Cache</summary>
     private Int64 _Count = -2L;
     readonly Object _count_lock = new();
@@ -473,9 +474,22 @@ public class EntitySession<TEntity> :DisposeBase, IEntitySession where TEntity :
             }
         }
 
+        var now = TimerX.Now;
+
         // 查真实记录数，修正FastCount不够准确的情况
-        if (/*count >= 0 &&*/ count < 10_000_000)
+        var fastCountMin = XCodeSetting.Current.FastCountMin;
+        if (count < fastCountMin && now >= _NextFullCount)
         {
+            // 根据数据量大小不同，使用不同的缓存时间
+            var exp = count switch
+            {
+                >= 1_000_000 => 3600,
+                >= 100_000 => 600,
+                >= 10_000 => 60,
+                _ => 60,
+            };
+            _NextFullCount = now.AddSeconds(exp);
+
             var builder = new SelectBuilder
             {
                 Table = FormatedTableName
@@ -603,7 +617,7 @@ public class EntitySession<TEntity> :DisposeBase, IEntitySession where TEntity :
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>影响的结果</returns>
-    public Int32 Execute(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public Int32 Execute(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         InitData();
 
@@ -617,7 +631,7 @@ public class EntitySession<TEntity> :DisposeBase, IEntitySession where TEntity :
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         InitData();
 
@@ -653,7 +667,7 @@ public class EntitySession<TEntity> :DisposeBase, IEntitySession where TEntity :
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>影响的结果</returns>
-    public Task<Int32> ExecuteAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public Task<Int32> ExecuteAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         InitData();
 
@@ -667,7 +681,7 @@ public class EntitySession<TEntity> :DisposeBase, IEntitySession where TEntity :
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         InitData();
 
@@ -930,6 +944,6 @@ public class EntitySession<TEntity> :DisposeBase, IEntitySession where TEntity :
 
     #region 队列
     /// <summary>实体队列</summary>
-    public EntityQueue Queue { get; private set; }
+    public EntityQueue Queue { get; set; }
     #endregion
 }

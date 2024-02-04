@@ -29,7 +29,7 @@ public class InsertBuilder
     /// <summary>
     /// 参数集合
     /// </summary>
-    public IDataParameter[] Parameters { get; set; }
+    public IDataParameter[]? Parameters { get; set; }
     #endregion
 
     /// <summary>
@@ -40,14 +40,14 @@ public class InsertBuilder
     /// <param name="columns"></param>
     /// <param name="entity"></param>
     /// <returns></returns>
-    public virtual String GetSql(IDatabase database, IDataTable table, IDataColumn[] columns, IModel entity)
+    public virtual String? GetSql(IDatabase database, IDataTable table, IDataColumn[]? columns, IModel entity)
     {
         Parameters = null;
 
         var sbNames = Pool.StringBuilder.Get();
         var sbValues = Pool.StringBuilder.Get();
 
-        if (columns == null) columns = table.Columns.ToArray();
+        columns ??= table.Columns.ToArray();
 
         var dps = new List<IDataParameter>();
         // 只读列没有插入操作
@@ -90,12 +90,12 @@ public class InsertBuilder
         return $"{action} Into {database.FormatName(table)}({ns}) Values({vs})";
     }
 
-    Boolean CheckIdentity(IDatabase db, IDataColumn column, Object value, StringBuilder sbNames, StringBuilder sbValues)
+    Boolean CheckIdentity(IDatabase db, IDataColumn column, Object? value, StringBuilder sbNames, StringBuilder sbValues)
     {
         if (!column.Identity) return false;
 
         // 有些时候需要向自增字段插入数据，这里特殊处理
-        String idv = null;
+        String? idv = null;
         if (AllowInsertIdentity) idv = "" + value;
 
         // 允许返回String.Empty作为插入空
@@ -109,7 +109,7 @@ public class InsertBuilder
         return true;
     }
 
-    static IDataParameter CreateParameter(IDatabase db, IDataColumn column, Object value)
+    static IDataParameter CreateParameter(IDatabase db, IDataColumn column, Object? value)
     {
         var dp = db.CreateParameter(column.ColumnName ?? column.Name, value, column);
 

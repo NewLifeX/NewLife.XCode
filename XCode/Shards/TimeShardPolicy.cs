@@ -59,7 +59,8 @@ public class TimeShardPolicy : IShardPolicy
         if (value is DateTime dt) return Shard(dt);
         if (value is Int64 id)
         {
-            if (!Factory.Snow.TryParse(id, out var time, out _, out _)) throw new XCodeException("雪花Id解析时间失败，无法用于分表");
+            if (!Factory.Snow.TryParse(id, out var time, out _, out _) || time.Year <= 1970)
+                throw new XCodeException("雪花Id解析时间失败，无法用于分表");
 
             return Shard(time);
         }
@@ -78,14 +79,15 @@ public class TimeShardPolicy : IShardPolicy
         if (fi.Type == typeof(DateTime))
         {
             var time = entity[fi.Name].ToDateTime();
-            if (time.Year <= 1) throw new XCodeException("实体对象时间字段为空，无法用于分表");
+            if (time.Year <= 1970) throw new XCodeException("实体对象时间字段为空，无法用于分表");
 
             return Shard(time);
         }
         else if (fi.Type == typeof(Int64))
         {
             var id = entity[fi.Name].ToLong();
-            if (!Factory.Snow.TryParse(id, out var time, out _, out _)) throw new XCodeException("雪花Id解析时间失败，无法用于分表");
+            if (!Factory.Snow.TryParse(id, out var time, out _, out _) || time.Year <= 1970)
+                throw new XCodeException("雪花Id解析时间失败，无法用于分表");
 
             return Shard(time);
         }

@@ -21,13 +21,9 @@ public interface IEntityModule
 
     /// <summary>验证实体对象</summary>
     /// <param name="entity"></param>
-    /// <param name="isNew"></param>
+    /// <param name="method"></param>
     /// <returns></returns>
-    Boolean Valid(IEntity entity, Boolean isNew);
-
-    /// <summary>删除实体对象</summary>
-    /// <param name="entity"></param>
-    Boolean Delete(IEntity entity);
+    Boolean Valid(IEntity entity, DataMethod method);
 }
 
 /// <summary>实体模块集合</summary>
@@ -40,7 +36,7 @@ public class EntityModules : IEnumerable<IEntityModule>
 
     #region 属性
     /// <summary>实体类型</summary>
-    public Type EntityType { get; set; }
+    public Type? EntityType { get; set; }
 
     /// <summary>模块集合</summary>
     public IEntityModule[] Modules { get; set; } = new IEntityModule[0];
@@ -49,7 +45,7 @@ public class EntityModules : IEnumerable<IEntityModule>
     #region 构造
     /// <summary>实例化实体模块集合</summary>
     /// <param name="entityType"></param>
-    public EntityModules(Type entityType) => EntityType = entityType;
+    public EntityModules(Type? entityType) => EntityType = entityType;
     #endregion
 
     #region 方法
@@ -58,8 +54,19 @@ public class EntityModules : IEnumerable<IEntityModule>
     /// <returns></returns>
     public virtual void Add(IEntityModule module)
     {
+        // 未指定实体类型表示全局模块，不需要初始化
+        var type = EntityType;
+        if (type != null)
+        {
+            // 提前设置字段，加速初始化过程，避免实体模块里面获取字段时，被当前实体类的静态构造函数阻塞
+            var fs = type.AsFactory()?.Fields;
+            if (fs != null) EntityModule.SetFields(type, fs);
+        }
+
         // 异步添加实体模块，避免死锁。实体类一般在静态构造函数里面添加模块，如果这里同步初始化会非常危险
-        ThreadPool.UnsafeQueueUserWorkItem(s => AddAsync(s as IEntityModule), module);
+        //ThreadPool.UnsafeQueueUserWorkItem(s => AddAsync(s as IEntityModule), module);
+        var task = Task.Run(() => AddAsync(module));
+        task.Wait(100);
     }
 
     /// <summary>添加实体模块</summary>
@@ -97,32 +104,18 @@ public class EntityModules : IEnumerable<IEntityModule>
         if (this != Global) Global.Create(entity, forEdit);
     }
 
-    /// <summary>添加更新实体时验证</summary>
+    /// <summary>添删改实体时验证</summary>
     /// <param name="entity"></param>
-    /// <param name="isNew"></param>
+    /// <param name="method"></param>
     /// <returns></returns>
-    public Boolean Valid(IEntity entity, Boolean isNew)
+    public Boolean Valid(IEntity entity, DataMethod method)
     {
         foreach (var item in Modules)
         {
-            if (!item.Valid(entity, isNew)) return false;
+            if (!item.Valid(entity, method)) return false;
         }
 
-        if (this != Global) Global.Valid(entity, isNew);
-
-        return true;
-    }
-
-    /// <summary>删除实体对象</summary>
-    /// <param name="entity"></param>
-    public Boolean Delete(IEntity entity)
-    {
-        foreach (var item in Modules)
-        {
-            if (!item.Delete(entity)) return false;
-        }
-
-        if (this != Global) Global.Delete(entity);
+        if (this != Global) return Global.Valid(entity, method);
 
         return true;
     }
@@ -171,7 +164,11 @@ public abstract class EntityModule : IEntityModule
     /// <summary>创建实体对象</summary>
     /// <param name="entity"></param>
     /// <param name="forEdit"></param>
-    public void Create(IEntity entity, Boolean forEdit) { if (Init(entity?.GetType())) OnCreate(entity, forEdit); }
+    public void Create(IEntity entity, Boolean forEdit)
+    {
+        if (entity != null && Init(entity.GetType()))
+            OnCreate(entity, forEdit);
+    }
 
     /// <summary>创建实体对象</summary>
     /// <param name="entity"></param>
@@ -180,34 +177,20 @@ public abstract class EntityModule : IEntityModule
 
     /// <summary>验证实体对象</summary>
     /// <param name="entity"></param>
-    /// <param name="isNew"></param>
+    /// <param name="method"></param>
     /// <returns></returns>
-    public Boolean Valid(IEntity entity, Boolean isNew)
+    public Boolean Valid(IEntity entity, DataMethod method)
     {
-        if (!Init(entity?.GetType())) return true;
+        if (entity == null || !Init(entity.GetType())) return true;
 
-        return OnValid(entity, isNew);
+        return OnValid(entity, method);
     }
 
     /// <summary>验证实体对象</summary>
     /// <param name="entity"></param>
-    /// <param name="isNew"></param>
+    /// <param name="method"></param>
     /// <returns></returns>
-    protected virtual Boolean OnValid(IEntity entity, Boolean isNew) => true;
-
-    /// <summary>删除实体对象</summary>
-    /// <param name="entity"></param>
-    public Boolean Delete(IEntity entity)
-    {
-        if (!Init(entity?.GetType())) return true;
-
-        return OnDelete(entity);
-    }
-
-    /// <summary>删除实体对象</summary>
-    /// <param name="entity"></param>
-    /// <returns></returns>
-    protected virtual Boolean OnDelete(IEntity entity) => true;
+    protected virtual Boolean OnValid(IEntity entity, DataMethod method) => true;
     #endregion
 
     #region 辅助
@@ -255,13 +238,15 @@ public abstract class EntityModule : IEntityModule
         return entity.SetItem(name, value);
     }
 
-    private static readonly ConcurrentDictionary<Type, FieldItem[]> _fieldNames = new();
+    private static readonly ConcurrentDictionary<Type, FieldItem[]> _fields = new();
     /// <summary>获取实体类的字段名。带缓存</summary>
     /// <param name="entityType"></param>
     /// <returns></returns>
-    protected static FieldItem[] GetFields(Type entityType)
-    {
-        return _fieldNames.GetOrAdd(entityType, t => t.AsFactory().Fields);
-    }
+    protected static FieldItem[] GetFields(Type entityType) => _fields.GetOrAdd(entityType, t => t.AsFactory().Fields);
+
+    /// <summary>提前设置字段，加速初始化过程</summary>
+    /// <param name="entityType"></param>
+    /// <param name="fields"></param>
+    public static void SetFields(Type entityType, FieldItem[] fields) => _fields.TryAdd(entityType, fields);
     #endregion
 }

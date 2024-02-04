@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using NewLife;
 
 namespace XCode;
 
@@ -11,7 +12,7 @@ namespace XCode;
 public class DirtyCollection : IEnumerable<String>
 {
     private String[] _keys = new String[8];
-    private Object[] _values = new Object[8];
+    private Object?[] _values = new Object?[8];
 
     /// <summary>数据长度</summary>
     /// <remarks>
@@ -44,32 +45,37 @@ public class DirtyCollection : IEnumerable<String>
     /// <param name="key"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    public Boolean Add(String key, Object value)
+    public Boolean Add(String key, Object? value)
     {
         if (Contains(key)) return false;
 
         // 抢位置
         var n = Interlocked.Increment(ref _length);
 
-        var ms = _keys;
-        while (ms.Length < _length)
+        var ks = _keys;
+        var vs = _values;
+        if (ks.Length < _length)
         {
-            // 扩容
-            var arr = new String[ms.Length * 2];
-            Array.Copy(ms, arr, ms.Length);
-            if (Interlocked.CompareExchange(ref _keys, arr, ms) == ms)
+            lock (this)
             {
-                var arr2 = new Object[arr.Length];
-                Array.Copy(_values, arr2, _values.Length);
-                _values = arr2;
-                break;
-            }
+                ks = _keys;
+                vs = _values;
+                if (ks.Length < _length)
+                {
+                    // 扩容
+                    var arr = new String[ks.Length * 2];
+                    Array.Copy(ks, arr, ks.Length);
+                    ks = _keys = arr;
 
-            ms = _keys;
+                    var arr2 = new Object[arr.Length];
+                    Array.Copy(vs, arr2, vs.Length);
+                    vs = _values = arr2;
+                }
+            }
         }
 
-        _keys[n - 1] = key;
-        _values[n - 1] = value;
+        ks[n - 1] = key;
+        vs[n - 1] = value;
 
         Interlocked.Increment(ref _count);
 
@@ -83,7 +89,7 @@ public class DirtyCollection : IEnumerable<String>
         if (len > ms.Length) len = ms.Length;
         for (var i = 0; i < len; i++)
         {
-            if (ms[i] == item)
+            if (ms[i].EqualIgnoreCase(item))
             {
                 ms[i] = null;
 
@@ -99,7 +105,7 @@ public class DirtyCollection : IEnumerable<String>
         if (len > ms.Length) len = ms.Length;
         for (var i = 0; i < len; i++)
         {
-            if (ms[i] == item) return true;
+            if (ms[i].EqualIgnoreCase(item)) return true;
         }
 
         return false;

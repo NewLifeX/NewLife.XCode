@@ -38,6 +38,7 @@ namespace XCode.Transform
             Dal = dal;
             Builder = new SelectBuilder { Table = tableName };
             BatchSize = dal.Db.BatchSize;
+            if (BatchSize <= 0) BatchSize = XCodeSetting.Current.BatchSize;
         }
 
         /// <summary>实例化分页抽取器</summary>
@@ -49,6 +50,7 @@ namespace XCode.Transform
             Dal = dal;
             Builder = new SelectBuilder { Table = tableName, OrderBy = orderBy };
             BatchSize = dal.Db.BatchSize;
+            if (BatchSize <= 0) BatchSize = XCodeSetting.Current.BatchSize;
         }
         #endregion
 

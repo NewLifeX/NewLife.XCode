@@ -205,6 +205,7 @@ abstract class DbBase : DisposeBase, IDatabase
         if (builder.TryGetAndRemove(nameof(DataCache), out value) && !value.IsNullOrEmpty()) DataCache = value.ToInt();
         // 反向工程生成sql中表名和字段名称大小写
         if (builder.TryGetAndRemove(nameof(NameFormat), out value) && !value.IsNullOrEmpty()) NameFormat = (NameFormats)Enum.Parse(typeof(NameFormats), value, true);
+        if (builder.TryGetAndRemove(nameof(BatchSize), out value) && !value.IsNullOrEmpty()) BatchSize = value.ToInt();
         if (builder.TryGetAndRemove(nameof(CommandTimeout), out value) && !value.IsNullOrEmpty()) CommandTimeout = value.ToInt();
 
         // 连接字符串去掉provider，可能有些数据库不支持这个属性
@@ -264,14 +265,14 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>反向工程表名、字段名大小写设置</summary>
     public NameFormats NameFormat { get; set; }
 
-    /// <summary>批大小。用于批量操作数据，默认5000</summary>
-    public Int32 BatchSize { get; set; } = 5_000;
+    /// <summary>批大小。用于批量操作数据，抽取、删除、备份、恢复</summary>
+    public Int32 BatchSize { get; set; }
 
     /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
     public Int32 CommandTimeout { get; set; }
 
     /// <summary>性能追踪器</summary>
-    public ITracer Tracer { get; set; }
+    public ITracer? Tracer { get; set; }
     #endregion
 
     #region 方法
@@ -387,10 +388,10 @@ abstract class DbBase : DisposeBase, IDatabase
     #endregion
 
     #region 下载驱动
-    protected static IList<String> GetLinkNames(String assemblyFile, Boolean strict = false)
+    protected static IList<String> GetLinkNames(String name, Boolean strict = false)
     {
         var links = new List<String>();
-        var name = Path.GetFileNameWithoutExtension(assemblyFile);
+        //var name = Path.GetFileNameWithoutExtension(assemblyFile);
         if (!name.IsNullOrEmpty())
         {
 #if !NETFRAMEWORK
@@ -430,16 +431,18 @@ abstract class DbBase : DisposeBase, IDatabase
     }
 
     /// <summary>获取提供者工厂</summary>
+    /// <param name="name"></param>
     /// <param name="assemblyFile"></param>
     /// <param name="className"></param>
     /// <param name="strict"></param>
     /// <param name="ignoreError"></param>
     /// <returns></returns>
-    public static DbProviderFactory GetProviderFactory(String assemblyFile, String className, Boolean strict = false, Boolean ignoreError = false)
+    public static DbProviderFactory GetProviderFactory(String? name, String assemblyFile, String className, Boolean strict = false, Boolean ignoreError = false)
     {
         try
         {
-            var links = GetLinkNames(assemblyFile, strict);
+            if(name.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(assemblyFile);
+            var links = GetLinkNames(name, strict);
             var type = PluginHelper.LoadPlugin(className, null, assemblyFile, links.Join(","));
 
             var factory = GetProviderFactory(type);
@@ -523,7 +526,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">唯一键。用于not in分页</param>
     /// <returns>分页SQL</returns>
-    public abstract String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn);
+    public abstract String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn);
 
     private static readonly Regex reg_SimpleSQL = new(@"^\s*select\s+\*\s+from\s+([\w\[\]\""\""\']+)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     /// <summary>检查简单SQL语句，比如Select * From table</summary>
@@ -755,7 +758,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <param name="column">字段</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    public virtual String FormatValue(IDataColumn column, Object value)
+    public virtual String FormatValue(IDataColumn column, Object? value)
     {
         var isNullable = true;
         Type type = null;
@@ -862,19 +865,20 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <param name="value">值</param>
     /// <param name="field">字段</param>
     /// <returns></returns>
-    public virtual IDataParameter CreateParameter(String name, Object value, IDataColumn field) => CreateParameter(name, value, field?.DataType);
+    public virtual IDataParameter CreateParameter(String name, Object? value, IDataColumn field) => CreateParameter(name, value, field?.DataType);
 
     /// <summary>创建参数</summary>
     /// <param name="name">名称</param>
     /// <param name="value">值</param>
     /// <param name="type">类型</param>
     /// <returns></returns>
-    public virtual IDataParameter CreateParameter(String name, Object value, Type type = null)
+    public virtual IDataParameter CreateParameter(String name, Object? value, Type? type = null)
     {
         if (value == null && type == null) throw new ArgumentNullException(nameof(value));
 
         var dp = Factory.CreateParameter();
         dp.ParameterName = FormatParameterName(name);
+        dp.SourceColumn = name;
         dp.Direction = ParameterDirection.Input;
 
         try
@@ -955,12 +959,12 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>创建参数数组</summary>
     /// <param name="ps"></param>
     /// <returns></returns>
-    public virtual IDataParameter[] CreateParameters(IDictionary<String, Object> ps) => ps?.Select(e => CreateParameter(e.Key, e.Value)).ToArray();
+    public virtual IDataParameter[] CreateParameters(IDictionary<String, Object>? ps) => ps?.Select(e => CreateParameter(e.Key, e.Value)).ToArray() ?? new IDataParameter[0];
 
     /// <summary>根据对象成员创建参数数组</summary>
     /// <param name="model"></param>
     /// <returns></returns>
-    public virtual IDataParameter[] CreateParameters(Object model)
+    public virtual IDataParameter[] CreateParameters(Object? model)
     {
         if (model == null) return new IDataParameter[0];
         if (model is IDataParameter[] dps) return dps;

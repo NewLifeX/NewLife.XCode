@@ -27,9 +27,9 @@ public partial interface ITenantUser
     Int32 RoleId { get; set; }
 
     /// <summary>角色组。次要角色集合</summary>
-    String RoleIds { get; set; }
+    String? RoleIds { get; set; }
 
     /// <summary>描述</summary>
-    String Remark { get; set; }
+    String? Remark { get; set; }
     #endregion
 }

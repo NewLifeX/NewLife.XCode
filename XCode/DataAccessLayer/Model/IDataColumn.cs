@@ -17,13 +17,13 @@ public interface IDataColumn
     /// 原始数据类型。
     /// 当且仅当目标数据库同为该数据库类型时，采用实体属性信息上的RawType作为反向工程的目标字段类型，以期获得开发和生产的最佳兼容。
     /// </summary>
-    String RawType { get; set; }
+    String? RawType { get; set; }
 
     /// <summary>元素类型</summary>
-    String ItemType { get; set; }
+    String? ItemType { get; set; }
 
     /// <summary>映射，表间关联，格式Role.Id.Name</summary>
-    String Map { get; set; }
+    String? Map { get; set; }
 
     /// <summary>标识</summary>
     Boolean Identity { get; set; }
@@ -47,13 +47,16 @@ public interface IDataColumn
     Boolean Nullable { get; set; }
 
     /// <summary>默认值</summary>
-    String DefaultValue { get; set; }
+    String? DefaultValue { get; set; }
 
     /// <summary>显示名。如果有Description则使用Description，否则使用Name</summary>
-    String DisplayName { get; }
+    String? DisplayName { get; }
+
+    ///// <summary>元素参数默认值</summary>
+    //String? ItemDefaultValue { get; set; }
 
     /// <summary>说明</summary>
-    String Description { get; set; }
+    String? Description { get; set; }
     #endregion
 
     #region 扩展属性

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Threading;
+﻿using System.Collections.Concurrent;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -13,14 +11,14 @@ public abstract class CacheBase<TEntity> : CacheBase where TEntity : Entity<TEnt
 {
     #region 属性
     /// <summary>连接名</summary>
-    public String ConnName { get; set; }
+    public String? ConnName { get; set; }
 
     /// <summary>表名</summary>
-    public String TableName { get; set; }
+    public String? TableName { get; set; }
     #endregion
 
     /// <summary>调用委托方法前设置连接名和表名，调用后还原</summary>
-    internal TResult Invoke<T, TResult>(Func<T, TResult> callback, T arg)
+    internal TResult? Invoke<T, TResult>(Func<T, TResult> callback, T arg)
     {
         var cn = Entity<TEntity>.Meta.ConnName;
         var tn = Entity<TEntity>.Meta.TableName;
@@ -62,7 +60,7 @@ public abstract class CacheBase : DisposeBase
     public static Int32 Period { get; set; }
 
     /// <summary>日志前缀</summary>
-    protected String LogPrefix { get; set; }
+    protected String? LogPrefix { get; set; }
     #endregion
 
     static CacheBase()
@@ -72,7 +70,7 @@ public abstract class CacheBase : DisposeBase
 #endif
     }
 
-    internal void WriteLog(String format, params Object[] args)
+    internal void WriteLog(String format, params Object?[] args)
     {
         if (Debug) XTrace.WriteLine(LogPrefix + format, args);
     }
@@ -89,7 +87,7 @@ public abstract class CacheBase : DisposeBase
         // 加入列表
         if (total < 10)
         {
-            var key = show?.Target?.GetType().FullName;
+            var key = show.Target?.GetType().FullName;
             if (key != null && !_dic.ContainsKey(key))
             {
                 _dic.TryAdd(key, show);
@@ -116,7 +114,7 @@ public abstract class CacheBase : DisposeBase
         }
     }
 
-    private static TimerX _timer;
+    private static TimerX? _timer;
     private static readonly ConcurrentDictionary<String, Action> _dic = new();
     private static Boolean NextShow;
 

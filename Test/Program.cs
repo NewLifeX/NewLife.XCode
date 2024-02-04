@@ -74,7 +74,7 @@ public class Program
             try
             {
 #endif
-            Test17();
+                Test3();
 #if !DEBUG
             }
             catch (Exception ex)
@@ -149,6 +149,25 @@ public class Program
 
         var ar = Area.FindByID(710000);
         var list = ar.Childs;
+    }
+
+    private static void Test3()
+    {
+        var list = User.FindAll();
+        XTrace.WriteLine(list.ToJson());
+
+        var p = new Parameter
+        {
+            Name = "test",
+            Value = "NewLife",
+        };
+        p.Insert();
+
+        var db = DbFactory.Create(DatabaseType.Hana);
+        var type = db.Factory.GetType();
+        XTrace.WriteLine(type.FullName);
+
+        var conn = db.Factory.CreateConnection();
     }
 
     private static void Test7()

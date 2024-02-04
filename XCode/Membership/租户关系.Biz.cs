@@ -1,4 +1,4 @@
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
@@ -6,9 +6,11 @@ using NewLife.Data;
 
 namespace XCode.Membership;
 
+[ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
 public partial class TenantUser : Entity<TenantUser>
 {
     #region 对象操作
+
     static TenantUser()
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
@@ -19,17 +21,17 @@ public partial class TenantUser : Entity<TenantUser>
         Meta.Modules.Add<UserModule>();
         Meta.Modules.Add<TimeModule>();
         Meta.Modules.Add<IPModule>();
+        Meta.Modules.Add<TenantModule>();
     }
 
-    /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <param name="isNew">是否插入</param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
-        // 如果没有脏数据，则不需要进行任何处理
-        if (!HasDirty) return;
+        if (method == DataMethod.Delete) return true;
 
-        // 建议先调用基类方法，基类方法会做一些统一处理
-        base.Valid(isNew);
+        // 如果没有脏数据，则不需要进行任何处理
+        if (!HasDirty) return true;
 
         // 重新整理角色
         var ids = GetRoleIDs();
@@ -40,10 +42,13 @@ public partial class TenantUser : Entity<TenantUser>
             if (!str.IsNullOrEmpty()) str = "," + str + ",";
             RoleIds = str;
         }
+
+        return base.Valid(method);
     }
-    #endregion
+    #endregion 对象操作
 
     #region 扩展属性
+
     ///// <summary>租户</summary>
     //[XmlIgnore, IgnoreDataMember]
     ////[ScriptIgnore]
@@ -88,9 +93,12 @@ public partial class TenantUser : Entity<TenantUser>
     [Map(__.RoleIds)]
     public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
 
-    #endregion
+    //public virtual String RoleName => Extends.Get(nameof(RoleName), k => ManageProvider.Get<IRole>()?.FindByID(k).Name);
+
+    #endregion 扩展属性
 
     #region 扩展查询
+
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
@@ -113,7 +121,6 @@ public partial class TenantUser : Entity<TenantUser>
     /// <returns>实体对象</returns>
     public static TenantUser FindByTenantIdAndUserId(Int32 tenantId, Int32 userId)
     {
-
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.UserId == userId);
 
@@ -150,9 +157,23 @@ public partial class TenantUser : Entity<TenantUser>
 
         return FindAll(_.UserId == userId);
     }
-    #endregion
+
+    /// <summary>根据租户查询用户id</summary>
+    /// <param name="tenantId"></param>
+    /// <returns></returns>
+    public static IList<TenantUser> FindAllByTenantId(Int32 tenantId)
+    {
+        if (tenantId <= 0) return new List<TenantUser>();
+
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
+
+        return FindAll(_.TenantId == tenantId);
+    }
+
+    #endregion 扩展查询
 
     #region 高级查询
+
     /// <summary>高级查询</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="userId">用户</param>
@@ -187,9 +208,11 @@ public partial class TenantUser : Entity<TenantUser>
     ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
     ///// <returns></returns>
     //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
-    #endregion
+
+    #endregion 高级查询
 
     #region 业务操作
+
     /// <summary>转模型</summary>
     /// <returns></returns>
     public TenantUserModel ToModel()
@@ -231,7 +254,8 @@ public partial class TenantUser : Entity<TenantUser>
 
         return false;
     }
-    #endregion
+
+    #endregion 业务操作
 }
 
 /// <summary>租户关系</summary>

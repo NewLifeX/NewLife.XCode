@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Net.Http;
 using System.Text;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -40,12 +41,11 @@ public partial class Area : Entity<Area>
         ec.FillListMethod = () => FindAll(_.ID >= 100000 & _.ID <= 999999, _.ID.Asc(), null, 0, 0);
     }
 
-    /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <param name="isNew">是否插入</param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
-        //// 如果没有脏数据，则不需要进行任何处理
-        //if (!HasDirty) return;
+        if (method == DataMethod.Delete) return true;
 
         FixLevel();
 
@@ -67,11 +67,13 @@ public partial class Area : Entity<Area>
 
         // 坐标
         //if (Longitude != 0 || Latitude != 0) GeoHash = NewLife.Data.GeoHash.Encode(Longitude, Latitude);
-        if (isNew || Dirtys[nameof(Longitude)] || Dirtys[nameof(Latitude)])
+        if (method == DataMethod.Insert || Dirtys[nameof(Longitude)] || Dirtys[nameof(Latitude)])
         {
             if (Math.Abs(Longitude) > 0.001 || Math.Abs(Latitude) > 0.001)
                 GeoHash = NewLife.Data.GeoHash.Encode(Longitude, Latitude);
         }
+
+        return base.Valid(method);
     }
 
     /// <summary>初始化数据</summary>
@@ -102,9 +104,9 @@ public partial class Area : Entity<Area>
 
     /// <summary>父级</summary>
     [XmlIgnore, ScriptIgnore]
-    public Area Parent => Extends.Get(nameof(Parent), k => FindByID(ParentID) ?? Root);
+    public Area Parent => Extends.Get(nameof(Parent), k => FindByID(ParentID) ?? Root)!;
 
-    /// <summary>所有父级</summary>
+    /// <summary>所有父级，从高到底</summary>
     [XmlIgnore, ScriptIgnore]
     public IList<Area> AllParents => Extends.Get(nameof(AllParents), k =>
     {
@@ -123,7 +125,7 @@ public partial class Area : Entity<Area>
         list.Reverse();
 
         return list;
-    });
+    })!;
 
     /// <summary>父级路径</summary>
     public String ParentPath
@@ -152,7 +154,7 @@ public partial class Area : Entity<Area>
 
     /// <summary>下级地区</summary>
     [XmlIgnore, ScriptIgnore]
-    public IList<Area> Childs => Extends.Get(nameof(Childs), k => FindAllByParentID(ID).Where(e => e.Enable).ToList());
+    public IList<Area> Childs => Extends.Get(nameof(Childs), k => FindAllByParentID(ID).Where(e => e.Enable).ToList())!;
 
     /// <summary>子孙级区域。支持省市区，不支持乡镇街道</summary>
     [XmlIgnore, ScriptIgnore]
@@ -459,11 +461,11 @@ public partial class Area : Entity<Area>
         return list.Match(key, e => e.FullName).OrderByDescending(e => e.Value).Take(count).ToDictionary(e => e.Key, e => e.Value);
     }
 
-    /// <summary>搜索地址所属地区</summary>
+    /// <summary>搜索地址所属地区（模糊匹配）</summary>
     /// <param name="address"></param>
     /// <param name="count"></param>
     /// <returns></returns>
-    public static IList<KeyValuePair<Area, Double>> SearchAddress(String address, Int32 count = 10)
+    public static IList<KeyValuePair<Area, Double>> MatchAddress(String address, Int32 count = 10)
     {
         var set = new Dictionary<Area, Double>();
 
@@ -505,7 +507,7 @@ public partial class Area : Entity<Area>
         return set.OrderByDescending(e => e.Value).Take(count).ToList();
     }
 
-    private static String[] _zzq = new[] { "广西", "西藏", "新疆", "宁夏", "内蒙古" };
+    //private static String[] _zzq = new[] { "广西", "西藏", "新疆", "宁夏", "内蒙古" };
     /// <summary>根据IP地址搜索地区</summary>
     /// <param name="ip"></param>
     /// <param name="maxLevel">最大层级，默认3级</param>
@@ -517,41 +519,100 @@ public partial class Area : Entity<Area>
         var address = ip.IPToAddress();
         if (address.IsNullOrEmpty()) return list;
 
-        // IP数据库里，缺失自治区分隔符
-        foreach (var item in _zzq)
-        {
-            if (address.StartsWith(item) && !address.Contains("自治区"))
-            {
-                address = item + "自治区" + address[item.Length..];
-                break;
-            }
-        }
-        var addrs = address.Split("省", "自治区", "市", "区", "自治县", "县", "自治州", " ");
-        if (addrs != null && addrs.Length >= 2)
-        {
-            var prov = FindByName(0, addrs[0]);
-            if (prov != null)
-            {
-                list.Add(prov);
+        return SearchAddress(address, maxLevel);
+    }
 
-                if (maxLevel == 2 && addrs.Length >= 2)
-                {
-                    var city = FindByNames(addrs.Take(2).ToArray());
-                    if (city != null && city.ID != prov.ID) list.Add(city);
-                }
-                else if (maxLevel == 3)
-                {
-                    var city = FindByNames(addrs);
-                    if (city != null && city.ID != prov.ID)
-                    {
-                        if (city.ParentID != prov.ID) list.Add(city.Parent);
-                        list.Add(city);
-                    }
-                }
-            }
+    /// <summary>根据地址搜索地区，2字符逐级进行前缀匹配，支持越级</summary>
+    /// <remarks>
+    /// 支持越级搜索，例如“上海市华新中学”，越过市辖区和青浦区两级，最终匹配华新镇
+    /// </remarks>
+    /// <param name="address">省市区地址</param>
+    /// <param name="maxLevel">最大层级，默认3级</param>
+    /// <returns></returns>
+    public static IList<Area> SearchAddress(String address, Int32 maxLevel = 3)
+    {
+        var list = new List<Area>();
+        if (address.IsNullOrEmpty() || maxLevel <= 0) return list;
+
+        var r = FindAddress(Root, address, maxLevel);
+        if (r != null)
+        {
+            list.AddRange(r.AllParents);
+            list.Add(r);
         }
 
         return list;
+
+        //// IP数据库里，缺失自治区分隔符
+        //foreach (var item in _zzq)
+        //{
+        //    if (address.StartsWith(item) && !address.Contains("自治区"))
+        //    {
+        //        address = item + "自治区" + address[item.Length..];
+        //        break;
+        //    }
+        //}
+
+        //// 地址切分，至少把省分出来
+        //var addrs = address.Split("省", "自治区", "市", "区", "自治县", "县", "自治州", " ");
+        //if (addrs != null && addrs.Length >= 2)
+        //{
+        //    var prov = FindByName(0, addrs[0]);
+        //    if (prov != null)
+        //    {
+        //        list.Add(prov);
+
+        //        if (maxLevel == 2 && addrs.Length >= 2)
+        //        {
+        //            var city = FindByNames(addrs.Take(2).ToArray());
+        //            if (city != null && city.ID != prov.ID) list.Add(city);
+        //        }
+        //        else if (maxLevel == 3)
+        //        {
+        //            var city = FindByNames(addrs);
+        //            if (city != null && city.ID != prov.ID)
+        //            {
+        //                if (city.ParentID != prov.ID) list.Add(city.Parent);
+        //                list.Add(city);
+        //            }
+        //        }
+        //    }
+        //}
+
+        //return list;
+    }
+
+    /// <summary>在指定区域下按地址查找地区，前缀匹配</summary>
+    /// <param name="root"></param>
+    /// <param name="address"></param>
+    /// <param name="maxLevel"></param>
+    /// <returns></returns>
+    static Area? FindAddress(Area root, String address, Int32 maxLevel)
+    {
+        var name = address.Substring(0, 2);
+        var r = root.Childs.FirstOrDefault(e => e.Name.StartsWithIgnoreCase(name));
+        if (r != null)
+        {
+            // 找到地区，如果层次足够，继续递归
+            if (maxLevel <= 1) return r;
+
+            address = address.TrimStart(r.FullName!, r.Name, name);
+            var r2 = FindAddress(r, address, maxLevel - 1);
+
+            return r2 ?? r;
+        }
+
+        // 层次足够，越级查找
+        if (maxLevel >= 2)
+        {
+            foreach (var item in root.Childs)
+            {
+                var r2 = FindAddress(item, address, maxLevel - 1);
+                if (r2 != null) return r2;
+            }
+        }
+
+        return null;
     }
     #endregion
 
@@ -827,7 +888,7 @@ public partial class Area : Entity<Area>
     /// <summary>抓取并保存数据</summary>
     /// <param name="url">民政局行政区划统计数据</param>
     /// <returns></returns>
-    public static Int32 FetchAndSave(String url = null)
+    public static Int32 FetchAndSave(String? url = null)
     {
         //if (url.IsNullOrEmpty()) url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
         //if (url.IsNullOrEmpty()) url = "https://www.mca.gov.cn/mzsj/xzqh/2022/202201xzqh.html";
@@ -942,7 +1003,7 @@ public partial class Area : Entity<Area>
                 //r.Enable = first;
                 r.CreateTime = DateTime.Now;
                 r.UpdateTime = DateTime.Now;
-                r.Valid(true);
+                r.Valid(DataMethod.Insert);
                 //r.SaveAsync();
 
                 bs.Add(r);
@@ -1014,7 +1075,7 @@ public partial class Area : Entity<Area>
                 r.Enable = enable;
                 r.CreateTime = DateTime.Now;
                 r.UpdateTime = DateTime.Now;
-                r.Valid(true);
+                r.Valid(DataMethod.Insert);
                 r.SaveAsync();
 
                 count++;

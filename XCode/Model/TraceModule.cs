@@ -1,6 +1,4 @@
-﻿using System;
-using System.Text;
-using NewLife;
+﻿using NewLife;
 using NewLife.Log;
 
 namespace XCode;
@@ -36,13 +34,14 @@ public class TraceModule : EntityModule
 
     /// <summary>验证数据，自动加上创建和更新的信息</summary>
     /// <param name="entity"></param>
-    /// <param name="isNew"></param>
-    protected override Boolean OnValid(IEntity entity, Boolean isNew)
+    /// <param name="method"></param>
+    protected override Boolean OnValid(IEntity entity, DataMethod method)
     {
-        if (!isNew && !entity.HasDirty) return true;
+        if (method == DataMethod.Delete) return true;
+        if (method == DataMethod.Update && !entity.HasDirty) return true;
 
         var traceId = DefaultSpan.Current?.TraceId;
-        if (!traceId.IsNullOrEmpty())
+        if (!traceId.IsNullOrEmpty() && traceId.Length < 50)
         {
             var fs = GetFields(entity.GetType());
 
@@ -54,17 +53,15 @@ public class TraceModule : EntityModule
                 ss.Add(traceId);
 
                 // 最大长度
-                var fs2 = fs.Where(e => e.Length > 0).ToList();
-                var len = fs2.Count > 0 ? fs2.Min(e => e.Length) : 50;
+                var fi = fs.FirstOrDefault(e => e.Name.EqualIgnoreCase(__.TraceId));
+                var len = fi.Length > 0 ? fi.Length : 50;
 
                 // 倒序取最后若干项
-                var rs = "";
-                for (var i = ss.Count - 1; i >= 0; i--)
+                var rs = ss.Join(",");
+                while (rs.Length > len)
                 {
-                    var str = ss.Skip(i).Join(",");
-                    if (str.Length > len) break;
-
-                    rs = str;
+                    ss.RemoveAt(0);
+                    rs = ss.Join(",");
                 }
 
                 if (!rs.IsNullOrEmpty()) traceId = rs;

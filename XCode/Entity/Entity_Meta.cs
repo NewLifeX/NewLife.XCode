@@ -43,24 +43,24 @@ public partial class Entity<TEntity>
         public static TableItem Table => _Table.Value;
 
 #if NET45
-        private static readonly ThreadLocal<String> _ConnName = new();
+        private static readonly ThreadLocal<String?> _ConnName = new();
 #else
-        private static readonly AsyncLocal<String> _ConnName = new();
+        private static readonly AsyncLocal<String?> _ConnName = new();
 #endif
         /// <summary>链接名。线程内允许修改，修改者负责还原。若要还原默认值，设为null即可</summary>
-        public static String ConnName
+        public static String? ConnName
         {
             get => _ConnName.Value ??= Table.ConnName;
             set { _Session.Value = null; _ConnName.Value = value; }
         }
 
 #if NET45
-        private static readonly ThreadLocal<String> _TableName = new();
+        private static readonly ThreadLocal<String?> _TableName = new();
 #else
-        private static readonly AsyncLocal<String> _TableName = new();
+        private static readonly AsyncLocal<String?> _TableName = new();
 #endif
         /// <summary>表名。线程内允许修改，修改者负责还原</summary>
-        public static String TableName
+        public static String? TableName
         {
             get => _TableName.Value ??= Table.TableName;
             set { _Session.Value = null; _TableName.Value = value; }
@@ -92,9 +92,9 @@ public partial class Entity<TEntity>
 
         #region 会话
 #if NET45
-        private static readonly ThreadLocal<EntitySession<TEntity>> _Session = new();
+        private static readonly ThreadLocal<EntitySession<TEntity>?> _Session = new();
 #else
-        private static readonly AsyncLocal<EntitySession<TEntity>> _Session = new();
+        private static readonly AsyncLocal<EntitySession<TEntity>?> _Session = new();
 #endif
         /// <summary>实体会话。线程静态</summary>
         public static EntitySession<TEntity> Session => _Session.Value ??= EntitySession<TEntity>.Create(ConnName, TableName);
@@ -178,17 +178,17 @@ public partial class Entity<TEntity>
         /// <summary>针对实体对象自动分库分表</summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public static IDisposable CreateShard(TEntity entity)
+        public static IDisposable? CreateShard(TEntity entity)
         {
             // 使用自动分表分库策略
             var model = ShardPolicy?.Shard(entity);
-            return model != null ? new SplitPackge(model.ConnName, model.TableName) : (IDisposable)null;
+            return model != null ? new SplitPackge(model.ConnName, model.TableName) : null;
         }
 
         /// <summary>为实体对象、时间、雪花Id等计算分表分库</summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static IDisposable CreateShard(Object value)
+        public static IDisposable? CreateShard(Object value)
         {
             // 使用自动分表分库策略
             var model = ShardPolicy?.Shard(value);
@@ -244,7 +244,7 @@ public partial class Entity<TEntity>
         #endregion
 
         #region 模块
-        internal static EntityModules _Modules = new(typeof(TEntity));
+        private static EntityModules _Modules = new(typeof(TEntity));
         /// <summary>实体模块集合</summary>
         public static EntityModules Modules => _Modules;
         #endregion

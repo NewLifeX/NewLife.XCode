@@ -71,7 +71,7 @@ public interface IDbSession : IDisposable2
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>记录集</returns>
-    DataSet Query(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps);
+    DataSet Query(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
 
     /// <summary>执行DbCommand，返回记录集</summary>
     /// <param name="cmd">DbCommand</param>
@@ -87,14 +87,14 @@ public interface IDbSession : IDisposable2
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    DbTable Query(String sql, IDataParameter[] ps);
+    DbTable Query(String sql, IDataParameter[]? ps);
 
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>总记录数</returns>
-    Int64 QueryCount(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps);
+    Int64 QueryCount(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
 
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="builder">查询生成器</param>
@@ -111,7 +111,7 @@ public interface IDbSession : IDisposable2
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    Int32 Execute(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps);
+    Int32 Execute(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
 
     /// <summary>执行DbCommand，返回受影响的行数</summary>
     /// <param name="cmd">DbCommand</param>
@@ -123,7 +123,7 @@ public interface IDbSession : IDisposable2
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps);
+    Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
 
     /// <summary>执行SQL语句，返回结果中的第一行第一列</summary>
     /// <typeparam name="T">返回类型</typeparam>
@@ -131,14 +131,14 @@ public interface IDbSession : IDisposable2
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    T ExecuteScalar<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps);
+    T ExecuteScalar<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
 
     /// <summary>创建DbCommand</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    DbCommand CreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps);
+    DbCommand CreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
     #endregion
 
     #region 批量操作
@@ -170,7 +170,7 @@ public interface IDbSession : IDisposable2
     /// <param name="addColumns">要累加更新的字段，默认累加</param>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
-    Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list);
+    Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list);
 
     /// <summary>批量插入或更新</summary>
     /// <param name="table">数据表</param>
@@ -179,7 +179,7 @@ public interface IDbSession : IDisposable2
     /// <param name="addColumns">主键已存在时，要累加更新的字段</param>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
-    Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list);
+    Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list);
     #endregion
 
     #region 高级
@@ -195,6 +195,6 @@ public interface IDbSession : IDisposable2
     /// <param name="collectionName">指定要返回的架构的名称。</param>
     /// <param name="restrictionValues">为请求的架构指定一组限制值。</param>
     /// <returns></returns>
-    DataTable GetSchema(DbConnection conn, String collectionName, String[] restrictionValues);
+    DataTable GetSchema(DbConnection? conn, String collectionName, String[]? restrictionValues);
     #endregion
 }

@@ -131,10 +131,10 @@ public class MySqlTests
         Assert.True(count > 0);
 
         var list = Role.FindAll();
-        Assert.Equal(5, list.Count);
+        Assert.Equal(4, list.Count);
 
         var list2 = Role.FindAll(Role._.Name == "管理员");
-        Assert.Equal(1, list2.Count);
+        Assert.Single(list2);
 
         var list3 = Role.Search("用户", null);
         Assert.Equal(2, list3.Count);
@@ -174,10 +174,10 @@ public class MySqlTests
         Assert.True(count > 0);
 
         var list = Role.FindAll();
-        Assert.Equal(5, list.Count);
+        Assert.Equal(4, list.Count);
 
         var list2 = Role.FindAll(Role._.Name == "管理员");
-        Assert.Equal(1, list2.Count);
+        Assert.Single(list2);
 
         var list3 = Role.Search("用户", null);
         Assert.Equal(2, list3.Count);
@@ -193,13 +193,13 @@ public class MySqlTests
     private IDisposable CreateForBatch(String action)
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership_Batch;");
-        DAL.AddConnStr("Membership_Batch", connStr, null, "MySql");
+        DAL.AddConnStr("Membership_Batch_mysql", connStr, null, "MySql");
 
         var dt = Role2.Meta.Table.DataTable.Clone() as IDataTable;
         dt.TableName = $"Role2_{action}";
 
         // 分表
-        var split = Role2.Meta.CreateSplit("Membership_Batch", dt.TableName);
+        var split = Role2.Meta.CreateSplit("Membership_Batch_mysql", dt.TableName);
 
         var session = Role2.Meta.Session;
         session.Dal.SetTables(dt);
@@ -305,8 +305,8 @@ public class MySqlTests
     [Fact]
     public void GetTables()
     {
-        DAL.AddConnStr("member", _ConnStr.Replace("Database=sys", "Database=membership"), null, "MySql");
-        var dal = DAL.Create("member");
+        DAL.AddConnStr("member_mysql", _ConnStr.Replace("Database=sys", "Database=membership"), null, "MySql");
+        var dal = DAL.Create("member_mysql");
         var tables = dal.Tables;
 
         Assert.True(tables.Count > 0);

@@ -36,30 +36,40 @@ public partial class User : Entity<User>
         //df.Add(nameof(Sex));
 
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add<UserModule>();
+        Meta.Modules.Add(new UserModule { AllowEmpty = false });
         Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add<IPModule>();
+        Meta.Modules.Add(new IPModule { AllowEmpty = false });
+
+        // 实体缓存
+        // var ec = Meta.Cache;
+        // ec.Expire = 60;
 
         // 单对象缓存
         var sc = Meta.SingleCache;
+        // sc.Expire = 60;
         sc.FindSlaveKeyMethod = k => Find(_.Name == k);
         sc.GetSlaveKeyMethod = e => e.Name;
     }
 
-    /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <param name="isNew">是否插入</param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
+        //if (method == DataMethod.Delete) return true;
         // 如果没有脏数据，则不需要进行任何处理
-        if (!HasDirty) return;
+        if (!HasDirty) return true;
 
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
 
         // 建议先调用基类方法，基类方法会做一些统一处理
-        base.Valid(isNew);
+        if (!base.Valid(method)) return false;
 
         // 在新插入数据或者修改了指定字段时进行修正
+
+        // 保留2位小数
+        //Ex3 = Math.Round(Ex3, 2);
+
         // 处理当前已登录用户信息，可以由UserModule过滤器代劳
         /*var user = ManageProvider.User;
         if (user != null)
@@ -70,7 +80,9 @@ public partial class User : Entity<User>
         //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
 
         // 检查唯一索引
-        // CheckExist(isNew, nameof(Name));
+        // CheckExist(method == DataMethod.Insert, nameof(Name));
+
+        return true;
     }
 
     ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
@@ -139,12 +151,12 @@ public partial class User : Entity<User>
     #region 扩展属性
     /// <summary>部门</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
+    public Department? Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
 
     /// <summary>部门</summary>
     [Map(nameof(DepartmentID), typeof(Department), "ID")]
     [Category("登录信息")]
-    public String DepartmentName => Department?.Name;
+    public String? DepartmentName => Department?.Name;
     #endregion
 
     #region 扩展查询

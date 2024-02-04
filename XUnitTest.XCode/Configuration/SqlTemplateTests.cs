@@ -197,7 +197,7 @@ select * from userx where id=@id
 
         var date = DateTime.Today;
         var list = Menu3.Search(date, date, "stone", new PageParameter { PageIndex = 2, PageSize = 30 });
-        Assert.Equal("[test] Select * From (select * from menu2 where 'visible'=2) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') Order By ID Desc limit 30, 30", sql);
+        Assert.Equal("[test] Select * From (select * from menu2 where 'visible'=2) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') limit 30, 30", sql);
     }
 
     [TestOrder(70)]
@@ -225,6 +225,6 @@ select * from userx where id=@id
 
         var date = DateTime.Today;
         var list = Menu3.Search(date, date, "stone", new PageParameter { PageIndex = 2, PageSize = 30 });
-        Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') Order By ID Desc limit 30, 30", sql);
+        Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') limit 30, 30", sql);
     }
 }

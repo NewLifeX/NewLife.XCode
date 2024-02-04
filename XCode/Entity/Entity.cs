@@ -51,7 +51,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         // Activator.CreateInstance()有缓存功能，而泛型的那个没有
         //return Activator.CreateInstance(typeof(TEntity)) as TEntity;
         //var entity = typeof(TEntity).CreateInstance() as TEntity;
-        Meta._Modules.Create(entity, forEdit);
+        Meta.Modules.Create(entity, forEdit);
 
         return entity;
     }
@@ -127,7 +127,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             // 查询列表异步加入对象缓存
             ThreadPool.UnsafeQueueUserWorkItem(es =>
             {
-                foreach (var entity in es as TEntity[])
+                foreach (var entity in (es as TEntity[])!)
                 {
                     sc.Add(entity);
                 }
@@ -139,9 +139,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     #region 操作
     private static IEntityPersistence Persistence => Meta.Factory.Persistence;
 
-    /// <summary>插入数据，<see cref="Valid"/>后，在事务中调用<see cref="OnInsert"/>。</summary>
+    /// <summary>插入数据，Valid后，在事务中调用<see cref="OnInsert"/>。</summary>
     /// <returns></returns>
-    public override Int32 Insert() => DoAction(OnInsert, true);
+    public override Int32 Insert() => DoAction(OnInsert, DataMethod.Insert);
 
     /// <summary>把该对象持久化到数据库，添加/更新实体缓存。</summary>
     /// <returns></returns>
@@ -158,9 +158,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return rs;
     }
 
-    /// <summary>更新数据，<see cref="Valid"/>后，在事务中调用<see cref="OnUpdate"/>。</summary>
+    /// <summary>更新数据，Valid后，在事务中调用<see cref="OnUpdate"/>。</summary>
     /// <returns></returns>
-    public override Int32 Update() => DoAction(OnUpdate, false);
+    public override Int32 Update() => DoAction(OnUpdate, DataMethod.Update);
 
     /// <summary>更新数据库，同时更新实体缓存</summary>
     /// <returns></returns>
@@ -181,42 +181,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// 如果需要避开该机制，请清空脏数据。
     /// </remarks>
     /// <returns></returns>
-    public override Int32 Delete() => DoAction(OnDelete, null);
+    public override Int32 Delete() => DoAction(OnDelete, DataMethod.Delete);
 
     /// <summary>从数据库中删除该对象，同时从实体缓存中删除</summary>
     /// <returns></returns>
     protected virtual Int32 OnDelete() => Meta.Session.Delete(this);
-
-    private Int32 DoAction(Func<Int32> func, Boolean? isnew)
-    {
-        if (Meta.Table.DataTable.InsertOnly)
-        {
-            if (isnew == null) throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止删除！");
-            if (!isnew.Value) throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止修改！");
-        }
-
-        if (enableValid)
-        {
-            Boolean rt;
-            if (isnew != null)
-            {
-                Valid(isnew.Value);
-                rt = Meta._Modules.Valid(this, isnew.Value);
-            }
-            else
-                rt = Meta._Modules.Delete(this);
-
-            // 没有更新任何数据
-            if (!rt) return 0;
-        }
-
-        AutoFillSnowIDPrimaryKey();
-
-        // 自动分库分表
-        using var split = Meta.CreateShard(this as TEntity);
-
-        return func();
-    }
 
     /// <summary>保存。Insert/Update/Upsert</summary>
     /// <remarks>
@@ -248,11 +217,10 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var db = Meta.Session.Dal;
         if (db.SupportBatch)
         {
-            Valid(isnew);
-            if (!Meta.Modules.Valid(this, isnew)) return -1;
+            if (!Valid(isnew ? DataMethod.Insert : DataMethod.Update)) return -1;
 
             // 自动分库分表
-            using var split = Meta.CreateShard(this as TEntity);
+            using var split = Meta.CreateShard((this as TEntity)!);
             return this.Upsert(null, null, null, Meta.Session);
         }
 
@@ -263,9 +231,15 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public override Int32 SaveWithoutValid()
     {
-        enableValid = false;
-        try { return Save(); }
-        finally { enableValid = true; }
+        _enableValid = false;
+        try
+        {
+            return Save();
+        }
+        finally
+        {
+            _enableValid = true;
+        }
     }
 
     /// <summary>异步保存。实现延迟保存，大事务保存。主要面向日志表和频繁更新的在线记录表</summary>
@@ -287,21 +261,20 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             isnew = true;
 
         // 提前执行Valid，让它提前准备好验证数据
-        if (enableValid)
+        if (_enableValid)
         {
-            Valid(isnew);
-            Meta._Modules.Valid(this, isnew);
+            if (!Valid(isnew ? DataMethod.Insert : DataMethod.Update)) return false;
         }
         // 自动分库分表，影响后面的Meta.Session
-        using var split = Meta.CreateShard(this as TEntity);
+        using var split = Meta.CreateShard((this as TEntity)!);
         if (!HasDirty) return false;
 
         return Meta.Session.Queue.Add(this, msDelay);
     }
 
-    /// <summary>插入数据，<see cref="Valid"/>后，在事务中调用<see cref="OnInsert"/>。</summary>
+    /// <summary>插入数据，Valid后调用<see cref="OnInsertAsync"/>。</summary>
     /// <returns></returns>
-    public override Task<Int32> InsertAsync() => DoAction(OnInsertAsync, true);
+    public override Task<Int32> InsertAsync() => DoAction(OnInsertAsync, DataMethod.Insert);
 
     /// <summary>把该对象持久化到数据库，添加/更新实体缓存。</summary>
     /// <returns></returns>
@@ -318,9 +291,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return rs;
     }
 
-    /// <summary>更新数据，<see cref="Valid"/>后，在事务中调用<see cref="OnUpdate"/>。</summary>
+    /// <summary>更新数据，Valid后调用<see cref="OnUpdateAsync"/>。</summary>
     /// <returns></returns>
-    public override Task<Int32> UpdateAsync() => DoAction(OnUpdateAsync, false);
+    public override Task<Int32> UpdateAsync() => DoAction(OnUpdateAsync, DataMethod.Update);
 
     /// <summary>更新数据库，同时更新实体缓存</summary>
     /// <returns></returns>
@@ -334,76 +307,116 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return rs;
     }
 
-    /// <summary>删除数据，通过在事务中调用OnDelete实现。</summary>
+    /// <summary>删除数据，Valid后调用<see cref="OnDeleteAsync"/>。</summary>
     /// <remarks>
     /// 删除时，如果有且仅有主键有脏数据，则可能是ObjectDataSource之类的删除操作。
     /// 该情况下，实体类没有完整的信息（仅有主键信息），将会导致无法通过扩展属性删除附属数据。
     /// 如果需要避开该机制，请清空脏数据。
     /// </remarks>
     /// <returns></returns>
-    public override Task<Int32> DeleteAsync() => DoAction(OnDeleteAsync, null);
+    public override Task<Int32> DeleteAsync() => DoAction(OnDeleteAsync, DataMethod.Delete);
 
     /// <summary>从数据库中删除该对象，同时从实体缓存中删除</summary>
     /// <returns></returns>
     protected virtual Task<Int32> OnDeleteAsync() => Meta.Session.DeleteAsync(this);
 
-    private Task<Int32> DoAction(Func<Task<Int32>> func, Boolean? isnew)
+    private TResult DoAction<TResult>(Func<TResult> func, DataMethod method)
     {
         if (Meta.Table.DataTable.InsertOnly)
         {
-            if (isnew == null) throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止删除！");
-            if (!isnew.Value) throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止修改！");
+            switch (method)
+            {
+                case DataMethod.Update:
+                    throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止修改！");
+                case DataMethod.Delete:
+                    throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止删除！");
+            }
         }
 
-        // 自动分库分表
-        using var split = Meta.CreateShard(this as TEntity);
-
-        if (enableValid)
+        if (_enableValid)
         {
-            Boolean rt;
-            if (isnew != null)
-            {
-                Valid(isnew.Value);
-                rt = Meta._Modules.Valid(this, isnew.Value);
-            }
-            else
-                rt = Meta._Modules.Delete(this);
+            var rt = Valid(method);
 
             // 没有更新任何数据
-            if (!rt) return Task.FromResult(0);
+            if (!rt) return typeof(TResult) == typeof(Task<Int32>) ? (TResult)(Object)Task.FromResult(0) : (TResult)(Object)0;
         }
 
-        AutoFillSnowIDPrimaryKey();
+        AutoFillSnowIdPrimaryKey();
+
+        // 自动分库分表
+        using var split = Meta.CreateShard((this as TEntity)!);
 
         return func();
     }
 
     [NonSerialized]
-    private Boolean enableValid = true;
+    private Boolean _enableValid = true;
 
     /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <remarks>建议重写者调用基类的实现，因为基类根据数据字段的唯一索引进行数据验证。</remarks>
+    /// <remarks>建议重写者调用基类的实现，因为基类自动生成雪花Id、填充创建更新信息以及验证字符串字段是否超长。</remarks>
     /// <param name="isNew">是否新数据</param>
     public override void Valid(Boolean isNew)
     {
+        // 2017-8-17 实体基类不再自动根据唯一索引判断唯一性，一切由用户自己解决
+
+        //var factory = Meta.Factory;
+        //// 校验字符串长度，超长时抛出参数异常
+        //foreach (var fi in factory.Fields)
+        //{
+        //    if (fi.Type == typeof(String) && fi.Length > 0)
+        //    {
+        //        if (this[fi.Name] is String str && str.Length > fi.Length && Dirtys[fi.Name])
+        //            throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
+        //    }
+        //}
+
+        //!!! 自动填充雪花Id，用户可能直接调用Valid
+        AutoFillSnowIdPrimaryKey();
+    }
+
+    /// <summary>验证数据，支持添删改，通过返回值表示验证失败。基类实现字符串字段长度检查</summary>
+    /// <param name="method"></param>
+    /// <returns></returns>
+    public override Boolean Valid(DataMethod method)
+    {
+        switch (method)
+        {
+            case DataMethod.Insert:
+                Valid(true);
+                break;
+            case DataMethod.Update:
+                Valid(false);
+                break;
+            case DataMethod.Delete:
+                break;
+            default:
+                break;
+        }
+
         var factory = Meta.Factory;
         // 校验字符串长度，超长时抛出参数异常
         foreach (var fi in factory.Fields)
         {
             if (fi.Type == typeof(String) && fi.Length > 0)
             {
-                if (this[fi.Name] is String str && str.Length > fi.Length)
+                if (this[fi.Name] is String str && str.Length > fi.Length && Dirtys[fi.Name])
                     throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
             }
         }
 
-        AutoFillSnowIDPrimaryKey();
+        var rs = Meta.Modules.Valid(this, method);
+        if (!rs) return false;
+
+        //!!! 自动填充雪花Id，用户可能直接调用Valid
+        AutoFillSnowIdPrimaryKey();
+
+        return true;
     }
 
     /// <summary>
     /// 雪花Id生成器。Int64主键非自增时，自动填充
     /// </summary>
-    private void AutoFillSnowIDPrimaryKey()
+    protected void AutoFillSnowIdPrimaryKey()
     {
         var factory = Meta.Factory;
 
@@ -436,12 +449,12 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (Exist(isNew, names))
         {
             var sb = Pool.StringBuilder.Get();
-            String name = null;
+            String? name = null;
             for (var i = 0; i < names.Length; i++)
             {
                 if (sb.Length > 0) sb.Append('，');
 
-                FieldItem field = Meta.Table.FindByName(names[i]);
+                FieldItem? field = Meta.Table.FindByName(names[i]);
                 if (field != null) name = field.Description;
                 if (String.IsNullOrEmpty(name)) name = names[i];
 
@@ -449,9 +462,12 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
 
             name = Meta.Table.Description;
-            var p = name.IndexOfAny(new[] { '。', '，' });
-            if (p > 0) name = name[..p];
-            if (String.IsNullOrEmpty(name)) name = typeof(TEntity).Name;
+            if (!name.IsNullOrEmpty())
+            {
+                var p = name.IndexOfAny(['。', '，']);
+                if (p > 0) name = name[..p];
+            }
+            if (name.IsNullOrEmpty()) name = typeof(TEntity).Name;
             sb.AppendFormat(" 的{0}已存在！", name);
 
             throw new ArgumentOutOfRangeException(String.Join(",", names), this[names[0]], sb.Put(true));
@@ -466,7 +482,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         // 根据指定键查找所有符合的数据，然后比对。
         // 当然，也可以通过指定键和主键配合，找到拥有指定键，但是不是当前主键的数据，只查记录数。
-        var values = new Object[names.Length];
+        var values = new Object?[names.Length];
         for (var i = 0; i < names.Length; i++)
         {
             values[i] = this[names[i]];
@@ -484,6 +500,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             for (var i = 0; i < names.Length; i++)
             {
                 var fi = Meta.Table.FindByName(names[i]);
+                if (ReferenceEquals(fi, null)) throw new ArgumentOutOfRangeException(nameof(names), $"{names[i]} not found");
+
                 exp &= fi == values[i];
             }
 
@@ -525,24 +543,27 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="name">属性名称</param>
     /// <param name="value">属性值</param>
     /// <returns></returns>
-    public static TEntity Find(String name, Object value) => Find(new String[] { name }, new Object[] { value });
+    public static TEntity? Find(String name, Object value) => Find([name], [value]);
 
     /// <summary>根据属性以及对应的值，查找单个实体</summary>
     /// <param name="name">属性名称</param>
     /// <param name="value">属性值</param>
     /// <param name="selects">查询列，默认null表示所有字段</param>
     /// <returns></returns>
-    public static TEntity Find(String name, Object value, String selects) => Find(new String[] { name }, new Object[] { value }, selects);
+    public static TEntity? Find(String name, Object value, String selects) => Find([name], [value], selects);
 
     /// <summary>根据属性列表以及对应的值列表，查找单个实体</summary>
     /// <param name="names">属性名称集合</param>
     /// <param name="values">属性值集合</param>
     /// <returns></returns>
-    public static TEntity Find(String[] names, Object[] values)
+    public static TEntity? Find(String[] names, Object[] values)
     {
+        if (names == null || names.Length == 0) throw new ArgumentNullException(nameof(names));
+        if (values == null || values.Length == 0) throw new ArgumentNullException(nameof(values));
+
         var exp = new WhereExpression();
         // 判断自增和主键
-        if (names != null && names.Length == 1)
+        if (names.Length == 1)
         {
             var field = Meta.Table.FindByName(names[0]);
             if ((field as FieldItem) != null && (field.IsIdentity || field.PrimaryKey))
@@ -558,6 +579,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         for (var i = 0; i < names.Length; i++)
         {
             var fi = Meta.Table.FindByName(names[i]);
+            if (ReferenceEquals(fi, null)) throw new ArgumentOutOfRangeException(nameof(names), $"{names[i]} not found");
+
             exp &= fi == values[i];
         }
 
@@ -572,11 +595,14 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="values">属性值集合</param>
     /// <param name="selects">查询列，默认null表示所有字段</param>
     /// <returns></returns>
-    public static TEntity Find(String[] names, Object[] values, String selects)
+    public static TEntity? Find(String[] names, Object[] values, String selects)
     {
+        if (names == null || names.Length == 0) throw new ArgumentNullException(nameof(names));
+        if (values == null || values.Length == 0) throw new ArgumentNullException(nameof(values));
+
         var exp = new WhereExpression();
         // 判断自增和主键
-        if (names != null && names.Length == 1)
+        if (names.Length == 1)
         {
             var field = Meta.Table.FindByName(names[0]);
             if ((field as FieldItem) != null && (field.IsIdentity || field.PrimaryKey))
@@ -592,6 +618,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         for (var i = 0; i < names.Length; i++)
         {
             var fi = Meta.Table.FindByName(names[i]);
+            if (ReferenceEquals(fi, null)) throw new ArgumentOutOfRangeException(nameof(names), $"{names[i]} not found");
+
             exp &= fi == values[i];
         }
 
@@ -609,7 +637,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// </remarks>
     /// <param name="where">查询条件</param>
     /// <returns></returns>
-    private static TEntity FindUnique(Expression where)
+    private static TEntity? FindUnique(Expression where)
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
@@ -652,7 +680,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="where">查询条件</param>
     /// <param name="selects">查询列，默认null表示所有字段</param>
     /// <returns></returns>
-    private static TEntity FindUnique(Expression where, String selects)
+    private static TEntity? FindUnique(Expression where, String selects)
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
@@ -691,7 +719,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="whereClause">查询条件</param>
     /// <returns></returns>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public static TEntity Find(String whereClause)
+    public static TEntity? Find(String whereClause)
     {
         var list = FindAll(whereClause, null, null, 0, 1);
         return list.Count <= 0 ? null : list[0];
@@ -700,7 +728,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <summary>根据条件查找单个实体</summary>
     /// <param name="where">查询条件</param>
     /// <returns></returns>
-    public static TEntity Find(Expression where)
+    public static TEntity? Find(Expression where)
     {
         var max = 1;
 
@@ -715,7 +743,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="where">查询条件</param>
     /// <param name="selects">查询列，默认null表示所有字段</param>
     /// <returns></returns>
-    public static TEntity Find(Expression where, String selects)
+    public static TEntity? Find(Expression where, String selects)
     {
         var max = 1;
 
@@ -730,7 +758,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="key">唯一主键的值</param>
     /// <param name="selects">查询列，默认null表示所有字段</param>
     /// <returns></returns>
-    public static TEntity FindByKey(Object key, String selects)
+    public static TEntity? FindByKey(Object key, String selects)
     {
         var field = Meta.Unique ?? throw new ArgumentNullException(nameof(Meta.Unique), "FindByKey方法要求" + typeof(TEntity).FullName + "有唯一主键！");
 
@@ -743,7 +771,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <summary>根据主键查找单个实体</summary>
     /// <param name="key">唯一主键的值</param>
     /// <returns></returns>
-    public static TEntity FindByKey(Object key)
+    public static TEntity? FindByKey(Object key)
     {
         var field = Meta.Unique ?? throw new ArgumentNullException(nameof(Meta.Unique), "FindByKey方法要求" + typeof(TEntity).FullName + "有唯一主键！");
 
@@ -756,7 +784,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <summary>根据主键查询一个实体对象用于表单编辑</summary>
     /// <param name="key">唯一主键的值</param>
     /// <returns></returns>
-    public static TEntity FindByKeyForEdit(Object key)
+    public static TEntity? FindByKeyForEdit(Object key)
     {
         var field = Meta.Unique ?? throw new ArgumentNullException("Meta.Unique", "FindByKeyForEdit方法要求该表有唯一主键！");
 
@@ -785,8 +813,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (entity == null)
         {
             var des = Meta.Table.Description;
-            var p = des.IndexOfAny(new[] { '。', '，' });
-            if (p > 0) des = des[..p];
+            if (!des.IsNullOrEmpty())
+            {
+                var p = des.IndexOfAny(['。', '，']);
+                if (p > 0) des = des[..p];
+            }
 
             String msg;
             if (Helper.IsNullKey(key, field.Type))
@@ -804,9 +835,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="field">指定字段</param>
     /// <param name="where">条件字句</param>
     /// <returns></returns>
-    public static Int32 FindMin(String field, Expression where = null)
+    public static Int32 FindMin(String field, Expression? where = null)
     {
         var fd = Meta.Table.FindByName(field);
+        if (ReferenceEquals(fd, null)) throw new ArgumentOutOfRangeException(nameof(field), $"{field} not found");
+
         var list = FindAll(where, fd, null, 0, 1);
         return list.Count <= 0 ? 0 : Convert.ToInt32(list[0][fd.Name]);
     }
@@ -815,9 +848,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="field">指定字段</param>
     /// <param name="where">条件字句</param>
     /// <returns></returns>
-    public static Int32 FindMax(String field, Expression where = null)
+    public static Int32 FindMax(String field, Expression? where = null)
     {
         var fd = Meta.Table.FindByName(field);
+        if (ReferenceEquals(fd, null)) throw new ArgumentOutOfRangeException(nameof(field), $"{field} not found");
+
         var list = FindAll(where, fd.Desc(), null, 0, 1);
         return list.Count <= 0 ? 0 : Convert.ToInt32(list[0][fd.Name]);
     }
@@ -838,7 +873,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns>实体集</returns>
-    public static IList<TEntity> FindAll(String where, String order, String selects, Int64 startRowIndex, Int64 maximumRows)
+    public static IList<TEntity> FindAll(String? where, String? order, String? selects, Int64 startRowIndex, Int64 maximumRows)
     {
         var session = Meta.Session;
         var needOrderByID = startRowIndex > 0 || maximumRows > 0;
@@ -862,7 +897,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns>实体集</returns>
-    public static IList<TEntity> FindAll(Expression where, String order, String selects, Int64 startRowIndex, Int64 maximumRows)
+    public static IList<TEntity> FindAll(Expression? where, String? order, String? selects, Int64 startRowIndex, Int64 maximumRows)
     {
         var session = Meta.Session;
 
@@ -874,7 +909,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         // 如下优化，避免了每次都调用Meta.Count而导致形成一次查询，虽然这次查询时间损耗不大
         // 但是绝大多数查询，都不需要进行类似的海量数据优化，显然，这个startRowIndex将会挡住99%以上的浪费
         Int64 count;
-        if (startRowIndex > 500000 && (count = session.LongCount) > 1000000)
+        if (startRowIndex > 500_000 && (count = session.LongCount) > 1_000_000)
         {
             //// 计算本次查询的结果行数
             //var wh = where?.GetString(null);
@@ -889,9 +924,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                 #region 排序倒序
                 // 默认是自增字段的降序
                 var fi = Meta.Unique;
-                if (String.IsNullOrEmpty(order2) && fi != null && fi.IsIdentity) order2 = fi.Name + " Desc";
+                if (order2.IsNullOrEmpty() && fi != null && fi.IsIdentity) order2 = fi.Name + " Desc";
 
-                if (!String.IsNullOrEmpty(order2))
+                if (!order2.IsNullOrEmpty())
                 {
                     //2014-01-05 Modify by Apex
                     //处理order by带有函数的情况，避免分隔时将函数拆分导致错误
@@ -946,7 +981,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                     var start = (Int32)(count - (startRowIndex + maximumRows));
                     var builder2 = CreateBuilder(where, order2, selects);
                     var list = LoadData(session.Query(builder2, start, max));
-                    if (list == null || list.Count <= 0) return list;
+                    if (list.Count <= 0) return list;
 
                     // 如果正在使用单对象缓存，则批量进入
                     if (selects.IsNullOrEmpty() || selects == "*") LoadSingleCache(list);
@@ -1032,7 +1067,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
     }
 
-    static ShardModel[] FixOrder(ShardModel[] shards, String order)
+    /// <summary>根据排序字段调整查询多表（分表）时的顺序</summary>
+    /// <param name="shards"></param>
+    /// <param name="order"></param>
+    /// <returns></returns>
+    static ShardModel[] FixOrder(ShardModel[] shards, String? order)
     {
         // 根据分页字段排序分页表
         var ds = order?.Split(",");
@@ -1061,9 +1100,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="page">分页排序参数，同时返回满足条件的总记录数</param>
     /// <param name="selects">查询列，默认null表示所有字段</param>
     /// <returns></returns>
-    public static IList<TEntity> FindAll(Expression where, PageParameter page = null, String selects = null)
+    public static IList<TEntity> FindAll(Expression? where, PageParameter? page = null, String? selects = null)
     {
         if (page == null) return FindAll(where, null, selects, 0, 0);
+
+        where ??= new WhereExpression();
 
         // 页面参数携带进来的扩展查询
         if (page.State is Expression exp)
@@ -1081,7 +1122,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             Int64 rows;
 
             // 如果总记录数超过10万，为了提高性能，返回快速查找且带有缓存的总记录数
-            if ((where == null || where.IsEmpty) && session.LongCount > 100_000)
+            if (where.IsEmpty && session.LongCount > 100_000)
                 rows = session.LongCount;
             else
                 rows = FindCount(where, null, selects, 0, 0);
@@ -1090,18 +1131,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             page.TotalCount = rows;
         }
 
-        // 验证排序字段，避免非法
-        var orderby = page.OrderBy;
-        if (!page.Sort.IsNullOrEmpty())
-        {
-            var st = Meta.Table.FindByName(page.Sort);
-            page.OrderBy = null;
-            page.Sort = session.Dal.Db.FormatName(st);
-            orderby = page.OrderBy;
-
-            //!!! 恢复排序字段，否则属性名和字段名不一致时前台无法降序
-            page.Sort = st?.Name;
-        }
+        // 验证排序字段，避免非法注入
+        var orderby = SqlBuilder.BuildOrder(page, Meta.Factory);
 
         // 采用起始行还是分页
         IList<TEntity> list;
@@ -1110,7 +1141,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         else
             list = FindAll(where, orderby, selects, (page.PageIndex - 1) * page.PageSize, page.PageSize);
 
-        if (list == null || list.Count == 0) return list;
+        if (list.Count == 0) return list;
 
         // 统计数据。100万以上数据要求带where才支持统计
         if (page.RetrieveState &&
@@ -1164,7 +1195,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <summary>根据条件查找单个实体</summary>
     /// <param name="where">查询条件</param>
     /// <returns></returns>
-    public static async Task<TEntity> FindAsync(Expression where)
+    public static async Task<TEntity?> FindAsync(Expression where)
     {
         var max = 1;
 
@@ -1189,7 +1220,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns>实体集</returns>
-    public static async Task<IList<TEntity>> FindAllAsync(Expression where, String order, String selects, Int64 startRowIndex, Int64 maximumRows)
+    public static async Task<IList<TEntity>> FindAllAsync(Expression where, String? order, String? selects, Int64 startRowIndex, Int64 maximumRows)
     {
         var session = Meta.Session;
 
@@ -1201,7 +1232,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         // 如下优化，避免了每次都调用Meta.Count而导致形成一次查询，虽然这次查询时间损耗不大
         // 但是绝大多数查询，都不需要进行类似的海量数据优化，显然，这个startRowIndex将会挡住99%以上的浪费
         Int64 count;
-        if (startRowIndex > 500000 && (count = session.LongCount) > 1000000)
+        if (startRowIndex > 500_000 && (count = session.LongCount) > 1_000_000)
         {
             //// 计算本次查询的结果行数
             //var wh = where?.GetString(null);
@@ -1216,9 +1247,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                 #region 排序倒序
                 // 默认是自增字段的降序
                 var fi = Meta.Unique;
-                if (String.IsNullOrEmpty(order2) && fi != null && fi.IsIdentity) order2 = fi.Name + " Desc";
+                if (order2.IsNullOrEmpty() && fi != null && fi.IsIdentity) order2 = fi.Name + " Desc";
 
-                if (!String.IsNullOrEmpty(order2))
+                if (!order2.IsNullOrEmpty())
                 {
                     //2014-01-05 Modify by Apex
                     //处理order by带有函数的情况，避免分隔时将函数拆分导致错误
@@ -1273,7 +1304,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                     var start = (Int32)(count - (startRowIndex + maximumRows));
                     var builder2 = CreateBuilder(where, order2, selects);
                     var list = LoadData(await session.QueryAsync(builder2, start, max));
-                    if (list == null || list.Count <= 0) return list;
+                    if (list.Count <= 0) return list;
 
                     // 如果正在使用单对象缓存，则批量进入
                     if (selects.IsNullOrEmpty() || selects == "*") LoadSingleCache(list);
@@ -1347,7 +1378,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="page">分页排序参数，同时返回满足条件的总记录数</param>
     /// <param name="selects">查询列，默认null表示所有字段</param>
     /// <returns></returns>
-    public static async Task<IList<TEntity>> FindAllAsync(Expression where, PageParameter page = null, String selects = null)
+    public static async Task<IList<TEntity>> FindAllAsync(Expression where, PageParameter? page = null, String? selects = null)
     {
         if (page == null) return await FindAllAsync(where, null, selects, 0, 0);
 
@@ -1367,7 +1398,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             Int64 rows;
 
             // 如果总记录数超过10万，为了提高性能，返回快速查找且带有缓存的总记录数
-            if ((where == null || where.IsEmpty) && session.LongCount > 100_000)
+            if (where.IsEmpty && session.LongCount > 100_000)
                 rows = session.LongCount;
             else
                 rows = await FindCountAsync(where, null, selects, 0, 0);
@@ -1376,18 +1407,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             page.TotalCount = rows;
         }
 
-        // 验证排序字段，避免非法
-        var orderby = page.OrderBy;
-        if (!page.Sort.IsNullOrEmpty())
-        {
-            var st = Meta.Table.FindByName(page.Sort);
-            page.OrderBy = null;
-            page.Sort = session.Dal.Db.FormatName(st);
-            orderby = page.OrderBy;
-
-            //!!! 恢复排序字段，否则属性名和字段名不一致时前台无法降序
-            page.Sort = st?.Name;
-        }
+        // 验证排序字段，避免非法注入
+        var orderby = SqlBuilder.BuildOrder(page, Meta.Factory);
 
         // 采用起始行还是分页
         IList<TEntity> list;
@@ -1396,7 +1417,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         else
             list = await FindAllAsync(where, orderby, selects, (page.PageIndex - 1) * page.PageSize, page.PageSize);
 
-        if (list == null || list.Count == 0) return list;
+        if (list.Count == 0) return list;
 
         // 统计数据。100万以上数据要求带where才支持统计
         if (page.RetrieveState &&
@@ -1422,7 +1443,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="startRowIndex">开始行，0表示第一行。这里无意义，仅仅为了保持与FindAll相同的方法签名</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行。这里无意义，仅仅为了保持与FindAll相同的方法签名</param>
     /// <returns>总行数</returns>
-    public static async Task<Int64> FindCountAsync(Expression where, String order = null, String selects = null, Int64 startRowIndex = 0, Int64 maximumRows = 0)
+    public static async Task<Int64> FindCountAsync(Expression where, String? order = null, String? selects = null, Int64 startRowIndex = 0, Int64 maximumRows = 0)
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
@@ -1478,7 +1499,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="startRowIndex">开始行，0表示第一行。这里无意义，仅仅为了保持与FindAll相同的方法签名</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行。这里无意义，仅仅为了保持与FindAll相同的方法签名</param>
     /// <returns>总行数</returns>
-    public static Int32 FindCount(String where, String order = null, String selects = null, Int64 startRowIndex = 0, Int64 maximumRows = 0)
+    public static Int32 FindCount(String? where, String? order = null, String? selects = null, Int64 startRowIndex = 0, Int64 maximumRows = 0)
     {
         var session = Meta.Session;
 
@@ -1504,7 +1525,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="startRowIndex">开始行，0表示第一行。这里无意义，仅仅为了保持与FindAll相同的方法签名</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行。这里无意义，仅仅为了保持与FindAll相同的方法签名</param>
     /// <returns>总行数</returns>
-    public static Int64 FindCount(Expression where, String order = null, String selects = null, Int64 startRowIndex = 0, Int64 maximumRows = 0)
+    public static Int64 FindCount(Expression where, String? order = null, String? selects = null, Int64 startRowIndex = 0, Int64 maximumRows = 0)
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
@@ -1556,7 +1577,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns>实体集</returns>
-    public static SelectBuilder FindSQL(String where, String order, String selects, Int32 startRowIndex = 0, Int32 maximumRows = 0)
+    public static SelectBuilder FindSQL(String? where, String? order, String? selects, Int32 startRowIndex = 0, Int32 maximumRows = 0)
     {
         var needOrderByID = startRowIndex > 0 || maximumRows > 0;
         var builder = CreateBuilder(where, order, selects, needOrderByID);
@@ -1566,9 +1587,12 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <summary>获取查询唯一键的SQL。比如Select ID From Table</summary>
     /// <param name="where"></param>
     /// <returns></returns>
-    public static SelectBuilder FindSQLWithKey(String where = null)
+    public static SelectBuilder FindSQLWithKey(String? where = null)
     {
-        var columnName = Meta.Session.Dal.Db.FormatName(Meta.Unique.Field);
+        var uk = Meta.Unique.Field;
+        if (uk == null) throw new XCodeException("实体类缺少唯一主键字段，无法生成SQL语句！");
+
+        var columnName = Meta.Session.Dal.Db.FormatName(uk);
         return FindSQL(where, null, columnName, 0, 0);
     }
     #endregion
@@ -1598,7 +1622,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     public static IList<TEntity> Search(DateTime start, DateTime end, String key, PageParameter page)
     {
         var df = Meta.Factory.Default as TEntity;
-        return FindAll(df.SearchWhere(start, end, key, page), page);
+        return FindAll(df!.SearchWhere(start, end, key, page), page);
     }
 
     /// <summary>构造高级查询条件</summary>
@@ -1625,7 +1649,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="fields">要查询的字段，默认为空表示查询所有字符串字段</param>
     /// <param name="func">处理每一个查询关键字的回调函数</param>
     /// <returns></returns>
-    public static WhereExpression SearchWhereByKeys(String keys, FieldItem[] fields = null, Func<String, FieldItem[], WhereExpression> func = null)
+    public static WhereExpression SearchWhereByKeys(String keys, FieldItem[]? fields = null, Func<String, FieldItem[]?, WhereExpression>? func = null)
     {
         var exp = new WhereExpression();
         if (String.IsNullOrEmpty(keys)) return exp;
@@ -1645,7 +1669,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="key">关键字</param>
     /// <param name="fields">要查询的字段，默认为空表示查询所有字符串字段</param>
     /// <returns></returns>
-    public static WhereExpression SearchWhereByKey(String key, FieldItem[] fields = null)
+    public static WhereExpression SearchWhereByKey(String key, FieldItem[]? fields = null)
     {
         var exp = new WhereExpression();
         if (key.IsNullOrEmpty()) return exp;
@@ -1706,7 +1730,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="order">排序</param>
     /// <param name="selects">选择列</param>
     /// <returns></returns>
-    public static SelectBuilder CreateBuilder(Expression where, String order, String selects)
+    public static SelectBuilder CreateBuilder(Expression? where, String? order, String? selects)
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
@@ -1719,7 +1743,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return builder;
     }
 
-    private static SelectBuilder CreateBuilder(String where, String order, String selects, Boolean needOrderByID)
+    private static SelectBuilder CreateBuilder(String? where, String? order, String? selects, Boolean needOrderByID)
     {
         var factory = Meta.Factory;
         var session = Meta.Session;
@@ -1802,7 +1826,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return builder;
     }
 
-    private static SelectBuilder FixParam(SelectBuilder builder, IDictionary<String, Object> ps)
+    private static SelectBuilder FixParam(SelectBuilder builder, IDictionary<String, Object>? ps)
     {
         // 提取参数
         if (ps != null)
@@ -1831,7 +1855,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// </remarks>
     /// <param name="name">字段名</param>
     /// <returns></returns>
-    public override Object this[String name]
+    public override Object? this[String name]
     {
         get
         {
@@ -1881,15 +1905,15 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     #endregion
 
     #region 序列化
-    Boolean IAccessor.Read(Stream stream, Object context) => OnRead(stream, context, false);
+    Boolean IAccessor.Read(Stream stream, Object? context) => OnRead(stream, context, false);
 
-    Boolean IAccessor.Write(Stream stream, Object context) => OnWrite(stream, context, false);
+    Boolean IAccessor.Write(Stream stream, Object? context) => OnWrite(stream, context, false);
 
     /// <summary>从数据流反序列化</summary>
     /// <param name="stream">数据流</param>
     /// <param name="context">上下文</param>
     /// <param name="extend">是否序列化扩展属性</param>
-    protected virtual Boolean OnRead(Stream stream, Object context, Boolean extend)
+    protected virtual Boolean OnRead(Stream stream, Object? context, Boolean extend)
     {
         if (context is not Binary bn) bn = new Binary { Stream = stream, EncodeInt = true };
 
@@ -1907,7 +1931,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="stream">数据流</param>
     /// <param name="context">上下文</param>
     /// <param name="extend">是否序列化扩展属性</param>
-    protected virtual Boolean OnWrite(Stream stream, Object context, Boolean extend)
+    protected virtual Boolean OnWrite(Stream stream, Object? context, Boolean extend)
     {
         if (context is not Binary bn) bn = new Binary { Stream = stream, EncodeInt = true };
 
@@ -2051,18 +2075,21 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="find">查找函数</param>
     /// <param name="create">创建对象</param>
     /// <returns></returns>
-    public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, TEntity> find, Func<TKey, TEntity> create)
+    public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, TEntity?> find, Func<TKey, TEntity> create)
     {
-        if (key == null) return null;
+        //if (key == null) return null;
 
-        var entity = find != null ? find(key, true) : FindByKey(key);
+        var entity = find != null ? find(key, true) : FindByKey(key!);
         if (entity != null) return entity;
 
         // 加锁，避免同一个key并发新增
         var keyLock = $"{typeof(TEntity).FullName}-{key}";
         lock (keyLock)
         {
-            entity = find != null ? find(key, false) : FindByKey(key);
+            // 打开事务，提升可靠性也避免读写分离造成数据不一致
+            using var trans = Meta.CreateTrans();
+
+            entity = find != null ? find(key, false) : FindByKey(key!);
             if (entity != null) return entity;
 
             if (create != null)
@@ -2080,9 +2107,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
             catch (Exception ex)
             {
-                entity = find != null ? find(key, false) : FindByKey(key);
+                entity = find != null ? find(key, false) : FindByKey(key!);
                 if (entity == null) throw ex.GetTrue();
             }
+
+            trans.Commit();
 
             return entity;
         }
@@ -2096,21 +2125,29 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, TEntity> find, Func<TKey, TEntity> create)
     {
-        if (key == null) return null;
-        if (find == null) throw new ArgumentNullException(nameof(find));
+        //if (key == null) return null;
+        //if (find == null) throw new ArgumentNullException(nameof(find));
 
-        var entity = find(key);
+        var entity = find != null ? find(key) : FindByKey(key!);
         if (entity != null) return entity;
 
         // 加锁，避免同一个key并发新增
         var keyLock = $"{typeof(TEntity).FullName}-{key}";
         lock (keyLock)
         {
-            entity = find(key);
+            // 打开事务，提升可靠性也避免读写分离造成数据不一致
+            using var trans = Meta.CreateTrans();
+
+            entity = find != null ? find(key) : FindByKey(key!);
             if (entity != null) return entity;
 
-            if (create == null) throw new ArgumentNullException(nameof(create));
-            entity = create(key);
+            if (create != null)
+                entity = create(key);
+            else
+            {
+                entity = new TEntity();
+                entity.SetItem(Meta.Factory.Unique.Name, key);
+            }
 
             // 插入失败时，再次查询
             try
@@ -2119,9 +2156,11 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
             catch (Exception ex)
             {
-                entity = find(key);
+                entity = find != null ? find(key) : FindByKey(key!);
                 if (entity == null) throw ex.GetTrue();
             }
+
+            trans.Commit();
 
             return entity;
         }

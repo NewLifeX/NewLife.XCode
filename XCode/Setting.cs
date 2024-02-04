@@ -53,6 +53,10 @@ public class XCodeSetting : Config<XCodeSetting>
     //[Description("备份目录。备份数据库时存放的目录")]
     //public String BackupPath { get; set; } = "";
 
+    /// <summary>批大小。用于批量操作数据，抽取、删除、备份、恢复，默认5000</summary>
+    [Description("批大小。用于批量操作数据，抽取、删除、备份、恢复，默认5000")]
+    public Int32 BatchSize { get; set; } = 5_000;
+
     /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
     [Description("命令超时。查询执行超时时间，默认0秒不限制")]
     public Int32 CommandTimeout { get; set; }
@@ -77,6 +81,10 @@ public class XCodeSetting : Config<XCodeSetting>
     [Description("扩展属性过期。扩展属性Extends缓存，默认10秒")]
     public Int32 ExtendExpire { get; set; } = 10;
 
+    /// <summary>字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒</summary>
+    [Description("字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒")]
+    public Int32 FieldCacheExpire { get; set; } = 3600;
+
     /// <summary>反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除</summary>
     [Description("反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除")]
     public Migration Migration { get; set; } = Migration.On;
@@ -84,6 +92,10 @@ public class XCodeSetting : Config<XCodeSetting>
     /// <summary></summary>
     [Description("表名称、字段名大小写格式。Default 根据模型生成;Upper 全大写;Lower 全小写;Underline下划线")]
     public NameFormats NameFormat { get; set; } = NameFormats.Default;
+
+    /// <summary>快速统计最小数据量</summary>
+    [Description("快速统计最小数据量。默认1000万，在对数据表进行无条件 count 时，先进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。")]
+    public int FastCountMin { get; set; } = 10_000_000;
     #endregion
 
     #region 方法

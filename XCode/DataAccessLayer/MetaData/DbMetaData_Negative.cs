@@ -121,7 +121,7 @@ internal partial class DbMetaData
 
     private void CheckAllTables(IDataTable[] tables, Migration mode, Boolean dbExit)
     {
-        IList<IDataTable> dbtables = null;
+        IList<IDataTable>? dbtables = null;
         if (dbExit)
         {
             var tableNames = tables.Select(e => FormatName(e, false)).ToArray();
@@ -175,18 +175,18 @@ internal partial class DbMetaData
             var sb = new StringBuilder();
 
             var sql = CheckTableDescription(entitytable, dbtable, mode);
-            Append(sb, ';', sql);
+            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
 
             // 先删除索引，后面才有可能删除字段
             sql = CheckDeleteIndex(entitytable, dbtable, mode);
-            Append(sb, ';', sql);
+            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
 
             sql = CheckColumnsChange(entitytable, dbtable, @readonly, onlyCreate);
-            Append(sb, ';', sql);
+            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
 
             // 新增字段后，可能需要删除索引
             sql = CheckAddIndex(entitytable, dbtable, mode);
-            Append(sb, ';', sql);
+            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
 
             if (sb.Length > 0) WriteLog($"DDL模式[{mode}]，请手工修改表：{Environment.NewLine}{sb}");
         }
@@ -269,11 +269,11 @@ internal partial class DbMetaData
             // 对于修改列，只读或者只创建，都只要sql
             if (IsColumnTypeChanged(item, dbf))
             {
-                WriteLog("字段{0}.{1}类型需要由数据库的{2}改变为实体的{3}", entitytable.Name, item.Name, dbf.DataType, item.DataType);
+                WriteLog("字段[{0}.{1}]类型需要由数据库的[{2}]改变为实体的[{3}]，RawType={4}", entitytable.Name, item.Name, dbf.DataType.Name, item.DataType.FullName.TrimStart("System."), dbf.RawType);
                 PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
             }
             else if (IsColumnLengthChanged(item, dbf, entityDb))
-                PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly, DDLSchema.AlterColumn, item, dbf);
             else if (IsColumnChanged(item, dbf, entityDb))
                 PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
 
@@ -297,7 +297,7 @@ internal partial class DbMetaData
     /// <param name="dbtable"></param>
     /// <param name="mode"></param>
     /// <returns>返回未执行语句</returns>
-    protected virtual String CheckTableDescription(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    protected virtual String? CheckTableDescription(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
         var @readonly = mode <= Migration.ReadOnly;
 
@@ -325,7 +325,7 @@ internal partial class DbMetaData
     /// <param name="dbtable"></param>
     /// <param name="mode"></param>
     /// <returns>返回未执行语句</returns>
-    protected virtual String CheckAddIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    protected virtual String? CheckAddIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
         var @readonly = mode <= Migration.ReadOnly;
         var onlyCreate = mode < Migration.Full;
@@ -380,7 +380,7 @@ internal partial class DbMetaData
     /// <param name="dbtable"></param>
     /// <param name="mode"></param>
     /// <returns>返回未执行语句</returns>
-    protected virtual String CheckDeleteIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    protected virtual String? CheckDeleteIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
         var @readonly = mode <= Migration.ReadOnly;
         var onlyCreate = mode < Migration.Full;
@@ -417,7 +417,7 @@ internal partial class DbMetaData
     /// <summary>格式化注释，去除所有非单词字符</summary>
     /// <param name="str"></param>
     /// <returns></returns>
-    private String FormatDescription(String str)
+    private String? FormatDescription(String? str)
     {
         if (str.IsNullOrWhiteSpace()) return null;
 
@@ -441,10 +441,22 @@ internal partial class DbMetaData
         // 是否已改变
         var isChanged = false;
 
+        // 仅针对字符串类型比较长度
+        if (!isChanged && entityColumn.DataType == typeof(String) && entityColumn.Length != dbColumn.Length)
+        {
+            isChanged = true;
+
+            // 如果是大文本类型，长度可能不等
+            if ((entityColumn.Length > Database.LongTextLength || entityColumn.Length <= 0)
+                && (entityDb != null && dbColumn.Length > entityDb.LongTextLength || dbColumn.Length <= 0)
+                || dbColumn.RawType.EqualIgnoreCase("ntext", "text", "sysname"))
+                isChanged = false;
+        }
+
         return isChanged;
     }
 
-    /// <summary>检查字段是否有改变，除了默认值和备注以外</summary>
+    /// <summary>检查字段长度是否扩大</summary>
     /// <param name="entityColumn"></param>
     /// <param name="dbColumn"></param>
     /// <param name="entityDb"></param>
@@ -455,7 +467,7 @@ internal partial class DbMetaData
         var isChanged = false;
 
         // 仅针对字符串类型比较长度
-        if (!isChanged && entityColumn.DataType == typeof(String) && entityColumn.Length != dbColumn.Length)
+        if (!isChanged && entityColumn.DataType == typeof(String) && entityColumn.Length > dbColumn.Length)
         {
             isChanged = true;
 
@@ -472,9 +484,12 @@ internal partial class DbMetaData
     protected virtual Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)
     {
         var type = entityColumn.DataType;
-        if (type.IsEnum) type = typeof(Int32);
+        //if (type.IsEnum) type = typeof(Int32);
+        if (type.IsEnum && (dbColumn.DataType.IsInt() || dbColumn.DataType == typeof(Boolean))) return false;
         if (type == dbColumn.DataType) return false;
-        if (Nullable.GetUnderlyingType(type) == dbColumn.DataType) return false;
+
+        var type2 = Nullable.GetUnderlyingType(type);
+        if (type2 == dbColumn.DataType) return false;
 
         //// 整型不做改变
         //if (type.IsInt() && dbColumn.DataType.IsInt()) return false;
@@ -484,7 +499,7 @@ internal partial class DbMetaData
         {
             //if (entityColumn.DataType == item.Key && dbColumn.DataType == item.Value) return false;
             // 把不常用的类型映射到常用类型，比如数据库SByte映射到实体类Byte，UInt32映射到Int32，而不需要重新修改数据库
-            if (dbColumn.DataType == item.Key && type == item.Value) return false;
+            if (dbColumn.DataType == item.Key && (type == item.Value || type2 == item.Value)) return false;
         }
 
         return true;
@@ -653,8 +668,8 @@ internal partial class DbMetaData
                 }
             }
 
-            IDataColumn dc = null;
-            IDataTable dt = null;
+            IDataColumn? dc = null;
+            IDataTable? dt = null;
             if (values != null && values.Length > 0)
             {
                 dc = values[0] as IDataColumn;
@@ -714,7 +729,11 @@ internal partial class DbMetaData
         return true;
     }
 
-    protected virtual void CreateTable(StringBuilder sb, IDataTable table, Boolean onlySql)
+    /// <summary>创建数据表，包括注释与索引</summary>
+    /// <param name="sb"></param>
+    /// <param name="table"></param>
+    /// <param name="onlySql"></param>
+    public virtual void CreateTable(StringBuilder sb, IDataTable table, Boolean onlySql)
     {
         // 创建表失败后，不再处理注释和索引
         if (!PerformSchema(sb, onlySql, DDLSchema.CreateTable, table)) return;
@@ -732,7 +751,11 @@ internal partial class DbMetaData
         CreateIndexes(sb, table, onlySql);
     }
 
-    void CreateIndexes(StringBuilder sb, IDataTable table, Boolean onlySql)
+    /// <summary>创建索引</summary>
+    /// <param name="sb"></param>
+    /// <param name="table"></param>
+    /// <param name="onlySql"></param>
+    public void CreateIndexes(StringBuilder sb, IDataTable table, Boolean onlySql)
     {
         if (table.Indexes != null)
         {
@@ -790,7 +813,7 @@ internal partial class DbMetaData
     /// <param name="schema">数据定义模式</param>
     /// <param name="values">其它信息</param>
     /// <returns></returns>
-    public virtual Object SetSchema(DDLSchema schema, params Object[] values)
+    public virtual Object? SetSchema(DDLSchema schema, params Object[]? values)
     {
         var db = Database as DbBase;
         using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
@@ -839,7 +862,7 @@ internal partial class DbMetaData
         // 字段名
         sb.AppendFormat("{0} ", FormatName(field));
 
-        String typeName = null;
+        String? typeName = null;
         // 如果还是原来的数据库类型，则直接使用
         //if (Database.DbType == field.Table.DbType) typeName = field.RawType;
         // 每种数据库的自增差异太大，理应由各自处理，而不采用原始值
@@ -867,7 +890,7 @@ internal partial class DbMetaData
         // 字段名
         sb.AppendFormat("{0} ", FormatName(field));
 
-        String typeName = null;
+        String? typeName = null;
         // 如果还是原来的数据库类型，则直接使用
         //if (Database.DbType == field.Table.DbType) typeName = field.RawType;
         // 每种数据库的自增差异太大，理应由各自处理，而不采用原始值
@@ -887,7 +910,7 @@ internal partial class DbMetaData
     /// <param name="field">字段</param>
     /// <param name="onlyDefine">仅仅定义</param>
     /// <returns></returns>
-    protected virtual String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected virtual String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
         if (field.PrimaryKey && field.Table.PrimaryKeys.Length <= 1) return " Primary Key";
 

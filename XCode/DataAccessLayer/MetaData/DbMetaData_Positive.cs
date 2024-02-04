@@ -81,7 +81,7 @@ partial class DbMetaData
 
     /// <summary>取得所有表构架</summary>
     /// <returns></returns>
-    protected virtual List<IDataTable> OnGetTables(String[] names)
+    protected virtual List<IDataTable> OnGetTables(String[]? names)
     {
         var list = new List<IDataTable>();
 
@@ -99,7 +99,7 @@ partial class DbMetaData
     /// <param name="names">指定表名</param>
     /// <param name="data">扩展</param>
     /// <returns></returns>
-    protected List<IDataTable> GetTables(DataRow[] rows, String[] names, IDictionary<String, DataTable> data = null)
+    protected List<IDataTable> GetTables(DataRow[]? rows, String[]? names, IDictionary<String, DataTable>? data = null)
     {
         if (rows == null || rows.Length == 0) return new List<IDataTable>();
 
@@ -175,7 +175,7 @@ partial class DbMetaData
         if (dt == null) return null;
 
         // 找到该表所有字段，注意排序
-        DataRow[] drs = null;
+        DataRow[]? drs = null;
         var where = $"{_.TalbeName}='{table.TableName}'";
         if (dt.Columns.Contains(_.OrdinalPosition))
             drs = dt.Select(where, _.OrdinalPosition);
@@ -329,11 +329,11 @@ partial class DbMetaData
     #endregion
 
     #region 数据类型
-    /// <summary>类型映射</summary>
-    protected IDictionary<Type, String[]> Types { get; set; }
+    /// <summary>类型映射。Net类型映射到数据库多种类型上</summary>
+    protected IDictionary<Type, String[]> Types { get; set; } = null!;
 
-    protected List<KeyValuePair<Type, Type>> _FieldTypeMaps;
-    /// <summary>字段类型映射</summary>
+    protected List<KeyValuePair<Type, Type>>? _FieldTypeMaps;
+    /// <summary>字段类型映射（数据库-实体类）</summary>
     protected virtual List<KeyValuePair<Type, Type>> FieldTypeMaps
     {
         get
@@ -343,25 +343,36 @@ partial class DbMetaData
                 // 把不常用的类型映射到常用类型，比如数据库SByte映射到实体类Byte，UInt32映射到Int32，而不需要重新修改数据库
                 var list = new List<KeyValuePair<Type, Type>>
                 {
-                    new KeyValuePair<Type, Type>(typeof(SByte), typeof(Byte)),
+                    new(typeof(SByte), typeof(Byte)),
                     //list.Add(new KeyValuePair<Type, Type>(typeof(SByte), typeof(Int16)));
                     // 因为等价，字节需要能够互相映射
-                    new KeyValuePair<Type, Type>(typeof(Byte), typeof(SByte)),
+                    new(typeof(Byte), typeof(SByte)),
+                    new(typeof(Byte), typeof(Boolean)),
+                    new(typeof(Boolean), typeof(Byte)),
+                    new(typeof(Byte), typeof(Int32)),
 
-                    new KeyValuePair<Type, Type>(typeof(UInt16), typeof(Int16)),
-                    new KeyValuePair<Type, Type>(typeof(Int16), typeof(UInt16)),
+                    new(typeof(UInt16), typeof(Int16)),
+                    new(typeof(Int16), typeof(UInt16)),
                     //list.Add(new KeyValuePair<Type, Type>(typeof(UInt16), typeof(Int32)));
                     //list.Add(new KeyValuePair<Type, Type>(typeof(Int16), typeof(Int32)));
+                    new(typeof(Int16), typeof(Int32)),
+                    new(typeof(Int16), typeof(Boolean)),
 
-                    new KeyValuePair<Type, Type>(typeof(UInt32), typeof(Int32)),
-                    new KeyValuePair<Type, Type>(typeof(Int32), typeof(UInt32)),
+                    new(typeof(UInt32), typeof(Int32)),
+                    new(typeof(Int32), typeof(UInt32)),
                     //// 因为自增的原因，某些字段需要被映射到Int32里面来
                     //list.Add(new KeyValuePair<Type, Type>(typeof(SByte), typeof(Int32)));
+                    new(typeof(Int32), typeof(Boolean)),
 
-                    new KeyValuePair<Type, Type>(typeof(UInt64), typeof(Int64)),
-                    new KeyValuePair<Type, Type>(typeof(Int64), typeof(UInt64)),
+                    new(typeof(UInt64), typeof(Int64)),
+                    new(typeof(Int64), typeof(UInt64)),
                     //list.Add(new KeyValuePair<Type, Type>(typeof(UInt64), typeof(Int32)));
                     //list.Add(new KeyValuePair<Type, Type>(typeof(Int64), typeof(Int32)));
+                    new(typeof(Int64), typeof(Int32)),
+
+                    // 数据库使用Double，实体类使用Decimal
+                    new(typeof(Double), typeof(Decimal)),
+                    new(typeof(Decimal), typeof(Double)),
 
                     //// 根据常用行，从不常用到常用排序，然后配对进入映射表
                     //var types = new Type[] { typeof(SByte), typeof(Byte), typeof(UInt16), typeof(Int16), typeof(UInt64), typeof(Int64), typeof(UInt32), typeof(Int32) };
@@ -376,7 +387,7 @@ partial class DbMetaData
                     //// 因为自增的原因，某些字段需要被映射到Int64里面来
                     //list.Add(new KeyValuePair<Type, Type>(typeof(UInt32), typeof(Int64)));
                     //list.Add(new KeyValuePair<Type, Type>(typeof(Int32), typeof(Int64)));
-                    new KeyValuePair<Type, Type>(typeof(Guid), typeof(String))
+                    new(typeof(Guid), typeof(String))
                 };
                 _FieldTypeMaps = list;
             }
@@ -387,7 +398,7 @@ partial class DbMetaData
     /// <summary>取字段类型</summary>
     /// <param name="field">字段</param>
     /// <returns></returns>
-    protected virtual String GetFieldType(IDataColumn field)
+    protected virtual String? GetFieldType(IDataColumn field)
     {
         var type = field.DataType;
         if (type == null) return null;
@@ -411,18 +422,18 @@ partial class DbMetaData
         return typeName;
     }
 
-    /// <summary>获取数据类型</summary>
+    /// <summary>获取Net数据类型</summary>
     /// <param name="field"></param>
     /// <returns></returns>
-    protected virtual Type GetDataType(IDataColumn field)
+    protected virtual Type? GetDataType(IDataColumn field)
     {
         var rawType = field.RawType;
-        if (rawType.Contains("(")) rawType = rawType.Substring(null, "(");
+        if (!rawType.IsNullOrEmpty() && rawType.Contains("(")) rawType = rawType.Substring(null, "(");
         var rawType2 = rawType + "(";
 
         foreach (var item in Types)
         {
-            String dbtype = null;
+            String? dbtype = null;
             if (rawType.EqualIgnoreCase(item.Value))
             {
                 dbtype = item.Value[0];
@@ -436,18 +447,18 @@ partial class DbMetaData
             }
             if (!dbtype.IsNullOrEmpty())
             {
-                // 修正原始类型
-                if (dbtype.Contains("{0}"))
-                {
-                    // 某些字段有精度需要格式化
-                    if (dbtype.Contains("{1}"))
-                    {
-                        if (field is XField xf)
-                            field.RawType = String.Format(dbtype, xf.Precision, xf.Scale);
-                    }
-                    else
-                        field.RawType = String.Format(dbtype, field.Length);
-                }
+                //// 修正原始类型
+                //if (dbtype.Contains("{0}"))
+                //{
+                //    // 某些字段有精度需要格式化
+                //    if (dbtype.Contains("{1}"))
+                //    {
+                //        if (field is XField xf)
+                //            field.RawType = String.Format(dbtype, xf.Precision, xf.Scale);
+                //    }
+                //    else
+                //        field.RawType = String.Format(dbtype, field.Length);
+                //}
 
                 return item.Key;
             }
@@ -456,29 +467,29 @@ partial class DbMetaData
         return null;
     }
 
-    /// <summary>获取数据类型</summary>
-    /// <param name="rawType"></param>
-    /// <returns></returns>
-    public virtual Type GetDataType(String rawType)
-    {
-        if (rawType.Contains("(")) rawType = rawType.Substring(null, "(");
-        var rawType2 = rawType + "(";
+    ///// <summary>获取数据类型</summary>
+    ///// <param name="rawType"></param>
+    ///// <returns></returns>
+    //public virtual Type? GetDataType(String rawType)
+    //{
+    //    if (rawType.Contains("(")) rawType = rawType.Substring(null, "(");
+    //    var rawType2 = rawType + "(";
 
-        foreach (var item in Types)
-        {
-            String dbtype = null;
-            if (rawType.EqualIgnoreCase(item.Value))
-            {
-                dbtype = item.Value[0];
-            }
-            else
-            {
-                dbtype = item.Value.FirstOrDefault(e => e.StartsWithIgnoreCase(rawType2));
-            }
-            if (!dbtype.IsNullOrEmpty()) return item.Key;
-        }
+    //    foreach (var item in Types)
+    //    {
+    //        String? dbtype = null;
+    //        if (rawType.EqualIgnoreCase(item.Value))
+    //        {
+    //            dbtype = item.Value[0];
+    //        }
+    //        else
+    //        {
+    //            dbtype = item.Value.FirstOrDefault(e => e.StartsWithIgnoreCase(rawType2));
+    //        }
+    //        if (!dbtype.IsNullOrEmpty()) return item.Key;
+    //    }
 
-        return null;
-    }
+    //    return null;
+    //}
     #endregion
 }

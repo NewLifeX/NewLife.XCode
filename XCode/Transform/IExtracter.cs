@@ -72,7 +72,7 @@ namespace XCode.Transform
         /// <summary>写日志</summary>
         /// <param name="format"></param>
         /// <param name="args"></param>
-        public void WriteLog(String format, params Object[] args) => Log?.Info(format, args);
+        public void WriteLog(String format, params Object?[] args) => Log?.Info(format, args);
         #endregion
     }
 }

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using NewLife;
 using NewLife.Caching;
 using NewLife.Collections;
@@ -26,7 +22,7 @@ partial class DAL
     public static Int32 ExecuteTimes => _ExecuteTimes;
 
     /// <summary>只读实例。读写分离时，读取操作分走</summary>
-    public DAL ReadOnly { get; set; }
+    public DAL? ReadOnly { get; set; }
 
     /// <summary>读写分离策略。忽略时间区间和表名</summary>
     public ReadWriteStrategy Strategy { get; set; } = new ReadWriteStrategy();
@@ -55,7 +51,7 @@ partial class DAL
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
-    /// <param name="builder">SQL语句</param>
+    /// <param name="builder">SQL语句</param> 
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns></returns>
@@ -86,7 +82,7 @@ partial class DAL
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public DbTable Query(String sql, IDictionary<String, Object> ps = null)
+    public DbTable Query(String sql, IDictionary<String, Object>? ps = null)
     {
         return QueryByCache(sql, ps, "", (s, p, k3) => Session.Query(s, Db.CreateParameters(p)), nameof(Query));
     }
@@ -177,7 +173,7 @@ partial class DAL
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
     /// <param name="sql">SQL语句</param>
-    /// <param name="commandTimeout">命令超时时间，一般用于需要长时间执行的命令</param>
+    /// <param name="commandTimeout">命令超时时间，一般用于需要长时间执行的命令。单位秒</param>
     /// <returns></returns>
     public Int32 Execute(String sql, Int32 commandTimeout)
     {
@@ -220,7 +216,7 @@ partial class DAL
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public Task<DbTable> QueryAsync(String sql, IDictionary<String, Object> ps = null)
+    public Task<DbTable> QueryAsync(String sql, IDictionary<String, Object>? ps = null)
     {
         return QueryByCacheAsync(sql, ps, "", (s, p, k3) => AsyncSession.QueryAsync(s, Db.CreateParameters(p)), nameof(QueryAsync));
     }
@@ -264,7 +260,7 @@ partial class DAL
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public Task<Int32> ExecuteAsync(String sql, CommandType type, params IDataParameter[] ps)
+    public Task<Int32> ExecuteAsync(String sql, CommandType type, params IDataParameter[]? ps)
     {
         return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteAsync(s, t, p));
     }
@@ -274,7 +270,7 @@ partial class DAL
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type, params IDataParameter[] ps)
+    public Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type, params IDataParameter[]? ps)
     {
         return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.InsertAndGetIdentityAsync(s, t, p));
     }
@@ -345,7 +341,7 @@ partial class DAL
 
     #region 缓存
     /// <summary>缓存存储</summary>
-    public ICache Store { get; set; }
+    public ICache? Store { get; set; }
 
     /// <summary>数据层缓存。默认10秒</summary>
     public Int32 Expire { get; set; }
@@ -359,7 +355,7 @@ partial class DAL
     /// <summary>埋点上下文信息。用于附加在埋点标签后的上下文信息</summary>
     public static void SetSpanTag(String value) => _SpanTag.Value = value;
 
-    private ICache GetCache()
+    private ICache? GetCache()
     {
         var st = Store;
         if (st != null) return st;
@@ -373,7 +369,8 @@ partial class DAL
 
         lock (this)
         {
-            if (Store == null)
+            st = Store;
+            if (st == null)
             {
                 var p = exp / 2;
                 if (p < 30) p = 30;
@@ -388,7 +385,7 @@ partial class DAL
     private TResult QueryByCache<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, TResult> callback, String action)
     {
         // 读写分离
-        if (Strategy != null)
+        if (Strategy != null && ReadOnly != null)
         {
             if (Strategy.Validate(this, k1 + "", action)) return ReadOnly.QueryByCache(k1, k2, k3, callback, action);
         }
@@ -411,7 +408,7 @@ partial class DAL
             Append(sb, k3);
             key = sb.Put(true);
 
-            if (cache.TryGetValue<TResult>(key, out var value)) return value;
+            if (cache.TryGetValue<TResult>(key, out var value)) return value!;
         }
 
         Interlocked.Increment(ref _QueryTimes);
@@ -501,7 +498,7 @@ partial class DAL
     private async Task<TResult> QueryByCacheAsync<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, Task<TResult>> callback, String action)
     {
         // 读写分离
-        if (Strategy != null)
+        if (Strategy != null && ReadOnly != null)
         {
             if (Strategy.Validate(this, k1 + "", action)) return await ReadOnly.QueryByCacheAsync(k1, k2, k3, callback, action);
         }
@@ -524,7 +521,7 @@ partial class DAL
             Append(sb, k3);
             key = sb.Put(true);
 
-            if (cache.TryGetValue<TResult>(key, out var value)) return value;
+            if (cache.TryGetValue<TResult>(key, out var value)) return value!;
         }
 
         Interlocked.Increment(ref _QueryTimes);
@@ -631,7 +628,7 @@ partial class DAL
         return list.ToArray();
     }
 
-    private static void Append(StringBuilder sb, Object value)
+    private static void Append(StringBuilder sb, Object? value)
     {
         if (value == null) return;
 

@@ -29,27 +29,25 @@ public partial class Log : Entity<Log>
         table.Properties["KEY_BLOCK_SIZE"] = "4";
     }
 
-    /// <summary>已重载。记录当前管理员</summary>
-    /// <param name="isNew"></param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
-        if (isNew)
+        if (method == DataMethod.Delete) return true;
+
+        // 如果没有脏数据，则不需要进行任何处理
+        if (!HasDirty) return true;
+
+        if (method == DataMethod.Insert)
         {
             // 自动设置当前登录用户
             if (!IsDirty(__.UserName)) UserName = ManageProvider.Provider?.Current + "";
         }
 
         // 处理过长的备注
-        var len = _.Remark.Length;
-        if (len > 0 && !Remark.IsNullOrEmpty() && Remark.Length > len) Remark = Remark[..len];
+        this.TrimExtraLong(_.Remark, _.UserName);
 
-        len = _.UserName.Length;
-        if (len > 0 && !UserName.IsNullOrEmpty() && UserName.Length > len) UserName = UserName[..len];
-
-        base.Valid(isNew);
-
-        // 时间
-        if (isNew && CreateTime.Year < 2000 && !IsDirty(__.CreateTime)) CreateTime = DateTime.Now;
+        return base.Valid(method);
     }
 
     /// <summary></summary>

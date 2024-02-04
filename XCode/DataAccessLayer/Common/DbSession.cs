@@ -66,7 +66,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <returns></returns>
     protected virtual XSqlException OnException(Exception ex, DbCommand cmd, String sql)
     {
-        if (sql.IsNullOrEmpty()) sql = GetSql(cmd);
+        if (sql.IsNullOrEmpty()) sql = GetSql(cmd)!;
         if (ex != null)
             return new XSqlException(sql, this, ex);
         else
@@ -363,7 +363,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual DbTable Query(String sql, IDataParameter[] ps)
+    public virtual DbTable Query(String sql, IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, CommandType.Text, ps);
         return Execute(cmd, true, cmd2 =>
@@ -524,7 +524,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual DbCommand CreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual DbCommand CreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         var cmd = OnCreateCommand(sql, type, ps);
         Transaction?.Check(cmd, true);
@@ -537,10 +537,10 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    protected virtual DbCommand OnCreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    protected virtual DbCommand OnCreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         var cmd = Database.Factory?.CreateCommand();
-        if (cmd == null) return null;
+        if (cmd == null) throw new InvalidOperationException();
 
         cmd.CommandType = type;
         cmd.CommandText = sql;
@@ -559,7 +559,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Task<DbTable> QueryAsync(String sql, IDataParameter[] ps)
+    public virtual Task<DbTable> QueryAsync(String sql, IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, CommandType.Text, ps);
         return ExecuteAsync(cmd, true, async cmd2 =>
@@ -624,7 +624,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public virtual Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
 
@@ -643,7 +643,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Task<T> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual Task<T> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
         return ExecuteAsync(cmd, true, async cmd2 =>
@@ -858,7 +858,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="collectionName">指定要返回的架构的名称。</param>
     /// <param name="restrictionValues">为请求的架构指定一组限制值。</param>
     /// <returns></returns>
-    public virtual DataTable GetSchema(DbConnection conn, String collectionName, String[] restrictionValues)
+    public virtual DataTable GetSchema(DbConnection? conn, String collectionName, String[]? restrictionValues)
     {
         // 小心collectionName为空，此时列出所有架构名称
         var key = "" + collectionName;
@@ -885,9 +885,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         return dt;
     }
 
-    private DataTable GetSchemaInternal(DbConnection conn, String key, String collectionName, String[] restrictionValues)
+    private DataTable GetSchemaInternal(DbConnection conn, String key, String collectionName, String[]? restrictionValues)
     {
-        DataTable dt = null;
+        DataTable? dt = null;
 
         var sw = Stopwatch.StartNew();
 
@@ -934,7 +934,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <summary>日志</summary>
     public ILog Log { get; set; } = XTrace.Log;
 
-    private static ILog logger;
+    private static ILog? logger;
 
     /// <summary>写入SQL到文本中</summary>
     /// <param name="sql"></param>
@@ -957,9 +957,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         }
     }
 
-    private String GetSql(DbCommand cmd)
+    private String? GetSql(DbCommand cmd)
     {
-        var max = (Database as DbBase).SQLMaxLength;
+        var max = (Database as DbBase)!.SQLMaxLength;
         try
         {
             var sql = cmd.CommandText;
@@ -979,9 +979,8 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                     if (i > 0) sb.Append(", ");
                     var v = ps[i].Value;
                     var sv = "";
-                    if (v is Byte[])
+                    if (v is Byte[] bv)
                     {
-                        var bv = v as Byte[];
                         if (bv.Length > 8)
                             sv = $"[{bv.Length}]0x{BitConverter.ToString(bv, 0, 8)}...";
                         else
@@ -998,9 +997,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
             }
 
             // 截断超长字符串
-            if (max > 0)
+            if (max > 0 && sql.Length > max)
             {
-                if (sql.Length > max && sql.StartsWithIgnoreCase("Insert")) sql = sql[..(max / 2)] + "..." + sql[^(max / 2)..];
+                if (sql.StartsWithIgnoreCase("Insert")) sql = sql[..(max / 2)] + "..." + sql[^(max / 2)..];
             }
 
             return sql;
@@ -1023,7 +1022,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     ///// <summary>输出日志</summary>
     ///// <param name="format"></param>
     ///// <param name="args"></param>
-    //public static void WriteLog(String format, params Object[] args) => XTrace.WriteLine(format, args);
+    //public static void WriteLog(String format, params Object?[] args) => XTrace.WriteLine(format, args);
 
     /// <summary>设置是否显示SQL，退出作用域后恢复</summary>
     /// <param name="showSql"></param>
@@ -1053,7 +1052,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
     #region SQL时间跟踪
     private Stopwatch _swSql;
-    private static readonly HashSet<String> _trace_sqls = new(StringComparer.OrdinalIgnoreCase);
+    //private static readonly HashSet<String> _trace_sqls = new(StringComparer.OrdinalIgnoreCase);
 
     protected void BeginTrace()
     {
@@ -1078,15 +1077,15 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         if (sql.IsNullOrEmpty()) sql = GetSql(cmd);
         if (sql.IsNullOrEmpty()) return;
 
-        // 同一个SQL只需要报警一次
-        if (_trace_sqls.Contains(sql)) return;
-        lock (_trace_sqls)
-        {
-            if (_trace_sqls.Contains(sql)) return;
+        //// 同一个SQL只需要报警一次
+        //if (_trace_sqls.Contains(sql)) return;
+        //lock (_trace_sqls)
+        //{
+        //    if (_trace_sqls.Contains(sql)) return;
 
-            if (_trace_sqls.Count >= 1000) _trace_sqls.Clear();
-            _trace_sqls.Add(sql);
-        }
+        //    if (_trace_sqls.Count >= 1000) _trace_sqls.Clear();
+        //    _trace_sqls.Add(sql);
+        //}
 
         XTrace.WriteLine("慢SQL[{0:n0}ms] {1}", _swSql.ElapsedMilliseconds, sql);
     }

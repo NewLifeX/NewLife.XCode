@@ -1,12 +1,14 @@
-using NewLife;
+﻿using NewLife;
 using NewLife.Common;
 using NewLife.Data;
 
 namespace XCode.Membership;
 
-public partial class Tenant : Entity<Tenant>
+[ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
+public partial class Tenant : Entity<Tenant>, ITenantSource
 {
     #region 对象操作
+
     static Tenant()
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
@@ -17,21 +19,27 @@ public partial class Tenant : Entity<Tenant>
         Meta.Modules.Add<UserModule>();
         Meta.Modules.Add<TimeModule>();
         Meta.Modules.Add<IPModule>();
+        Meta.Modules.Add<TenantModule>();
     }
 
-    /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <param name="isNew">是否插入</param>
-    public override void Valid(Boolean isNew)
+    /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
+    /// <param name="method">添删改方法</param>
+    public override Boolean Valid(DataMethod method)
     {
-        // 如果没有脏数据，则不需要进行任何处理
-        if (!HasDirty) return;
+        if (method == DataMethod.Delete) return true;
 
-        // 建议先调用基类方法，基类方法会做一些统一处理
-        base.Valid(isNew);
+        // 如果没有脏数据，则不需要进行任何处理
+        if (!HasDirty) return true;
 
         if (Code.IsNullOrEmpty()) Code = PinYin.GetFirst(Name);
+
+        // 管理者
+        if (method == DataMethod.Insert && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
+
+        return base.Valid(method);
     }
-    #endregion
+
+    #endregion 对象操作
 
     #region 扩展属性
 
@@ -39,9 +47,12 @@ public partial class Tenant : Entity<Tenant>
     [Map(__.RoleIds)]
     public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
 
-    #endregion
+    Int32 ITenantSource.TenantId { get => Id; set => Id = value; }
+
+    #endregion 扩展属性
 
     #region 扩展查询
+
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
@@ -81,9 +92,23 @@ public partial class Tenant : Entity<Tenant>
 
         return Find(_.Code == code);
     }
-    #endregion
+
+    /// <summary>根据管理员编号查询</summary>
+    /// <param name="managerId"></param>
+    /// <returns></returns>
+    public static Tenant FindByManagerId(Int32 managerId)
+    {
+        if (managerId <= 0) return null;
+
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ManagerId == managerId);
+
+        return Find(_.ManagerId == managerId);
+    }
+
+    #endregion 扩展查询
 
     #region 高级查询
+
     /// <summary>高级查询</summary>
     /// <param name="name">名称</param>
     /// <param name="managerId">租户管理员</param>
@@ -116,9 +141,11 @@ public partial class Tenant : Entity<Tenant>
     ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
     ///// <returns></returns>
     //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
-    #endregion
+
+    #endregion 高级查询
 
     #region 业务操作
+
     /// <summary>转模型</summary>
     /// <returns></returns>
     public TenantModel ToModel()
@@ -128,5 +155,6 @@ public partial class Tenant : Entity<Tenant>
 
         return model;
     }
-    #endregion
+
+    #endregion 业务操作
 }

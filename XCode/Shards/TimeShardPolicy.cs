@@ -8,21 +8,21 @@ public class TimeShardPolicy : IShardPolicy
 {
     #region 属性
     /// <summary>实体工厂</summary>
-    public IEntityFactory Factory { get; set; }
+    public IEntityFactory? Factory { get; set; }
 
     /// <summary>字段</summary>
-    public FieldItem Field { get; set; }
+    public FieldItem? Field { get; set; }
 
     /// <summary>连接名策略。格式化字符串，0位基础连接名，1位时间，如{0}_{1:yyyy}</summary>
-    public String ConnPolicy { get; set; }
+    public String? ConnPolicy { get; set; }
 
     /// <summary>表名策略。格式化字符串，0位基础表名，1位时间，如{0}_{1:yyyyMM}</summary>
-    public String TablePolicy { get; set; }
+    public String? TablePolicy { get; set; }
 
     /// <summary>时间区间步进。遇到时间区间需要扫描多张表时的时间步进，默认1天</summary>
     public TimeSpan Step { get; set; } = TimeSpan.FromDays(1);
 
-    private readonly String _fieldName;
+    private readonly String? _fieldName;
     #endregion
 
     #region 构造
@@ -32,7 +32,7 @@ public class TimeShardPolicy : IShardPolicy
     /// <summary>指定字段实例化分表策略</summary>
     /// <param name="field"></param>
     /// <param name="factory"></param>
-    public TimeShardPolicy(FieldItem field, IEntityFactory factory = null)
+    public TimeShardPolicy(FieldItem field, IEntityFactory? factory = null)
     {
         Field = field;
         Factory = factory ?? field.Factory;
@@ -47,18 +47,20 @@ public class TimeShardPolicy : IShardPolicy
         Factory = factory;
     }
 
-    private FieldItem GetField() => Field ??= Factory.Table.FindByName(_fieldName);
+    private FieldItem? GetField() => Field ??= _fieldName == null ? null : Factory?.Table.FindByName(_fieldName);
     #endregion
 
     /// <summary>为实体对象、时间、雪花Id等计算分表分库</summary>
     /// <param name="value"></param>
     /// <returns></returns>
-    public virtual ShardModel Shard(Object value)
+    public virtual ShardModel? Shard(Object value)
     {
         if (value is IEntity entity) return Shard(entity);
         if (value is DateTime dt) return Shard(dt);
         if (value is Int64 id)
         {
+            if (Factory == null) throw new XCodeException("分表策略要求指定实体工厂！");
+
             if (!Factory.Snow.TryParse(id, out var time, out _, out _) || time.Year <= 1970)
                 throw new XCodeException("雪花Id解析时间失败，无法用于分表");
 
@@ -71,7 +73,7 @@ public class TimeShardPolicy : IShardPolicy
     /// <summary>为实体对象计算分表分库</summary>
     /// <param name="entity"></param>
     /// <returns></returns>
-    public virtual ShardModel Shard(IEntity entity)
+    public virtual ShardModel? Shard(IEntity entity)
     {
         var fi = GetField();
         if (fi == null) throw new XCodeException("分表策略要求指定时间字段！");
@@ -85,6 +87,8 @@ public class TimeShardPolicy : IShardPolicy
         }
         else if (fi.Type == typeof(Int64))
         {
+            if (Factory == null) throw new XCodeException("分表策略要求指定实体工厂！");
+
             var id = entity[fi.Name].ToLong();
             if (!Factory.Snow.TryParse(id, out var time, out _, out _) || time.Year <= 1970)
                 throw new XCodeException("雪花Id解析时间失败，无法用于分表");
@@ -98,17 +102,18 @@ public class TimeShardPolicy : IShardPolicy
     /// <summary>为时间计算分表分库</summary>
     /// <param name="time"></param>
     /// <returns></returns>
-    public virtual ShardModel Shard(DateTime time)
+    public virtual ShardModel? Shard(DateTime time)
     {
         if (time.Year <= 1) throw new ArgumentNullException(nameof(time), "分表策略要求指定时间！");
 
-        var fi = GetField();
-        if (fi == null) throw new XCodeException("分表策略要求指定时间字段！");
+        var fi = GetField() ?? throw new XCodeException("分表策略要求指定时间字段！");
 
         if (ConnPolicy.IsNullOrEmpty() && TablePolicy.IsNullOrEmpty()) return null;
 
+        if (Factory == null) throw new XCodeException("分表策略要求指定实体工厂！");
         var table = Factory.Table;
 
+        // 这里不区分时区，而是直接使用时间
         var model = new ShardModel();
         if (!ConnPolicy.IsNullOrEmpty()) model.ConnName = String.Format(ConnPolicy, table.ConnName, time);
         if (!TablePolicy.IsNullOrEmpty()) model.TableName = String.Format(TablePolicy, table.TableName, time);
@@ -140,14 +145,15 @@ public class TimeShardPolicy : IShardPolicy
         //if (expression is not WhereExpression where) return null;
 
         // 时间范围查询，用户可能自己写分表查询
-        var fi = GetField();
+        var fi = GetField() ?? throw new XCodeException("分表策略要求指定时间字段！");
+
         var exps = new List<FieldExpression>();
         if (expression is WhereExpression where)
             exps = where.Where(e => e is FieldExpression fe && fe.Field == fi).Cast<FieldExpression>().ToList();
         else if (expression is FieldExpression fieldExpression && fieldExpression.Field == fi)
             exps.Add(fieldExpression);
         //if (exps.Count == 0) throw new XCodeException($"分表策略要求查询条件包括[{fi}]字段！");
-        if (exps.Count == 0) return null;
+        if (exps.Count == 0) return new ShardModel[0];
 
         if (fi.Type == typeof(DateTime))
         {
@@ -172,6 +178,8 @@ public class TimeShardPolicy : IShardPolicy
         }
         else if (fi.Type == typeof(Int64))
         {
+            if (Factory == null) throw new XCodeException("分表策略要求指定实体工厂！");
+
             var sf = exps.FirstOrDefault(e => e.Action is ">" or ">=");
             var ef = exps.FirstOrDefault(e => e.Action is "<" or "<=");
             if (sf != null)
@@ -196,7 +204,10 @@ public class TimeShardPolicy : IShardPolicy
             {
                 var id = eq.Value.ToLong();
                 if (Factory.Snow.TryParse(id, out var time, out _, out _))
-                    return new[] { Shard(time) };
+                {
+                    var model = Shard(time);
+                    if (model != null) return [model];
+                }
             }
         }
 
@@ -211,22 +222,28 @@ public class TimeShardPolicy : IShardPolicy
         for (var dt = start; dt < end; dt = dt.Add(Step))
         {
             var model = Shard(dt);
-            var key = $"{model.ConnName}#{model.TableName}";
-            if (key != "#" && !hash.Contains(key))
+            if (model != null)
             {
-                models.Add(model);
-                hash.Add(key);
+                var key = $"{model.ConnName}#{model.TableName}";
+                if (key != "#" && !hash.Contains(key))
+                {
+                    models.Add(model);
+                    hash.Add(key);
+                }
             }
         }
 
         // 标准时间区间 start <= @fi < end ，但是要考虑到end有一部分落入新的分片，减一秒判断
         {
             var model = Shard(end.AddSeconds(1));
-            var key = $"{model.ConnName}#{model.TableName}";
-            if (key != "#" && !hash.Contains(key))
+            if (model != null)
             {
-                models.Add(model);
-                hash.Add(key);
+                var key = $"{model.ConnName}#{model.TableName}";
+                if (key != "#" && !hash.Contains(key))
+                {
+                    models.Add(model);
+                    hash.Add(key);
+                }
             }
         }
 

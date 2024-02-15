@@ -6,12 +6,12 @@ namespace XCode.Shards;
 public interface IShardPolicy
 {
     /// <summary>字段</summary>
-    public FieldItem Field { get; set; }
+    public FieldItem? Field { get; set; }
 
     /// <summary>为实体对象、时间、雪花Id等计算分表分库</summary>
     /// <param name="value"></param>
     /// <returns></returns>
-    ShardModel Shard(Object value);
+    ShardModel? Shard(Object value);
 
     /// <summary>从时间区间中计算多个分表分库</summary>
     /// <param name="start"></param>

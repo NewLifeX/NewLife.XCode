@@ -85,7 +85,7 @@ public static class FieldExtension
         //var fromDateEnd = DateTime.Parse(String.Format("{0:yyyy-MM-dd 00:00:00}", DateTime.Now));
         //return field.Between(fromDateStart, fromDateEnd);
 
-        var date = DateTime.Now.Date;
+        var date = DateTime.Today;
         return field.Between(date, date);
     }
 
@@ -98,7 +98,7 @@ public static class FieldExtension
         //var fromDateEnd = DateTime.Parse(String.Format("{0:yyyy-MM-dd 00:00:00}", DateTime.Now.AddDays(-1)));
         //return field.Between(fromDateStart, fromDateEnd);
 
-        var date = DateTime.Now.Date.AddDays(-1);
+        var date = DateTime.Today.AddDays(-1);
         return field.Between(date, date);
     }
 
@@ -111,7 +111,7 @@ public static class FieldExtension
         //var fromDateEnd = DateTime.Parse(String.Format("{0:yyyy-MM-dd 00:00:00}", DateTime.Now.AddDays(1)));
         //return field.Between(fromDateStart, fromDateEnd);
 
-        var date = DateTime.Now.Date.AddDays(1);
+        var date = DateTime.Today.AddDays(1);
         return field.Between(date, date);
     }
 
@@ -125,7 +125,7 @@ public static class FieldExtension
         //var fromDateEnd = DateTime.Parse(String.Format("{0:yyyy-MM-dd} 00:00:00", DateTime.Now.AddDays(-1)));
         //return field.Between(fromDateStart, fromDateEnd);
 
-        var date = DateTime.Now.Date;
+        var date = DateTime.Today;
         return field.Between(date.AddDays(-1 * days), date);
     }
 
@@ -139,7 +139,7 @@ public static class FieldExtension
         //var fromDateEnd = DateTime.Parse(String.Format("{0:yyyy-MM-dd} 00:00:00", DateTime.Now.AddDays(days)));
         //return field.Between(fromDateStart, fromDateEnd);
 
-        var date = DateTime.Now.Date;
+        var date = DateTime.Today;
         return field.Between(date, date.AddDays(days));
     }
     #endregion
@@ -154,7 +154,7 @@ public static class FieldExtension
         //var fromDateEnd = DateTime.Parse(String.Format("{0:yyyy-MM-dd} 00:00:00", DateTime.Now.AddDays(Convert.ToDouble((6 - Convert.ToInt16(DateTime.Now.DayOfWeek))))));
         //return field.Between(fromDateStart, fromDateEnd);
 
-        var date = DateTime.Now.Date;
+        var date = DateTime.Today;
         var day = (Int32)date.DayOfWeek;
         return field.Between(date.AddDays(-1 * day), date.AddDays(6 - day));
     }
@@ -168,7 +168,7 @@ public static class FieldExtension
         //var fromDateEnd = DateTime.Parse(String.Format("{0:yyyy-MM-dd} 00:00:00", DateTime.Now.AddDays(Convert.ToDouble((6 - Convert.ToInt16(DateTime.Now.DayOfWeek))) - 7)));
         //return field.Between(fromDateStart, fromDateEnd);
 
-        var date = DateTime.Now.Date;
+        var date = DateTime.Today;
         var day = (Int32)date.DayOfWeek;
         return field.Between(date.AddDays(-1 * day - 7), date.AddDays(6 - day - 7));
     }
@@ -182,7 +182,7 @@ public static class FieldExtension
         //var fromDateEnd = DateTime.Parse(String.Format("{0:yyyy-MM-dd} 00:00:00", DateTime.Now.AddDays(Convert.ToDouble((6 - Convert.ToInt16(DateTime.Now.DayOfWeek))) + 7)));
         //return field.Between(fromDateStart, fromDateEnd);
 
-        var date = DateTime.Now.Date;
+        var date = DateTime.Today;
         var day = (Int32)date.DayOfWeek;
         return field.Between(date.AddDays(-1 * day + 7), date.AddDays(6 - day + 7));
     }

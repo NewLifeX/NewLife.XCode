@@ -996,7 +996,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         // 自动分表
         var shards = Meta.ShardPolicy?.Shards(where);
-        if (shards == null)
+        if (shards == null || shards.Length == 0)
         {
             var builder = CreateBuilder(where, order, selects);
             var list2 = LoadData(session.Query(builder, startRowIndex, maximumRows));
@@ -1319,7 +1319,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         // 自动分表
         var shards = Meta.ShardPolicy?.Shards(where);
-        if (shards == null)
+        if (shards == null || shards.Length == 0)
         {
             var builder = CreateBuilder(where, order, selects);
             var list2 = LoadData(await session.QueryAsync(builder, startRowIndex, maximumRows));
@@ -1467,7 +1467,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         // 自动分表
         var shards = Meta.ShardPolicy?.Shards(where);
-        if (shards == null) return await session.QueryCountAsync(builder);
+        if (shards == null || shards.Length == 0) return await session.QueryCountAsync(builder);
 
         var rs = 0L;
         foreach (var shard in shards)
@@ -1549,7 +1549,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         // 自动分表
         var shards = Meta.ShardPolicy?.Shards(where);
-        if (shards == null) return session.QueryCount(builder);
+        if (shards == null || shards.Length == 0) return session.QueryCount(builder);
 
         var rs = 0;
         foreach (var shard in shards)

@@ -83,7 +83,8 @@ public partial class DAL
         var start = (page.PageIndex - 1) * page.PageSize;
         var max = page.PageSize;
 
-        if (!page.OrderBy.IsNullOrEmpty()) sql += " order by " + page.OrderBy;
+        var orderby = page.GetOrderBy();
+        if (!orderby.IsNullOrEmpty()) sql += " order by " + orderby;
 
         return Query<T>(sql, param, start, max);
     }

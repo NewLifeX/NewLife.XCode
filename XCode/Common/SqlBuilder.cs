@@ -5,7 +5,7 @@ using NewLife.Data;
 namespace XCode;
 
 /// <summary>Sql构造器</summary>
-public class SqlBuilder
+public static class SqlBuilder
 {
     /// <summary>根据排序参数生成排序字句，严格要求排序字段必须是数据字段</summary>
     /// <param name="page"></param>
@@ -13,9 +13,11 @@ public class SqlBuilder
     /// <returns></returns>
     public static String? BuildOrder(PageParameter page, IEntityFactory factory)
     {
-        var dic = new Dictionary<String, Boolean>();
         var orderby = page.OrderBy;
-        if (!page.Sort.IsNullOrEmpty() && orderby.StartsWithIgnoreCase(page.Sort))
+        if (!orderby.IsNullOrEmpty()) return orderby;
+
+        var dic = new Dictionary<String, Boolean>();
+        if (!page.Sort.IsNullOrEmpty())
         {
             foreach (var item in page.Sort.Split(","))
             {
@@ -34,25 +36,25 @@ public class SqlBuilder
                 }
             }
         }
-        else if (!orderby.IsNullOrEmpty())
-        {
-            foreach (var item in orderby.Split(","))
-            {
-                var line = item.Trim();
-                if (line.EndsWithIgnoreCase(" Desc"))
-                {
-                    dic[line.Substring(0, line.Length - 5).Trim()] = true;
-                }
-                else if (line.EndsWithIgnoreCase(" Asc"))
-                {
-                    dic[line.Substring(0, line.Length - 4).Trim()] = false;
-                }
-                else
-                {
-                    dic[line] = false;
-                }
-            }
-        }
+        //else if (!orderby.IsNullOrEmpty())
+        //{
+        //    foreach (var item in orderby.Split(","))
+        //    {
+        //        var line = item.Trim();
+        //        if (line.EndsWithIgnoreCase(" Desc"))
+        //        {
+        //            dic[line.Substring(0, line.Length - 5).Trim()] = true;
+        //        }
+        //        else if (line.EndsWithIgnoreCase(" Asc"))
+        //        {
+        //            dic[line.Substring(0, line.Length - 4).Trim()] = false;
+        //        }
+        //        else
+        //        {
+        //            dic[line] = false;
+        //        }
+        //    }
+        //}
 
         if (dic.Count == 0) return orderby;
 
@@ -76,5 +78,20 @@ public class SqlBuilder
         }
 
         return sb.Put(true);
+    }
+
+    /// <summary>获取排序子句</summary>
+    /// <param name="page"></param>
+    /// <returns></returns>
+    public static String? GetOrderBy(this PageParameter page)
+    {
+        var orderby = page.OrderBy;
+        if (!orderby.IsNullOrEmpty()) return orderby;
+
+        orderby = page.Sort;
+        if (orderby.IsNullOrEmpty()) return orderby;
+        if (page.Desc && !orderby.EndsWithIgnoreCase(" Asc", " Desc")) orderby += " Desc";
+
+        return orderby;
     }
 }

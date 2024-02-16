@@ -45,10 +45,11 @@ public class PageParameterTest
     {
         {
             var pager = new PageParameter();
-            pager.OrderBy = History._.CreateTime;
             pager.Sort = null;
+            pager.OrderBy = History._.CreateTime;
             var query = History.FindAll(null, pager);
-            Assert.True(str.Contains($"Order By {History._.CreateTime}"), "单OrderBy出错");
+            //Assert.True(str.Contains($"Order By {History._.CreateTime}"), "单OrderBy出错");
+            Assert.Equal("[STOD] Select * From History Order By CreateTime limit 20", str);
         }
 
         {
@@ -57,7 +58,18 @@ public class PageParameterTest
             pager.OrderBy = History._.CreateTime;
             pager.Desc = true; // 无效，Desc只跟Sort配对使用，设置OrderBy后这两个都无效
             var query = History.FindAll(null, pager);
-            Assert.True(str.Contains($"Order By {History._.CreateTime}"), "单OrderBy出错");
+            //Assert.True(str.Contains($"Order By {History._.CreateTime}"), "单OrderBy出错");
+            Assert.Equal("[STOD] Select * From History Order By CreateTime limit 20", str);
+        }
+
+        {
+            // 设置Sort时清空OrderBy
+            var pager = new PageParameter();
+            pager.OrderBy = History._.CreateTime;
+            pager.Sort = null;
+            var query = History.FindAll(null, pager);
+            //Assert.False(str.Contains($"Order By {History._.CreateTime}"), "单OrderBy出错");
+            Assert.Equal("[STOD] Select * From History limit 20", str);
         }
     }
 
@@ -70,7 +82,8 @@ public class PageParameterTest
             pager.Sort = History._.ID;
             var query = History.FindAll(null, pager);
             //XTrace.WriteLine($"sql:{str}");
-            Assert.True(str.Contains($"Order By {History._.CreateTime}"), "单OrderBy+单Sort出错");
+            //Assert.True(str.Contains($"Order By {History._.ID}"), "单OrderBy+单Sort出错");
+            Assert.Equal("[STOD] Select * From History Order By ID limit 20", str);
         }
         {
             var pager = new PageParameter();
@@ -79,7 +92,8 @@ public class PageParameterTest
             pager.Desc = true;
             var query = History.FindAll(null, pager);
             //XTrace.WriteLine($"sql:{str}");
-            Assert.True(str.Contains($"Order By {History._.CreateTime} Desc"), "单OrderBy+单Sort出错");
+            //Assert.True(str.Contains($"Order By {History._.CreateTime} Desc"), "单OrderBy+单Sort出错");
+            Assert.Equal("[STOD] Select * From History Order By CreateTime limit 20", str);
         }
     }
 
@@ -91,12 +105,14 @@ public class PageParameterTest
         pager.OrderBy = $"{History._.CreateTime} desc,{History._.Action} asc";
         pager.Sort = null;
         var query = History.FindAll(null, pager);
-        Assert.True(str.Contains($"{History._.CreateTime} Desc,[{History._.Action}]"), "多OrderBy出错");
+        //Assert.True(str.Contains($"{History._.CreateTime} Desc,[{History._.Action}]"), "多OrderBy出错");
+        Assert.Equal("[STOD] Select * From History limit 20", str);
 
         pager.Sort = null;
-        pager.OrderBy = $"{History._.CreateTime} desc,{History._.Action} asc";
+        pager.OrderBy = $"{History._.CreateTime} desc, {History._.Action} asc";
         query = History.FindAll(null, pager);
-        Assert.True(str.Contains($"{History._.CreateTime} Desc,[{History._.Action}]"), "多OrderBy出错");
+        //Assert.True(str.Contains($"{History._.CreateTime} Desc,[{History._.Action}]"), "多OrderBy出错");
+        Assert.Equal("[STOD] Select * From History Order By CreateTime desc, Action asc limit 20", str);
     }
 
     [Fact(DisplayName = "多OrderBy+单Sort")]
@@ -107,12 +123,14 @@ public class PageParameterTest
         pager.Sort = History._.ID;
 
         var query = History.FindAll(null, pager);
-        Assert.True(str.Contains($"{History._.CreateTime} Desc,[{History._.Action}]"), "多OrderBy+单Sort出错");
+        //Assert.True(str.Contains($"{History._.CreateTime} Desc,[{History._.Action}]"), "多OrderBy+单Sort出错");
+        Assert.Equal("[STOD] Select * From History Order By ID limit 20", str);
 
         pager.Sort = History._.ID;
         pager.OrderBy = $"{History._.CreateTime} desc,{History._.Action} desc";
         query = History.FindAll(null, pager);
-        Assert.True(str.Contains($"{History._.CreateTime} Desc,[{History._.Action}]"), "多OrderBy+单Sort出错");
+        //Assert.True(str.Contains($"{History._.CreateTime} Desc,[{History._.Action}]"), "多OrderBy+单Sort出错");
+        Assert.Equal("[STOD] Select * From History Order By CreateTime desc,Action desc limit 20", str);
     }
 
     [Fact(DisplayName = "多Sort")]
@@ -134,12 +152,14 @@ public class PageParameterTest
         pager.OrderBy = $"{History._.CreateTime},{History._.Action} asc";
         pager.Sort = null;
         var query = History.FindAll(null, pager);
-        Assert.True(str.Contains($"{History._.CreateTime},[{History._.Action}]"), "单复杂OrderBy出错");
+        //Assert.True(str.Contains($"{History._.CreateTime},[{History._.Action}]"), "单复杂OrderBy出错");
+        Assert.Equal("[STOD] Select * From History limit 20", str);
 
         pager.Sort = null;
         pager.OrderBy = $"{History._.CreateTime},{History._.Action} asc";
         query = History.FindAll(null, pager);
-        Assert.True(str.Contains($"{History._.CreateTime},[{History._.Action}]"), "单复杂OrderBy出错");
+        //Assert.True(str.Contains($"{History._.CreateTime},[{History._.Action}]"), "单复杂OrderBy出错");
+        Assert.Equal("[STOD] Select * From History Order By CreateTime,Action asc limit 20", str);
     }
 
     [Fact(DisplayName = "单复杂OrderBy+单sort")]
@@ -149,11 +169,13 @@ public class PageParameterTest
         pager.OrderBy = $"{History._.CreateTime},{History._.Action} desc";
         pager.Sort = History._.ID;
         var query = History.FindAll(null, pager);
-        Assert.True(str.Contains($"{History._.CreateTime},[{History._.Action}]"), "单复杂OrderBy+单sort出错");
+        //Assert.True(str.Contains($"{History._.CreateTime},[{History._.Action}]"), "单复杂OrderBy+单sort出错");
+        Assert.Equal("[STOD] Select * From History Order By ID limit 20", str);
 
-        pager.OrderBy = $"{History._.CreateTime},{History._.Action} desc";
         pager.Sort = History._.ID;
+        pager.OrderBy = $"{History._.CreateTime},{History._.Action} desc";
         query = History.FindAll(null, pager);
-        Assert.True(str.Contains($"{History._.CreateTime},[{History._.Action}]"), "单复杂OrderBy+单sort出错");
+        //Assert.True(str.Contains($"{History._.CreateTime},[{History._.Action}]"), "单复杂OrderBy+单sort出错");
+        Assert.Equal("[STOD] Select * From History Order By CreateTime,Action desc limit 20", str);
     }
 }

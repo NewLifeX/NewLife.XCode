@@ -764,7 +764,12 @@ internal class SqlServerSession : RemoteDbSession
                     var dt = val.ToDateTime();
                     if (dt.Year < 1970) val = new DateTime(1970, 1, 1);
                 }
-
+                //byte[]类型查询时候参数化异常
+                else if (dc.DataType == typeof(Byte[]))
+                {
+                    if (val == null)
+                        val = new Byte[0];
+                }
                 // 逐列创建参数对象
                 dps.Add(db.CreateParameter(dc.Name, val, dc));
             }

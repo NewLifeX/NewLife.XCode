@@ -66,7 +66,9 @@ namespace XCode.Transform
                 // 分割数据页
                 var sb = Builder.Clone();
                 if (!sb.Where.IsNullOrEmpty()) sb.Where += " And ";
-                sb.Where += $"{name}.{db.FormatValue(field, StartTime)}";
+                //修复拼接sql错误
+                if (StartTime != null && StartTime > DateTime.MinValue)
+                    sb.Where += $"{name}>{db.FormatValue(field, StartTime)}";
 
                 // 查询数据
                 var dt = Dal.Query(sb, 0, BatchSize);
@@ -86,7 +88,8 @@ namespace XCode.Transform
                 {
                     sb = Builder.Clone();
                     if (!sb.Where.IsNullOrEmpty()) sb.Where += " And ";
-                    sb.Where += $"{name}>={db.FormatValue(field, StartTime)} And {name}<{db.FormatValue(field, StartTime.AddSeconds(1))}";
+                    //避免分页插入重复的一条数据
+                    sb.Where += $"{name}>{db.FormatValue(field, StartTime)} And {name}<{db.FormatValue(field, StartTime.AddSeconds(1))}";
 
                     // 查询数据，该时间点数据也可能有多页
                     var startRow = 0;

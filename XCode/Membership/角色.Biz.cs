@@ -76,7 +76,7 @@ public partial class Role : LogEntity<Role>, IRole
         }
 
         // 所有角色都有权进入管理平台，否则无法使用后台
-        var menu = menus.FirstOrDefault(e => e.Name == "Admin");
+        var menu = menus.FirstOrDefault(e => e.Name == "Admin" || e.Name == "System");
         if (menu != null)
         {
             foreach (var role in list)

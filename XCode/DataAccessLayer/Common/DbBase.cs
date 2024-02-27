@@ -779,7 +779,7 @@ abstract class DbBase : DisposeBase, IDatabase
             //!!! 为SQL格式化数值时，如果字符串是Empty，将不再格式化为null
             //if (String.IsNullOrEmpty(value.ToString()) && isNullable) return "null";
 
-            return "'" + value.ToString().Trim('\0').Replace("'", "''") + "'";
+            return "'" + value.ToString().Replace('\0',' ').Replace("'", "''") + "'";
         }
         else if (type == typeof(DateTime))
         {

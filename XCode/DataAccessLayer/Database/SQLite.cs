@@ -531,7 +531,7 @@ internal class SQLiteMetaData : FileDbMetaData
 
     static readonly Regex _reg = new("""
         (?:^|,)\s*(\[\w+\]|\w+)
-        \s+(\w+(?:\(\d+(?:,\s*\d+)?\))?)
+        \s*(\w+(?:\(\d+(?:,\s*\d+)?\))?)
         \s*([^,]*)?
         """,
         RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.IgnoreCase);

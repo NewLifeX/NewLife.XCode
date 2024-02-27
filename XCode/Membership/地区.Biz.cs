@@ -892,7 +892,7 @@ public partial class Area : Entity<Area>
     {
         //if (url.IsNullOrEmpty()) url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
         //if (url.IsNullOrEmpty()) url = "https://www.mca.gov.cn/mzsj/xzqh/2022/202201xzqh.html";
-        if (url.IsNullOrEmpty()) url = "https://x.newlifex.com/202201xzqh.htm";
+        if (url.IsNullOrEmpty()) url = "http://x.newlifex.com/202201xzqh.htm";
 
         var http = new HttpClient();
         var html = Task.Run(() => http.GetStringAsync(url)).Result;

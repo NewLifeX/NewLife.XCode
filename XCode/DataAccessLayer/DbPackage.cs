@@ -168,9 +168,19 @@ public class DbPackage
             return new IdExtracter(Dal, tableName, id);
 
         // 时间索引抽取
-        var time = table.Indexes.FirstOrDefault(e => table.GetColumn(e.Columns[0]).DataType == typeof(DateTime));
+        IDataColumn? time = null;
+        foreach (var dx in table.Indexes)
+        {
+            var column = table.GetColumn(dx.Columns[0]);
+            if (column != null && column.DataType == typeof(DateTime))
+            {
+                time = column;
+                break;
+            }
+        }
+        //var time = table.Indexes.FirstOrDefault(e => table.GetColumn(e.Columns[0])?.DataType == typeof(DateTime));
         if (time != null)
-            return new TimeExtracter(Dal, tableName, table.GetColumn(time.Columns[0]));
+            return new TimeExtracter(Dal, tableName, time);
 
         // 主键分页功能
         var pk = table.Columns.FirstOrDefault(e => e.PrimaryKey);

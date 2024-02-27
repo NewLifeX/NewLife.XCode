@@ -93,7 +93,7 @@ public class DbPackage
         {
             foreach (var dt in extracer.Fetch())
             {
-                var row = extracer.Row;
+                var row = extracer.TotalCount;
                 var count = dt.Rows.Count;
                 WriteLog("备份[{0}/{1}]数据 {2:n0} + {3:n0}", table, connName, row, count);
                 if (count == 0) break;
@@ -528,7 +528,7 @@ public class DbPackage
 
             foreach (var dt in extracer.Fetch())
             {
-                var row = extracer.Row;
+                var row = extracer.TotalCount;
                 var count = dt.Rows.Count;
                 WriteLog("同步[{0}/{1}]数据 {2:n0} + {3:n0}", table.Name, Dal.ConnName, row, count);
 

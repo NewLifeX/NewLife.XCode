@@ -22,6 +22,9 @@ public class PagingExtracter : IExtracter<DbTable>
 
     /// <summary>批大小。默认5000</summary>
     public Int32 BatchSize { get; set; } = 5000;
+
+    /// <summary>总行数</summary>
+    public Int32 TotalCount { get; set; }
     #endregion
 
     #region 构造

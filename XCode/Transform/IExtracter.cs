@@ -9,8 +9,11 @@ namespace XCode.Transform;
 public interface IExtracter<T>
 {
     #region 属性
-    /// <summary>开始行。分页时表示偏移行数，自增时表示下一个编号，默认0</summary>
-    Int64 Row { get; set; }
+    ///// <summary>开始行。分页时表示偏移行数，自增时表示下一个编号，默认0</summary>
+    //Int64 Row { get; set; }
+
+    /// <summary>总行数</summary>
+    Int32 TotalCount { get; set; }
     #endregion
 
     #region 抽取数据

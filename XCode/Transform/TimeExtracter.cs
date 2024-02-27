@@ -1,5 +1,4 @@
-﻿using NewLife;
-using NewLife.Data;
+﻿using NewLife.Data;
 using XCode.DataAccessLayer;
 
 namespace XCode.Transform;
@@ -53,63 +52,73 @@ public class TimeExtracter : IExtracter<DbTable>
 
     #region 抽取数据
     /// <summary>迭代抽取数据</summary>
+    /// <remarks>
+    /// 从StartTime开始，分区加分页抽取数据。每次抽取完成后，将StartTime设置为最后一行的时间，然后加上1秒作为下一次的开始时间。
+    /// 逼近当前时间时停止，下次再调用Fetch时，将从上次停止的地方继续抽取。
+    /// </remarks>
     /// <returns></returns>
     public virtual IEnumerable<DbTable> Fetch()
     {
         var field = Field;
         var db = Dal.Db;
         var name = db.FormatName(field);
+
+        // 第一次查询，不带时间条件，目的是为了找到第一个时间
+        if (StartTime.Year < 2000)
+        {
+            // 查询数据
+            var sb = Builder.Clone();
+            var dt = Dal.Query(sb, 0, 1);
+
+            // 第一页都没有数据，直接返回
+            if (dt == null || dt.Rows == null || dt.Rows.Count <= 0)
+                yield break;
+
+            StartTime = dt.Get<DateTime>(0, field.ColumnName);
+
+            if (StartTime.Year < 2000) yield break;
+        }
+
+        // 时间步进，分页查询
+        var minStep = TimeSpan.FromSeconds(60);
+        var maxStep = TimeSpan.FromDays(1);
+        var step = minStep;
         while (true)
         {
-            // 分割数据页
-            var sb = Builder.Clone();
-            if (!sb.Where.IsNullOrEmpty()) sb.Where += " And ";
-            sb.Where += $"{name}>={db.FormatValue(field, StartTime)}";
+            var now = DateTime.Now;
+            var end = StartTime.Add(step);
+            if (end > now) end = now;
 
-            // 查询数据
-            var dt = Dal.Query(sb, 0, BatchSize);
-            if (dt == null || dt.Rows == null) break;
+            // 按时间分片查询。如果有多页，则分片内使用分页查询
+            var sb = Builder.Clone().AppendWhereAnd($"{name}>={db.FormatValue(field, StartTime)} And {name}<{db.FormatValue(field, end)}");
 
-            var count = dt.Rows.Count;
-            if (count == 0) break;
-
-            // 返回数据
-            yield return dt;
-
-            // 分割时，取最后一行
-            var time = dt.Get<DateTime>(count - 1, field.ColumnName);
-
-            // 如果满一页，则再查一次该时间，避免该时间的数据同时落入多页
-            if (count == BatchSize)
+            var startRow = 0;
+            while (true)
             {
-                sb = Builder.Clone();
-                if (!sb.Where.IsNullOrEmpty()) sb.Where += " And ";
-                // 避免分页插入重复的一条数据
-                sb.Where += $"{name}>={db.FormatValue(field, time)} And {name}<{db.FormatValue(field, time.AddSeconds(1))}";
+                // 分页查询数据
+                var dt = Dal.Query(sb, startRow, BatchSize);
+                if (dt == null || dt.Rows == null) break;
 
-                // 查询数据，该时间点数据也可能有多页
-                var startRow = 0;
-                while (true)
-                {
-                    dt = Dal.Query(sb, startRow, BatchSize);
-                    if (dt == null || dt.Rows == null) break;
+                var count = dt.Rows.Count;
+                if (count == 0) break;
 
-                    var count2 = dt.Rows.Count;
-                    if (count2 == 0) break;
+                // 返回数据
+                yield return dt;
 
-                    yield return dt;
+                // 取最后一行的时间，加上1秒作为下一次分片的开始时间。多次赋值，最后一页为准
+                StartTime = dt.Get<DateTime>(count - 1, field.ColumnName).AddSeconds(1);
 
-                    startRow += count2;
-                    count += count2;
-                    if (count2 < BatchSize) break;
-                }
+                startRow += count;
+                TotalCount += count;
+                if (count == BatchSize) break;
             }
 
-            StartTime = time.AddSeconds(1);
+            // 踏空，加大步进
+            if (startRow == 0 && step < maxStep)
+                step += step;
 
-            // 下一页
-            TotalCount += count;
-            if (count < BatchSize) break;
+            // 止步于当前时间
+            if (StartTime.Add(minStep) >= DateTime.Now) break;
         }
     }
     #endregion

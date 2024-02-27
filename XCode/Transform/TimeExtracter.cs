@@ -33,10 +33,10 @@ public class TimeExtracter : IExtracter<DbTable>
     #endregion
 
     #region 构造
-    /// <summary>实例化自增抽取器</summary>
+    /// <summary>实例化时间索引数据抽取器</summary>
     public TimeExtracter() { }
 
-    /// <summary>实例化自增抽取器</summary>
+    /// <summary>实例化时间索引数据抽取器</summary>
     /// <param name="dal"></param>
     /// <param name="tableName"></param>
     /// <param name="field"></param>

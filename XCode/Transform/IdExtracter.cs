@@ -1,12 +1,11 @@
-﻿using NewLife;
-using NewLife.Data;
+﻿using NewLife.Data;
 using XCode.DataAccessLayer;
 
 namespace XCode.Transform;
 
-/// <summary>整型主键数据抽取器</summary>
+/// <summary>整数主键数据抽取器</summary>
 /// <remarks>
-/// 适用于带有自增字段或雪花Id字段的数据抽取器，速度飞快。
+/// 适用于带有自增字段或雪花Id字段的数据抽取器，每次只抽取一页，采取主键步进，速度飞快。
 /// </remarks>
 public class IdExtracter : IExtracter<DbTable>
 {
@@ -31,10 +30,10 @@ public class IdExtracter : IExtracter<DbTable>
     #endregion
 
     #region 构造
-    /// <summary>实例化自增抽取器</summary>
+    /// <summary>实例化整数主键数据抽取器</summary>
     public IdExtracter() { }
 
-    /// <summary>实例化自增抽取器</summary>
+    /// <summary>实例化整数主键数据抽取器</summary>
     /// <param name="dal"></param>
     /// <param name="tableName"></param>
     /// <param name="field"></param>
@@ -59,13 +58,11 @@ public class IdExtracter : IExtracter<DbTable>
         while (true)
         {
             // 分割数据页，自增
-            var sb = Builder.Clone();
-            if (!sb.Where.IsNullOrEmpty()) sb.Where += " And ";
-            sb.Where += $"{name}>{Row}";
+            var sb = Builder.Clone().AppendWhereAnd($"{name}>{Row}");
 
             // 查询数据
             var dt = Dal.Query(sb, 0, BatchSize);
-            if (dt == null) break;
+            if (dt == null || dt.Rows == null) break;
 
             var count = dt.Rows.Count;
             if (count == 0) break;

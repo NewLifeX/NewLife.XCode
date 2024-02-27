@@ -28,7 +28,7 @@ public class PagingExtracter : IExtracter<DbTable>
     #endregion
 
     #region 构造
-    /// <summary>实例化分页抽取器</summary>
+    /// <summary>实例化分页数据抽取器</summary>
     public PagingExtracter() { }
 
     /// <summary>实例化分页抽取器</summary>
@@ -46,7 +46,7 @@ public class PagingExtracter : IExtracter<DbTable>
     /// <param name="dal"></param>
     /// <param name="tableName"></param>
     /// <param name="orderBy"></param>
-    public PagingExtracter(DAL dal, String tableName, String orderBy)
+    public PagingExtracter(DAL dal, String tableName, String? orderBy)
     {
         Dal = dal;
         Builder = new SelectBuilder { Table = tableName, OrderBy = orderBy };
@@ -64,7 +64,7 @@ public class PagingExtracter : IExtracter<DbTable>
         {
             // 查询数据
             var dt = Dal.Query(Builder, Row, BatchSize);
-            if (dt == null) break;
+            if (dt == null || dt.Rows == null) break;
 
             var count = dt.Rows.Count;
             if (count == 0) break;

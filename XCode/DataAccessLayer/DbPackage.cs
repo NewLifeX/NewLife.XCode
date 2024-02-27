@@ -161,8 +161,8 @@ public class DbPackage
         var id = table.Columns.FirstOrDefault(e => e.Identity);
         if (id == null)
         {
-            var pks = table.Columns.Where(e => e.PrimaryKey).ToList();
-            if (pks.Count == 1 && pks[0].DataType.IsInt()) id = pks[0];
+            var pks = table.PrimaryKeys;
+            if (pks.Length >= 1 && pks[0].DataType.IsInt()) id = pks[0];
         }
         if (id != null)
             return new IdExtracter(Dal, tableName, id);
@@ -198,7 +198,7 @@ public class DbPackage
 
         // 默认第一个字段
         var dc = table.Columns.FirstOrDefault();
-        return dc != null ? new PagingExtracter(Dal, tableName, dc.ColumnName) : (IExtracter<DbTable>)new PagingExtracter(Dal, tableName);
+        return new PagingExtracter(Dal, tableName, dc?.ColumnName);
     }
 
     /// <summary>备份单表数据到文件</summary>

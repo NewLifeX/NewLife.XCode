@@ -978,11 +978,18 @@ internal class SqlServerMetaData : RemoteDbMetaData
         return list;
     }
 
-    private DataTable AllFields = null;
-    private DataTable AllIndexes = null;
+    private DataTable? AllFields = null;
+    private DataTable? AllIndexes = null;
 
     protected override void FixField(IDataColumn field, DataRow dr)
     {
+        //修复sqlserver同步到sqlserver建表长度为1的bug
+        var rawType = field.RawType?.ToLower();
+        if (rawType == "nvarchar" || rawType == "varchar" || rawType == "char" || rawType == "binary")
+            field.RawType += "(" + field.Length + ")";
+        if (rawType == "varbinary" && field.Length == -1)
+            field.RawType = "varbinary(max)";
+
         base.FixField(field, dr);
 
         var rows = AllFields?.Select("表名='" + field.Table.TableName + "' And 字段名='" + field.ColumnName + "'", null);
@@ -1081,6 +1088,15 @@ internal class SqlServerMetaData : RemoteDbMetaData
     //    if (field.DataType == typeof(String) && pi == "-1" && IsSQL2005) return "MAX";
     //    return pi;
     //}
+
+    protected override String? GetFieldType(IDataColumn field)
+    {
+        //mysql 转sqlserver
+        if (field.RawType?.ToLower() == "longblob")
+            return "varbinary(max)";
+
+        return base.GetFieldType(field);
+    }
     #endregion
 
     #region 取得字段信息的SQL模版

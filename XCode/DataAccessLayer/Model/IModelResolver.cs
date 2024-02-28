@@ -275,6 +275,13 @@ public class ModelResolver : IModelResolver
             if (f != null) f.Master = true;
         }
 
+        // 去除外键
+        if (table.Columns.Any())
+        {
+            table.Columns.RemoveAll(e => e.RawType.EqualIgnoreCase("KEY","K"));
+        }
+
+
         return table;
     }
 

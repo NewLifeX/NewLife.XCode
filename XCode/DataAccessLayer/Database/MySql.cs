@@ -347,19 +347,19 @@ internal class MySqlMetaData : RemoteDbMetaData
 
     #region 数据类型
 
-    //protected override List<KeyValuePair<Type, Type>> FieldTypeMaps
-    //{
-    //    get
-    //    {
-    //        if (_FieldTypeMaps == null)
-    //        {
-    //            var list = base.FieldTypeMaps;
-    //            if (!list.Any(e => e.Key == typeof(Byte) && e.Value == typeof(Boolean)))
-    //                list.Add(new(typeof(Byte), typeof(Boolean)));
-    //        }
-    //        return base.FieldTypeMaps;
-    //    }
-    //}
+    protected override List<KeyValuePair<Type, Type>> FieldTypeMaps
+    {
+        get
+        {
+            if (_FieldTypeMaps == null)
+            {
+                var list = base.FieldTypeMaps;
+                if (!list.Any(e => e.Key == typeof(Byte) && e.Value == typeof(Boolean)))
+                    list.Add(new(typeof(Byte), typeof(Boolean)));
+            }
+            return base.FieldTypeMaps;
+        }
+    }
 
     /// <summary>数据类型映射</summary>
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
@@ -381,6 +381,7 @@ internal class MySqlMetaData : RemoteDbMetaData
         // mysql中nvarchar会变成utf8字符集的varchar，而不会取数据库的utf8mb4
         { typeof(String), new String[] { "VARCHAR({0})", "LONGTEXT", "TEXT", "CHAR({0})", "NCHAR({0})", "NVARCHAR({0})", "SET", "ENUM", "TINYTEXT", "TEXT", "MEDIUMTEXT" } },
         { typeof(Boolean), new String[] { "TINYINT" } },
+        { typeof(Guid), new String[] { "CHAR(36)" } },
     };
 
     #endregion 数据类型

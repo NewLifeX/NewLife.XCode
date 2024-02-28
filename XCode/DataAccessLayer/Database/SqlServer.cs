@@ -767,9 +767,13 @@ internal class SqlServerSession : RemoteDbSession
                 //byte[]类型查询时候参数化异常
                 else if (dc.DataType == typeof(Byte[]))
                 {
-                    if (val == null)
-                        val = new Byte[0];
+                    val ??= new Byte[0];
                 }
+                if (dc.DataType == typeof(Guid))
+                {
+                    val ??= Guid.Empty;
+                }
+
                 // 逐列创建参数对象
                 dps.Add(db.CreateParameter(dc.Name, val, dc));
             }
@@ -978,6 +982,37 @@ internal class SqlServerMetaData : RemoteDbMetaData
         return list;
     }
 
+    public override String FieldClause(IDataTable table, Int32 index, Boolean onlyDefine)
+    {
+        var sb = new StringBuilder();
+        var field = table.Columns[index];
+        // 字段名
+        sb.AppendFormat("{0} ", FormatName(field));
+
+        String? typeName = null;
+        // 如果还是原来的数据库类型，则直接使用
+        //if (Database.DbType == field.Table.DbType) typeName = field.RawType;
+        // 每种数据库的自增差异太大，理应由各自处理，而不采用原始值
+        if (Database.Type == field.Table.DbType && !field.Identity) typeName = field.RawType;
+
+        if (typeName.IsNullOrEmpty()) typeName = GetFieldType(field);
+
+        sb.Append(typeName);
+
+        // 增加长度
+        if (field.DataType == typeof(String) && !typeName.IsNullOrEmpty() && !typeName.Contains("(") && !typeName.Contains("text"))
+        {
+            if (field.Length > 0)
+                sb.AppendFormat("({0})", field.Length);
+            else
+                sb.Append("(max)");
+        }
+        // 约束
+        sb.Append(GetFieldConstraints(field, onlyDefine));
+
+        return sb.ToString();
+    }
+
     private DataTable? AllFields = null;
     private DataTable? AllIndexes = null;
 
@@ -1039,7 +1074,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
     public override String FieldClause(IDataColumn field, Boolean onlyDefine)
     {
-        if (!String.IsNullOrEmpty(field.RawType) && field.RawType.Contains("char(-1)"))
+        if (!field.RawType.IsNullOrEmpty() && field.RawType.Contains("char(-1)"))
         {
             //if (IsSQL2005)
             field.RawType = field.RawType.Replace("char(-1)", "char(MAX)");

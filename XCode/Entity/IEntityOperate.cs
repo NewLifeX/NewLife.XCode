@@ -81,22 +81,22 @@ public interface IEntityFactory
     /// <param name="name">名称</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    IEntity Find(String name, Object value);
+    IEntity? Find(String name, Object value);
 
     /// <summary>根据条件查找单个实体</summary>
     /// <param name="where"></param>
     /// <returns></returns>
-    IEntity Find(Expression where);
+    IEntity? Find(Expression where);
 
     /// <summary>根据主键查找单个实体</summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    IEntity FindByKey(Object key);
+    IEntity? FindByKey(Object key);
 
     /// <summary>根据主键查询一个实体对象用于表单编辑</summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    IEntity FindByKeyForEdit(Object key);
+    IEntity? FindByKeyForEdit(Object key);
     #endregion
 
     #region 静态查询
@@ -163,7 +163,7 @@ public interface IEntityFactory
     IEntitySession GetSession(String connName, String tableName);
 
     /// <summary>分表分库策略</summary>
-    IShardPolicy ShardPolicy { get; set; }
+    IShardPolicy? ShardPolicy { get; set; }
 
     /// <summary>创建分库会话，using结束时自动还原</summary>
     /// <param name="connName">连接名</param>
@@ -174,12 +174,12 @@ public interface IEntityFactory
     /// <summary>针对实体对象自动分库分表</summary>
     /// <param name="entity"></param>
     /// <returns></returns>
-    IDisposable CreateShard(IEntity entity);
+    IDisposable? CreateShard(IEntity entity);
 
     /// <summary>为实体对象、时间、雪花Id等计算分表分库</summary>
     /// <param name="value"></param>
     /// <returns></returns>
-    IDisposable CreateShard(Object value);
+    IDisposable? CreateShard(Object value);
 
     /// <summary>针对时间区间自动分库分表，常用于多表顺序查询，支持倒序</summary>
     /// <param name="start"></param>
@@ -207,19 +207,19 @@ public interface IEntityFactory
     Boolean AllowInsertIdentity { get; set; }
 
     /// <summary>自动设置Guid的字段。对实体类有效，可在实体类类型构造函数里面设置</summary>
-    FieldItem AutoSetGuidField { get; set; }
+    FieldItem? AutoSetGuidField { get; set; }
 
     /// <summary>默认累加字段</summary>
     ICollection<String> AdditionalFields { get; }
 
     /// <summary>主时间字段。代表当前数据行更新时间</summary>
-    FieldItem MasterTime { get; set; }
+    FieldItem? MasterTime { get; set; }
 
     /// <summary>默认选择的字段</summary>
-    String Selects { get; set; }
+    String? Selects { get; set; }
 
     /// <summary>默认选择统计语句</summary>
-    String SelectStat { get; set; }
+    String? SelectStat { get; set; }
 
     /// <summary>实体模块集合</summary>
     EntityModules Modules { get; }

@@ -26,7 +26,7 @@ public partial class Entity<TEntity>
         #endregion
 
         #region 属性
-        private IEntity _Default;
+        private IEntity? _Default;
         /// <summary>默认实体</summary>
         public virtual IEntity Default { get => _Default ??= new TEntity(); set => _Default = value; }
 
@@ -49,10 +49,10 @@ public partial class Entity<TEntity>
         public virtual FieldItem Master => Meta.Master;
 
         /// <summary>连接名。当前线程正在使用的连接名</summary>
-        public virtual String ConnName { get => Meta.ConnName; set => Meta.ConnName = value; }
+        public virtual String ConnName { get => Meta.ConnName!; set => Meta.ConnName = value; }
 
         /// <summary>表名。当前线程正在使用的表名</summary>
-        public virtual String TableName { get => Meta.TableName; set => Meta.TableName = value; }
+        public virtual String TableName { get => Meta.TableName!; set => Meta.TableName = value; }
         #endregion
 
         #region 构造
@@ -69,7 +69,7 @@ public partial class Entity<TEntity>
         /// <summary>创建一个实体对象</summary>
         /// <param name="forEdit">是否为了编辑而创建，如果是，可以再次做一些相关的初始化工作</param>
         /// <returns></returns>
-        public virtual IEntity Create(Boolean forEdit = false) => (Default as TEntity).CreateInstance(forEdit);
+        public virtual IEntity Create(Boolean forEdit = false) => (Default as TEntity)!.CreateInstance(forEdit);
 
         /// <summary>加载记录集</summary>
         /// <param name="ds">记录集</param>
@@ -82,22 +82,22 @@ public partial class Entity<TEntity>
         /// <param name="name">名称</param>
         /// <param name="value">数值</param>
         /// <returns></returns>
-        public virtual IEntity Find(String name, Object value) => Entity<TEntity>.Find(name, value);
+        public virtual IEntity? Find(String name, Object value) => Entity<TEntity>.Find(name, value);
 
         /// <summary>根据条件查找单个实体</summary>
         /// <param name="where"></param>
         /// <returns></returns>
-        public virtual IEntity Find(Expression where) => Entity<TEntity>.Find(where);
+        public virtual IEntity? Find(Expression where) => Entity<TEntity>.Find(where);
 
         /// <summary>根据主键查找单个实体</summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public virtual IEntity FindByKey(Object key) => Entity<TEntity>.FindByKey(key);
+        public virtual IEntity? FindByKey(Object key) => Entity<TEntity>.FindByKey(key);
 
         /// <summary>根据主键查询一个实体对象用于表单编辑</summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public virtual IEntity FindByKeyForEdit(Object key) => Entity<TEntity>.FindByKeyForEdit(key);
+        public virtual IEntity? FindByKeyForEdit(Object key) => Entity<TEntity>.FindByKeyForEdit(key);
         #endregion
 
         #region 静态查询
@@ -162,7 +162,7 @@ public partial class Entity<TEntity>
         public virtual IEntitySession GetSession(String connName, String tableName) => EntitySession<TEntity>.Create(connName, tableName);
 
         /// <summary>分表分库策略</summary>
-        public virtual IShardPolicy ShardPolicy { get => Meta.ShardPolicy; set => Meta.ShardPolicy = value; }
+        public virtual IShardPolicy? ShardPolicy { get => Meta.ShardPolicy; set => Meta.ShardPolicy = value; }
 
         /// <summary>创建分库会话，using结束时自动还原</summary>
         /// <param name="connName">连接名</param>
@@ -173,12 +173,12 @@ public partial class Entity<TEntity>
         /// <summary>针对实体对象自动分库分表</summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public virtual IDisposable CreateShard(IEntity entity) => Meta.CreateShard(entity as TEntity);
+        public virtual IDisposable? CreateShard(IEntity entity) => Meta.CreateShard((entity as TEntity)!);
 
         /// <summary>为实体对象、时间、雪花Id等计算分表分库</summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public virtual IDisposable CreateShard(Object value) => Meta.CreateShard(value);
+        public virtual IDisposable? CreateShard(Object value) => Meta.CreateShard(value);
 
         /// <summary>针对时间区间自动分库分表，常用于多表顺序查询，支持倒序</summary>
         /// <param name="start"></param>
@@ -195,7 +195,7 @@ public partial class Entity<TEntity>
         /// <param name="find">查找函数</param>
         /// <param name="create">创建对象</param>
         /// <returns></returns>
-        public virtual IEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, IEntity?> find, Func<TKey, IEntity> create) => Entity<TEntity>.GetOrAdd(key, (k, b) => find?.Invoke(k, b) as TEntity, k => create?.Invoke(k) as TEntity);
+        public virtual IEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, IEntity?> find, Func<TKey, IEntity> create) => Entity<TEntity>.GetOrAdd(key, (k, b) => find?.Invoke(k, b) as TEntity, k => (create?.Invoke(k) as TEntity)!);
         #endregion
 
         #region 一些设置
@@ -211,15 +211,15 @@ public partial class Entity<TEntity>
         public virtual Boolean AllowInsertIdentity { get => _AllowInsertIdentity.Value; set => _AllowInsertIdentity.Value = value; }
 
         /// <summary>自动设置Guid的字段。对实体类有效，可在实体类类型构造函数里面设置</summary>
-        public virtual FieldItem AutoSetGuidField { get; set; }
+        public virtual FieldItem? AutoSetGuidField { get; set; }
 
         /// <summary>默认累加字段</summary>
         public virtual ICollection<String> AdditionalFields { get; } = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
 
         private Boolean _MasterTime_;
-        private FieldItem _MasterTime;
+        private FieldItem? _MasterTime;
         /// <summary>主时间字段。代表当前数据行更新时间</summary>
-        public FieldItem MasterTime
+        public FieldItem? MasterTime
         {
             get
             {
@@ -234,7 +234,7 @@ public partial class Entity<TEntity>
             set { _MasterTime = value; _MasterTime_ = false; }
         }
 
-        private static FieldItem GetMasterTime()
+        private static FieldItem? GetMasterTime()
         {
             var fis = Meta.Fields.Where(e => e.Type == typeof(DateTime)).ToArray();
             if (fis.Length == 0) return null;
@@ -260,11 +260,11 @@ public partial class Entity<TEntity>
         }
 
         /// <summary>默认选择的字段</summary>
-        public String Selects { get; set; }
+        public String? Selects { get; set; }
 
-        private String _SelectStat;
+        private String? _SelectStat;
         /// <summary>默认选择统计语句</summary>
-        public String SelectStat
+        public String? SelectStat
         {
             get
             {
@@ -326,7 +326,7 @@ public partial class Entity<TEntity>
         /// <summary>雪花Id生成器。Int64主键非自增时，自动填充</summary>
         public Snowflake Snow { get; } = new Snowflake();
 
-        private SqlTemplate _Template;
+        private SqlTemplate? _Template;
         /// <summary>Sql模版</summary>
         public SqlTemplate Template
         {

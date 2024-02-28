@@ -167,7 +167,7 @@ public partial class Entity<TEntity>
 
         #region 分表分库
         /// <summary>分表分库策略</summary>
-        public static IShardPolicy ShardPolicy { get; set; }
+        public static IShardPolicy? ShardPolicy { get; set; }
 
         /// <summary>创建分库会话，using结束时自动还原</summary>
         /// <param name="connName">连接名</param>
@@ -221,10 +221,10 @@ public partial class Entity<TEntity>
         private class SplitPackge : IDisposable
         {
             /// <summary>连接名</summary>
-            public String ConnName { get; set; }
+            public String? ConnName { get; set; }
 
             /// <summary>表名</summary>
-            public String TableName { get; set; }
+            public String? TableName { get; set; }
 
             public SplitPackge(String connName, String tableName)
             {

@@ -116,7 +116,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
     <PackageReference Include="NewLife.IP" Version="2.1.2024.101" />
     <PackageReference Include="NewLife.UnitTest" Version="1.0.2023.1204" />

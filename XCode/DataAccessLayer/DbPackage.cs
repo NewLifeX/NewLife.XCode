@@ -20,10 +20,10 @@ public class DbPackage
     /// <summary>
     /// 数据库连接
     /// </summary>
-    public DAL Dal { get; set; }
+    public DAL Dal { get; set; } = null!;
 
     /// <summary>数据页事件</summary>
-    public event EventHandler<PageEventArgs> OnPage;
+    public event EventHandler<PageEventArgs>? OnPage;
 
     /// <summary>批大小。用于批量操作数据，默认5000</summary>
     public Int32 BatchSize { get; set; }
@@ -40,16 +40,25 @@ public class DbPackage
     /// <summary>数据保存模式。默认Insert</summary>
     public SaveModes Mode { get; set; } = SaveModes.Insert;
 
+    /// <summary>数据抽取器的创建回调，支持外部自定义</summary>
+    public Func<IDataTable, IExtracter<DbTable>>? CreateExtracterCallback { get; set; }
+
     /// <summary>写文件Actor的创建回调，支持外部自定义</summary>
     public Func<WriteFileActor>? WriteFileCallback { get; set; }
 
     /// <summary>写数据库Actor的创建回调，支持外部自定义</summary>
     public Func<WriteDbActor>? WriteDbCallback { get; set; }
 
-    /// <summary>
-    /// 性能追踪器
-    /// </summary>
+    /// <summary>性能追踪器</summary>
     public ITracer? Tracer { get; set; } = DAL.GlobalTracer;
+    #endregion
+
+    #region 构造
+    /// <summary>实例化数据包</summary>
+    public DbPackage()
+    {
+        CreateExtracterCallback = GetExtracter;
+    }
     #endregion
 
     #region 备份
@@ -76,7 +85,7 @@ public class DbPackage
         var sb = new SelectBuilder { Table = tableName };
         var connName = Dal.ConnName;
 
-        var extracer = GetExtracter(table);
+        var extracer = CreateExtracterCallback?.Invoke(table) ?? GetExtracter(table);
 
         // 总行数
         writeFile.Total = Dal.SelectCount(sb);
@@ -153,7 +162,7 @@ public class DbPackage
     /// <summary>获取数据抽取器。自增/数字主键->时间索引->主键分页->索引分页->默认分页</summary>
     /// <param name="table"></param>
     /// <returns></returns>
-    protected virtual IExtracter<DbTable> GetExtracter(IDataTable table)
+    public virtual IExtracter<DbTable> GetExtracter(IDataTable table)
     {
         var tableName = Dal.Db.FormatName(table);
 
@@ -513,7 +522,7 @@ public class DbPackage
         writeDb.Dal = dal;
         writeDb.TracerParent = span;
 
-        var extracer = GetExtracter(table);
+        var extracer = CreateExtracterCallback?.Invoke(table) ?? GetExtracter(table);
 
         // 临时关闭日志
         var old = Dal.Db.ShowSQL;

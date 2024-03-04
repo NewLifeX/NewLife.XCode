@@ -93,7 +93,7 @@ public class DbPackage
         {
             foreach (var dt in extracer.Fetch())
             {
-                var row = extracer.Row;
+                var row = extracer.TotalCount;
                 var count = dt.Rows.Count;
                 WriteLog("备份[{0}/{1}]数据 {2:n0} + {3:n0}", table, connName, row, count);
                 if (count == 0) break;
@@ -161,16 +161,26 @@ public class DbPackage
         var id = table.Columns.FirstOrDefault(e => e.Identity);
         if (id == null)
         {
-            var pks = table.Columns.Where(e => e.PrimaryKey).ToList();
-            if (pks.Count == 1 && pks[0].DataType.IsInt()) id = pks[0];
+            var pks = table.PrimaryKeys;
+            if (pks.Length >= 1 && pks[0].DataType.IsInt()) id = pks[0];
         }
         if (id != null)
             return new IdExtracter(Dal, tableName, id);
 
         // 时间索引抽取
-        var time = table.Indexes.FirstOrDefault(e => table.GetColumn(e.Columns[0]).DataType == typeof(DateTime));
+        IDataColumn? time = null;
+        foreach (var dx in table.Indexes)
+        {
+            var column = table.GetColumn(dx.Columns[0]);
+            if (column != null && column.DataType == typeof(DateTime))
+            {
+                time = column;
+                break;
+            }
+        }
+        //var time = table.Indexes.FirstOrDefault(e => table.GetColumn(e.Columns[0])?.DataType == typeof(DateTime));
         if (time != null)
-            return new TimeExtracter(Dal, tableName, table.GetColumn(time.Columns[0]));
+            return new TimeExtracter(Dal, tableName, time);
 
         // 主键分页功能
         var pk = table.Columns.FirstOrDefault(e => e.PrimaryKey);
@@ -188,7 +198,7 @@ public class DbPackage
 
         // 默认第一个字段
         var dc = table.Columns.FirstOrDefault();
-        return dc != null ? new PagingExtracter(Dal, tableName, dc.ColumnName) : (IExtracter<DbTable>)new PagingExtracter(Dal, tableName);
+        return new PagingExtracter(Dal, tableName, dc?.ColumnName);
     }
 
     /// <summary>备份单表数据到文件</summary>
@@ -518,7 +528,7 @@ public class DbPackage
 
             foreach (var dt in extracer.Fetch())
             {
-                var row = extracer.Row;
+                var row = extracer.TotalCount;
                 var count = dt.Rows.Count;
                 WriteLog("同步[{0}/{1}]数据 {2:n0} + {3:n0}", table.Name, Dal.ConnName, row, count);
 

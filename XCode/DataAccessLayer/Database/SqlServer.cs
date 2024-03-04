@@ -764,10 +764,14 @@ internal class SqlServerSession : RemoteDbSession
                     var dt = val.ToDateTime();
                     if (dt.Year < 1970) val = new DateTime(1970, 1, 1);
                 }
-
-                if (val == null && dc.DataType == typeof(Guid))
+                //byte[]类型查询时候参数化异常
+                else if (dc.DataType == typeof(Byte[]))
                 {
-                    val = Guid.Empty;
+                    val ??= new Byte[0];
+                }
+                if (dc.DataType == typeof(Guid))
+                {
+                    val ??= Guid.Empty;
                 }
 
                 // 逐列创建参数对象
@@ -991,21 +995,17 @@ internal class SqlServerMetaData : RemoteDbMetaData
         // 每种数据库的自增差异太大，理应由各自处理，而不采用原始值
         if (Database.Type == field.Table.DbType && !field.Identity) typeName = field.RawType;
 
-        if (String.IsNullOrEmpty(typeName)) typeName = GetFieldType(field);
+        if (typeName.IsNullOrEmpty()) typeName = GetFieldType(field);
 
         sb.Append(typeName);
 
-        //增加长度
-        if (field.DataType.Name == "String" && !typeName.Contains("text"))
+        // 增加长度
+        if (field.DataType == typeof(String) && !typeName.IsNullOrEmpty() && !typeName.Contains("(") && !typeName.Contains("text"))
         {
             if (field.Length > 0)
-            {
                 sb.AppendFormat("({0})", field.Length);
-            }
             else
-            {
                 sb.Append("(max)");
-            }
         }
         // 约束
         sb.Append(GetFieldConstraints(field, onlyDefine));
@@ -1013,11 +1013,18 @@ internal class SqlServerMetaData : RemoteDbMetaData
         return sb.ToString();
     }
 
-    private DataTable AllFields = null;
-    private DataTable AllIndexes = null;
+    private DataTable? AllFields = null;
+    private DataTable? AllIndexes = null;
 
     protected override void FixField(IDataColumn field, DataRow dr)
     {
+        //修复sqlserver同步到sqlserver建表长度为1的bug
+        var rawType = field.RawType?.ToLower();
+        if (rawType == "nvarchar" || rawType == "varchar" || rawType == "char" || rawType == "binary")
+            field.RawType += "(" + field.Length + ")";
+        if (rawType == "varbinary" && field.Length == -1)
+            field.RawType = "varbinary(max)";
+
         base.FixField(field, dr);
 
         var rows = AllFields?.Select("表名='" + field.Table.TableName + "' And 字段名='" + field.ColumnName + "'", null);
@@ -1067,7 +1074,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
     public override String FieldClause(IDataColumn field, Boolean onlyDefine)
     {
-        if (!String.IsNullOrEmpty(field.RawType) && field.RawType.Contains("char(-1)"))
+        if (!field.RawType.IsNullOrEmpty() && field.RawType.Contains("char(-1)"))
         {
             //if (IsSQL2005)
             field.RawType = field.RawType.Replace("char(-1)", "char(MAX)");
@@ -1116,6 +1123,15 @@ internal class SqlServerMetaData : RemoteDbMetaData
     //    if (field.DataType == typeof(String) && pi == "-1" && IsSQL2005) return "MAX";
     //    return pi;
     //}
+
+    protected override String? GetFieldType(IDataColumn field)
+    {
+        //mysql 转sqlserver
+        if (field.RawType?.ToLower() == "longblob")
+            return "varbinary(max)";
+
+        return base.GetFieldType(field);
+    }
     #endregion
 
     #region 取得字段信息的SQL模版

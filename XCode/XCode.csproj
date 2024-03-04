@@ -7,7 +7,7 @@
     <Description>数据中间件，支持MySQL、SQLite、SqlServer、Oracle、Postgresql、TDengine、达梦，重点在缓存、性能、分表、自动建表。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2024 NewLife</Copyright>
-    <VersionPrefix>11.10</VersionPrefix>
+    <VersionPrefix>11.11</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -29,7 +29,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>正反向工程的字段类型匹配更宽松；新增DataMethod重构实体过滤器；实体查询默认不再自动增加主键降序</PackageReleaseNotes>
+    <PackageReleaseNotes>重构时间数据抽取器；增强Sqlite和SqlServer的正反向工程支持</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -44,7 +44,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.7.2024.216-beta0739" />
+    <PackageReference Include="NewLife.Core" Version="10.8.2024.303" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

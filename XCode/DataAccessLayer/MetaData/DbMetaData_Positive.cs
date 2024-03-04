@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Linq;
 using NewLife;
-using NewLife.Log;
-using NewLife.Serialization;
 using XCode.Common;
 using XCode.Exceptions;
 
@@ -212,16 +207,8 @@ partial class DbMetaData
 
             // 原始数据类型
             field.RawType = GetDataRowValue<String>(dr, "DATA_TYPE", "DATATYPE", "COLUMN_DATA_TYPE");
-
             // 长度
             field.Length = GetDataRowValue<Int32>(dr, "CHARACTER_MAXIMUM_LENGTH", "LENGTH", "COLUMN_SIZE");
-
-            //修复sqlserver同步到sqlserver建表长度为1的bug
-            var rawType = field.RawType.ToLower();
-            if (rawType == "nvarchar" || rawType == "varchar" || rawType == "char" || rawType == "binary")
-                field.RawType += "(" + field.Length + ")";
-            if (rawType == "varbinary" && field.Length == -1)
-                field.RawType = "varbinary(max)";
 
             if (field is XField fi)
             {
@@ -230,7 +217,6 @@ partial class DbMetaData
                 fi.Scale = GetDataRowValue<Int32>(dr, "NUMERIC_SCALE", "SCALE");
                 if (field.Length == 0) field.Length = fi.Precision;
             }
-
 
             // 允许空
             if (TryGetDataRowValue(dr, "IS_NULLABLE", out b))
@@ -344,7 +330,7 @@ partial class DbMetaData
     protected IDictionary<Type, String[]> Types { get; set; } = null!;
 
     protected List<KeyValuePair<Type, Type>>? _FieldTypeMaps;
-    /// <summary>字段类型映射</summary>
+    /// <summary>字段类型映射（数据库-实体类）</summary>
     protected virtual List<KeyValuePair<Type, Type>> FieldTypeMaps
     {
         get
@@ -359,6 +345,8 @@ partial class DbMetaData
                     // 因为等价，字节需要能够互相映射
                     new(typeof(Byte), typeof(SByte)),
                     new(typeof(Byte), typeof(Boolean)),
+                    new(typeof(Boolean), typeof(Byte)),
+                    new(typeof(Byte), typeof(Int32)),
 
                     new(typeof(UInt16), typeof(Int16)),
                     new(typeof(Int16), typeof(UInt16)),
@@ -377,6 +365,7 @@ partial class DbMetaData
                     new(typeof(Int64), typeof(UInt64)),
                     //list.Add(new KeyValuePair<Type, Type>(typeof(UInt64), typeof(Int32)));
                     //list.Add(new KeyValuePair<Type, Type>(typeof(Int64), typeof(Int32)));
+                    new(typeof(Int64), typeof(Int32)),
 
                     // 数据库使用Double，实体类使用Decimal
                     new(typeof(Double), typeof(Decimal)),
@@ -419,9 +408,6 @@ partial class DbMetaData
         var typeName = ns.FirstOrDefault();
         // 大文本选第二个类型
         if (ns.Length > 1 && type == typeof(String) && (field.Length <= 0 || field.Length >= Database.LongTextLength)) typeName = ns[1];
-        //mysql 转sqlserver
-        if (field.RawType.ToLower() == "longblob")
-            typeName = "varbinary(max)";
         if (typeName.Contains("{0}"))
         {
             if (typeName.Contains("{1}"))

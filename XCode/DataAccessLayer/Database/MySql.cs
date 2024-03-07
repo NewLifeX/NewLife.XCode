@@ -132,7 +132,7 @@ internal class MySql : RemoteDb
         return base.FormatValue(field, value);
     }
 
-    private static readonly Char[] _likeKeys = new[] { '\\', '\'', '\"', '%', '_' };
+    private static readonly Char[] _likeKeys = ['\\', '\'', '\"', '%', '_'];
 
     /// <summary>格式化模糊搜索的字符串。处理转义字符</summary>
     /// <param name="column">字段</param>
@@ -402,7 +402,15 @@ internal class MySqlMetaData : RemoteDbMetaData
             var dt = ss.Query(sql, null);
             if (dt.Rows == null || dt.Rows.Count == 0) return list;
 
-            var hs = new HashSet<String>(names ?? new String[0], StringComparer.OrdinalIgnoreCase);
+            sql = $"select * from information_schema.columns where table_schema='{db}'";
+            if (names != null && names.Length > 0) sql += " and table_name in ('" + names.Join("','") + "')";
+            var columns = ss.Query(sql, null);
+
+            sql = $"select * from information_schema.STATISTICS where table_schema='{db}'";
+            if (names != null && names.Length > 0) sql += " and table_name in ('" + names.Join("','") + "')";
+            var indexes = ss.Query(sql, null);
+
+            var hs = new HashSet<String>(names ?? [], StringComparer.OrdinalIgnoreCase);
 
             // 所有表
             foreach (var dr in dt)
@@ -416,65 +424,127 @@ internal class MySqlMetaData : RemoteDbMetaData
                 table.DbType = Database.Type;
 
                 #region 字段
-
-                sql = $"SHOW FULL COLUMNS FROM `{db}`.`{name}`";
-                var dcs = ss.Query(sql, null);
-                foreach (var dc in dcs)
+                if (columns.Rows != null && columns.Rows.Count > 0)
                 {
-                    var field = table.CreateColumn();
-
-                    field.ColumnName = dc["Field"] + "";
-                    field.RawType = dc["Type"] + "";
-                    field.Description = dc["Comment"] + "";
-
-                    if (dc["Extra"] + "" == "auto_increment") field.Identity = true;
-                    if (dc["Key"] + "" == "PRI") field.PrimaryKey = true;
-                    if (dc["Null"] + "" == "YES") field.Nullable = true;
-
-                    field.Length = field.RawType.Substring("(", ")").ToInt();
-                    field.DataType = GetDataType(field);
-
-                    if (field.DataType == null)
+                    foreach (var dc in columns)
                     {
-                        if (field.RawType.StartsWithIgnoreCase("varchar", "nvarchar")) field.DataType = typeof(String);
+                        if (dc["TABLE_NAME"] + "" != table.TableName) continue;
+
+                        var field = table.CreateColumn();
+
+                        field.ColumnName = dc["COLUMN_NAME"] + "";
+                        field.RawType = dc["COLUMN_TYPE"] + "";
+                        field.Description = dc["COLUMN_COMMENT"] + "";
+
+                        if (dc["Extra"] + "" == "auto_increment") field.Identity = true;
+                        if (dc["COLUMN_KEY"] + "" == "PRI") field.PrimaryKey = true;
+                        if (dc["IS_NULLABLE"] + "" == "YES") field.Nullable = true;
+
+                        field.Length = field.RawType.Substring("(", ")").ToInt();
+
+                        var type = GetDataType(field);
+                        if (type == null)
+                        {
+                            if (field.RawType.StartsWithIgnoreCase("varchar", "nvarchar")) field.DataType = typeof(String);
+                        }
+                        else
+                            field.DataType = type;
+
+                        // MySql中没有布尔型，这里处理YN枚举作为布尔型
+                        if (field.RawType is "enum('N','Y')" or "enum('Y','N')") field.DataType = typeof(Boolean);
+
+                        field.Fix();
+
+                        table.Columns.Add(field);
                     }
-
-                    // MySql中没有布尔型，这里处理YN枚举作为布尔型
-                    if (field.RawType is "enum('N','Y')" or "enum('Y','N')") field.DataType = typeof(Boolean);
-
-                    field.Fix();
-
-                    table.Columns.Add(field);
                 }
+                else
+                {
+                    sql = $"SHOW FULL COLUMNS FROM `{db}`.`{name}`";
+                    var dcs = ss.Query(sql, null);
+                    foreach (var dc in dcs)
+                    {
+                        var field = table.CreateColumn();
 
+                        field.ColumnName = dc["Field"] + "";
+                        field.RawType = dc["Type"] + "";
+                        field.Description = dc["Comment"] + "";
+
+                        if (dc["Extra"] + "" == "auto_increment") field.Identity = true;
+                        if (dc["Key"] + "" == "PRI") field.PrimaryKey = true;
+                        if (dc["Null"] + "" == "YES") field.Nullable = true;
+
+                        field.Length = field.RawType.Substring("(", ")").ToInt();
+                        field.DataType = GetDataType(field);
+
+                        if (field.DataType == null)
+                        {
+                            if (field.RawType.StartsWithIgnoreCase("varchar", "nvarchar")) field.DataType = typeof(String);
+                        }
+
+                        // MySql中没有布尔型，这里处理YN枚举作为布尔型
+                        if (field.RawType is "enum('N','Y')" or "enum('Y','N')") field.DataType = typeof(Boolean);
+
+                        field.Fix();
+
+                        table.Columns.Add(field);
+                    }
+                }
                 #endregion 字段
 
                 #region 索引
-
-                sql = $"SHOW INDEX FROM `{db}`.`{name}`";
-                var dis = ss.Query(sql, null);
-                foreach (var dr2 in dis)
+                if (indexes.Rows != null && indexes.Rows.Count > 0)
                 {
-                    var dname = dr2["Key_name"] + "";
-                    var di = table.Indexes.FirstOrDefault(e => e.Name == dname) ?? table.CreateIndex();
-                    //di.Name = dname;
-                    di.Unique = dr2.Get<Int32>("Non_unique") == 0;
-
-                    var cname = dr2.Get<String>("Column_name");
-                    if (cname.IsNullOrEmpty()) continue;
-
-                    var cs = new List<String>();
-                    if (di.Columns != null && di.Columns.Length > 0) cs.AddRange(di.Columns);
-                    cs.Add(cname);
-                    di.Columns = cs.ToArray();
-
-                    if (di.Name == null)
+                    foreach (var dr2 in indexes)
                     {
-                        di.Name = dname;
-                        table.Indexes.Add(di);
+                        if (dr2["TABLE_NAME"] + "" != table.TableName) continue;
+
+                        var dname = dr2["INDEX_NAME"] + "";
+                        var di = table.Indexes.FirstOrDefault(e => e.Name == dname) ?? table.CreateIndex();
+                        //di.Name = dname;
+                        di.Unique = dr2.Get<Int32>("Non_unique") == 0;
+
+                        var cname = dr2.Get<String>("Column_name");
+                        if (cname.IsNullOrEmpty()) continue;
+
+                        var cs = new List<String>();
+                        if (di.Columns != null && di.Columns.Length > 0) cs.AddRange(di.Columns);
+                        cs.Add(cname);
+                        di.Columns = cs.ToArray();
+
+                        if (di.Name == null)
+                        {
+                            di.Name = dname;
+                            table.Indexes.Add(di);
+                        }
                     }
                 }
+                else
+                {
+                    sql = $"SHOW INDEX FROM `{db}`.`{name}`";
+                    var dis = ss.Query(sql, null);
+                    foreach (var dr2 in dis)
+                    {
+                        var dname = dr2["Key_name"] + "";
+                        var di = table.Indexes.FirstOrDefault(e => e.Name == dname) ?? table.CreateIndex();
+                        //di.Name = dname;
+                        di.Unique = dr2.Get<Int32>("Non_unique") == 0;
 
+                        var cname = dr2.Get<String>("Column_name");
+                        if (cname.IsNullOrEmpty()) continue;
+
+                        var cs = new List<String>();
+                        if (di.Columns != null && di.Columns.Length > 0) cs.AddRange(di.Columns);
+                        cs.Add(cname);
+                        di.Columns = cs.ToArray();
+
+                        if (di.Name == null)
+                        {
+                            di.Name = dname;
+                            table.Indexes.Add(di);
+                        }
+                    }
+                }
                 #endregion 索引
 
                 // 修正关系数据
@@ -595,7 +665,7 @@ internal class MySqlMetaData : RemoteDbMetaData
 
     protected override Boolean DatabaseExist(String databaseName)
     {
-        var dt = GetSchema(_.Databases, new String[] { databaseName });
+        var dt = GetSchema(_.Databases, [databaseName]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -569,26 +570,29 @@ public static class ModelHelper
         if (pi1 != null && pi2 != null)
         {
             // 写入的时候省略了相同的TableName/ColumnName
-            var v2 = (String)value.GetValue(pi2);
+            var v2 = (String?)value.GetValue(pi2);
             if (String.IsNullOrEmpty(v2))
             {
                 value.SetValue(pi2, value.GetValue(pi1));
             }
         }
         // 自增字段非空
-        if (value is IDataColumn)
+        if (value is IDataColumn dc)
         {
-            var dc = value as IDataColumn;
             if (dc.Identity) dc.Nullable = false;
 
             // 优化字段名
             //dc.Fix();
-            if (dc.Name.IsNullOrEmpty())
-                dc.Name = ModelResolver.Current.GetName(dc.ColumnName);
-            else if (dc.ColumnName.IsNullOrEmpty() || dc.ColumnName == dc.Name)
+            if (dc.ColumnName.IsNullOrEmpty()) dc.ColumnName = dc.Name;
+            if (dc.Name.IsNullOrEmpty() || dc.ColumnName == dc.Name)
             {
-                dc.ColumnName = dc.Name;
-                dc.Name = ModelResolver.Current.GetName(dc.ColumnName);
+                var name = ModelResolver.Current.GetName(dc.ColumnName);
+
+                // 检查该名字是否已存在，可能两个字段名差异只是多了个下划线
+                if (dc.Table == null || !dc.Table.Columns.Any(e => e.Name.EqualIgnoreCase(name)))
+                    dc.Name = name;
+                else
+                    dc.Name = dc.Name;
             }
         }
         //reader.Skip();
@@ -596,14 +600,23 @@ public static class ModelHelper
         // 剩余特性作为扩展属性
         if (reader.MoveToFirstAttribute())
         {
-            if (value is IDataTable or IDataColumn)
+            if (value is IDataTable dt)
             {
-                var dic = (value is IDataTable) ? (value as IDataTable).Properties : (value as IDataColumn).Properties;
                 do
                 {
                     if (!names.Contains(reader.Name))
                     {
-                        dic[reader.Name] = reader.Value;
+                        dt.Properties[reader.Name] = reader.Value;
+                    }
+                } while (reader.MoveToNextAttribute());
+            }
+            else if (value is IDataColumn dc3)
+            {
+                do
+                {
+                    if (!names.Contains(reader.Name))
+                    {
+                        dc3.Properties[reader.Name] = reader.Value;
                     }
                 } while (reader.MoveToNextAttribute());
             }

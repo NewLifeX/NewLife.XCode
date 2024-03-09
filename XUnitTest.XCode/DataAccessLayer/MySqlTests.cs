@@ -309,7 +309,28 @@ public class MySqlTests
         var dal = DAL.Create("member_mysql");
         var tables = dal.Tables;
 
-        Assert.True(tables.Count > 0);
+        Assert.NotEmpty(tables);
+
+        foreach (var table in tables)
+        {
+            Assert.NotEmpty(table.Columns);
+            foreach (var dc in table.Columns)
+            {
+                Assert.NotEmpty(dc.Name);
+                Assert.NotEmpty(dc.ColumnName);
+                Assert.NotEmpty(dc.RawType);
+                Assert.NotNull(dc.DataType);
+                Assert.NotEmpty(dc.DisplayName);
+                Assert.NotEmpty(dc.Description);
+            }
+
+            //Assert.NotEmpty(table.Indexes);
+            foreach (var di in table.Indexes)
+            {
+                Assert.NotEmpty(di.Name);
+                Assert.NotEmpty(di.Columns);
+            }
+        }
 
         dal.SetTables(User.Meta.Table.DataTable);
     }

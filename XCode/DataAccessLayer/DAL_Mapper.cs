@@ -376,6 +376,106 @@ public partial class DAL
 
         return ExecuteByCache(sql, "", dps.ToArray(), (s, t, p) => Session.Execute(s, CommandType.Text, p));
     }
+    /// <summary>更细数据。无实体</summary>
+    /// <param name="data">实体对象</param>
+    /// <param name="table">表定义</param>
+    /// <param name="columns">字段列表，为空表示所有字段</param>
+    /// <param name="updateColumns">更新字段列表</param>
+    /// <param name="addColumns">生成+=的字段</param>
+    /// <returns></returns>
+    public Int32 Update(IModel data, IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns)
+    {
+        var ps = new HashSet<String>();
+        var dps = new List<IDataParameter>();
+
+        var sql = GetUpdateSql(table, columns, updateColumns, addColumns, ps);//builder.GetSql(Db, table, columns, data);
+        if (sql.IsNullOrEmpty()) return 0;
+
+        foreach (var dc in columns)
+        {
+
+            if (dc.Identity || dc.PrimaryKey)
+            {
+                //更新时添加主键做为查询条件
+                dps.Add(Db.CreateParameter(dc.Name, data[dc.Name], dc));
+                continue;
+            }
+
+            if (!ps.Contains(dc.Name)) continue;
+
+            // 用于参数化的字符串不能为null
+            var val = data[dc.Name];
+            if (dc.DataType == typeof(String))
+                val += "";
+            else if (dc.DataType == typeof(DateTime))
+            {
+                var dt = val.ToDateTime();
+                if (dt.Year < 1970) val = new DateTime(1970, 1, 1);
+            }
+            //byte[]类型查询时候参数化异常
+            else if (dc.DataType == typeof(Byte[]))
+            {
+                val ??= new Byte[0];
+            }
+            if (dc.DataType == typeof(Guid))
+            {
+                val ??= Guid.Empty;
+            }
+
+            // 逐列创建参数对象
+            dps.Add(Db.CreateParameter(dc.Name, val, dc));
+        }
+
+        return ExecuteByCache(sql, "", dps.ToArray(), (s, t, p) => Session.Execute(s, CommandType.Text, p));
+    }
+
+    private String GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, ICollection<String> ps)
+    {
+        var sb = Pool.StringBuilder.Get();
+        //var db = Database as DbBase;
+
+        // 字段列表
+        sb.AppendFormat("Update {0} Set ", Db.FormatName(table));
+        foreach (var dc in columns)
+        {
+            if (dc.Identity || dc.PrimaryKey) continue;
+
+            // 修复当columns看存在updateColumns不存在列时构造出来的Sql语句会出现连续逗号的问题
+            if (updateColumns != null && updateColumns.Contains(dc.Name) && (addColumns == null || !addColumns.Contains(dc.Name)))
+            {
+                sb.AppendFormat("{0}={1},", Db.FormatName(dc), Db.FormatParameterName(dc.Name));
+
+                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
+            }
+            else if (addColumns != null && addColumns.Contains(dc.Name))
+            {
+                sb.AppendFormat("{0}={0}+{1},", Db.FormatName(dc), Db.FormatParameterName(dc.Name));
+
+                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
+            }
+            //sb.Append(",");
+        }
+        sb.Length--;
+        //sb.Append(")");
+
+        // 条件
+        var pks = columns.Where(e => e.PrimaryKey).ToArray();
+        if (pks == null || pks.Length == 0) throw new InvalidOperationException("未指定用于更新的主键");
+
+        sb.Append(" Where ");
+        foreach (var dc in columns)
+        {
+            if (!dc.PrimaryKey) continue;
+
+            sb.AppendFormat("{0}={1}", Db.FormatName(dc), Db.FormatParameterName(dc.Name));
+            sb.Append(" And ");
+
+            if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
+        }
+        sb.Length -= " And ".Length;
+
+        return sb.Put(true);
+    }
 
     /// <summary>删除数据</summary>
     /// <param name="tableName">表名</param>

@@ -724,8 +724,8 @@ internal class SqlServerSession : RemoteDbSession
             }
             finally
             {
-                //if (conn != null) Database.Pool.Put(conn);
-                EndTrace(OnCreateCommand(sql, CommandType.Text));
+                var cmd = OnCreateCommand(sql, CommandType.Text);
+                EndTrace(cmd);
             }
         });
     }

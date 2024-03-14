@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EntityModel>
+  <Tables>
+    <Table Name="CorePerson" TableName="core_person" Description="居民信息" DbType="MySql">
+      <Columns>
+        <Column Name="PersonID" DataType="Int32" RawType="int(11)" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="Pname" DataType="String" RawType="varchar(50)" Description="姓名" />
+        <Column Name="Psex" DataType="Int32" RawType="int(11)" Nullable="True" Description="性别" />
+        <Column Name="CreditNo" DataType="String" RawType="char(50)" Description="身份证号" />
+        <Column Name="Mobile" DataType="String" RawType="char(50)" Description="联系电话" />
+        <Column Name="BuildID" DataType="Int32" RawType="int(11)" Nullable="True" Description="楼宇ID" />
+        <Column ColumnName="Build_ID" DataType="Int32" RawType="int(11)" Nullable="True" Description="平台楼号" />
+        <Column Name="UnitNum" DataType="String" RawType="varchar(20)" Length="20" Description="单元号" />
+        <Column Name="HouseNum" DataType="String" RawType="varchar(20)" Length="20" Description="房屋号" />
+        <Column Name="CreateUser" DataType="String" RawType="varchar(100)" Length="100" Description="创建者" />
+        <Column Name="CreateUserId" DataType="Int32" RawType="int(11)" Description="创建者ID" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+        <Column Name="CreateIP" DataType="String" RawType="varchar(50)" Description="创建IP" />
+        <Column Name="UpdateUser" DataType="String" RawType="varchar(100)" Length="100" Description="修改用户" />
+        <Column Name="UpdateUserId" DataType="Int32" RawType="int(11)" Description="修改用户ID" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="修改时间" />
+        <Column Name="UpdateIP" DataType="String" RawType="varchar(50)" Description="修改IP" />
+        <Column Name="Remark" DataType="String" RawType="varchar(200)" Length="200" Description="备注" />
+      </Columns>
+      <Indexes>
+        <Index Name="CreditNoPName" Columns="Pname,CreditNo" Unique="True" />
+        <Index Name="Build_IDIndex" Columns="Build_ID" />
+        <Index Name="BuildIDIndex" Columns="BuildID" />
+      </Indexes>
+    </Table>
+  </Tables>
+</EntityModel>

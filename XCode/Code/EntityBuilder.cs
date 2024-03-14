@@ -273,7 +273,7 @@ public class EntityBuilder : ClassBuilder
         //    baseClass += "IModel";
         //}
 
-        var bs = baseClass?.Split(',').Select(e => e.Trim()).ToList() ?? new List<String>();
+        var bs = baseClass?.Split(',').Select(e => e.Trim()).ToList() ?? [];
 
         // 数据类的基类只有接口，业务类基类则比较复杂
         var name = "";
@@ -680,7 +680,7 @@ public class EntityBuilder : ClassBuilder
 
                 if (!type.IsNullOrEmpty())
                 {
-                    if (!type.Contains(".") && conv.GetMethod("To" + type, new Type[] { typeof(Object) }) != null)
+                    if (!type.Contains(".") && conv.GetMethod("To" + type, [typeof(Object)]) != null)
                     {
                         switch (type)
                         {
@@ -988,7 +988,7 @@ public class EntityBuilder : ClassBuilder
         WriteLine("}");
     }
 
-    static String[] _validExcludes = new[] { "CreateUser", "CreateUserIP", "UpdateUser", "UpdateUserIP", "TraceId" };
+    static String[] _validExcludes = ["CreateUser", "CreateUserIP", "UpdateUser", "UpdateUserIP", "TraceId"];
     /// <summary>数据验证</summary>
     protected virtual void BuildValid()
     {
@@ -1325,7 +1325,7 @@ public class EntityBuilder : ClassBuilder
         var names = new List<String>();
 
         // 主键
-        IDataColumn pk = null;
+        IDataColumn? pk = null;
         if (Table.PrimaryKeys.Length == 1)
         {
             pk = Table.PrimaryKeys[0];
@@ -1343,7 +1343,7 @@ public class EntityBuilder : ClassBuilder
             WriteLine("public static {3} {0}({1} {2})", methodName, type, name, ClassName);
             WriteLine("{");
             {
-                if (pk.DataType.IsInt())
+                if (pk.DataType != null && pk.DataType.IsInt())
                     WriteLine("if ({0} <= 0) return null;", name);
                 else if (pk.DataType == typeof(String))
                     WriteLine("if ({0}.IsNullOrEmpty()) return null;", name);
@@ -1378,7 +1378,7 @@ public class EntityBuilder : ClassBuilder
             if (cs == null || cs.Length != di.Columns.Length) continue;
 
             // 索引最后一个字段如果是主键Id，则该不参与生成查询方法
-            if (pk != null && cs[cs.Length - 1].ColumnName.EqualIgnoreCase(pk.ColumnName))
+            if (pk != null && cs[^1].ColumnName.EqualIgnoreCase(pk.ColumnName))
             {
                 cs = cs.Take(cs.Length - 1).ToArray();
             }
@@ -1420,7 +1420,7 @@ public class EntityBuilder : ClassBuilder
                 var type = dc.Properties["Type"];
                 if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
 
-                ps[dc.CamelName()] = type;
+                ps[dc.CamelName()] = type!;
             }
             var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
 
@@ -1524,7 +1524,7 @@ public class EntityBuilder : ClassBuilder
     protected virtual void BuildSearch()
     {
         // 收集索引信息，索引中的所有字段都参与，构造一个高级查询模板
-        var idx = Table.Indexes ?? new List<IDataIndex>();
+        var idx = Table.Indexes ?? [];
         var cs = new List<IDataColumn>();
         if (idx != null && idx.Count > 0)
         {
@@ -1546,10 +1546,10 @@ public class EntityBuilder : ClassBuilder
         {
             // 时间字段。无差别支持UpdateTime/CreateTime
             var dcTime = cs.FirstOrDefault(e => e.DataType == typeof(DateTime));
-            dcTime ??= Table.GetColumns(new[] { "UpdateTime", "CreateTime" })?.FirstOrDefault();
+            dcTime ??= Table.GetColumns(["UpdateTime", "CreateTime"])?.FirstOrDefault();
             var dcSnow = cs.FirstOrDefault(e => e.PrimaryKey && !e.Identity && e.DataType == typeof(Int64));
 
-            cs.Remove(dcTime);
+            if (dcTime != null) cs.Remove(dcTime);
             cs.RemoveAll(e => e.Name.EqualIgnoreCase("key", "page"));
             if (dcSnow != null || dcTime != null)
                 cs.RemoveAll(e => e.Name.EqualIgnoreCase("start", "end"));
@@ -1563,10 +1563,15 @@ public class EntityBuilder : ClassBuilder
             {
                 WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.Description);
             }
-            if (dcSnow != null || dcTime != null)
+            if (dcTime != null)
             {
                 WriteLine("/// <param name=\"start\">{0}开始</param>", dcTime.DisplayName);
                 WriteLine("/// <param name=\"end\">{0}结束</param>", dcTime.DisplayName);
+            }
+            else if (dcSnow != null)
+            {
+                WriteLine("/// <param name=\"start\">{0}开始</param>", dcSnow.DisplayName);
+                WriteLine("/// <param name=\"end\">{0}结束</param>", dcSnow.DisplayName);
             }
             WriteLine("/// <param name=\"key\">关键字</param>");
             WriteLine("/// <param name=\"page\">分页参数信息。可携带统计和数据权限扩展查询等信息</param>");

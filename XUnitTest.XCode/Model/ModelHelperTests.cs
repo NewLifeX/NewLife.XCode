@@ -114,4 +114,27 @@ public class ModelHelperTests
         Assert.Equal("部门", dep.DisplayName);
         Assert.Equal("部门。组织机构，多级树状结构", dep.Description);
     }
+
+    [Fact]
+    public void ImportCity()
+    {
+        var file = "Model/City.xml";
+        var tables = DAL.ImportFrom(file);
+
+        Assert.NotNull(tables);
+        Assert.NotEmpty(tables);
+        Assert.Equal(1, tables.Count);
+
+        var option = new EntityBuilderOption();
+        var atts = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
+        var xml = File.ReadAllText(file.GetFullPath());
+
+        tables = ModelHelper.FromXml(xml, DAL.CreateTable, option, atts);
+        Assert.NotNull(tables);
+        Assert.NotEmpty(tables);
+        Assert.Equal(1, tables.Count);
+
+        var xml2 = DAL.Export(tables);
+        Assert.Equal(xml, xml2);
+    }
 }

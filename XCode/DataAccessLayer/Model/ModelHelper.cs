@@ -99,9 +99,9 @@ public static class ModelHelper
     /// <param name="table"></param>
     /// <param name="columnNames"></param>
     /// <returns></returns>
-    public static IDataIndex GetIndex(this IDataTable table, params String[] columnNames)
+    public static IDataIndex? GetIndex(this IDataTable table, params String[] columnNames)
     {
-        var dis = table?.Indexes;
+        var dis = table.Indexes;
         if (dis == null || dis.Count <= 0 || columnNames == null || columnNames.Length <= 0) return null;
 
         //var di = dis.FirstOrDefault(e => e != null && e.Columns.EqualIgnoreCase(columnNames));

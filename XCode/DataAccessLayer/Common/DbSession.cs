@@ -64,7 +64,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="cmd"></param>
     /// <param name="sql"></param>
     /// <returns></returns>
-    protected virtual XSqlException OnException(Exception ex, DbCommand cmd, String sql)
+    protected virtual XSqlException OnException(Exception ex, DbCommand cmd, String? sql)
     {
         if (sql.IsNullOrEmpty()) sql = GetSql(cmd)!;
         if (ex != null)
@@ -957,7 +957,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         }
     }
 
-    private String? GetSql(DbCommand cmd)
+    public String? GetSql(DbCommand cmd)
     {
         var max = (Database as DbBase)!.SQLMaxLength;
         try
@@ -1007,22 +1007,16 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         catch { return null; }
     }
 
-    public String WriteSQL(DbCommand cmd)
+    public String? WriteSQL(DbCommand cmd)
     {
         // 如果页面设定有XCode_SQLList列表，则往列表写入SQL语句
         if (!ShowSQL && DAL.LocalFilter == null) return null;
 
         var sql = GetSql(cmd);
-
-        WriteSQL(sql);
+        if (!sql.IsNullOrEmpty()) WriteSQL(sql);
 
         return sql;
     }
-
-    ///// <summary>输出日志</summary>
-    ///// <param name="format"></param>
-    ///// <param name="args"></param>
-    //public static void WriteLog(String format, params Object?[] args) => XTrace.WriteLine(format, args);
 
     /// <summary>设置是否显示SQL，退出作用域后恢复</summary>
     /// <param name="showSql"></param>
@@ -1042,7 +1036,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
     class MyShowSql : IDisposable
     {
-        public DbSession Session { get; set; }
+        public DbSession Session { get; set; } = null!;
 
         public Boolean ShowSql { get; set; }
 
@@ -1056,7 +1050,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
     protected void BeginTrace()
     {
-        if ((Database as DbBase).TraceSQLTime <= 0) return;
+        if ((Database as DbBase)!.TraceSQLTime <= 0) return;
 
         _swSql ??= new Stopwatch();
 
@@ -1066,13 +1060,13 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         _swSql.Start();
     }
 
-    protected void EndTrace(DbCommand cmd, String sql = null)
+    protected void EndTrace(DbCommand cmd, String? sql = null)
     {
         if (_swSql == null) return;
 
         _swSql.Stop();
 
-        if (_swSql.ElapsedMilliseconds < (Database as DbBase).TraceSQLTime) return;
+        if (_swSql.ElapsedMilliseconds < (Database as DbBase)!.TraceSQLTime) return;
 
         if (sql.IsNullOrEmpty()) sql = GetSql(cmd);
         if (sql.IsNullOrEmpty()) return;

@@ -9,7 +9,7 @@
         <Column Name="CreditNo" DataType="String" RawType="char(50)" Description="身份证号" />
         <Column Name="Mobile" DataType="String" RawType="char(50)" Description="联系电话" />
         <Column Name="BuildID" DataType="Int32" RawType="int(11)" Nullable="True" Description="楼宇ID" />
-        <Column ColumnName="Build_ID" DataType="Int32" RawType="int(11)" Nullable="True" Description="平台楼号" />
+        <Column Name="Build_ID" DataType="Int32" RawType="int(11)" Nullable="True" Description="平台楼号" />
         <Column Name="UnitNum" DataType="String" RawType="varchar(20)" Length="20" Description="单元号" />
         <Column Name="HouseNum" DataType="String" RawType="varchar(20)" Length="20" Description="房屋号" />
         <Column Name="CreateUser" DataType="String" RawType="varchar(100)" Length="100" Description="创建者" />

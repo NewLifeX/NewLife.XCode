@@ -297,7 +297,7 @@ public class ModelResolver : IModelResolver
             if (column.Table == null || !column.Table.Columns.Any(e => e.Name.EqualIgnoreCase(name)))
                 column.Name = name;
             else
-                column.Name = column.Name;
+                column.Name = column.ColumnName;
         }
 
         return column;

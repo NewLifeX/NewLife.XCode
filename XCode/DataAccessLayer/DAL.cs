@@ -668,10 +668,10 @@ public partial class DAL
     /// <returns></returns>
     public static IList<IDataTable> ImportFrom(String xmlFile)
     {
-        if (xmlFile.IsNullOrEmpty()) return new IDataTable[0];
+        if (xmlFile.IsNullOrEmpty()) return [];
 
         xmlFile = xmlFile.GetFullPath();
-        if (!File.Exists(xmlFile)) return new IDataTable[0];
+        if (!File.Exists(xmlFile)) return [];
 
         return ModelHelper.FromXml(File.ReadAllText(xmlFile), CreateTable);
     }

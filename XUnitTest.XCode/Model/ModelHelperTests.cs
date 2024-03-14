@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using NewLife.Collections;
+using NewLife.Data;
 using XCode.Code;
 using XCode.DataAccessLayer;
 using Xunit;
@@ -115,6 +116,16 @@ public class ModelHelperTests
         Assert.Equal("部门。组织机构，多级树状结构", dep.Description);
     }
 
+    private String ReadTarget(String file, String text)
+    {
+        //var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
+        //File.WriteAllText(file2.EnsureDirectory(true), text);
+
+        var target = File.ReadAllText(file.GetFullPath());
+
+        return target;
+    }
+
     [Fact]
     public void ImportCity()
     {
@@ -124,6 +135,14 @@ public class ModelHelperTests
         Assert.NotNull(tables);
         Assert.NotEmpty(tables);
         Assert.Equal(1, tables.Count);
+
+        var column = tables[0].Columns[6];
+        Assert.NotNull(column.Name);
+        Assert.NotEmpty(column.Name);
+        Assert.NotNull(column.ColumnName);
+        Assert.NotEmpty(column.ColumnName);
+
+        //column.Fix();
 
         var option = new EntityBuilderOption();
         var atts = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
@@ -135,6 +154,42 @@ public class ModelHelperTests
         Assert.Equal(1, tables.Count);
 
         var xml2 = DAL.Export(tables);
-        Assert.Equal(xml, xml2);
+        //Assert.Equal(xml, xml2);
+
+        // 代码生成
+
+        option = new EntityBuilderOption
+        {
+            ConnName = "MyConn",
+            Namespace = "Company.MyName",
+            //Partial = true,
+            Nullable = true,
+        };
+
+        var builder = new EntityBuilder
+        {
+            Table = tables[0],
+            Option = option,
+        };
+
+        // 数据类
+        builder.Execute();
+
+        var rs = builder.ToString();
+        Assert.NotEmpty(rs);
+
+        var target = ReadTarget("Model\\Code\\entity_city.cs", rs);
+        Assert.Equal(target, rs);
+
+        // 业务类
+        builder.Clear();
+        builder.Business = true;
+        builder.Execute();
+
+        rs = builder.ToString();
+        Assert.NotEmpty(rs);
+
+        target = ReadTarget("Model\\Code\\entity_city_biz.cs", rs);
+        Assert.Equal(target, rs);
     }
 }

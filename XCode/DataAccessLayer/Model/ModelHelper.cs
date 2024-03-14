@@ -29,7 +29,7 @@ public static class ModelHelper
     /// <returns></returns>
     public static IDataColumn[] GetColumns(this IDataTable table, String[] names)
     {
-        if (names == null || names.Length <= 0) return new IDataColumn[0];
+        if (names == null || names.Length <= 0) return [];
 
         //return table.Columns.Where(c => names.Any(n => c.Is(n))).ToArray();
         var dcs = new List<IDataColumn>();
@@ -148,6 +148,9 @@ public static class ModelHelper
     public static String CamelName(this IDataColumn column)
     {
         var name = column.Name;
+        if (name.IsNullOrEmpty()) name = column.ColumnName;
+        if (name.IsNullOrEmpty()) return name;
+
         if (name.EqualIgnoreCase("id")) return "id";
 
         // 全小写，直接返回
@@ -258,7 +261,7 @@ public static class ModelHelper
     /// <returns></returns>
     public static IList<IDataTable> FromXml(String xml, Func<IDataTable> createTable, Object? option = null, IDictionary<String, String>? atts = null)
     {
-        if (xml.IsNullOrEmpty()) return new IDataTable[0];
+        if (xml.IsNullOrEmpty()) return [];
         if (createTable == null) throw new ArgumentNullException(nameof(createTable));
 
         var settings = new XmlReaderSettings
@@ -342,7 +345,7 @@ public static class ModelHelper
     static void ReadTable(XmlReader reader, Func<IDataTable> createTable, IList<IDataTable> list)
     {
         var table = createTable();
-        (table as IXmlSerializable).ReadXml(reader);
+        (table as IXmlSerializable)!.ReadXml(reader);
 
         // 判断是否存在属性NeedHistory设置且为true
         var needHistory = table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
@@ -592,7 +595,7 @@ public static class ModelHelper
                 if (dc.Table == null || !dc.Table.Columns.Any(e => e.Name.EqualIgnoreCase(name)))
                     dc.Name = name;
                 else
-                    dc.Name = dc.Name;
+                    dc.Name = dc.ColumnName;
             }
         }
         //reader.Skip();

@@ -963,6 +963,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         try
         {
             var sql = cmd.CommandText;
+            var isInsert = sql.StartsWithIgnoreCase("Insert");
 
             // 诊断信息
             /*if (XTrace.Log.Level <= LogLevel.Debug)*/
@@ -999,7 +1000,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
             // 截断超长字符串
             if (max > 0 && sql.Length > max)
             {
-                if (sql.StartsWithIgnoreCase("Insert")) sql = sql[..(max / 2)] + "..." + sql[^(max / 2)..];
+                if (isInsert) sql = sql[..(max / 2)] + "......" + sql[^(max / 2)..];
             }
 
             return sql;

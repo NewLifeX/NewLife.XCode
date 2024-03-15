@@ -33,7 +33,7 @@ public class EntityBuilder : ClassBuilder
     /// <param name="atts"></param>
     /// <param name="tables"></param>
     /// <param name="log"></param>
-    public static void FixModelFile(String xmlFile, BuilderOption option, IDictionary<String, String> atts, IList<IDataTable> tables, ILog log = null)
+    public static void FixModelFile(String xmlFile, BuilderOption option, IDictionary<String, String> atts, IList<IDataTable> tables, ILog? log = null)
     {
         // 保存文件名
         if (xmlFile.IsNullOrEmpty()) xmlFile = atts["ModelFile"];
@@ -125,19 +125,21 @@ public class EntityBuilder : ClassBuilder
     /// <param name="tables">模型文件</param>
     /// <param name="option">生成可选项</param>
     /// <param name="log"></param>
-    public static Int32 BuildTables(IList<IDataTable> tables, EntityBuilderOption option, ILog log = null)
+    public static Int32 BuildTables(IList<IDataTable> tables, EntityBuilderOption option, ILog? log = null)
     {
         if (tables == null || tables.Count == 0) return 0;
 
         if (option == null)
             option = new EntityBuilderOption();
         else
-            option = option.Clone() as EntityBuilderOption;
+            option = (option.Clone() as EntityBuilderOption)!;
         //option.Partial = true;
 
         var output = option.Output;
         if (output.IsNullOrEmpty()) output = ".";
         log?.Info("生成实体类 {0}", output.GetBasePath());
+
+        var displayNames = new HashSet<String>();
 
         var count = 0;
         foreach (var item in tables)
@@ -163,15 +165,25 @@ public class EntityBuilder : ClassBuilder
                 builder.EntityOption.ModelNameForToModel = item.Name;
             }
 
+            // 如果已存在重复中文名，则使用英文名
+            var chinese = option.ChineseFileName;
+            if (chinese && !item.DisplayName.IsNullOrEmpty())
+            {
+                if (displayNames.Contains(item.DisplayName))
+                    chinese = false;
+                else
+                    displayNames.Add(item.DisplayName);
+            }
+
             builder.Load(item);
 
             builder.Execute();
-            builder.Save(null, true, option.ChineseFileName);
+            builder.Save(null, true, chinese);
 
             builder.Clear();
             builder.Business = true;
             builder.Execute();
-            builder.Save(null, false, option.ChineseFileName);
+            builder.Save(null, false, chinese);
         }
 
         return count;

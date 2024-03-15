@@ -103,7 +103,16 @@ class Program
         // 加载模型文件，得到数据表
         var option = new CubeBuilderOption();
         var tables = ClassBuilder.LoadModels(modelFile, option, out var atts, log);
-        EntityBuilder.FixModelFile(modelFile, option, atts, tables, log);
+
+        try
+        {
+            XTrace.WriteLine("修正模型：{0}", modelFile);
+            EntityBuilder.FixModelFile(modelFile, option, atts, tables, log);
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteException(ex);
+        }
 
         XTrace.WriteLine("共有模型：{0}", tables.Count);
 

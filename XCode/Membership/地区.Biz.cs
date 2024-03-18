@@ -668,6 +668,9 @@ public partial class Area : Entity<Area>
             var bs = new List<Area>();
             foreach (var item in list)
             {
+                // 香港澳门没有三层地区，一级直辖三级
+                if (i == layer - 1 && item.ID > 810000) continue;
+
                 bs.AddRange(item.Childs);
             }
 

@@ -212,7 +212,8 @@ internal class SqlServer : RemoteDb
         // 如果包含分组，则必须作为子查询
         var builder1 = builder.CloneWithGroupBy("XCode_T0", true);
         // *替换为{builder.Column}，否则会出现查询字段不一致的问题
-        builder1.Column = $"{builder.Column}, row_number() over(Order By {builder.OrderBy ?? builder.Key}) as rowNumber";
+        var column = string.IsNullOrEmpty(builder.Column) ? "*" : builder.Column;
+        builder1.Column = $"{column}, row_number() over(Order By {builder.OrderBy ?? builder.Key}) as rowNumber";
 
         var builder2 = builder1.AsChild("XCode_T1", true);
         // 结果列处理

@@ -602,7 +602,7 @@ partial class DAL
         }
     }
 
-    private static readonly Regex reg_table = new("(?:\\s+from|insert\\s+into|update|\\s+join|drop\\s+table|truncate\\s+table)\\s+[`'\"\\[]?([\\w]+)[`'\"\\[]?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex reg_table = new("""(?:\s+from|insert\s+into|update|\s+join|drop\s+table|truncate\s+table)\s+(?:[`'"\[]?[\w]+[`'"\]]?\.)?[`'"\[]?([\w]+)[`'"\]]?""", RegexOptions.Compiled | RegexOptions.IgnoreCase);
     /// <summary>从Sql语句中截取表名</summary>
     /// <param name="sql">Sql语句</param>
     /// <param name="trimShard">是否去掉表名后面的分表信息。如日期分表</param>
@@ -615,12 +615,12 @@ partial class DAL
         {
             //list.Add(item.Groups[1].Value);
             var tableName = item.Groups[1].Value;
-            if (trimShard && tableName.Contains("_"))
+            if (trimShard)
             {
                 var p = tableName.LastIndexOf('_');
-                if (p > 0 && tableName.Substring(p + 1).ToInt() > 0)
+                if (p > 0 && tableName[(p + 1)..].ToInt() > 0)
                 {
-                    tableName = tableName.Substring(0, p);
+                    tableName = tableName[..p];
                 }
             }
             if (!list.Contains(tableName)) list.Add(tableName);

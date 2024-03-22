@@ -100,4 +100,29 @@ public class DALTests
         var type3 = Nullable.GetUnderlyingType(type2);
         Assert.Null(type3);
     }
+
+    [Theory]
+    [InlineData("select * from user", "user")]
+    [InlineData("select * from 'user' where id=123", "user")]
+    [InlineData("select * from `user` where id=123", "user")]
+    [InlineData("select * from \"user\" where id=123", "user")]
+    [InlineData("select * from [user] where id=123", "user")]
+    [InlineData("select * from member.user", "user")]
+    [InlineData("select * from `member`.'user' where id=123", "user")]
+    [InlineData("select * from \"member\".`user` where id=123", "user")]
+    [InlineData("select * from [member].\"user\" where id=123", "user")]
+    [InlineData("select * from 'member'.[user] where id=123", "user")]
+    [InlineData("insert into \"member\".`user`(xxx)", "user")]
+    [InlineData("update \"member\".`user` set xxx", "user")]
+    [InlineData("select * from 'member'.[user] left join data.[role] on user.roleid=role.id where id=123", "user,role")]
+    [InlineData("truncate table \"member\".`user`", "user")]
+    public void GetTables(String sql, String tableName)
+    {
+        var ts = DAL.GetTables(sql, false);
+        Assert.NotNull(ts);
+
+        var tables = tableName.Split(",");
+        Assert.Equal(tables.Length, ts.Length);
+        Assert.Equal(tableName, ts.Join(","));
+    }
 }

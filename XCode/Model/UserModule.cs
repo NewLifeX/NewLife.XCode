@@ -93,11 +93,11 @@ public class UserModule : EntityModule
                     break;
             }
         }
-        else
+        else if (AllowEmpty)
         {
             // 在没有当前登录用户的场合，把更新者清零
             SetNoDirtyItem(fs, entity, __.UpdateUserID, 0);
-            if (AllowEmpty) SetNoDirtyItem(fs, entity, __.UpdateUser, "");
+            SetNoDirtyItem(fs, entity, __.UpdateUser, "");
         }
 
         return true;

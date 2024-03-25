@@ -5,6 +5,7 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Collections;
 using NewLife.Data;
+using NewLife.Log;
 
 namespace XCode.DataAccessLayer;
 
@@ -347,13 +348,13 @@ partial class DAL
     public Int32 Expire { get; set; }
 
 #if NET45
-    private static readonly ThreadLocal<String> _SpanTag = new();
+    private static readonly ThreadLocal<String?> _SpanTag = new();
 #else
-    private static readonly AsyncLocal<String> _SpanTag = new();
+    private static readonly AsyncLocal<String?> _SpanTag = new();
 #endif
 
     /// <summary>埋点上下文信息。用于附加在埋点标签后的上下文信息</summary>
-    public static void SetSpanTag(String value) => _SpanTag.Value = value;
+    public static void SetSpanTag(String? value) => _SpanTag.Value = value;
 
     private ICache? GetCache()
     {
@@ -468,19 +469,7 @@ partial class DAL
         try
         {
             var rs = callback(k1, k2, k3);
-
-            if (span != null)
-            {
-                if (rs is DbTable dt)
-                    span.Tag = $"{sql} [rows={dt.Rows?.Count}]";
-                else if (rs is DataSet ds && ds.Tables.Count > 0)
-                    span.Tag = $"{sql} [rows={ds.Tables[0].Rows.Count}]";
-                else
-                    span.Tag = $"{sql} [result={rs}]";
-
-                var stag = _SpanTag.Value;
-                if (!stag.IsNullOrEmpty()) span.Tag += " " + stag;
-            }
+            AppendTag(span, sql, rs);
 
             return rs;
         }
@@ -493,6 +482,26 @@ partial class DAL
         {
             span?.Dispose();
         }
+    }
+
+    private void AppendTag(ISpan? span, String sql, Object? rs)
+    {
+        if (span == null) return;
+
+        if (rs is DbTable dt)
+        {
+            if (dt.Rows != null && dt.Rows.Count == 1 && dt.Columns != null && dt.Columns.Length <= 3)
+                span.Tag = $"{sql} [rows={dt.Rows.Count}, result={dt.Rows[0].Join(",")}]";
+            else
+                span.Tag = $"{sql} [rows={dt.Rows?.Count}]";
+        }
+        else if (rs is DataSet ds && ds.Tables.Count > 0)
+            span.Tag = $"{sql} [rows={ds.Tables[0].Rows.Count}]";
+        else
+            span.Tag = $"{sql} [result={rs}]";
+
+        var stag = _SpanTag.Value;
+        if (!stag.IsNullOrEmpty()) span.Tag += " " + stag;
     }
 
     private async Task<TResult> QueryByCacheAsync<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, Task<TResult>> callback, String action)
@@ -575,19 +584,7 @@ partial class DAL
         try
         {
             var rs = await callback(k1, k2, k3);
-
-            if (span != null)
-            {
-                if (rs is DbTable dt)
-                    span.Tag = $"{sql} [rows={dt.Rows?.Count}]";
-                else if (rs is DataSet ds && ds.Tables.Count > 0)
-                    span.Tag = $"{sql} [rows={ds.Tables[0].Rows.Count}]";
-                else
-                    span.Tag = $"{sql} [result={rs}]";
-
-                var stag = _SpanTag.Value;
-                if (!stag.IsNullOrEmpty()) span.Tag += " " + stag;
-            }
+            AppendTag(span, sql, rs);
 
             return rs;
         }

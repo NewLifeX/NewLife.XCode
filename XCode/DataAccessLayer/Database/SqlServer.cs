@@ -1203,10 +1203,10 @@ internal class SqlServerMetaData : RemoteDbMetaData
     #endregion
 
     #region 数据定义
-    public override Object SetSchema(DDLSchema schema, params Object[] values)
+    public override Object? SetSchema(DDLSchema schema, params Object?[]? values)
     {
+        if (Database is DbBase db)
         {
-            var db = Database as DbBase;
             var tracer = db.Tracer;
             if (schema is not DDLSchema.BackupDatabase and not DDLSchema.RestoreDatabase) tracer = null;
             using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
@@ -1243,7 +1243,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
     public override String CreateDatabaseSQL(String dbname, String file)
     {
-        var dp = (Database as SqlServer).DataPath;
+        var dp = (Database as SqlServer)!.DataPath;
 
         if (String.IsNullOrEmpty(file))
         {

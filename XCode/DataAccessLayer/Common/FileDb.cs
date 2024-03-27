@@ -67,7 +67,7 @@ namespace XCode.DataAccessLayer
 
         protected virtual void CreateDatabase()
         {
-            if (!File.Exists(FileName)) Database.CreateMetaData().SetSchema(DDLSchema.CreateDatabase, null);
+            if (!File.Exists(FileName)) Database.CreateMetaData().SetSchema(DDLSchema.CreateDatabase);
         }
         #endregion
 
@@ -96,10 +96,10 @@ namespace XCode.DataAccessLayer
         /// <param name="schema"></param>
         /// <param name="values"></param>
         /// <returns></returns>
-        public override Object SetSchema(DDLSchema schema, Object[] values)
+        public override Object? SetSchema(DDLSchema schema, Object?[] values)
         {
+            if (Database is DbBase db)
             {
-                var db = Database as DbBase;
                 var tracer = db.Tracer;
                 if (schema is not DDLSchema.DatabaseExist and not DDLSchema.CreateDatabase and not DDLSchema.DropDatabase) tracer = null;
                 using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);

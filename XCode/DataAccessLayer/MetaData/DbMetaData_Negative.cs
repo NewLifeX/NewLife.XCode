@@ -88,7 +88,7 @@ internal partial class DbMetaData
         var dbExist = false;
         try
         {
-            dbExist = (Boolean)SetSchema(DDLSchema.DatabaseExist, null);
+            dbExist = (Boolean)(SetSchema(DDLSchema.DatabaseExist) ?? false);
         }
         catch
         {
@@ -101,13 +101,13 @@ internal partial class DbMetaData
             if (mode > Migration.ReadOnly)
             {
                 WriteLog("创建数据库：{0}", ConnName);
-                SetSchema(DDLSchema.CreateDatabase, null, null);
+                SetSchema(DDLSchema.CreateDatabase, [null, null]);
 
                 dbExist = true;
             }
             else
             {
-                var sql = GetSchemaSQL(DDLSchema.CreateDatabase, null, null);
+                var sql = GetSchemaSQL(DDLSchema.CreateDatabase, [null, null]);
                 if (String.IsNullOrEmpty(sql))
                     WriteLog("请为连接{0}创建数据库！", ConnName);
                 else
@@ -659,7 +659,7 @@ internal partial class DbMetaData
         {
             // 没办法形成SQL，输出日志信息
             var s = new StringBuilder();
-            if (values != null && values.Length > 0)
+            if (values.Length > 0)
             {
                 foreach (var item in values)
                 {
@@ -670,7 +670,7 @@ internal partial class DbMetaData
 
             IDataColumn? dc = null;
             IDataTable? dt = null;
-            if (values != null && values.Length > 0)
+            if (values.Length > 0)
             {
                 dc = values[0] as IDataColumn;
                 dt = values[0] as IDataTable;
@@ -786,7 +786,7 @@ internal partial class DbMetaData
     /// <param name="schema">数据定义模式</param>
     /// <param name="values">其它信息</param>
     /// <returns></returns>
-    public virtual String GetSchemaSQL(DDLSchema schema, params Object[] values)
+    public virtual String GetSchemaSQL(DDLSchema schema, params Object?[] values)
     {
         return schema switch
         {
@@ -813,9 +813,10 @@ internal partial class DbMetaData
     /// <param name="schema">数据定义模式</param>
     /// <param name="values">其它信息</param>
     /// <returns></returns>
-    public virtual Object? SetSchema(DDLSchema schema, params Object[]? values)
+    public virtual Object? SetSchema(DDLSchema schema, params Object?[] values)
     {
-        var db = Database as DbBase;
+        if (Database is not DbBase db) return null;
+
         using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
 
         var sql = GetSchemaSQL(schema, values);

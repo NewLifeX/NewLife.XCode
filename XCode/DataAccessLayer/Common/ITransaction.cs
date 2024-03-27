@@ -1,7 +1,5 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
-using System.Threading;
 using NewLife;
 using NewLife.Log;
 
@@ -20,13 +18,13 @@ public interface ITransaction : IDisposable
     Int32 Executes { get; }
 
     /// <summary>数据库事务</summary>
-    DbTransaction Tran { get; }
+    DbTransaction? Tran { get; }
 
     /// <summary>获取事务</summary>
     /// <param name="cmd">命令</param>
     /// <param name="execute">是否执行增删改</param>
     /// <returns></returns>
-    DbTransaction Check(DbCommand cmd, Boolean execute);
+    DbTransaction? Check(DbCommand cmd, Boolean execute);
 
     /// <summary>增加事务计数</summary>
     /// <returns></returns>
@@ -60,7 +58,7 @@ class Transaction : DisposeBase, ITransaction
     IDbSession _Session;
 
     /// <summary>连接对象</summary>
-    public DbConnection Conn { get; private set; }
+    public DbConnection? Conn { get; private set; }
     #endregion
 
     #region 构造
@@ -89,7 +87,7 @@ class Transaction : DisposeBase, ITransaction
 
         Tran.TryDispose();
         Tran = null;
-        _Session = null;
+        //_Session = null;
 
         Conn?.Close();
         Conn = null;
@@ -98,13 +96,13 @@ class Transaction : DisposeBase, ITransaction
 
     #region 延迟打开事务
     /// <summary>数据库事务。首次使用打开事务</summary>
-    public DbTransaction Tran { get; private set; }
+    public DbTransaction? Tran { get; private set; }
 
     /// <summary>给命令设置事务和连接</summary>
     /// <param name="cmd">命令</param>
     /// <param name="execute">是否执行增删改</param>
     /// <returns></returns>
-    public DbTransaction Check(DbCommand cmd, Boolean execute)
+    public DbTransaction? Check(DbCommand cmd, Boolean execute)
     {
         var conn = Conn;
         if (conn == null || cmd.Transaction != null) return cmd.Transaction;
@@ -241,7 +239,7 @@ class Transaction : DisposeBase, ITransaction
 
     #region 日志
     /// <summary>链路追踪</summary>
-    public ITracer Tracer { get; set; }
+    public ITracer? Tracer { get; set; }
 
     /// <summary>日志</summary>
     public ILog Log { get; set; } = Logger.Null;

@@ -196,10 +196,10 @@ abstract class RemoteDbMetaData : DbMetaData
     #endregion
 
     #region 架构定义
-    public override Object SetSchema(DDLSchema schema, params Object[] values)
+    public override Object? SetSchema(DDLSchema schema, Object?[] values)
     {
+        if (Database is DbBase db)
         {
-            var db = Database as DbBase;
             var tracer = db.Tracer;
             if (schema is not DDLSchema.DatabaseExist and not DDLSchema.CreateDatabase) tracer = null;
             using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
@@ -219,7 +219,7 @@ abstract class RemoteDbMetaData : DbMetaData
                     return DatabaseExist(databaseName);
 
                 case DDLSchema.CreateDatabase:
-                    values = new Object[] { databaseName, values == null || values.Length < 2 ? null : values[1] };
+                    values = [databaseName, values == null || values.Length < 2 ? null : values[1]];
 
                     var sql = base.GetSchemaSQL(schema, values);
                     if (sql.IsNullOrEmpty()) return null;
@@ -254,7 +254,7 @@ abstract class RemoteDbMetaData : DbMetaData
     protected virtual Boolean DatabaseExist(String databaseName)
     {
         var session = Database.CreateSession();
-        return session.QueryCount(GetSchemaSQL(DDLSchema.DatabaseExist, new Object[] { databaseName })) > 0;
+        return session.QueryCount(GetSchemaSQL(DDLSchema.DatabaseExist, [databaseName])) > 0;
     }
 
     //protected virtual Boolean DropDatabase(String databaseName)

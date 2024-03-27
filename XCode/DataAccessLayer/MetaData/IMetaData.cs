@@ -38,13 +38,13 @@ namespace XCode.DataAccessLayer
         /// <param name="schema">数据定义模式</param>
         /// <param name="values">其它信息</param>
         /// <returns>数据定义语句</returns>
-        String? GetSchemaSQL(DDLSchema schema, params Object[]? values);
+        String? GetSchemaSQL(DDLSchema schema, params Object?[] values);
 
         /// <summary>设置数据定义模式</summary>
         /// <param name="schema">数据定义模式</param>
         /// <param name="values">其它信息</param>
         /// <returns></returns>
-        Object? SetSchema(DDLSchema schema, params Object[]? values);
+        Object? SetSchema(DDLSchema schema, params Object?[] values);
         #endregion
     }
 }

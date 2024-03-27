@@ -83,7 +83,7 @@ public class EntityTransaction : DisposeBase
     /// <summary>是否已完成事务</summary>
     protected Boolean hasFinish;
     /// <summary>埋点片段</summary>
-    protected ISpan span;
+    protected ISpan? span;
 
     /// <summary>会话</summary>
     public IDbSession Session { get; private set; }

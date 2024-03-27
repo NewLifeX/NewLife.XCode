@@ -118,6 +118,7 @@ public class DbPackage
                 OnProcess(table, row, dt, writeFile);
 
                 total += count;
+                if (span != null) span.Value = total;
             }
 
             // 通知写入完成
@@ -289,6 +290,7 @@ public class DbPackage
                         Backup(item, ms);
 
                         count++;
+                        if (span != null) span.Value = count;
                     }
                     catch (Exception ex)
                     {
@@ -382,6 +384,8 @@ public class DbPackage
 
                 // 下一页
                 total += rs.Count;
+                if (span != null) span.Value = total;
+
                 if (rs.Count < pageSize) break;
                 row += pageSize;
             }
@@ -469,6 +473,7 @@ public class DbPackage
 
         try
         {
+            var count = 0;
             foreach (var item in tables)
             {
                 var entry = zip.GetEntry(item.Name + ".table");
@@ -479,6 +484,9 @@ public class DbPackage
                         using var ms = entry.Open();
                         using var bs = new BufferedStream(ms);
                         Restore(bs, item);
+
+                        count++;
+                        if (span != null) span.Value = count;
                     }
                     catch (Exception ex)
                     {
@@ -551,6 +559,7 @@ public class DbPackage
                 OnProcess(table, row, dt, writeDb);
 
                 total += count;
+                if (span != null) span.Value = total;
             }
 
             // 通知写入完成
@@ -596,11 +605,15 @@ public class DbPackage
 
         try
         {
+            var count = 0;
             foreach (var item in tables)
             {
                 try
                 {
                     dic[item.Name] = Sync(item, connName, false);
+
+                    count++;
+                    if (span != null) span.Value = count;
                 }
                 catch (Exception ex)
                 {

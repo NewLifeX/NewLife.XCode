@@ -166,9 +166,10 @@ public class EntityQueue : DisposeBase
 
             var ss = Session;
             DefaultSpan.Current = null;
-            using var span = Tracer?.NewSpan($"db:{ss.ConnName}:Queue:{ss.TableName}", list.Count);
+            using var span = Tracer?.NewSpan($"db:{ss.ConnName}:Queue:{ss.TableName}", list.Count, list.Count);
             if (_lastTraceId != null) span?.Detach(_lastTraceId);
             _lastTraceId = null;
+
             try
             {
                 Process(list);
@@ -183,8 +184,7 @@ public class EntityQueue : DisposeBase
 
     private void Process(Object state)
     {
-        var list = state as ICollection<IEntity>;
-        if (list == null) return;
+        if (state is not ICollection<IEntity> list) return;
 
         var ss = Session;
 

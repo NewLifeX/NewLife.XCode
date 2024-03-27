@@ -466,6 +466,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
             try
             {
                 count = dal.Session.QueryCountFast(FormatedTableName);
+                if (span != null) span.Value = count;
             }
             catch (Exception ex)
             {
@@ -727,6 +728,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         try
         {
             var rs = dal.Session.Truncate(FormatedTableName);
+            if (span != null) span.Value = rs;
 
             // 干掉所有缓存
             _cache?.Clear("Truncate", true);

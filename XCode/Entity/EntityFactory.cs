@@ -169,6 +169,8 @@ public static class EntityFactory
                 connNames.Add(ti.ConnName);
 
                 Init(ti.ConnName, types, true);
+
+                if (span != null) span.Value++;
             }
         }
         catch (Exception ex)
@@ -198,6 +200,8 @@ public static class EntityFactory
                 connNames.Add(ti.ConnName);
 
                 ts.Add(Task.Run(() => Init(ti.ConnName, types, false)));
+
+                if (span != null) span.Value++;
             }
 
             await Task.WhenAll(ts);
@@ -269,6 +273,8 @@ public static class EntityFactory
                 //    entity.InitData();
                 //}
                 item.Session.InitData();
+
+                if (span != null) span.Value++;
             }
         }
         catch (Exception ex)

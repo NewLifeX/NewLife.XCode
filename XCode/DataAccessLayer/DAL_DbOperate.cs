@@ -6,6 +6,7 @@ using NewLife.Caching;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Reflection;
 
 namespace XCode.DataAccessLayer;
 
@@ -465,7 +466,7 @@ partial class DAL
         }
 
         // 使用k1参数作为tag，一般是sql
-        var span = tracer?.NewSpan(traceName, sql);
+        using var span = tracer?.NewSpan(traceName, sql);
         try
         {
             var rs = callback(k1, k2, k3);
@@ -478,10 +479,6 @@ partial class DAL
             span?.SetError(ex, null);
             throw;
         }
-        finally
-        {
-            span?.Dispose();
-        }
     }
 
     private void AppendTag(ISpan? span, String sql, Object? rs)
@@ -490,15 +487,34 @@ partial class DAL
 
         if (rs is DbTable dt)
         {
+            // 数值记录行数，标签记录结果
+            var rows = dt.Rows?.Count ?? 0;
+            span.Value = rows;
+
             if (dt.Rows != null && dt.Rows.Count == 1 && dt.Columns != null && dt.Columns.Length <= 3)
-                span.Tag = $"{sql} [rows={dt.Rows.Count}, result={dt.Rows[0].Join(",")}]";
+                span.Tag = $"{sql} [rows={rows}, result={dt.Rows[0].Join(",")}]";
             else
-                span.Tag = $"{sql} [rows={dt.Rows?.Count}]";
+                span.Tag = $"{sql} [rows={rows}]";
         }
         else if (rs is DataSet ds && ds.Tables.Count > 0)
-            span.Tag = $"{sql} [rows={ds.Tables[0].Rows.Count}]";
+        {
+            // 数值记录行数，标签记录结果
+            var dst = ds.Tables[0];
+            var rows = dst.Rows.Count;
+            span.Value = rows;
+
+            if (dst.Rows != null && dst.Rows.Count == 1 && dst.Columns != null && dst.Columns.Count <= 3)
+                span.Tag = $"{sql} [rows={rows}, result={dst.Rows[0].ItemArray.Join(",")}]";
+            else
+                span.Tag = $"{sql} [rows={rows}]";
+        }
         else
+        {
+            // 数值和标签都记录结果，大概率是受影响行数
+            if (rs != null && rs.GetType().IsInt()) span.Value = rs.ToLong();
+
             span.Tag = $"{sql} [result={rs}]";
+        }
 
         var stag = _SpanTag.Value;
         if (!stag.IsNullOrEmpty()) span.Tag += " " + stag;
@@ -580,7 +596,7 @@ partial class DAL
         }
 
         // 使用k1参数作为tag，一般是sql
-        var span = tracer?.NewSpan(traceName, sql);
+        using var span = tracer?.NewSpan(traceName, sql);
         try
         {
             var rs = await callback(k1, k2, k3);
@@ -592,10 +608,6 @@ partial class DAL
         {
             span?.SetError(ex, null);
             throw;
-        }
-        finally
-        {
-            span?.Dispose();
         }
     }
 

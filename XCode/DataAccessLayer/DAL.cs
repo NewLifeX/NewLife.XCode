@@ -773,7 +773,7 @@ public partial class DAL
         if (Db is DbBase db2 && !db2.SupportSchema) return;
 
         var tracer = Tracer ?? GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{ConnName}:SetTables", tables.Join());
+        using var span = tracer?.NewSpan($"db:{ConnName}:SetTables", tables.Join(), tables.Length);
         try
         {
             //// 构建DataTable时也要注意表前缀，避免反向工程用错

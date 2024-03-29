@@ -134,7 +134,18 @@ public partial class DAL
             if (!connName.EndsWithIgnoreCase(".readonly"))
             {
                 var connName2 = connName + ".readonly";
-                if (css.ContainsKey(connName2)) ReadOnly = Create(connName2);
+                if (css.ContainsKey(connName2)) _reads = [Create(connName2)];
+            }
+            else if (!connName.Contains(".rd"))
+            {
+                // 多从库读写分离
+                var rs = new List<DAL>();
+                for (var i = 0; i < 32; i++)
+                {
+                    var connName2 = $"{connName}.rd{i}";
+                    if (css.ContainsKey(connName2)) rs.Add(Create(connName2));
+                }
+                _reads = rs;
             }
 
             _inited = true;

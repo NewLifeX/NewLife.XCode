@@ -7,6 +7,7 @@ using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
+using NewLife.Threading;
 
 namespace XCode.DataAccessLayer;
 
@@ -23,11 +24,16 @@ partial class DAL
     /// <summary>执行次数</summary>
     public static Int32 ExecuteTimes => _ExecuteTimes;
 
+    private IList<DAL>? _reads;
+    /// <summary>只读连接集合。读写分离时，读取操作分走</summary>
+    public IList<DAL>? Reads => _reads;
+
     /// <summary>只读实例。读写分离时，读取操作分走</summary>
-    public DAL? ReadOnly { get; set; }
+    [Obsolete("=>Reads")]
+    public DAL? ReadOnly => _reads?.FirstOrDefault();
 
     /// <summary>读写分离策略。忽略时间区间和表名</summary>
-    public ReadWriteStrategy Strategy { get; set; } = new ReadWriteStrategy();
+    public ReadWriteStrategy Strategy { get; set; } = new();
     #endregion
 
     #region 数据操作方法
@@ -341,7 +347,7 @@ partial class DAL
     public Int32 Rollback() => Session.Rollback();
     #endregion
 
-    #region 缓存
+    #region 缓存&埋点
     /// <summary>缓存存储</summary>
     public ICache? Store { get; set; }
 
@@ -387,9 +393,9 @@ partial class DAL
     private TResult QueryByCache<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, TResult> callback, String action)
     {
         // 读写分离
-        if (Strategy != null && ReadOnly != null)
+        if (Strategy != null && Strategy.TryGet(this, k1 + "", action, out var rd) && rd != null)
         {
-            if (Strategy.Validate(this, k1 + "", action)) return ReadOnly.QueryByCache(k1, k2, k3, callback, action);
+            return rd.QueryByCache(k1, k2, k3, callback, action);
         }
 
         //CheckDatabase();
@@ -523,9 +529,9 @@ partial class DAL
     private async Task<TResult> QueryByCacheAsync<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, Task<TResult>> callback, String action)
     {
         // 读写分离
-        if (Strategy != null && ReadOnly != null)
+        if (Strategy != null && Strategy.TryGet(this, k1 + "", action, out var rd) && rd != null)
         {
-            if (Strategy.Validate(this, k1 + "", action)) return await ReadOnly.QueryByCacheAsync(k1, k2, k3, callback, action);
+            return await rd.QueryByCacheAsync(k1, k2, k3, callback, action);
         }
 
         //CheckDatabase();
@@ -676,6 +682,44 @@ partial class DAL
         {
             sb.Append('#');
             sb.Append(value);
+        }
+    }
+    #endregion
+
+    #region 读写分离
+    private IList<DAL>? _bakReads;
+    /// <summary>停用只读从库</summary>
+    /// <param name="delayTime">延迟恢复的时间。单位秒，默认0等待手动恢复</param>
+    /// <returns></returns>
+    public Boolean DisableReadOnly(Int32 delayTime = 0)
+    {
+        if (_reads == null) return false;
+        lock (this)
+        {
+            if (_reads == null) return false;
+
+            _bakReads = _reads;
+            _reads = null;
+
+            if (delayTime > 0) TimerX.Delay(s => EnableReadOnly(), delayTime * 1000);
+
+            return true;
+        }
+    }
+
+    /// <summary>恢复只读从库</summary>
+    /// <returns></returns>
+    public Boolean EnableReadOnly()
+    {
+        if (_bakReads == null) return false;
+        lock (this)
+        {
+            if (_bakReads == null) return false;
+
+            _reads = _bakReads;
+            _bakReads = null;
+
+            return true;
         }
     }
     #endregion

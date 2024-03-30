@@ -691,7 +691,7 @@ partial class DAL
     /// <summary>停用只读从库</summary>
     /// <param name="delayTime">延迟恢复的时间。单位秒，默认0等待手动恢复</param>
     /// <returns></returns>
-    public Boolean DisableReadOnly(Int32 delayTime = 0)
+    public Boolean SuspendReadOnly(Int32 delayTime = 0)
     {
         if (_reads == null) return false;
         lock (this)
@@ -701,7 +701,7 @@ partial class DAL
             _bakReads = _reads;
             _reads = null;
 
-            if (delayTime > 0) TimerX.Delay(s => EnableReadOnly(), delayTime * 1000);
+            if (delayTime > 0) TimerX.Delay(s => ResumeReadOnly(), delayTime * 1000);
 
             return true;
         }
@@ -709,7 +709,7 @@ partial class DAL
 
     /// <summary>恢复只读从库</summary>
     /// <returns></returns>
-    public Boolean EnableReadOnly()
+    public Boolean ResumeReadOnly()
     {
         if (_bakReads == null) return false;
         lock (this)

@@ -29,7 +29,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>重构时间数据抽取器；增强Sqlite和SqlServer的正反向工程支持</PackageReleaseNotes>
+    <PackageReleaseNotes>支持ISpan.Value，优化Sql语句埋点</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -44,7 +44,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.8.2024.327-beta0307" />
+    <PackageReference Include="NewLife.Core" Version="10.9.2024.402" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

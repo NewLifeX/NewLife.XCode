@@ -137,8 +137,7 @@ public partial class DAL
     /// <param name="param">参数对象</param>
     /// <returns></returns>
     public Int32 Execute(String sql, Object? param = null) =>
-        //var ps = param?.ToDictionary();
-        ExecuteByCache(sql, "", param, (s, t, p) => Session.Execute(s, CommandType.Text, Db.CreateParameters(p)));
+        ExecuteByCache(sql, "", param, (s, t, p) => Session.Execute(s, CommandType.Text, Db.CreateParameters(p)), nameof(Execute));
 
     /// <summary>执行Sql并返回数据读取器</summary>
     /// <param name="sql"></param>
@@ -181,7 +180,7 @@ public partial class DAL
     /// <param name="param">参数对象</param>
     /// <returns></returns>
     public Task<Int32> ExecuteAsync(String sql, Object? param = null) =>
-        ExecuteByCacheAsync(sql, "", param, (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, Db.CreateParameters(p)));
+        ExecuteByCacheAsync(sql, "", param, (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, Db.CreateParameters(p)), nameof(ExecuteAsync));
 
     /// <summary>执行Sql并返回数据读取器</summary>
     /// <param name="sql"></param>
@@ -249,7 +248,7 @@ public partial class DAL
         var vs = dps.Join(",", e => e.ParameterName);
         var sql = $"Insert Into {tableName}({ns}) Values({vs})";
 
-        return ExecuteByCache(sql, "", dps, (s, t, p) => Session.Execute(s, CommandType.Text, p));
+        return ExecuteByCache(sql, "", dps, (s, t, p) => Session.Execute(s, CommandType.Text, p), nameof(Insert));
     }
 
     /// <summary>插入数据表。多行数据循环插入，非批量</summary>
@@ -284,7 +283,7 @@ public partial class DAL
         var sql = builder.GetSql(Db, table, columns, data);
         if (sql.IsNullOrEmpty()) return 0;
 
-        return ExecuteByCache(sql, "", builder.Parameters, (s, t, p) => Session.Execute(s, CommandType.Text, p));
+        return ExecuteByCache(sql, "", builder.Parameters, (s, t, p) => Session.Execute(s, CommandType.Text, p), nameof(Insert));
     }
 
     /// <summary>更新数据。不支持自动识别主键</summary>
@@ -374,7 +373,7 @@ public partial class DAL
 
         var sql = sb.Put(true);
 
-        return ExecuteByCache(sql, "", dps.ToArray(), (s, t, p) => Session.Execute(s, CommandType.Text, p));
+        return ExecuteByCache(sql, "", dps.ToArray(), (s, t, p) => Session.Execute(s, CommandType.Text, p), nameof(Update));
     }
     /// <summary>更细数据。无实体</summary>
     /// <param name="data">实体对象</param>
@@ -426,7 +425,7 @@ public partial class DAL
             dps.Add(Db.CreateParameter(dc.Name, val, dc));
         }
 
-        return ExecuteByCache(sql, "", dps.ToArray(), (s, t, p) => Session.Execute(s, CommandType.Text, p));
+        return ExecuteByCache(sql, "", dps.ToArray(), (s, t, p) => Session.Execute(s, CommandType.Text, p), nameof(Update));
     }
 
     private String GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, ICollection<String> ps)
@@ -506,7 +505,7 @@ public partial class DAL
         }
         var sql = sb.Put(true);
 
-        return ExecuteByCache(sql, "", dps.ToArray(), (s, t, p) => Session.Execute(s, CommandType.Text, p));
+        return ExecuteByCache(sql, "", dps.ToArray(), (s, t, p) => Session.Execute(s, CommandType.Text, p), nameof(Delete));
     }
 
     /// <summary>插入数据</summary>
@@ -524,7 +523,7 @@ public partial class DAL
         var vs = dps.Join(",", e => e.ParameterName);
         var sql = $"Insert Into {tableName}({ns}) Values({vs})";
 
-        return ExecuteByCacheAsync(sql, "", dps, (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, p));
+        return ExecuteByCacheAsync(sql, "", dps, (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, p), nameof(InsertAsync));
     }
 
     /// <summary>更新数据。不支持自动识别主键</summary>
@@ -586,7 +585,7 @@ public partial class DAL
 
         var sql = sb.Put(true);
 
-        return ExecuteByCacheAsync(sql, "", dps.ToArray(), (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, p));
+        return ExecuteByCacheAsync(sql, "", dps.ToArray(), (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, p), nameof(UpdateAsync));
     }
 
     /// <summary>删除数据</summary>
@@ -618,7 +617,7 @@ public partial class DAL
         }
         var sql = sb.Put(true);
 
-        return ExecuteByCacheAsync(sql, "", dps.ToArray(), (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, p));
+        return ExecuteByCacheAsync(sql, "", dps.ToArray(), (s, t, p) => AsyncSession.ExecuteAsync(s, CommandType.Text, p), nameof(DeleteAsync));
     }
 
     /// <summary>插入数据</summary>

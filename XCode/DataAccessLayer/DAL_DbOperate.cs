@@ -118,7 +118,7 @@ partial class DAL
     /// <returns></returns>
     public Int32 Execute(String sql)
     {
-        return ExecuteByCache(sql, "", "", (s, t, p) => Session.Execute(s));
+        return ExecuteByCache(sql, "", "", (s, t, p) => Session.Execute(s), nameof(Execute));
     }
 
     /// <summary>执行插入语句并返回新增行的自动编号</summary>
@@ -126,7 +126,7 @@ partial class DAL
     /// <returns>新增行的自动编号</returns>
     public Int64 InsertAndGetIdentity(String sql)
     {
-        return ExecuteByCache(sql, "", "", (s, t, p) => Session.InsertAndGetIdentity(s));
+        return ExecuteByCache(sql, "", "", (s, t, p) => Session.InsertAndGetIdentity(s), nameof(InsertAndGetIdentity));
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
@@ -146,7 +146,7 @@ partial class DAL
     /// <returns></returns>
     public Int32 Execute(String sql, CommandType type, params IDataParameter[] ps)
     {
-        return ExecuteByCache(sql, type, ps, (s, t, p) => Session.Execute(s, t, p));
+        return ExecuteByCache(sql, type, ps, (s, t, p) => Session.Execute(s, t, p), nameof(Execute));
     }
 
     /// <summary>执行插入语句并返回新增行的自动编号</summary>
@@ -156,7 +156,7 @@ partial class DAL
     /// <returns>新增行的自动编号</returns>
     public Int64 InsertAndGetIdentity(String sql, CommandType type, params IDataParameter[] ps)
     {
-        return ExecuteByCache(sql, type, ps, (s, t, p) => Session.InsertAndGetIdentity(s, t, p));
+        return ExecuteByCache(sql, type, ps, (s, t, p) => Session.InsertAndGetIdentity(s, t, p), nameof(InsertAndGetIdentity));
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
@@ -176,7 +176,7 @@ partial class DAL
     /// <returns></returns>
     public Int32 Execute(String sql, CommandType type, IDictionary<String, Object> ps)
     {
-        return ExecuteByCache(sql, type, ps, (s, t, p) => Session.Execute(s, t, Db.CreateParameters(p)));
+        return ExecuteByCache(sql, type, ps, (s, t, p) => Session.Execute(s, t, Db.CreateParameters(p)), nameof(Execute));
     }
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
@@ -190,7 +190,7 @@ partial class DAL
             using var cmd = Session.CreateCommand(s);
             if (t > 0) cmd.CommandTimeout = t;
             return Session.Execute(cmd);
-        });
+        }, nameof(Execute));
     }
 
     /// <summary>执行SQL语句，返回结果中的第一行第一列</summary>
@@ -201,7 +201,7 @@ partial class DAL
     /// <returns></returns>
     public T ExecuteScalar<T>(String sql, CommandType type, IDictionary<String, Object> ps)
     {
-        return ExecuteByCache(sql, type, ps, (s, t, p) => Session.ExecuteScalar<T>(s, t, Db.CreateParameters(p)));
+        return ExecuteByCache(sql, type, ps, (s, t, p) => Session.ExecuteScalar<T>(s, t, Db.CreateParameters(p)), nameof(ExecuteScalar));
     }
     #endregion
 
@@ -252,7 +252,7 @@ partial class DAL
     /// <returns></returns>
     public Task<Int32> ExecuteAsync(String sql)
     {
-        return ExecuteByCacheAsync(sql, "", "", (s, t, p) => AsyncSession.ExecuteAsync(s));
+        return ExecuteByCacheAsync(sql, "", "", (s, t, p) => AsyncSession.ExecuteAsync(s), nameof(ExecuteAsync));
     }
 
     /// <summary>执行插入语句并返回新增行的自动编号</summary>
@@ -260,7 +260,7 @@ partial class DAL
     /// <returns>新增行的自动编号</returns>
     public Task<Int64> InsertAndGetIdentityAsync(String sql)
     {
-        return ExecuteByCacheAsync(sql, "", "", (s, t, p) => AsyncSession.InsertAndGetIdentityAsync(s));
+        return ExecuteByCacheAsync(sql, "", "", (s, t, p) => AsyncSession.InsertAndGetIdentityAsync(s), nameof(InsertAndGetIdentityAsync));
     }
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
@@ -270,7 +270,7 @@ partial class DAL
     /// <returns></returns>
     public Task<Int32> ExecuteAsync(String sql, CommandType type, params IDataParameter[]? ps)
     {
-        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteAsync(s, t, p));
+        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteAsync(s, t, p), nameof(ExecuteAsync));
     }
 
     /// <summary>执行插入语句并返回新增行的自动编号</summary>
@@ -280,7 +280,7 @@ partial class DAL
     /// <returns>新增行的自动编号</returns>
     public Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type, params IDataParameter[]? ps)
     {
-        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.InsertAndGetIdentityAsync(s, t, p));
+        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.InsertAndGetIdentityAsync(s, t, p), nameof(InsertAndGetIdentityAsync));
     }
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
@@ -290,7 +290,7 @@ partial class DAL
     /// <returns></returns>
     public Task<Int32> ExecuteAsync(String sql, CommandType type, IDictionary<String, Object> ps)
     {
-        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteAsync(s, t, Db.CreateParameters(p)));
+        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteAsync(s, t, Db.CreateParameters(p)), nameof(ExecuteAsync));
     }
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
@@ -304,7 +304,7 @@ partial class DAL
             using var cmd = Session.CreateCommand(s);
             if (t > 0) cmd.CommandTimeout = t;
             return AsyncSession.ExecuteAsync(cmd);
-        });
+        }, nameof(ExecuteAsync));
     }
 
     /// <summary>执行SQL语句，返回结果中的第一行第一列</summary>
@@ -315,7 +315,7 @@ partial class DAL
     /// <returns></returns>
     public Task<T> ExecuteScalarAsync<T>(String sql, CommandType type, IDictionary<String, Object> ps)
     {
-        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteScalarAsync<T>(s, t, Db.CreateParameters(p)));
+        return ExecuteByCacheAsync(sql, type, ps, (s, t, p) => AsyncSession.ExecuteScalarAsync<T>(s, t, Db.CreateParameters(p)), nameof(ExecuteScalarAsync));
     }
     #endregion
 
@@ -427,13 +427,13 @@ partial class DAL
         return rs;
     }
 
-    private TResult ExecuteByCache<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, TResult> callback)
+    private TResult ExecuteByCache<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, TResult> callback, String action)
     {
         if (Db.Readonly) throw new InvalidOperationException($"数据连接[{ConnName}]只读，禁止执行{k1}");
 
         //CheckDatabase();
 
-        var rs = Invoke(k1, k2, k3, callback, "Execute");
+        var rs = Invoke(k1, k2, k3, callback, action);
 
         GetCache()?.Clear();
 
@@ -452,23 +452,7 @@ partial class DAL
         if (tracer != null)
         {
             sql = (k1 + "").Trim();
-            if (action == "Execute")
-            {
-                // 使用 Insert/Update/Delete 作为埋点操作名
-                var p = sql.IndexOf(' ');
-                if (p > 0) action = sql[..p];
-            }
-            else if (action.EqualIgnoreCase("Query", "Select"))
-            {
-                // 查询数据时，Group作为独立埋点操作名
-                if (sql.ToLower().Contains("group by"))
-                    action = "Group";
-            }
-
-            traceName = $"db:{ConnName}:{action}";
-
-            var tables = GetTables(sql, true);
-            if (tables.Length > 0) traceName += ":" + tables.Join("-");
+            traceName = GetTraceName(sql, action);
         }
 
         // 使用k1参数作为tag，一般是sql
@@ -476,7 +460,7 @@ partial class DAL
         try
         {
             var rs = callback(k1, k2, k3);
-            AppendTag(span, sql, rs);
+            AppendTag(span, sql, rs, action);
 
             return rs;
         }
@@ -487,7 +471,35 @@ partial class DAL
         }
     }
 
-    private void AppendTag(ISpan? span, String sql, Object? rs)
+    private String GetTraceName(String sql, String action)
+    {
+        var act = (action + "").TrimEnd("Async");
+        if (act.EqualIgnoreCase("InsertAndGetIdentity"))
+        {
+            act = "Insert";
+        }
+        else if (act.EqualIgnoreCase("Execute", "ExecuteScalar"))
+        {
+            // 使用 Insert/Update/Delete 作为埋点操作名
+            var p = sql.IndexOf(' ');
+            if (p > 0) act = sql[..p];
+        }
+        else if (act.EqualIgnoreCase("Query", "Select"))
+        {
+            // 查询数据时，Group作为独立埋点操作名
+            if (sql.ToLower().Contains("group by"))
+                act = "Group";
+        }
+
+        var traceName = $"db:{ConnName}:{act}";
+
+        var tables = GetTables(sql, true);
+        if (tables.Length > 0) traceName += ":" + tables.Join("-");
+
+        return traceName;
+    }
+
+    private void AppendTag(ISpan? span, String sql, Object? rs, String action)
     {
         if (span == null) return;
 
@@ -513,6 +525,12 @@ partial class DAL
                 span.Tag = $"{sql} [rows={rows}, result={dst.Rows[0].ItemArray.Join(",")}]";
             else
                 span.Tag = $"{sql} [rows={rows}]";
+        }
+        else if (action == nameof(InsertAndGetIdentity) || action == nameof(InsertAndGetIdentityAsync))
+        {
+            if (rs.ToInt() > 0) span.Value = 1;
+
+            span.Tag = $"{sql} [id={rs}]";
         }
         else
         {
@@ -563,13 +581,13 @@ partial class DAL
         return rs;
     }
 
-    private async Task<TResult> ExecuteByCacheAsync<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, Task<TResult>> callback)
+    private async Task<TResult> ExecuteByCacheAsync<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<T1, T2, T3, Task<TResult>> callback, String action)
     {
         if (Db.Readonly) throw new InvalidOperationException($"数据连接[{ConnName}]只读，禁止执行{k1}");
 
         //CheckDatabase();
 
-        var rs = await InvokeAsync(k1, k2, k3, callback, "Execute");
+        var rs = await InvokeAsync(k1, k2, k3, callback, action);
 
         GetCache()?.Clear();
 
@@ -588,17 +606,7 @@ partial class DAL
         if (tracer != null)
         {
             sql = (k1 + "").Trim();
-            if (action == "Execute")
-            {
-                // 使用 Insert/Update/Delete 作为埋点操作名
-                var p = sql.IndexOf(' ');
-                if (p > 0) action = sql[..p];
-            }
-
-            traceName = $"db:{ConnName}:{action}";
-
-            var tables = GetTables(sql, true);
-            if (tables.Length > 0) traceName += ":" + tables.Join("-");
+            traceName = GetTraceName(sql, action);
         }
 
         // 使用k1参数作为tag，一般是sql
@@ -606,7 +614,7 @@ partial class DAL
         try
         {
             var rs = await callback(k1, k2, k3);
-            AppendTag(span, sql, rs);
+            AppendTag(span, sql, rs, action);
 
             return rs;
         }
@@ -698,6 +706,9 @@ partial class DAL
         {
             if (_reads == null) return false;
 
+            var tracer = Tracer ?? GlobalTracer;
+            using var span = tracer?.NewSpan($"db:{ConnName}:SuspendReadOnly", "delayTime=" + delayTime);
+
             _bakReads = _reads;
             _reads = null;
 
@@ -715,6 +726,9 @@ partial class DAL
         lock (this)
         {
             if (_bakReads == null) return false;
+
+            var tracer = Tracer ?? GlobalTracer;
+            using var span = tracer?.NewSpan($"db:{ConnName}:ResumeReadOnly");
 
             _reads = _bakReads;
             _bakReads = null;

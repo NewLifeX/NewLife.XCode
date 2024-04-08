@@ -94,6 +94,7 @@ public partial class DAL
     /// <param name="connName">配置名</param>
     private DAL(String connName) => ConnName = connName;
 
+    static String _symbols = "-_.";
     private Boolean _inited;
     private void Init()
     {
@@ -109,6 +110,10 @@ public partial class DAL
             if (!css.ContainsKey(connName)) OnResolve?.Invoke(this, new ResolveEventArgs(connName));
             if (!css.ContainsKey(connName))
             {
+                // 如果连接名不在预期之内，则需要严格检查名字，才能创建默认的SQLite数据库
+                if (connName.Any(c => !Char.IsLetterOrDigit(c) && !_symbols.Contains(c)))
+                    throw new XCodeException($"非法连接名[{connName}]");
+
                 var cfg = NewLife.Setting.Current;
                 var set = XCodeSetting.Current;
                 var connstr = "Data Source=" + cfg.DataPath.CombinePath(connName + ".db");

@@ -2069,7 +2069,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     #endregion
 
     #region 高并发
-    /// <summary>获取 或 新增 对象，带缓存查询，常用于统计等高并发更新的情况，一般配合SaveAsync</summary>
+    /// <summary>获取 或 新增 对象，带缓存查询，常用于统计等高并发新增或更新的场景</summary>
+    /// <remarks>常规操作是插入数据前检查是否已存在，但可能存在并行冲突问题，GetOrAdd能很好解决该问题</remarks>
     /// <typeparam name="TKey"></typeparam>
     /// <param name="key">业务主键，如果是多字段混合索引，则建立一个模型类</param>
     /// <param name="find">查找函数</param>
@@ -2117,13 +2118,14 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
     }
 
-    /// <summary>获取 或 新增 对象，不带缓存查询，常用于统计等高并发更新的情况，一般配合SaveAsync</summary>
+    /// <summary>获取 或 新增 对象，不带缓存查询，常用于统计等高并发新增或更新的场景</summary>
+    /// <remarks>常规操作是插入数据前检查是否已存在，但可能存在并行冲突问题，GetOrAdd能很好解决该问题</remarks>
     /// <typeparam name="TKey"></typeparam>
     /// <param name="key">业务主键，如果是多字段混合索引，则建立一个模型类</param>
     /// <param name="find">查找函数</param>
     /// <param name="create">创建对象</param>
     /// <returns></returns>
-    public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, TEntity> find, Func<TKey, TEntity> create)
+    public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, TEntity?> find, Func<TKey, TEntity> create)
     {
         //if (key == null) return null;
         //if (find == null) throw new ArgumentNullException(nameof(find));
@@ -2164,6 +2166,25 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
             return entity;
         }
+    }
+
+    /// <summary>获取 或 新增 对象，根据业务主键查询，常用于统计等高并发新增或更新的场景</summary>
+    /// <remarks>常规操作是插入数据前检查是否已存在，但可能存在并行冲突问题，GetOrAdd能很好解决该问题</remarks>
+    /// <typeparam name="TKey"></typeparam>
+    /// <param name="field">主键名</param>
+    /// <param name="key">业务主键，如果是多字段混合索引，则建立一个模型类</param>
+    /// <returns></returns>
+    public static TEntity GetOrAdd<TKey>(String field, TKey key)
+    {
+        if (field.IsNullOrEmpty()) field = Meta.Unique.Name;
+        var f = Meta.Table.FindByName(field) ?? throw new ArgumentNullException(nameof(field));
+
+        return GetOrAdd(key, k => Find(f.Equal(k)), k =>
+        {
+            var v = new TEntity();
+            v.SetItem(f.Name, k);
+            return v;
+        });
     }
     #endregion
 }

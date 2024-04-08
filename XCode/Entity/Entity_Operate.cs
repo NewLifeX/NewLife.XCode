@@ -189,7 +189,8 @@ public partial class Entity<TEntity>
         #endregion
 
         #region 高并发
-        /// <summary>获取 或 新增 对象，常用于统计等高并发更新的情况，一般配合SaveAsync</summary>
+        /// <summary>获取 或 新增 对象，带缓存查询，常用于统计等高并发新增或更新的场景</summary>
+        /// <remarks>常规操作是插入数据前检查是否已存在，但可能存在并行冲突问题，GetOrAdd能很好解决该问题</remarks>
         /// <typeparam name="TKey"></typeparam>
         /// <param name="key">业务主键</param>
         /// <param name="find">查找函数</param>

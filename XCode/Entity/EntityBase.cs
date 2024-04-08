@@ -93,9 +93,9 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     public Boolean SetItem(String name, Object? value)
     {
         var fact = GetType().AsFactory();
-        FieldItem fi = fact.Table.FindByName(name);
+        var fi = fact.Table.FindByName(name);
         // 确保数据类型一致
-        if (fi != null) value = value.ChangeType(fi.Type);
+        if (fi is not null) value = value.ChangeType(fi.Type);
 
         var b = OnPropertyChanging(name, value);
         if (b)

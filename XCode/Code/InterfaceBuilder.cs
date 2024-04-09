@@ -41,6 +41,9 @@ public class InterfaceBuilder : ClassBuilder
 
             builder.Load(item);
 
+            // 模型类使用全局输出路径
+            if (!option.Output.IsNullOrEmpty()) builder.Option.Output = option.Output;
+
             //// 自定义模型
             //var modelInterface = option.ModelInterface;
             //if (!modelInterface.IsNullOrEmpty()) builder.Option.ClassNameTemplate = modelInterface;

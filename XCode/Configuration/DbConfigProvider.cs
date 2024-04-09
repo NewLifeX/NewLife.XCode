@@ -31,7 +31,7 @@ public class DbConfigProvider : ConfigProvider
     #region 方法
     /// <summary>初始化提供者，如有必要，此时加载缓存文件</summary>
     /// <param name="value"></param>
-    public override void Init(String value)
+    public override void Init(String? value)
     {
         // 只有全局配置支持本地缓存
         if (UserId != 0) return;
@@ -57,7 +57,7 @@ public class DbConfigProvider : ConfigProvider
             var dic = txt.StartsWith("{") && txt.EndsWith("}") ?
                 JsonParser.Decode(txt) :
                 XmlParser.Decode(txt);
-            Root = Build(dic);
+            if (dic != null) Root = Build(dic);
 
             // 如果位于分布式环境中，使用较短间隔，否则使用较长间隔
             if (Period == 15)
@@ -205,7 +205,7 @@ public class DbConfigProvider : ConfigProvider
         return true;
     }
 
-    void Save(IList<Parameter> list, IConfigSection root, String prefix)
+    void Save(IList<Parameter> list, IConfigSection root, String? prefix)
     {
         if (root == null || root.Childs == null) return;
 
@@ -253,7 +253,7 @@ public class DbConfigProvider : ConfigProvider
 
     #region 定时
     /// <summary>定时器</summary>
-    protected TimerX _timer;
+    protected TimerX? _timer;
     private void InitTimer()
     {
         if (_timer != null) return;
@@ -276,7 +276,7 @@ public class DbConfigProvider : ConfigProvider
         var dic = GetAll();
         if (dic == null) return;
 
-        var changed = new Dictionary<String, Object>();
+        var changed = new Dictionary<String, Object?>();
         if (_cache != null)
         {
             foreach (var item in dic)

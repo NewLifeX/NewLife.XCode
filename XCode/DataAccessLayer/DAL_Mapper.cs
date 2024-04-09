@@ -39,7 +39,7 @@ public partial class DAL
         var type = typeof(T);
         var utype = Nullable.GetUnderlyingType(type);
         if (utype != null) type = utype;
-        if (type.GetTypeCode() != TypeCode.Object) return dt.Rows.Select(e => e[0].ChangeType<T>());
+        if (type.GetTypeCode() != TypeCode.Object) return dt.Rows.Select(e => e[0].ChangeType<T>()!);
 
         return dt.ReadModels<T>();
     }
@@ -111,7 +111,7 @@ public partial class DAL
         var type = typeof(T);
         var utype = Nullable.GetUnderlyingType(type);
         if (utype != null) type = utype;
-        if (type.GetTypeCode() != TypeCode.Object) return dt.Rows.Select(e => e[0].ChangeType<T>());
+        if (type.GetTypeCode() != TypeCode.Object) return dt.Rows.Select(e => e[0].ChangeType<T>()!);
 
         return dt.ReadModels<T>();
     }

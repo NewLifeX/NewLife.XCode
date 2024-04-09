@@ -31,7 +31,7 @@ class XField : SerializableDataMember, IDataColumn, ICloneable
     [XmlAttribute]
     [DisplayName("数据类型")]
     [Description("数据类型")]
-    public Type DataType { get; set; } = null!;
+    public Type? DataType { get; set; }
 
     /// <summary>原始数据类型</summary>
     [XmlAttribute]

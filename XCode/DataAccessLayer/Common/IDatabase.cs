@@ -64,10 +64,10 @@ public interface IDatabase : IDisposable2
     //ConnectionPool Pool { get; }
 
     /// <summary>拥有者</summary>
-    String Owner { get; set; }
+    String? Owner { get; set; }
 
     /// <summary>数据库名</summary>
-    String DatabaseName { get; }
+    String? DatabaseName { get; }
 
     /// <summary>数据库服务器版本</summary>
     String ServerVersion { get; }
@@ -230,6 +230,6 @@ public interface IDatabase : IDisposable2
     Int32 DataCache { get; set; }
 
     /// <summary>表前缀。所有在该连接上的表名都自动增加该前缀</summary>
-    String TablePrefix { get; set; }
+    String? TablePrefix { get; set; }
     #endregion
 }

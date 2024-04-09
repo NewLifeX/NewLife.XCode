@@ -39,7 +39,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     public IDatabase Database { get; }
 
     /// <summary>链路追踪</summary>
-    public ITracer Tracer { get; set; }
+    public ITracer? Tracer { get; set; }
     #endregion
 
     #region 打开/关闭
@@ -381,7 +381,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Int64 QueryCount(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual Int64 QueryCount(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         if (sql.Contains(" "))
         {
@@ -413,7 +413,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Int32 Execute(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual Int32 Execute(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
         return Execute(cmd, false, static cmd2 => cmd2.ExecuteNonQuery());
@@ -478,7 +478,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public virtual Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
 
@@ -497,7 +497,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual T ExecuteScalar<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual T ExecuteScalar<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
         return Execute(cmd, true, static cmd2 =>
@@ -571,7 +571,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Task<Int64> QueryCountAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual Task<Int64> QueryCountAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         if (sql.Contains(" "))
         {
@@ -603,7 +603,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Task<Int32> ExecuteAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public virtual Task<Int32> ExecuteAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
         return ExecuteAsync(cmd, false, cmd2 => cmd2.ExecuteNonQueryAsync());

@@ -88,8 +88,11 @@
     <Compile Remove="Membership\访问统计.cs" />
     <Compile Remove="Model\XCodeService.cs" />
     <Compile Remove="Properties\AssemblyInfo.cs" />
+    <Compile Remove="Transform\DataContext.cs" />
     <Compile Remove="Transform\ETL.cs" />
     <Compile Remove="Transform\IdentityExtracter.cs" />
+    <Compile Remove="Transform\IETLModule.cs" />
+    <Compile Remove="Transform\IETLStat.cs" />
     <Compile Remove="Transform\Sync.cs" />
     <Compile Remove="Transform\TimeSpanExtracter.cs" />
   </ItemGroup>

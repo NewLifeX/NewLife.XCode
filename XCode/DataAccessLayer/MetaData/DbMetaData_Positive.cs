@@ -96,7 +96,7 @@ partial class DbMetaData
     /// <param name="names">指定表名</param>
     /// <param name="data">扩展</param>
     /// <returns></returns>
-    protected List<IDataTable> GetTables(DataRow[]? rows, String[]? names, IDictionary<String, DataTable>? data = null)
+    protected List<IDataTable> GetTables(DataRow[]? rows, String[]? names, IDictionary<String, DataTable?>? data = null)
     {
         if (rows == null || rows.Length == 0) return new List<IDataTable>();
 
@@ -157,7 +157,7 @@ partial class DbMetaData
     /// <param name="table"></param>
     /// <param name="dr"></param>
     /// <param name="data"></param>
-    protected virtual void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable> data) { }
+    protected virtual void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable?> data) { }
     #endregion
 
     #region 字段架构

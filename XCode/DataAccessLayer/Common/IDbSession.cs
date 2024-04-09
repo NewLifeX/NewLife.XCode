@@ -195,6 +195,6 @@ public interface IDbSession : IDisposable2
     /// <param name="collectionName">指定要返回的架构的名称。</param>
     /// <param name="restrictionValues">为请求的架构指定一组限制值。</param>
     /// <returns></returns>
-    DataTable GetSchema(DbConnection? conn, String collectionName, String[]? restrictionValues);
+    DataTable GetSchema(DbConnection? conn, String collectionName, String?[]? restrictionValues);
     #endregion
 }

@@ -271,8 +271,9 @@ public static class ModelHelper
         };
 
         var reader = XmlReader.Create(new MemoryStream(Encoding.UTF8.GetBytes(xml)), settings);
-        while (reader.NodeType != XmlNodeType.Element) { if (!reader.Read()) return null; }
+        while (reader.NodeType != XmlNodeType.Element) { if (!reader.Read()) return []; }
 
+        // 读取根节点特性
         if (atts != null && reader.HasAttributes)
         {
             reader.MoveToFirstAttribute();
@@ -433,7 +434,7 @@ public static class ModelHelper
                             // 清空默认的原始类型，让其从xml读取
                             dc.RawType = null;
                         }
-                        (dc as IXmlSerializable).ReadXml(reader);
+                        (dc as IXmlSerializable)!.ReadXml(reader);
                         table.Columns.Add(dc);
                     }
                     reader.ReadEndElement();
@@ -450,7 +451,7 @@ public static class ModelHelper
                     while (reader.IsStartElement())
                     {
                         var di = table.CreateIndex();
-                        (di as IXmlSerializable).ReadXml(reader);
+                        (di as IXmlSerializable)!.ReadXml(reader);
                         di.Fix();
                         table.Indexes.Add(di);
                     }
@@ -748,7 +749,7 @@ public static class ModelHelper
 
     private static readonly ConcurrentDictionary<Type, Object> cache = new();
 
-    private static Object GetDefault(Type type) => cache.GetOrAdd(type, item => item.CreateInstance());
+    private static Object GetDefault(Type type) => cache.GetOrAdd(type, item => item.CreateInstance()!);
     #endregion
 
     #region 修正连接
@@ -756,11 +757,9 @@ public static class ModelHelper
     /// <param name="dc"></param>
     /// <param name="oridc"></param>
     /// <returns></returns>
-    private static IDataColumn FixDefaultByType(this IDataColumn dc, IDataColumn oridc)
+    private static IDataColumn FixDefaultByType(this IDataColumn dc, IDataColumn? oridc)
     {
-        if (dc?.DataType == null) return dc;
-
-        var isnew = oridc == null || oridc == dc;
+        if (dc.DataType == null) return dc;
 
         switch (dc.DataType.GetTypeCode())
         {
@@ -807,7 +806,7 @@ public static class ModelHelper
                 break;
             case TypeCode.String:
                 // 原来就是普通字符串，或者非ntext字符串，一律转nvarchar
-                if (dc.Length >= 0 && dc.Length < 4000 || !isnew && oridc.RawType != "ntext")
+                if (dc.Length >= 0 && dc.Length < 4000 || oridc != null && oridc != dc && oridc.RawType != "ntext")
                 {
                     var len = dc.Length;
                     if (len == 0) len = 50;
@@ -820,7 +819,7 @@ public static class ModelHelper
                 {
                     // 新建默认长度-1，写入忽略所有长度
                     dc.Length = -1;
-                    if (isnew)
+                    if (oridc == null || oridc == dc)
                     {
                         dc.RawType = "ntext";
                         //dc.Length = -1;

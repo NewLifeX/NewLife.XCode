@@ -19,7 +19,7 @@ class DB2 : RemoteDb
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory() => GetProviderFactory("IBM.Data.DB2", "IBM.Data.DB2.Core.dll", "IBM.Data.DB2.Core.DB2Factory");
+    protected override DbProviderFactory? CreateFactory() => GetProviderFactory("IBM.Data.DB2", "IBM.Data.DB2.Core.dll", "IBM.Data.DB2.Core.DB2Factory");
 
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
@@ -177,7 +177,7 @@ class DB2 : RemoteDb
     /// <param name="value">值</param>
     /// <param name="type">类型</param>
     /// <returns></returns>
-    public override IDataParameter CreateParameter(String name, Object value, Type type = null)
+    public override IDataParameter CreateParameter(String name, Object? value, Type? type = null)
     {
         //var type = field?.DataType;
         if (type == null)
@@ -256,7 +256,7 @@ internal class DB2Session : RemoteDbSession
         var dt = new DbTable();
         dt.ReadHeader(dr);
 
-        Int32[] fields = null;
+        Int32[]? fields = null;
 
         // 干掉rowNumber
         var idx = Array.FindIndex(dt.Columns, c => c.EqualIgnoreCase("rowNumber"));
@@ -291,8 +291,8 @@ internal class DB2Session : RemoteDbSession
         if (p >= 0 && p < tableName.Length - 1) tableName = tableName[(p + 1)..];
         tableName = tableName.ToUpper();
 
-        var owner = (Database as DB2).Owner;
-        if (owner.IsNullOrEmpty()) owner = (Database as DB2).User;
+        var owner = (Database as DB2)!.Owner;
+        if (owner.IsNullOrEmpty()) owner = (Database as DB2)!.User;
         //var owner = (Database as DB2).Owner.ToUpper();
         owner = owner.ToUpper();
 
@@ -307,7 +307,7 @@ internal class DB2Session : RemoteDbSession
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         BeginTransaction(IsolationLevel.Serializable);
         try
@@ -333,8 +333,8 @@ internal class DB2Session : RemoteDbSession
         if (p >= 0 && p < tableName.Length - 1) tableName = tableName[(p + 1)..];
         tableName = tableName.ToUpper();
 
-        var owner = (Database as DB2).Owner;
-        if (owner.IsNullOrEmpty()) owner = (Database as DB2).User;
+        var owner = (Database as DB2)!.Owner;
+        if (owner.IsNullOrEmpty()) owner = (Database as DB2)!.User;
         //var owner = (Database as DB2).Owner.ToUpper();
         owner = owner.ToUpper();
 
@@ -343,7 +343,7 @@ internal class DB2Session : RemoteDbSession
         return ExecuteScalarAsync<Int64>(sql);
     }
 
-    public override async Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override async Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         BeginTransaction(IsolationLevel.Serializable);
         try
@@ -366,16 +366,16 @@ internal class DB2Session : RemoteDbSession
     /// <param name="type"></param>
     /// <param name="ps"></param>
     /// <returns></returns>
-    protected override DbCommand OnCreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    protected override DbCommand OnCreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         var cmd = base.OnCreateCommand(sql, type, ps);
-        if (cmd == null) return null;
+        //if (cmd == null) return null;
 
         // 如果参数Value都是数组，那么就是批量操作
         if (ps != null && ps.Length > 0 && ps.All(p => p.Value is IList))
         {
             var arr = ps.First().Value as IList;
-            cmd.SetValue("ArrayBindCount", arr.Count);
+            cmd.SetValue("ArrayBindCount", arr!.Count);
             cmd.SetValue("BindByName", true);
 
             // 超时时间放大10倍
@@ -405,7 +405,7 @@ internal class DB2Session : RemoteDbSession
         var db = Database as DbBase;
 
         // 字段列表
-        sb.AppendFormat("Insert Into {0}(", db.FormatName(table));
+        sb.AppendFormat("Insert Into {0}(", db!.FormatName(table));
         foreach (var dc in columns)
         {
             //if (dc.Identity) continue;
@@ -444,7 +444,8 @@ internal class DB2Session : RemoteDbSession
 
             //var vs = new List<Object>();
             var type = dc.DataType;
-            if (!type.IsInt() && type.IsEnum) type = typeof(Int32);
+            if (type != null && !type.IsInt() && type.IsEnum) type = typeof(Int32);
+
             var arr = Array.CreateInstance(type, list.Count());
             var k = 0;
             foreach (var entity in list)
@@ -491,7 +492,7 @@ internal class DB2Session : RemoteDbSession
         return Execute(sql, CommandType.Text, dps);
     }
 
-    private String GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, ICollection<String> ps)
+    private String? GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, ICollection<String> ps)
     {
         if ((updateColumns == null || updateColumns.Count == 0)
             && (addColumns == null || addColumns.Count == 0)) return null;
@@ -500,7 +501,7 @@ internal class DB2Session : RemoteDbSession
         var db = Database as DbBase;
 
         // 字段列表
-        sb.AppendFormat("Update {0} Set ", db.FormatName(table));
+        sb.AppendFormat("Update {0} Set ", db!.FormatName(table));
         foreach (var dc in columns)
         {
             if (dc.Identity || dc.PrimaryKey) continue;
@@ -540,6 +541,8 @@ internal class DB2Session : RemoteDbSession
     {
         var ps = new HashSet<String>();
         var sql = GetUpdateSql(table, columns, updateColumns, addColumns, ps);
+        if (sql.IsNullOrEmpty()) return 0;
+
         var dps = GetParameters(columns, ps, list);
 
         return Execute(sql, CommandType.Text, dps);
@@ -558,50 +561,52 @@ class DB2Meta : RemoteDbMetaData
         get
         {
             var owner = Database.Owner;
-            if (owner.IsNullOrEmpty()) owner = (Database as DB2).User;
+            if (owner.IsNullOrEmpty()) owner = (Database as DB2)!.User;
 
             return owner.ToUpper();
         }
     }
 
     /// <summary>用户名</summary>
-    public String UserID => (Database as DB2).User.ToUpper();
+    public String UserID => (Database as DB2)!.User.ToUpper();
 
     /// <summary>取得所有表构架</summary>
     /// <returns></returns>
-    protected override List<IDataTable> OnGetTables(String[] names)
+    protected override List<IDataTable> OnGetTables(String[]? names)
     {
-        DataTable dt = null;
+        DataTable? dt = null;
 
         // 不缺分大小写，并且不是保留字，才转大写
         if (names != null)
         {
             var db = Database as DB2;
             /*if (db.IgnoreCase)*/
-            names = names.Select(e => db.IsReservedWord(e) ? e : e.ToUpper()).ToArray();
+            names = names.Select(e => db!.IsReservedWord(e) ? e : e.ToUpper()).ToArray();
         }
 
         // 采用集合过滤，提高效率
-        String tableName = null;
+        String? tableName = null;
         if (names != null && names.Length == 1) tableName = names.FirstOrDefault();
         if (tableName.IsNullOrEmpty()) tableName = null;
 
         var owner = Owner;
         //if (owner.IsNullOrEmpty()) owner = UserID;
 
-        dt = GetSchema(_.Tables, new String[] { owner, tableName });
+        dt = GetSchema(_.Tables, [owner, tableName]);
+        if (dt == null) return [];
+
         if (!dt.Columns.Contains("TABLE_TYPE"))
         {
             dt.Columns.Add("TABLE_TYPE", typeof(String));
-            foreach (var dr in dt.Rows?.ToArray())
+            foreach (var dr in dt.Rows.ToArray())
             {
                 dr["TABLE_TYPE"] = "Table";
             }
         }
-        var dtView = GetSchema(_.Views, new String[] { owner, tableName });
+        var dtView = GetSchema(_.Views, [owner, tableName]);
         if (dtView != null && dtView.Rows.Count != 0)
         {
-            foreach (var dr in dtView.Rows?.ToArray())
+            foreach (var dr in dtView.Rows.ToArray())
             {
                 var drNew = dt.NewRow();
                 drNew["OWNER"] = dr["OWNER"];
@@ -611,7 +616,7 @@ class DB2Meta : RemoteDbMetaData
             }
         }
 
-        var data = new NullableDictionary<String, DataTable>(StringComparer.OrdinalIgnoreCase);
+        var data = new NullableDictionary<String, DataTable?>(StringComparer.OrdinalIgnoreCase);
 
         // 如果表太多，则只要目标表数据
         var mulTable = "";
@@ -626,7 +631,7 @@ class DB2Meta : RemoteDbMetaData
         data["IndexColumns"] = Get("all_ind_columns", owner, tableName, mulTable, "Table_Owner");
 
         // 主键
-        if (MetaDataCollections.Contains(_.PrimaryKeys)) data["PrimaryKeys"] = GetSchema(_.PrimaryKeys, new String[] { owner, tableName, null });
+        if (MetaDataCollections.Contains(_.PrimaryKeys)) data["PrimaryKeys"] = GetSchema(_.PrimaryKeys, [owner, tableName, null]);
 
         // 序列
         data["Sequences"] = Get("all_sequences", owner, null, null, "Sequence_Owner");
@@ -650,7 +655,7 @@ class DB2Meta : RemoteDbMetaData
     {
         var list = new List<String>();
 
-        var dt = GetSchema(_.Tables, new String[] { Owner, null });
+        var dt = GetSchema(_.Tables, [Owner, null]);
         if (dt?.Rows == null || dt.Rows.Count <= 0) return list;
 
         foreach (DataRow dr in dt.Rows)
@@ -661,7 +666,7 @@ class DB2Meta : RemoteDbMetaData
         return list;
     }
 
-    private DataTable Get(String name, String owner, String tableName, String mulTable = null, String ownerName = null)
+    private DataTable Get(String name, String owner, String? tableName, String? mulTable = null, String? ownerName = null)
     {
         if (ownerName.IsNullOrEmpty()) ownerName = "Owner";
         var sql = $"Select * From {name} Where {ownerName}='{owner}'";
@@ -673,12 +678,12 @@ class DB2Meta : RemoteDbMetaData
         return Database.CreateSession().Query(sql).Tables[0];
     }
 
-    protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable> data)
+    protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable?> data)
     {
         base.FixTable(table, dr, data);
 
         // 主键
-        var dt = data?["PrimaryKeys"];
+        var dt = data["PrimaryKeys"];
         if (dt != null && dt.Rows.Count > 0)
         {
             var drs = dt.Select($"{_.TalbeName}='{table.TableName}'");
@@ -706,7 +711,7 @@ class DB2Meta : RemoteDbMetaData
         if (table?.Columns == null || table.Columns.Count == 0) return;
     }
 
-    String GetTableComment(String name, IDictionary<String, DataTable> data)
+    String? GetTableComment(String name, IDictionary<String, DataTable?> data)
     {
         var dt = data?["TableComment"];
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
@@ -726,10 +731,10 @@ class DB2Meta : RemoteDbMetaData
     protected override List<IDataColumn> GetFields(IDataTable table, DataTable columns, IDictionary<String, DataTable> data)
     {
         var list = base.GetFields(table, columns, data);
-        if (list == null || list.Count <= 0) return null;
+        if (list == null || list.Count <= 0) return [];
 
         // 字段注释
-        if (list != null && list.Count > 0)
+        if (list.Count > 0)
         {
             foreach (var field in list)
             {
@@ -744,7 +749,7 @@ class DB2Meta : RemoteDbMetaData
 
     protected override List<IDataColumn> GetFields(IDataTable table, DataRow[] rows)
     {
-        if (rows == null || rows.Length <= 0) return null;
+        if (rows == null || rows.Length <= 0) return [];
 
         var owner = Owner;
         if (owner.IsNullOrEmpty() || !rows[0].Table.Columns.Contains(KEY_OWNER)) return base.GetFields(table, rows);
@@ -758,7 +763,7 @@ class DB2Meta : RemoteDbMetaData
         return base.GetFields(table, list.ToArray());
     }
 
-    String GetColumnComment(String tableName, String columnName, IDictionary<String, DataTable> data)
+    String? GetColumnComment(String tableName, String columnName, IDictionary<String, DataTable> data)
     {
         var dt = data?["ColumnComment"];
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
@@ -788,7 +793,7 @@ class DB2Meta : RemoteDbMetaData
             if (field.RawType.StartsWithIgnoreCase("NUMBER"))
             {
                 var prec = fi.Precision;
-                Type type = null;
+                Type? type = null;
                 if (fi.Scale == 0)
                 {
                     // 0表示长度不限制，为了方便使用，转为最常见的Int32

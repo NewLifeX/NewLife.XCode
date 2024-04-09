@@ -83,9 +83,9 @@ public static class DbFactory
             if (type != null)
             {
                 if (type.CreateInstance() is IDatabase db) _dbs[db.Type] = db;
-            }
 
-            return type;
+                return type;
+            }
         }
 
         // 默认SQLite

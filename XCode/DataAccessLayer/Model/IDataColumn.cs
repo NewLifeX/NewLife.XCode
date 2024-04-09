@@ -11,7 +11,7 @@ public interface IDataColumn
     String ColumnName { get; set; }
 
     /// <summary>数据类型</summary>
-    Type DataType { get; set; }
+    Type? DataType { get; set; }
 
     /// <summary>
     /// 原始数据类型。

@@ -11,10 +11,10 @@ public abstract class CacheBase<TEntity> : CacheBase where TEntity : Entity<TEnt
 {
     #region 属性
     /// <summary>连接名</summary>
-    public String? ConnName { get; set; }
+    public String ConnName { get; set; } = null!;
 
     /// <summary>表名</summary>
-    public String? TableName { get; set; }
+    public String TableName { get; set; } = null!;
     #endregion
 
     /// <summary>调用委托方法前设置连接名和表名，调用后还原</summary>

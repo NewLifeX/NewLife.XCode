@@ -261,6 +261,7 @@ internal partial class DbMetaData
         #region 修改列
         // 开发时的实体数据库
         var entityDb = DbFactory.Create(entitytable.DbType);
+        if (entityDb == null) throw new NotSupportedException($"Not supported DbType [{entitytable.DbType}]");
 
         foreach (var item in entitytable.Columns)
         {

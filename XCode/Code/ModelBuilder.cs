@@ -48,7 +48,7 @@ public class ModelBuilder : ClassBuilder
 
             builder.Load(item);
 
-            if (!option.Output.IsNullOrEmpty()) builder.Option.Output = option.Output;
+            //if (!option.Output.IsNullOrEmpty()) builder.Option.Output = option.Output;
 
             // 自定义模型
             var modelClass = item.Properties["ModelClass"];

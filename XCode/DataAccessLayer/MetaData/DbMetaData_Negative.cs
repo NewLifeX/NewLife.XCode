@@ -152,7 +152,7 @@ internal partial class DbMetaData
         }
     }
 
-    protected virtual void CheckTable(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    protected virtual void CheckTable(IDataTable entitytable, IDataTable? dbtable, Migration mode)
     {
         var @readonly = mode <= Migration.ReadOnly;
         if (dbtable == null)
@@ -269,7 +269,7 @@ internal partial class DbMetaData
             // 对于修改列，只读或者只创建，都只要sql
             if (IsColumnTypeChanged(item, dbf))
             {
-                WriteLog("字段[{0}.{1}]类型需要由数据库的[{2}]改变为实体的[{3}]，RawType={4}", entitytable.Name, item.Name, dbf.DataType.Name, item.DataType.FullName.TrimStart("System."), dbf.RawType);
+                WriteLog("字段[{0}.{1}]类型需要由数据库的[{2}]改变为实体的[{3}]，RawType={4}", entitytable.Name, item.Name, dbf.DataType?.Name, item.DataType?.FullName.TrimStart("System."), dbf.RawType);
                 PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
             }
             else if (IsColumnLengthChanged(item, dbf, entityDb))
@@ -484,6 +484,8 @@ internal partial class DbMetaData
     protected virtual Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)
     {
         var type = entityColumn.DataType;
+        if (type == null || dbColumn.DataType == null) return true;
+
         //if (type.IsEnum) type = typeof(Int32);
         if (type.IsEnum && (dbColumn.DataType.IsInt() || dbColumn.DataType == typeof(Boolean))) return false;
         if (type == dbColumn.DataType) return false;
@@ -592,7 +594,7 @@ internal partial class DbMetaData
                         if (type == typeof(String))
                             sbValue.Append($"ifnull({fname}, \'\')");
                         else if (type == typeof(Int16) || type == typeof(Int32) || type == typeof(Int64) ||
-                           type == typeof(Single) || type == typeof(Double) || type == typeof(Decimal) || type.IsEnum)
+                           type == typeof(Single) || type == typeof(Double) || type == typeof(Decimal) || type != null && type.IsEnum)
                             sbValue.Append($"ifnull({fname}, 0)");
                         else if (type == typeof(DateTime))
                             sbValue.Append($"ifnull({fname}, {db.FormatDateTime(DateTime.MinValue)})");
@@ -679,6 +681,7 @@ internal partial class DbMetaData
             switch (schema)
             {
                 case DDLSchema.AddTableDescription:
+                    if (dt == null) throw new ArgumentNullException(nameof(values));
                     WriteLog("{0}({1},{2})", schema, dt.TableName, dt.Description);
                     break;
                 case DDLSchema.DropTableDescription:
@@ -690,12 +693,15 @@ internal partial class DbMetaData
                 //case DDLSchema.AlterColumn:
                 //    break;
                 case DDLSchema.DropColumn:
+                    if (dc == null) throw new ArgumentNullException(nameof(values));
                     WriteLog("{0}({1})", schema, dc.ColumnName);
                     break;
                 case DDLSchema.AddColumnDescription:
+                    if (dc == null) throw new ArgumentNullException(nameof(values));
                     WriteLog("{0}({1},{2})", schema, dc.ColumnName, dc.Description);
                     break;
                 case DDLSchema.DropColumnDescription:
+                    if (dc == null) throw new ArgumentNullException(nameof(values));
                     WriteLog("{0}({1})", schema, dc.ColumnName);
                     break;
                 default:

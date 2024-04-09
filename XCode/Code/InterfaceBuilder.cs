@@ -13,7 +13,7 @@ public class InterfaceBuilder : ClassBuilder
     /// <param name="option">可选项</param>
     /// <param name="log"></param>
     /// <returns></returns>
-    public static Int32 BuildInterfaces(IList<IDataTable> tables, BuilderOption option = null, ILog log = null)
+    public static Int32 BuildInterfaces(IList<IDataTable> tables, BuilderOption? option = null, ILog? log = null)
     {
         if (option == null)
             option = new BuilderOption();
@@ -22,7 +22,7 @@ public class InterfaceBuilder : ClassBuilder
 
         //option.Partial = true;
 
-        log?.Info("生成简易接口 {0}", option.Output.GetBasePath());
+        log?.Info("生成简易接口 {0}", option.Output?.GetBasePath());
 
         var count = 0;
         foreach (var item in tables)
@@ -35,14 +35,22 @@ public class InterfaceBuilder : ClassBuilder
             {
                 Table = item,
                 Option = option.Clone(),
-                Log = log
+                //Log = log
             };
+            if (log != null) builder.Log = log;
 
             builder.Load(item);
 
             //// 自定义模型
             //var modelInterface = option.ModelInterface;
             //if (!modelInterface.IsNullOrEmpty()) builder.Option.ClassNameTemplate = modelInterface;
+
+            // 自定义模型
+            var modelInterface = item.Properties["ModelInterface"];
+            if (!modelInterface.IsNullOrEmpty())
+            {
+                builder.Option.ClassNameTemplate = modelInterface;
+            }
 
             builder.Execute();
             builder.Save(null, true, false);

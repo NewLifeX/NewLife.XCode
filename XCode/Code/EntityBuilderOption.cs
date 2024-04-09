@@ -30,10 +30,6 @@ public class EntityBuilderOption : BuilderOption
     [Description("用户实体转为模型类的模型类。例如{name}或{name}DTO")]
     public String? ModelNameForToModel { get; set; }
 
-    ///// <summary>在数据类上生成扩展属性</summary>
-    //[Description("在数据类上生成扩展属性")]
-    //public Boolean ExtendOnData { get; set; }
-
     /// <summary>命名格式。Default/Upper/Lower/Underline</summary>
     [Description("命名格式。Default/Upper/Lower/Underline")]
     public NameFormats NameFormat { get; set; }

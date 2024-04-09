@@ -21,8 +21,18 @@ class Program
         {
             Console.WriteLine("NewLife.XCode v{0}", Assembly.GetExecutingAssembly().GetName().Version);
             Console.WriteLine("Usage: xcode model.xml");
-            Console.WriteLine("Upgrade: https://x.newlifex.com/xcodetool.exe");
+            Console.WriteLine("Upgrade: http://x.newlifex.com/xcodetool.exe");
             Console.WriteLine();
+        }
+
+        var log = XTrace.Log;
+        log.Level = LogLevel.All;
+        if (log is CompositeLog clog)
+        {
+            // 使用绝对路径目录，避免在子目录中生成日志文件
+            var textFileLog = clog.Get<TextFileLog>();
+            if (textFileLog != null)
+                textFileLog.LogPath = textFileLog.LogPath.GetBasePath();
         }
 
         // 在当前目录查找模型文件
@@ -41,7 +51,7 @@ class Program
                 return;
             }
 
-            Build(file);
+            Build(file, log);
         }
         else
         {
@@ -50,11 +60,10 @@ class Program
             var di = Environment.CurrentDirectory.AsDirectory();
             foreach (var fi in di.GetFiles("*.xml", SearchOption.AllDirectories))
             {
-                if (!fi.Name.EqualIgnoreCase("XCode.xml"))
-                {
-                    var txt = File.ReadAllText(fi.FullName);
-                    if (txt.Contains("<Tables") || txt.Contains("<EntityModel")) files.Add(fi.FullName);
-                }
+                if (fi.Name.EqualIgnoreCase("XCode.xml")) continue;
+
+                var txt = File.ReadAllText(fi.FullName);
+                if (txt.Contains("<Tables") || txt.Contains("<EntityModel")) files.Add(fi.FullName);
             }
 
             if (files.Count > 0)
@@ -62,7 +71,7 @@ class Program
                 // 循环处理
                 foreach (var item in files)
                 {
-                    Build(item);
+                    Build(item, log);
                 }
             }
             else
@@ -79,19 +88,10 @@ class Program
 
     /// <summary>生成实体类。用户可以调整该方法可以改变生成实体类代码的逻辑，从而得到自己的代码生成器</summary>
     /// <param name="modelFile"></param>
-    static void Build(String modelFile)
+    static void Build(String modelFile, ILog log)
     {
         XTrace.WriteLine("正在处理：{0}", modelFile);
 
-        var log = XTrace.Log;
-        log.Level = LogLevel.All;
-        if (log is CompositeLog clog)
-        {
-            // 使用绝对路径目录，避免在子目录中生成日志文件
-            var textFileLog = clog.Get<TextFileLog>();
-            if (textFileLog != null)
-                textFileLog.LogPath = textFileLog.LogPath.GetBasePath();
-        }
         //EntityBuilder.Debug = true;
 
         // 设置当前工作目录
@@ -115,9 +115,6 @@ class Program
         }
 
         XTrace.WriteLine("共有模型：{0}", tables.Count);
-
-        // 是否把扩展属性生成到数据类
-        //option.ExtendOnData = true;
 
         // 是否使用中文名
         option.ChineseFileName = true;

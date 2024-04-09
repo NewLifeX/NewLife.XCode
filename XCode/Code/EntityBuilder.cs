@@ -484,8 +484,6 @@ public class EntityBuilder : ClassBuilder
         {
             BuildAction();
 
-            //if (!EntityOption.ExtendOnData)
-            {
                 WriteLine();
                 BuildExtendProperty();
 
@@ -494,7 +492,6 @@ public class EntityBuilder : ClassBuilder
 
                 WriteLine();
                 BuildSearch();
-            }
 
             WriteLine();
             BuildBusiness();
@@ -518,18 +515,6 @@ public class EntityBuilder : ClassBuilder
 
             WriteLine();
             BuildMap();
-
-            //if (EntityOption.ExtendOnData)
-            //{
-            //    WriteLine();
-            //    BuildExtendProperty();
-
-            //    WriteLine();
-            //    BuildExtendSearch();
-
-            //    WriteLine();
-            //    BuildSearch();
-            //}
 
             WriteLine();
             BuildFieldName();

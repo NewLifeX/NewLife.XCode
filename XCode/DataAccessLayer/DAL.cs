@@ -153,6 +153,9 @@ public partial class DAL
                 _reads = rs;
             }
 
+            if (_reads != null && _reads.Count > 0)
+                WriteLog("[{0}]读写分离到：{1}", this, _reads.Join());
+
             _inited = true;
         }
     }

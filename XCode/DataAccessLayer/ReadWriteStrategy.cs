@@ -66,7 +66,7 @@ public class ReadWriteStrategy
         }
 
         // 是否忽略的表名
-        if (!sql.IsNullOrEmpty())
+        if (!sql.IsNullOrEmpty() && IgnoreTables != null && IgnoreTables.Count > 0)
         {
             var tables = DAL.GetTables(sql, false);
             foreach (var item in tables)
@@ -84,7 +84,7 @@ public class ReadWriteStrategy
     /// <param name="action"></param>
     /// <param name="readonly"></param>
     /// <returns></returns>
-    public virtual Boolean TryGet(DAL dal, String sql, String action, out DAL @readonly)
+    public virtual Boolean TryGet(DAL dal, String sql, String action, out DAL? @readonly)
     {
         @readonly = null;
 

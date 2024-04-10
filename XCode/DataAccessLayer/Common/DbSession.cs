@@ -233,7 +233,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
     #region 事务
     /// <summary>数据库事务。不是线程安全，不支持多线程共用</summary>
-    public ITransaction Transaction { get; private set; }
+    public ITransaction? Transaction { get; private set; }
 
     /// <summary>开始事务</summary>
     /// <remarks>
@@ -1041,7 +1041,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     #endregion
 
     #region SQL时间跟踪
-    private Stopwatch _swSql;
+    private Stopwatch? _swSql;
     //private static readonly HashSet<String> _trace_sqls = new(StringComparer.OrdinalIgnoreCase);
 
     protected void BeginTrace()

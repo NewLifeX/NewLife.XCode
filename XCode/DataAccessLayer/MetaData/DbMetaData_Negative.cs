@@ -261,7 +261,7 @@ internal partial class DbMetaData
         #region 修改列
         // 开发时的实体数据库
         var entityDb = DbFactory.Create(entitytable.DbType);
-        if (entityDb == null) throw new NotSupportedException($"Not supported DbType [{entitytable.DbType}]");
+        //if (entityDb == null) throw new NotSupportedException($"Not supported DbType [{entitytable.DbType}]");
 
         foreach (var item in entitytable.Columns)
         {
@@ -432,7 +432,7 @@ internal partial class DbMetaData
     /// <param name="dbColumn"></param>
     /// <param name="entityDb"></param>
     /// <returns></returns>
-    protected virtual Boolean IsColumnChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase entityDb)
+    protected virtual Boolean IsColumnChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
     {
         // 自增、主键、非空等，不再认为是字段修改，减轻反向工程复杂度
         //if (entityColumn.Identity != dbColumn.Identity) return true;
@@ -462,7 +462,7 @@ internal partial class DbMetaData
     /// <param name="dbColumn"></param>
     /// <param name="entityDb"></param>
     /// <returns></returns>
-    protected virtual Boolean IsColumnLengthChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase entityDb)
+    protected virtual Boolean IsColumnLengthChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
     {
         // 是否已改变
         var isChanged = false;

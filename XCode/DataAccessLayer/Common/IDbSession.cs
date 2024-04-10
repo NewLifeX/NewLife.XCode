@@ -16,7 +16,7 @@ public interface IDbSession : IDisposable2
     IDatabase Database { get; }
 
     /// <summary>数据库事务</summary>
-    ITransaction Transaction { get; }
+    ITransaction? Transaction { get; }
 
     /// <summary>是否输出SQL</summary>
     Boolean ShowSQL { get; set; }

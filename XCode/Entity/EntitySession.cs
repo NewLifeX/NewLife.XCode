@@ -121,7 +121,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
 
     IEntityFactory Factory { get; } = typeof(TEntity).AsFactory();
 
-    private DAL _readDal;
+    //private DAL _readDal;
     private DAL _Dal;
     /// <summary>数据操作层</summary>
     public DAL Dal => _Dal ??= DAL.Create(ConnName);
@@ -443,7 +443,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     /// <returns></returns>
     private Int64 GetCount(Int64 count)
     {
-        var dal = GetDAL(false);
+        var dal = Dal;
 
         // 第一次访问，SQLite的Select Count非常慢，数据大于阀值时，使用最大ID作为表记录数
         if (count < 0 && dal.DbType == DatabaseType.SQLite && TableItem.Identity != null)
@@ -525,36 +525,36 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     #endregion
 
     #region 数据库操作
-    private String _readonlyConnName;
-    /// <summary>获取数据操作对象，根据是否查询以及事务来进行读写分离</summary>
-    /// <param name="read"></param>
-    /// <returns></returns>
-    public DAL GetDAL(Boolean read)
-    {
-        // 如果主连接已打开事务，则直接使用
-        var dal = Dal;
-        if (dal.Session is DbSession ds && ds.Transaction != null) return dal;
+    //private String _readonlyConnName;
+    ///// <summary>获取数据操作对象，根据是否查询以及事务来进行读写分离</summary>
+    ///// <param name="read"></param>
+    ///// <returns></returns>
+    //public DAL GetDAL(Boolean read)
+    //{
+    //    // 如果主连接已打开事务，则直接使用
+    //    var dal = Dal;
+    //    if (dal.Session is DbSession ds && ds.Transaction != null) return dal;
 
-        // 读写分离
-        if (read)
-        {
-            if (_readDal != null) return _readDal;
+    //    // 读写分离
+    //    if (read)
+    //    {
+    //        if (_readDal != null) return _readDal;
 
-            // 根据后缀查找只读连接名
-            var name = ConnName + ".readonly";
-            if (DAL.ConnStrs.ContainsKey(name))
-            {
-                if (_readonlyConnName.IsNullOrEmpty())
-                {
-                    XTrace.WriteLine("[{0}]读写分离到[{1}]", ConnName, name);
-                    _readonlyConnName = name;
-                }
-                return _readDal = DAL.Create(name);
-            }
-        }
+    //        // 根据后缀查找只读连接名
+    //        var name = ConnName + ".readonly";
+    //        if (DAL.ConnStrs.ContainsKey(name))
+    //        {
+    //            if (_readonlyConnName.IsNullOrEmpty())
+    //            {
+    //                XTrace.WriteLine("[{0}]读写分离到[{1}]", ConnName, name);
+    //                _readonlyConnName = name;
+    //            }
+    //            return _readDal = DAL.Create(name);
+    //        }
+    //    }
 
-        return dal;
-    }
+    //    return dal;
+    //}
 
     /// <summary>初始化数据，执行反向工程检查，建库建表</summary>
     public void InitData() => WaitForInitData();
@@ -570,7 +570,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
 
         FixBuilder(builder);
 
-        return GetDAL(true).Query(builder, startRowIndex, maximumRows);
+        return Dal.Query(builder, startRowIndex, maximumRows);
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
@@ -580,7 +580,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     {
         InitData();
 
-        return GetDAL(true).Query(sql);
+        return Dal.Query(sql);
     }
 
     /// <summary>查询记录数</summary>
@@ -592,7 +592,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
 
         FixBuilder(builder);
 
-        return GetDAL(true).SelectCount(builder);
+        return Dal.SelectCount(builder);
     }
 
     /// <summary>查询记录数</summary>
@@ -602,7 +602,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     {
         InitData();
 
-        return GetDAL(true).SelectCount(sql, CommandType.Text, null);
+        return Dal.SelectCount(sql, CommandType.Text, null);
     }
 
     private void FixBuilder(SelectBuilder builder)
@@ -622,7 +622,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     {
         InitData();
 
-        var rs = GetDAL(false).Execute(sql, type, ps);
+        var rs = Dal.Execute(sql, type, ps);
         DataChange("Execute " + type);
         return rs;
     }
@@ -636,7 +636,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     {
         InitData();
 
-        var rs = GetDAL(false).InsertAndGetIdentity(sql, type, ps);
+        var rs = Dal.InsertAndGetIdentity(sql, type, ps);
         DataChange("InsertAndGetIdentity " + type);
         return rs;
     }
@@ -650,7 +650,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     {
         InitData();
 
-        return GetDAL(true).QueryAsync(builder, startRowIndex, maximumRows);
+        return Dal.QueryAsync(builder, startRowIndex, maximumRows);
     }
 
     /// <summary>查询记录数</summary>
@@ -660,7 +660,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     {
         InitData();
 
-        return GetDAL(true).SelectCountAsync(builder);
+        return Dal.SelectCountAsync(builder);
     }
 
     /// <summary>执行</summary>
@@ -672,7 +672,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     {
         InitData();
 
-        var rs = GetDAL(false).ExecuteAsync(sql, type, ps);
+        var rs = Dal.ExecuteAsync(sql, type, ps);
         DataChange("Execute " + type);
         return rs;
     }
@@ -686,7 +686,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     {
         InitData();
 
-        var rs = GetDAL(false).InsertAndGetIdentityAsync(sql, type, ps);
+        var rs = Dal.InsertAndGetIdentityAsync(sql, type, ps);
         DataChange("InsertAndGetIdentity " + type);
         return rs;
     }
@@ -722,7 +722,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     /// <returns></returns>
     public Int32 Truncate()
     {
-        var dal = GetDAL(false);
+        var dal = Dal;
 
         using var span = dal.Tracer?.NewSpan($"db:{ConnName}:Truncate:{TableName}");
         try

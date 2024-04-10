@@ -76,7 +76,7 @@ partial class DAL
     #region 辅助函数
     /// <summary>已重载。</summary>
     /// <returns></returns>
-    public override String ToString() => Db.ToString();
+    public override String ToString() => ConnName;
 
     /// <summary>建立数据表对象</summary>
     /// <returns></returns>

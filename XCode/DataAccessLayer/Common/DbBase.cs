@@ -105,14 +105,15 @@ abstract class DbBase : DisposeBase, IDatabase
     private Boolean _inited;
     protected DbProviderFactory? GetFactory(Boolean create)
     {
-        if (_inited) return null;
-
         try
         {
             var type = GetType();
             if (_factories.TryGetValue(type, out var factory)) return factory;
 
             if (!create) return null;
+
+            // 如果已经初始化过，还没拿到工厂，那么没有必要创建第二次
+            if (_inited) return null;
 
             // 先创建，再加锁加入集合。允许重复创建，避免死锁
             factory = CreateFactory();

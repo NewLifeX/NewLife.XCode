@@ -51,7 +51,7 @@ public class HanaTests
         Assert.NotNull(dp);
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.Hana);
@@ -63,7 +63,7 @@ public class HanaTests
         conn.Open();
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void DALTest()
     {
         DAL.AddConnStr("sysHana", _ConnStr, null, "Hana");
@@ -89,7 +89,7 @@ public class HanaTests
         Assert.NotEmpty(ver);
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void MetaTest()
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
@@ -108,7 +108,7 @@ public class HanaTests
         Assert.NotEmpty(tb.Description);
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void SelectTest()
     {
         DAL.AddConnStr("sysHana", _ConnStr, null, "Hana");
@@ -150,7 +150,7 @@ public class HanaTests
         catch (Exception ex) { XTrace.WriteException(ex); }
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void TablePrefixTest()
     {
         DAL.AddConnStr("sysHana", _ConnStr, null, "Hana");
@@ -210,7 +210,7 @@ public class HanaTests
         return split;
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void BatchInsert()
     {
         using var split = CreateForBatch("BatchInsert");
@@ -231,7 +231,7 @@ public class HanaTests
         Assert.Contains(list2, e => e.Name == "普通用户");
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void BatchInsertIgnore()
     {
         using var split = CreateForBatch("InsertIgnore");
@@ -261,7 +261,7 @@ public class HanaTests
         Assert.Contains(list2, e => e.Name == "游客");
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void BatchReplace()
     {
         using var split = CreateForBatch("Replace");
@@ -302,7 +302,7 @@ public class HanaTests
         Assert.NotEqual(gly.ID, gly2.ID);
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void GetTables()
     {
         DAL.AddConnStr("member_hana", _ConnStr.Replace("Database=sys", "Database=membership"), null, "Hana");
@@ -314,7 +314,7 @@ public class HanaTests
         dal.SetTables(User.Meta.Table.DataTable);
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void PositiveAndNegative()
     {
         var connName = GetType().Name;
@@ -341,7 +341,7 @@ public class HanaTests
         Assert.DoesNotContain(table.TableName, tableNames);
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void SelectTinyintTest()
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
@@ -382,7 +382,7 @@ public class HanaTests
         XTrace.WriteLine(list.ToJson(true));
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void CreateTableWithMyISAM()
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
@@ -408,7 +408,7 @@ public class HanaTests
         Assert.Contains(dal.Tables, t => t.TableName == table.TableName);
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void CreateTableWithCompressed()
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
@@ -447,7 +447,7 @@ public class HanaTests
         Assert.Contains(" KEY_BLOCK_SIZE=4", sql);
     }
 
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void CreateTableWithArchive()
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");

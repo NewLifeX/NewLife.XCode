@@ -56,7 +56,7 @@ public abstract class CacheBase : DisposeBase
     /// <summary>是否调试缓存模块</summary>
     public static Boolean Debug { get; set; }
 
-    /// <summary>显示统计信息的周期。默认60*60s，DAL.Debug=true时10*60s，Debug=true时60s</summary>
+    /// <summary>显示统计信息的周期</summary>
     public static Int32 Period { get; set; }
 
     /// <summary>日志前缀</summary>
@@ -68,6 +68,9 @@ public abstract class CacheBase : DisposeBase
 #if DEBUG
         Debug = true;
 #endif
+
+        var set = XCodeSetting.Current;
+        Period = set.CacheStatPeriod;
     }
 
     internal void WriteLog(String format, params Object?[] args)
@@ -82,7 +85,7 @@ public abstract class CacheBase : DisposeBase
     {
         Interlocked.Increment(ref total);
 
-        NextShow = true;
+        _NextShow = true;
 
         // 加入列表
         if (total < 10)
@@ -102,13 +105,14 @@ public abstract class CacheBase : DisposeBase
                 if (_timer == null)
                 {
                     var ms = Period * 1000;
-                    if (ms == 0)
-                    {
-                        ms = 60 * 60 * 1000;
-                        if (DAL.Debug) ms = 10 * 60 * 1000;
-                        if (Debug) ms = 1 * 60 * 1000;
-                    }
-                    _timer = new TimerX(Check, null, 10000, ms);
+                    //if (ms == 0)
+                    //{
+                    //    ms = 60 * 60 * 1000;
+                    //    if (DAL.Debug) ms = 10 * 60 * 1000;
+                    //    if (Debug) ms = 1 * 60 * 1000;
+                    //}
+                    if (ms > 0)
+                        _timer = new TimerX(ShowCacheStat, null, 1000, ms);
                 }
             }
         }
@@ -116,17 +120,28 @@ public abstract class CacheBase : DisposeBase
 
     private static TimerX? _timer;
     private static readonly ConcurrentDictionary<String, Action> _dic = new();
-    private static Boolean NextShow;
+    private static Boolean _NextShow;
 
-    private static void Check(Object state)
+    private static void ShowCacheStat(Object state)
     {
-        if (!NextShow) return;
+        if (!_NextShow) return;
 
-        NextShow = false;
+        _NextShow = false;
 
         foreach (var item in _dic)
         {
             item.Value();
+        }
+
+        // 重新读取周期
+        var set = XCodeSetting.Current;
+        Period = set.CacheStatPeriod;
+
+        if (_timer != null)
+        {
+            _timer.Period = Period * 1000;
+
+            if (Period <= 0) _timer = null;
         }
     }
 }

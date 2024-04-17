@@ -65,26 +65,6 @@ public class XCodeSetting : Config<XCodeSetting>
     [Description("失败重试。执行命令超时后的重试次数，默认0不重试")]
     public Int32 RetryOnFailure { get; set; }
 
-    /// <summary>数据层缓存。根据sql做缓存，默认0秒</summary>
-    [Description("数据层缓存。根据sql做缓存，默认0秒")]
-    public Int32 DataCacheExpire { get; set; }
-
-    /// <summary>实体缓存过期。整表缓存实体列表，默认10秒</summary>
-    [Description("实体缓存过期。整表缓存实体列表，默认10秒")]
-    public Int32 EntityCacheExpire { get; set; } = 10;
-
-    /// <summary>单对象缓存过期。按主键缓存实体，默认10秒</summary>
-    [Description("单对象缓存过期。按主键缓存实体，默认10秒")]
-    public Int32 SingleCacheExpire { get; set; } = 10;
-
-    /// <summary>扩展属性过期。扩展属性Extends缓存，默认10秒</summary>
-    [Description("扩展属性过期。扩展属性Extends缓存，默认10秒")]
-    public Int32 ExtendExpire { get; set; } = 10;
-
-    /// <summary>字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒</summary>
-    [Description("字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒")]
-    public Int32 FieldCacheExpire { get; set; } = 3600;
-
     /// <summary>反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除</summary>
     [Description("反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除")]
     public Migration Migration { get; set; } = Migration.On;
@@ -95,7 +75,39 @@ public class XCodeSetting : Config<XCodeSetting>
 
     /// <summary>快速统计最小数据量</summary>
     [Description("快速统计最小数据量。默认1000万，在对数据表进行无条件 count 时，先进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。")]
-    public int FastCountMin { get; set; } = 10_000_000;
+    public Int32 FastCountMin { get; set; } = 10_000_000;
+    #endregion
+
+    #region 缓存
+    /// <summary>数据层缓存。根据sql做缓存，默认0秒</summary>
+    [Category("缓存")]
+    [Description("数据层缓存。根据sql做缓存，默认0秒")]
+    public Int32 DataCacheExpire { get; set; }
+
+    /// <summary>实体缓存过期。整表缓存实体列表，默认10秒</summary>
+    [Category("缓存")]
+    [Description("实体缓存过期。整表缓存实体列表，默认10秒")]
+    public Int32 EntityCacheExpire { get; set; } = 10;
+
+    /// <summary>单对象缓存过期。按主键缓存实体，默认10秒</summary>
+    [Category("缓存")]
+    [Description("单对象缓存过期。按主键缓存实体，默认10秒")]
+    public Int32 SingleCacheExpire { get; set; } = 10;
+
+    /// <summary>扩展属性过期。扩展属性Extends缓存，默认10秒</summary>
+    [Category("缓存")]
+    [Description("扩展属性过期。扩展属性Extends缓存，默认10秒")]
+    public Int32 ExtendExpire { get; set; } = 10;
+
+    /// <summary>字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒</summary>
+    [Category("缓存")]
+    [Description("字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒")]
+    public Int32 FieldCacheExpire { get; set; } = 3600;
+
+    /// <summary>缓存统计周期。在日志中定期输出各个缓存的统计数据，用于分析性能问题，单位秒，0表示不输出，默认3600秒</summary>
+    [Category("缓存")]
+    [Description("缓存统计周期。在日志中定期输出各个缓存的统计数据，用于分析性能问题，单位秒，0表示不输出，默认3600秒")]
+    public Int32 CacheStatPeriod { get; set; } = 3600;
     #endregion
 
     #region 方法

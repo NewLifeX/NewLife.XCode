@@ -358,7 +358,7 @@ public class TableItem
     #endregion
 
     #region 方法
-    private Dictionary<String, Field> _all;
+    private IDictionary<String, Field?> _all;
 
     /// <summary>根据名称查找</summary>
     /// <param name="name">名称</param>
@@ -373,23 +373,23 @@ public class TableItem
         // 借助字典，快速搜索数据列
         if (_all == null)
         {
-            var dic = new Dictionary<String, Field>(StringComparer.OrdinalIgnoreCase);
+            var dic = new ConcurrentDictionary<String, Field?>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var item in Fields)
             {
                 if (item is not Field field) continue;
 
                 if (!dic.ContainsKey(item.Name))
-                    dic.Add(item.Name, field);
+                    dic.TryAdd(item.Name, field);
             }
             foreach (var item in AllFields)
             {
                 if (item is not Field field) continue;
 
                 if (!dic.ContainsKey(item.Name))
-                    dic.Add(item.Name, field);
+                    dic.TryAdd(item.Name, field);
                 else if (!item.ColumnName.IsNullOrEmpty() && !dic.ContainsKey(item.ColumnName))
-                    dic.Add(item.ColumnName, field);
+                    dic.TryAdd(item.ColumnName, field);
             }
 
             // 宁可重复计算，也要避免锁
@@ -397,22 +397,23 @@ public class TableItem
         }
         if (_all.TryGetValue(name, out var f)) return f;
 
+        // 即使没有找到，也要缓存起来，避免下次重复查找
         foreach (var item in Fields)
         {
-            if (item.Name.EqualIgnoreCase(name)) return item as Field;
+            if (item.Name.EqualIgnoreCase(name)) return _all[name] = item as Field;
         }
 
         foreach (var item in Fields)
         {
-            if (item.ColumnName.EqualIgnoreCase(name)) return item as Field;
+            if (item.ColumnName.EqualIgnoreCase(name)) return _all[name] = item as Field;
         }
 
         foreach (var item in AllFields)
         {
-            if (item.Name.EqualIgnoreCase(name)) return item as Field;
+            if (item.Name.EqualIgnoreCase(name)) return _all[name] = item as Field;
         }
 
-        return null;
+        return _all[name] = null;
     }
 
     /// <summary>已重载。</summary>

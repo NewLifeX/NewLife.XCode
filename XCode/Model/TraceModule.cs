@@ -15,6 +15,11 @@ public class TraceModule : EntityModule
     }
     #endregion
 
+    #region 属性
+    /// <summary>允许合并。字段内允许合并保存多个TraceId，串在一个调用链上显示。默认false</summary>
+    public Boolean AllowMerge { get; set; }
+    #endregion
+
     /// <summary>初始化。检查是否匹配</summary>
     /// <param name="entityType"></param>
     /// <returns></returns>
@@ -45,30 +50,32 @@ public class TraceModule : EntityModule
         {
             var fs = GetFields(entity.GetType());
 
-            // 多编码合并
-            var old = entity[__.TraceId] as String;
-            var ss = old?.Split(',').ToList();
-            if (ss != null && ss.Count > 0 && !ss.Contains(traceId))
+            if (AllowMerge)
             {
-                ss.Add(traceId);
-
-                // 最大长度
-                var fi = fs.FirstOrDefault(e => e.Name.EqualIgnoreCase(__.TraceId));
-                var len = fi.Length > 0 ? fi.Length : 50;
-
-                // 倒序取最后若干项
-                var rs = ss.Join(",");
-                while (rs.Length > len)
+                // 多编码合并
+                var old = entity[__.TraceId] as String;
+                var ss = old?.Split(',').ToList();
+                if (ss != null && ss.Count > 0 && !ss.Contains(traceId))
                 {
-                    ss.RemoveAt(0);
-                    rs = ss.Join(",");
-                }
+                    ss.Add(traceId);
 
-                if (!rs.IsNullOrEmpty()) traceId = rs;
+                    // 最大长度
+                    var fi = fs.FirstOrDefault(e => e.Name.EqualIgnoreCase(__.TraceId));
+                    var len = fi.Length > 0 ? fi.Length : 50;
+
+                    // 倒序取最后若干项
+                    var rs = ss.Join(",");
+                    while (rs.Length > len)
+                    {
+                        ss.RemoveAt(0);
+                        rs = ss.Join(",");
+                    }
+
+                    if (!rs.IsNullOrEmpty()) traceId = rs;
+                }
             }
 
-            // 不管新建还是更新，都改变更新
-            if (!traceId.IsNullOrEmpty()) SetNoDirtyItem(fs, entity, __.TraceId, traceId);
+            SetNoDirtyItem(fs, entity, __.TraceId, traceId);
         }
 
         return true;

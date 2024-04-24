@@ -730,7 +730,7 @@ public static class EntityExtension
             // 创建时间等字段不参与Update
             dirtys = dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).ToArray();
 
-            if (dirtys.Length > 0) option.UpdateColumns = dirtys;
+            if (dirtys.Count > 0) option.UpdateColumns = dirtys;
         }
         var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
@@ -869,7 +869,7 @@ public static class EntityExtension
             // 创建时间等字段不参与Update
             dirtys = dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).ToArray();
 
-            if (dirtys.Length > 0) option.UpdateColumns = dirtys;
+            if (dirtys.Count > 0) option.UpdateColumns = dirtys;
         }
         var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
@@ -986,23 +986,41 @@ public static class EntityExtension
     /// <param name="fact"></param>
     /// <param name="list"></param>
     /// <returns></returns>
-    private static String[] GetDirtyColumns(IEntityFactory fact, IEnumerable<IEntity> list)
+    private static IList<String> GetDirtyColumns(IEntityFactory fact, IEnumerable<IEntity> list)
     {
-        // 获取所有带有脏数据的字段
-        var ns = new List<String>();
-        foreach (var entity in list)
+        // 任意实体来自数据库，则全部都是目标字段。因为有可能是从数据库查询出来的实体，然后批量插入
+        if (list.Any(e => e.IsFromDatabase)) return fact.Fields.Select(e => e.Name).ToList();
+
+        // 构建集合，已经标记为脏数据的字段不再搜索，减少循环次数
+        var fields = fact.Fields.ToList();
+        var columns = new List<String>();
+
+        // 非空非字符串字段，都是目标字段
+        foreach (var fi in fields)
         {
-            foreach (var fi in fact.Fields)
+            if (!fi.IsNullable && fi.Type != typeof(String) && fi.Type != typeof(DateTime))
             {
-                // 来自数据库或脏数据，或者非空非string
-                if (entity.IsFromDatabase || entity.Dirtys[fi.Name] || (!fi.IsNullable && fi.Type != typeof(String) && fi.Type != typeof(DateTime)))
-                {
-                    if (!ns.Contains(fi.Name)) ns.Add(fi.Name);
-                }
+                columns.Add(fi.Name);
             }
         }
+        fields.RemoveAll(e => columns.Contains(e.Name));
+        if (fields.Count == 0) return columns;
 
-        return ns.ToArray();
+        // 获取所有带有脏数据的字段
+        foreach (var entity in list)
+        {
+            var tmps = new List<String>();
+            foreach (var fi in fields)
+            {
+                // 脏数据
+                if (entity.Dirtys[fi.Name]) tmps.Add(fi.Name);
+            }
+            columns.AddRange(tmps);
+            fields.RemoveAll(e => tmps.Contains(e.Name));
+            if (fields.Count == 0) break;
+        }
+
+        return columns;
     }
     #endregion
 

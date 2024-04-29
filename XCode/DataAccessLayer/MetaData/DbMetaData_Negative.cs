@@ -188,7 +188,7 @@ internal partial class DbMetaData
             sql = CheckAddIndex(entitytable, dbtable, mode);
             if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
 
-            if (sb.Length > 0) WriteLog($"DDL模式[{mode}]，请手工修改表：{Environment.NewLine}{sb}");
+            if (sb.Length > 0) WriteLog($"DDL模式[{mode}]，请手工修改表[{dbtable.TableName}]：{Environment.NewLine}{sb}");
         }
     }
 

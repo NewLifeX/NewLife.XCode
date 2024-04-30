@@ -62,11 +62,8 @@ partial class DAL
     /// <returns></returns>
     public DataSet Select(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
     {
-        return QueryWrap(builder, startRowIndex, maximumRows, (ss, sb, start, max) =>
-        {
-            sb = PageSplit(sb, start, max);
-            return ss.Query(sb.ToString(), CommandType.Text, sb.Parameters.ToArray());
-        }, nameof(Select));
+        var sql = PageSplit(builder, startRowIndex, maximumRows).ToString();
+        return QueryWrap(sql, builder, "", (ss, sql, sb, k3) => ss.Query(sql, CommandType.Text, sb.Parameters.ToArray()), nameof(Select));
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
@@ -76,11 +73,8 @@ partial class DAL
     /// <returns></returns>
     public DbTable Query(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
     {
-        return QueryWrap(builder, startRowIndex, maximumRows, (ss, sb, start, max) =>
-        {
-            sb = PageSplit(sb, start, max);
-            return ss.Query(sb);
-        }, nameof(Query));
+        builder = PageSplit(builder, startRowIndex, maximumRows);
+        return QueryWrap(builder, "", "", (ss, sb, k2, k3) => ss.Query(sb), nameof(Query));
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
@@ -177,11 +171,8 @@ partial class DAL
     /// <returns></returns>
     public Task<DbTable> QueryAsync(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
     {
-        return QueryAsyncWrap(builder, startRowIndex, maximumRows, (ss, sb, start, max) =>
-        {
-            sb = PageSplit(sb, start, max);
-            return ss.QueryAsync(sb.ToString(), sb.Parameters.ToArray());
-        }, nameof(QueryAsync));
+        var sql = PageSplit(builder, startRowIndex, maximumRows).ToString();
+        return QueryAsyncWrap(sql, builder, "", (ss, sql, sb, k3) => ss.QueryAsync(sql, sb.Parameters.ToArray()), nameof(QueryAsync));
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>

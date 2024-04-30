@@ -93,31 +93,6 @@ public class Program
         }
     }
 
-    private static void Test17()
-    {
-        var find = Role.FindByID(1);
-        find.Ex1 = 3;
-        find.Update();
-        XTrace.WriteLine(find.ToJson());
-        var newRole = new Role() { ID = 1, Name = "Yann" };
-        var b = newRole.Update();
-
-        find = Role.FindByID(1);
-        XTrace.WriteLine(find.ToJson());
-        var aaa = ";";
-
-        var list = new List<Role>();
-        for (int i = 0; i < 5; i++)
-        {
-            var s = new Role() { ID = i + 1, Name = $"{i}" };
-            list.Add(s);
-        }
-
-        list.Update();
-
-
-    }
-
     private static void Test1()
     {
         foreach (var item in "data/".AsDirectory().GetFiles("*.db"))
@@ -156,6 +131,8 @@ public class Program
         var list = User.FindAll();
         XTrace.WriteLine(list.ToJson());
 
+        list = User.FindAll(null, null, null, 3, 7);
+
         var p = new Parameter
         {
             Name = "test",
@@ -163,11 +140,11 @@ public class Program
         };
         p.Insert();
 
-        var db = DbFactory.Create(DatabaseType.Hana);
-        var type = db.Factory.GetType();
-        XTrace.WriteLine(type.FullName);
+        //var db = DbFactory.Create(DatabaseType.Hana);
+        //var type = db.Factory.GetType();
+        //XTrace.WriteLine(type.FullName);
 
-        var conn = db.Factory.CreateConnection();
+        //var conn = db.Factory.CreateConnection();
     }
 
     private static void Test7()

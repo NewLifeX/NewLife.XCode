@@ -486,7 +486,7 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
-                columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
+                columns = columns.Where(e => !e.Identity && dirtys.Contains(e.Name)).ToArray();
             }
 
             option.Columns = columns;
@@ -567,8 +567,9 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
-                columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
+                columns = columns.Where(e => !e.Identity && dirtys.Contains(e.Name)).ToArray();
             }
+
             option.Columns = columns;
         }
 
@@ -648,7 +649,7 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
-                columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
+                columns = columns.Where(e => !e.Identity && dirtys.Contains(e.Name)).ToArray();
             }
 
             option.Columns = columns;
@@ -817,7 +818,7 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
-                columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
+                columns = columns.Where(e => !e.Identity && (e.PrimaryKey || dirtys.Contains(e.Name))).ToArray();
             }
 
             // 遇到自增字段，需要谨慎处理，部分insert部分update则无法执行upsert
@@ -953,7 +954,7 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, [entity]);
-                columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
+                columns = columns.Where(e => !e.Identity && (e.PrimaryKey || dirtys.Contains(e.Name))).ToArray();
             }
             option.Columns = columns;
         }

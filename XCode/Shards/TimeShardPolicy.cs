@@ -153,7 +153,7 @@ public class TimeShardPolicy : IShardPolicy
         else if (expression is FieldExpression fieldExpression && fieldExpression.Field == fi)
             exps.Add(fieldExpression);
         //if (exps.Count == 0) throw new XCodeException($"分表策略要求查询条件包括[{fi}]字段！");
-        if (exps.Count == 0) return new ShardModel[0];
+        if (exps.Count == 0) return [];
 
         if (fi.Type == typeof(DateTime))
         {

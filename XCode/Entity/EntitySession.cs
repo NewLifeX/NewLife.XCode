@@ -819,14 +819,14 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         var e = entity as TEntity;
 
         // 加入实体缓存
-        _cache?.Add(e);
+        _cache?.Add(e!);
 
         // 增加计数
         if (_Count >= 0) Interlocked.Increment(ref _Count);
 
         // 清空扩展属性
         //(entity as EntityBase)._Extends?.Clear();
-        (entity as EntityBase)._Extends = null;
+        (entity as EntityBase)!._Extends = null;
 
         return rs;
     }
@@ -843,13 +843,13 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         var e = entity as TEntity;
 
         // 更新缓存
-        _cache?.Update(e);
+        _cache?.Update(e!);
 
         // 干掉缓存项，让它重新获取
-        _singleCache?.Remove(e);
+        _singleCache?.Remove(e!);
 
         // 清空扩展属性
-        (entity as EntityBase)._Extends = null;
+        (entity as EntityBase)!._Extends = null;
 
         return rs;
     }
@@ -866,16 +866,16 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         var e = entity as TEntity;
 
         // 从实体缓存删除
-        _cache?.Remove(e);
+        _cache?.Remove(e!);
 
         // 从单对象缓存删除
-        _singleCache?.Remove(e);
+        _singleCache?.Remove(e!);
 
         // 减少计数
         if (_Count > 0) Interlocked.Decrement(ref _Count);
 
         // 清空扩展属性
-        (entity as EntityBase)._Extends = null;
+        (entity as EntityBase)!._Extends = null;
 
         return rs;
     }
@@ -892,7 +892,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         var e = entity as TEntity;
 
         // 加入实体缓存
-        _cache?.Add(e);
+        _cache?.Add(e!);
 
         // 增加计数
         if (_Count >= 0) Interlocked.Increment(ref _Count);
@@ -912,10 +912,10 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         var e = entity as TEntity;
 
         // 更新缓存
-        _cache?.Update(e);
+        _cache?.Update(e!);
 
         // 干掉缓存项，让它重新获取
-        _singleCache?.Remove(e);
+        _singleCache?.Remove(e!);
 
         return rs;
     }
@@ -932,10 +932,10 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         var e = entity as TEntity;
 
         // 从实体缓存删除
-        _cache?.Remove(e);
+        _cache?.Remove(e!);
 
         // 从单对象缓存删除
-        _singleCache?.Remove(e);
+        _singleCache?.Remove(e!);
 
         // 减少计数
         if (_Count > 0) Interlocked.Decrement(ref _Count);

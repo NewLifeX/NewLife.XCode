@@ -128,17 +128,33 @@ public class Program
 
     private static void Test3()
     {
-        var list = User.FindAll();
-        XTrace.WriteLine(list.ToJson());
+        //var list = User.FindAll();
+        //XTrace.WriteLine(list.ToJson());
 
-        list = User.FindAll(null, null, null, 3, 7);
+        //list = User.FindAll(null, null, null, 3, 7);
 
-        var p = new Parameter
+        //var p = new Parameter
+        //{
+        //    Name = "test",
+        //    Value = "NewLife",
+        //};
+        //p.Insert();
+
+        var list = Role.FindAll();
+        XTrace.WriteLine("Roles: {0}", list.Count);
+
+        //var dal = Role.Meta.Session.Dal;
+        var f = "data/mb2.db".GetFullPath();
+        if (File.Exists(f)) File.Delete(f);
+
+        DAL.AddConnStr("mb2", "", null, "sqlite");
+        Role.Meta.ConnName = "mb2";
+        foreach (var item in list)
         {
-            Name = "test",
-            Value = "NewLife",
-        };
-        p.Insert();
+            item.Name += "2";
+            //item.Insert();
+        }
+        list.Insert();
 
         //var db = DbFactory.Create(DatabaseType.Hana);
         //var type = db.Factory.GetType();

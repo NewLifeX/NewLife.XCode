@@ -103,14 +103,14 @@ public interface IEntityPersistence
     /// <param name="entity">实体对象</param>
     /// <param name="methodType"></param>
     /// <returns>SQL字符串</returns>
-    String GetSql(IEntitySession session, IEntity entity, DataObjectMethodType methodType);
+    String? GetSql(IEntitySession session, IEntity entity, DataObjectMethodType methodType);
     #endregion
 
     #region 参数化
     /// <summary>插入语句</summary>
     /// <param name="session">实体会话</param>
     /// <returns></returns>
-    String InsertSQL(IEntitySession session);
+    String? InsertSQL(IEntitySession session);
     #endregion
 }
 
@@ -142,7 +142,7 @@ public class EntityPersistence : IEntityPersistence
 
         IDataParameter[]? dps = null;
         var sql = SQL(session, entity, DataObjectMethodType.Insert, ref dps);
-        if (String.IsNullOrEmpty(sql)) return 0;
+        if (sql.IsNullOrEmpty()) return 0;
 
         var rs = 0;
 
@@ -176,7 +176,7 @@ public class EntityPersistence : IEntityPersistence
         return rs;
     }
 
-    void SetGuidField(FieldItem fi, IEntity entity)
+    void SetGuidField(FieldItem? fi, IEntity entity)
     {
         if (fi != null)
         {
@@ -231,7 +231,7 @@ public class EntityPersistence : IEntityPersistence
     {
         IDataParameter[]? dps = null;
         var sql = SQL(session, entity, DataObjectMethodType.Delete, ref dps);
-        if (String.IsNullOrEmpty(sql)) return 0;
+        if (sql.IsNullOrEmpty()) return 0;
 
         var rs = session.Execute(sql, CommandType.Text, dps);
 
@@ -254,7 +254,7 @@ public class EntityPersistence : IEntityPersistence
 
         IDataParameter[]? dps = null;
         var sql = SQL(session, entity, DataObjectMethodType.Insert, ref dps);
-        if (String.IsNullOrEmpty(sql)) return 0;
+        if (sql.IsNullOrEmpty()) return 0;
 
         var rs = 0;
 
@@ -297,7 +297,7 @@ public class EntityPersistence : IEntityPersistence
         // 没有脏数据，不需要更新
         if (!entity.HasDirty) return 0;
 
-        IDataParameter[] dps = null;
+        IDataParameter[]? dps = null;
         var sql = "";
 
         // 双锁判断脏数据
@@ -325,9 +325,9 @@ public class EntityPersistence : IEntityPersistence
     /// <returns></returns>
     public virtual async Task<Int32> DeleteAsync(IEntitySession session, IEntity entity)
     {
-        IDataParameter[] dps = null;
+        IDataParameter[]? dps = null;
         var sql = SQL(session, entity, DataObjectMethodType.Delete, ref dps);
-        if (String.IsNullOrEmpty(sql)) return 0;
+        if (sql.IsNullOrEmpty()) return 0;
 
         var rs = await session.ExecuteAsync(sql, CommandType.Text, dps);
 
@@ -352,7 +352,10 @@ public class EntityPersistence : IEntityPersistence
         var db = session.Dal.Db;
         var fs = new Dictionary<String, FieldItem>(StringComparer.OrdinalIgnoreCase);
         foreach (var fi in factory.Fields)
+        {
             fs.Add(fi.Name, fi);
+        }
+
         var sbn = Pool.StringBuilder.Get();
         var sbv = Pool.StringBuilder.Get();
         for (var i = 0; i < names.Length; i++)
@@ -386,6 +389,7 @@ public class EntityPersistence : IEntityPersistence
 
         var sql = $"Update {session.FormatedTableName} Set {setClause.Replace("And", ",")}";
         if (!String.IsNullOrEmpty(whereClause)) sql += " Where " + whereClause;
+
         return session.Execute(sql);
     }
 
@@ -452,7 +456,9 @@ public class EntityPersistence : IEntityPersistence
         var db = session.Dal.Db;
         var fs = new Dictionary<String, FieldItem>(StringComparer.OrdinalIgnoreCase);
         foreach (var fi in factory.Fields)
+        {
             fs.Add(fi.Name, fi);
+        }
 
         var sb = Pool.StringBuilder.Get();
         for (var i = 0; i < names.Length; i++)
@@ -477,9 +483,9 @@ public class EntityPersistence : IEntityPersistence
     /// <param name="entity">实体对象</param>
     /// <param name="methodType"></param>
     /// <returns>SQL字符串</returns>
-    public virtual String GetSql(IEntitySession session, IEntity entity, DataObjectMethodType methodType)
+    public virtual String? GetSql(IEntitySession session, IEntity entity, DataObjectMethodType methodType)
     {
-        IDataParameter[] dps = null;
+        IDataParameter[]? dps = null;
         return SQL(session, entity, methodType, ref dps);
     }
 
@@ -489,7 +495,7 @@ public class EntityPersistence : IEntityPersistence
     /// <param name="methodType"></param>
     /// <param name="parameters">参数数组</param>
     /// <returns>SQL字符串</returns>
-    String SQL(IEntitySession session, IEntity entity, DataObjectMethodType methodType, ref IDataParameter[]? parameters)
+    String? SQL(IEntitySession session, IEntity entity, DataObjectMethodType methodType, ref IDataParameter[]? parameters)
     {
         return methodType switch
         {
@@ -500,7 +506,7 @@ public class EntityPersistence : IEntityPersistence
         };
     }
 
-    String InsertSQL(IEntitySession session, IEntity entity, ref IDataParameter[]? parameters)
+    String? InsertSQL(IEntitySession session, IEntity entity, ref IDataParameter[]? parameters)
     {
         var factory = Factory;
         var db = session.Dal.Db;
@@ -531,7 +537,7 @@ public class EntityPersistence : IEntityPersistence
             {
             }
             // 2，没有脏数据但有默认值
-            else if (!fi.Column.DefaultValue.IsNullOrEmpty())
+            else if (fi.Column != null && !fi.Column.DefaultValue.IsNullOrEmpty())
             {
                 // 字符串和时间日期在有默认值且不允许空时，不参与构造Sql。建表时用户需要自己在数据表中指定默认值，反向工程不支持
                 if ((fi.Type == typeof(String) || fi.Type == typeof(DateTime)) && !fi.IsNullable)
@@ -582,7 +588,7 @@ public class EntityPersistence : IEntityPersistence
         return $"Insert Into {session.FormatedTableName}({ns}) Values({vs})";
     }
 
-    Boolean CheckIdentity(IDatabase db, FieldItem fi, Object value, StringBuilder sbNames, StringBuilder sbValues)
+    Boolean CheckIdentity(IDatabase db, FieldItem fi, Object? value, StringBuilder sbNames, StringBuilder sbValues)
     {
         if (!fi.IsIdentity) return false;
 
@@ -605,7 +611,7 @@ public class EntityPersistence : IEntityPersistence
         return true;
     }
 
-    String UpdateSQL(IEntitySession session, IEntity entity, ref IDataParameter[]? parameters)
+    String? UpdateSQL(IEntitySession session, IEntity entity, ref IDataParameter[]? parameters)
     {
         /*
          * 实体更新原则：
@@ -682,7 +688,7 @@ public class EntityPersistence : IEntityPersistence
         }
 
         // 重置累加数据
-        if (dfs != null && dfs.Count > 0) entity.Addition.Reset(dfs);
+        if (dfs != null && dfs.Count > 0) entity.Addition?.Reset(dfs);
 
         var str = sb.Put(true);
         if (str.IsNullOrEmpty()) return null;
@@ -706,7 +712,7 @@ public class EntityPersistence : IEntityPersistence
         return $"Update {session.FormatedTableName} Set {str} Where {def}";
     }
 
-    String DeleteSQL(IEntitySession session, IEntity entity, ref IDataParameter[]? parameters)
+    String? DeleteSQL(IEntitySession session, IEntity entity, ref IDataParameter[]? parameters)
     {
         var factory = Factory;
         var db = session.Dal.Db;
@@ -732,7 +738,7 @@ public class EntityPersistence : IEntityPersistence
         return $"Delete From {session.FormatedTableName} Where {def}";
     }
 
-    static Boolean UseParam(FieldItem fi, Object value)
+    static Boolean UseParam(FieldItem fi, Object? value)
     {
         //// 是否使用参数化
         //if (Setting.Current.UserParameter) return true;
@@ -748,7 +754,7 @@ public class EntityPersistence : IEntityPersistence
         return false;
     }
 
-    static IDataParameter CreateParameter(IDatabase db, FieldItem fi, Object value)
+    static IDataParameter CreateParameter(IDatabase db, FieldItem fi, Object? value)
     {
         var dp = db.CreateParameter(fi.ColumnName ?? fi.Name, value, fi.Field);
 
@@ -757,7 +763,7 @@ public class EntityPersistence : IEntityPersistence
         return dp;
     }
 
-    static Boolean TryCheckAdditionalValue(IDictionary<String, Object[]> dfs, String name, out Object value, out Boolean sign)
+    static Boolean TryCheckAdditionalValue(IDictionary<String, Object[]>? dfs, String name, out Object? value, out Boolean sign)
     {
         value = null;
         sign = false;
@@ -848,9 +854,9 @@ public class EntityPersistence : IEntityPersistence
 
         // 标识列作为查询关键字
         var fi = factory.Table.Identity;
-        if (fi != null)
+        if (fi is Field field)
         {
-            exp &= (fi as Field) == entity[fi.Name];
+            exp &= field == entity[fi.Name];
             return exp;
         }
 
@@ -861,7 +867,8 @@ public class EntityPersistence : IEntityPersistence
 
         foreach (var item in ps)
         {
-            exp &= (item as Field) == entity[item.Name];
+            if (item is Field field2)
+                exp &= field2 == entity[item.Name];
         }
 
         return exp;
@@ -871,7 +878,7 @@ public class EntityPersistence : IEntityPersistence
     #region 参数化
     /// <summary>插入语句</summary>
     /// <returns></returns>
-    public virtual String InsertSQL(IEntitySession session)
+    public virtual String? InsertSQL(IEntitySession session)
     {
         var factory = Factory;
         var db = session.Dal.Db;
@@ -890,6 +897,7 @@ public class EntityPersistence : IEntityPersistence
 
         var ns = sbNames.Put(true);
         var vs = sbValues.Put(true);
+        if (ns.IsNullOrEmpty()) return null;
 
         return $"Insert Into {session.FormatedTableName}({ns}) Values({vs})";
     }

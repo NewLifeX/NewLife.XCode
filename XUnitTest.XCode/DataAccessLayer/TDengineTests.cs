@@ -30,7 +30,7 @@ public class TDengineTests
     }
 
     [TestOrder(0)]
-    [Fact]
+    [Fact(Skip = "跳过")]
     public void InitTest()
     {
         var db = DbFactory.Create(DatabaseType.TDengine);

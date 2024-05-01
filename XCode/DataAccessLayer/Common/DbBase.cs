@@ -878,7 +878,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <param name="value">值</param>
     /// <param name="field">字段</param>
     /// <returns></returns>
-    public virtual IDataParameter CreateParameter(String name, Object? value, IDataColumn field) => CreateParameter(name, value, field?.DataType);
+    public virtual IDataParameter CreateParameter(String name, Object? value, IDataColumn? field) => CreateParameter(name, value, field?.DataType);
 
     /// <summary>创建参数</summary>
     /// <param name="name">名称</param>

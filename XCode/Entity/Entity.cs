@@ -995,7 +995,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         #endregion
 
         // 自动分表
-        var shards = Meta.ShardPolicy?.Shards(where);
+        var shards = where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0)
         {
             var builder = CreateBuilder(where, order, selects);
@@ -1074,10 +1074,10 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     static ShardModel[] FixOrder(ShardModel[] shards, String? order)
     {
         // 根据分页字段排序分页表
+        var sfield = Meta.ShardPolicy?.Field;
         var ds = order?.Split(",");
-        if (ds != null)
+        if (ds != null && sfield != null)
         {
-            var sfield = Meta.ShardPolicy.Field;
             foreach (var item in ds)
             {
                 var ss = item.Split(' ');
@@ -1466,7 +1466,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (!builder.GroupBy.IsNullOrEmpty()) builder.Column = selects;
 
         // 自动分表
-        var shards = Meta.ShardPolicy?.Shards(where);
+        var shards = where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0) return await session.QueryCountAsync(builder);
 
         var rs = 0L;
@@ -1548,7 +1548,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (!builder.GroupBy.IsNullOrEmpty()) builder.Column = selects;
 
         // 自动分表
-        var shards = Meta.ShardPolicy?.Shards(where);
+        var shards = where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0) return session.QueryCount(builder);
 
         var rs = 0;
@@ -1955,7 +1955,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public virtual TEntity CloneEntity(Boolean setDirty = false)
     {
-        var obj = Meta.Factory.Create() as TEntity;
+        var obj = (Meta.Factory.Create() as TEntity)!;
         foreach (var fi in Meta.Fields)
         {
             if (setDirty)
@@ -1995,7 +1995,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var dis = table.Indexes;
         if (dis != null && dis.Count > 0)
         {
-            IDataIndex di = null;
+            IDataIndex? di = null;
             foreach (var item in dis)
             {
                 if (!item.Unique) continue;
@@ -2052,8 +2052,13 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     public Int32 ResetDirty()
     {
         var key = Meta.Unique ?? throw new InvalidOperationException("要求有唯一主键");
+        var k = this[key.Name];
+        if (k == null) return 0;
+
+        var entity = FindByKey(k);
+        if (entity == null) return 0;
+
         var rs = 0;
-        var entity = FindByKey(this[key.Name]);
         foreach (var item in Meta.Fields)
         {
             var change = !CheckEqual(this[item.Name], entity[item.Name]);

@@ -204,7 +204,7 @@ public interface IDatabase : IDisposable2
     /// <param name="value">值</param>
     /// <param name="field">字段</param>
     /// <returns></returns>
-    IDataParameter CreateParameter(String name, Object? value, IDataColumn field);
+    IDataParameter CreateParameter(String name, Object? value, IDataColumn? field);
 
     /// <summary>创建参数</summary>
     /// <param name="name">名称</param>

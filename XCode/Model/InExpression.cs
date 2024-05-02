@@ -52,7 +52,7 @@ namespace XCode
             if (Field == null || Format.IsNullOrWhiteSpace()) return;
 
             // 部分场景外部未能传入数据库，此时内部尽力获取
-            if (db == null) db = Field?.Factory.Session.Dal.Db;
+            db ??= Field?.Factory?.Session.Dal.Db ?? throw new ArgumentNullException(nameof(db));
 
             var column = Field.Field;
             var columnName = db.FormatName(Field.Field);

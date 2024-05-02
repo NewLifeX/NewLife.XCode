@@ -45,7 +45,7 @@ public class FieldItem
             var name = Description;
             if (name.IsNullOrEmpty()) return Name;
 
-            var p = name.IndexOfAny(new[] { '。', '，' });
+            var p = name.IndexOfAny(['。', '，']);
             if (p > 0) name = name[..p];
 
             return name;
@@ -84,7 +84,7 @@ public class FieldItem
     public Boolean PrimaryKey { get; internal set; }
 
     /// <summary>是否主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
-    public Boolean Master { get; private set; }
+    public Boolean Master { get; internal set; }
 
     /// <summary>是否允许空</summary>
     public Boolean IsNullable { get; internal set; }
@@ -99,7 +99,7 @@ public class FieldItem
     public Boolean IsDynamic => _Property == null;
 
     /// <summary>字段名要过滤掉的标识符，考虑MSSQL、MySql、SQLite、Oracle等</summary>
-    static readonly Char[] COLUMNNAME_FLAG = new Char[] { '[', ']', '\'', '"', '`' };
+    static readonly Char[] COLUMNNAME_FLAG = ['[', ']', '\'', '"', '`'];
 
     private String? _ColumnName;
     /// <summary>用于数据绑定的字段名</summary>
@@ -113,23 +113,14 @@ public class FieldItem
     /// <remarks>set { _ReadOnly = value; } 放出只读属性的设置，比如在编辑页面的时候，有的字段不能修改 如修改用户时  不能修改用户名</remarks>
     public Boolean ReadOnly { get; set; }
 
-    /// <summary>表</summary>
+    /// <summary>表定义。来自实体类特性</summary>
     public TableItem Table { get; internal protected set; } = null!;
 
     /// <summary>字段</summary>
     public IDataColumn Field { get; private set; } = null!;
 
     /// <summary>实体操作者</summary>
-    public IEntityFactory? Factory
-    {
-        get
-        {
-            var type = Table?.EntityType;
-            if (type == null || type.IsInterface) return null;
-
-            return type.AsFactory();
-        }
-    }
+    public IEntityFactory? Factory => Table?.EntityType.AsFactory();
 
     /// <summary>已格式化的字段名，可字节用于SQL中。主要用于处理关键字，比如MSSQL里面的[User]</summary>
     public String? FormatedName => Field == null ? null : Factory?.Session.Dal.Db.FormatName(Field);

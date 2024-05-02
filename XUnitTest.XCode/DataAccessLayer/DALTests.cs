@@ -147,6 +147,10 @@ public class DALTests
         // 构建新的模型
         var tb = Role.Meta.Table.DataTable.Clone() as IDataTable;
         tb.TableName = "Role_mtt";
+
+        var column = tb.Columns.First(e => e.Name == "Name");
+        column.ColumnName = "Name_mtt";
+
         var xml = DAL.Export([tb]);
         File.WriteAllText(file.EnsureDirectory(true), xml);
 
@@ -161,7 +165,11 @@ public class DALTests
         using var st = Role.Meta.CreateSplit(name, null);
 
         // 此时我们希望实体类拿到的数据表是新的
-        var tb3 = Role.Meta.Table.DataTable;
-        Assert.Equal(tb.TableName, tb3.TableName);
+        //var tb3 = Role.Meta.Table.DataTable;
+        Assert.Equal(tb.TableName, Role.Meta.Session.Table.TableName);
+        Assert.Equal(tb.TableName, Role.Meta.Session.DataTable.TableName);
+        Assert.Equal(tb.TableName, Role.Meta.Session.TableName);
+        //Assert.Equal(tb.TableName, Role.Meta.TableName);
+        Assert.Equal("Name_mtt", Role.Meta.Session.Table.FindByName("Name").ColumnName);
     }
 }

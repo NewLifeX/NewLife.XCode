@@ -38,9 +38,9 @@ public partial class Entity<TEntity>
         #endregion
 
         #region 基本属性
-        private static readonly Lazy<TableItem> _Table = new(() => TableItem.Create(ThisType));
-        /// <summary>表信息。来自实体类</summary>
-        public static TableItem Table => _Table.Value;
+        private static TableItem? _Table;
+        /// <summary>数据表元数据信息。来自实体类，并合并默认连接名上的文件模型</summary>
+        public static TableItem Table { get => _Table ??= TableItem.Create(ThisType, null); set => _Table = value; }
 
 #if NET45
         private static readonly ThreadLocal<String?> _ConnName = new();

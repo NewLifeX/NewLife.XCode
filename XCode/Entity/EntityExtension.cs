@@ -268,7 +268,7 @@ public static class EntityExtension
     {
         // 没有其它唯一索引，且主键为空时，走批量插入
         var rs = 0;
-        if (!session.Table.Indexes.Any(di => di.Unique))
+        if (!session.DataTable.Indexes.Any(di => di.Unique))
         {
             var inserts = new List<T>();
             var updates = new List<T>();
@@ -501,7 +501,7 @@ public static class EntityExtension
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{fact.Table.TableName}", $"{session.TableName}[{list.Count()}]", list.Count());
         try
         {
-            var rs = dal.Session.Insert(session.Table, option.Columns, list.Cast<IModel>());
+            var rs = dal.Session.Insert(session.DataTable, option.Columns, list.Cast<IModel>());
 
             // 清除脏数据，避免重复提交保存
             foreach (var item in list)
@@ -583,7 +583,7 @@ public static class EntityExtension
         {
             //if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
-            var rs = dal.Session.InsertIgnore(session.Table, option.Columns, list.Cast<IModel>());
+            var rs = dal.Session.InsertIgnore(session.DataTable, option.Columns, list.Cast<IModel>());
 
             // 清除脏数据，避免重复提交保存
             foreach (var item in list)
@@ -665,7 +665,7 @@ public static class EntityExtension
         {
             //if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
-            var rs = dal.Session.Replace(session.Table, option.Columns, list.Cast<IModel>());
+            var rs = dal.Session.Replace(session.DataTable, option.Columns, list.Cast<IModel>());
 
             // 清除脏数据，避免重复提交保存
             foreach (var item in list)
@@ -749,7 +749,7 @@ public static class EntityExtension
         {
             //if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
-            var rs = dal.Session.Update(session.Table, option.Columns, updateColumns, addColumns, list.Cast<IModel>());
+            var rs = dal.Session.Update(session.DataTable, option.Columns, updateColumns, addColumns, list.Cast<IModel>());
 
             // 清除脏数据，避免重复提交保存
             foreach (var item in list)
@@ -888,7 +888,7 @@ public static class EntityExtension
         {
             //if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
 
-            var rs = dal.Session.Upsert(session.Table, option.Columns, updateColumns, addColumns, list.Cast<IModel>());
+            var rs = dal.Session.Upsert(session.DataTable, option.Columns, updateColumns, addColumns, list.Cast<IModel>());
 
             // 清除脏数据，避免重复提交保存
             foreach (var item in list)
@@ -972,7 +972,7 @@ public static class EntityExtension
         {
             if (span != null) span.Tag = $"{session.TableName}[{entity}]";
 
-            return dal.Session.Upsert(session.Table, option.Columns, option.UpdateColumns, option.AddColumns, [entity as IModel]);
+            return dal.Session.Upsert(session.DataTable, option.Columns, option.UpdateColumns, option.AddColumns, [entity as IModel]);
         }
         catch (Exception ex)
         {

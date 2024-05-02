@@ -110,31 +110,31 @@ public static class EntityFactory
         var dic = new Dictionary<String, Type>(StringComparer.OrdinalIgnoreCase);
         var list = new List<String>();
         var list2 = new List<String>();
-        foreach (var item in LoadEntities(connName))
+        foreach (var type in LoadEntities(connName))
         {
-            list.Add(item.Name);
+            list.Add(type.Name);
 
             // 过滤掉第一次使用才加载的
             if (checkMode)
             {
-                var att = item.GetCustomAttribute<ModelCheckModeAttribute>(true);
+                var att = type.GetCustomAttribute<ModelCheckModeAttribute>(true);
                 if (att != null && att.Mode != ModelCheckModes.CheckAllTablesWhenInit) continue;
             }
-            list2.Add(item.Name);
+            list2.Add(type.Name);
 
-            var table = TableItem.Create(item).DataTable;
+            var table = TableItem.Create(type, connName).DataTable;
 
             // 判断表名是否已存在
-            if (dic.TryGetValue(table.TableName, out var type))
+            if (dic.TryGetValue(table.TableName, out var oldType))
             {
                 // 两个都不是，报错吧！
-                var msg = $"设计错误！发现表{table.TableName}同时被两个实体类（{type.FullName}和{item.FullName}）使用！";
+                var msg = $"设计错误！发现表{table.TableName}同时被两个实体类（{oldType.FullName}和{type.FullName}）使用！";
                 XTrace.WriteLine(msg);
                 throw new XCodeException(msg);
             }
             else
             {
-                dic.Add(table.TableName, item);
+                dic.Add(table.TableName, type);
             }
 
             tables.Add(table);

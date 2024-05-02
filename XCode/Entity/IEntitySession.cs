@@ -16,7 +16,7 @@ public interface IEntitySession
     String TableName { get; }
 
     /// <summary>数据表</summary>
-    IDataTable Table { get; }
+    IDataTable DataTable { get; }
 
     /// <summary>用于标识会话的键值</summary>
     String Key { get; }

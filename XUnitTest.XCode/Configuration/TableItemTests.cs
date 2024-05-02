@@ -3,16 +3,15 @@ using XCode.Configuration;
 using Xunit;
 using XUnitTest.XCode.TestEntity;
 
-namespace XUnitTest.XCode.Configuration
+namespace XUnitTest.XCode.Configuration;
+
+public class TableItemTests
 {
-    public class TableItemTests
+    [Fact]
+    public void TrimIndex()
     {
-        [Fact]
-        public void TrimIndex()
-        {
-            var ti = TableItem.Create(typeof(Log2));
-            XTrace.WriteLine(ti.TableName);
-            Assert.Equal(4, ti.DataTable.Indexes.Count);
-        }
+        var ti = TableItem.Create(typeof(Log2), null);
+        XTrace.WriteLine(ti.TableName);
+        Assert.Equal(4, ti.DataTable.Indexes.Count);
     }
 }

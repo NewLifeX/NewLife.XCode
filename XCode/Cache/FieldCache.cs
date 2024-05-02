@@ -44,7 +44,7 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
     {
         if (_field == null && !_fieldName.IsNullOrEmpty()) _field = Entity<TEntity>.Meta.Table.FindByName(_fieldName);
 
-        if (_Unique == null)
+        if (_field != null && _Unique == null)
         {
             var tb = _field.Table;
             var id = tb.Identity;

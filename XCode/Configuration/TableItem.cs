@@ -37,39 +37,11 @@ public class TableItem
     #endregion
 
     #region 属性
-    private String? _TableName;
-    /// <summary>表名</summary>
-    public String TableName
-    {
-        get
-        {
-            if (_TableName.IsNullOrEmpty()) _TableName = _Table?.Name ?? EntityType.Name;
+    /// <summary>默认表名。来自实体类特性</summary>
+    public String TableName => _Table?.Name ?? EntityType.Name;
 
-            return _TableName;
-        }
-        set
-        {
-            _TableName = value;
-            DataTable.TableName = value;
-        }
-    }
-
-    private String? _ConnName;
-    /// <summary>连接名</summary>
-    public String ConnName
-    {
-        get
-        {
-            if (_ConnName.IsNullOrEmpty())
-            {
-                var connName = _Table?.ConnName + "";
-
-                _ConnName = connName;
-            }
-            return _ConnName;
-        }
-        set => _ConnName = value;
-    }
+    /// <summary>默认连接名。来自实体类特性</summary>
+    public String ConnName => _Table?.ConnName + "";
     #endregion
 
     #region 扩展属性
@@ -422,13 +394,7 @@ public class TableItem
 
     /// <summary>已重载。</summary>
     /// <returns></returns>
-    public override String ToString()
-    {
-        if (String.IsNullOrEmpty(Description))
-            return TableName;
-        else
-            return $"{TableName}（{Description}）";
-    }
+    public override String ToString() => Description.IsNullOrEmpty() ? TableName : $"{TableName}（{Description}）";
     #endregion
 
     #region 动态增加字段

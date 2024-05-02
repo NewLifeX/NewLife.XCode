@@ -1008,8 +1008,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
         else
         {
-            var dt = Meta.Table;
-            using var span = DAL.GlobalTracer?.NewSpan($"db:{dt.ConnName}:{dt.TableName}:AutoShard", "自动分页查询");
+            var ss = Meta.Session;
+            using var span = DAL.GlobalTracer?.NewSpan($"db:{ss.ConnName}:{ss.TableName}:AutoShard", "自动分页查询");
 
             // 先生成查询语句
             var builder = CreateBuilder(where, order, selects);

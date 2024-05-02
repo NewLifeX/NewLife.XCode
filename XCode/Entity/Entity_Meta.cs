@@ -47,7 +47,7 @@ public partial class Entity<TEntity>
 #else
         private static readonly AsyncLocal<String?> _ConnName = new();
 #endif
-        /// <summary>链接名。线程内允许修改，修改者负责还原。若要还原默认值，设为null即可</summary>
+        /// <summary>当前链接名。线程内允许修改，修改者负责还原。若要还原默认值，设为null即可</summary>
         public static String ConnName
         {
             get => _ConnName.Value ??= Table.ConnName;
@@ -59,7 +59,7 @@ public partial class Entity<TEntity>
 #else
         private static readonly AsyncLocal<String?> _TableName = new();
 #endif
-        /// <summary>表名。线程内允许修改，修改者负责还原</summary>
+        /// <summary>当前表名。线程内允许修改，修改者负责还原</summary>
         public static String TableName
         {
             get => _TableName.Value ??= Table.TableName;

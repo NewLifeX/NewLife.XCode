@@ -148,18 +148,16 @@ public static class EntityExtension
                 DefaultSpan.Current?.AppendTag("ShardPolicy");
 
                 // 提前计算分表，按库表名分组
-                var table = fact.Table;
                 var dic = list.GroupBy(e =>
                 {
-                    var sd = fact.ShardPolicy.Shard(e);
-                    return fact.GetSession(sd.ConnName ?? table.ConnName, sd.TableName ?? table.TableName);
+                    var shard = fact.ShardPolicy.Shard(e);
+                    return fact.GetSession(shard?.ConnName ?? session2.ConnName, shard?.TableName ?? session2.TableName);
                 });
                 // 按库表分组执行批量插入
                 var rs = 0;
                 foreach (var item in dic)
                 {
-                    var ss = item.Key;
-                    rs += BatchInsert(item.ToList(), option: null, ss);
+                    rs += BatchInsert(item.ToList(), option: null, item.Key);
                 }
                 return rs;
             }

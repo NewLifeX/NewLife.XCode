@@ -13,7 +13,7 @@ public class FieldExpression : Expression
     public FieldItem Field { get; set; }
 
     /// <summary>动作</summary>
-    public String Action { get; set; }
+    public String? Action { get; set; }
 
     /// <summary>值</summary>
     public Object? Value { get; set; }

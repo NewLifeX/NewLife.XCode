@@ -76,7 +76,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         Key = connName + "###" + tableName;
 
         TableItem = TableItem.Create(ThisType);
-        Table = TableItem.DataTable.Clone() as IDataTable;
+        Table = (TableItem.DataTable.Clone() as IDataTable)!;
         Table.TableName = tableName;
 
         Queue = new EntityQueue(this)
@@ -122,11 +122,11 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     IEntityFactory Factory { get; } = typeof(TEntity).AsFactory();
 
     //private DAL _readDal;
-    private DAL _Dal;
+    private DAL? _Dal;
     /// <summary>数据操作层</summary>
     public DAL Dal => _Dal ??= DAL.Create(ConnName);
 
-    private String _FormatedTableName;
+    private String? _FormatedTableName;
     /// <summary>已格式化的表名，带有中括号等</summary>
     public virtual String FormatedTableName
     {
@@ -138,7 +138,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         }
     }
 
-    private EntitySession<TEntity> _Default;
+    private EntitySession<TEntity>? _Default;
     /// <summary>该实体类的默认会话。</summary>
     private EntitySession<TEntity> Default
     {
@@ -234,9 +234,9 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         // 检查新表名对应的数据表
         var table = TableItem.DataTable;
         // 克隆一份，防止修改
-        table = table.Clone() as IDataTable;
+        table = (table.Clone() as IDataTable)!;
 
-        if (table != null && table.TableName != TableName)
+        if (/*table != null &&*/ table.TableName != TableName)
         {
             // 表名去掉前缀
             var name = TableName;
@@ -303,7 +303,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     #endregion
 
     #region 缓存
-    private EntityCache<TEntity> _cache;
+    private EntityCache<TEntity>? _cache;
     /// <summary>实体缓存</summary>
     /// <returns></returns>
     public EntityCache<TEntity> Cache
@@ -323,7 +323,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         }
     }
 
-    private ISingleEntityCache<Object, TEntity> _singleCache;
+    private ISingleEntityCache<Object, TEntity>? _singleCache;
     /// <summary>单对象实体缓存。</summary>
     public ISingleEntityCache<Object, TEntity> SingleCache
     {
@@ -698,7 +698,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         _OnDataChange?.Invoke(ThisType);
     }
 
-    private Action<Type> _OnDataChange;
+    private Action<Type>? _OnDataChange;
     /// <summary>数据改变后触发。参数指定触发该事件的实体类</summary>
     public event Action<Type> OnDataChange
     {

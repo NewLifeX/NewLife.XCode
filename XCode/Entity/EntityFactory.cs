@@ -86,16 +86,16 @@ public static class EntityFactory
     /// <returns></returns>
     public static IEnumerable<Type> LoadEntities(String connName)
     {
-        foreach (var item in typeof(IEntity).GetAllSubclasses())
+        foreach (var type in typeof(IEntity).GetAllSubclasses())
         {
             // 实体类的基类必须是泛型，避免多级继承导致误判
-            if (!item.BaseType.IsGenericType) continue;
+            if (!type.BaseType.IsGenericType) continue;
 
-            var ti = TableItem.Create(item);
-            if (ti == null)
-                XTrace.WriteLine("实体类[{0}]无法创建TableItem", item.FullName);
-            else if (ti.ConnName == connName)
-                yield return item;
+            var name = type.GetCustomAttribute<BindTableAttribute>(true)?.ConnName;
+            if (name == null)
+                XTrace.WriteLine("实体类[{0}]无法创建TableItem", type.FullName);
+            else if (name == connName)
+                yield return type;
         }
     }
 
@@ -162,13 +162,13 @@ public static class EntityFactory
             // 加载所有实体类
             var types = typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType.IsGenericType).ToList();
             var connNames = new List<String>();
-            foreach (var item in types)
+            foreach (var type in types)
             {
-                var ti = TableItem.Create(item);
-                if (ti == null || connNames.Contains(ti.ConnName) || ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
-                connNames.Add(ti.ConnName);
+                var (name, mode) = GetInfo(type);
+                if (name == null || connNames.Contains(name) || mode != ModelCheckModes.CheckAllTablesWhenInit) continue;
+                connNames.Add(name);
 
-                Init(ti.ConnName, types, true);
+                Init(name, types, true);
 
                 if (span != null) span.Value++;
             }
@@ -178,6 +178,14 @@ public static class EntityFactory
             span?.SetError(ex, null);
             throw;
         }
+    }
+
+    private static (String? connName, ModelCheckModes mode) GetInfo(Type type)
+    {
+        var att = type.GetCustomAttribute<BindTableAttribute>(true);
+        var att2 = type.GetCustomAttribute<ModelCheckModeAttribute>(true);
+
+        return (att?.ConnName, att2?.Mode ?? ModelCheckModes.CheckAllTablesWhenInit);
     }
 
     /// <summary>初始化所有数据库连接的实体类和数据表</summary>
@@ -193,13 +201,13 @@ public static class EntityFactory
             // 加载所有实体类
             var types = typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType.IsGenericType).ToList();
             var connNames = new List<String>();
-            foreach (var item in types)
+            foreach (var type in types)
             {
-                var ti = TableItem.Create(item);
-                if (ti == null || connNames.Contains(ti.ConnName) || ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
-                connNames.Add(ti.ConnName);
+                var (name, mode) = GetInfo(type);
+                if (name == null || connNames.Contains(name) || mode != ModelCheckModes.CheckAllTablesWhenInit) continue;
+                connNames.Add(name);
 
-                ts.Add(Task.Run(() => Init(ti.ConnName, types, false)));
+                ts.Add(Task.Run(() => Init(name, types, false)));
 
                 if (span != null) span.Value++;
             }
@@ -229,8 +237,8 @@ public static class EntityFactory
             var facts = new List<IEntityFactory>();
             foreach (var type in types)
             {
-                var ti = TableItem.Create(type);
-                if (ti != null && ti.ConnName == connName && ti.ModelCheckMode == ModelCheckModes.CheckAllTablesWhenInit)
+                var (name, mode) = GetInfo(type);
+                if (name != null && name == connName && mode == ModelCheckModes.CheckAllTablesWhenInit)
                 {
                     var fact = CreateFactory(type);
                     facts.Add(fact);

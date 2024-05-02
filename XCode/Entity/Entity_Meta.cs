@@ -32,14 +32,14 @@ public partial class Entity<TEntity>
                 //if (_Factory != null) return _Factory;
 
                 var type = ThisType;
-                return type.IsInterface ? null : type.AsFactory();
+                return type.AsFactory();
             }
         }
         #endregion
 
         #region 基本属性
         private static readonly Lazy<TableItem> _Table = new(() => TableItem.Create(ThisType));
-        /// <summary>表信息</summary>
+        /// <summary>表信息。来自实体类</summary>
         public static TableItem Table => _Table.Value;
 
 #if NET45
@@ -76,7 +76,7 @@ public partial class Entity<TEntity>
         public static ICollection<String> FieldNames => Table.FieldNames;
 
         /// <summary>唯一键，返回第一个标识列或者唯一的主键</summary>
-        public static FieldItem Unique
+        public static FieldItem? Unique
         {
             get
             {
@@ -87,7 +87,7 @@ public partial class Entity<TEntity>
         }
 
         /// <summary>主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
-        public static FieldItem Master => Table.Master ?? Unique;
+        public static FieldItem? Master => Table.Master ?? Unique;
         #endregion
 
         #region 会话

@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
+using System.Linq;
 using NewLife;
 using XCode.DataAccessLayer;
+using XCode.Membership;
 using Xunit;
 
 namespace XUnitTest.XCode.DataAccessLayer;
@@ -124,5 +127,41 @@ public class DALTests
         var tables = tableName.Split(",");
         Assert.Equal(tables.Length, ts.Length);
         Assert.Equal(tableName, ts.Join(","));
+    }
+
+    [Fact]
+    public void ModelTableTest()
+    {
+        var name = "modelTable-test";
+        DAL.AddConnStr(name, null, null, "Sqlite");
+
+        var dal = DAL.Create(name);
+
+        var file = $"Models/{name}.xml";
+        if (File.Exists(file)) File.Delete(file);
+
+        // 直接获取，此时为空
+        var tables = dal.ModelTables;
+        Assert.Empty(tables);
+
+        // 构建新的模型
+        var tb = Role.Meta.Table.DataTable.Clone() as IDataTable;
+        tb.TableName = "Role_mtt";
+        var xml = DAL.Export([tb]);
+        File.WriteAllText(file.EnsureDirectory(true), xml);
+
+        // 清空模型表，再次读取
+        dal.ModelTables = null;
+        tables = dal.ModelTables;
+        Assert.NotEmpty(tables);
+
+        var tb2 = tables.FirstOrDefault();
+        Assert.Equal(tb.TableName, tb2.TableName);
+
+        using var st = Role.Meta.CreateSplit(name, null);
+
+        // 此时我们希望实体类拿到的数据表是新的
+        var tb3 = Role.Meta.Table.DataTable;
+        Assert.Equal(tb.TableName, tb3.TableName);
     }
 }

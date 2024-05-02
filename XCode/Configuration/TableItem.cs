@@ -165,7 +165,7 @@ public class TableItem
         InitFields();
     }
 
-    private static readonly ConcurrentDictionary<Type, TableItem> cache = new();
+    private static readonly ConcurrentDictionary<Type, TableItem> _cache = new();
     /// <summary>创建</summary>
     /// <param name="type">类型</param>
     /// <returns></returns>
@@ -173,8 +173,12 @@ public class TableItem
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
 
+        if (_cache.TryGetValue(type, out var tableItem)) return tableItem;
+
+        if (type.GetCustomAttribute<BindTableAttribute>(true) == null) throw new ArgumentOutOfRangeException(nameof(type));
+
         // 不能给没有BindTableAttribute特性的类型创建TableItem，否则可能会在InitFields中抛出异常
-        return cache.GetOrAdd(type, key => key.GetCustomAttribute<BindTableAttribute>(true) != null ? new TableItem(key) : null);
+        return _cache.GetOrAdd(type, key => new TableItem(key));
     }
 
     private void InitFields()

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Collections;
@@ -320,6 +321,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     protected virtual Task<Int32> OnDeleteAsync() => Meta.Session.DeleteAsync(this);
 
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     private TResult DoAction<TResult>(Func<TResult> func, DataMethod method)
     {
         if (Meta.Table.DataTable.InsertOnly)

@@ -63,7 +63,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     {
         if (sql.IsNullOrEmpty()) sql = GetSql(cmd)!;
         if (ex != null)
-            return new XSqlException(sql, this, ex);
+            return new XSqlException(sql, this, ex.Message);
         else
             return new XSqlException(sql, this);
     }
@@ -72,6 +72,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <typeparam name="TResult"></typeparam>
     /// <param name="callback"></param>
     /// <returns></returns>
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     public virtual TResult Process<TResult>(Func<DbConnection, TResult> callback)
     {
         var delay = 1000;
@@ -106,6 +109,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <typeparam name="TResult"></typeparam>
     /// <param name="callback"></param>
     /// <returns></returns>
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     public virtual TResult Process<TResult>(Func<TResult> callback)
     {
         var delay = 1000;
@@ -139,6 +145,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <typeparam name="TResult"></typeparam>
     /// <param name="callback"></param>
     /// <returns></returns>
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     public virtual async Task<TResult> ProcessAsync<TResult>(Func<DbConnection, Task<TResult>> callback)
     {
         var delay = 1000;
@@ -173,6 +182,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <typeparam name="TResult"></typeparam>
     /// <param name="callback"></param>
     /// <returns></returns>
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     public virtual async Task<TResult> ProcessAsync<TResult>(Func<Task<TResult>> callback)
     {
         var delay = 1000;
@@ -432,6 +444,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <returns></returns>
     public virtual Int32 Execute(DbCommand cmd) => Execute(cmd, false, static cmd2 => cmd2.ExecuteNonQuery());
 
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     public virtual T Execute<T>(DbCommand cmd, Boolean query, Func<DbCommand, T> callback)
     {
         Transaction?.Check(cmd, !query);
@@ -659,6 +674,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         });
     }
 
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     public virtual Task<T> ExecuteAsync<T>(DbCommand cmd, Boolean query, Func<DbCommand, Task<T>> callback)
     {
         Transaction?.Check(cmd, !query);

@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using NewLife;
@@ -313,6 +314,9 @@ partial class DAL
         return st;
     }
 
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     private TResult QueryWrap<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<IDbSession, T1, T2, T3, TResult> callback, String action)
     {
         // 读写分离
@@ -350,6 +354,9 @@ partial class DAL
         return rs;
     }
 
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     private TResult ExecuteWrap<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<IDbSession, T1, T2, T3, TResult> callback, String action)
     {
         if (Db.Readonly) throw new InvalidOperationException($"数据连接[{ConnName}]只读，禁止执行{k1}");
@@ -365,6 +372,9 @@ partial class DAL
         return rs;
     }
 
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     private TResult Invoke<T1, T2, T3, TResult>(IDbSession session, T1 k1, T2 k2, T3 k3, Func<IDbSession, T1, T2, T3, TResult> callback, String action)
     {
         var tracer = Tracer ?? GlobalTracer;
@@ -467,6 +477,9 @@ partial class DAL
         if (!stag.IsNullOrEmpty()) span.Tag += " " + stag;
     }
 
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     private async Task<TResult> QueryAsyncWrap<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<IAsyncDbSession, T1, T2, T3, Task<TResult>> callback, String action)
     {
         // 读写分离
@@ -504,6 +517,9 @@ partial class DAL
         return rs;
     }
 
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     private async Task<TResult> ExecuteAsyncWrap<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<IAsyncDbSession, T1, T2, T3, Task<TResult>> callback, String action)
     {
         if (Db.Readonly) throw new InvalidOperationException($"数据连接[{ConnName}]只读，禁止执行{k1}");
@@ -519,6 +535,9 @@ partial class DAL
         return rs;
     }
 
+#if NETCOREAPP
+    [StackTraceHidden]
+#endif
     private async Task<TResult> InvokeAsync<T1, T2, T3, TResult>(IAsyncDbSession session, T1 k1, T2 k2, T3 k3, Func<IAsyncDbSession, T1, T2, T3, Task<TResult>> callback, String action)
     {
         var tracer = Tracer ?? GlobalTracer;

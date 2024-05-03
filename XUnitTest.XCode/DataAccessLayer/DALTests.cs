@@ -3,12 +3,14 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using NewLife;
+using NewLife.Log;
 using XCode.DataAccessLayer;
 using XCode.Membership;
 using Xunit;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
+[Collection("Database")]
 public class DALTests
 {
     [Fact]
@@ -140,16 +142,19 @@ public class DALTests
         var file = $"Models/{name}.xml";
         if (File.Exists(file)) File.Delete(file);
 
+        var db = $"Data/{name}.db";
+        if (File.Exists(db)) File.Delete(db);
+
         // 直接获取，此时为空
         var tables = dal.ModelTables;
         Assert.Empty(tables);
 
         // 构建新的模型
         var tb = Role.Meta.Table.DataTable.Clone() as IDataTable;
-        tb.TableName = "Role_mtt";
+        tb.TableName = "Role_mqtt";
 
         var column = tb.Columns.First(e => e.Name == "Name");
-        column.ColumnName = "Name_mtt";
+        column.ColumnName = "Name_mqtt";
 
         var xml = DAL.Export([tb]);
         File.WriteAllText(file.EnsureDirectory(true), xml);
@@ -169,7 +174,26 @@ public class DALTests
         Assert.Equal(tb.TableName, Role.Meta.Session.Table.TableName);
         Assert.Equal(tb.TableName, Role.Meta.Session.DataTable.TableName);
         Assert.Equal(tb.TableName, Role.Meta.Session.TableName);
-        //Assert.Equal(tb.TableName, Role.Meta.TableName);
-        Assert.Equal("Name_mtt", Role.Meta.Session.Table.FindByName("Name").ColumnName);
+        Assert.Equal(tb.TableName, Role.Meta.TableName);
+        Assert.Equal(tb.TableName, Role.Meta.Table.TableName);
+        Assert.Equal("Name_mqtt", Role.Meta.Session.Table.FindByName("Name").ColumnName);
+        Assert.Equal("Role", Role.Meta.Table.RawTableName);
+
+        // 初始化
+        var count = Role.Meta.Count;
+
+        XTrace.WriteLine("开始文件模型映射表的添删改查测试");
+
+        var role = new Role { Name = "Stone" };
+        role.Insert();
+
+        var role2 = Role.Find(Role._.Name, "Stone");
+        Assert.NotNull(role2);
+        Assert.Equal(role.ID, role2.ID);
+
+        role2.Name = "NewLife";
+        role2.Update();
+
+        role2.Delete();
     }
 }

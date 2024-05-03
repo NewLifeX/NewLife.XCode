@@ -117,7 +117,7 @@ public class FieldItem
     public TableItem Table { get; internal protected set; } = null!;
 
     /// <summary>字段</summary>
-    public IDataColumn Field { get; private set; } = null!;
+    public IDataColumn Field { get; internal set; } = null!;
 
     /// <summary>实体操作者</summary>
     public IEntityFactory? Factory => Table?.EntityType.AsFactory();

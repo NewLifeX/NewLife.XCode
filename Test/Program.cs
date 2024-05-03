@@ -26,6 +26,7 @@ using XCode.Cache;
 using XCode.Code;
 using XCode.DataAccessLayer;
 using XCode.Membership;
+using StackTraceHiddenAttribute = System.Diagnostics.StackTraceHiddenAttribute;
 
 namespace Test;
 
@@ -126,6 +127,7 @@ public class Program
         var list = ar.Childs;
     }
 
+    [StackTraceHidden]
     private static void Test3()
     {
         //var list = User.FindAll();
@@ -139,6 +141,8 @@ public class Program
         //    Value = "NewLife",
         //};
         //p.Insert();
+
+        throw new Exception("error");
 
         var list = Role.FindAll();
         XTrace.WriteLine("Roles: {0}", list.Count);

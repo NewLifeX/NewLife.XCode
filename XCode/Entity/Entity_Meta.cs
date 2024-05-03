@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using NewLife;
+using NewLife.Log;
 using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
@@ -38,33 +39,14 @@ public partial class Entity<TEntity>
         #endregion
 
         #region 基本属性
-        private static TableItem? _Table;
         /// <summary>数据表元数据信息。来自实体类，并合并默认连接名上的文件模型</summary>
-        public static TableItem Table { get => _Table ??= TableItem.Create(ThisType, null); set => _Table = value; }
+        public static TableItem Table { get => Wrap.Table; set => Wrap.Table = value; }
 
-#if NET45
-        private static readonly ThreadLocal<String?> _ConnName = new();
-#else
-        private static readonly AsyncLocal<String?> _ConnName = new();
-#endif
         /// <summary>当前链接名。线程内允许修改，修改者负责还原。若要还原默认值，设为null即可</summary>
-        public static String ConnName
-        {
-            get => _ConnName.Value ??= Table.ConnName;
-            set { _Session.Value = null; _ConnName.Value = value; }
-        }
+        public static String ConnName { get => Wrap.ConnName; set { Wrap.ConnName = value; } }
 
-#if NET45
-        private static readonly ThreadLocal<String?> _TableName = new();
-#else
-        private static readonly AsyncLocal<String?> _TableName = new();
-#endif
         /// <summary>当前表名。线程内允许修改，修改者负责还原</summary>
-        public static String TableName
-        {
-            get => _TableName.Value ??= Table.TableName;
-            set { _Session.Value = null; _TableName.Value = value; }
-        }
+        public static String TableName { get => Wrap.TableName; set { Wrap.TableName = value; } }
 
         /// <summary>所有数据属性</summary>
         public static FieldItem[] AllFields => Table.AllFields;
@@ -92,12 +74,47 @@ public partial class Entity<TEntity>
 
         #region 会话
 #if NET45
-        private static readonly ThreadLocal<EntitySession<TEntity>?> _Session = new();
+        private static readonly ThreadLocal<SessionWrap?> _wrap = new();
 #else
-        private static readonly AsyncLocal<EntitySession<TEntity>?> _Session = new();
+        private static readonly AsyncLocal<SessionWrap?> _wrap = new();
 #endif
+        private static SessionWrap Wrap => _wrap.Value ??= new SessionWrap();
+
         /// <summary>实体会话。线程静态</summary>
-        public static EntitySession<TEntity> Session => _Session.Value ??= EntitySession<TEntity>.Create(ConnName, TableName);
+        public static EntitySession<TEntity> Session => Wrap.Session;
+
+        class SessionWrap
+        {
+            private String? _ConnName;
+            public String ConnName
+            {
+                get => _ConnName ??= Table.ConnName;
+                set { _ConnName = value; Reset(); }
+            }
+
+            private String? _TableName;
+            public String TableName
+            {
+                get => _TableName ??= Table.TableName;
+                set { _TableName = value; Reset(); }
+            }
+
+            private TableItem? _Table;
+            public TableItem Table
+            {
+                get => _Table ??= TableItem.Create(ThisType, _ConnName);
+                set { _Table = value; _Session = null; }
+            }
+
+            private EntitySession<TEntity>? _Session;
+            public EntitySession<TEntity> Session => _Session ??= EntitySession<TEntity>.Create(ConnName, TableName);
+
+            void Reset()
+            {
+                _Table = null;
+                _Session = null;
+            }
+        }
         #endregion
 
         #region 事务保护
@@ -230,6 +247,9 @@ public partial class Entity<TEntity>
             {
                 ConnName = Meta.ConnName;
                 TableName = Meta.TableName;
+#if DEBUG
+                XTrace.WriteLine("CreateSplit: {0}->{2}, {1}->{3}", ConnName, TableName, connName, tableName);
+#endif
 
                 Meta.ConnName = connName;
                 Meta.TableName = tableName;
@@ -237,6 +257,9 @@ public partial class Entity<TEntity>
 
             public void Dispose()
             {
+#if DEBUG
+                XTrace.WriteLine("RestoreSplit: {0}, {1}", ConnName, TableName);
+#endif
                 Meta.ConnName = ConnName;
                 Meta.TableName = TableName;
             }

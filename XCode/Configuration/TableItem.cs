@@ -390,7 +390,8 @@ public class TableItem
                     DisplayName = column.DisplayName,
                     Description = column.Description,
                     //Map = column.Map,
-                    IsDataObjectField = true
+                    IsDataObjectField = true,
+                    Field = column,
                 };
 
                 fields.Add(fi);
@@ -407,6 +408,7 @@ public class TableItem
                 fi.Master = column.Master;
                 fi.DisplayName = column.DisplayName;
                 fi.Description = column.Description;
+                fi.Field = column;
             }
 
             if (fi.PrimaryKey) pkeys.Add(fi);

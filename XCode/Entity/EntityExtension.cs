@@ -472,6 +472,7 @@ public static class EntityExtension
             var id = columns.FirstOrDefault(e => e.Identity);
             if (id != null)
             {
+                // 如果自增列数据为0，则提出自增列，让数据库填充自增值
                 if (entity[id.Name].ToLong() == 0) columns = columns.Where(e => !e.Identity).ToArray();
             }
 
@@ -484,7 +485,7 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
-                columns = columns.Where(e => !e.Identity && dirtys.Contains(e.Name)).ToArray();
+                columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             }
 
             option.Columns = columns;
@@ -558,6 +559,7 @@ public static class EntityExtension
             var id = columns.FirstOrDefault(e => e.Identity);
             if (id != null)
             {
+                // 如果自增列数据为0，则提出自增列，让数据库填充自增值
                 if (entity[id.Name].ToLong() == 0) columns = columns.Where(e => !e.Identity).ToArray();
             }
 
@@ -565,7 +567,7 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
-                columns = columns.Where(e => !e.Identity && dirtys.Contains(e.Name)).ToArray();
+                columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             }
 
             option.Columns = columns;
@@ -640,6 +642,7 @@ public static class EntityExtension
             var id = columns.FirstOrDefault(e => e.Identity);
             if (id != null)
             {
+                // 如果自增列数据为0，则提出自增列，让数据库填充自增值
                 if (entity[id.Name].ToLong() == 0) columns = columns.Where(e => !e.Identity).ToArray();
             }
 
@@ -647,7 +650,7 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
-                columns = columns.Where(e => !e.Identity && dirtys.Contains(e.Name)).ToArray();
+                columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             }
 
             option.Columns = columns;
@@ -816,7 +819,7 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
-                columns = columns.Where(e => !e.Identity && (e.PrimaryKey || dirtys.Contains(e.Name))).ToArray();
+                columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
             }
 
             // 遇到自增字段，需要谨慎处理，部分insert部分update则无法执行upsert
@@ -952,7 +955,7 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(fact, [entity]);
-                columns = columns.Where(e => !e.Identity && (e.PrimaryKey || dirtys.Contains(e.Name))).ToArray();
+                columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
             }
             option.Columns = columns;
         }
@@ -1014,9 +1017,13 @@ public static class EntityExtension
                 // 脏数据
                 if (entity.Dirtys[fi.Name]) tmps.Add(fi.Name);
             }
-            columns.AddRange(tmps);
-            fields.RemoveAll(e => tmps.Contains(e.Name));
-            if (fields.Count == 0) break;
+
+            if (tmps.Count > 0)
+            {
+                columns.AddRange(tmps);
+                fields.RemoveAll(e => tmps.Contains(e.Name));
+                if (fields.Count == 0) break;
+            }
         }
 
         return columns;

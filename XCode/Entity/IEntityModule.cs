@@ -139,6 +139,11 @@ public class EntityModules : IEnumerable<IEntityModule>
 /// <summary>实体模块基类</summary>
 public abstract class EntityModule : IEntityModule
 {
+    #region 属性
+    /// <summary>自动清理超长字段。默认true</summary>
+    public Boolean AutoTrim { get; set; } = true;
+    #endregion
+
     #region IEntityModule 成员
     private readonly Dictionary<Type, Boolean> _Inited = new();
     /// <summary>为指定实体类初始化模块，返回是否支持</summary>
@@ -220,6 +225,7 @@ public abstract class EntityModule : IEntityModule
         // 没有这个字段，就不想了
         var fi = fields.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
         if (fi == null) return false;
+
         name = fi.Name;
         // 如果是默认值则覆盖，无视脏数据，此时很可能是新增
         if (fi.Type.IsInt())
@@ -229,6 +235,12 @@ public abstract class EntityModule : IEntityModule
         else if (fi.Type == typeof(String))
         {
             if (entity[name] is String str && !str.IsNullOrEmpty()) return false;
+
+            // 自动清理超长字段
+            if (AutoTrim && value is String str2)
+            {
+                if (fi.Length > 0 && str2.Length > fi.Length) value = str2.Substring(0, fi.Length);
+            }
         }
         else if (fi.Type == typeof(DateTime))
         {

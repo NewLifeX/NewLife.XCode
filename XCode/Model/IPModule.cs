@@ -56,7 +56,9 @@ public class IPModule : EntityModule
         if (!ip.IsNullOrEmpty())
         {
             // 如果不是IPv6，去掉后面端口
-            if (ip.Contains("://")) ip = ip.Substring("://", null);
+            var p = ip.IndexOf("://");
+            if (p >= 0) ip = ip.Substring(p + 3);
+            //if (ip.Contains("://")) ip = ip.Substring("://", null);
             //if (ip.Contains(":") && !ip.Contains("::")) ip = ip.Substring(null, ":");
 
             switch (method)
@@ -65,9 +67,9 @@ public class IPModule : EntityModule
                     var fs2 = GetIPFieldNames(entity.GetType());
                     if (fs2 != null)
                     {
-                        foreach (var item in fs2)
+                        foreach (var fi in fs2)
                         {
-                            SetItem(fs2, entity, item, ip);
+                            SetItem(fs2, entity, fi, ip);
                         }
                     }
                     break;

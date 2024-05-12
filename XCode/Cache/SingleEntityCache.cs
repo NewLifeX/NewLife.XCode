@@ -18,6 +18,7 @@ namespace XCode.Cache;
 /// <typeparam name="TKey">键值类型</typeparam>
 /// <typeparam name="TEntity">实体类型</typeparam>
 public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntityCache<TKey, TEntity>
+    where TKey : notnull
     where TEntity : Entity<TEntity>, new()
 {
     #region 属性
@@ -36,10 +37,10 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
 
     #region 主键
     /// <summary>获取缓存主键的方法，默认方法为获取实体主键值</summary>
-    public Func<TEntity, TKey> GetKeyMethod { get; set; }
+    public Func<TEntity, TKey> GetKeyMethod { get; set; } = null!;
 
     /// <summary>查找数据的方法</summary>
-    public Func<TKey, TEntity> FindKeyMethod { get; set; }
+    public Func<TKey, TEntity> FindKeyMethod { get; set; } = null!;
     #endregion
 
     #region 从键
@@ -47,14 +48,14 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     public Boolean SlaveKeyIgnoreCase { get; set; }
 
     /// <summary>根据从键查找数据的方法</summary>
-    public Func<String, TEntity> FindSlaveKeyMethod { get; set; }
+    public Func<String, TEntity>? FindSlaveKeyMethod { get; set; }
 
     /// <summary>获取缓存从键的方法，默认为空</summary>
-    public Func<TEntity, String> GetSlaveKeyMethod { get; set; }
+    public Func<TEntity, String>? GetSlaveKeyMethod { get; set; }
     #endregion
 
     #region 构造
-    /// <summary>实例化一个实体缓存</summary>
+    /// <summary>实例化一个单对象缓存</summary>
     public SingleEntityCache()
     {
         var exp = XCodeSetting.Current.SingleCacheExpire;
@@ -90,7 +91,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     #endregion
 
     #region 检查过期缓存
-    private TimerX _Timer;
+    private TimerX? _Timer;
     private void StartTimer()
     {
         if (_Timer == null)
@@ -167,25 +168,22 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
 
     #region 缓存对象
     /// <summary>缓存对象</summary>
-    class CacheItem
+    class CacheItem(TKey key, String? slaveKey)
     {
         /// <summary>键</summary>
-        public TKey Key { get; set; }
+        public TKey Key { get; set; } = key;
 
         /// <summary>从键</summary>
-        public String SlaveKey { get; set; }
+        public String? SlaveKey { get; set; } = slaveKey;
 
         /// <summary>实体</summary>
-        public TEntity Entity { get; set; }
+        public TEntity? Entity { get; set; }
 
         /// <summary>访问时间</summary>
         public DateTime VisitTime { get; set; }
 
         /// <summary>缓存过期时间</summary>
         public DateTime ExpireTime { get; set; }
-
-        ///// <summary>是否已经过期</summary>
-        //public Boolean Expired => ExpireTime <= TimerX.Now;
 
         public void SetEntity(TEntity entity, Int32 expire)
         {
@@ -207,7 +205,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     /// <summary>单对象缓存</summary>
     private readonly ConcurrentDictionary<TKey, CacheItem> Entities = new();
 
-    private ConcurrentDictionary<String, CacheItem> _SlaveEntities;
+    private ConcurrentDictionary<String, CacheItem>? _SlaveEntities;
     /// <summary>单对象缓存，从键查询使用</summary>
     private ConcurrentDictionary<String, CacheItem> SlaveEntities
     {
@@ -363,12 +361,8 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
 
         var skey = entity == null ? null : GetSlaveKeyMethod?.Invoke(entity);
 
-        var item = new CacheItem
-        {
-            Key = key,
-            SlaveKey = skey
-        };
-        item.SetEntity(entity, Expire);
+        var item = new CacheItem(key, skey);
+        item.SetEntity(entity!, Expire);
 
         //var es = Entities;
         //// 新增或更新

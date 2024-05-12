@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using NewLife.Log;
 using XCode.Cache;
@@ -33,23 +34,28 @@ public class SingleEntityCacheTests
     [Fact]
     public void TestKey()
     {
+        var list = User.FindAll(null, null, null, 0, 1);
+        var id = list.FirstOrDefault().ID;
+
+        XTrace.WriteLine("准备在User上测试单对象缓存，ID={0}    ", id);
+
         var cache = new SingleEntityCache<Int32, User> { Expire = 1 };
 
         // 首次访问
         XTrace.WriteLine("首次访问");
-        var user = cache[1];
+        var user = cache[id];
         Assert.Equal(0, cache.Success);
 
         // 再次访问
         XTrace.WriteLine("再次访问");
-        var user2 = cache[1];
+        var user2 = cache[id];
         Assert.Equal(1, cache.Success);
 
         Thread.Sleep(cache.Expire * 1000 + 10);
 
         // 三次访问
         XTrace.WriteLine("三次访问");
-        var user3 = cache[1];
+        var user3 = cache[id];
         Assert.Equal(2, cache.Success);
     }
 

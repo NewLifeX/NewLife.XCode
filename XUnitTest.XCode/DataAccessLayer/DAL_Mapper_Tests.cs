@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Security.Cryptography;
 using NewLife.Data;
 using NewLife.Security;
 using XCode;
@@ -26,6 +27,8 @@ public class DAL_Mapper_Tests
         var list = dal.Query<MyUser>("select * from user", null, 0, 100).ToList();
         Assert.True(list.Count > 0);
 
+        var uid = list.FirstOrDefault(e => e.Name == "admin")?.Id ?? 0;
+
         list = dal.Query<MyUser>("select * from user").ToList();
         Assert.NotNull(list);
 
@@ -34,14 +37,14 @@ public class DAL_Mapper_Tests
         Assert.Single(list);
 
         var user = list[0];
-        Assert.Equal(1, user.Id);
+        Assert.Equal(uid, user.Id);
         Assert.Equal("admin", user.Name);
 
         var id = dal.QuerySingle<Int32>("select id from user where name=@Name", new { Name = "admin" });
-        Assert.Equal(1, id);
+        Assert.Equal(uid, id);
 
         var id2 = dal.QuerySingle<Int32?>("select id from user where name=@Name", new { Name = "admin" });
-        Assert.Equal(1, id2);
+        Assert.Equal(uid, id2);
 
         var user2 = dal.QuerySingle<MyUser>("select * from user where name='xxx'");
         Assert.Null(user2);
@@ -59,12 +62,15 @@ public class DAL_Mapper_Tests
 
         var dal = User.Meta.Session.Dal;
 
-        var list = dal.Query<MyUser>("select * from user where name=@Name", new { Name = "admin" }, 0, 5).ToList();
+        var list = dal.Query<MyUser>("select * from user", null, 0, 100).ToList();
+        var uid = list.FirstOrDefault(e => e.Name == "admin")?.Id ?? 0;
+
+        list = dal.Query<MyUser>("select * from user where name=@Name", new { Name = "admin" }, 0, 5).ToList();
         Assert.NotNull(list);
         Assert.Single(list);
 
         var user = list[0];
-        Assert.Equal(1, user.Id);
+        Assert.Equal(uid, user.Id);
         Assert.Equal("admin", user.Name);
 
         Assert.Equal("[Membership] select * from user where name=@Name limit 5 [@Name=admin]", sql);
@@ -79,12 +85,15 @@ public class DAL_Mapper_Tests
 
         var dal = User.Meta.Session.Dal;
 
-        var list = dal.Query<MyUser>("select * from user where name=@Name", new { Name = "admin" }, new PageParameter { PageIndex = 1, PageSize = 20 }).ToList();
+        var list = dal.Query<MyUser>("select * from user", null, 0, 100).ToList();
+        var uid = list.FirstOrDefault(e => e.Name == "admin")?.Id ?? 0;
+
+        list = dal.Query<MyUser>("select * from user where name=@Name", new { Name = "admin" }, new PageParameter { PageIndex = 1, PageSize = 20 }).ToList();
         Assert.NotNull(list);
         Assert.Single(list);
 
         var user = list[0];
-        Assert.Equal(1, user.Id);
+        Assert.Equal(uid, user.Id);
         Assert.Equal("admin", user.Name);
 
         Assert.Equal("[Membership] select * from user where name=@Name limit 20 [@Name=admin]", sql);

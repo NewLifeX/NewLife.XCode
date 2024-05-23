@@ -483,8 +483,8 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         var now = TimerX.Now;
 
         // 查真实记录数，修正FastCount不够准确的情况
-        var fastCountMin = XCodeSetting.Current.FastCountMin;
-        if (count < fastCountMin && now >= _NextFullCount)
+        var floor = XCodeSetting.Current.FullCountFloor;
+        if (count < floor && now >= _NextFullCount)
         {
             // 根据数据量大小不同，使用不同的缓存时间
             var exp = count switch

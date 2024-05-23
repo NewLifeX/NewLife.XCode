@@ -167,9 +167,15 @@ internal class Oracle : RemoteDb
     /// <returns></returns>
     public override String FormatDateTime(DateTime dt)
     {
-        if (dt.Hour == 0 && dt.Minute == 0 && dt.Second == 0) return $"To_Date('{dt:yyyy-MM-dd}', 'YYYY-MM-DD')";
+        if (dt.Ticks % 10_000_000 == 0)
+        {
+            if (dt.Hour == 0 && dt.Minute == 0 && dt.Second == 0)
+                return $"To_Date('{dt:yyyy-MM-dd}', 'YYYY-MM-DD')";
+            else
+                return $"To_Date('{dt:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+        }
 
-        return $"To_Date('{dt:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+        return $"To_Date('{dt:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF')";
     }
 
     public override String FormatValue(IDataColumn field, Object? value)

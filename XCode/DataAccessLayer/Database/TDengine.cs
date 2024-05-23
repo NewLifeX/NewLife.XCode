@@ -109,7 +109,13 @@ class TDengine : RemoteDb
     /// </remarks>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public override String FormatDateTime(DateTime dateTime) => $"'{dateTime:yyyy-MM-dd HH:mm:ss.fff}'";
+    public override String FormatDateTime(DateTime dateTime)
+    {
+        if (dateTime.Ticks % 10_000_000 == 0)
+            return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'";
+        else
+            return $"'{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'";
+    }
 
     /// <summary>长文本长度</summary>
     public override Int32 LongTextLength => 4000;

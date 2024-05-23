@@ -396,7 +396,13 @@ internal class SqlServer : RemoteDb
     /// <summary>格式化时间为SQL字符串</summary>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public override String FormatDateTime(DateTime dateTime) => "{ts'" + dateTime.ToFullString() + "'}";
+    public override String FormatDateTime(DateTime dateTime)
+    {
+        if (dateTime.Ticks % 10_000_000 == 0)
+            return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss}'}}";
+        else
+            return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'}}";
+    }
 
     /// <summary>格式化名称，如果是关键字，则格式化后返回，否则原样返回</summary>
     /// <param name="name">名称</param>
@@ -465,7 +471,7 @@ internal class SqlServer : RemoteDb
         return base.FormatValue(field, value);
     }
 
-    private static readonly Char[] _likeKeys = new[] { '[', ']', '%', '_' };
+    private static readonly Char[] _likeKeys = ['[', ']', '%', '_'];
     /// <summary>格式化模糊搜索的字符串。处理转义字符</summary>
     /// <param name="column">字段</param>
     /// <param name="format">格式化字符串</param>

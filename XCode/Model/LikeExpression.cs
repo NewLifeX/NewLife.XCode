@@ -84,8 +84,8 @@ namespace XCode
 
                 // 数值留给字典
                 ps[name] = Value.ChangeType(type);
-
-                builder.AppendFormat(Format, columnName, db.FormatParameterName(name));
+                var line = db.FormatLike(Field.Field, Format);
+                builder.Append(line);
             }
             else
             {

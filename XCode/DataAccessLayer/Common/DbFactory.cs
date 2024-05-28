@@ -19,7 +19,7 @@ public static class DbFactory
         Register<DB2>(DatabaseType.DB2);
         Register<TDengine>(DatabaseType.TDengine);
         Register<Hana>(DatabaseType.Hana);
-        //Register<Access>(DatabaseType.Access);
+        Register<KingBase>(DatabaseType.KingBase);
         //Register<SqlCe>(DatabaseType.SqlCe);
         //Register<Network>(DatabaseType.Network);
     }

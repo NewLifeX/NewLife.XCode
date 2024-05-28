@@ -854,6 +854,12 @@ abstract class DbBase : DisposeBase, IDatabase
 
         return String.Format(format, FormatName(column), value);
     }
+    /// <summary>(参数化)格式化模糊搜索的字符串。处理转义字符</summary>
+    /// <param name="column">字段</param>
+    /// <param name="format">格式化字符串</param>
+    /// <returns></returns>
+    public virtual String FormatLike(IDataColumn column, String format) 
+        => String.Format(format, FormatName(column), FormatParameterName(column.ColumnName));
 
     /// <summary>格式化参数名</summary>
     /// <param name="name">名称</param>

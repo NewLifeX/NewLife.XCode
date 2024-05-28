@@ -66,7 +66,7 @@ class Access : FileDbBase
     /// <summary>格式化时间为SQL字符串</summary>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public override String FormatDateTime(DateTime dateTime) => "#" + dateTime.ToFullString() + "#";
+    public override String FormatDateTime(DateTime dateTime) => $"#{dateTime:yyyy-MM-dd HH:mm:ss.fff}#";
 
     /// <summary>格式化关键字</summary>
     /// <param name="keyWord">关键字</param>

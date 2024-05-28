@@ -73,9 +73,9 @@ public class XCodeSetting : Config<XCodeSetting>
     [Description("表名称、字段名大小写格式。Default 根据模型生成;Upper 全大写;Lower 全小写;Underline下划线")]
     public NameFormats NameFormat { get; set; } = NameFormats.Default;
 
-    /// <summary>快速统计最小数据量</summary>
-    [Description("快速统计最小数据量。默认1000万，在对数据表进行无条件 count 时，先进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。")]
-    public Int32 FastCountMin { get; set; } = 10_000_000;
+    /// <summary>全表查行数下限。在获取数据表行数时，先根据索引表进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。默认1000万</summary>
+    [Description("全表查行数下限。在获取数据表行数时，先根据索引表进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。调小该值可避免大表页面首次访问太慢，调大该值可获得精确行数。默认1000万")]
+    public Int32 FullCountFloor { get; set; } = 10_000_000;
 
     /// <summary>模型目录。从该目录加载连接名指定的模型文件，替代实体类模型，按需配置修改实体类所映射的表名字段名</summary>
     [Description("模型目录。从该目录加载连接名指定的模型文件，替代实体类模型，按需配置修改实体类所映射的表名字段名")]

@@ -640,7 +640,13 @@ abstract class DbBase : DisposeBase, IDatabase
     /// </remarks>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public virtual String FormatDateTime(DateTime dateTime) => "'" + dateTime.ToFullString() + "'";
+    public virtual String FormatDateTime(DateTime dateTime)
+    {
+        if (dateTime.Ticks % 10_000_000 == 0)
+            return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'";
+        else
+            return $"'{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'";
+    }
 
     /// <summary>格式化关键字</summary>
     /// <param name="keyWord">表名</param>

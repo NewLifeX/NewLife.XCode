@@ -149,8 +149,8 @@ public class TimeShardPolicy : IShardPolicy
 
         var exps = new List<FieldExpression>();
         if (expression is WhereExpression where)
-            exps = where.Where(e => e is FieldExpression fe && fe.Field == fi).Cast<FieldExpression>().ToList();
-        else if (expression is FieldExpression fieldExpression && fieldExpression.Field == fi)
+            exps = where.Where(e => e is FieldExpression fe && fe.Field.Name == fi.Name).Cast<FieldExpression>().ToList();
+        else if (expression is FieldExpression fieldExpression && fieldExpression.Field.Name == fi.Name)
             exps.Add(fieldExpression);
         //if (exps.Count == 0) throw new XCodeException($"分表策略要求查询条件包括[{fi}]字段！");
         if (exps.Count == 0) return [];

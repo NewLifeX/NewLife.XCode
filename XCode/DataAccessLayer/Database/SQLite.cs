@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using NewLife;
@@ -27,12 +28,23 @@ internal class SQLite : FileDbBase
             return GetProviderFactory(null, "Mono.Data.Sqlite.dll", "System.Data.SqliteFactory");
 
         var type =
-            PluginHelper.LoadPlugin("Microsoft.Data.Sqlite.SqliteFactory", null, "Microsoft.Data.Sqlite.dll", null) ??
-            PluginHelper.LoadPlugin("System.Data.SQLite.SQLiteFactory", null, "System.Data.SQLite.dll", null);
+            PluginHelper.LoadPlugin("System.Data.SQLite.SQLiteFactory", null, "System.Data.SQLite.dll", null) ??
+            PluginHelper.LoadPlugin("Microsoft.Data.Sqlite.SqliteFactory", null, "Microsoft.Data.Sqlite.dll", null);
 
-        return GetProviderFactory(type) ??
-            GetProviderFactory(null, "Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true) ??
-            GetProviderFactory(null, "System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false);
+#if NETCOREAPP ||NETSTANDARD
+        if (RuntimeInformation.ProcessArchitecture is not Architecture.X86 and not Architecture.X64)
+        {
+            return GetProviderFactory(type) ??
+                GetProviderFactory(null, "Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true) ??
+                GetProviderFactory(null, "System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false);
+        }
+        else
+#endif
+        {
+            return GetProviderFactory(type) ??
+                GetProviderFactory(null, "System.Data.SQLite.dll", "System.Data.SQLite.SQLiteFactory", false, false) ??
+                GetProviderFactory(null, "Microsoft.Data.Sqlite.dll", "Microsoft.Data.Sqlite.SqliteFactory", true, true);
+        }
     }
 
     /// <summary>是否内存数据库</summary>

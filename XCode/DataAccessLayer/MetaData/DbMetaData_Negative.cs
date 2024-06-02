@@ -569,7 +569,7 @@ internal partial class DbMetaData
                             if (sbName.Length > 0) sbName.Append(", ");
                             if (sbValue.Length > 0) sbValue.Append(", ");
                             sbName.Append(fname);
-                            sbValue.Append(db.FormatDateTime(DateTime.MinValue));
+                            sbValue.Append(db.FormatDateTime(item, DateTime.MinValue));
                         }
                         else if (type == typeof(Boolean))
                         {
@@ -598,7 +598,7 @@ internal partial class DbMetaData
                            type == typeof(Single) || type == typeof(Double) || type == typeof(Decimal) || type != null && type.IsEnum)
                             sbValue.Append($"ifnull({fname}, 0)");
                         else if (type == typeof(DateTime))
-                            sbValue.Append($"ifnull({fname}, {db.FormatDateTime(DateTime.MinValue)})");
+                            sbValue.Append($"ifnull({fname}, {db.FormatDateTime(field, DateTime.MinValue)})");
                         else if (type == typeof(Boolean))
                             sbValue.Append($"ifnull({fname}, {db.FormatValue(item, false)})");
                         else

@@ -148,11 +148,6 @@ public interface IDatabase : IDisposable2
     /// <summary>长文本长度</summary>
     Int32 LongTextLength { get; }
 
-    /// <summary>格式化时间为SQL字符串</summary>
-    /// <param name="dateTime">时间值</param>
-    /// <returns></returns>
-    String FormatDateTime(DateTime dateTime);
-
     /// <summary>格式化名称，如果不是关键字，则原样返回</summary>
     /// <param name="name">名称</param>
     /// <returns></returns>
@@ -175,12 +170,24 @@ public interface IDatabase : IDisposable2
     /// <returns></returns>
     String FormatValue(IDataColumn column, Object? value);
 
+    /// <summary>格式化时间为SQL字符串</summary>
+    /// <param name="dateTime">时间值</param>
+    /// <returns></returns>
+    String FormatDateTime(DateTime dateTime);
+
+    /// <summary>格式化时间为SQL字符串</summary>
+    /// <param name="column">字段</param>
+    /// <param name="dateTime">时间值</param>
+    /// <returns></returns>
+    String FormatDateTime(IDataColumn column, DateTime dateTime);
+
     /// <summary>格式化模糊搜索的字符串。处理转义字符</summary>
     /// <param name="column">字段</param>
     /// <param name="format">格式化字符串</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
     String FormatLike(IDataColumn column, String format, String value);
+
     /// <summary>(参数化)格式化模糊搜索的字符串。处理转义字符</summary>
     /// <param name="column">字段</param>
     /// <param name="format">格式化字符串</param>

@@ -163,19 +163,20 @@ internal class Oracle : RemoteDb
     #region 数据库特性
 
     /// <summary>已重载。格式化时间</summary>
-    /// <param name="dt"></param>
+    /// <param name="column">字段</param>
+    /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public override String FormatDateTime(DateTime dt)
+    public override String FormatDateTime(IDataColumn column, DateTime dateTime)
     {
-        if (dt.Ticks % 10_000_000 == 0)
+        if (dateTime.Ticks % 10_000_000 == 0)
         {
-            if (dt.Hour == 0 && dt.Minute == 0 && dt.Second == 0)
-                return $"To_Date('{dt:yyyy-MM-dd}', 'YYYY-MM-DD')";
+            if (dateTime.Hour == 0 && dateTime.Minute == 0 && dateTime.Second == 0)
+                return $"To_Date('{dateTime:yyyy-MM-dd}', 'YYYY-MM-DD')";
             else
-                return $"To_Date('{dt:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
+                return $"To_Date('{dateTime:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
         }
 
-        return $"To_Date('{dt:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF')";
+        return $"To_Date('{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}', 'YYYY-MM-DD HH24:MI:SS.FF')";
     }
 
     public override String FormatValue(IDataColumn field, Object? value)

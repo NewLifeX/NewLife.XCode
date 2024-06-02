@@ -107,9 +107,10 @@ class TDengine : RemoteDb
     /// 优化DateTime转为全字符串，平均耗时从25.76ns降为15.07。
     /// 调用非常频繁，每分钟都有数百万次调用。
     /// </remarks>
+    /// <param name="column">字段</param>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public override String FormatDateTime(DateTime dateTime)
+    public override String FormatDateTime(IDataColumn column, DateTime dateTime)
     {
         if (dateTime.Ticks % 10_000_000 == 0)
             return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'";

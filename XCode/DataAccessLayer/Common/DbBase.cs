@@ -640,7 +640,17 @@ abstract class DbBase : DisposeBase, IDatabase
     /// </remarks>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public virtual String FormatDateTime(DateTime dateTime)
+    public virtual String FormatDateTime(DateTime dateTime) => FormatDateTime(null!, dateTime);
+
+    /// <summary>格式化时间为SQL字符串</summary>
+    /// <remarks>
+    /// 优化DateTime转为全字符串，平均耗时从25.76ns降为15.07。
+    /// 调用非常频繁，每分钟都有数百万次调用。
+    /// </remarks>
+    /// <param name="column">字段</param>
+    /// <param name="dateTime">时间值</param>
+    /// <returns></returns>
+    public virtual String FormatDateTime(IDataColumn column, DateTime dateTime)
     {
         if (dateTime.Ticks % 10_000_000 == 0)
             return $"'{dateTime:yyyy-MM-dd HH:mm:ss}'";
@@ -810,7 +820,7 @@ abstract class DbBase : DisposeBase, IDatabase
 
             if (isNullable && (dt <= DateTime.MinValue || dt >= DateTime.MaxValue)) return "null";
 
-            return FormatDateTime(dt);
+            return FormatDateTime(column!, dt);
         }
         else if (type == typeof(Boolean))
         {
@@ -864,7 +874,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <param name="column">字段</param>
     /// <param name="format">格式化字符串</param>
     /// <returns></returns>
-    public virtual String FormatLike(IDataColumn column, String format) 
+    public virtual String FormatLike(IDataColumn column, String format)
         => String.Format(format, FormatName(column), FormatParameterName(column.ColumnName));
 
     /// <summary>格式化参数名</summary>

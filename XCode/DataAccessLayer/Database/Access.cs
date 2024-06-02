@@ -64,9 +64,10 @@ class Access : FileDbBase
     }
 
     /// <summary>格式化时间为SQL字符串</summary>
+    /// <param name="column">字段</param>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public override String FormatDateTime(DateTime dateTime) => $"#{dateTime:yyyy-MM-dd HH:mm:ss.fff}#";
+    public override String FormatDateTime(IDataColumn column, DateTime dateTime) => $"#{dateTime:yyyy-MM-dd HH:mm:ss.fff}#";
 
     /// <summary>格式化关键字</summary>
     /// <param name="keyWord">关键字</param>

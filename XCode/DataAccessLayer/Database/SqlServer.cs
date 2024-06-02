@@ -394,14 +394,22 @@ internal class SqlServer : RemoteDb
     public override Int32 LongTextLength => 4000;
 
     /// <summary>格式化时间为SQL字符串</summary>
+    /// <param name="column">字段</param>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public override String FormatDateTime(DateTime dateTime)
+    public override String FormatDateTime(IDataColumn column, DateTime dateTime)
     {
         if (dateTime.Ticks % 10_000_000 == 0)
-            return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss}'}}";
-        else
+        {
+            if (dateTime.Hour == 0 && dateTime.Minute == 0 && dateTime.Second == 0)
+                return $"{{ts'{dateTime:yyyy-MM-dd}'}}";
+            else
+                return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss}'}}";
+        }
+        else if (column != null && !column.RawType.EqualIgnoreCase("datetime2"))
             return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'}}";
+        else
+            return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss.fff}'}}";
     }
 
     /// <summary>格式化名称，如果是关键字，则格式化后返回，否则原样返回</summary>
@@ -465,7 +473,7 @@ internal class SqlServer : RemoteDb
 
             if (isNullable && (dt <= DateTime.MinValue || dt >= DateTime.MaxValue)) return "null";
 
-            return FormatDateTime(dt);
+            return FormatDateTime(field!, dt);
         }
 
         return base.FormatValue(field, value);

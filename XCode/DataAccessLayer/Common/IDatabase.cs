@@ -235,6 +235,13 @@ public interface IDatabase : IDisposable2
     /// <returns></returns>
     IDataParameter[] CreateParameters(Object? model);
 
+    /// <summary>生成批量删除SQL。部分数据库支持分批删除</summary>
+    /// <param name="tableName"></param>
+    /// <param name="where"></param>
+    /// <param name="batchSize"></param>
+    /// <returns>不支持分批删除时返回null</returns>
+    String? BuildDeleteSql(String tableName, String where, Int32 batchSize);
+
     /// <summary>本连接数据只读</summary>
     Boolean Readonly { get; set; }
 

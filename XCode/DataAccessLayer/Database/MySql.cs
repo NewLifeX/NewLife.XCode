@@ -164,7 +164,7 @@ internal class MySql : RemoteDb
     /// <param name="value">值</param>
     /// <param name="type">类型</param>
     /// <returns></returns>
-    public override IDataParameter CreateParameter(String name, Object value, Type? type = null)
+    public override IDataParameter CreateParameter(String name, Object? value, Type? type = null)
     {
         var dp = base.CreateParameter(name, value, type);
 
@@ -199,6 +199,21 @@ internal class MySql : RemoteDb
     /// <returns></returns>
     public override String StringConcat(String left, String right) => $"concat({(!String.IsNullOrEmpty(left) ? left : "\'\'")},{(!String.IsNullOrEmpty(right) ? right : "\'\'")})";
 
+    /// <summary>生成批量删除SQL。部分数据库支持分批删除</summary>
+    /// <param name="tableName"></param>
+    /// <param name="where"></param>
+    /// <param name="batchSize"></param>
+    /// <returns>不支持分批删除时返回null</returns>
+    public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
+    {
+        var sql = base.BuildDeleteSql(tableName, where, 0);
+
+        if (batchSize <= 0) return sql;
+
+        sql = $"{sql} limit {batchSize}";
+
+        return sql;
+    }
     #endregion 数据库特性
 
     #region 跨版本兼容

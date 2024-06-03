@@ -413,34 +413,39 @@ public class EntityPersistence : IEntityPersistence
     /// <returns></returns>
     public virtual Int32 Delete(IEntitySession session, String whereClause)
     {
-        var sql = $"Delete From {session.FormatedTableName}";
-        if (!whereClause.IsNullOrEmpty()) sql += " Where " + whereClause;
-        //return session.Execute(sql);
+        var batchSize = session.Dal.Db.BatchSize;
+        if (batchSize <= 0) batchSize = XCodeSetting.Current.BatchSize;
+        if (batchSize <= 0) batchSize = 10_000;
+        var interval = XCodeSetting.Current.BatchInterval;
 
-        // MySql 支持分批删除
-        if (session.Dal.DbType == DatabaseType.MySql)
+        // 部分数据库支持分批删除
+        var rs = 0;
+        while (true)
         {
-            var batchSize = session.Dal.Db.BatchSize;
-            if (batchSize <= 0) batchSize = XCodeSetting.Current.BatchSize;
-            if (batchSize <= 0) batchSize = 10_000;
-
-            var rs = 0;
-            while (true)
+            // 生成分批删除SQL，如果失败则退出，回归默认整体删除逻辑
+            var sql = session.Dal.Db.BuildDeleteSql(session.FormatedTableName, whereClause, batchSize);
+            if (sql.IsNullOrEmpty())
             {
-                var rows = session.Dal.Execute($"{sql} limit {batchSize}", 5 * 60);
-                rs += rows;
-
-                if (rows < batchSize) break;
-
-                // 延迟一点，避免太快影响数据库性能
-                Thread.Sleep(100);
+                rs = -1;
+                break;
             }
 
-            return rs;
+            var rows = session.Dal.Execute(sql, 5 * 60);
+            rs += rows;
+
+            if (rows < batchSize) break;
+
+            // 延迟一点，避免太快影响数据库性能
+            if (interval > 0) Thread.Sleep(interval);
         }
 
-        // 加大超时时间
-        return session.Dal.Execute(sql, 5 * 60);
+        if (rs >= 0) return rs;
+
+        {
+            // 加大超时时间
+            var sql = session.Dal.Db.BuildDeleteSql(session.FormatedTableName, whereClause, 0);
+            return session.Dal.Execute(sql!, 5 * 60);
+        }
     }
 
     /// <summary>从数据库中删除指定属性列表和值列表所限定的实体对象。</summary>

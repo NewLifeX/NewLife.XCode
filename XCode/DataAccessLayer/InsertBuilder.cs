@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Text;
 using NewLife;
@@ -9,9 +7,7 @@ using NewLife.Data;
 
 namespace XCode.DataAccessLayer;
 
-/// <summary>
-/// 插入Sql语句生成器
-/// </summary>
+/// <summary>插入Sql语句生成器</summary>
 public class InsertBuilder
 {
     #region 属性

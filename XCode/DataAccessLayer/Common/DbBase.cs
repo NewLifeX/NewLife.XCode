@@ -995,7 +995,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>创建参数数组</summary>
     /// <param name="ps"></param>
     /// <returns></returns>
-    public virtual IDataParameter[] CreateParameters(IDictionary<String, Object>? ps) => ps?.Select(e => CreateParameter(e.Key, e.Value)).ToArray() ?? new IDataParameter[0];
+    public virtual IDataParameter[] CreateParameters(IDictionary<String, Object>? ps) => ps?.Select(e => CreateParameter(e.Key, e.Value)).ToArray() ?? [];
 
     /// <summary>根据对象成员创建参数数组</summary>
     /// <param name="model"></param>
@@ -1014,6 +1014,21 @@ abstract class DbBase : DisposeBase, IDatabase
         }
 
         return list.ToArray();
+    }
+
+    /// <summary>生成批量删除SQL。部分数据库支持分批删除</summary>
+    /// <param name="tableName"></param>
+    /// <param name="where"></param>
+    /// <param name="batchSize"></param>
+    /// <returns>不支持分批删除时返回null</returns>
+    public virtual String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
+    {
+        if (batchSize > 0) return null;
+
+        var sql = $"Delete From {FormatName(tableName)}";
+        if (!where.IsNullOrEmpty()) sql += " Where " + where;
+
+        return sql;
     }
 
     /// <summary>是否支持Schema。默认true</summary>

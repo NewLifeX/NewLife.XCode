@@ -57,6 +57,10 @@ public class XCodeSetting : Config<XCodeSetting>
     [Description("批大小。用于批量操作数据，抽取、删除、备份、恢复，默认5000")]
     public Int32 BatchSize { get; set; } = 5_000;
 
+    /// <summary>批操作间隙。用于批量删除数据时的暂停间隙，单位毫秒，默认100</summary>
+    [Description("批操作间隙。用于批量删除数据时的暂停间隙，单位毫秒，默认100")]
+    public Int32 BatchInterval { get; set; } = 100;
+
     /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
     [Description("命令超时。查询执行超时时间，默认0秒不限制")]
     public Int32 CommandTimeout { get; set; }

@@ -375,6 +375,7 @@ public partial class DAL
 
         return ExecuteWrap(sql, "", dps.ToArray(), (ss, s, t, p) => ss.Execute(s, CommandType.Text, p), nameof(Update));
     }
+
     /// <summary>更细数据。无实体</summary>
     /// <param name="data">实体对象</param>
     /// <param name="table">表定义</param>
@@ -484,6 +485,13 @@ public partial class DAL
     {
         if (tableName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(tableName));
 
+        var (sql, dps) = GetDeleteSql(tableName, where);
+
+        return ExecuteWrap(sql, "", dps.ToArray(), (ss, s, t, p) => ss.Execute(s, CommandType.Text, p), nameof(Delete));
+    }
+
+    private (String, IList<IDataParameter>) GetDeleteSql(String tableName, Object where)
+    {
         var sb = Pool.StringBuilder.Get();
         sb.Append("Delete From ");
         sb.Append(tableName);
@@ -503,9 +511,8 @@ public partial class DAL
                 sb.AppendFormat("{0}={1}", pi.Name, p.ParameterName);
             }
         }
-        var sql = sb.Put(true);
 
-        return ExecuteWrap(sql, "", dps.ToArray(), (ss, s, t, p) => ss.Execute(s, CommandType.Text, p), nameof(Delete));
+        return (sb.Put(true), dps);
     }
 
     /// <summary>插入数据</summary>
@@ -596,26 +603,7 @@ public partial class DAL
     {
         if (tableName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(tableName));
 
-        var sb = Pool.StringBuilder.Get();
-        sb.Append("Delete From ");
-        sb.Append(tableName);
-
-        // 带上参数化的Where条件
-        var dps = new List<IDataParameter>();
-        if (where != null)
-        {
-            sb.Append(" Where ");
-            var i = 0;
-            foreach (var pi in where.GetType().GetProperties(true))
-            {
-                if (i++ > 0) sb.Append("And ");
-
-                var p = Db.CreateParameter(pi.Name, pi.GetValue(where, null), pi.PropertyType);
-                dps.Add(p);
-                sb.AppendFormat("{0}={1}", pi.Name, p.ParameterName);
-            }
-        }
-        var sql = sb.Put(true);
+        var (sql, dps) = GetDeleteSql(tableName, where);
 
         return ExecuteAsyncWrap(sql, "", dps.ToArray(), (ss, s, t, p) => ss.ExecuteAsync(s, CommandType.Text, p), nameof(DeleteAsync));
     }

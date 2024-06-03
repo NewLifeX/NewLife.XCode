@@ -503,6 +503,21 @@ internal class SqlServer : RemoteDb
                  .Replace("_", "[_]");
         return base.FormatLike(column, format, value);
     }
+
+    /// <summary>生成批量删除SQL。部分数据库支持分批删除</summary>
+    /// <param name="tableName"></param>
+    /// <param name="where"></param>
+    /// <param name="batchSize"></param>
+    /// <returns>不支持分批删除时返回null</returns>
+    public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
+    {
+        if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, 0);
+
+        var sql = $"Delete Top {batchSize} From {FormatName(tableName)}";
+        if (!where.IsNullOrEmpty()) sql += " Where " + where;
+
+        return sql;
+    }
     #endregion
 }
 

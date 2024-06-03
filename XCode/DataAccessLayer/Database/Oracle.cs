@@ -216,7 +216,7 @@ internal class Oracle : RemoteDb
     /// <param name="value">值</param>
     /// <param name="type">类型</param>
     /// <returns></returns>
-    public override IDataParameter CreateParameter(String name, Object value, Type type = null)
+    public override IDataParameter CreateParameter(String name, Object? value, Type? type = null)
     {
         //var type = field?.DataType;
         if (type == null)
@@ -252,6 +252,21 @@ internal class Oracle : RemoteDb
         return dp;
     }
 
+    /// <summary>生成批量删除SQL。部分数据库支持分批删除</summary>
+    /// <param name="tableName"></param>
+    /// <param name="where"></param>
+    /// <param name="batchSize"></param>
+    /// <returns>不支持分批删除时返回null</returns>
+    public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
+    {
+        if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, 0);
+
+        var sql = $"Select RowId From {FormatName(tableName)} Where ";
+        if (!where.IsNullOrEmpty()) sql += "(" + where + ") And ";
+        sql += $"RowNum<={batchSize}";
+
+        return $"Delete From {FormatName(tableName)} Where RowId In({sql})";
+    }
     #endregion 数据库特性
 
     #region 关键字

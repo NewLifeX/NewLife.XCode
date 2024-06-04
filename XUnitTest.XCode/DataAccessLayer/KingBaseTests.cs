@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -257,22 +258,22 @@ public class KingBaseTests
 
         DAL.AddConnStr("Membership", connStr, null, "KingBase");
         var dal = DAL.Create("Membership");
-        var a = dal.Query<Role>("select * from Role order by id");
+        var a = dal.Query<Role>("select * from \"Role\" order by \"ID\"");
 
-        var p1 = new PageParameter() { PageSize = 20, PageIndex = 1, Sort = "Id", RetrieveTotalCount = true, Desc = false };
-        a = dal.Query<Role>("select * from Role ", null, p1);
+        var p1 = new PageParameter() { PageSize = 20, PageIndex = 1, Sort = "\"ID\"", RetrieveTotalCount = true, Desc = false };
+        a = dal.Query<Role>("select * from \"Role\" ", null, p1);
 
-        var p2 = new PageParameter() { PageSize = 20, PageIndex = 1, Sort = "Id", RetrieveTotalCount = true, Desc = false };
-        a = dal.Query<Role>("select * from Role", null, p2);
+        var p2 = new PageParameter() { PageSize = 20, PageIndex = 1, Sort = "\"ID\"", RetrieveTotalCount = true, Desc = false };
+        a = dal.Query<Role>("select * from \"Role\"", null, p2);
 
 
-        dal.Query<Role>("select * from Role order by id");
+        dal.Query<Role>("select * from \"Role\" order by \"ID\"");
 
-        var p11 = new PageParameter() { PageSize = 20, PageIndex = 2, Sort = "Id", RetrieveTotalCount = true, Desc = false };
-        a = dal.Query<Role>("select * from Role ", null, p11);
+        var p11 = new PageParameter() { PageSize = 20, PageIndex = 2, Sort = "\"ID\"", RetrieveTotalCount = true, Desc = false };
+        a = dal.Query<Role>("select * from \"Role\" ", null, p11);
 
-        var p21 = new PageParameter() { PageSize = 20, PageIndex = 2, Sort = "Id", RetrieveTotalCount = true, Desc = false };
-        a = dal.Query<Role>("select * from Role", null, p21);
+        var p21 = new PageParameter() { PageSize = 20, PageIndex = 2, Sort = "\"ID\"", RetrieveTotalCount = true, Desc = false };
+        a = dal.Query<Role>("select * from \"Role\"", null, p21);
         // 清理现场
         //try
         //{
@@ -290,7 +291,7 @@ public class KingBaseTests
 
         var str = """
             <EntityModel>
-             <Table Name="ActEvtLog" TableName="ACT_EVT_LOG" DbType="KingBase">
+             <Table Name="ActEvtLog" TableName="ACT_EVT_LOG" DbType="HighGo">
                 <Columns>
                   <Column Name="LogNr" ColumnName="LOG_NR_" DataType="Int32" RawType="numeric(19, 0)" Identity="True" PrimaryKey="True" />
                   <Column Name="Type" ColumnName="TYPE_" DataType="String" Length="64" />
@@ -300,7 +301,7 @@ public class KingBaseTests
                   <Column Name="TaskId" ColumnName="TASK_ID_" DataType="String" Length="64" />
                   <Column Name="TimeStamp" ColumnName="TIME_STAMP_" DataType="DateTime" Scale="3" Nullable="False" />
                   <Column Name="UserId" ColumnName="USER_ID_" DataType="String" Length="255" />
-                  <Column Name="Data" ColumnName="DATA_" DataType="Byte[]" RawType="varbinary(-1)" Length="-1" />
+                  <Column Name="Data" ColumnName="DATA_" DataType="Byte[]" />
                   <Column Name="LockOwner" ColumnName="LOCK_OWNER_" DataType="String" Length="255" />
                   <Column Name="LockTime" ColumnName="LOCK_TIME_" DataType="DateTime" Scale="3" />
                   <Column Name="IsProcessed" ColumnName="IS_PROCESSED_" DataType="Byte" Nullable="True" />
@@ -312,27 +313,37 @@ public class KingBaseTests
         Assert.NotNull(table);
         Assert.Equal("ActEvtLog", table.Name);
         Assert.Equal("ACT_EVT_LOG", table.TableName);
-        Assert.Equal(DatabaseType.KingBase, table.DbType);
+        Assert.Equal(DatabaseType.HighGo, table.DbType);
 
-        var db = DbFactory.Create(DatabaseType.KingBase);
+        var db = DbFactory.Create(DatabaseType.HighGo);
         var meta = db.CreateMetaData();
         var sql = meta.GetSchemaSQL(DDLSchema.CreateTable, table);
 
-        var targetSql = @$"Create Table If Not Exists ""ACT_EVT_LOG""(
-	""LOG_NR_"" SERIAL NOT NULL,
-	""TYPE_"" VARCHAR(64),
-	""PROC_DEF_ID_"" VARCHAR(64),
-	""PROC_INST_ID_"" VARCHAR(64),
-	""EXECUTION_ID_"" VARCHAR(64),
-	""TASK_ID_"" VARCHAR(64),
-	""TIME_STAMP_"" DATETIME NOT NULL DEFAULT '0001-01-01',
-	""USER_ID_"" VARCHAR(255),
-	""DATA_"" varbinary(-1),
-	""LOCK_OWNER_"" VARCHAR(255),
-	""LOCK_TIME_"" DATETIME,
-	""IS_PROCESSED_"" TINYINT,
-	Primary Key (""LOG_NR_"")
-);";
+        var targetSql = @$"Create Table ""ACT_EVT_LOG""(
+	""LOG_NR_"" serial Primary Key,
+	""TYPE_"" varchar(64) NULL,
+	""PROC_DEF_ID_"" varchar(64) NULL,
+	""PROC_INST_ID_"" varchar(64) NULL,
+	""EXECUTION_ID_"" varchar(64) NULL,
+	""TASK_ID_"" varchar(64) NULL,
+	""TIME_STAMP_"" timestamp NOT NULL DEFAULT '0001-01-01',
+	""USER_ID_"" varchar(255) NULL,
+	""DATA_"" bytea NULL,
+	""LOCK_OWNER_"" varchar(255) NULL,
+	""LOCK_TIME_"" timestamp NULL,
+	""IS_PROCESSED_"" bit null
+)";
         Assert.Equal(targetSql, sql);
+    }
+
+    [Fact(Skip = "跳过")]
+    public void BuildDeleteSql()
+    {
+        DAL.AddConnStr("KingBase", _ConnStr, null, "KingBase");
+        var dal = DAL.Create("KingBase");
+        Role.Meta.ConnName = "KingBase";
+        Role.Meta.Session.InitData();
+        var count = Role.Delete(Role._.Name == "管理员");
+        Assert.Equal(count, 1);
     }
 }

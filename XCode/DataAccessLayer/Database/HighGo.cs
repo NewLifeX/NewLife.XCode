@@ -40,6 +40,17 @@ namespace XCode.DataAccessLayer
             format = format.Replace("'%{", "'%' || {").Replace("}%'", "} || '%'").Replace("'{", "{").Replace("}'", "}");
             return base.FormatLike(column, format);
         }
+        public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
+        {
+            if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, 0);
+            var sb = Pool.StringBuilder.Get();
+            var xWhere = string.Empty;
+            var xTable = this.FormatName(tableName);
+            if (!string.IsNullOrWhiteSpace(where)) xWhere = " Where " + where;
+            var sql = $"WITH to_delete AS (SELECT \"ctid\" FROM {xTable} {xWhere} LIMIT {batchSize}) ";
+            sql += $"DELETE FROM {xTable} where \"ctid\" in (SELECT \"ctid\" from to_delete)";
+            return sql;
+        }
         #endregion
 
         protected override void OnSetConnectionString(ConnectionStringBuilder builder) => base.OnSetConnectionString(builder);

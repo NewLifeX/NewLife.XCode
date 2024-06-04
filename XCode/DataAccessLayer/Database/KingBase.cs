@@ -24,14 +24,33 @@ internal class KingBase : RemoteDb
     #endregion
 
     #region 数据库特性
+    protected override String ReservedWordsStr =>
+     "ABORT,ABSOLUTE,ACCESS,ACTION,ADD,AFTER,ALL,ALLOCATE,ALTER,AND,ANY,ARE,ARRAY,AS,ASC,ASSERTION,AT,AUTHORIZATION,AVG,BEFORE,BEGIN,BETWEEN,BIT,BIT_LENGTH,BOTH,BY,CASCADE,CASCADED,CASE,CAST,CATALOG,CHAR,CHAR_LENGTH,CHARACTER,CHARACTER_LENGTH,CHECK,CLOSE,COALESCE,COLLATE,COLLATION,COLUMN,COMMIT,CONNECT,CONNECTION,CONSTRAINT,CONSTRAINTS,CONTINUE,CONVERT,CORRESPONDING,COUNT,CREATE,CROSS,CURRENT,CURRENT_DATE,CURRENT_TIME,CURRENT_TIMESTAMP,CURRENT_USER,CURSOR,DATE,DAY,DEALLOCATE,DEC,DECIMAL,DECLARE,DEFAULT,DEFERRABLE,DEFERRED,DELETE,DESC,DESCRIBE,DESCRIPTOR,DIAGNOSTICS,DISCONNECT,DISTINCT,DOMAIN,DOUBLE,DROP,ELSE,END,END-EXEC,ESCAPE,EXCEPT,EXCEPTION,EXEC,EXECUTE,EXISTS,EXTERNAL,EXTRACT,FALSE,FETCH,FIRST,FLOAT,FOR,FOREIGN,FOUND,FROM,FULL,GET,GLOBAL,GO,GOTO,GRANT,GROUP,HAVING,HOUR,IDENTITY,IMMEDIATE,IN,INDICATOR,INITIALLY,INNER,INPUT,INSENSITIVE,INSERT,INT,INTEGER,INTERSECT,INTERVAL,INTO,IS,ISOLATION,JOIN,KEY,LANGUAGE,LAST,LEADING,LEFT,LEVEL,LIKE,LOCAL,LOWER,MATCH,MAX,MIN,MINUTE,MODULE,MONTH,NAMES,NATIONAL,NATURAL,NCHAR,NEXT,NO,NOT,NULL,NULLIF,NUMERIC,OCTET_LENGTH,OF,ON,ONLY,OPEN,OPTION,OR,ORDER,OUTER,OUTPUT,OVERLAPS,PAD,PARTIAL,POSITION,PRECISION,PREPARE,PRESERVE,PRIMARY,PRIOR,PRIVILEGES,PROCEDURE,PUBLIC,READ,REAL,REFERENCES,RELATIVE,RESTRICT,REVOKE,RIGHT,ROLLBACK,ROWS,SCHEMA,SCROLL,SECOND,SECTION,SELECT,SESSION,SESSION_USER,SET,SIZE,SMALLINT,SOME,SPACE,SQL,SQLCODE,SQLERROR,SQLSTATE,SUBSTRING,SUM,SYSTEM_USER,TABLE,TEMPORARY,THEN,TIME,TIMESTAMP,TIMEZONE_HOUR,TIMEZONE_MINUTE,TO,TRAILING,TRANSACTION,TRANSLATE,TRANSLATION,TRIM,TRUE,UNION,UNIQUE,UNKNOWN,UPDATE,UPPER,USAGE,USER,USING,VALUE,VALUES,VARYING,VIEW,WHEN,WHENEVER,WHERE,WITH,WORK,WRITE,YEAR,ZONE";
+    
     public override String FormatName(String name)
     {
         if (name.IsNullOrWhiteSpace()) { return name; }
         if (name[0] == '"' && name[name.Length - 1] == '"') { return name; }
         return $"\"{name}\"";
     }
-    protected override String ReservedWordsStr =>
-        "ABORT,ABSOLUTE,ACCESS,ACTION,ADD,AFTER,ALL,ALLOCATE,ALTER,AND,ANY,ARE,ARRAY,AS,ASC,ASSERTION,AT,AUTHORIZATION,AVG,BEFORE,BEGIN,BETWEEN,BIT,BIT_LENGTH,BOTH,BY,CASCADE,CASCADED,CASE,CAST,CATALOG,CHAR,CHAR_LENGTH,CHARACTER,CHARACTER_LENGTH,CHECK,CLOSE,COALESCE,COLLATE,COLLATION,COLUMN,COMMIT,CONNECT,CONNECTION,CONSTRAINT,CONSTRAINTS,CONTINUE,CONVERT,CORRESPONDING,COUNT,CREATE,CROSS,CURRENT,CURRENT_DATE,CURRENT_TIME,CURRENT_TIMESTAMP,CURRENT_USER,CURSOR,DATE,DAY,DEALLOCATE,DEC,DECIMAL,DECLARE,DEFAULT,DEFERRABLE,DEFERRED,DELETE,DESC,DESCRIBE,DESCRIPTOR,DIAGNOSTICS,DISCONNECT,DISTINCT,DOMAIN,DOUBLE,DROP,ELSE,END,END-EXEC,ESCAPE,EXCEPT,EXCEPTION,EXEC,EXECUTE,EXISTS,EXTERNAL,EXTRACT,FALSE,FETCH,FIRST,FLOAT,FOR,FOREIGN,FOUND,FROM,FULL,GET,GLOBAL,GO,GOTO,GRANT,GROUP,HAVING,HOUR,IDENTITY,IMMEDIATE,IN,INDICATOR,INITIALLY,INNER,INPUT,INSENSITIVE,INSERT,INT,INTEGER,INTERSECT,INTERVAL,INTO,IS,ISOLATION,JOIN,KEY,LANGUAGE,LAST,LEADING,LEFT,LEVEL,LIKE,LOCAL,LOWER,MATCH,MAX,MIN,MINUTE,MODULE,MONTH,NAMES,NATIONAL,NATURAL,NCHAR,NEXT,NO,NOT,NULL,NULLIF,NUMERIC,OCTET_LENGTH,OF,ON,ONLY,OPEN,OPTION,OR,ORDER,OUTER,OUTPUT,OVERLAPS,PAD,PARTIAL,POSITION,PRECISION,PREPARE,PRESERVE,PRIMARY,PRIOR,PRIVILEGES,PROCEDURE,PUBLIC,READ,REAL,REFERENCES,RELATIVE,RESTRICT,REVOKE,RIGHT,ROLLBACK,ROWS,SCHEMA,SCROLL,SECOND,SECTION,SELECT,SESSION,SESSION_USER,SET,SIZE,SMALLINT,SOME,SPACE,SQL,SQLCODE,SQLERROR,SQLSTATE,SUBSTRING,SUM,SYSTEM_USER,TABLE,TEMPORARY,THEN,TIME,TIMESTAMP,TIMEZONE_HOUR,TIMEZONE_MINUTE,TO,TRAILING,TRANSACTION,TRANSLATE,TRANSLATION,TRIM,TRUE,UNION,UNIQUE,UNKNOWN,UPDATE,UPPER,USAGE,USER,USING,VALUE,VALUES,VARYING,VIEW,WHEN,WHENEVER,WHERE,WITH,WORK,WRITE,YEAR,ZONE";
+
+    public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
+    {
+        if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, 0);
+        var sb = Pool.StringBuilder.Get();
+        var xWhere = string.Empty;
+        var xTable = this.FormatName(tableName);
+        if (!string.IsNullOrWhiteSpace(where)) xWhere = " Where " + where;
+        var sql = $"WITH to_delete AS (SELECT \"ctid\" FROM {xTable} {xWhere} LIMIT {batchSize}) ";
+        sql += $"DELETE FROM {xTable} where \"ctid\" in (SELECT \"ctid\" from to_delete)";
+        return sql;
+    }
+
+    public override String FormatLike(IDataColumn column, String format)
+    {
+        format = format.Replace("'%{", "'%' || {").Replace("}%'", "} || '%'").Replace("'{", "{").Replace("}'", "}");
+        return base.FormatLike(column, format);
+    }
     #endregion
     protected override void OnSetConnectionString(ConnectionStringBuilder builder) => base.OnSetConnectionString(builder);
 
@@ -56,12 +75,6 @@ internal class KingBase : RemoteDb
 
     /// <summary>创建数据库会话</summary>
     protected override IDbSession OnCreateSession() => new KingBaseSession(this);
-
-    public override String FormatLike(IDataColumn column, String format)
-    {
-        format = format.Replace("'%{", "'%' || {").Replace("}%'", "} || '%'").Replace("'{", "{").Replace("}'", "}");
-        return base.FormatLike(column, format);
-    }
 
     #region 分页
     public override SelectBuilder PageSplit(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows) => PostgreSQL.PageSplitByOffsetLimit(builder, startRowIndex, maximumRows);
@@ -247,18 +260,18 @@ internal class KingBaseMetaData : RemoteDbMetaData
     /// <summary>数据类型映射</summary>
     static readonly Dictionary<Type, String[]> _DataTypes = new()
     {
-        { typeof(Byte[]), new String[] { "BYTEA", "BLOB", "CLOB", "NCLOB", "BIT({0})", "BIT VARYING({0})" } },
-        { typeof(Byte), new String[] { "TINYINT", "INT1" } },
-        { typeof(Int16), new String[] { "SMALLINT", "INT2", "SMALLSERIAL" } },
-        { typeof(Int32), new String[] { "INTEGER", "INT4", "TINYINT", "YEAR", "MEDIUMINT", "MIDDLEINT", "INT3" } },
-        { typeof(Int64), new String[] { "BIGINT", "BIGSERIAL", "INT8" } },
-        { typeof(Single), new String[] { "REAL", "FLOAT", "FLOAT4" } },
-        { typeof(Double), new String[] { "DOUBLE PRECISION", "FLOAT8" } },
-        { typeof(Decimal), new String[] { "NUMERIC({0}, {1})", "DECIMAL({0}, {1})", "NUMBER({0}, {1})", "FIXED({0}, {1})" } },
-        { typeof(DateTime), new String[] { "DATETIME", "DATE", "TIME", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMPTZ", "TIMESTAMP WITHOUT TIME ZONE", "TIME WITH TIME ZONE" , "TIMETZ", "TIME WITHOUT TIME ZONE" } },
-        { typeof(Boolean), new String[] { "BOOLEAN", "BOOL" } },
-        { typeof(Guid), new String[] { "UUID" } },
-        { typeof(String), new String[] { "VARCHAR({0})","TEXT", "NVARCHAR({0})", "CHARACTER({0})", "CHARACTER VARYING({0})", "CHAR({0})", "NAME", "LONGTEXT", "MEDIUMTEXT", "TINYTEXT", "XML", "JSON", "ROWID"} },
+        { typeof(Byte[]), new String[] { "bytea", "blob", "clob", "nclob", "bit({0})", "bit varying({0})" } },
+        { typeof(Byte), new String[] { "tinyint", "int1" } },
+        { typeof(Int16), new String[] { "smallint", "int2", "smallserial" } },
+        { typeof(Int32), new String[] { "integer", "int4", "tinyint", "year", "mediumint", "middleint", "int3" } },
+        { typeof(Int64), new String[] { "bigint", "bigserial", "int8" } },
+        { typeof(Single), new String[] { "real", "float", "float4" } },
+        { typeof(Double), new String[] { "double precision", "float8" } },
+        { typeof(Decimal), new String[] { "numeric({0}, {1})", "decimal({0}, {1})", "number({0}, {1})", "fixed({0}, {1})" } },
+        { typeof(DateTime), new String[] { "datetime", "date", "time", "timestamp", "timestamp with time zone", "timestamptz", "timestamp without time zone", "time with time zone" , "timetz", "time without time zone" } },
+        { typeof(Boolean), new String[] { "boolean", "bool" } },
+        { typeof(Guid), new String[] { "uuid" } },
+        { typeof(String), new String[] { "varchar({0})","text", "nvarchar({0})", "character({0})", "character varying({0})", "char({0})", "name", "longtext", "mediumtext", "tinytext", "xml", "json", "rowid" } },
     };
     #endregion
 
@@ -274,7 +287,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
             {
                 "mysql" => DatabaseType.MySql,
                 "oracle" => DatabaseType.Oracle,
-                "postgresql" => DatabaseType.PostgreSQL,
+                "pg" => DatabaseType.PostgreSQL,
                 _ => DatabaseType.None
             };
         }
@@ -429,9 +442,9 @@ internal class KingBaseMetaData : RemoteDbMetaData
     {
         if (field.Identity)
         {
-            if (field.DataType == typeof(Int16)) { return "SMALLSERIAL"; }
-            if (field.DataType == typeof(Int32)) { return "SERIAL"; }
-            if (field.DataType == typeof(Int64)) { return "BIGSERIAL"; }
+            if (field.DataType == typeof(Int16)) { return "smallserial"; }
+            if (field.DataType == typeof(Int32)) { return "serial"; }
+            if (field.DataType == typeof(Int64)) { return "bigserial"; }
         }
         return base.GetFieldType(field);
     }

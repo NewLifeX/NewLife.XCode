@@ -331,4 +331,15 @@ public class HighGoTests
 )";
         Assert.Equal(targetSql, sql, true);
     }
+
+    [Fact(Skip = "跳过")]
+    public void BuildDeleteSql()
+    {
+        DAL.AddConnStr("HighGo", _ConnStr, null, "HighGo");
+        var dal = DAL.Create("HighGo");
+        Role.Meta.ConnName = "HighGo";
+        Role.Meta.Session.InitData();
+        var count = Role.Delete(Role._.Name == "管理员");
+        Assert.Equal(count, 1);
+    }
 }

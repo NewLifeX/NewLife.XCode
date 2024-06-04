@@ -406,7 +406,7 @@ internal class SqlServer : RemoteDb
             else
                 return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss}'}}";
         }
-        else if (column != null && !column.RawType.EqualIgnoreCase("datetime2"))
+        else if (column != null && column.RawType.EqualIgnoreCase("datetime2"))
             return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'}}";
         else
             return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss.fff}'}}";

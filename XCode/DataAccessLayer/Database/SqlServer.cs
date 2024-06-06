@@ -513,7 +513,7 @@ internal class SqlServer : RemoteDb
     {
         if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, 0);
 
-        var sql = $"Delete Top {batchSize} From {FormatName(tableName)}";
+        var sql = $"Delete Top ({batchSize}) From {FormatName(tableName)}";
         if (!where.IsNullOrEmpty()) sql += " Where " + where;
 
         return sql;

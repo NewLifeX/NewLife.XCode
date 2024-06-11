@@ -402,12 +402,12 @@ internal class SqlServer : RemoteDb
         if (dateTime.Ticks % 10_000_000 == 0)
         {
             if (dateTime.Hour == 0 && dateTime.Minute == 0 && dateTime.Second == 0)
-                return $"{{ts'{dateTime:yyyy-MM-dd}'}}";
+                return $"'{dateTime:yyyy-MM-dd}'";
             else
                 return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss}'}}";
         }
         else if (column != null && column.RawType.EqualIgnoreCase("datetime2"))
-            return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'}}";
+            return $"'{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'";
         else
             return $"{{ts'{dateTime:yyyy-MM-dd HH:mm:ss.fff}'}}";
     }

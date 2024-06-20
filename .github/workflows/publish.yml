@@ -10,19 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup dotNET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 7.0.x
+        dotnet-version: |
+          6.0.x
+          7.0.x
+          8.x
+    - name: Get Version
+      run: echo "VERSION=$(date '+%Y.%m%d')" >> $GITHUB_ENV
     - name: Build
       run: |
-        dotnet build -c Release
-    - name: Pack
-      run: |
-        dotnet pack --no-build -c Release -o out XCode/XCode.csproj
-        dotnet pack --no-build -c Release -o out XCodeTool/XCodeTool.csproj
-
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode/XCode.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCodeTool/XCodeTool.csproj
     - name: Publish
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}

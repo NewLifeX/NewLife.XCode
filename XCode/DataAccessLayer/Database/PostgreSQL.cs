@@ -5,6 +5,7 @@ using System.Text;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
+using NewLife.Log;
 
 namespace XCode.DataAccessLayer;
 
@@ -271,8 +272,9 @@ internal class PostgreSQLSession : RemoteDbSession
         var db = Database as DbBase;
 
         // 字段列表
-        if (columns == null) columns = table.Columns.ToArray();
+        columns ??= table.Columns.ToArray();
         BuildInsert(sb, db, action, table, columns);
+        DefaultSpan.Current?.AppendTag(sb.ToString());
 
         // 值列表
         sb.Append(" Values");

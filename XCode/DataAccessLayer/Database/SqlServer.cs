@@ -610,6 +610,7 @@ internal class SqlServerSession : RemoteDbSession
         var ps = new HashSet<String>();
         var sql = GetInsertSql(table, columns, ps);
         var dpsList = GetParametersList(columns, ps, list);
+        DefaultSpan.Current?.AppendTag(sql);
 
         return BatchExecute(sql, dpsList);
     }
@@ -664,6 +665,7 @@ internal class SqlServerSession : RemoteDbSession
         sb.AppendLine(";");
         sb.AppendLine("END;");
         var sql = sb.Put(true);
+        DefaultSpan.Current?.AppendTag(sql);
 
         var dpsList = GetParametersList(columns, ps, list, true);
         return BatchExecute(sql, dpsList);

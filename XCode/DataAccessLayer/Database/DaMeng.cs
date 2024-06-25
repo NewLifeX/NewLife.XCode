@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
+using NewLife.Log;
 using NewLife.Reflection;
 using XCode.Common;
 
@@ -293,6 +294,7 @@ internal class DaMengSession : RemoteDbSession
         var ps = new HashSet<String>();
         var sql = GetInsertSql(table, columns, ps);
         var dps = GetParameters(columns, ps, list);
+        DefaultSpan.Current?.AppendTag(sql);
 
         return Execute(sql, CommandType.Text, dps);
     }
@@ -384,6 +386,7 @@ internal class DaMengSession : RemoteDbSession
         sb.AppendLine("END;");
 
         var sql = sb.Put(true);
+        DefaultSpan.Current?.AppendTag(sql);
 
         var dps = GetParameters(columns, ps, list);
 
@@ -440,6 +443,7 @@ internal class DaMengSession : RemoteDbSession
         var ps = new HashSet<String>();
         var sql = GetUpdateSql(table, columns, updateColumns, addColumns, ps);
         if (sql.IsNullOrEmpty()) return 0;
+        DefaultSpan.Current?.AppendTag(sql);
 
         var dps = GetParameters(columns, ps, list);
 

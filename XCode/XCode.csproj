@@ -29,7 +29,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>支持人大金仓数据库</PackageReleaseNotes>
+    <PackageReleaseNotes>新增支持瀚高数据库；新增BuildDeleteSql</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -44,7 +44,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="10.10.2024.601" />
+    <PackageReference Include="NewLife.Core" Version="10.10.2024.701" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

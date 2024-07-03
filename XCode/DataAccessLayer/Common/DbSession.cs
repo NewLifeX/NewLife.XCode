@@ -1008,8 +1008,15 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                         else
                             sv = $"[{bv.Length}]0x{BitConverter.ToString(bv)}";
                     }
-                    else if (v is String str && str.Length > 64)
-                        sv = $"[{str.Length}]{str[..64]}...";
+                    else if (v is String str)
+                    {
+                        var max2 = max - sb.Length;
+                        if (max2 < 64) max2 = 64;
+                        if (str.Length > max2)
+                            sv = $"[{str.Length}]{str[..max2]}...";
+                        else
+                            sv = $"[{str.Length}]{str}";
+                    }
                     else
                         sv = v is DateTime dt ? dt.ToFullString() : (v + "");
                     sb.AppendFormat("{0}={1}", ps[i].ParameterName, sv);

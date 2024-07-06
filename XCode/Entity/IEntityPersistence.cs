@@ -521,8 +521,8 @@ public class EntityPersistence : IEntityPersistence
         * 插入数据原则：
         * 1，来自数据库或有脏数据的字段一定要参与
         * 2，没有脏数据，允许空的字段不参与
-        * 3，没有脏数据，不允许空，字符串类型不参与，如果数据库也没有默认值则报错
-        * 4，没有脏数据，不允许空，其它类型参与插入
+        * 3，没有脏数据，不允许空，字符串和时间日期类型参与插入，填充默认值或最小值
+        * 4，没有脏数据，不允许空，其它类型参与插入，填充默认值
         */
 
         var sbNames = Pool.StringBuilder.Get();
@@ -541,33 +541,44 @@ public class EntityPersistence : IEntityPersistence
             if (entity.IsFromDatabase || entity.IsDirty(fi.Name))
             {
             }
-            // 2，没有脏数据但有默认值
-            else if (fi.Column != null && !fi.Column.DefaultValue.IsNullOrEmpty())
-            {
-                // 字符串和时间日期在有默认值且不允许空时，不参与构造Sql。建表时用户需要自己在数据表中指定默认值，反向工程不支持
-                if ((fi.Type == typeof(String) || fi.Type == typeof(DateTime)) && !fi.IsNullable)
-                {
-                    if (!fullInsert) continue;
-                }
-
-                value = fi.Column.DefaultValue.ChangeType(fi.Type);
-            }
             // 3，没有脏数据，允许空的字段不参与
             else if (fi.IsNullable)
             {
+                // 如果没有脏数据，即使字段有值，也不参与插入，要求用户按照严格要求设置字段值。
+                // 时间日期的默认值是 0001-01-01，不能简单判null处理。
                 if (!fullInsert) continue;
             }
-            // 4，没有脏数据，不允许空的字符串类型不参与，如果数据库也没有默认值则报错
-            else if (fi.Type == typeof(String) && value == null)
+            // 3，没有脏数据，不允许空，字符串和时间日期类型参与插入，填充默认值或最小值
+            else if (fi.Type == typeof(String))
             {
-                if (!fullInsert) continue;
+                //// 没有数据也没有脏数据，还不允许为空，那么就不参与插入，期望数据库有默认值，否则干脆直接让它报错
+                //if (!fullInsert) continue;
 
-                value = String.Empty;
+                if (value == null)
+                {
+                    // 实体模型既然设置该字段为不允许空，而又没有赋值，那么就填充默认值或最小值。
+                    // 如果想让它使用数据库默认值，那么就要设置允许空，这样子不参与插入。
+
+                    value = fi.Column?.DefaultValue?.Trim('\'');
+                    value ??= String.Empty;
+                }
             }
-            // 5，不允许空的时间日期类型不参与
+            // 3，没有脏数据，不允许空，字符串和时间日期类型参与插入，填充默认值或最小值
             else if (fi.Type == typeof(DateTime))
             {
-                if (!fullInsert) continue;
+                //// 没有数据也没有脏数据，还不允许为空，那么就不参与插入，期望数据库有默认值，否则干脆直接让它报错
+                //if (!fullInsert) continue;
+
+                if (value.ToDateTime().Year == 1)
+                {
+                    value = fi.Column?.DefaultValue?.Trim('\'').ToDateTime();
+                    value ??= DateTime.MinValue;
+                }
+            }
+            // 4，没有脏数据，不允许空，其它类型参与插入
+            else
+            {
+                value ??= fi.Column?.DefaultValue?.Trim('\'').ChangeType(fi.Type);
             }
 
             sbNames.Separate(",").Append(db.FormatName(fi.Field));

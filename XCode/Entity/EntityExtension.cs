@@ -1000,6 +1000,7 @@ public static class EntityExtension
         // 非空非字符串字段，都是目标字段
         foreach (var fi in fields)
         {
+            // 非空字符串和时间日期类型不参与插入，因为数据库会自动填充默认值。这一点跟单体插入不同。
             if (!fi.IsNullable && fi.Type != typeof(String) && fi.Type != typeof(DateTime))
             {
                 columns.Add(fi.Name);

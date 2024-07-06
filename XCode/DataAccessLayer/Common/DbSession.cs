@@ -1015,7 +1015,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                         if (str.Length > max2)
                             sv = $"[{str.Length}]{str[..max2]}...";
                         else
-                            sv = $"[{str.Length}]{str}";
+                            sv = str;
                     }
                     else
                         sv = v is DateTime dt ? dt.ToFullString() : (v + "");

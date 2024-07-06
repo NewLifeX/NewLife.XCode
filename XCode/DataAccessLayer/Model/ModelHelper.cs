@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Data;
-using System.Data.Common;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -752,7 +751,7 @@ public static class ModelHelper
     private static Object GetDefault(Type type) => cache.GetOrAdd(type, item => item.CreateInstance()!);
     #endregion
 
-    #region 修正连接
+    #region 修正数据列
     /// <summary>根据类型修正字段的一些默认值</summary>
     /// <param name="dc"></param>
     /// <param name="oridc"></param>

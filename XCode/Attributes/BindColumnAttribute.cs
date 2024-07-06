@@ -1,5 +1,7 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Reflection;
+using System.Xml.Serialization;
 
 namespace XCode;
 
@@ -37,6 +39,9 @@ public sealed class BindColumnAttribute : Attribute
 
     /// <summary>是否主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
     public Boolean Master { get; set; }
+
+    /// <summary>数据规模。time表示这是大数据单表的数据时间字段，shard:yyMMdd表示这是大数据多表的分表字段</summary>
+    public String? DataScale { get; set; }
     #endregion
 
     #region 构造

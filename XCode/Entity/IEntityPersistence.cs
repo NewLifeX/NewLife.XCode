@@ -575,6 +575,22 @@ public class EntityPersistence : IEntityPersistence
                     value ??= DateTime.MinValue;
                 }
             }
+            else if (fi.Type.IsInt())
+            {
+                if (value == null || value.ToLong() == 0)
+                {
+                    value ??= fi.Column?.DefaultValue?.Trim('\'').ChangeType(fi.Type);
+                    value ??= 0;
+                }
+            }
+            else if (fi.Type == typeof(Single) || fi.Type == typeof(Double) || fi.Type == typeof(Decimal))
+            {
+                if (value == null || value.ToDouble() == 0d)
+                {
+                    value ??= fi.Column?.DefaultValue?.Trim('\'').ChangeType(fi.Type);
+                    value ??= 0;
+                }
+            }
             // 4，没有脏数据，不允许空，其它类型参与插入
             else
             {

@@ -46,6 +46,9 @@ public interface IDataColumn
     /// <summary>允许空</summary>
     Boolean Nullable { get; set; }
 
+    /// <summary>数据规模。time表示这是大数据单表的数据时间字段，shard:yyMMdd表示这是大数据多表的分表字段</summary>
+    String? DataScale { get; set; }
+
     /// <summary>默认值</summary>
     String? DefaultValue { get; set; }
 

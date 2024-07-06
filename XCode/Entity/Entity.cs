@@ -1623,26 +1623,29 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="key">关键字</param>
     /// <param name="page">分页排序参数，同时返回满足条件的总记录数</param>
     /// <returns></returns>
-    public static IList<TEntity> Search(DateTime start, DateTime end, String key, PageParameter page)
-    {
-        var df = Meta.Factory.Default as TEntity;
-        return FindAll(df!.SearchWhere(start, end, key, page), page);
-    }
+    public static IList<TEntity> Search(DateTime start, DateTime end, String key, PageParameter page) => FindAll(SearchWhere(start, end, key), page);
 
     /// <summary>构造高级查询条件</summary>
     /// <param name="start">开始时间</param>
     /// <param name="end">结束时间</param>
     /// <param name="key">关键字</param>
-    /// <param name="page">分页排序参数，同时返回满足条件的总记录数</param>
     /// <returns></returns>
-    protected virtual WhereExpression SearchWhere(DateTime start, DateTime end, String key, PageParameter page)
+    protected static WhereExpression SearchWhere(DateTime start, DateTime end, String key)
     {
         var exp = SearchWhereByKeys(key);
 
         if (start > DateTime.MinValue || end > DateTime.MinValue)
         {
             var fi = Meta.Factory.MasterTime;
-            if (fi != null) exp &= fi.Between(start, end);
+            if (fi != null)
+            {
+                if (fi.Type == typeof(Int64) && !fi.IsIdentity)
+                    exp &= fi.Between(start, end, Meta.Factory.Snow);
+                else if (start == end)
+                    exp &= fi.Equal(start);
+                else
+                    exp &= fi.Between(start, end);
+            }
         }
 
         return exp;

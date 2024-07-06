@@ -29,7 +29,7 @@ public partial class Log : ILog, IEntity<ILog>
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, false, false, 0)]
-    [BindColumn("ID", "编号", "")]
+    [BindColumn("ID", "编号", "", DataScale = "time")]
     public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
     private String? _Category;

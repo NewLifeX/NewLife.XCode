@@ -222,6 +222,7 @@ public class FieldItem
             dc.Scale = col.Scale;
             dc.DefaultValue = col.DefaultValue;
             //dc.ItemDefaultValue = col.ItemDefaultValue;
+            dc.DataScale = col.DataScale;
         }
 
         // 特别处理，兼容旧版本

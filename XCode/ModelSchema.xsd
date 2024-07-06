@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema id="Model202309"
-    targetNamespace="https://newlifex.com/Model202309.xsd"
+<xs:schema id="Model202407"
+    targetNamespace="https://newlifex.com/Model202407.xsd"
     elementFormDefault="qualified"
-    xmlns="https://newlifex.com/Model202309.xsd"
-    xmlns:mstns="https://newlifex.com/Model202309.xsd"
+    xmlns="https://newlifex.com/Model202407.xsd"
+    xmlns:mstns="https://newlifex.com/Model202407.xsd"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
 >
   <xs:annotation>
     <xs:documentation xml:lang="zh-cn">
-      新生命Xml模型文件架构说明
+      新生命Xml数据模型架构说明
     </xs:documentation>
   </xs:annotation>
 
@@ -186,7 +186,7 @@
   <xs:complexType name="TableType">
     <xs:annotation>
       <xs:documentation xml:lang="zh-cn">
-        一个Table就是一个实体类，对应一张数据表
+        数据表。一个Table就是一个实体类，对应一张数据表。大数据表务必在表示数据时间的Column字段中指定DataScale。
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
@@ -200,7 +200,7 @@
       <xs:element name="Indexes" type="IndexesType" minOccurs="0">
         <xs:annotation>
           <xs:documentation xml:lang="zh-cn">
-            索引列表，并根据列名生成拓展查询方法
+            索引列表，并根据列名生成扩展查询方法
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -292,7 +292,7 @@
     <xs:attribute name="Output" type="xs:string">
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">
-          模型表专用输出路径
+          模型表专用输出路径，相对于全局输出路径
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -317,6 +317,8 @@
       <xs:enumeration value="DaMeng" ></xs:enumeration>
       <xs:enumeration value="DB2" ></xs:enumeration>
       <xs:enumeration value="TDengine" ></xs:enumeration>
+      <xs:enumeration value="KingBase" ></xs:enumeration>
+      <xs:enumeration value="HighGo" ></xs:enumeration>
     </xs:restriction>
   </xs:simpleType>
 
@@ -338,7 +340,7 @@
     <xs:attribute name="ColumnName" type="xs:string">
       <xs:annotation>
         <xs:documentation>
-          列名
+          字段名，对应数据库字段名，为空时使用Name
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -352,7 +354,7 @@
     <xs:attribute name="RawType" type="xs:string">
       <xs:annotation>
         <xs:documentation>
-          原始数据类型，当且仅当目标数据库同为该数据库类型时，采用实体属性信息上的RawType作为反向工程的目标字段类型，以期获得开发和生产的最佳兼容。
+          原始数据类型，采用该值作为目标字段类型，而不是根据C#类型自动映射的字段类型，以期获得开发和生产的最佳兼容。
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -366,49 +368,49 @@
     <xs:attribute name="PrimaryKey" type="BooleanType">
       <xs:annotation>
         <xs:documentation>
-          主键
+          主键。数据表主键，强烈建议使用单字段主键
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="Master" type="xs:string">
       <xs:annotation>
         <xs:documentation>
-          主字段。主字段作为业务主要字段，代表当前数据行意义
+          主字段。主字段作为业务主要字段，代表当前数据行意义。例如名称和标题，实体对象ToString时使用该字段值
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="Length" type="xs:int">
       <xs:annotation>
         <xs:documentation>
-          长度，字符串-1表示无限大
+          长度。字符串默认长度50，此时隐藏Length；字符串-1表示无限大
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="Precision" type="xs:int">
       <xs:annotation>
         <xs:documentation>
-          精度
+          精度。用于Double和Decimal类型
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="Scale" type="xs:int">
       <xs:annotation>
         <xs:documentation>
-          位数
+          位数。小数位数，用于Double和Decimal类型
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="Nullable" type="BooleanType">
       <xs:annotation>
         <xs:documentation>
-          允许空
+          允许空。如果字段允许空，且插入时未指定值，则生成Insert语句时不包含该字段
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="DefaultValue" type="xs:string">
       <xs:annotation>
         <xs:documentation>
-          默认值
+          默认值。如果字段不允许空，且插入时未指定值，则生成Insert语句时使用该默认值
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -429,7 +431,7 @@
     <xs:attribute name="Type" type="xs:string">
       <xs:annotation>
         <xs:documentation>
-          生成自定义类型，比如枚举，值可以是类型名也可以是命名空间+类型名
+          使用自定义类型，比如枚举，值可以是类型名也可以是命名空间+类型名
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -443,14 +445,21 @@
     <xs:attribute name="ItemType" type="ItemTypeType">
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">
-          元素类型，用于魔方表单展示
+          元素类型。主要用于魔方页面显示
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="DataScale" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="zh-cn">
+          数据规模。time表示这是大数据单表的数据时间字段，shard:yyMMdd表示这是大数据多表的分表字段
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
     <xs:attribute name="Map" type="xs:string">
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">
-          映射，表间关联，用于生成扩展属性，例如 XCode.Membership.Area@Id@Path@AreaPath，又如 Tenant@Id@$
+          映射。表间关联，用于生成扩展属性，例如 XCode.Membership.Area@Id@Path@AreaPath，又如 Tenant@Id@$
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -464,7 +473,7 @@
     <xs:attribute name="Category" type="xs:string">
       <xs:annotation>
         <xs:documentation>
-          属性分类
+          属性分类。主要用于魔方表单页面分组显示
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -484,7 +493,7 @@
   <xs:simpleType name="DataTypeType">
     <xs:annotation>
       <xs:documentation>
-        字段类型，为简化模型，强烈建议使用常见类型
+        属性数据类型，为简化模型，强烈建议使用常见类型
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base="xs:string">
@@ -516,6 +525,9 @@
       <xs:enumeration value="url" ></xs:enumeration>
       <xs:enumeration value="TimeSpan" ></xs:enumeration>
       <xs:enumeration value="GMK" ></xs:enumeration>
+      <xs:enumeration value="date" ></xs:enumeration>
+      <xs:enumeration value="percent" ></xs:enumeration>
+      <xs:enumeration value="money" ></xs:enumeration>
     </xs:restriction>
   </xs:simpleType>
   <!--ItemType-end-->

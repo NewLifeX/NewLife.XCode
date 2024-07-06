@@ -237,13 +237,17 @@ public partial class Entity<TEntity>
 
         private static FieldItem? GetMasterTime()
         {
+            // 优先数据规模字段
+            var fi = Meta.Fields.FirstOrDefault(e => e.Column != null && !e.Column.DataScale.IsNullOrEmpty());
+            if (fi != null) return fi;
+
             var fis = Meta.Fields.Where(e => e.Type == typeof(DateTime)).ToArray();
             if (fis.Length == 0) return null;
 
             var dt = Meta.Table.DataTable;
 
             // 时间作为主键
-            var fi = fis.FirstOrDefault(e => e.PrimaryKey);
+            fi = fis.FirstOrDefault(e => e.PrimaryKey);
             if (fi != null) return fi;
 
             // 第一个时间日期索引字段

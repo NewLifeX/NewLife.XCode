@@ -96,9 +96,50 @@ public class EntityBuilder : ClassBuilder
             }
         }
 
+        // 雪花Id主键，默认设置数据规模DataScale
+        foreach (var table in tables)
+        {
+            if (table.Columns.Any(e => !e.DataScale.IsNullOrEmpty())) continue;
+
+            // 雪花Id主键，默认设置数据规模DataScale
+            if (table.PrimaryKeys.Length == 1)
+            {
+                var column = table.PrimaryKeys[0];
+                if (!column.Identity && column.DataType == typeof(Int64))
+                {
+                    column.DataScale = "time";
+                    continue;
+                }
+            }
+
+            // 只读日志表
+            if (table.InsertOnly)
+            {
+                // 第一个时间日期索引字段
+                IDataColumn? column = null;
+                foreach (var di in table.Indexes.OrderBy(e => e.Columns.Length).OrderByDescending(e => e.Unique).ThenByDescending(e => e.PrimaryKey))
+                {
+                    if (di.Columns == null || di.Columns.Length == 0) continue;
+
+                    var col = table.GetColumn(di.Columns[0]);
+                    if (col != null && col.DataType == typeof(DateTime))
+                    {
+                        column = col;
+                        break;
+                    }
+                }
+
+                if (column != null && column.DataType == typeof(DateTime))
+                {
+                    column.DataScale = "time";
+                    continue;
+                }
+            }
+        }
+
         // 更新xsd
-        atts["xmlns"] = "https://newlifex.com/Model202309.xsd";
-        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202309.xsd";
+        atts["xmlns"] = "https://newlifex.com/Model202407.xsd";
+        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202407.xsd";
 
         // 版本和教程
         //var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
@@ -484,14 +525,14 @@ public class EntityBuilder : ClassBuilder
         {
             BuildAction();
 
-                WriteLine();
-                BuildExtendProperty();
+            WriteLine();
+            BuildExtendProperty();
 
-                WriteLine();
-                BuildExtendSearch();
+            WriteLine();
+            BuildExtendSearch();
 
-                WriteLine();
-                BuildSearch();
+            WriteLine();
+            BuildSearch();
 
             WriteLine();
             BuildBusiness();
@@ -610,12 +651,17 @@ public class EntityBuilder : ClassBuilder
         var sb = Pool.StringBuilder.Get();
         sb.AppendFormat("[BindColumn(\"{0}\", \"{1}\", \"{2}\"", dc.ColumnName, dc.Description, dc.RawType);
 
-        // 支持生成带精度的特性
+        // 元素类型
         if (!dc.ItemType.IsNullOrEmpty()) sb.AppendFormat(", ItemType = \"{0}\"", dc.ItemType);
 
+        // 支持生成带精度的特性
         if (dc.Precision > 0 || dc.Scale > 0) sb.AppendFormat(", Precision = {0}, Scale = {1}", dc.Precision, dc.Scale);
 
+        // 默认值
         if (!dc.DefaultValue.IsNullOrEmpty()) sb.AppendFormat(", DefaultValue = \"{0}\"", dc.DefaultValue);
+
+        // 数据规模
+        if (!dc.DataScale.IsNullOrEmpty()) sb.AppendFormat(", DataScale = \"{0}\"", dc.DataScale);
 
         ////添加自定义控件默认值
         //if (!dc.ItemDefaultValue.IsNullOrEmpty()) sb.AppendFormat(", ItemDefaultValue = \"{0}\"", dc.ItemDefaultValue);

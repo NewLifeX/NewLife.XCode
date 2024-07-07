@@ -287,6 +287,24 @@ public class EntityBuilder : ClassBuilder
         AddNameSpace();
 
         base.Prepare();
+
+        if (!Business)
+        {
+            // 读取biz文件，识别其中已生成的扩展查询方法，避免在数据类中重复生成
+            var bizFile = GetFileName(null, Option.ChineseFileName);
+            if (!bizFile.IsNullOrEmpty() && File.Exists(bizFile))
+            {
+                var txt = File.ReadAllText(bizFile);
+                if (!txt.IsNullOrEmpty())
+                {
+                    var sections = MemberSection.GetMethods(txt);
+                    foreach (var sec in sections)
+                    {
+                        Members.Add(sec.FullName);
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>增加常用命名空间</summary>
@@ -409,8 +427,8 @@ public class EntityBuilder : ClassBuilder
         // 合并扩展属性
         {
             var sname = "#region 扩展属性";
-            var newNs = Find(newLines, sname, "#endregion");
-            var oldNs = Find(oldLines, sname, "#endregion");
+            var newNs = CodeRange.Find(newLines, sname, "#endregion");
+            var oldNs = CodeRange.Find(oldLines, sname, "#endregion");
 
             // 两个都有才合并
             if (newNs != null && oldNs != null)
@@ -438,8 +456,8 @@ public class EntityBuilder : ClassBuilder
         // 合并扩展查询
         {
             var sname = "#region 扩展查询";
-            var newNs = Find(newLines, sname, "#endregion");
-            var oldNs = Find(oldLines, sname, "#endregion");
+            var newNs = CodeRange.Find(newLines, sname, "#endregion");
+            var oldNs = CodeRange.Find(oldLines, sname, "#endregion");
 
             // 两个都有才合并
             if (newNs != null && oldNs != null)
@@ -467,50 +485,6 @@ public class EntityBuilder : ClassBuilder
         }
 
         if (changed > 0) File.WriteAllText(fileName, oldLines.Join(Environment.NewLine).Trim());
-    }
-
-    class MyRange
-    {
-        public Int32 Start { get; set; }
-        public Int32 Count { get; set; }
-        public IList<MemberSection>? Sections { get; set; }
-    }
-
-    MyRange Find(IList<String> lines, String start, String end)
-    {
-        var s = -1;
-        var e = -1;
-        var flag = 0;
-        for (var i = 0; i < lines.Count && flag < 2; i++)
-        {
-            if (flag == 0)
-            {
-                if (lines[i].Contains(start))
-                {
-                    s = i;
-                    flag = 1;
-                }
-            }
-            else if (flag == 1)
-            {
-                if (lines[i].Contains(end))
-                {
-                    e = i;
-                    flag = 2;
-                }
-            }
-        }
-
-        if (s < 0 || e < 0) return null;
-
-        var ns = lines.Skip(s).Take(e - s + 1).ToArray();
-        var list = MemberSection.Parse(ns);
-        foreach (var item in list)
-        {
-            item.StartLine += s;
-        }
-
-        return new MyRange { Start = s, Count = e - s + 1, Sections = list };
     }
 
     /// <summary>生成尾部</summary>
@@ -541,8 +515,8 @@ public class EntityBuilder : ClassBuilder
             WriteLine();
             BuildExtendProperty();
 
-            WriteLine();
-            BuildExtendSearch();
+            //WriteLine();
+            //BuildExtendSearch();
 
             WriteLine();
             BuildSearch();
@@ -569,6 +543,9 @@ public class EntityBuilder : ClassBuilder
 
             WriteLine();
             BuildMap();
+
+            WriteLine();
+            BuildExtendSearch();
 
             WriteLine();
             BuildFieldName();

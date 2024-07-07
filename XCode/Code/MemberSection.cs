@@ -1,4 +1,4 @@
-﻿using System.Xml.Linq;
+﻿using System.Text.RegularExpressions;
 using NewLife;
 
 namespace XCode.Code;
@@ -8,16 +8,16 @@ internal class MemberSection
 {
     #region 属性
     /// <summary>名称。成员名或方法签名</summary>
-    public String Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>全名</summary>
-    public String FullName { get; set; }
+    public String FullName { get; set; } = null!;
 
     /// <summary>开始行行号</summary>
     public Int32 StartLine { get; set; }
 
     /// <summary>代码行</summary>
-    public String[] Lines { get; set; }
+    public String[] Lines { get; set; } = [];
     #endregion
 
     #region 方法
@@ -46,7 +46,7 @@ internal class MemberSection
             else if (status == 0)
             {
                 // 空行后的#，不认为是开始
-                if (line.StartsWith("#region"))
+                if (line != null && line.StartsWith("#region"))
                     status = 0;
                 else
                 {
@@ -57,7 +57,7 @@ internal class MemberSection
                         p = i - 1;
                     status = 1;
 
-                    name = GetName(line);
+                    if (line != null) name = GetName(line);
                 }
             }
             else if (status >= 1)
@@ -66,13 +66,13 @@ internal class MemberSection
                 if (line == "{")
                     status++;
                 // 右大括号，减少缩进。有些代码风格并没有把左大括号放在独立一行
-                else if (line.StartsWith("}") && status > 1)
+                else if (line != null && line.StartsWith("}") && status > 1)
                     status--;
                 // 遇到空行，代码段结束
                 else if (status == 1 && (line.IsNullOrEmpty() || IsStart(line) || line.EndsWith("#endregion")))
                 {
                     var ms = Create(name, p, lines.Skip(p).Take(i - p).ToArray());
-                    list.Add(ms);
+                    if (ms != null) list.Add(ms);
 
                     status = line.IsNullOrEmpty() || IsStart(line) ? 0 : -1;
                     name = null;
@@ -81,14 +81,14 @@ internal class MemberSection
                 else if (status == 1 && i == lines.Count - 1)
                 {
                     var ms = Create(name, p, lines.Skip(p).Take(i - p + 1).ToArray());
-                    list.Add(ms);
+                    if (ms != null) list.Add(ms);
 
                     status = -1;
                     name = null;
                 }
                 else
                 {
-                    if (name.IsNullOrEmpty()) name = GetName(line);
+                    if (name.IsNullOrEmpty() && line != null) name = GetName(line);
                 }
             }
         }
@@ -98,7 +98,7 @@ internal class MemberSection
 
     static Boolean IsStart(String line) => line.StartsWith("/// <summary>") || line.StartsWith("///// <summary>") || line.StartsWith("#region");
 
-    static MemberSection Create(String name, Int32 p, String[] lines)
+    static MemberSection? Create(String? name, Int32 p, String[] lines)
     {
         // 名称为空，可能被注释了
         if (name.IsNullOrEmpty())
@@ -112,9 +112,10 @@ internal class MemberSection
                 }
             }
         }
+        if (name.IsNullOrEmpty()) return null;
 
         var key = name;
-        var pKey = key?.IndexOf('(') ?? 0;
+        var pKey = key.IndexOf('(');
         if (pKey > 0) key = key.Substring(0, pKey);
 
         var ms = new MemberSection
@@ -128,7 +129,7 @@ internal class MemberSection
         return ms;
     }
 
-    static String GetName(String line)
+    static String? GetName(String line)
     {
         if (!line.StartsWithIgnoreCase("public ", "protected ", "private ", "internal ", "static "))
             return null;
@@ -141,7 +142,7 @@ internal class MemberSection
         str = str.TrimStart("static ", "readonly ");
 
         // 去掉参数
-        p2 = str.IndexOfAny(new[] { '{', '=' });
+        p2 = str.IndexOfAny(['{', '=']);
         str = p2 > 0 ? str.Substring(0, p2).Trim() : str;
 
         // 去掉返回值
@@ -154,5 +155,28 @@ internal class MemberSection
     /// <summary>已重载。</summary>
     /// <returns></returns>
     public override String ToString() => $"{Name} [{Lines?.Length}]";
+    #endregion
+
+    #region 辅助
+    /// <summary>获取方法以及签名</summary>
+    /// <param name="txt"></param>
+    /// <returns></returns>
+    public static IList<MemberSection> GetMethods(String txt)
+    {
+        var rs = new List<MemberSection>();
+        if (txt.IsNullOrEmpty()) return rs;
+
+        var reg = new Regex(@"([\w\<\>,]+)\s(\w+)\(([^\)]*)\)\s*(?://)*{");
+        foreach (Match item in reg.Matches(txt))
+        {
+            rs.Add(new MemberSection
+            {
+                Name = item.Groups[2].Value,
+                FullName = $"{item.Groups[2].Value}({item.Groups[3].Value})",
+            });
+        }
+
+        return rs;
+    }
     #endregion
 }

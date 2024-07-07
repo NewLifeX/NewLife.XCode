@@ -129,52 +129,6 @@ public partial class Log : Entity<Log>
     #region 扩展属性
     #endregion
 
-    #region 扩展查询
-    /// <summary>根据编号查找</summary>
-    /// <param name="id">编号</param>
-    /// <returns>实体对象</returns>
-    public static Log FindByID(Int64 id)
-    {
-        if (id < 0) return null;
-
-        return Find(_.ID == id);
-    }
-
-    /// <summary>根据操作、类别查找</summary>
-    /// <param name="action">操作</param>
-    /// <param name="category">类别</param>
-    /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByActionAndCategory(String action, String category)
-    {
-        if (action.IsNullOrEmpty()) return [];
-        if (category.IsNullOrEmpty()) return [];
-
-        return FindAll(_.Action == action & _.Category == category);
-    }
-
-    /// <summary>根据类别、链接查找</summary>
-    /// <param name="category">类别</param>
-    /// <param name="linkId">链接</param>
-    /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCategoryAndLinkID(String category, Int32 linkId)
-    {
-        if (category.IsNullOrEmpty()) return [];
-        if (linkId < 0) return [];
-
-        return FindAll(_.Category == category & _.LinkID == linkId);
-    }
-
-    /// <summary>根据创建用户查找</summary>
-    /// <param name="createUserId">创建用户</param>
-    /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCreateUserID(Int32 createUserId)
-    {
-        if (createUserId < 0) return [];
-
-        return FindAll(_.CreateUserID == createUserId);
-    }
-    #endregion
-
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="category">类别</param>

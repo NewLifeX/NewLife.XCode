@@ -376,13 +376,13 @@ public class EntityBuilderTests
             //Assert.Equal(target, rs);
 
             // 扩展查询部分，由于插入在后面，无法进行相等比较
-            var p1 = rs.IndexOf("#region 扩展查询");
-            var p2 = target.IndexOf("#region 扩展查询");
+            var p1 = rs.IndexOf("#region 高级查询");
+            var p2 = target.IndexOf("#region 高级查询");
             var str1 = rs.Substring(0, p1);
             var str2 = target.Substring(0, p2);
             Assert.Equal(str2, str1);
-            Assert.Contains("FindByName(String name)", rs);
-            Assert.Contains("FindAllByMail(String mail)", rs);
+            //Assert.Contains("FindByName(String name)", rs);
+            //Assert.Contains("FindAllByMail(String mail)", rs);
         }
     }
 }

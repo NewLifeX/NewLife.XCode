@@ -1021,7 +1021,7 @@ public class EntityBuilder : ClassBuilder
         WriteLine("}");
     }
 
-    static String[] _validExcludes = ["CreateUser", "CreateUserIP", "UpdateUser", "UpdateUserIP", "TraceId"];
+    static String[] _validExcludes = ["CreateUser", "CreateUserID", "CreateTime", "CreateIP", "UpdateUser", "UpdateUserID", "UpdateTime", "UpdateIP", "Remark", "TraceId"];
     /// <summary>数据验证</summary>
     protected virtual void BuildValid()
     {
@@ -1153,10 +1153,12 @@ public class EntityBuilder : ClassBuilder
         foreach (var column in Table.Columns)
         {
             if (column.Identity) continue;
+            if (column.DataType == null) continue;
 
             // 跳过排除项
-            if (Option.Excludes.Contains(column.Name)) continue;
-            if (Option.Excludes.Contains(column.ColumnName)) continue;
+            if (Option.Excludes.Contains(column.Name, StringComparer.OrdinalIgnoreCase)) continue;
+            if (Option.Excludes.Contains(column.ColumnName, StringComparer.OrdinalIgnoreCase)) continue;
+            if (_validExcludes.Contains(column.Name, StringComparer.OrdinalIgnoreCase)) continue;
 
             switch (column.DataType.GetTypeCode())
             {

@@ -100,12 +100,6 @@ public partial class Log : Entity<Log>
     //    entity.Ex4 = "abc";
     //    entity.Ex5 = "abc";
     //    entity.Ex6 = "abc";
-    //    entity.TraceId = "abc";
-    //    entity.CreateUser = "abc";
-    //    entity.CreateUserID = 0;
-    //    entity.CreateIP = "abc";
-    //    entity.CreateTime = DateTime.Now;
-    //    entity.Remark = "abc";
     //    entity.Insert();
 
     //    if (XTrace.Debug) XTrace.WriteLine("完成初始化Log[日志]数据！");

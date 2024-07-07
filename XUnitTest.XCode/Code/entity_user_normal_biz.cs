@@ -124,11 +124,6 @@ public partial class User : Entity<User>
     //    entity.Ex4 = "abc";
     //    entity.Ex5 = "abc";
     //    entity.Ex6 = "abc";
-    //    entity.UpdateUser = "abc";
-    //    entity.UpdateUserID = 0;
-    //    entity.UpdateIP = "abc";
-    //    entity.UpdateTime = DateTime.Now;
-    //    entity.Remark = "abc";
     //    entity.Insert();
 
     //    if (XTrace.Debug) XTrace.WriteLine("完成初始化User[用户]数据！");

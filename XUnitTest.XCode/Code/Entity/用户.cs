@@ -11,7 +11,7 @@ using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
-namespace XCode.Membership;
+namespace XCode.Membership666;
 
 /// <summary>用户。用户帐号信息</summary>
 [Serializable]

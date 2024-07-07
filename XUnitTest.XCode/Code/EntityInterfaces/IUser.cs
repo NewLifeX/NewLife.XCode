@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 
-namespace XCode.Membership;
+namespace XCode.Membership666;
 
 /// <summary>用户。用户帐号信息</summary>
 public partial interface IUser

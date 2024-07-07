@@ -26,14 +26,14 @@ using XCode.Shards;
 
 namespace XCode.Membership666;
 
-public partial class User : Entity<User>
+public partial class Role : Entity<Role>
 {
     #region 对象操作
-    static User()
+    static Role()
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
         //var df = Meta.Factory.AdditionalFields;
-        //df.Add(nameof(Sex));
+        //df.Add(nameof(Sort));
 
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Modules.Add(new UserModule { AllowEmpty = false });
@@ -74,9 +74,12 @@ public partial class User : Entity<User>
         /*var user = ManageProvider.User;
         if (user != null)
         {
+            if (method == DataMethod.Insert && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
             if (!Dirtys[nameof(UpdateUserID)]) UpdateUserID = user.ID;
         }*/
+        //if (method == DataMethod.Insert && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
         //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
+        //if (method == DataMethod.Insert && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
         //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
 
         // 检查唯一索引
@@ -92,31 +95,14 @@ public partial class User : Entity<User>
     //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
     //    if (Meta.Session.Count > 0) return;
 
-    //    if (XTrace.Debug) XTrace.WriteLine("开始初始化User[用户]数据……");
+    //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Role[角色]数据……");
 
-    //    var entity = new User();
+    //    var entity = new Role();
     //    entity.Name = "abc";
-    //    entity.Password = "abc";
-    //    entity.DisplayName = "abc";
-    //    entity.Sex = 0;
-    //    entity.Mail = "abc";
-    //    entity.Mobile = "abc";
-    //    entity.Code = "abc";
-    //    entity.AreaId = 0;
-    //    entity.Avatar = "abc";
-    //    entity.RoleID = 0;
-    //    entity.RoleIds = "abc";
-    //    entity.DepartmentID = 0;
-    //    entity.Online = true;
     //    entity.Enable = true;
-    //    entity.Age = 0;
-    //    entity.Birthday = DateTime.Now;
-    //    entity.Logins = 0;
-    //    entity.LastLogin = DateTime.Now;
-    //    entity.LastLoginIP = "abc";
-    //    entity.RegisterTime = DateTime.Now;
-    //    entity.RegisterIP = "abc";
-    //    entity.OnlineTime = 0;
+    //    entity.IsSystem = true;
+    //    entity.Permission = "abc";
+    //    entity.Sort = 0;
     //    entity.Ex1 = 0;
     //    entity.Ex2 = 0;
     //    entity.Ex3 = 0.0;
@@ -125,7 +111,7 @@ public partial class User : Entity<User>
     //    entity.Ex6 = "abc";
     //    entity.Insert();
 
-    //    if (XTrace.Debug) XTrace.WriteLine("完成初始化User[用户]数据！");
+    //    if (XTrace.Debug) XTrace.WriteLine("完成初始化Role[角色]数据！");
     //}
 
     ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
@@ -144,78 +130,42 @@ public partial class User : Entity<User>
     #endregion
 
     #region 扩展属性
-    /// <summary>部门</summary>
-    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Department? Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
-
-    /// <summary>部门</summary>
-    [Map(nameof(DepartmentID), typeof(Department), "ID")]
-    [Category("登录信息")]
-    public String? DepartmentName => Department?.Name;
     #endregion
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="name">名称。登录用户名</param>
-    /// <param name="mail">邮件</param>
-    /// <param name="mobile">手机</param>
-    /// <param name="code">代码。身份证、员工编号等</param>
-    /// <param name="roleId">角色。主要角色</param>
+    /// <param name="name">名称</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<User> Search(String name, String mail, String mobile, String code, Int32 roleId, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Role> Search(String name, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-        if (!mail.IsNullOrEmpty()) exp &= _.Mail == mail;
-        if (!mobile.IsNullOrEmpty()) exp &= _.Mobile == mobile;
-        if (!code.IsNullOrEmpty()) exp &= _.Code == code;
-        if (roleId >= 0) exp &= _.RoleID == roleId;
         exp &= _.UpdateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Password.Contains(key) | _.DisplayName.Contains(key) | _.Mail.Contains(key) | _.Mobile.Contains(key) | _.Code.Contains(key) | _.Avatar.Contains(key) | _.RoleIds.Contains(key) | _.LastLoginIP.Contains(key) | _.RegisterIP.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+        if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Permission.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
         return FindAll(exp, page);
     }
 
-    // Select Count(ID) as ID,Mail From User Where CreateTime>'2020-01-24 00:00:00' Group By Mail Order By ID Desc limit 20
-    static readonly FieldCache<User> _MailCache = new FieldCache<User>(nameof(Mail))
-    {
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-    };
+    // Select Count(ID) as ID,Category From Role Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
+    //static readonly FieldCache<Role> _CategoryCache = new FieldCache<Role>(nameof(Category))
+    //{
+    //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+    //};
 
-    /// <summary>获取邮件列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-    /// <returns></returns>
-    public static IDictionary<String, String> GetMailList() => _MailCache.FindAllName();
-
-    // Select Count(ID) as ID,Mobile From User Where CreateTime>'2020-01-24 00:00:00' Group By Mobile Order By ID Desc limit 20
-    static readonly FieldCache<User> _MobileCache = new FieldCache<User>(nameof(Mobile))
-    {
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-    };
-
-    /// <summary>获取手机列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-    /// <returns></returns>
-    public static IDictionary<String, String> GetMobileList() => _MobileCache.FindAllName();
-
-    // Select Count(ID) as ID,Code From User Where CreateTime>'2020-01-24 00:00:00' Group By Code Order By ID Desc limit 20
-    static readonly FieldCache<User> _CodeCache = new FieldCache<User>(nameof(Code))
-    {
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-    };
-
-    /// <summary>获取代码列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-    /// <returns></returns>
-    public static IDictionary<String, String> GetCodeList() => _CodeCache.FindAllName();
+    ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+    ///// <returns></returns>
+    //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
     #endregion
 
     #region 业务操作
-    public IUser ToModel()
+    public IRole ToModel()
     {
-        var model = new User();
+        var model = new Role();
         model.Copy(this);
 
         return model;

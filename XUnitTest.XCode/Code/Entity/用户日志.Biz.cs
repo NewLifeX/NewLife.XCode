@@ -26,22 +26,14 @@ using XCode.Shards;
 
 namespace XCode.Membership666;
 
-public partial class Log : Entity<Log>
+public partial class UserLog : Entity<UserLog>
 {
     #region 对象操作
-    static Log()
+    static UserLog()
     {
-        Meta.Table.DataTable.InsertOnly = true;
-
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(LinkID));
-        // 按天分表
-        //Meta.ShardPolicy = new TimeShardPolicy(nameof(ID), Meta.Factory)
-        //{
-        //    TablePolicy = "{0}_{1:yyyyMMdd}",
-        //    Step = TimeSpan.FromDays(1),
-        //};
 
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Modules.Add(new UserModule { AllowEmpty = false });
@@ -85,10 +77,10 @@ public partial class Log : Entity<Log>
     //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
     //    if (Meta.Session.Count > 0) return;
 
-    //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Log[日志]数据……");
+    //    if (XTrace.Debug) XTrace.WriteLine("开始初始化UserLog[用户日志]数据……");
 
-    //    var entity = new Log();
-    //    entity.ID = 0;
+    //    var entity = new UserLog();
+    //    entity.DataTime = DateTime.Now;
     //    entity.Category = "abc";
     //    entity.Action = "abc";
     //    entity.LinkID = 0;
@@ -102,7 +94,7 @@ public partial class Log : Entity<Log>
     //    entity.Ex6 = "abc";
     //    entity.Insert();
 
-    //    if (XTrace.Debug) XTrace.WriteLine("完成初始化Log[日志]数据！");
+    //    if (XTrace.Debug) XTrace.WriteLine("完成初始化UserLog[用户日志]数据！");
     //}
 
     ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
@@ -134,7 +126,7 @@ public partial class Log : Entity<Log>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> Search(String category, String action, Int32 linkId, Int32 createUserId, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<UserLog> Search(String category, String action, Int32 linkId, Int32 createUserId, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -148,8 +140,8 @@ public partial class Log : Entity<Log>
         return FindAll(exp, page);
     }
 
-    // Select Count(Id) as Id,Action From Log Where CreateTime>'2020-01-24 00:00:00' Group By Action Order By Id Desc limit 20
-    static readonly FieldCache<Log> _ActionCache = new FieldCache<Log>(nameof(Action))
+    // Select Count(ID) as ID,Action From UserLog Where CreateTime>'2020-01-24 00:00:00' Group By Action Order By ID Desc limit 20
+    static readonly FieldCache<UserLog> _ActionCache = new FieldCache<UserLog>(nameof(Action))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };
@@ -158,8 +150,8 @@ public partial class Log : Entity<Log>
     /// <returns></returns>
     public static IDictionary<String, String> GetActionList() => _ActionCache.FindAllName();
 
-    // Select Count(Id) as Id,Category From Log Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-    static readonly FieldCache<Log> _CategoryCache = new FieldCache<Log>(nameof(Category))
+    // Select Count(ID) as ID,Category From UserLog Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
+    static readonly FieldCache<UserLog> _CategoryCache = new FieldCache<UserLog>(nameof(Category))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };
@@ -170,9 +162,9 @@ public partial class Log : Entity<Log>
     #endregion
 
     #region 业务操作
-    public ILog ToModel()
+    public IUserLog ToModel()
     {
-        var model = new Log();
+        var model = new UserLog();
         model.Copy(this);
 
         return model;

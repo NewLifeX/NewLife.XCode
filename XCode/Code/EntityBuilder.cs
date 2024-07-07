@@ -20,6 +20,9 @@ public class EntityBuilder : ClassBuilder
     /// <summary>使用缓存。默认true，标记为大数据的表不使用缓存</summary>
     public Boolean UsingCache { get; set; } = true;
 
+    /// <summary>数据规模字段。标识是否大数据表</summary>
+    public IDataColumn? ScaleColumn { get; set; }
+
     /// <summary>所有表类型名。用于扩展属性</summary>
     public IList<IDataTable> AllTables { get; set; } = [];
 
@@ -280,8 +283,12 @@ public class EntityBuilder : ClassBuilder
     protected override void Prepare()
     {
         // 标记为大数据的表不使用缓存
-        var fi = Table.Columns.FirstOrDefault(e => e.DataScale.EqualIgnoreCase("time") || e.DataScale.StartsWithIgnoreCase("time:", "timeShard:"));
-        if (fi != null) UsingCache = false;
+        var column = Table.Columns.FirstOrDefault(e => e.DataScale.EqualIgnoreCase("time") || e.DataScale.StartsWithIgnoreCase("time:", "timeShard:"));
+        if (column != null)
+        {
+            UsingCache = false;
+            ScaleColumn = column;
+        }
 
         // 增加常用命名空间
         AddNameSpace();
@@ -561,6 +568,12 @@ public class EntityBuilder : ClassBuilder
 
             WriteLine();
             BuildExtendSearch();
+
+            if (ScaleColumn != null)
+            {
+                WriteLine();
+                BuildDelete(ScaleColumn);
+            }
 
             WriteLine();
             BuildFieldName();
@@ -923,6 +936,47 @@ public class EntityBuilder : ClassBuilder
         WriteLine("#endregion");
     }
 
+    /// <summary>按时间删除数据</summary>
+    protected virtual void BuildDelete(IDataColumn column)
+    {
+        WriteLine("#region 数据清理");
+
+        WriteLine("/// <summary>清理指定时间段内的数据</summary>");
+        WriteLine("/// <param name=\"start\">开始时间。未指定时清理小于指定时间的所有数据</param>");
+        WriteLine("/// <param name=\"end\">结束时间</param>");
+        WriteLine("/// <returns>清理行数</returns>");
+        WriteLine("public static Int32 DeleteWith(DateTime start, DateTime end)");
+        WriteLine("{");
+        {
+            // 分为时间、雪花Id、字符串三种
+            var type = column.DataType;
+            if (type == typeof(DateTime))
+            {
+                WriteLine("if (start == end) return Delete(_.{0} == start);", column.Name);
+                WriteLine();
+                WriteLine("return Delete(_.{0}.Between(start, end));", column.Name);
+            }
+            else if (type == typeof(Int64))
+            {
+                //WriteLine("var where = new WhereExpression()");
+                //WriteLine("if (start.Year > 2000) where &= _.{0} >= Meta.Factory.Snow.GetId(start)", column.Name);
+                //WriteLine("if (end.Year > 2000) where &= _.{0} < Meta.Factory.Snow.GetId(end)", column.Name);
+                WriteLine("return Delete(_.{0}.Between(start, end, Meta.Factory.Snow));", column.Name);
+            }
+            else if (type == typeof(String))
+            {
+                WriteLine("if (start == end) return Delete(_.{0} == start);", column.Name);
+                WriteLine();
+                WriteLine("var where = new WhereExpression();");
+                WriteLine("if (start.Year > 2000) where &= _.{0} >= start;", column.Name);
+                WriteLine("if (end.Year > 2000) where &= _.{0} < end;", column.Name);
+                WriteLine("return Delete(where);");
+            }
+        }
+        WriteLine("}");
+
+        WriteLine("#endregion");
+    }
     #endregion 数据类
 
     #region 业务类

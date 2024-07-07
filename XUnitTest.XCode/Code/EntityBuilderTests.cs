@@ -27,6 +27,7 @@ public class EntityBuilderTests
         //var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
         //File.WriteAllText(file2, text);
 
+        if (!File.Exists(file)) return null;
         var target = File.ReadAllText(file.GetFullPath());
 
         return target;
@@ -298,28 +299,74 @@ public class EntityBuilderTests
         option.Output = @"Output\EntityInterfaces\";
         InterfaceBuilder.BuildInterfaces(tables, option);
 
+        // 拷贝输出到原始目录，仅测试使用
+        foreach (var table in tables)
+        {
+            {
+                var rs = File.ReadAllText($"Entity\\{table.DisplayName}.cs".GetFullPath());
+                var target = ReadTarget($"Code\\Entity\\{table.DisplayName}.cs", rs);
+            }
+            {
+                var rs = File.ReadAllText($"Entity\\{table.DisplayName}.Biz.cs".GetFullPath());
+                var target = ReadTarget($"Code\\Entity\\{table.DisplayName}.Biz.cs", rs);
+            }
+            {
+                var rs = File.ReadAllText($"Output\\EntityModels\\{table.Name}Model.cs".GetFullPath());
+                var target = ReadTarget($"Code\\EntityModels\\{table.Name}Model.cs", rs);
+            }
+            {
+                var rs = File.ReadAllText($"Output\\EntityInterfaces\\I{table.Name}.cs".GetFullPath());
+                var target = ReadTarget($"Code\\EntityInterfaces\\I{table.Name}.cs", rs);
+            }
+        }
+
         {
             var rs = File.ReadAllText("Entity\\日志.cs".GetFullPath());
             var target = ReadTarget("Code\\Entity\\日志.cs", rs);
             Assert.Equal(target, rs);
         }
-
         {
             var rs = File.ReadAllText("Entity\\日志.Biz.cs".GetFullPath());
             var target = ReadTarget("Code\\Entity\\日志.Biz.cs", rs);
             Assert.Equal(target, rs);
         }
-
         {
             var rs = File.ReadAllText("Output\\EntityModels\\LogModel.cs".GetFullPath());
             var target = ReadTarget("Code\\EntityModels\\LogModel.cs", rs);
             Assert.Equal(target, rs);
         }
-
         {
             var rs = File.ReadAllText("Output\\EntityInterfaces\\ILog.cs".GetFullPath());
             var target = ReadTarget("Code\\EntityInterfaces\\ILog.cs", rs);
             Assert.Equal(target, rs);
+        }
+
+        {
+            var rs = File.ReadAllText("Entity\\用户日志.cs".GetFullPath());
+            var target = ReadTarget("Code\\Entity\\用户日志.cs", rs);
+            Assert.Equal(target, rs);
+        }
+        {
+            var rs = File.ReadAllText("Entity\\用户日志.Biz.cs".GetFullPath());
+            var target = ReadTarget("Code\\Entity\\用户日志.Biz.cs", rs);
+            Assert.Equal(target, rs);
+
+            rs = File.ReadAllText("Output\\EntityInterfaces\\IUserLog.cs".GetFullPath());
+            ReadTarget("Code\\EntityInterfaces\\IUserLog.cs", rs);
+        }
+
+        {
+            var rs = File.ReadAllText("Entity\\成员日志.cs".GetFullPath());
+            var target = ReadTarget("Code\\Entity\\成员日志.cs", rs);
+            Assert.Equal(target, rs);
+        }
+        {
+            var rs = File.ReadAllText("Entity\\成员日志.Biz.cs".GetFullPath());
+            var target = ReadTarget("Code\\Entity\\成员日志.Biz.cs", rs);
+            Assert.Equal(target, rs);
+
+            rs = File.ReadAllText("Output\\EntityInterfaces\\IMemberLog.cs".GetFullPath());
+            ReadTarget("Code\\EntityInterfaces\\IMemberLog.cs", rs);
         }
     }
 

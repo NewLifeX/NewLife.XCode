@@ -7,12 +7,15 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership666;
 
-/// <summary>日志</summary>
-public partial interface ILog
+/// <summary>用户日志</summary>
+public partial interface IUserLog
 {
     #region 属性
-    /// <summary>编号。按天分表</summary>
+    /// <summary>编号</summary>
     Int64 ID { get; set; }
+
+    /// <summary>数据时间。按月分表</summary>
+    DateTime DataTime { get; set; }
 
     /// <summary>类别</summary>
     String? Category { get; set; }

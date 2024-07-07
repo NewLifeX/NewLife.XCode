@@ -13,24 +13,32 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Membership666;
 
-/// <summary>日志</summary>
+/// <summary>用户日志</summary>
 [Serializable]
 [DataObject]
-[Description("日志")]
-[BindIndex("IX_Log_Action_Category_ID", false, "Action,Category,ID")]
-[BindIndex("IX_Log_Category_LinkID_ID", false, "Category,LinkID,ID")]
-[BindIndex("IX_Log_CreateUserID_ID", false, "CreateUserID,ID")]
-[BindTable("Log", Description = "日志", ConnName = "Log", DbType = DatabaseType.None)]
-public partial class Log : ILog, IEntity<ILog>
+[Description("用户日志")]
+[BindIndex("IX_UserLog_Action_Category_ID", false, "Action,Category,ID")]
+[BindIndex("IX_UserLog_Category_LinkID_ID", false, "Category,LinkID,ID")]
+[BindIndex("IX_UserLog_CreateUserID_ID", false, "CreateUserID,ID")]
+[BindTable("UserLog", Description = "用户日志", ConnName = "Log", DbType = DatabaseType.None)]
+public partial class UserLog : IUserLog, IEntity<IUserLog>
 {
     #region 属性
     private Int64 _ID;
-    /// <summary>编号。按天分表</summary>
+    /// <summary>编号</summary>
     [DisplayName("编号")]
-    [Description("编号。按天分表")]
-    [DataObjectField(true, false, false, 0)]
-    [BindColumn("ID", "编号。按天分表", "", DataScale = "timeShard:yyMMdd")]
+    [Description("编号")]
+    [DataObjectField(true, true, false, 0)]
+    [BindColumn("ID", "编号", "")]
     public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+
+    private DateTime _DataTime;
+    /// <summary>数据时间。按月分表</summary>
+    [DisplayName("数据时间")]
+    [Description("数据时间。按月分表")]
+    [DataObjectField(false, false, true, 0)]
+    [BindColumn("DataTime", "数据时间。按月分表", "", DataScale = "timeShard:yyMM")]
+    public DateTime DataTime { get => _DataTime; set { if (OnPropertyChanging("DataTime", value)) { _DataTime = value; OnPropertyChanged("DataTime"); } } }
 
     private String? _Category;
     /// <summary>类别</summary>
@@ -181,9 +189,10 @@ public partial class Log : ILog, IEntity<ILog>
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(ILog model)
+    public void Copy(IUserLog model)
     {
         ID = model.ID;
+        DataTime = model.DataTime;
         Category = model.Category;
         Action = model.Action;
         LinkID = model.LinkID;
@@ -213,6 +222,7 @@ public partial class Log : ILog, IEntity<ILog>
         get => name switch
         {
             "ID" => _ID,
+            "DataTime" => _DataTime,
             "Category" => _Category,
             "Action" => _Action,
             "LinkID" => _LinkID,
@@ -237,6 +247,7 @@ public partial class Log : ILog, IEntity<ILog>
             switch (name)
             {
                 case "ID": _ID = value.ToLong(); break;
+                case "DataTime": _DataTime = value.ToDateTime(); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Action": _Action = Convert.ToString(value); break;
                 case "LinkID": _LinkID = value.ToInt(); break;
@@ -276,7 +287,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static Log FindByID(Int64 id)
+    public static UserLog FindByID(Int64 id)
     {
         if (id < 0) return null;
 
@@ -287,7 +298,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <param name="action">操作</param>
     /// <param name="category">类别</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByActionAndCategory(String action, String category)
+    public static IList<UserLog> FindAllByActionAndCategory(String action, String category)
     {
         if (action.IsNullOrEmpty()) return [];
         if (category.IsNullOrEmpty()) return [];
@@ -299,7 +310,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <param name="category">类别</param>
     /// <param name="linkId">链接</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCategoryAndLinkID(String category, Int32 linkId)
+    public static IList<UserLog> FindAllByCategoryAndLinkID(String category, Int32 linkId)
     {
         if (category.IsNullOrEmpty()) return [];
         if (linkId < 0) return [];
@@ -310,7 +321,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <summary>根据创建用户查找</summary>
     /// <param name="createUserId">创建用户</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCreateUserID(Int32 createUserId)
+    public static IList<UserLog> FindAllByCreateUserID(Int32 createUserId)
     {
         if (createUserId < 0) return [];
 
@@ -325,16 +336,21 @@ public partial class Log : ILog, IEntity<ILog>
     /// <returns>清理行数</returns>
     public static Int32 DeleteWith(DateTime start, DateTime end)
     {
-        return Delete(_.ID.Between(start, end, Meta.Factory.Snow));
+        if (start == end) return Delete(_.DataTime == start);
+
+        return Delete(_.DataTime.Between(start, end));
     }
     #endregion
 
     #region 字段名
-    /// <summary>取得日志字段信息的快捷方式</summary>
+    /// <summary>取得用户日志字段信息的快捷方式</summary>
     public partial class _
     {
-        /// <summary>编号。按天分表</summary>
+        /// <summary>编号</summary>
         public static readonly Field ID = FindByName("ID");
+
+        /// <summary>数据时间。按月分表</summary>
+        public static readonly Field DataTime = FindByName("DataTime");
 
         /// <summary>类别</summary>
         public static readonly Field Category = FindByName("Category");
@@ -390,11 +406,14 @@ public partial class Log : ILog, IEntity<ILog>
         static Field FindByName(String name) => Meta.Table.FindByName(name);
     }
 
-    /// <summary>取得日志字段名称的快捷方式</summary>
+    /// <summary>取得用户日志字段名称的快捷方式</summary>
     public partial class __
     {
-        /// <summary>编号。按天分表</summary>
+        /// <summary>编号</summary>
         public const String ID = "ID";
+
+        /// <summary>数据时间。按月分表</summary>
+        public const String DataTime = "DataTime";
 
         /// <summary>类别</summary>
         public const String Category = "Category";

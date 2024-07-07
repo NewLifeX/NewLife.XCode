@@ -26,28 +26,23 @@ using XCode.Shards;
 
 namespace XCode.Membership666;
 
-public partial class Log : Entity<Log>
+public partial class Tenant : Entity<Tenant>
 {
     #region 对象操作
-    static Log()
+    static Tenant()
     {
-        Meta.Table.DataTable.InsertOnly = true;
-
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
         //var df = Meta.Factory.AdditionalFields;
-        //df.Add(nameof(LinkID));
-        // 按天分表
-        //Meta.ShardPolicy = new TimeShardPolicy(nameof(ID), Meta.Factory)
-        //{
-        //    TablePolicy = "{0}_{1:yyyyMMdd}",
-        //    Step = TimeSpan.FromDays(1),
-        //};
+        //df.Add(nameof(ManagerId));
 
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Modules.Add(new UserModule { AllowEmpty = false });
         Meta.Modules.Add<TimeModule>();
         Meta.Modules.Add(new IPModule { AllowEmpty = false });
-        Meta.Modules.Add<TraceModule>();
+
+        // 实体缓存
+        // var ec = Meta.Cache;
+        // ec.Expire = 60;
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
@@ -63,17 +58,20 @@ public partial class Log : Entity<Log>
 
         // 在新插入数据或者修改了指定字段时进行修正
 
-        // 保留2位小数
-        //Ex3 = Math.Round(Ex3, 2);
-
         // 处理当前已登录用户信息，可以由UserModule过滤器代劳
         /*var user = ManageProvider.User;
         if (user != null)
         {
-            if (method == DataMethod.Insert && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
+            if (method == DataMethod.Insert && !Dirtys[nameof(CreateUserId)]) CreateUserId = user.ID;
+            if (!Dirtys[nameof(UpdateUserId)]) UpdateUserId = user.ID;
         }*/
         //if (method == DataMethod.Insert && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
+        //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
         //if (method == DataMethod.Insert && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
+        //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
+
+        // 检查唯一索引
+        // CheckExist(method == DataMethod.Insert, nameof(Code));
 
         return true;
     }
@@ -85,24 +83,21 @@ public partial class Log : Entity<Log>
     //    // InitData一般用于当数据表没有数据时添加一些默认数据，该实体类的任何第一次数据库操作都会触发该方法，默认异步调用
     //    if (Meta.Session.Count > 0) return;
 
-    //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Log[日志]数据……");
+    //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Tenant[租户]数据……");
 
-    //    var entity = new Log();
-    //    entity.ID = 0;
-    //    entity.Category = "abc";
-    //    entity.Action = "abc";
-    //    entity.LinkID = 0;
-    //    entity.Success = true;
-    //    entity.UserName = "abc";
-    //    entity.Ex1 = 0;
-    //    entity.Ex2 = 0;
-    //    entity.Ex3 = 0.0;
-    //    entity.Ex4 = "abc";
-    //    entity.Ex5 = "abc";
-    //    entity.Ex6 = "abc";
+    //    var entity = new Tenant();
+    //    entity.Code = "abc";
+    //    entity.Name = "abc";
+    //    entity.Enable = true;
+    //    entity.ManagerId = 0;
+    //    entity.RoleIds = "abc";
+    //    entity.Logo = "abc";
+    //    entity.DatabaseName = "abc";
+    //    entity.TableName = "abc";
+    //    entity.Expired = DateTime.Now;
     //    entity.Insert();
 
-    //    if (XTrace.Debug) XTrace.WriteLine("完成初始化Log[日志]数据！");
+    //    if (XTrace.Debug) XTrace.WriteLine("完成初始化Tenant[租户]数据！");
     //}
 
     ///// <summary>已重载。基类先调用Valid(true)验证数据，然后在事务保护内调用OnInsert</summary>
@@ -125,54 +120,38 @@ public partial class Log : Entity<Log>
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="category">类别</param>
-    /// <param name="action">操作</param>
-    /// <param name="linkId">链接</param>
-    /// <param name="createUserId">创建用户</param>
-    /// <param name="start">时间开始</param>
-    /// <param name="end">时间结束</param>
+    /// <param name="code">编码。唯一编码</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> Search(String category, String action, Int32 linkId, Int32 createUserId, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Tenant> Search(String code, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
-        if (!action.IsNullOrEmpty()) exp &= _.Action == action;
-        if (linkId >= 0) exp &= _.LinkID == linkId;
-        if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
-        exp &= _.CreateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Category.Contains(key) | _.Action.Contains(key) | _.UserName.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.TraceId.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.Remark.Contains(key);
+        if (!code.IsNullOrEmpty()) exp &= _.Code == code;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.RoleIds.Contains(key) | _.Logo.Contains(key) | _.DatabaseName.Contains(key) | _.TableName.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
 
         return FindAll(exp, page);
     }
 
-    // Select Count(Id) as Id,Action From Log Where CreateTime>'2020-01-24 00:00:00' Group By Action Order By Id Desc limit 20
-    static readonly FieldCache<Log> _ActionCache = new FieldCache<Log>(nameof(Action))
-    {
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-    };
+    // Select Count(Id) as Id,Category From Tenant Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
+    //static readonly FieldCache<Tenant> _CategoryCache = new FieldCache<Tenant>(nameof(Category))
+    //{
+    //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
+    //};
 
-    /// <summary>获取操作列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-    /// <returns></returns>
-    public static IDictionary<String, String> GetActionList() => _ActionCache.FindAllName();
-
-    // Select Count(Id) as Id,Category From Log Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-    static readonly FieldCache<Log> _CategoryCache = new FieldCache<Log>(nameof(Category))
-    {
-        //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
-    };
-
-    /// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
-    /// <returns></returns>
-    public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
+    ///// <summary>获取类别列表，字段缓存10分钟，分组统计数据最多的前20种，用于魔方前台下拉选择</summary>
+    ///// <returns></returns>
+    //public static IDictionary<String, String> GetCategoryList() => _CategoryCache.FindAllName();
     #endregion
 
     #region 业务操作
-    public ILog ToModel()
+    public ITenant ToModel()
     {
-        var model = new Log();
+        var model = new Tenant();
         model.Copy(this);
 
         return model;

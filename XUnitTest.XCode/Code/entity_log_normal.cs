@@ -288,6 +288,17 @@ public partial class Log
     }
     #endregion
 
+    #region 数据清理
+    /// <summary>清理指定时间段内的数据</summary>
+    /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>
+    /// <param name="end">结束时间</param>
+    /// <returns>清理行数</returns>
+    public static Int32 DeleteWith(DateTime start, DateTime end)
+    {
+        return Delete(_.ID.Between(start, end, Meta.Factory.Snow));
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得日志字段信息的快捷方式</summary>
     public partial class _

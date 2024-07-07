@@ -24,7 +24,7 @@ using XCode.DataAccessLayer;
 using XCode.Membership;
 using XCode.Shards;
 
-namespace XCode.Membership;
+namespace XCode.Membership666;
 
 public partial class User : Entity<User>
 {

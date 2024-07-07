@@ -7,12 +7,15 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership666;
 
-/// <summary>日志</summary>
-public partial class LogModel : ILog
+/// <summary>用户日志</summary>
+public partial class UserLogModel : IUserLog
 {
     #region 属性
-    /// <summary>编号。按天分表</summary>
+    /// <summary>编号</summary>
     public Int64 ID { get; set; }
+
+    /// <summary>数据时间。按月分表</summary>
+    public DateTime DataTime { get; set; }
 
     /// <summary>类别</summary>
     public String? Category { get; set; }
@@ -69,9 +72,10 @@ public partial class LogModel : ILog
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(ILog model)
+    public void Copy(IUserLog model)
     {
         ID = model.ID;
+        DataTime = model.DataTime;
         Category = model.Category;
         Action = model.Action;
         LinkID = model.LinkID;

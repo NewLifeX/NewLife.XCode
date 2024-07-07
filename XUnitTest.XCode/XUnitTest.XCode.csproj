@@ -13,23 +13,10 @@
     <Compile Remove="Code\class_user_normal.cs" />
     <Compile Remove="Code\class_user_pure.cs" />
     <Compile Remove="Code\class_user_save.cs" />
-    <Compile Remove="Code\Dtos\IUser.cs" />
-    <Compile Remove="Code\Dtos\UserDto.cs" />
-    <Compile Remove="Code\EntityInterfaces\ILog.cs" />
-    <Compile Remove="Code\EntityInterfaces\IUser.cs" />
-    <Compile Remove="Code\EntityModels\LogModel.cs" />
-    <Compile Remove="Code\EntityModels\UserModel.cs" />
-    <Compile Remove="Code\Entity\日志.Biz.cs" />
-    <Compile Remove="Code\Entity\日志.cs" />
-    <Compile Remove="Code\Entity\用户.Biz.cs" />
-    <Compile Remove="Code\Entity\用户.Biz2.cs" />
-    <Compile Remove="Code\Entity\用户.cs" />
     <Compile Remove="Code\entity_log_normal.cs" />
     <Compile Remove="Code\entity_log_normal_biz.cs" />
     <Compile Remove="Code\entity_user_normal.cs" />
     <Compile Remove="Code\entity_user_normal_biz.cs" />
-    <Compile Remove="Code\Models\IUserModel.cs" />
-    <Compile Remove="Code\Models\UserModel.cs" />
     <Compile Remove="DataAccessLayer\DAL_EnvironmentVariable.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -49,6 +36,32 @@
     <EmbeddedResource Include="TestEntity\MenuX.sql" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Code\Dtos\**" />
+    <None Include="Code\Dtos\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Remove="Code\Entity\**" />
+    <None Include="Code\Entity\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Remove="Code\EntityInterfaces\**" />
+    <None Include="Code\EntityInterfaces\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Remove="Code\EntityModels\**" />
+    <None Include="Code\EntityModels\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Remove="Code\EntityModels\**" />
+    <None Include="Code\EntityModels\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Remove="Code\Models\**" />
+    <None Include="Code\Models\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
     <None Include="Code\BuildTT\UserTT.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -59,39 +72,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Code\class_user_save.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\Dtos\IUser.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\Dtos\UserDto.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\EntityInterfaces\ILog.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\EntityInterfaces\IUser.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\EntityModels\LogModel.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\EntityModels\UserModel.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\Entity\日志.Biz.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\Entity\日志.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\Entity\用户.Biz2.cs">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\Entity\用户.Biz.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\Entity\用户.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Code\entity_log_normal.cs">
@@ -107,12 +87,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Code\class_user_normal.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\Models\IUserModel.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Code\Models\UserModel.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

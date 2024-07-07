@@ -7,33 +7,39 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership666;
 
-/// <summary>日志</summary>
-public partial class LogModel : ILog
+/// <summary>字典参数</summary>
+public partial class ParameterModel : IParameter
 {
     #region 属性
-    /// <summary>编号。按天分表</summary>
-    public Int64 ID { get; set; }
+    /// <summary>编号</summary>
+    public Int32 ID { get; set; }
+
+    /// <summary>用户。按用户区分参数，用户0表示系统级</summary>
+    public Int32 UserID { get; set; }
 
     /// <summary>类别</summary>
     public String? Category { get; set; }
 
-    /// <summary>操作</summary>
-    public String? Action { get; set; }
+    /// <summary>名称</summary>
+    public String? Name { get; set; }
 
-    /// <summary>链接</summary>
-    public Int32 LinkID { get; set; }
+    /// <summary>数值</summary>
+    public String? Value { get; set; }
 
-    /// <summary>成功</summary>
-    public Boolean Success { get; set; }
+    /// <summary>长数值</summary>
+    public String? LongValue { get; set; }
 
-    /// <summary>用户名</summary>
-    public String? UserName { get; set; }
+    /// <summary>种类。0普通，21列表，22名值</summary>
+    public XCode.Membership.ParameterKinds Kind { get; set; }
+
+    /// <summary>启用</summary>
+    public Boolean Enable { get; set; }
 
     /// <summary>扩展1</summary>
     public Int32 Ex1 { get; set; }
 
     /// <summary>扩展2</summary>
-    public Int32 Ex2 { get; set; }
+    public Decimal Ex2 { get; set; }
 
     /// <summary>扩展3</summary>
     public Double Ex3 { get; set; }
@@ -47,9 +53,6 @@ public partial class LogModel : ILog
     /// <summary>扩展6</summary>
     public String? Ex6 { get; set; }
 
-    /// <summary>性能追踪。用于APM性能追踪定位，还原该事件的调用链</summary>
-    public String? TraceId { get; set; }
-
     /// <summary>创建者</summary>
     public String? CreateUser { get; set; }
 
@@ -59,35 +62,52 @@ public partial class LogModel : ILog
     /// <summary>创建地址</summary>
     public String? CreateIP { get; set; }
 
-    /// <summary>时间</summary>
+    /// <summary>创建时间</summary>
     public DateTime CreateTime { get; set; }
 
-    /// <summary>详细信息</summary>
+    /// <summary>更新者</summary>
+    public String? UpdateUser { get; set; }
+
+    /// <summary>更新用户</summary>
+    public Int32 UpdateUserID { get; set; }
+
+    /// <summary>更新地址</summary>
+    public String? UpdateIP { get; set; }
+
+    /// <summary>更新时间</summary>
+    public DateTime UpdateTime { get; set; }
+
+    /// <summary>备注</summary>
     public String? Remark { get; set; }
     #endregion
 
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(ILog model)
+    public void Copy(IParameter model)
     {
         ID = model.ID;
+        UserID = model.UserID;
         Category = model.Category;
-        Action = model.Action;
-        LinkID = model.LinkID;
-        Success = model.Success;
-        UserName = model.UserName;
+        Name = model.Name;
+        Value = model.Value;
+        LongValue = model.LongValue;
+        Kind = model.Kind;
+        Enable = model.Enable;
         Ex1 = model.Ex1;
         Ex2 = model.Ex2;
         Ex3 = model.Ex3;
         Ex4 = model.Ex4;
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
-        TraceId = model.TraceId;
         CreateUser = model.CreateUser;
         CreateUserID = model.CreateUserID;
         CreateIP = model.CreateIP;
         CreateTime = model.CreateTime;
+        UpdateUser = model.UpdateUser;
+        UpdateUserID = model.UpdateUserID;
+        UpdateIP = model.UpdateIP;
+        UpdateTime = model.UpdateTime;
         Remark = model.Remark;
     }
     #endregion

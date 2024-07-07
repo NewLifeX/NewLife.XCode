@@ -8,7 +8,7 @@
     <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
     <BaseClass>Entity</BaseClass>
     <!--命名空间-->
-    <Namespace>XCode.Membership</Namespace>
+    <Namespace>XCode.Membership666</Namespace>
     <!--输出目录-->
     <Output>..\..\XUnitTest.XCode\Code</Output>
     <!--是否使用中文文件名。默认false-->
@@ -245,7 +245,7 @@
     </Table>
     <Table Name="Log" Description="日志" ConnName="Log" InsertOnly="True">
       <Columns>
-        <Column Name="ID" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
+        <Column Name="ID" DataType="Int64" PrimaryKey="True" DataScale="timeShard:yyMMdd" Description="编号。按天分表" />
         <Column Name="Category" DataType="String" Description="类别" />
         <Column Name="Action" DataType="String" Description="操作" />
         <Column Name="LinkID" ColumnName="link_id" DataType="Int32" Description="链接" />
@@ -313,6 +313,62 @@
       <Indexes>
         <Index Name="IU_TenantUser_TenantId_UserId" Columns="TenantId,UserId" Unique="True" />
         <Index Name="IX_TenantUser_UserId" Columns="UserId" />
+      </Indexes>
+    </Table>
+    <Table Name="UserLog" TableName="user_log" Description="用户日志" ConnName="Log">
+      <Columns>
+        <Column Name="ID" DataType="Int64" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="DataTime" ColumnName="data_time" DataType="DateTime" DataScale="timeShard:yyMM" Description="数据时间。按月分表" />
+        <Column Name="Category" DataType="String" Description="类别" />
+        <Column Name="Action" DataType="String" Description="操作" />
+        <Column Name="LinkID" ColumnName="link_id" DataType="Int32" Description="链接" />
+        <Column Name="Success" DataType="Boolean" Description="成功" />
+        <Column Name="UserName" ColumnName="user_name" DataType="String" Description="用户名" />
+        <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
+        <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />
+        <Column Name="Ex3" DataType="Double" Description="扩展3" Category="扩展" />
+        <Column Name="Ex4" DataType="String" Description="扩展4" Category="扩展" />
+        <Column Name="Ex5" DataType="String" Description="扩展5" Category="扩展" />
+        <Column Name="Ex6" DataType="String" Description="扩展6" Category="扩展" />
+        <Column Name="TraceId" ColumnName="trace_id" DataType="String" Description="性能追踪。用于APM性能追踪定位，还原该事件的调用链" />
+        <Column Name="CreateUser" ColumnName="create_user" DataType="String" Description="创建者" Category="扩展" />
+        <Column Name="CreateUserID" ColumnName="create_user_id" DataType="Int32" Map="User@Id@$" Description="创建用户" Category="扩展" />
+        <Column Name="CreateIP" ColumnName="create_ip" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="CreateTime" ColumnName="create_time" DataType="DateTime" Nullable="False" Description="时间" />
+        <Column Name="Remark" DataType="String" Length="2000" Description="详细信息" />
+      </Columns>
+      <Indexes>
+        <Index Name="IX_UserLog_Action_Category_ID" Columns="Action,Category,ID" />
+        <Index Name="IX_UserLog_Category_LinkID_ID" Columns="Category,LinkID,ID" />
+        <Index Name="IX_UserLog_CreateUserID_ID" Columns="CreateUserID,ID" />
+      </Indexes>
+    </Table>
+    <Table Name="MemberLog" TableName="member_log" Description="成员日志" ConnName="Log">
+      <Columns>
+        <Column Name="ID" DataType="Int64" Identity="True" PrimaryKey="True" Description="编号" />
+        <Column Name="Ds" DataType="String" DataScale="time" Description="数据分区" />
+        <Column Name="Category" DataType="String" Description="类别" />
+        <Column Name="Action" DataType="String" Description="操作" />
+        <Column Name="LinkID" ColumnName="link_id" DataType="Int32" Description="链接" />
+        <Column Name="Success" DataType="Boolean" Description="成功" />
+        <Column Name="UserName" ColumnName="user_name" DataType="String" Description="用户名" />
+        <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
+        <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />
+        <Column Name="Ex3" DataType="Double" Description="扩展3" Category="扩展" />
+        <Column Name="Ex4" DataType="String" Description="扩展4" Category="扩展" />
+        <Column Name="Ex5" DataType="String" Description="扩展5" Category="扩展" />
+        <Column Name="Ex6" DataType="String" Description="扩展6" Category="扩展" />
+        <Column Name="TraceId" ColumnName="trace_id" DataType="String" Description="性能追踪。用于APM性能追踪定位，还原该事件的调用链" />
+        <Column Name="CreateUser" ColumnName="create_user" DataType="String" Description="创建者" Category="扩展" />
+        <Column Name="CreateUserID" ColumnName="create_user_id" DataType="Int32" Map="User@Id@$" Description="创建用户" Category="扩展" />
+        <Column Name="CreateIP" ColumnName="create_ip" DataType="String" Description="创建地址" Category="扩展" />
+        <Column Name="CreateTime" ColumnName="create_time" DataType="DateTime" Nullable="False" Description="时间" />
+        <Column Name="Remark" DataType="String" Length="2000" Description="详细信息" />
+      </Columns>
+      <Indexes>
+        <Index Name="IX_MemberLog_Action_Category_ID" Columns="Action,Category,ID" />
+        <Index Name="IX_MemberLog_Category_LinkID_ID" Columns="Category,LinkID,ID" />
+        <Index Name="IX_MemberLog_CreateUserID_ID" Columns="CreateUserID,ID" />
       </Indexes>
     </Table>
   </Tables>

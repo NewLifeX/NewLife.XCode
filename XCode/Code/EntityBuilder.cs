@@ -145,6 +145,16 @@ public class EntityBuilder : ClassBuilder
             }
         }
 
+        // 使用缓存
+        foreach (var table in tables)
+        {
+            var cache = table.Properties["UsingCache"];
+            if (!cache.IsNullOrEmpty() && !cache.ToBoolean(true))
+                table.Properties["UsingCache"] = false.ToString();
+            else
+                table.Properties.Remove("UsingCache");
+        }
+
         // 更新xsd
         atts["xmlns"] = "https://newlifex.com/Model202407.xsd";
         atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202407.xsd";
@@ -271,9 +281,19 @@ public class EntityBuilder : ClassBuilder
         else if (!modelClass.IsNullOrEmpty())
             option.ModelNameForCopy = modelClass;
 
-        // 标记为大数据的表不使用缓存
-        var fi = table.Columns.FirstOrDefault(e => e.DataScale.EqualIgnoreCase("time") || e.DataScale.StartsWithIgnoreCase("time:", "timeShard:"));
-        if (fi != null) UsingCache = false;
+        // 使用缓存
+        if (UsingCache)
+        {
+            var cache = table.Properties["UsingCache"];
+            if (!cache.IsNullOrEmpty() && !cache.ToBoolean(true)) UsingCache = false;
+        }
+
+        if (UsingCache)
+        {
+            // 标记为大数据的表不使用缓存
+            var fi = table.Columns.FirstOrDefault(e => e.DataScale.EqualIgnoreCase("time") || e.DataScale.StartsWithIgnoreCase("time:", "timeShard:"));
+            if (fi != null) UsingCache = false;
+        }
     }
 
     #endregion 方法

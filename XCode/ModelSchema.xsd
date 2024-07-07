@@ -271,7 +271,14 @@
     <xs:attribute name="InsertOnly" type="BooleanType">
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">
-          仅插入数据，比如日志型
+          仅插入数据，比如日志表、记录表、事件表等
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="UsingCache" type="BooleanType">
+      <xs:annotation>
+        <xs:documentation xml:lang="zh-cn">
+          使用缓存。生成Find/FindAll等方法时是否使用缓存
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

@@ -185,7 +185,7 @@
         <Index Columns="ParentID,Name" Unique="True" />
       </Indexes>
     </Table>
-    <Table Name="Parameter" Description="字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合">
+    <Table Name="Parameter" Description="字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合" UsingCache="False">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="UserID" DataType="Int32" Map="User@Id@$" Description="用户。按用户区分参数，用户0表示系统级" />

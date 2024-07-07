@@ -18,7 +18,7 @@ namespace XCode.Membership666;
 [DataObject]
 [Description("租户。多租户SAAS平台，用于隔离业务数据")]
 [BindIndex("IU_Tenant_Code", true, "Code")]
-[BindTable("Tenant", Description = "租户。多租户SAAS平台，用于隔离业务数据", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("Tenant", Description = "租户。多租户SAAS平台，用于隔离业务数据", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class Tenant : ITenant, IEntity<ITenant>
 {
     #region 属性

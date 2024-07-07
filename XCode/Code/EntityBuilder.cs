@@ -288,6 +288,13 @@ public class EntityBuilder : ClassBuilder
         {
             UsingCache = false;
             ScaleColumn = column;
+
+            if (column.DataScale.StartsWithIgnoreCase("timeShard:"))
+            {
+                var us = Option.Usings;
+                us.Add("System.Linq");
+                us.Add("NewLife.Log");
+            }
         }
 
         // 增加常用命名空间
@@ -974,6 +981,40 @@ public class EntityBuilder : ClassBuilder
             }
         }
         WriteLine("}");
+
+        // 对于分库分表的大数据表，生成删表方法
+        if (column.DataScale.StartsWithIgnoreCase("timeShard:"))
+        {
+            WriteLine();
+            WriteLine("/// <summary>删除指定时间段内的数据表</summary>");
+            WriteLine("/// <param name=\"start\">开始时间</param>");
+            WriteLine("/// <param name=\"end\">结束时间</param>");
+            WriteLine("/// <returns>清理行数</returns>");
+            WriteLine("public static Int32 DropWith(DateTime start, DateTime end)");
+            WriteLine("{");
+            {
+                WriteLine("return Meta.AutoShard(start, end, session =>", column.Name);
+                WriteLine("{");
+                {
+                    WriteLine("try");
+                    WriteLine("{");
+                    {
+                        WriteLine("return session.Execute($\"Drop Table {session.FormatedTableName}\");");
+                    }
+                    WriteLine("}");
+                    WriteLine("catch (Exception ex)");
+                    WriteLine("{");
+                    {
+                        WriteLine("XTrace.WriteException(ex);");
+                        WriteLine("return 0;");
+                    }
+                    WriteLine("}");
+                }
+                WriteLine("}");
+                WriteLine(").Sum();");
+            }
+            WriteLine("}");
+        }
 
         WriteLine("#endregion");
     }

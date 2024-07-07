@@ -23,7 +23,7 @@ namespace XCode.Membership666;
 [BindIndex("IX_User_Code", false, "Code")]
 [BindIndex("IX_User_RoleID", false, "RoleID")]
 [BindIndex("IX_User_UpdateTime", false, "UpdateTime")]
-[BindTable("User", Description = "用户。用户帐号信息", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("User", Description = "用户。用户帐号信息", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class User : IUser, IEntity<IUser>
 {
     #region 属性

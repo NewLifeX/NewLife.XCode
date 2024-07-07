@@ -13,6 +13,7 @@
     <Compile Remove="Code\class_user_normal.cs" />
     <Compile Remove="Code\class_user_pure.cs" />
     <Compile Remove="Code\class_user_save.cs" />
+    <Compile Remove="Code\Entity\用户.Biz2.cs" />
     <Compile Remove="Code\entity_log_normal.cs" />
     <Compile Remove="Code\entity_log_normal_biz.cs" />
     <Compile Remove="Code\entity_user_normal.cs" />
@@ -38,22 +39,6 @@
   <ItemGroup>
     <Compile Remove="Code\Dtos\**" />
     <None Include="Code\Dtos\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Compile Remove="Code\Entity\**" />
-    <None Include="Code\Entity\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Compile Remove="Code\EntityInterfaces\**" />
-    <None Include="Code\EntityInterfaces\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Compile Remove="Code\EntityModels\**" />
-    <None Include="Code\EntityModels\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <Compile Remove="Code\EntityModels\**" />
-    <None Include="Code\EntityModels\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Remove="Code\Models\**" />

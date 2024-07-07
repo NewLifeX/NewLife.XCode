@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
+using NewLife.Log;
 using XCode;
 using XCode.Cache;
 using XCode.Configuration;
@@ -339,6 +341,27 @@ public partial class UserLog : IUserLog, IEntity<IUserLog>
         if (start == end) return Delete(_.DataTime == start);
 
         return Delete(_.DataTime.Between(start, end));
+    }
+
+    /// <summary>删除指定时间段内的数据表</summary>
+    /// <param name="start">开始时间</param>
+    /// <param name="end">结束时间</param>
+    /// <returns>清理行数</returns>
+    public static Int32 DropWith(DateTime start, DateTime end)
+    {
+        return Meta.AutoShard(start, end, session =>
+        {
+            try
+            {
+                return session.Execute($"Drop Table {session.FormatedTableName}");
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+                return 0;
+            }
+        }
+        ).Sum();
     }
     #endregion
 

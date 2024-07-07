@@ -18,7 +18,7 @@ namespace XCode.Membership666;
 [DataObject]
 [Description("角色")]
 [BindIndex("IU_Role_Name", true, "Name")]
-[BindTable("Role", Description = "角色", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("Role", Description = "角色", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class Role : IRole, IEntity<IRole>
 {
     #region 属性

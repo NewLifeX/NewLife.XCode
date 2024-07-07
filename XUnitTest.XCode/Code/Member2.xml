@@ -20,7 +20,7 @@
     <!--可为null上下文。生成String?等-->
     <Nullable>False</Nullable>
     <!--数据库连接名-->
-    <ConnName>Membership</ConnName>
+    <ConnName>Membership666</ConnName>
     <!--模型类模版。设置后生成模型类，用于接口数据传输，例如{name}Model-->
     <ModelClass>{name}Model</ModelClass>
     <!--模型类输出目录。默认当前目录的Models子目录-->

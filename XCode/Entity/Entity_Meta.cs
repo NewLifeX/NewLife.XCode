@@ -230,8 +230,7 @@ public partial class Entity<TEntity>
                 if (!dal.TableNames.Contains(shard.TableName)) continue;
 
                 using var split = new SplitPackge(shard.ConnName, shard.TableName);
-                var rs = callback();
-                if (!Equals(rs, default)) yield return rs;
+                yield return callback();
             }
         }
 
@@ -262,6 +261,28 @@ public partial class Entity<TEntity>
 #endif
                 Meta.ConnName = ConnName;
                 Meta.TableName = TableName;
+            }
+        }
+
+        /// <summary>针对时间区间自动分库分表，常用于多表顺序查询，支持倒序</summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
+        public static IEnumerable<T> AutoShard<T>(DateTime start, DateTime end, Func<IEntitySession, T> callback)
+        {
+            // 使用自动分表分库策略
+            var models = ShardPolicy?.Shards(start, end);
+            if (models == null) yield break;
+
+            foreach (var shard in models)
+            {
+                // 如果目标分表不存在，则不要展开查询
+                var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : Session.Dal;
+                if (!dal.TableNames.Contains(shard.TableName)) continue;
+
+                var ss = EntitySession<TEntity>.Create(shard.ConnName, shard.TableName);
+                yield return callback(ss);
             }
         }
         #endregion

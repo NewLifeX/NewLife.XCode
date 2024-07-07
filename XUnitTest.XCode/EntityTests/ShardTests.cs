@@ -413,4 +413,32 @@ public class ShardTests
         // 恢复现场，避免影响其它测试用例
         Log2.Meta.ShardPolicy = null;
     }
+
+    [TestOrder(140)]
+    [Fact(Skip = "跳过")]
+    public void SearchAutoShard4()
+    {
+        // 配置自动分表策略，一般在实体类静态构造函数中配置
+        var shard = new TimeShardPolicy("ID", Log2.Meta.Factory)
+        {
+            ConnPolicy = "{0}_{1:yyyy}",
+            TablePolicy = "{0}_{1:yyyyMMdd}",
+        };
+
+        var start = DateTime.Today;
+        var end = DateTime.Today;
+        Log2.Meta.AutoShard(start, end, session =>
+        {
+            try
+            {
+                return session.Execute($"Drop Table {session.FormatedTableName}");
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+                return 0;
+            }
+        }
+        );
+    }
 }

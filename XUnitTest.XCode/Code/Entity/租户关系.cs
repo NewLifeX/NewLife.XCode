@@ -19,7 +19,7 @@ namespace XCode.Membership666;
 [Description("租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权")]
 [BindIndex("IU_TenantUser_TenantId_UserId", true, "TenantId,UserId")]
 [BindIndex("IX_TenantUser_UserId", false, "UserId")]
-[BindTable("TenantUser", Description = "租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("TenantUser", Description = "租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
 {
     #region 属性

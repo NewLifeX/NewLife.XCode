@@ -20,7 +20,7 @@ namespace XCode.Membership666;
 [BindIndex("IU_Parameter_UserID_Category_Name", true, "UserID,Category,Name")]
 [BindIndex("IX_Parameter_Category_Name", false, "Category,Name")]
 [BindIndex("IX_Parameter_UpdateTime", false, "UpdateTime")]
-[BindTable("Parameter", Description = "字典参数", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("Parameter", Description = "字典参数", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class Parameter : IParameter, IEntity<IParameter>
 {
     #region 属性

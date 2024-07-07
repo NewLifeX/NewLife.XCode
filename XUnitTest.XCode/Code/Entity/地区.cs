@@ -23,7 +23,7 @@ namespace XCode.Membership666;
 [BindIndex("IX_Area_JianPin", false, "JianPin")]
 [BindIndex("IX_Area_GeoHash", false, "GeoHash")]
 [BindIndex("IX_Area_UpdateTime_ID", false, "UpdateTime,ID")]
-[BindTable("Area", Description = "地区。行政区划数据，最高支持四级地址，9位数字", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("Area", Description = "地区。行政区划数据，最高支持四级地址，9位数字", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class Area : IArea, IEntity<IArea>
 {
     #region 属性

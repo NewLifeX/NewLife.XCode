@@ -22,7 +22,7 @@ namespace XCode.Membership666;
 [BindIndex("IX_Department_Code", false, "Code")]
 [BindIndex("IX_Department_UpdateTime", false, "UpdateTime")]
 [BindIndex("IX_Department_TenantId", false, "TenantId")]
-[BindTable("Department", Description = "部门。组织机构，多级树状结构", ConnName = "Membership", DbType = DatabaseType.None)]
+[BindTable("Department", Description = "部门。组织机构，多级树状结构", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class Department : IDepartment, IEntity<IDepartment>
 {
     #region 属性

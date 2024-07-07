@@ -37,12 +37,6 @@ public partial class Log : Entity<Log>
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(LinkID));
-        // 按天分表
-        //Meta.ShardPolicy = new TimeShardPolicy(nameof(ID), Meta.Factory)
-        //{
-        //    TablePolicy = "{0}_{1:yyyyMMdd}",
-        //    Step = TimeSpan.FromDays(1),
-        //};
 
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Modules.Add(new UserModule { AllowEmpty = false });

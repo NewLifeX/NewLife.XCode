@@ -36,8 +36,8 @@
 
 时间字段几种场景：
 
-1. 时间字段。创建更新时间或者业务时间DataTime，支持timeshard:yyyy:yyMMdd，后面两段是分库分表表达式，第二段为空时只分表不分库，即timeshard::yyMMdd。
-2. 雪花Id。支持timeshard:yyyy:yyMMdd，后面两段是分库分表表达式，第二段为空时只分表不分库，即timeshard::yyMMdd。
+1. 时间字段。创建更新时间或者业务时间DataTime，支持timeshard:yyMMdd:yyyy，后面两段是分库分表表达式，第三段为空时只分表不分库，即timeshard::yyMMdd。
+2. 雪花Id。支持timeshard:yyMMdd:yyyy，后面两段是分库分表表达式，第三段为空时只分表不分库，即timeshard::yyMMdd。
 
 
 

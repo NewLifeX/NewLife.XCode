@@ -35,6 +35,13 @@ public partial class UserLog : Entity<UserLog>
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(LinkID));
 
+        // 按月分表
+        Meta.ShardPolicy = new TimeShardPolicy(nameof(DataTime), Meta.Factory)
+        {
+                TablePolicy = "{0}_{1:yyMM}",
+                Step = TimeSpan.FromDays(30),
+        };
+
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Modules.Add(new UserModule { AllowEmpty = false });
         Meta.Modules.Add<TimeModule>();

@@ -27,11 +27,11 @@ public partial class Log : ILog, IEntity<ILog>
 {
     #region 属性
     private Int64 _ID;
-    /// <summary>编号。按天分表</summary>
+    /// <summary>编号。按小时分表，按月分库</summary>
     [DisplayName("编号")]
-    [Description("编号。按天分表")]
+    [Description("编号。按小时分表，按月分库")]
     [DataObjectField(true, false, false, 0)]
-    [BindColumn("ID", "编号。按天分表", "", DataScale = "timeShard:yyMMdd")]
+    [BindColumn("ID", "编号。按小时分表，按月分库", "", DataScale = "timeShard:yyMMddHH:yyyyMM")]
     public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
     private String? _Category;
@@ -356,7 +356,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <summary>取得日志字段信息的快捷方式</summary>
     public partial class _
     {
-        /// <summary>编号。按天分表</summary>
+        /// <summary>编号。按小时分表，按月分库</summary>
         public static readonly Field ID = FindByName("ID");
 
         /// <summary>类别</summary>
@@ -416,7 +416,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <summary>取得日志字段名称的快捷方式</summary>
     public partial class __
     {
-        /// <summary>编号。按天分表</summary>
+        /// <summary>编号。按小时分表，按月分库</summary>
         public const String ID = "ID";
 
         /// <summary>类别</summary>

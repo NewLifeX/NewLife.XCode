@@ -1076,16 +1076,9 @@ public class EntityBuilder : ClassBuilder
             }
 
             // 自动分表
-            dc = Table.Columns.FirstOrDefault(e => !e.Identity && e.PrimaryKey && e.DataType == typeof(Int64));
-            if (dc != null)
-            {
-                WriteLine("// 按天分表");
-                WriteLine("//Meta.ShardPolicy = new TimeShardPolicy(nameof({0}), Meta.Factory)", dc.Name);
-                WriteLine("//{");
-                WriteLine("//    TablePolicy = \"{0}_{1:yyyyMMdd}\",");
-                WriteLine("//    Step = TimeSpan.FromDays(1),");
-                WriteLine("//};");
-            }
+            dc = ScaleColumn;
+            if (dc != null && !dc.DataScale.IsNullOrEmpty() && dc.DataScale.StartsWithIgnoreCase("timeShard:"))
+                BuildShardPolicy(dc);
 
             var ns = new HashSet<String>(Table.Columns.Select(e => e.Name), StringComparer.OrdinalIgnoreCase);
             WriteLine();
@@ -1129,6 +1122,52 @@ public class EntityBuilder : ClassBuilder
             }
         }
         WriteLine("}");
+    }
+
+    /// <summary>生成分表策略</summary>
+    /// <param name="dc"></param>
+    protected virtual void BuildShardPolicy(IDataColumn dc)
+    {
+        if (dc.DataScale.IsNullOrEmpty()) return;
+
+        var ss = dc.DataScale.Split(":");
+        var tablePolicy = ss.Length >= 2 ? ss[1] : "";
+        var connPolicy = ss.Length >= 3 ? ss[2] : "";
+        if (!connPolicy.IsNullOrEmpty() || !tablePolicy.IsNullOrEmpty())
+        {
+            WriteLine();
+
+            if (tablePolicy.Contains("HH") || connPolicy.Contains("HH"))
+                WriteLine("// 按小时分表");
+            else if (tablePolicy.Contains("dd") || connPolicy.Contains("dd"))
+                WriteLine("// 按天分表");
+            else if (tablePolicy.Contains("MM") || connPolicy.Contains("MM"))
+                WriteLine("// 按月分表");
+            else if (tablePolicy.Contains("yy") || connPolicy.Contains("yy"))
+                WriteLine("// 按年分表");
+            else
+                WriteLine("// 按[{0}/{1}]分表", connPolicy, tablePolicy);
+
+            WriteLine("Meta.ShardPolicy = new TimeShardPolicy(nameof({0}), Meta.Factory)", dc.Name);
+            WriteLine("{");
+            if (!connPolicy.IsNullOrEmpty())
+                WriteLine($"    ConnPolicy = \"{{0}}_{{1:{connPolicy}}}\",");
+            if (!tablePolicy.IsNullOrEmpty())
+                WriteLine($"    TablePolicy = \"{{0}}_{{1:{tablePolicy}}}\",");
+
+            if (tablePolicy.Contains("HH") || connPolicy.Contains("HH"))
+                WriteLine("    Step = TimeSpan.FromHours(1),");
+            else if (tablePolicy.Contains("dd") || connPolicy.Contains("dd"))
+                WriteLine("    Step = TimeSpan.FromDays(1),");
+            else if (tablePolicy.Contains("MM") || connPolicy.Contains("MM"))
+                WriteLine("    Step = TimeSpan.FromDays(30),");
+            else if (tablePolicy.Contains("yy") || connPolicy.Contains("yy"))
+                WriteLine("    Step = TimeSpan.FromDays(365),");
+            else
+                WriteLine("    Step = TimeSpan.FromDays(1),");
+
+            WriteLine("};");
+        }
     }
 
     static String[] _validExcludes = ["CreateUser", "CreateUserID", "CreateTime", "CreateIP", "UpdateUser", "UpdateUserID", "UpdateTime", "UpdateIP", "Remark", "TraceId"];

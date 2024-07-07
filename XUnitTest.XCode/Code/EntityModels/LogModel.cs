@@ -11,7 +11,7 @@ namespace XCode.Membership666;
 public partial class LogModel : ILog
 {
     #region 属性
-    /// <summary>编号。按天分表</summary>
+    /// <summary>编号。按小时分表，按月分库</summary>
     public Int64 ID { get; set; }
 
     /// <summary>类别</summary>

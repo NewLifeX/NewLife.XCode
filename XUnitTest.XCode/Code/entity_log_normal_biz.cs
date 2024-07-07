@@ -158,7 +158,6 @@ public partial class Log : Entity<Log>
     {
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Action.EqualIgnoreCase(action) && e.Category.EqualIgnoreCase(category));
-
         return FindAll(_.Action == action & _.Category == category);
     }
 
@@ -170,7 +169,6 @@ public partial class Log : Entity<Log>
     {
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.LinkID == linkId);
-
         return FindAll(_.Category == category & _.LinkID == linkId);
     }
 

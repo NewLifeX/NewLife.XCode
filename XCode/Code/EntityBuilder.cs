@@ -4,6 +4,7 @@ using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Reflection;
+using XCode.Configuration;
 using XCode.DataAccessLayer;
 
 namespace XCode.Code;
@@ -18,11 +19,14 @@ public class EntityBuilder : ClassBuilder
     /// <summary>合并业务类，当业务类已存在时。默认true</summary>
     public Boolean MergeBusiness { get; set; } = true;
 
+    /// <summary>使用缓存。默认true，标记为大数据的表不使用缓存</summary>
+    public Boolean UsingCache { get; set; } = true;
+
     /// <summary>所有表类型名。用于扩展属性</summary>
-    public IList<IDataTable> AllTables { get; set; } = new List<IDataTable>();
+    public IList<IDataTable> AllTables { get; set; } = [];
 
     /// <summary>实体类生成选型</summary>
-    public EntityBuilderOption EntityOption => Option as EntityBuilderOption;
+    public EntityBuilderOption EntityOption => (EntityBuilderOption)Option;
     #endregion 属性
 
     #region 静态快速
@@ -193,7 +197,7 @@ public class EntityBuilder : ClassBuilder
             {
                 AllTables = tables,
                 Option = option.Clone(),
-                Log = log
+                Log = log!
             };
 
             // 不能对option赋值，否则所有table的ModelNameForToModel就相同了
@@ -262,6 +266,10 @@ public class EntityBuilder : ClassBuilder
         }
         else if (!modelClass.IsNullOrEmpty())
             option.ModelNameForCopy = modelClass;
+
+        // 标记为大数据的表不使用缓存
+        var fi = table.Columns.FirstOrDefault(e => !e.DataScale.IsNullOrEmpty());
+        if (fi != null) UsingCache = false;
     }
 
     #endregion 方法
@@ -1391,19 +1399,27 @@ public class EntityBuilder : ClassBuilder
                 else if (pk.DataType == typeof(String))
                     WriteLine("if ({0}.IsNullOrEmpty()) return null;", name);
 
-                WriteLine();
-                WriteLine("// 实体缓存");
-                if (pk.DataType == typeof(String))
-                    WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.{0}.EqualIgnoreCase({1}));", pk.Name, name);
+                if (UsingCache)
+                {
+                    WriteLine();
+                    WriteLine("// 实体缓存");
+                    if (pk.DataType == typeof(String))
+                        WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.{0}.EqualIgnoreCase({1}));", pk.Name, name);
+                    else
+                        WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.{0} == {1});", pk.Name, name);
+
+                    WriteLine();
+                    WriteLine("// 单对象缓存");
+                    WriteLine("return Meta.SingleCache[{0}];", name);
+
+                    WriteLine();
+                    WriteLine("//return Find(_.{0} == {1});", pk.Name, name);
+                }
                 else
-                    WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.{0} == {1});", pk.Name, name);
-
-                WriteLine();
-                WriteLine("// 单对象缓存");
-                WriteLine("return Meta.SingleCache[{0}];", name);
-
-                WriteLine();
-                WriteLine("//return Find(_.{0} == {1});", pk.Name, name);
+                {
+                    if (IsIntOrString(pk)) WriteLine();
+                    WriteLine("return Find(_.{0} == {1});", pk.Name, name);
+                }
             }
             WriteLine("}");
         }
@@ -1430,7 +1446,7 @@ public class EntityBuilder : ClassBuilder
             var flag = true;
             foreach (var dc in cs)
             {
-                if (dc.DataType.IsInt() || dc.DataType == typeof(String))
+                if (IsIntOrString(dc))
                 {
                     flag = true;
                 }
@@ -1480,13 +1496,18 @@ public class EntityBuilder : ClassBuilder
                 WriteLine("public static {2} {0}({1})", methodName, args, ClassName);
                 WriteLine("{");
                 {
+                    var header = false;
                     if (cs.Length == 1)
                     {
-                        var dc = cs[0];
-                        if (dc.DataType.IsInt())
-                            WriteLine("if ({0} <= 0) return null;", dc.CamelName());
-                        else if (dc.DataType == typeof(String))
-                            WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.CamelName());
+                        foreach (var dc in cs)
+                        {
+                            if (dc.DataType != null && dc.DataType.IsInt())
+                                WriteLine("if ({0} <= 0) return null;", dc.CamelName());
+                            else if (dc.DataType == typeof(String))
+                                WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.CamelName());
+
+                            header |= IsIntOrString(dc);
+                        }
                     }
 
                     var exp = new StringBuilder();
@@ -1503,19 +1524,22 @@ public class EntityBuilder : ClassBuilder
                             wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
                     }
 
-                    if (cs.Length == 1) WriteLine();
-                    WriteLine("// 实体缓存");
-                    WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => {0});", wh);
-
-                    // 单对象缓存
-                    if (cs.Length == 1 && cs[0].Master)
+                    if (UsingCache)
                     {
-                        WriteLine();
-                        WriteLine("// 单对象缓存");
-                        WriteLine("//return Meta.SingleCache.GetItemWithSlaveKey({0}) as {1};", cs[0].CamelName(), ClassName);
+                        if (header) WriteLine();
+                        WriteLine("// 实体缓存");
+                        WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => {0});", wh);
+
+                        // 单对象缓存
+                        if (cs.Length == 1 && cs[0].Master)
+                        {
+                            WriteLine();
+                            WriteLine("// 单对象缓存");
+                            WriteLine("//return Meta.SingleCache.GetItemWithSlaveKey({0}) as {1};", cs[0].CamelName(), ClassName);
+                        }
                     }
 
-                    WriteLine();
+                    if (header) WriteLine();
                     WriteLine("return Find({0});", exp);
                 }
                 WriteLine("}");
@@ -1526,13 +1550,18 @@ public class EntityBuilder : ClassBuilder
                 WriteLine("public static IList<{2}> {0}({1})", methodName, args, ClassName);
                 WriteLine("{");
                 {
+                    var header = false;
                     if (cs.Length == 1)
                     {
-                        var dc = cs[0];
-                        if (dc.DataType.IsInt())
-                            WriteLine("if ({0} <= 0) return new List<{1}>();", dc.CamelName(), ClassName);
-                        else if (dc.DataType == typeof(String))
-                            WriteLine("if ({0}.IsNullOrEmpty()) return new List<{1}>();", dc.CamelName(), ClassName);
+                        foreach (var dc in cs)
+                        {
+                            if (dc.DataType != null && dc.DataType.IsInt())
+                                WriteLine("if ({0} <= 0) return new List<{1}>();", dc.CamelName(), ClassName);
+                            else if (dc.DataType == typeof(String))
+                                WriteLine("if ({0}.IsNullOrEmpty()) return new List<{1}>();", dc.CamelName(), ClassName);
+
+                            header |= IsIntOrString(dc);
+                        }
                     }
 
                     var exp = new StringBuilder();
@@ -1549,11 +1578,14 @@ public class EntityBuilder : ClassBuilder
                             wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
                     }
 
-                    if (cs.Length == 1) WriteLine();
-                    WriteLine("// 实体缓存");
-                    WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => {0});", wh);
+                    if (UsingCache)
+                    {
+                        if (header) WriteLine();
+                        WriteLine("// 实体缓存");
+                        WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => {0});", wh);
+                    }
 
-                    WriteLine();
+                    if (header) WriteLine();
                     WriteLine("return FindAll({0});", exp);
                 }
                 WriteLine("}");
@@ -1749,4 +1781,8 @@ public class EntityBuilder : ClassBuilder
     }
 
     #endregion 业务类
+
+    #region 辅助
+    private Boolean IsIntOrString(IDataColumn column) => column.DataType != null && (column.DataType.IsInt() || column.DataType == typeof(String));
+    #endregion
 }

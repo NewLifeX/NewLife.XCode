@@ -174,7 +174,14 @@ internal class MemberSection
             {
                 var str = elm.Trim();
                 var p = str.IndexOf(' ');
-                if (p > 0) types.Add(str[..p]);
+                if (p > 0)
+                {
+                    str = str[..p];
+                    p = str.LastIndexOf('.');
+                    if (p > 0) str = str[(p + 1)..];
+
+                    types.Add(str);
+                }
             }
             rs.Add(new MemberSection
             {

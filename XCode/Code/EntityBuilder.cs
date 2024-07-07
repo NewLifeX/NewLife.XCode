@@ -1579,17 +1579,22 @@ public class EntityBuilder : ClassBuilder
         methodName = $"FindBy{methodName}";
 
         var ps = new Dictionary<String, String>();
+        var ps2 = new Dictionary<String, String>();
         foreach (var dc in columns)
         {
             var type = dc.Properties["Type"];
-            if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+            if (type.IsNullOrEmpty()) type = dc.DataType?.Name + "";
 
-            ps[dc.CamelName()] = type!;
+            ps[dc.CamelName()] = type;
+
+            var p = type.LastIndexOf('.');
+            if (p > 0) type = type[(p + 1)..];
+            ps2[dc.CamelName()] = type;
         }
         var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
 
         // 如果方法名已存在，则不生成
-        var key = $"{methodName}({ps.Join(",", e => e.Value)})";
+        var key = $"{methodName}({ps2.Join(",", e => e.Value)})";
         if (Members.Contains(key)) return false;
         Members.Add(key);
 
@@ -1680,17 +1685,22 @@ public class EntityBuilder : ClassBuilder
         methodName = $"FindAllBy{methodName}";
 
         var ps = new Dictionary<String, String>();
+        var ps2 = new Dictionary<String, String>();
         foreach (var dc in columns)
         {
             var type = dc.Properties["Type"];
-            if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+            if (type.IsNullOrEmpty()) type = dc.DataType?.Name + "";
 
-            ps[dc.CamelName()] = type!;
+            ps[dc.CamelName()] = type;
+
+            var p = type.LastIndexOf('.');
+            if (p > 0) type = type[(p + 1)..];
+            ps2[dc.CamelName()] = type;
         }
         var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
 
         // 如果方法名已存在，则不生成
-        var key = $"{methodName}({ps.Join(",", e => e.Value)})";
+        var key = $"{methodName}({ps2.Join(",", e => e.Value)})";
         if (Members.Contains(key)) return false;
         Members.Add(key);
 

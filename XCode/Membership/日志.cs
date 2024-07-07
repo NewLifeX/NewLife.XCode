@@ -29,7 +29,7 @@ public partial class Log : ILog, IEntity<LogModel>
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, false, false, 0)]
-    [BindColumn("ID", "编号", "")]
+    [BindColumn("ID", "编号", "", DataScale = "time")]
     public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
     private String? _Category;
@@ -270,6 +270,20 @@ public partial class Log : ILog, IEntity<LogModel>
     [Category("扩展")]
     public String? CreateUserName => MyCreateUser?.ToString();
 
+    #endregion
+
+    #region 扩展查询
+    #endregion
+
+    #region 数据清理
+    /// <summary>清理指定时间段内的数据</summary>
+    /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>
+    /// <param name="end">结束时间</param>
+    /// <returns>清理行数</returns>
+    public static Int32 DeleteWith(DateTime start, DateTime end)
+    {
+        return Delete(_.ID.Between(start, end, Meta.Factory.Snow));
+    }
     #endregion
 
     #region 字段名

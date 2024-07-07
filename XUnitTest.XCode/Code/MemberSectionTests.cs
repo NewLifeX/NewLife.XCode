@@ -475,7 +475,6 @@ public class MemberSectionTests
     {
         var code =
         """
-
             #region 扩展属性
             /// <summary>部门</summary>
             [XmlIgnore, IgnoreDataMember, ScriptIgnore]
@@ -571,13 +570,27 @@ public class MemberSectionTests
             }
             #endregion
 
+            public static IList<Area> FindAllByName(String name) => Meta.Cache.Entities.FindAll(e => e.Name == name || e.FullName == name);
 
+            /// <summary>根据父级、名称查找</summary>
+            /// <param name="parentId">父级</param>
+            /// <param name="name">名称</param>
+            /// <returns>实体列表</returns>
+            public static IList<Department> FindAllByParentIDAndName(Int32 parentId, String name)
+            {
+
+                // 实体缓存
+                if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+
+                return FindAll(_.ParentID == parentId & _.Name == name);
+            }
+        
         """;
 
         var list = MemberSection.GetMethods(code);
 
         Assert.NotNull(list);
-        Assert.Equal(6, list.Count);
+        Assert.Equal(8, list.Count);
 
         Assert.Equal("FindByID", list[0].Name);
         Assert.Equal("FindByName", list[1].Name);
@@ -585,13 +598,17 @@ public class MemberSectionTests
         Assert.Equal("FindAllByMobile", list[3].Name);
         Assert.Equal("FindAllByCode", list[4].Name);
         Assert.Equal("FindAllByRoleID", list[5].Name);
+        Assert.Equal("FindAllByName", list[6].Name);
+        Assert.Equal("FindAllByParentIDAndName", list[7].Name);
 
-        Assert.Equal("FindByID(Int32 id)", list[0].FullName);
-        Assert.Equal("FindByName(String name)", list[1].FullName);
-        Assert.Equal("FindAllByMail(String mail)", list[2].FullName);
-        Assert.Equal("FindAllByMobile(String mobile)", list[3].FullName);
-        Assert.Equal("FindAllByCode(String code)", list[4].FullName);
-        Assert.Equal("FindAllByRoleID(Int32 roleId)", list[5].FullName);
+        Assert.Equal("FindByID(Int32)", list[0].FullName);
+        Assert.Equal("FindByName(String)", list[1].FullName);
+        Assert.Equal("FindAllByMail(String)", list[2].FullName);
+        Assert.Equal("FindAllByMobile(String)", list[3].FullName);
+        Assert.Equal("FindAllByCode(String)", list[4].FullName);
+        Assert.Equal("FindAllByRoleID(Int32)", list[5].FullName);
+        Assert.Equal("FindAllByName(String)", list[6].FullName);
+        Assert.Equal("FindAllByParentIDAndName(Int32,String)", list[7].FullName);
 
         //Assert.Equal(lines.Length, list.Sum(e => e.Lines.Length));
     }

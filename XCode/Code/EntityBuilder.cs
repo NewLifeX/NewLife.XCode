@@ -305,7 +305,7 @@ public class EntityBuilder : ClassBuilder
         if (!Business)
         {
             // 读取biz文件，识别其中已生成的扩展查询方法，避免在数据类中重复生成
-            var bizFile = GetFileName(null, Option.ChineseFileName);
+            var bizFile = GetFileName(".Biz.cs", Option.ChineseFileName);
             LoadCodeFile(bizFile);
         }
     }
@@ -1512,7 +1512,7 @@ public class EntityBuilder : ClassBuilder
         var pks = Table.PrimaryKeys;
         if (pks.Length > 0)
         {
-            if (BuildExtendFind(pks)) methods++;
+            if (BuildExtendFind(pks, methods)) methods++;
         }
 
         // 索引
@@ -1537,16 +1537,14 @@ public class EntityBuilder : ClassBuilder
             // 只有整数和字符串能生成查询函数
             if (cs.Any(e => !IsIntOrString(e))) continue;
 
-            if (methods > 0) WriteLine();
-
             // 返回类型
             if (di.Unique)
             {
-                if (BuildExtendFind(cs)) methods++;
+                if (BuildExtendFind(cs, methods)) methods++;
             }
             else
             {
-                if (BuildExtendFindAll(cs)) methods++;
+                if (BuildExtendFindAll(cs, methods)) methods++;
             }
         }
 
@@ -1562,7 +1560,10 @@ public class EntityBuilder : ClassBuilder
             if (item.Count() > 1)
             {
                 var dc = Table.GetColumn(item.Key);
-                if (dc != null) BuildExtendFindAll([dc]);
+                if (dc != null)
+                {
+                    if (BuildExtendFindAll([dc], methods)) methods++;
+                }
             }
         }
 
@@ -1571,7 +1572,8 @@ public class EntityBuilder : ClassBuilder
 
     /// <summary>生成扩展Find查询单对象</summary>
     /// <param name="columns"></param>
-    protected virtual Boolean BuildExtendFind(IDataColumn[] columns)
+    /// <param name="index"></param>
+    protected virtual Boolean BuildExtendFind(IDataColumn[] columns, Int32 index)
     {
         var methodName = columns.Select(e => e.Name).Join("And");
         methodName = $"FindBy{methodName}";
@@ -1587,11 +1589,11 @@ public class EntityBuilder : ClassBuilder
         var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
 
         // 如果方法名已存在，则不生成
-        var key = $"{methodName}({args})";
+        var key = $"{methodName}({ps.Join(",", e => e.Value)})";
         if (Members.Contains(key)) return false;
         Members.Add(key);
 
-        //WriteLine();
+        if (index > 0) WriteLine();
         WriteLine("/// <summary>根据{0}查找</summary>", columns.Select(e => e.DisplayName).Join("、"));
         foreach (var dc in columns)
         {
@@ -1671,7 +1673,8 @@ public class EntityBuilder : ClassBuilder
 
     /// <summary>生成扩展FindAll查询对象列表</summary>
     /// <param name="columns"></param>
-    protected virtual Boolean BuildExtendFindAll(IDataColumn[] columns)
+    /// <param name="index"></param>
+    protected virtual Boolean BuildExtendFindAll(IDataColumn[] columns, Int32 index)
     {
         var methodName = columns.Select(e => e.Name).Join("And");
         methodName = $"FindAllBy{methodName}";
@@ -1687,11 +1690,11 @@ public class EntityBuilder : ClassBuilder
         var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
 
         // 如果方法名已存在，则不生成
-        var key = $"{methodName}({args})";
+        var key = $"{methodName}({ps.Join(",", e => e.Value)})";
         if (Members.Contains(key)) return false;
         Members.Add(key);
 
-        //WriteLine();
+        if (index > 0) WriteLine();
         WriteLine("/// <summary>根据{0}查找</summary>", columns.Select(e => e.DisplayName).Join("、"));
         foreach (var dc in columns)
         {

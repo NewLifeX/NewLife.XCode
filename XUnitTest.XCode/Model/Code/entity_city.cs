@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -243,7 +243,6 @@ public partial class CorePerson
 
         return Find(_.Pname == pname & _.CreditNo == creditNo);
     }
-
 
     /// <summary>根据楼宇ID查找</summary>
     /// <param name="buildId">楼宇ID</param>

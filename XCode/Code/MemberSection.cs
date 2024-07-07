@@ -166,13 +166,20 @@ internal class MemberSection
         var rs = new List<MemberSection>();
         if (txt.IsNullOrEmpty()) return rs;
 
-        var reg = new Regex(@"([\w\<\>,]+)\s(\w+)\(([^\)]*)\)\s*(?://)*{");
+        var reg = new Regex(@"([\w\<\>,]+)\s(\w+)\(([^\)]*)\)\s*(?://)*(?:{|=>)");
         foreach (Match item in reg.Matches(txt))
         {
+            var types = new List<String>();
+            foreach (var elm in item.Groups[3].Value.Split(","))
+            {
+                var str = elm.Trim();
+                var p = str.IndexOf(' ');
+                if (p > 0) types.Add(str[..p]);
+            }
             rs.Add(new MemberSection
             {
                 Name = item.Groups[2].Value,
-                FullName = $"{item.Groups[2].Value}({item.Groups[3].Value})",
+                FullName = $"{item.Groups[2].Value}({types.Join(",")})",
             });
         }
 

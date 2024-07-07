@@ -478,6 +478,9 @@ public partial class User : IUser, IEntity<UserModel>
 
     #endregion
 
+    #region 扩展查询
+    #endregion
+
     #region 字段名
     /// <summary>取得用户字段信息的快捷方式</summary>
     public partial class _

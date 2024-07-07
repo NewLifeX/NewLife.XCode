@@ -519,7 +519,7 @@ public class ClassBuilder
     }
 
     /// <summary>清空，重新生成</summary>
-    public void Clear()
+    public virtual void Clear()
     {
         _Indent = null;
 

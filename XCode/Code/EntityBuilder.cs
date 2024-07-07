@@ -292,16 +292,23 @@ public class EntityBuilder : ClassBuilder
         {
             // 读取biz文件，识别其中已生成的扩展查询方法，避免在数据类中重复生成
             var bizFile = GetFileName(null, Option.ChineseFileName);
-            if (!bizFile.IsNullOrEmpty() && File.Exists(bizFile))
+            LoadCodeFile(bizFile);
+        }
+    }
+
+    /// <summary>加载代码文件，读取其中的方法作为成员，避免重复生成</summary>
+    /// <param name="file"></param>
+    public void LoadCodeFile(String file)
+    {
+        if (!file.IsNullOrEmpty() && File.Exists(file))
+        {
+            var txt = File.ReadAllText(file);
+            if (!txt.IsNullOrEmpty())
             {
-                var txt = File.ReadAllText(bizFile);
-                if (!txt.IsNullOrEmpty())
+                var sections = MemberSection.GetMethods(txt);
+                foreach (var sec in sections)
                 {
-                    var sections = MemberSection.GetMethods(txt);
-                    foreach (var sec in sections)
-                    {
-                        Members.Add(sec.FullName);
-                    }
+                    Members.Add(sec.FullName);
                 }
             }
         }
@@ -344,6 +351,14 @@ public class EntityBuilder : ClassBuilder
             us.Add("XCode.Membership");
             us.Add("XCode.Shards");
         }
+    }
+
+    /// <summary>清空上下文。便于重新生成</summary>
+    public override void Clear()
+    {
+        base.Clear();
+
+        Members.Clear();
     }
 
     /// <summary>获取基类</summary>
@@ -1618,7 +1633,8 @@ public class EntityBuilder : ClassBuilder
         if (cs.Count > 0)
         {
             // 时间字段。无差别支持UpdateTime/CreateTime
-            var dcTime = cs.FirstOrDefault(e => e.DataType == typeof(DateTime));
+            var dcTime = cs.FirstOrDefault(e => e.DataScale.StartsWithIgnoreCase("time"));
+            dcTime ??= cs.FirstOrDefault(e => e.DataType == typeof(DateTime));
             dcTime ??= Table.GetColumns(["UpdateTime", "CreateTime"])?.FirstOrDefault();
             var dcSnow = cs.FirstOrDefault(e => e.PrimaryKey && !e.Identity && e.DataType == typeof(Int64));
 

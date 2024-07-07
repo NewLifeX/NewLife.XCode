@@ -228,6 +228,37 @@ public partial class CorePerson
     #region 关联映射
     #endregion
 
+    #region 扩展查询
+    /// <summary>根据姓名、身份证号查找</summary>
+    /// <param name="pname">姓名</param>
+    /// <param name="creditNo">身份证号</param>
+    /// <returns>实体对象</returns>
+    public static CorePerson FindByPnameAndCreditNo(String pname, String creditNo)
+    {
+        if (pname.IsNullOrEmpty()) return null;
+        if (creditNo.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Pname.EqualIgnoreCase(pname) && e.CreditNo.EqualIgnoreCase(creditNo));
+
+        return Find(_.Pname == pname & _.CreditNo == creditNo);
+    }
+
+
+    /// <summary>根据楼宇ID查找</summary>
+    /// <param name="buildId">楼宇ID</param>
+    /// <returns>实体列表</returns>
+    public static IList<CorePerson> FindAllByBuildID(Int32 buildId)
+    {
+        if (buildId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.BuildID == buildId);
+
+        return FindAll(_.BuildID == buildId);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得居民信息字段信息的快捷方式</summary>
     public partial class _

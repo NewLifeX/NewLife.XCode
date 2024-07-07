@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -94,15 +94,6 @@ public partial class CorePerson : Entity<CorePerson>
     //    entity.Build_ID = 0;
     //    entity.UnitNum = "abc";
     //    entity.HouseNum = "abc";
-    //    entity.CreateUser = "abc";
-    //    entity.CreateUserId = 0;
-    //    entity.CreateTime = DateTime.Now;
-    //    entity.CreateIP = "abc";
-    //    entity.UpdateUser = "abc";
-    //    entity.UpdateUserId = 0;
-    //    entity.UpdateTime = DateTime.Now;
-    //    entity.UpdateIP = "abc";
-    //    entity.Remark = "abc";
     //    entity.Insert();
 
     //    if (XTrace.Debug) XTrace.WriteLine("完成初始化CorePerson[居民信息]数据！");
@@ -143,18 +134,6 @@ public partial class CorePerson : Entity<CorePerson>
         //return Find(_.PersonID == personId);
     }
 
-    /// <summary>根据姓名、身份证号查找</summary>
-    /// <param name="pname">姓名</param>
-    /// <param name="creditNo">身份证号</param>
-    /// <returns>实体对象</returns>
-    public static CorePerson FindByPnameAndCreditNo(String pname, String creditNo)
-    {
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Pname.EqualIgnoreCase(pname) && e.CreditNo.EqualIgnoreCase(creditNo));
-
-        return Find(_.Pname == pname & _.CreditNo == creditNo);
-    }
-
     /// <summary>根据平台楼号查找</summary>
     /// <param name="build_ID">平台楼号</param>
     /// <returns>实体列表</returns>
@@ -166,19 +145,6 @@ public partial class CorePerson : Entity<CorePerson>
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Build_ID == build_ID);
 
         return FindAll(_.Build_ID == build_ID);
-    }
-
-    /// <summary>根据楼宇ID查找</summary>
-    /// <param name="buildId">楼宇ID</param>
-    /// <returns>实体列表</returns>
-    public static IList<CorePerson> FindAllByBuildID(Int32 buildId)
-    {
-        if (buildId <= 0) return new List<CorePerson>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.BuildID == buildId);
-
-        return FindAll(_.BuildID == buildId);
     }
     #endregion
 

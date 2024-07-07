@@ -1,10 +1,8 @@
-﻿using System.Reflection;
-using System.Text;
+﻿using System.Text;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Reflection;
-using XCode.Configuration;
 using XCode.DataAccessLayer;
 
 namespace XCode.Code;
@@ -27,6 +25,9 @@ public class EntityBuilder : ClassBuilder
 
     /// <summary>实体类生成选型</summary>
     public EntityBuilderOption EntityOption => (EntityBuilderOption)Option;
+
+    /// <summary>成员集合。主要用于避免重复生成相同签名的成员，方法的签名包括参数列表</summary>
+    public IList<String> Members { get; set; } = [];
     #endregion 属性
 
     #region 静态快速
@@ -268,7 +269,7 @@ public class EntityBuilder : ClassBuilder
             option.ModelNameForCopy = modelClass;
 
         // 标记为大数据的表不使用缓存
-        var fi = table.Columns.FirstOrDefault(e => !e.DataScale.IsNullOrEmpty());
+        var fi = table.Columns.FirstOrDefault(e => e.DataScale.EqualIgnoreCase("time") || e.DataScale.StartsWithIgnoreCase("time:", "timeShard:"));
         if (fi != null) UsingCache = false;
     }
 
@@ -278,6 +279,10 @@ public class EntityBuilder : ClassBuilder
     /// <summary>生成前的准备工作。计算类型以及命名空间等</summary>
     protected override void Prepare()
     {
+        // 标记为大数据的表不使用缓存
+        var fi = Table.Columns.FirstOrDefault(e => e.DataScale.EqualIgnoreCase("time") || e.DataScale.StartsWithIgnoreCase("time:", "timeShard:"));
+        if (fi != null) UsingCache = false;
+
         // 增加常用命名空间
         AddNameSpace();
 
@@ -1373,58 +1378,17 @@ public class EntityBuilder : ClassBuilder
     {
         WriteLine("#region 扩展查询");
 
-        var names = new List<String>();
+        var methods = 0;
 
         // 主键
-        IDataColumn? pk = null;
-        if (Table.PrimaryKeys.Length == 1)
+        var pks = Table.PrimaryKeys;
+        if (pks.Length > 0)
         {
-            pk = Table.PrimaryKeys[0];
-            var name = pk.CamelName();
-
-            var type = pk.Properties["Type"];
-            if (type.IsNullOrEmpty()) type = pk.DataType?.Name;
-
-            var methodName = $"FindBy{pk.Name}";
-            names.Add(methodName);
-
-            WriteLine("/// <summary>根据{0}查找</summary>", pk.DisplayName);
-            WriteLine("/// <param name=\"{0}\">{1}</param>", name, pk.DisplayName);
-            WriteLine("/// <returns>实体对象</returns>");
-            WriteLine("public static {3} {0}({1} {2})", methodName, type, name, ClassName);
-            WriteLine("{");
-            {
-                if (pk.DataType != null && pk.DataType.IsInt())
-                    WriteLine("if ({0} <= 0) return null;", name);
-                else if (pk.DataType == typeof(String))
-                    WriteLine("if ({0}.IsNullOrEmpty()) return null;", name);
-
-                if (UsingCache)
-                {
-                    WriteLine();
-                    WriteLine("// 实体缓存");
-                    if (pk.DataType == typeof(String))
-                        WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.{0}.EqualIgnoreCase({1}));", pk.Name, name);
-                    else
-                        WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.{0} == {1});", pk.Name, name);
-
-                    WriteLine();
-                    WriteLine("// 单对象缓存");
-                    WriteLine("return Meta.SingleCache[{0}];", name);
-
-                    WriteLine();
-                    WriteLine("//return Find(_.{0} == {1});", pk.Name, name);
-                }
-                else
-                {
-                    if (IsIntOrString(pk)) WriteLine();
-                    WriteLine("return Find(_.{0} == {1});", pk.Name, name);
-                }
-            }
-            WriteLine("}");
+            if (BuildExtendFind(pks)) methods++;
         }
 
         // 索引
+        var pk = pks.FirstOrDefault();
         foreach (var di in Table.Indexes)
         {
             // 跳过主键
@@ -1443,156 +1407,211 @@ public class EntityBuilder : ClassBuilder
             }
 
             // 只有整数和字符串能生成查询函数
-            var flag = true;
-            foreach (var dc in cs)
-            {
-                if (IsIntOrString(dc))
-                {
-                    flag = true;
-                }
-                else if (dc.DataType == typeof(DateTime))
-                {
-                    if (dc.Name.EqualIgnoreCase("CreateTime", "UpdateTime"))
-                    {
-                        flag = false;
-                    }
-                }
-                else
-                {
-                    flag = false;
-                }
+            if (cs.Any(e => !IsIntOrString(e))) continue;
 
-                if (!flag) break;
-            }
-            if (!flag) continue;
-
-            WriteLine();
-            WriteLine("/// <summary>根据{0}查找</summary>", cs.Select(e => e.DisplayName).Join("、"));
-            foreach (var dc in cs)
-            {
-                WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.DisplayName);
-            }
-
-            var ps = new Dictionary<String, String>();
-            foreach (var dc in cs)
-            {
-                var type = dc.Properties["Type"];
-                if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
-
-                ps[dc.CamelName()] = type!;
-            }
-            var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
-
-            // 如果方法名已存在，则不生成
-            var methodName = cs.Select(e => e.Name).Join("And");
-            methodName = di.Unique ? $"FindBy{methodName}" : $"FindAllBy{methodName}";
-            if (names.Contains(methodName)) continue;
-            names.Add(methodName);
+            if (methods > 0) WriteLine();
 
             // 返回类型
             if (di.Unique)
             {
-                WriteLine("/// <returns>{0}</returns>", di.Unique ? "实体对象" : "实体列表");
-                WriteLine("public static {2} {0}({1})", methodName, args, ClassName);
-                WriteLine("{");
-                {
-                    var header = false;
-                    if (cs.Length == 1)
-                    {
-                        foreach (var dc in cs)
-                        {
-                            if (dc.DataType != null && dc.DataType.IsInt())
-                                WriteLine("if ({0} <= 0) return null;", dc.CamelName());
-                            else if (dc.DataType == typeof(String))
-                                WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.CamelName());
-
-                            header |= IsIntOrString(dc);
-                        }
-                    }
-
-                    var exp = new StringBuilder();
-                    var wh = new StringBuilder();
-                    foreach (var dc in cs)
-                    {
-                        if (exp.Length > 0) exp.Append(" & ");
-                        exp.AppendFormat("_.{0} == {1}", dc.Name, dc.CamelName());
-
-                        if (wh.Length > 0) wh.Append(" && ");
-                        if (dc.DataType == typeof(String))
-                            wh.AppendFormat("e.{0}.EqualIgnoreCase({1})", dc.Name, dc.CamelName());
-                        else
-                            wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
-                    }
-
-                    if (UsingCache)
-                    {
-                        if (header) WriteLine();
-                        WriteLine("// 实体缓存");
-                        WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => {0});", wh);
-
-                        // 单对象缓存
-                        if (cs.Length == 1 && cs[0].Master)
-                        {
-                            WriteLine();
-                            WriteLine("// 单对象缓存");
-                            WriteLine("//return Meta.SingleCache.GetItemWithSlaveKey({0}) as {1};", cs[0].CamelName(), ClassName);
-                        }
-                    }
-
-                    if (header) WriteLine();
-                    WriteLine("return Find({0});", exp);
-                }
-                WriteLine("}");
+                if (BuildExtendFind(cs)) methods++;
             }
             else
             {
-                WriteLine("/// <returns>{0}</returns>", di.Unique ? "实体对象" : "实体列表");
-                WriteLine("public static IList<{2}> {0}({1})", methodName, args, ClassName);
-                WriteLine("{");
-                {
-                    var header = false;
-                    if (cs.Length == 1)
-                    {
-                        foreach (var dc in cs)
-                        {
-                            if (dc.DataType != null && dc.DataType.IsInt())
-                                WriteLine("if ({0} <= 0) return new List<{1}>();", dc.CamelName(), ClassName);
-                            else if (dc.DataType == typeof(String))
-                                WriteLine("if ({0}.IsNullOrEmpty()) return new List<{1}>();", dc.CamelName(), ClassName);
+                if (BuildExtendFindAll(cs)) methods++;
+            }
+        }
 
-                            header |= IsIntOrString(dc);
-                        }
-                    }
-
-                    var exp = new StringBuilder();
-                    var wh = new StringBuilder();
-                    foreach (var dc in cs)
-                    {
-                        if (exp.Length > 0) exp.Append(" & ");
-                        exp.AppendFormat("_.{0} == {1}", dc.Name, dc.CamelName());
-
-                        if (wh.Length > 0) wh.Append(" && ");
-                        if (dc.DataType == typeof(String))
-                            wh.AppendFormat("e.{0}.EqualIgnoreCase({1})", dc.Name, dc.CamelName());
-                        else
-                            wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
-                    }
-
-                    if (UsingCache)
-                    {
-                        if (header) WriteLine();
-                        WriteLine("// 实体缓存");
-                        WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => {0});", wh);
-                    }
-
-                    if (header) WriteLine();
-                    WriteLine("return FindAll({0});", exp);
-                }
-                WriteLine("}");
+        // 作为多个索引头部的字段，生成FindAll。例如多个索引都使用Ds开头，那么应该生成FindAllByDs
+        var mcolumns = new List<String>();
+        foreach (var di in Table.Indexes)
+        {
+            if (di.Columns.Length > 1) mcolumns.Add(di.Columns[0]);
+        }
+        // 实际生成时，可能已经有了FindAllByDs，则根据方法名和签名跳过
+        foreach (var item in mcolumns.GroupBy(e => e))
+        {
+            if (item.Count() > 1)
+            {
+                var dc = Table.GetColumn(item.Key);
+                if (dc != null) BuildExtendFindAll([dc]);
             }
         }
 
         WriteLine("#endregion");
+    }
+
+    /// <summary>生成扩展Find查询单对象</summary>
+    /// <param name="columns"></param>
+    protected virtual Boolean BuildExtendFind(IDataColumn[] columns)
+    {
+        var methodName = columns.Select(e => e.Name).Join("And");
+        methodName = $"FindBy{methodName}";
+
+        var ps = new Dictionary<String, String>();
+        foreach (var dc in columns)
+        {
+            var type = dc.Properties["Type"];
+            if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+
+            ps[dc.CamelName()] = type!;
+        }
+        var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
+
+        // 如果方法名已存在，则不生成
+        var key = $"{methodName}({args})";
+        if (Members.Contains(key)) return false;
+        Members.Add(key);
+
+        //WriteLine();
+        WriteLine("/// <summary>根据{0}查找</summary>", columns.Select(e => e.DisplayName).Join("、"));
+        foreach (var dc in columns)
+        {
+            WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.DisplayName);
+        }
+
+        WriteLine("/// <returns>实体对象</returns>");
+        WriteLine("public static {2} {0}({1})", methodName, args, ClassName);
+        WriteLine("{");
+        {
+            var header = false;
+            foreach (var dc in columns)
+            {
+                if (dc.DataType != null && dc.DataType.IsInt())
+                    WriteLine("if ({0} < 0) return null;", dc.CamelName());
+                else if (dc.DataType == typeof(String))
+                    WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.CamelName());
+
+                header |= IsIntOrString(dc);
+            }
+
+            var exp = new StringBuilder();
+            var wh = new StringBuilder();
+            foreach (var dc in columns)
+            {
+                if (exp.Length > 0) exp.Append(" & ");
+                exp.AppendFormat("_.{0} == {1}", dc.Name, dc.CamelName());
+
+                if (wh.Length > 0) wh.Append(" && ");
+                if (dc.DataType == typeof(String))
+                    wh.AppendFormat("e.{0}.EqualIgnoreCase({1})", dc.Name, dc.CamelName());
+                else
+                    wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
+            }
+
+            var singleCache = false;
+            if (UsingCache)
+            {
+                if (header) WriteLine();
+                WriteLine("// 实体缓存");
+                WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => {0});", wh);
+
+                // 单对象缓存
+                if (columns.Length == 1)
+                {
+                    var pk = columns[0];
+                    if (pk.PrimaryKey)
+                    {
+                        WriteLine();
+                        WriteLine("// 单对象缓存");
+                        WriteLine("return Meta.SingleCache[{0}];", pk.CamelName());
+
+                        singleCache = true;
+                    }
+                    else if (pk.Master)
+                    {
+                        WriteLine();
+                        WriteLine("// 单对象缓存");
+                        WriteLine("return Meta.SingleCache.GetItemWithSlaveKey({0}) as {1};", pk.CamelName(), ClassName);
+
+                        singleCache = true;
+                    }
+                }
+            }
+
+            if (header) WriteLine();
+
+            if (singleCache)
+                WriteLine("//return Find({0});", exp);
+            else
+                WriteLine("return Find({0});", exp);
+        }
+        WriteLine("}");
+
+        return true;
+    }
+
+    /// <summary>生成扩展FindAll查询对象列表</summary>
+    /// <param name="columns"></param>
+    protected virtual Boolean BuildExtendFindAll(IDataColumn[] columns)
+    {
+        var methodName = columns.Select(e => e.Name).Join("And");
+        methodName = $"FindAllBy{methodName}";
+
+        var ps = new Dictionary<String, String>();
+        foreach (var dc in columns)
+        {
+            var type = dc.Properties["Type"];
+            if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
+
+            ps[dc.CamelName()] = type!;
+        }
+        var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
+
+        // 如果方法名已存在，则不生成
+        var key = $"{methodName}({args})";
+        if (Members.Contains(key)) return false;
+        Members.Add(key);
+
+        //WriteLine();
+        WriteLine("/// <summary>根据{0}查找</summary>", columns.Select(e => e.DisplayName).Join("、"));
+        foreach (var dc in columns)
+        {
+            WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.DisplayName);
+        }
+
+        WriteLine("/// <returns>实体列表</returns>");
+        WriteLine("public static IList<{2}> {0}({1})", methodName, args, ClassName);
+        WriteLine("{");
+        {
+            var header = false;
+            foreach (var dc in columns)
+            {
+                if (dc.DataType != null && dc.DataType.IsInt())
+                    WriteLine("if ({0} < 0) return [];", dc.CamelName(), ClassName);
+                else if (dc.DataType == typeof(String))
+                    WriteLine("if ({0}.IsNullOrEmpty()) return [];", dc.CamelName(), ClassName);
+
+                header |= IsIntOrString(dc);
+            }
+
+            var exp = new StringBuilder();
+            var wh = new StringBuilder();
+            foreach (var dc in columns)
+            {
+                if (exp.Length > 0) exp.Append(" & ");
+                exp.AppendFormat("_.{0} == {1}", dc.Name, dc.CamelName());
+
+                if (wh.Length > 0) wh.Append(" && ");
+                if (dc.DataType == typeof(String))
+                    wh.AppendFormat("e.{0}.EqualIgnoreCase({1})", dc.Name, dc.CamelName());
+                else
+                    wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
+            }
+
+            if (UsingCache)
+            {
+                if (header) WriteLine();
+                WriteLine("// 实体缓存");
+                WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => {0});", wh);
+            }
+
+            if (header) WriteLine();
+            WriteLine("return FindAll({0});", exp);
+        }
+        WriteLine("}");
+
+        return true;
     }
 
     /// <summary>高级查询</summary>

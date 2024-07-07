@@ -165,7 +165,7 @@ public partial class User : Entity<User>
     /// <returns>实体对象</returns>
     public static User FindByID(Int32 id)
     {
-        if (id <= 0) return null;
+        if (id < 0) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
@@ -187,9 +187,9 @@ public partial class User : Entity<User>
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
 
         // 单对象缓存
-        //return Meta.SingleCache.GetItemWithSlaveKey(name) as User;
+        return Meta.SingleCache.GetItemWithSlaveKey(name) as User;
 
-        return Find(_.Name == name);
+        //return Find(_.Name == name);
     }
 
     /// <summary>根据邮件查找</summary>
@@ -197,7 +197,7 @@ public partial class User : Entity<User>
     /// <returns>实体列表</returns>
     public static IList<User> FindAllByMail(String mail)
     {
-        if (mail.IsNullOrEmpty()) return new List<User>();
+        if (mail.IsNullOrEmpty()) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mail.EqualIgnoreCase(mail));
@@ -210,7 +210,7 @@ public partial class User : Entity<User>
     /// <returns>实体列表</returns>
     public static IList<User> FindAllByMobile(String mobile)
     {
-        if (mobile.IsNullOrEmpty()) return new List<User>();
+        if (mobile.IsNullOrEmpty()) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mobile.EqualIgnoreCase(mobile));
@@ -223,7 +223,7 @@ public partial class User : Entity<User>
     /// <returns>实体列表</returns>
     public static IList<User> FindAllByCode(String code)
     {
-        if (code.IsNullOrEmpty()) return new List<User>();
+        if (code.IsNullOrEmpty()) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
@@ -236,7 +236,7 @@ public partial class User : Entity<User>
     /// <returns>实体列表</returns>
     public static IList<User> FindAllByRoleID(Int32 roleId)
     {
-        if (roleId <= 0) return new List<User>();
+        if (roleId < 0) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleID == roleId);

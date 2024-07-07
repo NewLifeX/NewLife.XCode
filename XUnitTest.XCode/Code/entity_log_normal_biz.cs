@@ -139,15 +139,9 @@ public partial class Log : Entity<Log>
     /// <returns>实体对象</returns>
     public static Log FindByID(Int64 id)
     {
-        if (id <= 0) return null;
+        if (id < 0) return null;
 
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
-
-        // 单对象缓存
-        return Meta.SingleCache[id];
-
-        //return Find(_.ID == id);
+        return Find(_.ID == id);
     }
 
     /// <summary>根据操作、类别查找</summary>
@@ -156,8 +150,9 @@ public partial class Log : Entity<Log>
     /// <returns>实体列表</returns>
     public static IList<Log> FindAllByActionAndCategory(String action, String category)
     {
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Action.EqualIgnoreCase(action) && e.Category.EqualIgnoreCase(category));
+        if (action.IsNullOrEmpty()) return [];
+        if (category.IsNullOrEmpty()) return [];
+
         return FindAll(_.Action == action & _.Category == category);
     }
 
@@ -167,8 +162,9 @@ public partial class Log : Entity<Log>
     /// <returns>实体列表</returns>
     public static IList<Log> FindAllByCategoryAndLinkID(String category, Int64 linkId)
     {
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.LinkID == linkId);
+        if (category.IsNullOrEmpty()) return [];
+        if (linkId < 0) return [];
+
         return FindAll(_.Category == category & _.LinkID == linkId);
     }
 
@@ -177,10 +173,7 @@ public partial class Log : Entity<Log>
     /// <returns>实体列表</returns>
     public static IList<Log> FindAllByCreateUserID(Int32 createUserId)
     {
-        if (createUserId <= 0) return new List<Log>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserID == createUserId);
+        if (createUserId < 0) return [];
 
         return FindAll(_.CreateUserID == createUserId);
     }

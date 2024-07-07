@@ -135,7 +135,7 @@ public partial class Log : Entity<Log>
     /// <returns>实体对象</returns>
     public static Log FindByID(Int64 id)
     {
-        if (id <= 0) return null;
+        if (id < 0) return null;
 
         return Find(_.ID == id);
     }
@@ -146,6 +146,9 @@ public partial class Log : Entity<Log>
     /// <returns>实体列表</returns>
     public static IList<Log> FindAllByActionAndCategory(String action, String category)
     {
+        if (action.IsNullOrEmpty()) return [];
+        if (category.IsNullOrEmpty()) return [];
+
         return FindAll(_.Action == action & _.Category == category);
     }
 
@@ -155,6 +158,9 @@ public partial class Log : Entity<Log>
     /// <returns>实体列表</returns>
     public static IList<Log> FindAllByCategoryAndLinkID(String category, Int32 linkId)
     {
+        if (category.IsNullOrEmpty()) return [];
+        if (linkId < 0) return [];
+
         return FindAll(_.Category == category & _.LinkID == linkId);
     }
 
@@ -163,7 +169,7 @@ public partial class Log : Entity<Log>
     /// <returns>实体列表</returns>
     public static IList<Log> FindAllByCreateUserID(Int32 createUserId)
     {
-        if (createUserId <= 0) return new List<Log>();
+        if (createUserId < 0) return [];
 
         return FindAll(_.CreateUserID == createUserId);
     }

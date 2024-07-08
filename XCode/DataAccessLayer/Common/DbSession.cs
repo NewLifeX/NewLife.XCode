@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -520,6 +521,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
+    [return: MaybeNull]
     public virtual T ExecuteScalar<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
@@ -529,7 +531,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
             if (rs == null || rs == DBNull.Value) return default;
             if (rs is T t) return t;
 
-            return (T)Reflect.ChangeType(rs, typeof(T));
+            return (T?)Reflect.ChangeType(rs, typeof(T));
         });
     }
 
@@ -661,7 +663,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Task<T> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
+    public virtual Task<T?> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
         return ExecuteAsync(cmd, true, async cmd2 =>
@@ -670,7 +672,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
             if (rs == null || rs == DBNull.Value) return default;
             if (rs is T t) return t;
 
-            return (T)Reflect.ChangeType(rs, typeof(T));
+            return (T?)Reflect.ChangeType(rs, typeof(T));
         });
     }
 

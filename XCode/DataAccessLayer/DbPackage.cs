@@ -466,8 +466,9 @@ public class DbPackage
                 tables = DAL.Import(ms.ToStr()).ToArray();
             }
         }
+        if (tables == null) throw new ArgumentNullException(nameof(tables));
 
-        WriteLog("恢复[{0}]从文件 {1}。数据表：{2}", Dal.ConnName, file2, tables?.Join(",", e => e.Name));
+        WriteLog("恢复[{0}]从文件 {1}。数据表：{2}", Dal.ConnName, file2, tables.Join(",", e => e.Name));
 
         if (setSchema) Dal.SetTables(tables);
 
@@ -641,7 +642,7 @@ public class DbPackage
         /// <summary>
         /// 数据流
         /// </summary>
-        public Stream Stream { get; set; }
+        public Stream Stream { get; set; } = null!;
 
         /// <summary>
         /// 总数
@@ -651,17 +652,17 @@ public class DbPackage
         /// <summary>
         /// 日志
         /// </summary>
-        public ILog Log { get; set; }
+        public ILog? Log { get; set; }
 
-        private Binary _Binary;
+        private Binary _Binary = null!;
         private Boolean _writeHeader;
-        private String[] _columns;
+        private String[] _columns = null!;
 
         /// <summary>
         /// 开始
         /// </summary>
         /// <returns></returns>
-        public override Task Start()
+        public override Task? Start()
         {
             // 二进制读写器
             _Binary = new Binary
@@ -681,9 +682,10 @@ public class DbPackage
         /// <returns></returns>
         protected override async Task ReceiveAsync(ActorContext context, CancellationToken cancellationToken)
         {
-            var dt = context.Message as DbTable;
+            if (context.Message is not DbTable dt) return;
+
             var bn = _Binary;
-            Int32[] fields = null;
+            Int32[]? fields = null;
 
             //using var span = Tracer?.NewSpan($"db:WriteStream", (Stream as FileStream)?.Name);
 
@@ -732,17 +734,19 @@ public class DbPackage
     public class WriteDbActor : Actor
     {
         /// <summary>父级对象</summary>
-        public DbPackage Host { get; set; }
+        public DbPackage Host { get; set; } = null!;
+
         /// <summary>
         /// 目标数据库
         /// </summary>
-        public DAL Dal { get; set; }
+        public DAL Dal { get; set; } = null!;
+
         /// <summary>
         /// 数据表
         /// </summary>
-        public IDataTable Table { get; set; }
+        public IDataTable Table { get; set; } = null!;
 
-        private IDataColumn[] _Columns;
+        private IDataColumn[] _Columns = null!;
 
         /// <summary>
         /// 接收消息，批量插入

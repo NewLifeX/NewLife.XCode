@@ -469,7 +469,7 @@ internal class DB2Session : RemoteDbSession
         return dps.ToArray();
     }
 
-    public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
+    public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var ps = new HashSet<String>();
         var insert = GetInsertSql(table, columns, ps);
@@ -501,7 +501,7 @@ internal class DB2Session : RemoteDbSession
         return Execute(sql, CommandType.Text, dps);
     }
 
-    private String? GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, ICollection<String> ps)
+    private String? GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps)
     {
         if ((updateColumns == null || updateColumns.Count == 0)
             && (addColumns == null || addColumns.Count == 0)) return null;
@@ -546,7 +546,7 @@ internal class DB2Session : RemoteDbSession
         return sb.Put(true);
     }
 
-    public override Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
+    public override Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var ps = new HashSet<String>();
         var sql = GetUpdateSql(table, columns, updateColumns, addColumns, ps);
@@ -670,7 +670,8 @@ class DB2Meta : RemoteDbMetaData
 
         foreach (DataRow dr in dt.Rows)
         {
-            list.Add(GetDataRowValue<String>(dr, _.TalbeName));
+            var tn = GetDataRowValue<String>(dr, _.TalbeName);
+            if (!tn.IsNullOrEmpty()) list.Add(tn);
         }
 
         return list;
@@ -688,19 +689,19 @@ class DB2Meta : RemoteDbMetaData
         return Database.CreateSession().Query(sql).Tables[0];
     }
 
-    protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable?> data)
+    protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable?>? data)
     {
         base.FixTable(table, dr, data);
 
         // 主键
-        var dt = data["PrimaryKeys"];
+        var dt = data?["PrimaryKeys"];
         if (dt != null && dt.Rows.Count > 0)
         {
             var drs = dt.Select($"{_.TalbeName}='{table.TableName}'");
             if (drs != null && drs.Length > 0)
             {
                 // 找到主键所在索引，这个索引的列才是主键
-                if (TryGetDataRowValue(drs[0], _.IndexName, out String name) && !String.IsNullOrEmpty(name))
+                if (TryGetDataRowValue(drs[0], _.IndexName, out String? name) && !String.IsNullOrEmpty(name))
                 {
                     var di = table.Indexes.FirstOrDefault(i => i.Name == name);
                     if (di != null)
@@ -721,7 +722,7 @@ class DB2Meta : RemoteDbMetaData
         if (table?.Columns == null || table.Columns.Count == 0) return;
     }
 
-    String? GetTableComment(String name, IDictionary<String, DataTable?> data)
+    String? GetTableComment(String name, IDictionary<String, DataTable?>? data)
     {
         var dt = data?["TableComment"];
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
@@ -738,18 +739,15 @@ class DB2Meta : RemoteDbMetaData
     /// <param name="columns">列</param>
     /// <param name="data"></param>
     /// <returns></returns>
-    protected override List<IDataColumn> GetFields(IDataTable table, DataTable columns, IDictionary<String, DataTable> data)
+    protected override List<IDataColumn> GetFields(IDataTable table, DataTable? columns, IDictionary<String, DataTable?>? data)
     {
         var list = base.GetFields(table, columns, data);
         if (list == null || list.Count <= 0) return [];
 
         // 字段注释
-        if (list.Count > 0)
+        foreach (var field in list)
         {
-            foreach (var field in list)
-            {
-                field.Description = GetColumnComment(table.TableName, field.ColumnName, data);
-            }
+            field.Description = GetColumnComment(table.TableName, field.ColumnName, data);
         }
 
         return list;
@@ -767,13 +765,13 @@ class DB2Meta : RemoteDbMetaData
         var list = new List<DataRow>();
         foreach (var dr in rows)
         {
-            if (TryGetDataRowValue(dr, KEY_OWNER, out String str) && owner.EqualIgnoreCase(str)) list.Add(dr);
+            if (TryGetDataRowValue(dr, KEY_OWNER, out String? str) && owner.EqualIgnoreCase(str)) list.Add(dr);
         }
 
         return base.GetFields(table, list.ToArray());
     }
 
-    String? GetColumnComment(String tableName, String columnName, IDictionary<String, DataTable> data)
+    String? GetColumnComment(String tableName, String columnName, IDictionary<String, DataTable?>? data)
     {
         var dt = data?["ColumnComment"];
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
@@ -889,7 +887,7 @@ class DB2Meta : RemoteDbMetaData
 
     protected override void FixIndex(IDataIndex index, DataRow dr)
     {
-        if (TryGetDataRowValue(dr, "UNIQUENESS", out String str))
+        if (TryGetDataRowValue(dr, "UNIQUENESS", out String? str))
             index.Unique = str == "UNIQUE";
 
         base.FixIndex(index, dr);
@@ -949,7 +947,7 @@ class DB2Meta : RemoteDbMetaData
     /// <param name="field"></param>
     /// <param name="onlyDefine"></param>
     /// <returns></returns>
-    protected override String GetDefault(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetDefault(IDataColumn field, Boolean onlyDefine)
     {
         if (field.DataType == typeof(DateTime)) return " DEFAULT To_Date('0001-01-01','yyyy-mm-dd')";
 
@@ -990,7 +988,7 @@ class DB2Meta : RemoteDbMetaData
 
     public override String AddColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Add {FieldClause(field, true)}";
 
-    public override String AlterColumnSQL(IDataColumn field, IDataColumn oldfield) => $"Alter Table {FormatName(field.Table)} Modify {FieldClause(field, false)}";
+    public override String AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"Alter Table {FormatName(field.Table)} Modify {FieldClause(field, false)}";
 
     public override String DropColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Drop Column {field}";
 

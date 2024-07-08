@@ -195,7 +195,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
 
     #region 脏数据
     [NonSerialized]
-    private DirtyCollection _Dirtys;
+    private DirtyCollection? _Dirtys;
     /// <summary>脏属性。存储哪些属性的数据被修改过了。</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     protected DirtyCollection Dirtys => _Dirtys ??= new DirtyCollection();
@@ -247,7 +247,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
 
     #region 累加
     [NonSerialized]
-    private IEntityAddition _Addition;
+    private IEntityAddition? _Addition;
     /// <summary>累加</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     IEntityAddition IEntity.Addition => _Addition ??= new EntityAddition(this);

@@ -818,13 +818,14 @@ internal class OracleMeta : RemoteDbMetaData
 
         foreach (DataRow dr in dt.Rows)
         {
-            list.Add(GetDataRowValue<String>(dr, _.TalbeName));
+            var tn = GetDataRowValue<String>(dr, _.TalbeName);
+            if (!tn.IsNullOrEmpty()) list.Add(tn);
         }
 
         return list;
     }
 
-    private DataTable Get(String name, String owner, String tableName, String mulTable = null, String ownerName = null)
+    private DataTable Get(String name, String owner, String tableName, String? mulTable = null, String? ownerName = null)
     {
         if (ownerName.IsNullOrEmpty()) ownerName = "Owner";
         var sql = $"Select * From {name} Where {ownerName}='{owner}'";
@@ -848,7 +849,7 @@ internal class OracleMeta : RemoteDbMetaData
             if (drs != null && drs.Length > 0)
             {
                 // 找到主键所在索引，这个索引的列才是主键
-                if (TryGetDataRowValue(drs[0], _.IndexName, out String name) && !String.IsNullOrEmpty(name))
+                if (TryGetDataRowValue(drs[0], _.IndexName, out String? name) && !String.IsNullOrEmpty(name))
                 {
                     var di = table.Indexes.FirstOrDefault(i => i.Name == name);
                     if (di != null)
@@ -897,7 +898,7 @@ internal class OracleMeta : RemoteDbMetaData
     //    return drs != null && drs.Length > 0;
     //}
 
-    private String GetTableComment(String name, IDictionary<String, DataTable> data)
+    private String? GetTableComment(String name, IDictionary<String, DataTable> data)
     {
         var dt = data?["TableComment"];
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
@@ -914,18 +915,15 @@ internal class OracleMeta : RemoteDbMetaData
     /// <param name="columns">列</param>
     /// <param name="data"></param>
     /// <returns></returns>
-    protected override List<IDataColumn> GetFields(IDataTable table, DataTable columns, IDictionary<String, DataTable> data)
+    protected override List<IDataColumn> GetFields(IDataTable table, DataTable? columns, IDictionary<String, DataTable?>? data)
     {
         var list = base.GetFields(table, columns, data);
-        if (list == null || list.Count <= 0) return null;
+        if (list == null || list.Count <= 0) return [];
 
         // 字段注释
-        if (list != null && list.Count > 0)
+        foreach (var field in list)
         {
-            foreach (var field in list)
-            {
-                field.Description = GetColumnComment(table.TableName, field.ColumnName, data);
-            }
+            field.Description = GetColumnComment(table.TableName, field.ColumnName, data);
         }
 
         return list;
@@ -935,7 +933,7 @@ internal class OracleMeta : RemoteDbMetaData
 
     protected override List<IDataColumn> GetFields(IDataTable table, DataRow[] rows)
     {
-        if (rows == null || rows.Length <= 0) return null;
+        if (rows == null || rows.Length <= 0) return [];
 
         var owner = Owner;
         if (owner.IsNullOrEmpty() || !rows[0].Table.Columns.Contains(KEY_OWNER)) return base.GetFields(table, rows);
@@ -943,13 +941,13 @@ internal class OracleMeta : RemoteDbMetaData
         var list = new List<DataRow>();
         foreach (var dr in rows)
         {
-            if (TryGetDataRowValue(dr, KEY_OWNER, out String str) && owner.EqualIgnoreCase(str)) list.Add(dr);
+            if (TryGetDataRowValue(dr, KEY_OWNER, out String? str) && owner.EqualIgnoreCase(str)) list.Add(dr);
         }
 
         return base.GetFields(table, list.ToArray());
     }
 
-    private String GetColumnComment(String tableName, String columnName, IDictionary<String, DataTable> data)
+    private String? GetColumnComment(String tableName, String columnName, IDictionary<String, DataTable?>? data)
     {
         var dt = data?["ColumnComment"];
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
@@ -1072,7 +1070,7 @@ internal class OracleMeta : RemoteDbMetaData
 
     protected override void FixIndex(IDataIndex index, DataRow dr)
     {
-        if (TryGetDataRowValue(dr, "UNIQUENESS", out String str))
+        if (TryGetDataRowValue(dr, "UNIQUENESS", out String? str))
             index.Unique = str == "UNIQUE";
 
         base.FixIndex(index, dr);
@@ -1133,7 +1131,7 @@ internal class OracleMeta : RemoteDbMetaData
     /// <param name="field"></param>
     /// <param name="onlyDefine"></param>
     /// <returns></returns>
-    protected override String GetDefault(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetDefault(IDataColumn field, Boolean onlyDefine)
     {
         if (field.DataType == typeof(DateTime)) return " DEFAULT To_Date('0001-01-01','yyyy-mm-dd')";
 
@@ -1224,7 +1222,7 @@ internal class OracleMeta : RemoteDbMetaData
 
     public override String AddColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Add {FieldClause(field, true)}";
 
-    public override String AlterColumnSQL(IDataColumn field, IDataColumn oldfield) => $"Alter Table {FormatName(field.Table)} Modify {FieldClause(field, false)}";
+    public override String AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"Alter Table {FormatName(field.Table)} Modify {FieldClause(field, false)}";
 
     public override String DropColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Drop Column {field}";
 

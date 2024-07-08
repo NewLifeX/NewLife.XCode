@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using NewLife;
 using NewLife.Data;
@@ -93,7 +94,7 @@ abstract partial class DbMetaData : DisposeBase, IMetaData
     /// <param name="name">名称</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    protected static Boolean TryGetDataRowValue<T>(DataRow dr, String name, out T value)
+    protected static Boolean TryGetDataRowValue<T>(DataRow dr, String name, out T? value)
     {
         value = default;
         if (dr == null || !dr.Table.Columns.Contains(name) || dr.IsNull(name)) return false;
@@ -148,11 +149,11 @@ abstract partial class DbMetaData : DisposeBase, IMetaData
     /// <param name="dr"></param>
     /// <param name="names">名称</param>
     /// <returns></returns>
-    protected static T GetDataRowValue<T>(DataRow dr, params String[] names)
+    protected static T? GetDataRowValue<T>(DataRow dr, params String[] names)
     {
         foreach (var item in names)
         {
-            if (TryGetDataRowValue(dr, item, out T value)) return value;
+            if (TryGetDataRowValue(dr, item, out T? value)) return value;
         }
 
         return default;
@@ -160,7 +161,7 @@ abstract partial class DbMetaData : DisposeBase, IMetaData
 
     protected static DbTable Select(DbTable ds, String name, Object value)
     {
-        var list = new List<Object[]>();
+        var list = new List<Object?[]>();
         var col = ds.GetColumn(name);
         if (col >= 0)
         {

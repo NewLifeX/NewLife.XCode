@@ -793,24 +793,24 @@ internal partial class DbMetaData
     /// <param name="schema">数据定义模式</param>
     /// <param name="values">其它信息</param>
     /// <returns></returns>
-    public virtual String GetSchemaSQL(DDLSchema schema, params Object?[] values)
+    public virtual String? GetSchemaSQL(DDLSchema schema, params Object?[] values)
     {
         return schema switch
         {
-            DDLSchema.CreateDatabase => CreateDatabaseSQL((String)values[0], (String)values[1]),
-            DDLSchema.DropDatabase => DropDatabaseSQL((String)values[0]),
-            DDLSchema.DatabaseExist => DatabaseExistSQL(values == null || values.Length <= 0 ? null : (String)values[0]),
-            DDLSchema.CreateTable => CreateTableSQL((IDataTable)values[0]),
-            DDLSchema.DropTable => DropTableSQL((IDataTable)values[0]),
-            DDLSchema.AddTableDescription => AddTableDescriptionSQL((IDataTable)values[0]),
-            DDLSchema.DropTableDescription => DropTableDescriptionSQL((IDataTable)values[0]),
-            DDLSchema.AddColumn => AddColumnSQL((IDataColumn)values[0]),
-            DDLSchema.AlterColumn => AlterColumnSQL((IDataColumn)values[0], values.Length > 1 ? (IDataColumn)values[1] : null),
-            DDLSchema.DropColumn => DropColumnSQL((IDataColumn)values[0]),
-            DDLSchema.AddColumnDescription => AddColumnDescriptionSQL((IDataColumn)values[0]),
-            DDLSchema.DropColumnDescription => DropColumnDescriptionSQL((IDataColumn)values[0]),
-            DDLSchema.CreateIndex => CreateIndexSQL((IDataIndex)values[0]),
-            DDLSchema.DropIndex => DropIndexSQL((IDataIndex)values[0]),
+            DDLSchema.CreateDatabase => CreateDatabaseSQL((String)values[0]!, (String?)values[1]),
+            DDLSchema.DropDatabase => DropDatabaseSQL((String)values[0]!),
+            DDLSchema.DatabaseExist => DatabaseExistSQL((String)values[0]!),
+            DDLSchema.CreateTable => CreateTableSQL((IDataTable)values[0]!),
+            DDLSchema.DropTable => DropTableSQL((IDataTable)values[0]!),
+            DDLSchema.AddTableDescription => AddTableDescriptionSQL((IDataTable)values[0]!),
+            DDLSchema.DropTableDescription => DropTableDescriptionSQL((IDataTable)values[0]!),
+            DDLSchema.AddColumn => AddColumnSQL((IDataColumn)values[0]!),
+            DDLSchema.AlterColumn => AlterColumnSQL((IDataColumn)values[0]!, values.Length > 1 ? (IDataColumn)values[1]! : null),
+            DDLSchema.DropColumn => DropColumnSQL((IDataColumn)values[0]!),
+            DDLSchema.AddColumnDescription => AddColumnDescriptionSQL((IDataColumn)values[0]!),
+            DDLSchema.DropColumnDescription => DropColumnDescriptionSQL((IDataColumn)values[0]!),
+            DDLSchema.CreateIndex => CreateIndexSQL((IDataIndex)values[0]!),
+            DDLSchema.DropIndex => DropIndexSQL((IDataIndex)values[0]!),
             DDLSchema.CompactDatabase => CompactDatabaseSQL(),
             _ => throw new NotSupportedException("不支持该操作！"),
         };
@@ -827,7 +827,7 @@ internal partial class DbMetaData
         using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
 
         var sql = GetSchemaSQL(schema, values);
-        if (String.IsNullOrEmpty(sql)) return null;
+        if (sql.IsNullOrEmpty()) return null;
 
         if (span != null) span.Tag += Environment.NewLine + sql;
 
@@ -938,7 +938,7 @@ internal partial class DbMetaData
     /// <param name="field"></param>
     /// <param name="onlyDefine"></param>
     /// <returns></returns>
-    protected virtual String GetDefault(IDataColumn field, Boolean onlyDefine)
+    protected virtual String? GetDefault(IDataColumn field, Boolean onlyDefine)
     {
         if (field.DataType.IsInt() || field.DataType.IsEnum)
             return $" DEFAULT {field.DefaultValue.ToInt()}";
@@ -956,11 +956,11 @@ internal partial class DbMetaData
     #endregion
 
     #region 数据定义语句
-    public virtual String CreateDatabaseSQL(String dbname, String file) => $"Create Database {Database.FormatName(dbname)}";
+    public virtual String CreateDatabaseSQL(String dbname, String? file) => $"Create Database {Database.FormatName(dbname)}";
 
     public virtual String DropDatabaseSQL(String dbname) => $"Drop Database {Database.FormatName(dbname)}";
 
-    public virtual String DatabaseExistSQL(String dbname) => null;
+    public virtual String? DatabaseExistSQL(String dbname) => null;
 
     public virtual String CreateTableSQL(IDataTable table)
     {
@@ -985,19 +985,19 @@ internal partial class DbMetaData
 
     //public virtual String TableExistSQL(IDataTable table) => throw new NotSupportedException("该功能未实现！");
 
-    public virtual String AddTableDescriptionSQL(IDataTable table) => null;
+    public virtual String? AddTableDescriptionSQL(IDataTable table) => null;
 
-    public virtual String DropTableDescriptionSQL(IDataTable table) => null;
+    public virtual String? DropTableDescriptionSQL(IDataTable table) => null;
 
-    public virtual String AddColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Add {FieldClause(field, true)}";
+    public virtual String? AddColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Add {FieldClause(field, true)}";
 
-    public virtual String AlterColumnSQL(IDataColumn field, IDataColumn oldfield) => $"Alter Table {FormatName(field.Table)} Alter Column {FieldClause(field, false)}";
+    public virtual String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"Alter Table {FormatName(field.Table)} Alter Column {FieldClause(field, false)}";
 
-    public virtual String DropColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Drop Column {FormatName(field)}";
+    public virtual String? DropColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Drop Column {FormatName(field)}";
 
-    public virtual String AddColumnDescriptionSQL(IDataColumn field) => null;
+    public virtual String? AddColumnDescriptionSQL(IDataColumn field) => null;
 
-    public virtual String DropColumnDescriptionSQL(IDataColumn field) => null;
+    public virtual String? DropColumnDescriptionSQL(IDataColumn field) => null;
 
     public virtual String CreateIndexSQL(IDataIndex index)
     {
@@ -1016,11 +1016,11 @@ internal partial class DbMetaData
 
     public virtual String DropIndexSQL(IDataIndex index) => $"Drop Index {index.Name} On {FormatName(index.Table)}";
 
-    public virtual String CompactDatabaseSQL() => null;
+    public virtual String? CompactDatabaseSQL() => null;
     #endregion
 
     #region 操作
-    public virtual String Backup(String dbname, String bakfile, Boolean compressed) => null;
+    public virtual String? Backup(String dbname, String? bakfile, Boolean compressed) => null;
 
     //public virtual Int32 CompactDatabase() => -1;
     #endregion

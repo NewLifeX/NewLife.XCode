@@ -70,7 +70,8 @@ partial class DbMetaData
         // 只要表名，不要其它
         foreach (DataRow dr in dt.Rows)
         {
-            list.Add(GetDataRowValue<String>(dr, _.TalbeName));
+            var tn = GetDataRowValue<String>(dr, _.TalbeName);
+            if (!tn.IsNullOrEmpty()) list.Add(tn);
         }
 
         return list;
@@ -98,13 +99,13 @@ partial class DbMetaData
     /// <returns></returns>
     protected List<IDataTable> GetTables(DataRow[]? rows, String[]? names, IDictionary<String, DataTable?>? data = null)
     {
-        if (rows == null || rows.Length == 0) return new List<IDataTable>();
+        if (rows == null || rows.Length == 0) return [];
 
         // 表名过滤
         if (names != null && names.Length > 0)
         {
             var hs = new HashSet<String>(names, StringComparer.OrdinalIgnoreCase);
-            rows = rows.Where(dr => TryGetDataRowValue(dr, _.TalbeName, out String name) && hs.Contains(name)).ToArray();
+            rows = rows.Where(dr => TryGetDataRowValue(dr, _.TalbeName, out String? name) && !name.IsNullOrEmpty() && hs.Contains(name)).ToArray();
         }
 
         var columns = data?["Columns"];
@@ -120,7 +121,7 @@ partial class DbMetaData
         {
             #region 基本属性
             var table = DAL.CreateTable();
-            table.TableName = GetDataRowValue<String>(dr, _.TalbeName);
+            table.TableName = GetDataRowValue<String>(dr, _.TalbeName)!;
 
             // 描述
             table.Description = GetDataRowValue<String>(dr, "DESCRIPTION");
@@ -157,7 +158,7 @@ partial class DbMetaData
     /// <param name="table"></param>
     /// <param name="dr"></param>
     /// <param name="data"></param>
-    protected virtual void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable?> data) { }
+    protected virtual void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable?>? data) { }
     #endregion
 
     #region 字段架构
@@ -166,10 +167,10 @@ partial class DbMetaData
     /// <param name="columns">列</param>
     /// <param name="data"></param>
     /// <returns></returns>
-    protected virtual List<IDataColumn> GetFields(IDataTable table, DataTable columns, IDictionary<String, DataTable> data)
+    protected virtual List<IDataColumn> GetFields(IDataTable table, DataTable? columns, IDictionary<String, DataTable?>? data)
     {
         var dt = columns;
-        if (dt == null) return null;
+        if (dt == null) return [];
 
         // 找到该表所有字段，注意排序
         DataRow[]? drs = null;
@@ -196,7 +197,7 @@ partial class DbMetaData
             var field = table.CreateColumn();
 
             // 名称
-            field.ColumnName = GetDataRowValue<String>(dr, _.ColumnName);
+            field.ColumnName = GetDataRowValue<String>(dr, _.ColumnName)!;
 
             // 标识、主键
             if (TryGetDataRowValue(dr, "AUTOINCREMENT", out Boolean b))
@@ -221,7 +222,7 @@ partial class DbMetaData
             // 允许空
             if (TryGetDataRowValue(dr, "IS_NULLABLE", out b))
                 field.Nullable = b;
-            else if (TryGetDataRowValue(dr, "IS_NULLABLE", out String str))
+            else if (TryGetDataRowValue(dr, "IS_NULLABLE", out String? str))
             {
                 if (!String.IsNullOrEmpty(str)) field.Nullable = "YES".EqualIgnoreCase(str);
             }
@@ -255,7 +256,7 @@ partial class DbMetaData
     protected virtual void FixField(IDataColumn field, DataRow dr)
     {
         // 修正数据类型 +++重点+++
-        if (field.DataType == null) field.DataType = GetDataType(field);
+        if (field.DataType == null) field.DataType = GetDataType(field)!;
     }
     #endregion
 
@@ -265,26 +266,26 @@ partial class DbMetaData
     /// <param name="indexes">索引</param>
     /// <param name="indexColumns">索引列</param>
     /// <returns></returns>
-    protected virtual List<IDataIndex> GetIndexes(IDataTable table, DataTable indexes, DataTable indexColumns)
+    protected virtual List<IDataIndex> GetIndexes(IDataTable table, DataTable? indexes, DataTable? indexColumns)
     {
-        if (indexes == null) return null;
+        if (indexes == null) return [];
 
         var drs = indexes.Select($"{_.TalbeName}='{table.TableName}'");
-        if (drs == null || drs.Length <= 0) return null;
+        if (drs == null || drs.Length <= 0) return [];
 
         var list = new List<IDataIndex>();
         foreach (var dr in drs)
         {
-            if (!TryGetDataRowValue(dr, _.IndexName, out String name)) continue;
+            if (!TryGetDataRowValue(dr, _.IndexName, out String? name)) continue;
 
             var di = table.CreateIndex();
             di.Name = name;
 
-            if (TryGetDataRowValue(dr, _.ColumnName, out name) && !String.IsNullOrEmpty(name))
+            if (TryGetDataRowValue(dr, _.ColumnName, out name) && !name.IsNullOrEmpty())
                 di.Columns = name.Split(',');
             else if (indexColumns != null)
             {
-                String orderby = null;
+                String? orderby = null;
                 // Oracle数据库用ColumnPosition，其它数据库用OrdinalPosition
                 if (indexColumns.Columns.Contains(_.OrdinalPosition))
                     orderby = _.OrdinalPosition;
@@ -297,7 +298,7 @@ partial class DbMetaData
                     var ns = new List<String>();
                     foreach (var item in dics)
                     {
-                        if (TryGetDataRowValue(item, _.ColumnName, out String dcname) && !dcname.IsNullOrEmpty() && !ns.Contains(dcname)) ns.Add(dcname);
+                        if (TryGetDataRowValue(item, _.ColumnName, out String? dcname) && !dcname.IsNullOrEmpty() && !ns.Contains(dcname)) ns.Add(dcname);
                     }
                     if (ns.Count <= 0) DAL.WriteLog("表{0}的索引{1}无法取得字段列表！", table, di.Name);
                     di.Columns = ns.ToArray();
@@ -316,7 +317,7 @@ partial class DbMetaData
 
             list.Add(di);
         }
-        return list != null && list.Count > 0 ? list : null;
+        return list;
     }
 
     /// <summary>修正索引</summary>

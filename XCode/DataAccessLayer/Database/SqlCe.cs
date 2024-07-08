@@ -232,7 +232,8 @@ class SqlCeMetaData : FileDbMetaData
 
         foreach (var dr in rows)
         {
-            list.Add(GetDataRowValue<String>(dr, _.TalbeName));
+            var tn = GetDataRowValue<String>(dr, _.TalbeName);
+            if (!tn.IsNullOrEmpty()) list.Add(tn);
         }
 
         return list;
@@ -243,35 +244,36 @@ class SqlCeMetaData : FileDbMetaData
     /// <param name="indexes">索引</param>
     /// <param name="indexColumns">索引列</param>
     /// <returns></returns>
-    protected override List<IDataIndex> GetIndexes(IDataTable table, DataTable indexes, DataTable indexColumns)
+    protected override List<IDataIndex> GetIndexes(IDataTable table, DataTable? indexes, DataTable? indexColumns)
     {
         var list = base.GetIndexes(table, indexes, indexColumns);
-        if (list != null && list.Count > 0)
+
+        // SqlCe的索引直接以索引字段的方式排布，所以需要重新组合起来
+        var dic = new Dictionary<String, IDataIndex>();
+        foreach (var item in list)
         {
-            // SqlCe的索引直接以索引字段的方式排布，所以需要重新组合起来
-            var dic = new Dictionary<String, IDataIndex>();
-            foreach (var item in list)
+            if (item.Name.IsNullOrEmpty()) continue;
+
+            if (!dic.TryGetValue(item.Name, out var di))
             {
-                if (!dic.TryGetValue(item.Name, out var di))
-                {
-                    dic.Add(item.Name, item);
-                }
-                else
-                {
-                    var ss = new List<String>(di.Columns);
-                    if (item.Columns != null && item.Columns.Length > 0 && !ss.Contains(item.Columns[0]))
-                    {
-                        ss.Add(item.Columns[0]);
-                        di.Columns = ss.ToArray();
-                    }
-                }
+                dic.Add(item.Name, item);
             }
-            list.Clear();
-            foreach (var item in dic.Values)
+            else
             {
-                list.Add(item);
+                var ss = new List<String>(di.Columns);
+                if (item.Columns != null && item.Columns.Length > 0 && !ss.Contains(item.Columns[0]))
+                {
+                    ss.Add(item.Columns[0]);
+                    di.Columns = ss.ToArray();
+                }
             }
         }
+        list.Clear();
+        foreach (var item in dic.Values)
+        {
+            list.Add(item);
+        }
+
         return list;
     }
 

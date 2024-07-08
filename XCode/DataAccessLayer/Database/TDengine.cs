@@ -372,7 +372,7 @@ class TDengineMetaData : RemoteDbMetaData
         return dt != null && dt.Rows != null && dt.Rows.Any(e => e[0] as String == databaseName);
     }
 
-    public override String CreateDatabaseSQL(String dbname, String file) => $"Create Database If Not Exists {Database.FormatName(dbname)}";
+    public override String CreateDatabaseSQL(String dbname, String? file) => $"Create Database If Not Exists {Database.FormatName(dbname)}";
     //public override String CreateDatabaseSQL(String dbname, String file) => $"Create Database If Not Exists {Database.FormatName(dbname)} KEEP 365 DAYS 10 BLOCKS 6 UPDATE 1;";
 
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";
@@ -404,7 +404,7 @@ class TDengineMetaData : RemoteDbMetaData
         // 返回String.Empty表示已经在别的SQL中处理
         String.Empty;
 
-    public override String AlterColumnSQL(IDataColumn field, IDataColumn oldfield) => $"Alter Table {FormatName(field.Table)} Modify Column {FieldClause(field, false)}";
+    public override String AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"Alter Table {FormatName(field.Table)} Modify Column {FieldClause(field, false)}";
 
     public override String AddColumnDescriptionSQL(IDataColumn field) =>
         // 返回String.Empty表示已经在别的SQL中处理

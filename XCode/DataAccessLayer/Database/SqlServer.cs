@@ -1008,7 +1008,8 @@ internal class SqlServerMetaData : RemoteDbMetaData
         var rows = dt.Select($"(TABLE_TYPE='BASE TABLE' Or TABLE_TYPE='VIEW') AND TABLE_NAME<>'Sysdiagrams'");
         foreach (var dr in rows)
         {
-            list.Add(GetDataRowValue<String>(dr, _.TalbeName));
+            var tn = GetDataRowValue<String>(dr, _.TalbeName);
+            if (!tn.IsNullOrEmpty()) list.Add(tn);
         }
 
         return list;
@@ -1073,21 +1074,20 @@ internal class SqlServerMetaData : RemoteDbMetaData
         }
     }
 
-    protected override List<IDataIndex> GetIndexes(IDataTable table, DataTable _indexes, DataTable _indexColumns)
+    protected override List<IDataIndex> GetIndexes(IDataTable table, DataTable? indexes, DataTable? indexColumns)
     {
-        var list = base.GetIndexes(table, _indexes, _indexColumns);
-        if (list != null && list.Count > 0)
+        var list = base.GetIndexes(table, indexes, indexColumns);
+
+        foreach (var item in list)
         {
-            foreach (var item in list)
+            var drs = AllIndexes?.Select("name='" + item.Name + "'");
+            if (drs != null && drs.Length > 0)
             {
-                var drs = AllIndexes?.Select("name='" + item.Name + "'");
-                if (drs != null && drs.Length > 0)
-                {
-                    item.Unique = GetDataRowValue<Boolean>(drs[0], "is_unique");
-                    item.PrimaryKey = GetDataRowValue<Boolean>(drs[0], "is_primary_key");
-                }
+                item.Unique = GetDataRowValue<Boolean>(drs[0], "is_unique");
+                item.PrimaryKey = GetDataRowValue<Boolean>(drs[0], "is_primary_key");
             }
         }
+
         return list;
     }
 
@@ -1359,7 +1359,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
     /// <param name="dbname"></param>
     /// <param name="bakfile"></param>
     /// <param name="compressed"></param>
-    public override String Backup(String dbname, String bakfile, Boolean compressed)
+    public override String Backup(String dbname, String? bakfile, Boolean compressed)
     {
 
         var name = dbname;
@@ -1527,7 +1527,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
     public override String AddColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Add {FieldClause(field, true)}";
 
-    public override String AlterColumnSQL(IDataColumn field, IDataColumn oldfield)
+    public override String AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
     {
         // 创建为自增，重建表
         if (field.Identity && !oldfield.Identity)

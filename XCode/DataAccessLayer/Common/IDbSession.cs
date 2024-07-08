@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using NewLife;
 using NewLife.Data;
 
@@ -131,6 +132,7 @@ public interface IDbSession : IDisposable2
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
+    [return: MaybeNull]
     T ExecuteScalar<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
 
     /// <summary>创建DbCommand</summary>

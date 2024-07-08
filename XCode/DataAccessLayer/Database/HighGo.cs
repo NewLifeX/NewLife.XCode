@@ -261,7 +261,7 @@ internal class HighGoMetaData : RemoteDbMetaData
         { typeof(String), new String[] { "varchar({0})", "text", "character varying({0})", "character({0})", "char{0})" } },
     };
     #endregion
-    protected override String GetDefault(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetDefault(IDataColumn field, Boolean onlyDefine)
     {
         if (field.DataType == typeof(Boolean)) { return $" DEFAULT {(field.DefaultValue.ToBoolean() ? true : false)}"; }
         return base.GetDefault(field, onlyDefine);

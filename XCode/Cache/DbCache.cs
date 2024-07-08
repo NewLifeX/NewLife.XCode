@@ -1,4 +1,5 @@
-﻿using NewLife.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using NewLife.Serialization;
 using NewLife.Threading;
 using XCode;
 using XCode.Configuration;
@@ -137,6 +138,7 @@ public class DbCache : NewLife.Caching.Cache
     /// <summary>获取缓存项，不存在时返回默认值</summary>
     /// <param name="key">键</param>
     /// <returns></returns>
+    [return: MaybeNull]
     public override T Get<T>(String key)
     {
         var e = Find(key);

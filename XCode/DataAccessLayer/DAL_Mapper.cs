@@ -172,7 +172,7 @@ public partial class DAL
     /// <param name="sql">SQL语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public T ExecuteScalar<T>(String sql, Object? param = null) =>
+    public T? ExecuteScalar<T>(String sql, Object? param = null) =>
         QueryWrap(sql, param, "", (ss, s, p, k3) => ss.ExecuteScalar<T>(s, CommandType.Text, Db.CreateParameters(p)), nameof(ExecuteScalar));
 
     /// <summary>执行Sql</summary>
@@ -214,7 +214,7 @@ public partial class DAL
     /// <param name="sql">SQL语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public Task<T> ExecuteScalarAsync<T>(String sql, Object? param = null) =>
+    public Task<T?> ExecuteScalarAsync<T>(String sql, Object? param = null) =>
         QueryAsyncWrap(sql, param, "", (ss, s, p, k3) => ss.ExecuteScalarAsync<T>(s, CommandType.Text, Db.CreateParameters(p)), nameof(ExecuteScalarAsync));
 
     private ConcurrentDictionary<Type, String> _tableMaps = new();

@@ -342,7 +342,7 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable> data)
     {
         // 注释
-        if (TryGetDataRowValue(dr, "TABLE_COMMENT", out String comment)) table.Description = comment;
+        if (TryGetDataRowValue(dr, "TABLE_COMMENT", out String? comment)) table.Description = comment;
 
         base.FixTable(table, dr, data);
     }
@@ -350,16 +350,16 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     protected override void FixField(IDataColumn field, DataRow dr)
     {
         // 修正原始类型
-        if (TryGetDataRowValue(dr, "COLUMN_TYPE", out String rawType)) field.RawType = rawType;
+        if (TryGetDataRowValue(dr, "COLUMN_TYPE", out String? rawType)) field.RawType = rawType;
 
         // 修正自增字段
-        if (TryGetDataRowValue(dr, "EXTRA", out String extra) && extra == "auto_increment") field.Identity = true;
+        if (TryGetDataRowValue(dr, "EXTRA", out String? extra) && extra == "auto_increment") field.Identity = true;
 
         // 修正主键
-        if (TryGetDataRowValue(dr, "COLUMN_KEY", out String key)) field.PrimaryKey = key == "PRI";
+        if (TryGetDataRowValue(dr, "COLUMN_KEY", out String? key)) field.PrimaryKey = key == "PRI";
 
         // 注释
-        if (TryGetDataRowValue(dr, "COLUMN_COMMENT", out String comment)) field.Description = comment;
+        if (TryGetDataRowValue(dr, "COLUMN_COMMENT", out String? comment)) field.Description = comment;
 
         // 布尔类型
         if (field.RawType == "enum")

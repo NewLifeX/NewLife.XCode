@@ -493,6 +493,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
 
         var field = Meta.Unique;
+        if (field == null) return false;
+
         var val = this[field.Name];
         var cache = Meta.Session.Cache;
         if (!cache.Using)
@@ -1064,7 +1066,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
 
 #if DEBUG
-            if (span != null) XTrace.WriteLine(span.Tag);
+            if (span?.Tag != null) XTrace.WriteLine(span.Tag);
 #endif
 
             return rs;
@@ -1593,7 +1595,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public static SelectBuilder FindSQLWithKey(String? where = null)
     {
-        var uk = Meta.Unique.Field;
+        var uk = Meta.Unique?.Field;
         if (uk == null) throw new XCodeException("实体类缺少唯一主键字段，无法生成SQL语句！");
 
         var columnName = Meta.Session.Dal.Db.FormatName(uk);
@@ -2188,7 +2190,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public static TEntity GetOrAdd<TKey>(String field, TKey key)
     {
-        if (field.IsNullOrEmpty()) field = Meta.Unique.Name;
+        if (field.IsNullOrEmpty()) field = Meta.Unique?.Name ?? throw new ArgumentNullException(nameof(field));
         var f = Meta.Table.FindByName(field) ?? throw new ArgumentNullException(nameof(field));
 
         return GetOrAdd(key, k => Find(f.Equal(k)), k =>

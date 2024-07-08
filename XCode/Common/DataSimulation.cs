@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using NewLife;
 using NewLife.Log;
 using NewLife.Security;
 
@@ -102,7 +103,7 @@ public class DataSimulation
                 lock (list)
                 {
                     list.Add(e);
-                    if (UseSql) qs.Add(sql);
+                    if (UseSql && !sql.IsNullOrEmpty()) qs.Add(sql);
                 }
             }
         });

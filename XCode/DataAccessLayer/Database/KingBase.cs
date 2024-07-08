@@ -27,7 +27,7 @@ internal class KingBase : RemoteDb
     #region 数据库特性
     protected override String ReservedWordsStr =>
      "ABORT,ABSOLUTE,ACCESS,ACTION,ADD,AFTER,ALL,ALLOCATE,ALTER,AND,ANY,ARE,ARRAY,AS,ASC,ASSERTION,AT,AUTHORIZATION,AVG,BEFORE,BEGIN,BETWEEN,BIT,BIT_LENGTH,BOTH,BY,CASCADE,CASCADED,CASE,CAST,CATALOG,CHAR,CHAR_LENGTH,CHARACTER,CHARACTER_LENGTH,CHECK,CLOSE,COALESCE,COLLATE,COLLATION,COLUMN,COMMIT,CONNECT,CONNECTION,CONSTRAINT,CONSTRAINTS,CONTINUE,CONVERT,CORRESPONDING,COUNT,CREATE,CROSS,CURRENT,CURRENT_DATE,CURRENT_TIME,CURRENT_TIMESTAMP,CURRENT_USER,CURSOR,DATE,DAY,DEALLOCATE,DEC,DECIMAL,DECLARE,DEFAULT,DEFERRABLE,DEFERRED,DELETE,DESC,DESCRIBE,DESCRIPTOR,DIAGNOSTICS,DISCONNECT,DISTINCT,DOMAIN,DOUBLE,DROP,ELSE,END,END-EXEC,ESCAPE,EXCEPT,EXCEPTION,EXEC,EXECUTE,EXISTS,EXTERNAL,EXTRACT,FALSE,FETCH,FIRST,FLOAT,FOR,FOREIGN,FOUND,FROM,FULL,GET,GLOBAL,GO,GOTO,GRANT,GROUP,HAVING,HOUR,IDENTITY,IMMEDIATE,IN,INDICATOR,INITIALLY,INNER,INPUT,INSENSITIVE,INSERT,INT,INTEGER,INTERSECT,INTERVAL,INTO,IS,ISOLATION,JOIN,KEY,LANGUAGE,LAST,LEADING,LEFT,LEVEL,LIKE,LOCAL,LOWER,MATCH,MAX,MIN,MINUTE,MODULE,MONTH,NAMES,NATIONAL,NATURAL,NCHAR,NEXT,NO,NOT,NULL,NULLIF,NUMERIC,OCTET_LENGTH,OF,ON,ONLY,OPEN,OPTION,OR,ORDER,OUTER,OUTPUT,OVERLAPS,PAD,PARTIAL,POSITION,PRECISION,PREPARE,PRESERVE,PRIMARY,PRIOR,PRIVILEGES,PROCEDURE,PUBLIC,READ,REAL,REFERENCES,RELATIVE,RESTRICT,REVOKE,RIGHT,ROLLBACK,ROWS,SCHEMA,SCROLL,SECOND,SECTION,SELECT,SESSION,SESSION_USER,SET,SIZE,SMALLINT,SOME,SPACE,SQL,SQLCODE,SQLERROR,SQLSTATE,SUBSTRING,SUM,SYSTEM_USER,TABLE,TEMPORARY,THEN,TIME,TIMESTAMP,TIMEZONE_HOUR,TIMEZONE_MINUTE,TO,TRAILING,TRANSACTION,TRANSLATE,TRANSLATION,TRIM,TRUE,UNION,UNIQUE,UNKNOWN,UPDATE,UPPER,USAGE,USER,USING,VALUE,VALUES,VARYING,VIEW,WHEN,WHENEVER,WHERE,WITH,WORK,WRITE,YEAR,ZONE";
-    
+
     public override String FormatName(String name)
     {
         if (name.IsNullOrWhiteSpace()) { return name; }
@@ -491,17 +491,18 @@ internal class KingBaseMetaData : RemoteDbMetaData
         return sb.Put(true);
     }
     public override String DropTableSQL(IDataTable table) => $"Drop Table If Exists {FormatName(table)}";
-    public override String AddTableDescriptionSQL(IDataTable table)
+    public override String? AddTableDescriptionSQL(IDataTable table)
     {
         if (String.IsNullOrEmpty(table.Description)) { return null; }
         return $"COMMENT ON TABLE {FormatName(table)} IS '{table.Description}'";
     }
-    public override String DropTableDescriptionSQL(IDataTable table) => $"COMMENT ON TABLE {FormatName(table)} IS NULL";
-    public override String AddColumnSQL(IDataColumn field) => $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {GetFieldType(field)}";
-    public override String AlterColumnSQL(IDataColumn field, IDataColumn oldfield) => $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
-    public override String AddColumnDescriptionSQL(IDataColumn field)
+    public override String? DropTableDescriptionSQL(IDataTable table) => $"COMMENT ON TABLE {FormatName(table)} IS NULL";
+    public override String? AddColumnSQL(IDataColumn field) => $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {GetFieldType(field)}";
+    public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
+    public override String? AddColumnDescriptionSQL(IDataColumn field)
     {
-        if (String.IsNullOrEmpty(field.Description)) { return null; };
+        if (String.IsNullOrEmpty(field.Description)) return null;
+
         return $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS '{field.Description}'";
     }
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS NULL";

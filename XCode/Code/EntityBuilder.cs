@@ -624,7 +624,9 @@ public class EntityBuilder : ClassBuilder
         var des = Table.Description;
         if (!Option.DisplayNameTemplate.IsNullOrEmpty())
         {
-            des = Table.Description.TrimStart(Table.DisplayName, "。");
+            var dis = Table.DisplayName;
+            if (!dis.IsNullOrEmpty())
+                des = des?.TrimStart(dis, "。");
             des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
         }
         WriteLine("/// <summary>{0}</summary>", des);

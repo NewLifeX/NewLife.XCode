@@ -11,7 +11,7 @@ namespace XCode;
 [Serializable]
 public class DirtyCollection : IEnumerable<String>
 {
-    private String[] _keys = new String[8];
+    private String?[] _keys = new String?[8];
     private Object?[] _values = new Object?[8];
 
     /// <summary>数据长度</summary>
@@ -128,7 +128,7 @@ public class DirtyCollection : IEnumerable<String>
         if (len > ms.Length) len = ms.Length;
         for (var i = 0; i < len; i++)
         {
-            if (ms[i] != null) yield return ms[i];
+            if (ms[i] != null) yield return ms[i]!;
         }
     }
 
@@ -136,15 +136,15 @@ public class DirtyCollection : IEnumerable<String>
 
     /// <summary>获取字典枚举</summary>
     /// <returns></returns>
-    public IDictionary<String, Object> GetDictionary()
+    public IDictionary<String, Object?> GetDictionary()
     {
-        var dic = new Dictionary<String, Object>();
+        var dic = new Dictionary<String, Object?>();
         var len = _length;
         var ms = _keys;
         if (len > ms.Length) len = ms.Length;
         for (var i = 0; i < len; i++)
         {
-            if (ms[i] != null) dic[ms[i]] = _values[i];
+            if (ms[i] != null) dic[ms[i]!] = _values[i];
         }
 
         return dic;

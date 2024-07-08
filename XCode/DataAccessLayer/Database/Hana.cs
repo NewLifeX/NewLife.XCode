@@ -549,7 +549,7 @@ internal class HanaMetaData : RemoteDbMetaData
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
 
-    public override String CreateDatabaseSQL(String dbname, String file) => base.CreateDatabaseSQL(dbname, file) + " DEFAULT CHARACTER SET utf8mb4";
+    public override String CreateDatabaseSQL(String dbname, String? file) => base.CreateDatabaseSQL(dbname, file) + " DEFAULT CHARACTER SET utf8mb4";
 
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";
 
@@ -589,14 +589,14 @@ internal class HanaMetaData : RemoteDbMetaData
         return sb.Put(true);
     }
 
-    public override String AddTableDescriptionSQL(IDataTable table)
+    public override String? AddTableDescriptionSQL(IDataTable table)
     {
         if (String.IsNullOrEmpty(table.Description)) return null;
 
         return $"Alter Table {FormatName(table)} Comment '{table.Description}'";
     }
 
-    public override String AlterColumnSQL(IDataColumn field, IDataColumn oldfield) => $"Alter Table {FormatName(field.Table)} Modify Column {FieldClause(field, false)}";
+    public override String AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"Alter Table {FormatName(field.Table)} Modify Column {FieldClause(field, false)}";
 
     public override String AddColumnDescriptionSQL(IDataColumn field) =>
         // 返回String.Empty表示已经在别的SQL中处理

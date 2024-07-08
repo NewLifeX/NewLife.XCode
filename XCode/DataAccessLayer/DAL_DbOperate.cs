@@ -161,7 +161,7 @@ partial class DAL
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public T ExecuteScalar<T>(String sql, CommandType type, IDictionary<String, Object> ps) => ExecuteWrap(sql, type, ps, (ss, s, t, p) => ss.ExecuteScalar<T>(s, t, Db.CreateParameters(p)), nameof(ExecuteScalar));
+    public T? ExecuteScalar<T>(String sql, CommandType type, IDictionary<String, Object> ps) => ExecuteWrap(sql, type, ps, (ss, s, t, p) => ss.ExecuteScalar<T>(s, t, Db.CreateParameters(p)), nameof(ExecuteScalar));
     #endregion
 
     #region 异步操作
@@ -245,7 +245,7 @@ partial class DAL
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public Task<T> ExecuteScalarAsync<T>(String sql, CommandType type, IDictionary<String, Object> ps) => ExecuteAsyncWrap(sql, type, ps, (ss, s, t, p) => ss.ExecuteScalarAsync<T>(s, t, Db.CreateParameters(p)), nameof(ExecuteScalarAsync));
+    public Task<T?> ExecuteScalarAsync<T>(String sql, CommandType type, IDictionary<String, Object> ps) => ExecuteAsyncWrap(sql, type, ps, (ss, s, t, p) => ss.ExecuteScalarAsync<T>(s, t, Db.CreateParameters(p)), nameof(ExecuteScalarAsync));
     #endregion
 
     #region 事务

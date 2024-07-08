@@ -87,20 +87,20 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
         // 重载。从DescriptionAttribute和BindColumnAttribute中获取备注，创建DisplayNameAttribute特性
         var atts = TypeDescriptor.GetAttributes(this, true);
 
-        if (atts != null && !ContainAttribute(atts, typeof(DisplayNameAttribute)))
+        if (!ContainAttribute(atts, typeof(DisplayNameAttribute)))
         {
             var list = new List<Attribute>();
-            String description = null;
+            String? description = null;
             foreach (Attribute item in atts)
             {
-                if (item.GetType() == typeof(DescriptionAttribute))
+                if (item is DescriptionAttribute des)
                 {
-                    description = (item as DescriptionAttribute).Description;
+                    description = des.Description;
                     if (!String.IsNullOrEmpty(description)) break;
                 }
-                if (item.GetType() == typeof(BindColumnAttribute))
+                if (item is BindColumnAttribute bca)
                 {
-                    description = (item as BindColumnAttribute).Description;
+                    description = bca.Description;
                     if (!String.IsNullOrEmpty(description)) break;
                 }
             }
@@ -145,7 +145,7 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
 
     internal static PropertyDescriptorCollection Fix(Type type, PropertyDescriptorCollection pdc)
     {
-        if (pdc == null || pdc.Count <= 0) return pdc;
+        if (pdc.Count <= 0) return pdc;
 
         var factory = type.AsFactory();
 

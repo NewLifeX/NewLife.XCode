@@ -996,6 +996,7 @@ internal class SQLiteMetaData : FileDbMetaData
 
         // SQLite只有一种整数，不去比较类型差异
         if (type1 == type2) return false;
+        if (type1 == null || type2 == null) return true;
         if (type1.IsInt() && type2.IsInt()) return false;
         //if ((type1 == typeof(Int32) || type1 == typeof(Int64)) &&
         //    (type2 == typeof(Int32) || type2 == typeof(Int64)))

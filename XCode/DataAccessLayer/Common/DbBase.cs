@@ -843,7 +843,7 @@ abstract class DbBase : DisposeBase, IDatabase
         if (value == null) return isNullable ? "null" : "";
 
         // 枚举
-        if (type != null && !type.IsInt() && type.IsEnum) type = typeof(Int32);
+        if (type != null && type.IsEnum) type = typeof(Int32);
 
         // 转为目标类型，比如枚举转为数字
         if (type != null) value = value.ChangeType(type);

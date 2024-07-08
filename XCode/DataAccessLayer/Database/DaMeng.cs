@@ -339,13 +339,11 @@ internal class DaMengSession : RemoteDbSession
         var dps = new List<IDataParameter>();
         foreach (var dc in columns)
         {
-            //if (dc.Identity) continue;
             if (!ps.Contains(dc.Name)) continue;
 
-            //var vs = new List<Object>();
             var type = dc.DataType ?? throw new ArgumentNullException(nameof(dc.DataType));
+            if (type.IsEnum) type = typeof(Int32);
 
-            if (!type.IsInt() && type.IsEnum) type = typeof(Int32);
             var arr = Array.CreateInstance(type, list.Count());
             var k = 0;
             foreach (var entity in list)

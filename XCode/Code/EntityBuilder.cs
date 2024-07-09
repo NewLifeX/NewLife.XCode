@@ -1627,8 +1627,10 @@ public class EntityBuilder : ClassBuilder
             WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.DisplayName);
         }
 
+        var nullable = EntityOption.Nullable;
+
         WriteLine("/// <returns>实体对象</returns>");
-        WriteLine("public static {2} {0}({1})", methodName, args, ClassName);
+        WriteLine("public static {2} {0}({1})", methodName, args, ClassName + (nullable ? "?" : ""));
         WriteLine("{");
         {
             var header = false;

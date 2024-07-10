@@ -197,10 +197,6 @@ internal class SqlServer : RemoteDb
 
             return builder.Clone().Top(maximumRows);
         }
-
-        // 修复无主键分页报错的情况
-        if (builder.Key.IsNullOrEmpty() && builder.OrderBy.IsNullOrEmpty()) throw new XCodeException("分页算法要求指定排序列！" + builder.ToString());
-
         // Sql2012，非首页
         if (IsSQL2012 && !builder.OrderBy.IsNullOrEmpty())
         {
@@ -208,6 +204,8 @@ internal class SqlServer : RemoteDb
             builder.Limit = $"offset {startRowIndex} rows fetch next {maximumRows} rows only";
             return builder;
         }
+        // 修复无主键分页报错的情况
+        if (builder.Key.IsNullOrEmpty() && builder.OrderBy.IsNullOrEmpty()) throw new XCodeException("分页算法要求指定排序列！" + builder.ToString());
 
         // 如果包含分组，则必须作为子查询
         var builder1 = builder.CloneWithGroupBy("XCode_T0", true);

@@ -134,7 +134,7 @@ class Program
             //opt.ModelNameForToModel = modelClass;
             if (!modelInterface.IsNullOrEmpty())
             {
-                opt.BaseClass = modelInterface;
+                opt.BaseClass += "," + modelInterface;
                 opt.ModelNameForCopy ??= modelInterface;
             }
             else if (!modelClass.IsNullOrEmpty())
@@ -155,7 +155,7 @@ class Program
             opt.ClassNameTemplate = modelClass;
             // 模型接口存在，且相同于拷贝类型，才能作为基类
             if (!modelInterface.IsNullOrEmpty() && modelInterface == opt.ModelNameForCopy)
-                opt.BaseClass = modelInterface;
+                opt.BaseClass += "," + modelInterface;
             else
                 opt.BaseClass = null;
             opt.ModelNameForCopy = !modelInterface.IsNullOrEmpty() ? modelInterface : modelClass;

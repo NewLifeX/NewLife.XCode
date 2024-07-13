@@ -413,13 +413,17 @@ public class EntityBuilder : ClassBuilder
         if (Business)
         {
             // 数据类只要实体基类
-            name = bs.FirstOrDefault(e => e.Contains("Entity"));
+            if (bs.Count >= 2)
+                name = bs[0];
             if (name.IsNullOrEmpty()) name = "Entity";
 
             name = $"{name}<{ClassName}>";
         }
         else
         {
+            if (bs.Count >= 2)
+                bs.RemoveAt(0);  // 移除第一个，因为第一个是实体基类
+
             // 有可能实现了接口拷贝
             var model = Option.ModelNameForCopy;
             if (!model.IsNullOrEmpty())

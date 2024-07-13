@@ -404,7 +404,16 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             if (fi.Type == typeof(String) && fi.Length > 0)
             {
                 if (this[fi.Name] is String str && str.Length > fi.Length && Dirtys[fi.Name])
-                    throw new ArgumentOutOfRangeException(fi.Name, $"{fi.DisplayName}长度限制{fi.Length}字符");
+                {
+                    // 优先使用主字段，不足时使用主键
+                    var uk = Meta.Master;
+                    if (uk == null || this[uk.Name] is String str2 && str2.Length > 50) uk = Meta.Unique;
+
+                    if (uk != null)
+                        throw new ArgumentOutOfRangeException(fi.Name, $"[{fi.Name}/{fi.DisplayName}]长度限制{fi.Length}字符[{uk.Name}={this[uk.Name]}]");
+                    else
+                        throw new ArgumentOutOfRangeException(fi.Name, $"[{fi.Name}/{fi.DisplayName}]长度限制{fi.Length}字符");
+                }
             }
         }
 

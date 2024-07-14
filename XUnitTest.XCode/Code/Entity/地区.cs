@@ -264,7 +264,7 @@ public partial class Area : IArea, IEntity<IArea>
     /// <summary>根据编码查找</summary>
     /// <param name="id">编码</param>
     /// <returns>实体对象</returns>
-    public static Area FindByID(Int32 id)
+    public static Area? FindByID(Int32 id)
     {
         if (id < 0) return null;
 

@@ -1561,12 +1561,23 @@ public class EntityBuilder : ClassBuilder
             }
 
             // 只有整数和字符串能生成查询函数
-            if (cs.Any(e => !IsIntOrString(e))) continue;
+            if (cs.Any(e => !CanSearch(e))) continue;
 
-            // 返回类型
+            // 唯一索引
             if (di.Unique)
             {
                 if (BuildExtendFind(cs, methods)) methods++;
+
+                // 生成多个前缀查询
+                for (var i = 1; i < cs.Length; i++)
+                {
+                    // 如果当前字段不可查询，则终止
+                    if (!CanSearch(cs[i - 1])) break;
+
+                    var cs2 = cs.Take(i).ToArray();
+
+                    if (BuildExtendFindAll(cs2, methods)) methods++;
+                }
             }
             else
             {
@@ -1644,8 +1655,10 @@ public class EntityBuilder : ClassBuilder
                     WriteLine("if ({0} < 0) return null;", dc.CamelName());
                 else if (dc.DataType == typeof(String))
                     WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.CamelName());
+                else if (dc.DataType == typeof(DateTime) && dc.ItemType.EqualIgnoreCase("date"))
+                    WriteLine("if ({0}.Year < 2000) return null;", dc.CamelName());
 
-                header |= IsIntOrString(dc);
+                header |= CanSearch(dc);
             }
 
             var exp = new StringBuilder();
@@ -1750,8 +1763,10 @@ public class EntityBuilder : ClassBuilder
                     WriteLine("if ({0} < 0) return [];", dc.CamelName(), ClassName);
                 else if (dc.DataType == typeof(String))
                     WriteLine("if ({0}.IsNullOrEmpty()) return [];", dc.CamelName(), ClassName);
+                else if (dc.DataType == typeof(DateTime) && dc.ItemType.EqualIgnoreCase("date"))
+                    WriteLine("if ({0}.Year < 2000) return [];", dc.CamelName());
 
-                header |= IsIntOrString(dc);
+                header |= CanSearch(dc);
             }
 
             var exp = new StringBuilder();
@@ -1972,6 +1987,18 @@ public class EntityBuilder : ClassBuilder
     #endregion 业务类
 
     #region 辅助
-    private Boolean IsIntOrString(IDataColumn column) => column.DataType != null && (column.DataType.IsInt() || column.DataType == typeof(String));
+    /// <summary>该列是否能够搜索。整型、字符串以及日期类型可以搜索</summary>
+    /// <param name="column"></param>
+    /// <returns></returns>
+    private Boolean CanSearch(IDataColumn column)
+    {
+        if (column.DataType == null) return false;
+
+        if (column.DataType.IsInt()) return true;
+        if (column.DataType == typeof(String)) return true;
+        if (column.DataType == typeof(DateTime) && column.ItemType.EqualIgnoreCase("date")) return true;
+
+        return false;
+    }
     #endregion
 }

@@ -336,7 +336,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static Parameter FindByID(Int32 id)
+    public static Parameter? FindByID(Int32 id)
     {
         if (id < 0) return null;
 
@@ -354,7 +354,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <param name="category">类别</param>
     /// <param name="name">名称</param>
     /// <returns>实体对象</returns>
-    public static Parameter FindByUserIDAndCategoryAndName(Int32 userId, String category, String name)
+    public static Parameter? FindByUserIDAndCategoryAndName(Int32 userId, String category, String name)
     {
         if (userId < 0) return null;
         if (category.IsNullOrEmpty()) return null;
@@ -364,6 +364,34 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserID == userId && e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));
 
         return Find(_.UserID == userId & _.Category == category & _.Name == name);
+    }
+
+    /// <summary>根据用户查找</summary>
+    /// <param name="userId">用户</param>
+    /// <returns>实体列表</returns>
+    public static IList<Parameter> FindAllByUserID(Int32 userId)
+    {
+        if (userId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserID == userId);
+
+        return FindAll(_.UserID == userId);
+    }
+
+    /// <summary>根据用户、类别查找</summary>
+    /// <param name="userId">用户</param>
+    /// <param name="category">类别</param>
+    /// <returns>实体列表</returns>
+    public static IList<Parameter> FindAllByUserIDAndCategory(Int32 userId, String category)
+    {
+        if (userId < 0) return [];
+        if (category.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserID == userId && e.Category.EqualIgnoreCase(category));
+
+        return FindAll(_.UserID == userId & _.Category == category);
     }
 
     /// <summary>根据类别、名称查找</summary>

@@ -371,7 +371,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static Menu FindByID(Int32 id)
+    public static Menu? FindByID(Int32 id)
     {
         if (id < 0) return null;
 
@@ -401,7 +401,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
     /// <param name="parentId">父编号</param>
     /// <param name="name">名称</param>
     /// <returns>实体对象</returns>
-    public static Menu FindByParentIDAndName(Int32 parentId, String name)
+    public static Menu? FindByParentIDAndName(Int32 parentId, String name)
     {
         if (parentId < 0) return null;
         if (name.IsNullOrEmpty()) return null;
@@ -410,6 +410,19 @@ public partial class Menu : IMenu, IEntity<IMenu>
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
         return Find(_.ParentID == parentId & _.Name == name);
+    }
+
+    /// <summary>根据父编号查找</summary>
+    /// <param name="parentId">父编号</param>
+    /// <returns>实体列表</returns>
+    public static IList<Menu> FindAllByParentID(Int32 parentId)
+    {
+        if (parentId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId);
+
+        return FindAll(_.ParentID == parentId);
     }
     #endregion
 

@@ -227,7 +227,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static TenantUser FindById(Int32 id)
+    public static TenantUser? FindById(Int32 id)
     {
         if (id < 0) return null;
 
@@ -244,7 +244,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
     /// <param name="tenantId">租户</param>
     /// <param name="userId">用户</param>
     /// <returns>实体对象</returns>
-    public static TenantUser FindByTenantIdAndUserId(Int32 tenantId, Int32 userId)
+    public static TenantUser? FindByTenantIdAndUserId(Int32 tenantId, Int32 userId)
     {
         if (tenantId < 0) return null;
         if (userId < 0) return null;
@@ -253,6 +253,19 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.UserId == userId);
 
         return Find(_.TenantId == tenantId & _.UserId == userId);
+    }
+
+    /// <summary>根据租户查找</summary>
+    /// <param name="tenantId">租户</param>
+    /// <returns>实体列表</returns>
+    public static IList<TenantUser> FindAllByTenantId(Int32 tenantId)
+    {
+        if (tenantId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
+
+        return FindAll(_.TenantId == tenantId);
     }
 
     /// <summary>根据用户查找</summary>

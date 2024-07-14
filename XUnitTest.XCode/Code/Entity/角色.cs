@@ -304,7 +304,7 @@ public partial class Role : IRole, IEntity<IRole>
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static Role FindByID(Int32 id)
+    public static Role? FindByID(Int32 id)
     {
         if (id < 0) return null;
 
@@ -320,7 +320,7 @@ public partial class Role : IRole, IEntity<IRole>
     /// <summary>根据名称查找</summary>
     /// <param name="name">名称</param>
     /// <returns>实体对象</returns>
-    public static Role FindByName(String name)
+    public static Role? FindByName(String name)
     {
         if (name.IsNullOrEmpty()) return null;
 

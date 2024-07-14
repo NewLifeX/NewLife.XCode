@@ -254,7 +254,7 @@ public partial class Tenant : ITenant, IEntity<ITenant>
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static Tenant FindById(Int32 id)
+    public static Tenant? FindById(Int32 id)
     {
         if (id < 0) return null;
 
@@ -270,7 +270,7 @@ public partial class Tenant : ITenant, IEntity<ITenant>
     /// <summary>根据编码查找</summary>
     /// <param name="code">编码</param>
     /// <returns>实体对象</returns>
-    public static Tenant FindByCode(String code)
+    public static Tenant? FindByCode(String code)
     {
         if (code.IsNullOrEmpty()) return null;
 

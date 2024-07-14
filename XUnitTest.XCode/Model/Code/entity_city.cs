@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -233,15 +233,28 @@ public partial class CorePerson
     /// <param name="pname">姓名</param>
     /// <param name="creditNo">身份证号</param>
     /// <returns>实体对象</returns>
-    public static CorePerson FindByPnameAndCreditNo(String pname, String creditNo)
+    public static CorePerson? FindByPnameAndCreditNo(String pname, String creditNo)
     {
-        if (pname.IsNullOrEmpty()) return null;
-        if (creditNo.IsNullOrEmpty()) return null;
+        if (pname == null) return null;
+        if (creditNo == null) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Pname.EqualIgnoreCase(pname) && e.CreditNo.EqualIgnoreCase(creditNo));
 
         return Find(_.Pname == pname & _.CreditNo == creditNo);
+    }
+
+    /// <summary>根据姓名查找</summary>
+    /// <param name="pname">姓名</param>
+    /// <returns>实体列表</returns>
+    public static IList<CorePerson> FindAllByPname(String pname)
+    {
+        if (pname == null) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Pname.EqualIgnoreCase(pname));
+
+        return FindAll(_.Pname == pname);
     }
 
     /// <summary>根据楼宇ID查找</summary>

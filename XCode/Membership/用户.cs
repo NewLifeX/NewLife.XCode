@@ -22,6 +22,7 @@ namespace XCode.Membership;
 [BindIndex("IX_User_Mobile", false, "Mobile")]
 [BindIndex("IX_User_Code", false, "Code")]
 [BindIndex("IX_User_RoleID", false, "RoleID")]
+[BindIndex("IX_User_DepartmentID", false, "DepartmentID")]
 [BindIndex("IX_User_UpdateTime", false, "UpdateTime")]
 [BindTable("User", Description = "用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class User : IUser, IEntity<UserModel>
@@ -479,6 +480,18 @@ public partial class User : IUser, IEntity<UserModel>
     #endregion
 
     #region 扩展查询
+    /// <summary>根据部门查找</summary>
+    /// <param name="departmentId">部门</param>
+    /// <returns>实体列表</returns>
+    public static IList<User> FindAllByDepartmentID(Int32 departmentId)
+    {
+        if (departmentId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DepartmentID == departmentId);
+
+        return FindAll(_.DepartmentID == departmentId);
+    }
     #endregion
 
     #region 字段名

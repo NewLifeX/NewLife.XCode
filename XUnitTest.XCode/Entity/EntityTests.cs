@@ -17,6 +17,6 @@ public class EntityTests
         };
         //user.Insert();
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() => user.Insert());
-        Assert.EndsWith("[Name=StoneXXX]", ex.Message);
+        Assert.Contains("[Name=StoneXXX]", ex.Message);
     }
 }

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202309.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202309.xsd">
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202407.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202407.xsd">
   <Option>
     <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
     <ClassNameTemplate />
@@ -82,6 +82,7 @@
         <Index Columns="Mobile" />
         <Index Columns="Code" />
         <Index Columns="RoleID" />
+        <Index Columns="DepartmentID" />
         <Index Columns="UpdateTime" />
       </Indexes>
     </Table>
@@ -115,11 +116,11 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
+        <Index Columns="TenantId,ParentID,Name" Unique="True" />
         <Index Columns="Name" />
         <Index Columns="ParentID,Name" />
         <Index Columns="Code" />
         <Index Columns="UpdateTime" />
-        <Index Columns="TenantId" />
       </Indexes>
     </Table>
     <Table Name="Role" Description="角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限">
@@ -181,18 +182,18 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="Name" />
         <Index Columns="ParentID,Name" Unique="True" />
+        <Index Columns="Name" />
       </Indexes>
     </Table>
-    <Table Name="Parameter" Description="字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合">
+    <Table Name="Parameter" Description="字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合" UsingCache="False">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="UserID" DataType="Int32" Map="User@Id@$" Description="用户。按用户区分参数，用户0表示系统级" />
         <Column Name="Category" DataType="String" Description="类别" />
-        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="Value" DataType="String" Length="200" Description="数值" />
-        <Column Name="LongValue" DataType="String" Length="2000" Description="长数值" />
+        <Column Name="LongValue" DataType="String" Length="-1" Description="长数值" />
         <Column Name="Kind" DataType="Int32" Description="种类。0普通，21列表，22名值" Type="XCode.Membership.ParameterKinds" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
@@ -220,7 +221,7 @@
     <Table Name="Area" Description="地区。行政区划数据，最高支持四级地址，9位数字">
       <Columns>
         <Column Name="ID" DataType="Int32" PrimaryKey="True" Description="编码。行政区划编码" />
-        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="FullName" DataType="String" Master="True" Description="全名" />
         <Column Name="ParentID" DataType="Int32" Description="父级" />
         <Column Name="Level" DataType="Int32" Description="层级" />
@@ -249,9 +250,9 @@
     </Table>
     <Table Name="Log" Description="日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除" ConnName="Log" InsertOnly="True">
       <Columns>
-        <Column Name="ID" DataType="Int64" PrimaryKey="True" Description="编号" />
+        <Column Name="ID" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
         <Column Name="Category" DataType="String" Description="类别" />
-        <Column Name="Action" DataType="String" Description="操作" />
+        <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
         <Column Name="LinkID" DataType="Int64" Description="链接" />
         <Column Name="Success" DataType="Boolean" Description="成功" />
         <Column Name="UserName" DataType="String" Description="用户名" />
@@ -278,7 +279,7 @@
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Code" DataType="String" Description="编码。唯一编码" />
-        <Column Name="Name" DataType="String" Master="True" Description="名称。显示名称" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。显示名称" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="ManagerId" DataType="Int32" Map="User@Id@$" Description="管理者" />
         <Column Name="RoleIds" DataType="String" Length="200" Description="角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同" />

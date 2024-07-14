@@ -82,6 +82,7 @@
         <Index Columns="Mobile" />
         <Index Columns="Code" />
         <Index Columns="RoleID" />
+        <Index Columns="DepartmentID" />
         <Index Columns="UpdateTime" />
       </Indexes>
     </Table>
@@ -115,11 +116,11 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
+        <Index Columns="TenantId,ParentID,Name" Unique="True" />
         <Index Columns="Name" />
         <Index Columns="ParentID,Name" />
         <Index Columns="Code" />
         <Index Columns="UpdateTime" />
-        <Index Columns="TenantId" />
       </Indexes>
     </Table>
     <Table Name="Role" Description="角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限">
@@ -181,8 +182,8 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="Name" />
         <Index Columns="ParentID,Name" Unique="True" />
+        <Index Columns="Name" />
       </Indexes>
     </Table>
     <Table Name="Parameter" Description="字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合" UsingCache="False">
@@ -192,7 +193,7 @@
         <Column Name="Category" DataType="String" Description="类别" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="Value" DataType="String" Length="200" Description="数值" />
-        <Column Name="LongValue" DataType="String" Length="2000" Description="长数值" />
+        <Column Name="LongValue" DataType="String" Length="-1" Description="长数值" />
         <Column Name="Kind" DataType="Int32" Description="种类。0普通，21列表，22名值" Type="XCode.Membership.ParameterKinds" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />

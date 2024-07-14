@@ -98,9 +98,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Build.tt" />
-    <None Remove="install.ps1" />
-    <None Remove="Readme.MD" />
-    <None Remove="UpdateInfo.txt" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
@@ -110,9 +107,5 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Readme.MD" />
-    <EmbeddedResource Include="UpdateInfo.txt" />
   </ItemGroup>
 </Project>

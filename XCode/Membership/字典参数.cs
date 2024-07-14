@@ -68,7 +68,7 @@ public partial class Parameter : IParameter, IEntity<ParameterModel>
     /// <summary>长数值</summary>
     [DisplayName("长数值")]
     [Description("长数值")]
-    [DataObjectField(false, false, true, 2000)]
+    [DataObjectField(false, false, true, -1)]
     [BindColumn("LongValue", "长数值", "")]
     public String? LongValue { get => _LongValue; set { if (OnPropertyChanging("LongValue", value)) { _LongValue = value; OnPropertyChanged("LongValue"); } } }
 
@@ -333,6 +333,17 @@ public partial class Parameter : IParameter, IEntity<ParameterModel>
     #endregion
 
     #region 扩展查询
+    /// <summary>根据用户、类别查找</summary>
+    /// <param name="userId">用户</param>
+    /// <param name="category">类别</param>
+    /// <returns>实体列表</returns>
+    public static IList<Parameter> FindAllByUserIDAndCategory(Int32 userId, String category)
+    {
+        if (userId < 0) return [];
+        if (category == null) return [];
+
+        return FindAll(_.UserID == userId & _.Category == category);
+    }
     #endregion
 
     #region 字段名

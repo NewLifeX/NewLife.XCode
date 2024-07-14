@@ -357,8 +357,8 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     public static Parameter? FindByUserIDAndCategoryAndName(Int32 userId, String category, String name)
     {
         if (userId < 0) return null;
-        if (category.IsNullOrEmpty()) return null;
-        if (name.IsNullOrEmpty()) return null;
+        if (category == null) return null;
+        if (name == null) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserID == userId && e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));
@@ -386,7 +386,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     public static IList<Parameter> FindAllByUserIDAndCategory(Int32 userId, String category)
     {
         if (userId < 0) return [];
-        if (category.IsNullOrEmpty()) return [];
+        if (category == null) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserID == userId && e.Category.EqualIgnoreCase(category));
@@ -400,8 +400,8 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <returns>实体列表</returns>
     public static IList<Parameter> FindAllByCategoryAndName(String category, String name)
     {
-        if (category.IsNullOrEmpty()) return [];
-        if (name.IsNullOrEmpty()) return [];
+        if (category == null) return [];
+        if (name == null) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));

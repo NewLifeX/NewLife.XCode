@@ -300,8 +300,8 @@ public partial class MemberLog : IMemberLog, IEntity<IMemberLog>
     /// <returns>实体列表</returns>
     public static IList<MemberLog> FindAllByActionAndCategory(String action, String category)
     {
-        if (action.IsNullOrEmpty()) return [];
-        if (category.IsNullOrEmpty()) return [];
+        if (action == null) return [];
+        if (category == null) return [];
 
         return FindAll(_.Action == action & _.Category == category);
     }
@@ -312,7 +312,7 @@ public partial class MemberLog : IMemberLog, IEntity<IMemberLog>
     /// <returns>实体列表</returns>
     public static IList<MemberLog> FindAllByCategoryAndLinkID(String category, Int32 linkId)
     {
-        if (category.IsNullOrEmpty()) return [];
+        if (category == null) return [];
         if (linkId < 0) return [];
 
         return FindAll(_.Category == category & _.LinkID == linkId);

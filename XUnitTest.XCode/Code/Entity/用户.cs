@@ -491,7 +491,7 @@ public partial class User : IUser, IEntity<IUser>
     /// <returns>实体对象</returns>
     public static User? FindByName(String name)
     {
-        if (name.IsNullOrEmpty()) return null;
+        if (name == null) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
@@ -507,7 +507,7 @@ public partial class User : IUser, IEntity<IUser>
     /// <returns>实体列表</returns>
     public static IList<User> FindAllByMail(String mail)
     {
-        if (mail.IsNullOrEmpty()) return [];
+        if (mail == null) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mail.EqualIgnoreCase(mail));
@@ -520,7 +520,7 @@ public partial class User : IUser, IEntity<IUser>
     /// <returns>实体列表</returns>
     public static IList<User> FindAllByMobile(String mobile)
     {
-        if (mobile.IsNullOrEmpty()) return [];
+        if (mobile == null) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mobile.EqualIgnoreCase(mobile));
@@ -533,7 +533,7 @@ public partial class User : IUser, IEntity<IUser>
     /// <returns>实体列表</returns>
     public static IList<User> FindAllByCode(String code)
     {
-        if (code.IsNullOrEmpty()) return [];
+        if (code == null) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));

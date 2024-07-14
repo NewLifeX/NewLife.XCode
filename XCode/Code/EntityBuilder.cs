@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Reflection;
+using System.Text;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
@@ -325,8 +326,13 @@ public class EntityBuilder : ClassBuilder
         if (!Business)
         {
             // 读取biz文件，识别其中已生成的扩展查询方法，避免在数据类中重复生成
-            var bizFile = GetFileName(".Biz.cs", Option.ChineseFileName);
-            LoadCodeFile(bizFile);
+            var codeFile = GetFileName(".Biz.cs", Option.ChineseFileName);
+            LoadCodeFile(codeFile);
+        }
+        else
+        {
+            var codeFile = GetFileName(".cs", Option.ChineseFileName);
+            LoadCodeFile(codeFile);
         }
     }
 
@@ -599,6 +605,9 @@ public class EntityBuilder : ClassBuilder
 
             WriteLine();
             BuildExtendSearch();
+
+            //todo 条件暂时未成熟，生成的高级查询有些缺陷，需要人工介入修改
+            //BuildAdvanceSearch();
 
             if (ScaleColumn != null)
             {
@@ -1615,19 +1624,7 @@ public class EntityBuilder : ClassBuilder
         var methodName = columns.Select(e => e.Name).Join("And");
         methodName = $"FindBy{methodName}";
 
-        var ps = new Dictionary<String, String>();
-        var ps2 = new Dictionary<String, String>();
-        foreach (var dc in columns)
-        {
-            var type = dc.Properties["Type"];
-            if (type.IsNullOrEmpty()) type = dc.DataType?.Name + "";
-
-            ps[dc.CamelName()] = type;
-
-            var p = type.LastIndexOf('.');
-            if (p > 0) type = type[(p + 1)..];
-            ps2[dc.CamelName()] = type;
-        }
+        var (ps, ps2) = GetParameters(columns);
         var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
 
         // 如果方法名已存在，则不生成
@@ -1654,7 +1651,12 @@ public class EntityBuilder : ClassBuilder
                 if (dc.DataType != null && dc.DataType.IsInt())
                     WriteLine("if ({0} < 0) return null;", dc.CamelName());
                 else if (dc.DataType == typeof(String))
-                    WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.CamelName());
+                {
+                    if (nullable)
+                        WriteLine("if ({0} == null) return null;", dc.CamelName());
+                    else
+                        WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.CamelName());
+                }
                 else if (dc.DataType == typeof(DateTime) && dc.ItemType.EqualIgnoreCase("date"))
                     WriteLine("if ({0}.Year < 2000) return null;", dc.CamelName());
 
@@ -1725,19 +1727,7 @@ public class EntityBuilder : ClassBuilder
         var methodName = columns.Select(e => e.Name).Join("And");
         methodName = $"FindAllBy{methodName}";
 
-        var ps = new Dictionary<String, String>();
-        var ps2 = new Dictionary<String, String>();
-        foreach (var dc in columns)
-        {
-            var type = dc.Properties["Type"];
-            if (type.IsNullOrEmpty()) type = dc.DataType?.Name + "";
-
-            ps[dc.CamelName()] = type;
-
-            var p = type.LastIndexOf('.');
-            if (p > 0) type = type[(p + 1)..];
-            ps2[dc.CamelName()] = type;
-        }
+        var (ps, ps2) = GetParameters(columns);
         var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
 
         // 如果方法名已存在，则不生成
@@ -1762,7 +1752,12 @@ public class EntityBuilder : ClassBuilder
                 if (dc.DataType != null && dc.DataType.IsInt())
                     WriteLine("if ({0} < 0) return [];", dc.CamelName(), ClassName);
                 else if (dc.DataType == typeof(String))
-                    WriteLine("if ({0}.IsNullOrEmpty()) return [];", dc.CamelName(), ClassName);
+                {
+                    if (Option.Nullable)
+                        WriteLine("if ({0} == null) return [];", dc.CamelName());
+                    else
+                        WriteLine("if ({0}.IsNullOrEmpty()) return [];", dc.CamelName(), ClassName);
+                }
                 else if (dc.DataType == typeof(DateTime) && dc.ItemType.EqualIgnoreCase("date"))
                     WriteLine("if ({0}.Year < 2000) return [];", dc.CamelName());
 
@@ -1798,116 +1793,40 @@ public class EntityBuilder : ClassBuilder
         return true;
     }
 
-    /// <summary>高级查询</summary>
+    private (IDictionary<String, String>, IDictionary<String, String>) GetParameters(IList<IDataColumn> columns)
+    {
+        var ps = new Dictionary<String, String>();
+        var ps2 = new Dictionary<String, String>();
+        foreach (var dc in columns)
+        {
+            var type = dc.Properties["Type"];
+            if (type.IsNullOrEmpty()) type = dc.DataType?.Name + "";
+
+            if (dc.DataType == typeof(Boolean))
+                type += "?";
+
+            ps[dc.CamelName()] = type;
+
+            var p = type.LastIndexOf('.');
+            if (p > 0) type = type[(p + 1)..];
+            ps2[dc.CamelName()] = type;
+        }
+
+        return (ps, ps2);
+    }
+
+    /// <summary>自定义查询区域</summary>
     protected virtual void BuildSearch()
     {
-        // 收集索引信息，索引中的所有字段都参与，构造一个高级查询模板
+        WriteLine("#region 高级查询");
+
+        var cs = BuildAdvanceSearch();
+
         var idx = Table.Indexes ?? [];
-        var cs = new List<IDataColumn>();
-        if (idx != null && idx.Count > 0)
-        {
-            // 索引中的所有字段，按照表字段顺序
-            var dcs = idx.SelectMany(e => e.Columns).Distinct().ToArray();
-            foreach (var dc in Table.Columns)
-            {
-                // 主键和自增，不参与
-                if (dc.PrimaryKey || dc.Identity) continue;
-
-                if (dc.Name.EqualIgnoreCase(dcs) || dc.ColumnName.EqualIgnoreCase(dcs)) cs.Add(dc);
-            }
-        }
-
         var returnName = ClassName;
 
-        WriteLine("#region 高级查询");
-        if (cs.Count > 0)
-        {
-            // 时间字段。无差别支持UpdateTime/CreateTime
-            var dcTime = cs.FirstOrDefault(e => e.DataScale.StartsWithIgnoreCase("time"));
-            dcTime ??= cs.FirstOrDefault(e => e.DataType == typeof(DateTime));
-            dcTime ??= Table.GetColumns(["UpdateTime", "CreateTime"])?.FirstOrDefault();
-            var dcSnow = cs.FirstOrDefault(e => e.PrimaryKey && !e.Identity && e.DataType == typeof(Int64));
-
-            if (dcTime != null) cs.Remove(dcTime);
-            cs.RemoveAll(e => e.Name.EqualIgnoreCase("key", "page"));
-            if (dcSnow != null || dcTime != null)
-                cs.RemoveAll(e => e.Name.EqualIgnoreCase("start", "end"));
-
-            // 可用于关键字模糊搜索的字段
-            var keys = Table.Columns.Where(e => e.DataType == typeof(String)).ToList();
-
-            // 注释部分
-            WriteLine("/// <summary>高级查询</summary>");
-            foreach (var dc in cs)
-            {
-                WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.Description);
-            }
-            if (dcTime != null)
-            {
-                WriteLine("/// <param name=\"start\">{0}开始</param>", dcTime.DisplayName);
-                WriteLine("/// <param name=\"end\">{0}结束</param>", dcTime.DisplayName);
-            }
-            else if (dcSnow != null)
-            {
-                WriteLine("/// <param name=\"start\">{0}开始</param>", dcSnow.DisplayName);
-                WriteLine("/// <param name=\"end\">{0}结束</param>", dcSnow.DisplayName);
-            }
-            WriteLine("/// <param name=\"key\">关键字</param>");
-            WriteLine("/// <param name=\"page\">分页参数信息。可携带统计和数据权限扩展查询等信息</param>");
-            WriteLine("/// <returns>实体列表</returns>");
-
-            // 参数部分
-            //var pis = cs.Join(", ", dc => $"{dc.DataType.Name} {dc.CamelName()}");
-            var pis = new StringBuilder();
-            foreach (var dc in cs)
-            {
-                if (pis.Length > 0) pis.Append(", ");
-
-                var type = dc.Properties["Type"];
-                if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
-
-                if (dc.DataType == typeof(Boolean))
-                    pis.Append($"{type}? {dc.CamelName()}");
-                else
-                    pis.Append($"{type} {dc.CamelName()}");
-            }
-            var piTime = dcTime == null ? "" : "DateTime start, DateTime end, ";
-            if (pis.Length > 0)
-                WriteLine("public static IList<{0}> Search({1}, {2}String key, PageParameter page)", returnName, pis, piTime);
-            else
-                WriteLine("public static IList<{0}> Search({2}String key, PageParameter page)", returnName, pis, piTime);
-            WriteLine("{");
-            {
-                WriteLine("var exp = new WhereExpression();");
-
-                // 构造表达式
-                WriteLine();
-                foreach (var dc in cs)
-                {
-                    if (dc.DataType.IsInt())
-                        WriteLine("if ({0} >= 0) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
-                    else if (dc.DataType == typeof(Boolean))
-                        WriteLine("if ({0} != null) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
-                    else if (dc.DataType == typeof(String))
-                        WriteLine("if (!{0}.IsNullOrEmpty()) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
-                }
-
-                if (dcSnow != null)
-                    WriteLine("exp &= _.{0}.Between(start, end, Meta.Factory.Snow);", dcSnow.Name);
-                else if (dcTime != null)
-                    WriteLine("exp &= _.{0}.Between(start, end);", dcTime.Name);
-
-                if (keys.Count > 0)
-                    WriteLine("if (!key.IsNullOrEmpty()) exp &= {0};", keys.Join(" | ", k => $"_.{k.Name}.Contains(key)"));
-
-                // 查询返回
-                WriteLine();
-                WriteLine("return FindAll(exp, page);");
-            }
-            WriteLine("}");
-        }
-
         // 字段缓存，用于魔方前台下拉选择
+        if (idx != null && idx.Count > 0)
         {
             // 主键和时间字段
             var pk = Table.Columns.FirstOrDefault(e => e.Identity);
@@ -1968,6 +1887,117 @@ public class EntityBuilder : ClassBuilder
         }
 
         WriteLine("#endregion");
+    }
+
+    /// <summary>生成高级查询</summary>
+    protected virtual IList<IDataColumn> BuildAdvanceSearch()
+    {
+        // 收集索引信息，索引中的所有字段都参与，构造一个高级查询模板
+        var idx = Table.Indexes ?? [];
+        var cs = new List<IDataColumn>();
+        if (idx != null && idx.Count > 0)
+        {
+            // 索引中的所有字段，按照表字段顺序
+            var dcs = idx.SelectMany(e => e.Columns).Distinct().ToArray();
+            foreach (var dc in Table.Columns)
+            {
+                // 主键和自增，不参与
+                if (dc.PrimaryKey || dc.Identity) continue;
+
+                if (dc.Name.EqualIgnoreCase(dcs) || dc.ColumnName.EqualIgnoreCase(dcs)) cs.Add(dc);
+            }
+        }
+
+        if (cs.Count <= 0) return cs;
+
+        var returnName = ClassName;
+
+        // 时间字段。无差别支持UpdateTime/CreateTime
+        var dcTime = cs.FirstOrDefault(e => e.DataScale.StartsWithIgnoreCase("time"));
+        dcTime ??= cs.FirstOrDefault(e => e.DataType == typeof(DateTime));
+        dcTime ??= Table.GetColumns(["UpdateTime", "CreateTime"])?.FirstOrDefault();
+        var dcSnow = cs.FirstOrDefault(e => e.PrimaryKey && !e.Identity && e.DataType == typeof(Int64));
+
+        if (dcTime != null) cs.Remove(dcTime);
+        cs.RemoveAll(e => e.Name.EqualIgnoreCase("key", "page"));
+        if (dcSnow != null || dcTime != null)
+            cs.RemoveAll(e => e.Name.EqualIgnoreCase("start", "end"));
+
+        var (ps, ps2) = GetParameters(cs);
+
+        // 如果方法名已存在，则不生成
+        if (dcTime != null)
+        {
+            ps2["start"] = "DateTime";
+            ps2["end"] = "DateTime";
+        }
+        ps2["key"] = "String";
+        ps2["page"] = "PageParameter";
+        var key = $"Search({ps2.Join(",", e => e.Value)})";
+        if (Members.Contains(key)) return cs;
+        Members.Add(key);
+
+        // 可用于关键字模糊搜索的字段
+        var keys = Table.Columns.Where(e => e.DataType == typeof(String)).ToList();
+
+        // 注释部分
+        WriteLine("/// <summary>高级查询</summary>");
+        foreach (var dc in cs)
+        {
+            WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.Description);
+        }
+        if (dcTime != null)
+        {
+            WriteLine("/// <param name=\"start\">{0}开始</param>", dcTime.DisplayName);
+            WriteLine("/// <param name=\"end\">{0}结束</param>", dcTime.DisplayName);
+        }
+        else if (dcSnow != null)
+        {
+            WriteLine("/// <param name=\"start\">{0}开始</param>", dcSnow.DisplayName);
+            WriteLine("/// <param name=\"end\">{0}结束</param>", dcSnow.DisplayName);
+        }
+        WriteLine("/// <param name=\"key\">关键字</param>");
+        WriteLine("/// <param name=\"page\">分页参数信息。可携带统计和数据权限扩展查询等信息</param>");
+        WriteLine("/// <returns>实体列表</returns>");
+
+        // 参数部分
+        var pis = ps.Join(", ", e => $"{e.Value} {e.Key}");
+        var piTime = dcTime == null ? "" : "DateTime start, DateTime end, ";
+        if (pis.Length > 0)
+            WriteLine("public static IList<{0}> Search({1}, {2}String key, PageParameter page)", returnName, pis, piTime);
+        else
+            WriteLine("public static IList<{0}> Search({2}String key, PageParameter page)", returnName, pis, piTime);
+        WriteLine("{");
+        {
+            WriteLine("var exp = new WhereExpression();");
+
+            // 构造表达式
+            WriteLine();
+            foreach (var dc in cs)
+            {
+                if (dc.DataType.IsInt())
+                    WriteLine("if ({0} >= 0) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
+                else if (dc.DataType == typeof(Boolean))
+                    WriteLine("if ({0} != null) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
+                else if (dc.DataType == typeof(String))
+                    WriteLine("if (!{0}.IsNullOrEmpty()) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
+            }
+
+            if (dcSnow != null)
+                WriteLine("exp &= _.{0}.Between(start, end, Meta.Factory.Snow);", dcSnow.Name);
+            else if (dcTime != null)
+                WriteLine("exp &= _.{0}.Between(start, end);", dcTime.Name);
+
+            if (keys.Count > 0)
+                WriteLine("if (!key.IsNullOrEmpty()) exp &= {0};", keys.Join(" | ", k => $"_.{k.Name}.Contains(key)"));
+
+            // 查询返回
+            WriteLine();
+            WriteLine("return FindAll(exp, page);");
+        }
+        WriteLine("}");
+
+        return cs;
     }
 
     /// <summary>业务操作</summary>

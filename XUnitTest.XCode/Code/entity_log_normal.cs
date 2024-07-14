@@ -259,8 +259,8 @@ public partial class Log
     /// <returns>实体列表</returns>
     public static IList<Log> FindAllByActionAndCategory(String action, String category)
     {
-        if (action.IsNullOrEmpty()) return [];
-        if (category.IsNullOrEmpty()) return [];
+        if (action == null) return [];
+        if (category == null) return [];
 
         return FindAll(_.Action == action & _.Category == category);
     }
@@ -271,7 +271,7 @@ public partial class Log
     /// <returns>实体列表</returns>
     public static IList<Log> FindAllByCategoryAndLinkID(String category, Int64 linkId)
     {
-        if (category.IsNullOrEmpty()) return [];
+        if (category == null) return [];
         if (linkId < 0) return [];
 
         return FindAll(_.Category == category & _.LinkID == linkId);

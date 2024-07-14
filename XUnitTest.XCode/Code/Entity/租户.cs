@@ -272,7 +272,7 @@ public partial class Tenant : ITenant, IEntity<ITenant>
     /// <returns>实体对象</returns>
     public static Tenant? FindByCode(String code)
     {
-        if (code.IsNullOrEmpty()) return null;
+        if (code == null) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Code.EqualIgnoreCase(code));

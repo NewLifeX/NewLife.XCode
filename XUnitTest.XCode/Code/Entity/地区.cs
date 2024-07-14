@@ -295,7 +295,7 @@ public partial class Area : IArea, IEntity<IArea>
     /// <returns>实体列表</returns>
     public static IList<Area> FindAllByName(String name)
     {
-        if (name.IsNullOrEmpty()) return [];
+        if (name == null) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
@@ -308,7 +308,7 @@ public partial class Area : IArea, IEntity<IArea>
     /// <returns>实体列表</returns>
     public static IList<Area> FindAllByPinYin(String pinYin)
     {
-        if (pinYin.IsNullOrEmpty()) return [];
+        if (pinYin == null) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.PinYin.EqualIgnoreCase(pinYin));
@@ -321,7 +321,7 @@ public partial class Area : IArea, IEntity<IArea>
     /// <returns>实体列表</returns>
     public static IList<Area> FindAllByJianPin(String jianPin)
     {
-        if (jianPin.IsNullOrEmpty()) return [];
+        if (jianPin == null) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.JianPin.EqualIgnoreCase(jianPin));
@@ -334,7 +334,7 @@ public partial class Area : IArea, IEntity<IArea>
     /// <returns>实体列表</returns>
     public static IList<Area> FindAllByGeoHash(String geoHash)
     {
-        if (geoHash.IsNullOrEmpty()) return [];
+        if (geoHash == null) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.GeoHash.EqualIgnoreCase(geoHash));

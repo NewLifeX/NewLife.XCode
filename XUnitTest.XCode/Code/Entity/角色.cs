@@ -322,7 +322,7 @@ public partial class Role : IRole, IEntity<IRole>
     /// <returns>实体对象</returns>
     public static Role? FindByName(String name)
     {
-        if (name.IsNullOrEmpty()) return null;
+        if (name == null) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));

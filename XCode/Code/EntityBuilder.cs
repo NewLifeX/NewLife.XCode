@@ -1804,6 +1804,13 @@ public class EntityBuilder : ClassBuilder
 
             if (dc.DataType == typeof(Boolean))
                 type += "?";
+            else if (dc.DataType == typeof(String))
+            {
+                if (Option.Nullable && dc.Nullable)
+                {
+                    type += "?";
+                }
+            }
 
             ps[dc.CamelName()] = type;
 

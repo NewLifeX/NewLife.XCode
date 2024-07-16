@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using NewLife;
+using NewLife.Common;
 using NewLife.Configuration;
 using NewLife.Data;
 using NewLife.Log;
@@ -38,9 +39,21 @@ public class DbConfigProvider : ConfigProvider
 
         // 本地缓存。兼容旧版配置文件
         var name = Category;
-        var file = $"Config/dbConfig_{name}.json".GetFullPath();
-        var old = $"Config/{name}.config".GetFullPath();
-        if (!File.Exists(file)) file = old;
+        var path = Path.GetTempPath().CombinePath(SysConfig.Current.Name);
+        var file = path.CombinePath($"dbConfig_{name}.json").GetFullPath();
+        var old = $"Config/dbConfig_{name}.json".GetFullPath();
+        if (!File.Exists(file) && File.Exists(old))
+        {
+            try
+            {
+                File.Move(old, file);
+            }
+            catch
+            {
+                file = old;
+            }
+        }
+
         if ((Root == null || Root.Childs == null || Root.Childs.Count == 0) && CacheLevel > ConfigCacheLevel.NoCache && File.Exists(file))
         {
             XTrace.WriteLine("[{0}/{1}]加载缓存配置：{2}", Category, UserId, file);
@@ -182,7 +195,8 @@ public class DbConfigProvider : ConfigProvider
         if (CacheLevel > ConfigCacheLevel.NoCache)
         {
             var name = Category;
-            var file = $"Config/dbConfig_{name}.json".GetFullPath();
+            var path = Path.GetTempPath().CombinePath(SysConfig.Current.Name);
+            var file = path.CombinePath($"dbConfig_{name}.json").GetFullPath();
             var txt = configs.ToJson(true);
 
             // 加密存储

@@ -108,7 +108,7 @@ internal class PostgreSQL : RemoteDb
     /// <summary>长文本长度</summary>
     public override Int32 LongTextLength => 4000;
 
-    protected internal override String ParamPrefix => "$";
+    protected internal override String ParamPrefix => "@";
 
     /// <summary>系统数据库名</summary>
     public override String SystemDatabaseName => "postgres";

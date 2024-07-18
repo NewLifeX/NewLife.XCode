@@ -441,4 +441,24 @@ public class ShardTests
         }
         );
     }
+
+    [Fact]
+    public void ExpressionShards()
+    {
+        var policy = new TimeShardPolicy(Log2._.CreateTime, Log2.Meta.Factory)
+        {
+            TablePolicy = "{0}_{1:yyyyMMdd}",
+        };
+
+        var start = "2024-05-29".ToDateTime();
+        var end = start.AddDays(1);
+        //var fi = Log2.Meta.Factory.Table.FindByName("ID");
+        var fi = policy.Field;
+        var where = fi >= start & fi < end;
+
+        var shards = policy.Shards(where);
+        Assert.NotNull(shards);
+        Assert.Single(shards);
+        Assert.Equal("Log2_20240529", shards[0].TableName);
+    }
 }

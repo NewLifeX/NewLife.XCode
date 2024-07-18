@@ -1024,7 +1024,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         else
         {
             var ss = Meta.Session;
-            using var span = DAL.GlobalTracer?.NewSpan($"db:{ss.ConnName}:{ss.TableName}:AutoShard", "自动分页查询");
+            using var span = DAL.GlobalTracer?.NewSpan($"db:{ss.ConnName}:{ss.TableName}:AutoShard", "自动分页查询", shards.Length);
 
             // 先生成查询语句
             var builder = CreateBuilder(where, order, selects);

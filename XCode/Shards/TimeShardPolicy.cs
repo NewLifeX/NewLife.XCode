@@ -164,12 +164,21 @@ public class TimeShardPolicy : IShardPolicy
                 var start = sf.Value.ToDateTime();
                 if (start.Year > 1)
                 {
+                    // 不等于时，增加1秒
+                    if (sf.Action == ">") start = start.AddSeconds(1);
+
                     var end = DateTime.Now;
 
                     if (ef != null)
                     {
                         var time = ef.Value.ToDateTime();
-                        if (time.Year > 1) end = time;
+                        if (time.Year > 1)
+                        {
+                            end = time;
+
+                            // 不等于时，减少1秒
+                            if (ef.Action == "<") end = end.AddSeconds(-1);
+                        }
                     }
 
                     return GetModels(start, end);
@@ -218,6 +227,12 @@ public class TimeShardPolicy : IShardPolicy
     {
         var models = new List<ShardModel>();
 
+        // 根据不仅，把start调整到整点
+        if (Step.TotalDays >= 1)
+            start = start.Date;
+        else if (start.Hour >= 1)
+            start = start.Date.AddHours(start.Hour);
+
         var hash = new HashSet<String>();
         for (var dt = start; dt < end; dt = dt.Add(Step))
         {
@@ -233,19 +248,19 @@ public class TimeShardPolicy : IShardPolicy
             }
         }
 
-        // 标准时间区间 start <= @fi < end ，但是要考虑到end有一部分落入新的分片，减一秒判断
-        {
-            var model = Shard(end.AddSeconds(1));
-            if (model != null)
-            {
-                var key = $"{model.ConnName}#{model.TableName}";
-                if (key != "#" && !hash.Contains(key))
-                {
-                    models.Add(model);
-                    hash.Add(key);
-                }
-            }
-        }
+        //// 标准时间区间 start <= @fi < end ，但是要考虑到end有一部分落入新的分片，减一秒判断
+        //{
+        //    var model = Shard(end.AddSeconds(1));
+        //    if (model != null)
+        //    {
+        //        var key = $"{model.ConnName}#{model.TableName}";
+        //        if (key != "#" && !hash.Contains(key))
+        //        {
+        //            models.Add(model);
+        //            hash.Add(key);
+        //        }
+        //    }
+        //}
 
         return models.ToArray();
     }

@@ -239,8 +239,9 @@ class Program
         var line = ss?.FirstOrDefault(e => e.StartsWith("xcodetool"));
         if (line.IsNullOrEmpty())
         {
-            rs = Execute("dotnet", "tool install -g xcodetool");
-            XTrace.WriteLine("已安装工具xcodetool，可在模型目录使用xcode命令来生成代码");
+            rs = Execute("dotnet", "tool install xcodetool -g");
+            XTrace.WriteLine(rs);
+            //XTrace.WriteLine("已安装工具xcodetool，可在模型目录使用xcode命令来生成代码");
         }
         else
         {
@@ -248,10 +249,15 @@ class Program
             if (ss != null && ss.Length >= 2 && Version.TryParse(ss[1], out var ver))
             {
                 var dt = new DateTime(ver.Build, ver.Revision / 100, ver.Revision % 100);
-                if (dt.AddMonths(1) < DateTime.Now)
+                if (dt.AddMonths(3) < DateTime.Now)
+                {
+                    rs = Execute("dotnet", "tool update xcodetool -g --prerelease");
+                    XTrace.WriteLine(rs);
+                }
+                else if (dt.AddMonths(1) < DateTime.Now)
                 {
                     //rs = Execute("dotnet", "tool install -g --prerelease xcodetool");
-                    rs = Execute("dotnet", "tool install -g xcodetool");
+                    rs = Execute("dotnet", "tool update xcodetool -g");
                     XTrace.WriteLine(rs);
                 }
             }

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
 using XCode;
@@ -21,6 +23,7 @@ class Program
         {
             Console.WriteLine("NewLife.XCode v{0}", Assembly.GetExecutingAssembly().GetName().Version);
             Console.WriteLine("Usage: xcode model.xml");
+            Console.WriteLine("Install: dotnet tool install -g xcodetool");
             Console.WriteLine("Upgrade: http://x.newlifex.com/xcodetool.exe");
             Console.WriteLine();
         }
@@ -34,6 +37,9 @@ class Program
             if (textFileLog != null)
                 textFileLog.LogPath = textFileLog.LogPath.GetBasePath();
         }
+
+        // 检查工具
+        var task = Task.Run(CheckTool);
 
         // 在当前目录查找模型文件
         var file = "";
@@ -84,6 +90,8 @@ class Program
                 File.WriteAllText(file, xml, Encoding.UTF8);
             }
         }
+
+        task.Wait(5_000);
     }
 
     /// <summary>生成实体类。用户可以调整该方法可以改变生成实体类代码的逻辑，从而得到自己的代码生成器</summary>
@@ -221,5 +229,70 @@ class Program
                 CubeBuilder.BuildControllers(tables, opt, log);
             }
         }
+    }
+
+    static void CheckTool()
+    {
+        var rs = Execute("dotnet", "tool list -g", 3_000);
+
+        var ss = rs?.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
+        var line = ss?.FirstOrDefault(e => e.StartsWith("xcodetool"));
+        if (line.IsNullOrEmpty())
+        {
+            rs = Execute("dotnet", "tool install -g xcodetool");
+            XTrace.WriteLine("已安装工具xcodetool，可在模型目录使用xcode命令来生成代码");
+        }
+        else
+        {
+            ss = line.Split([' ', '-'], StringSplitOptions.RemoveEmptyEntries);
+            if (ss != null && ss.Length >= 2 && Version.TryParse(ss[1], out var ver))
+            {
+                var dt = new DateTime(ver.Build, ver.Revision / 100, ver.Revision % 100);
+                if (dt.AddMonths(1) < DateTime.Now)
+                {
+                    //rs = Execute("dotnet", "tool install -g --prerelease xcodetool");
+                    rs = Execute("dotnet", "tool install -g xcodetool");
+                    XTrace.WriteLine(rs);
+                }
+            }
+        }
+    }
+
+    /// <summary>执行命令并等待返回</summary>
+    /// <param name="cmd"></param>
+    /// <param name="arguments"></param>
+    /// <param name="msWait"></param>
+    /// <returns></returns>
+    public static String? Execute(String cmd, String? arguments = null, Int32 msWait = 0)
+    {
+        try
+        {
+            if (XTrace.Log.Level <= LogLevel.Debug) XTrace.WriteLine("Execute({0} {1})", cmd, arguments);
+
+            var psi = new ProcessStartInfo(cmd, arguments ?? String.Empty)
+            {
+                // UseShellExecute 必须 false，以便于后续重定向输出流
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                StandardOutputEncoding = Encoding.UTF8,
+            };
+            var process = Process.Start(psi);
+            if (process == null) return null;
+
+            if (msWait > 0 && !process.WaitForExit(msWait))
+            {
+                process.Kill();
+                return null;
+            }
+
+            var rs = process.StandardOutput.ReadToEnd();
+            if (rs.IsNullOrEmpty()) rs = process.StandardError.ReadToEnd();
+
+            return rs;
+        }
+        catch { return null; }
     }
 }

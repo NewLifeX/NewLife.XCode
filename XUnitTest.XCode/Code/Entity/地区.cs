@@ -293,7 +293,7 @@ public partial class Area : IArea, IEntity<IArea>
     /// <summary>根据名称查找</summary>
     /// <param name="name">名称</param>
     /// <returns>实体列表</returns>
-    public static IList<Area> FindAllByName(String name)
+    public static IList<Area> FindAllByName(String? name)
     {
         if (name == null) return [];
 
@@ -306,7 +306,7 @@ public partial class Area : IArea, IEntity<IArea>
     /// <summary>根据拼音查找</summary>
     /// <param name="pinYin">拼音</param>
     /// <returns>实体列表</returns>
-    public static IList<Area> FindAllByPinYin(String pinYin)
+    public static IList<Area> FindAllByPinYin(String? pinYin)
     {
         if (pinYin == null) return [];
 
@@ -319,7 +319,7 @@ public partial class Area : IArea, IEntity<IArea>
     /// <summary>根据简拼查找</summary>
     /// <param name="jianPin">简拼</param>
     /// <returns>实体列表</returns>
-    public static IList<Area> FindAllByJianPin(String jianPin)
+    public static IList<Area> FindAllByJianPin(String? jianPin)
     {
         if (jianPin == null) return [];
 
@@ -332,7 +332,7 @@ public partial class Area : IArea, IEntity<IArea>
     /// <summary>根据地址编码查找</summary>
     /// <param name="geoHash">地址编码</param>
     /// <returns>实体列表</returns>
-    public static IList<Area> FindAllByGeoHash(String geoHash)
+    public static IList<Area> FindAllByGeoHash(String? geoHash)
     {
         if (geoHash == null) return [];
 

@@ -389,7 +389,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
     /// <returns>实体列表</returns>
     public static IList<Menu> FindAllByName(String name)
     {
-        if (name == null) return [];
+        if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
@@ -404,7 +404,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
     public static Menu? FindByParentIDAndName(Int32 parentId, String name)
     {
         if (parentId < 0) return null;
-        if (name == null) return null;
+        if (name.IsNullOrEmpty()) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));

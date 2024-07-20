@@ -4,9 +4,9 @@
     <Table Name="CorePerson" TableName="core_person" Description="居民信息" DbType="MySql">
       <Columns>
         <Column Name="PersonID" DataType="Int32" RawType="int(11)" Identity="True" PrimaryKey="True" Description="编号" />
-        <Column Name="Pname" DataType="String" RawType="varchar(50)" Description="姓名" />
+        <Column Name="Pname" DataType="String" RawType="varchar(50)" Nullable="false" Description="姓名" />
         <Column Name="Psex" DataType="Int32" RawType="int(11)" Nullable="True" Description="性别" />
-        <Column Name="CreditNo" DataType="String" RawType="char(50)" Description="身份证号" />
+        <Column Name="CreditNo" DataType="String" RawType="char(50)" Nullable="false" Description="身份证号" />
         <Column Name="Mobile" DataType="String" RawType="char(50)" Description="联系电话" />
         <Column Name="BuildID" DataType="Int32" RawType="int(11)" Nullable="True" Description="楼宇ID" />
         <Column Name="Build_ID" DataType="Int32" RawType="int(11)" Nullable="True" Description="平台楼号" />

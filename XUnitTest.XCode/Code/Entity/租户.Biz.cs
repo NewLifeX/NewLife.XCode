@@ -126,7 +126,7 @@ public partial class Tenant : Entity<Tenant>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Tenant> Search(String code, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Tenant> Search(String? code, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 

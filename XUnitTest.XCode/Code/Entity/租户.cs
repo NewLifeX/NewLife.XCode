@@ -270,7 +270,7 @@ public partial class Tenant : ITenant, IEntity<ITenant>
     /// <summary>根据编码查找</summary>
     /// <param name="code">编码</param>
     /// <returns>实体对象</returns>
-    public static Tenant? FindByCode(String code)
+    public static Tenant? FindByCode(String? code)
     {
         if (code == null) return null;
 

@@ -354,7 +354,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <param name="category">类别</param>
     /// <param name="name">名称</param>
     /// <returns>实体对象</returns>
-    public static Parameter? FindByUserIDAndCategoryAndName(Int32 userId, String category, String name)
+    public static Parameter? FindByUserIDAndCategoryAndName(Int32 userId, String? category, String? name)
     {
         if (userId < 0) return null;
         if (category == null) return null;
@@ -383,7 +383,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <param name="userId">用户</param>
     /// <param name="category">类别</param>
     /// <returns>实体列表</returns>
-    public static IList<Parameter> FindAllByUserIDAndCategory(Int32 userId, String category)
+    public static IList<Parameter> FindAllByUserIDAndCategory(Int32 userId, String? category)
     {
         if (userId < 0) return [];
         if (category == null) return [];
@@ -398,7 +398,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <param name="category">类别</param>
     /// <param name="name">名称</param>
     /// <returns>实体列表</returns>
-    public static IList<Parameter> FindAllByCategoryAndName(String category, String name)
+    public static IList<Parameter> FindAllByCategoryAndName(String? category, String? name)
     {
         if (category == null) return [];
         if (name == null) return [];

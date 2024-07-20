@@ -298,7 +298,7 @@ public partial class MemberLog : IMemberLog, IEntity<IMemberLog>
     /// <param name="action">操作</param>
     /// <param name="category">类别</param>
     /// <returns>实体列表</returns>
-    public static IList<MemberLog> FindAllByActionAndCategory(String action, String category)
+    public static IList<MemberLog> FindAllByActionAndCategory(String? action, String? category)
     {
         if (action == null) return [];
         if (category == null) return [];
@@ -310,7 +310,7 @@ public partial class MemberLog : IMemberLog, IEntity<IMemberLog>
     /// <param name="category">类别</param>
     /// <param name="linkId">链接</param>
     /// <returns>实体列表</returns>
-    public static IList<MemberLog> FindAllByCategoryAndLinkID(String category, Int32 linkId)
+    public static IList<MemberLog> FindAllByCategoryAndLinkID(String? category, Int32 linkId)
     {
         if (category == null) return [];
         if (linkId < 0) return [];

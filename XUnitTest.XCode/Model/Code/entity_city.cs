@@ -32,13 +32,13 @@ public partial class CorePerson
     [BindColumn("PersonID", "编号", "int(11)")]
     public Int32 PersonID { get => _PersonID; set { if (OnPropertyChanging("PersonID", value)) { _PersonID = value; OnPropertyChanged("PersonID"); } } }
 
-    private String? _Pname;
+    private String _Pname = null!;
     /// <summary>姓名</summary>
     [DisplayName("姓名")]
     [Description("姓名")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, false, 50)]
     [BindColumn("Pname", "姓名", "varchar(50)")]
-    public String? Pname { get => _Pname; set { if (OnPropertyChanging("Pname", value)) { _Pname = value; OnPropertyChanged("Pname"); } } }
+    public String Pname { get => _Pname; set { if (OnPropertyChanging("Pname", value)) { _Pname = value; OnPropertyChanged("Pname"); } } }
 
     private Int32 _Psex;
     /// <summary>性别</summary>
@@ -48,13 +48,13 @@ public partial class CorePerson
     [BindColumn("Psex", "性别", "int(11)")]
     public Int32 Psex { get => _Psex; set { if (OnPropertyChanging("Psex", value)) { _Psex = value; OnPropertyChanged("Psex"); } } }
 
-    private String? _CreditNo;
+    private String _CreditNo = null!;
     /// <summary>身份证号</summary>
     [DisplayName("身份证号")]
     [Description("身份证号")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, false, 50)]
     [BindColumn("CreditNo", "身份证号", "char(50)")]
-    public String? CreditNo { get => _CreditNo; set { if (OnPropertyChanging("CreditNo", value)) { _CreditNo = value; OnPropertyChanged("CreditNo"); } } }
+    public String CreditNo { get => _CreditNo; set { if (OnPropertyChanging("CreditNo", value)) { _CreditNo = value; OnPropertyChanged("CreditNo"); } } }
 
     private String? _Mobile;
     /// <summary>联系电话</summary>
@@ -235,8 +235,8 @@ public partial class CorePerson
     /// <returns>实体对象</returns>
     public static CorePerson? FindByPnameAndCreditNo(String pname, String creditNo)
     {
-        if (pname == null) return null;
-        if (creditNo == null) return null;
+        if (pname.IsNullOrEmpty()) return null;
+        if (creditNo.IsNullOrEmpty()) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Pname.EqualIgnoreCase(pname) && e.CreditNo.EqualIgnoreCase(creditNo));
@@ -249,7 +249,7 @@ public partial class CorePerson
     /// <returns>实体列表</returns>
     public static IList<CorePerson> FindAllByPname(String pname)
     {
-        if (pname == null) return [];
+        if (pname.IsNullOrEmpty()) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Pname.EqualIgnoreCase(pname));

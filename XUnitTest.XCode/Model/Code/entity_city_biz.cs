@@ -53,6 +53,10 @@ public partial class CorePerson : Entity<CorePerson>
         // 如果没有脏数据，则不需要进行任何处理
         if (!HasDirty) return true;
 
+        // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
+        if (Pname.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Pname), "姓名不能为空！");
+        if (CreditNo.IsNullOrEmpty()) throw new ArgumentNullException(nameof(CreditNo), "身份证号不能为空！");
+
         // 建议先调用基类方法，基类方法会做一些统一处理
         if (!base.Valid(method)) return false;
 

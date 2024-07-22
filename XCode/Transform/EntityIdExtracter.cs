@@ -33,8 +33,7 @@ public class EntityIdExtracter
     {
         Factory = factory;
         IdField = idField;
-        BatchSize = factory.Session.Dal.Db.BatchSize;
-        if (BatchSize <= 0) BatchSize = XCodeSetting.Current.BatchSize;
+        BatchSize = factory.Session.Dal.GetBatchSize();
     }
     #endregion
 

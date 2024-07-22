@@ -19,4 +19,7 @@ public class BatchOption
 
     /// <summary>是否完全插入所有字段。用于Insert/Upsert，默认false表示不插入没有脏数据的字段</summary>
     public Boolean FullInsert { get; set; }
+
+    /// <summary>批操作分批大小。默认0，使用数据链接设置或全局设置</summary>
+    public Int32 BatchSize { get; set; }
 }

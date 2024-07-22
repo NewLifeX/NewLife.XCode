@@ -413,9 +413,7 @@ public class EntityPersistence : IEntityPersistence
     /// <returns></returns>
     public virtual Int32 Delete(IEntitySession session, String whereClause)
     {
-        var batchSize = session.Dal.Db.BatchSize;
-        if (batchSize <= 0) batchSize = XCodeSetting.Current.BatchSize;
-        if (batchSize <= 0) batchSize = 10_000;
+        var batchSize = session.Dal.GetBatchSize(10_000);
         var interval = XCodeSetting.Current.BatchInterval;
 
         // 部分数据库支持分批删除

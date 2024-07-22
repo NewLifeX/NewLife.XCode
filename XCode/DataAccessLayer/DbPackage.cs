@@ -365,8 +365,7 @@ public class DbPackage
 
             var row = 0;
             var pageSize = BatchSize;
-            if (pageSize <= 0) pageSize = Dal.Db.BatchSize;
-            if (pageSize <= 0) pageSize = XCodeSetting.Current.BatchSize;
+            if (pageSize <= 0) pageSize = Dal.GetBatchSize();
             while (true)
             {
                 //修复总行数是pageSize的倍数无法退出循环的情况

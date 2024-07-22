@@ -42,8 +42,7 @@ public class IdExtracter : IExtracter<DbTable>
         Dal = dal;
         Builder = new SelectBuilder { Table = tableName, OrderBy = field.ColumnName + " asc" };
         Field = field;
-        BatchSize = dal.Db.BatchSize;
-        if (BatchSize <= 0) BatchSize = XCodeSetting.Current.BatchSize;
+        BatchSize = dal.GetBatchSize();
     }
     #endregion
 

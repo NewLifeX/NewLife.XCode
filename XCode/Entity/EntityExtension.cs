@@ -495,19 +495,24 @@ public static class EntityExtension
         session.InitData();
 
         var dal = session.Dal;
-        //dal.CheckDatabase();
-        //var tableName = dal.Db.FormatTableName(session.TableName);
+        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
+        var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{fact.Table.TableName}", $"{session.TableName}[{list.Count()}]", list.Count());
+        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
         try
         {
-            var rs = dal.Session.Insert(session.DataTable, option.Columns, list.Cast<IModel>());
-
-            // 清除脏数据，避免重复提交保存
-            foreach (var item in list)
+            var rs = 0;
+            for (var i = 0; i < total; i += option.BatchSize)
             {
-                item.Dirtys.Clear();
+                var tmp = list.Skip(i).Take(option.BatchSize).ToList();
+                rs += dal.Session.Insert(session.DataTable, option.Columns, tmp.Cast<IModel>());
+
+                // 清除脏数据，避免重复提交保存
+                foreach (var item in tmp)
+                {
+                    item.Dirtys.Clear();
+                }
             }
 
             return rs;
@@ -577,20 +582,24 @@ public static class EntityExtension
         session.InitData();
 
         var dal = session.Dal;
-        //dal.CheckDatabase();
+        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
+        var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{dal.ConnName}:InsertIgnore:{fact.Table.TableName}", $"{session.TableName}[{list.Count()}]", list.Count());
+        using var span = tracer?.NewSpan($"db:{dal.ConnName}:InsertIgnore:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
         try
         {
-            //if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
-
-            var rs = dal.Session.InsertIgnore(session.DataTable, option.Columns, list.Cast<IModel>());
-
-            // 清除脏数据，避免重复提交保存
-            foreach (var item in list)
+            var rs = 0;
+            for (var i = 0; i < total; i += option.BatchSize)
             {
-                item.Dirtys.Clear();
+                var tmp = list.Skip(i).Take(option.BatchSize).ToList();
+                rs += dal.Session.InsertIgnore(session.DataTable, option.Columns, list.Cast<IModel>());
+
+                // 清除脏数据，避免重复提交保存
+                foreach (var item in tmp)
+                {
+                    item.Dirtys.Clear();
+                }
             }
 
             return rs;
@@ -660,20 +669,24 @@ public static class EntityExtension
         session.InitData();
 
         var dal = session.Dal;
-        //dal.CheckDatabase();
+        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
+        var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchReplace:{fact.Table.TableName}", $"{session.TableName}[{list.Count()}]", list.Count());
+        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchReplace:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
         try
         {
-            //if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
-
-            var rs = dal.Session.Replace(session.DataTable, option.Columns, list.Cast<IModel>());
-
-            // 清除脏数据，避免重复提交保存
-            foreach (var item in list)
+            var rs = 0;
+            for (var i = 0; i < total; i += option.BatchSize)
             {
-                item.Dirtys.Clear();
+                var tmp = list.Skip(i).Take(option.BatchSize).ToList();
+                rs += dal.Session.Replace(session.DataTable, option.Columns, list.Cast<IModel>());
+
+                // 清除脏数据，避免重复提交保存
+                foreach (var item in tmp)
+                {
+                    item.Dirtys.Clear();
+                }
             }
 
             return rs;
@@ -743,21 +756,24 @@ public static class EntityExtension
         session.InitData();
 
         var dal = session.Dal;
-        //dal.CheckDatabase();
-        //var tableName = dal.Db.FormatTableName(session.TableName);
+        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
+        var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{fact.Table.TableName}", $"{session.TableName}[{list.Count()}]", list.Count());
+        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
         try
         {
-            //if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
-
-            var rs = dal.Session.Update(session.DataTable, option.Columns, updateColumns, addColumns, list.Cast<IModel>());
-
-            // 清除脏数据，避免重复提交保存
-            foreach (var item in list)
+            var rs = 0;
+            for (var i = 0; i < total; i += option.BatchSize)
             {
-                item.Dirtys.Clear();
+                var tmp = list.Skip(i).Take(option.BatchSize).ToList();
+                rs += dal.Session.Update(session.DataTable, option.Columns, updateColumns, addColumns, list.Cast<IModel>());
+
+                // 清除脏数据，避免重复提交保存
+                foreach (var item in tmp)
+                {
+                    item.Dirtys.Clear();
+                }
             }
 
             return rs;
@@ -884,19 +900,22 @@ public static class EntityExtension
         //dal.CheckDatabase();
         //var tableName = dal.Db.FormatTableName(session.TableName);
 
-        //XTrace.WriteLine("columns={0}", columns.Join(",", e => e.ColumnName));
+        var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{fact.Table.TableName}", $"{session.TableName}[{list.Count()}]", list.Count());
+        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
         try
         {
-            //if (span != null && list is ICollection collection) span.Tag = $"{session.TableName}[{collection.Count}]";
-
-            var rs = dal.Session.Upsert(session.DataTable, option.Columns, updateColumns, addColumns, list.Cast<IModel>());
-
-            // 清除脏数据，避免重复提交保存
-            foreach (var item in list)
+            var rs = 0;
+            for (var i = 0; i < total; i += option.BatchSize)
             {
-                item.Dirtys.Clear();
+                var tmp = list.Skip(i).Take(option.BatchSize).ToList();
+                rs += dal.Session.Upsert(session.DataTable, option.Columns, updateColumns, addColumns, list.Cast<IModel>());
+
+                // 清除脏数据，避免重复提交保存
+                foreach (var item in tmp)
+                {
+                    item.Dirtys.Clear();
+                }
             }
 
             return rs;

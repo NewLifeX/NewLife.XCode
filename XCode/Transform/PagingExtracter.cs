@@ -38,8 +38,7 @@ public class PagingExtracter : IExtracter<DbTable>
     {
         Dal = dal;
         Builder = new SelectBuilder { Table = tableName };
-        BatchSize = dal.Db.BatchSize;
-        if (BatchSize <= 0) BatchSize = XCodeSetting.Current.BatchSize;
+        BatchSize = dal.GetBatchSize();
     }
 
     /// <summary>实例化分页抽取器</summary>
@@ -50,8 +49,7 @@ public class PagingExtracter : IExtracter<DbTable>
     {
         Dal = dal;
         Builder = new SelectBuilder { Table = tableName, OrderBy = orderBy };
-        BatchSize = dal.Db.BatchSize;
-        if (BatchSize <= 0) BatchSize = XCodeSetting.Current.BatchSize;
+        BatchSize = dal.GetBatchSize();
     }
     #endregion
 

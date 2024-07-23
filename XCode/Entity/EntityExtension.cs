@@ -897,8 +897,7 @@ public static class EntityExtension
         session.InitData();
 
         var dal = session.Dal;
-        //dal.CheckDatabase();
-        //var tableName = dal.Db.FormatTableName(session.TableName);
+        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;

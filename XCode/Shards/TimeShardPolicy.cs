@@ -1,4 +1,5 @@
 ﻿using NewLife;
+using NewLife.Data;
 using XCode.Configuration;
 using XCode.Statistics;
 
@@ -62,7 +63,7 @@ public class TimeShardPolicy : IShardPolicy
     /// <returns></returns>
     public virtual ShardModel? Shard(Object value)
     {
-        if (value is IEntity entity) return Shard(entity);
+        if (value is IModel entity) return Shard(entity);
         if (value is DateTime dt) return Shard(dt);
         if (value is Int64 id)
         {
@@ -80,7 +81,7 @@ public class TimeShardPolicy : IShardPolicy
     /// <summary>为实体对象计算分表分库</summary>
     /// <param name="entity"></param>
     /// <returns></returns>
-    public virtual ShardModel? Shard(IEntity entity)
+    public virtual ShardModel? Shard(IModel entity)
     {
         var fi = GetField();
         if (fi == null) throw new XCodeException("分表策略要求指定时间字段！");

@@ -171,10 +171,10 @@ public interface IEntityFactory
     /// <returns></returns>
     IDisposable CreateSplit(String connName, String tableName);
 
-    /// <summary>针对实体对象自动分库分表</summary>
-    /// <param name="entity"></param>
-    /// <returns></returns>
-    IDisposable? CreateShard(IEntity entity);
+    ///// <summary>针对实体对象自动分库分表</summary>
+    ///// <param name="entity"></param>
+    ///// <returns></returns>
+    //IDisposable? CreateShard(IEntity entity);
 
     /// <summary>为实体对象、时间、雪花Id等计算分表分库</summary>
     /// <param name="value"></param>

@@ -928,7 +928,8 @@ public class EntityBuilder : ClassBuilder
             }
 
             // 属性名
-            var name = column.Name.TrimEnd("Id", "ID", mapIdName);
+            var name = column.Name.TrimEnd("Id", "ID", "code", "Code", "num", "Num", "guid", "Guid", mapIdName);
+            if (name.IsNullOrEmpty()) name = mapIdName;
             if (Table.Columns.Any(e => e.Name.EqualIgnoreCase(name))) name = "My" + name;
 
             // 备注
@@ -945,7 +946,7 @@ public class EntityBuilder : ClassBuilder
             var myName = ss.Length > 3 ? ss[3] : null;
             if (myName.IsNullOrEmpty())
             {
-                myName = column.Name.TrimEnd("Id", "ID", mapIdName);
+                myName = column.Name.TrimEnd("Id", "ID", "code", "Code", "num", "Num", "guid", "Guid", mapIdName);
                 if (mapName != null && mapName.Name != "$") myName += mapName.Name;
             }
 

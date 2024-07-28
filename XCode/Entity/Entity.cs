@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Data;
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using NewLife;
 using NewLife.Collections;
@@ -220,6 +219,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         {
             if (!Valid(isnew ? DataMethod.Insert : DataMethod.Update)) return -1;
 
+            if (Meta.InShard) return this.Upsert(null, null, null, Meta.Session);
+
             // 自动分库分表
             using var split = Meta.CreateShard((this as TEntity)!);
             return this.Upsert(null, null, null, Meta.Session);
@@ -266,9 +267,12 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         {
             if (!Valid(isnew ? DataMethod.Insert : DataMethod.Update)) return false;
         }
+        if (!HasDirty) return false;
+
+        if (Meta.InShard) return Meta.Session.Queue.Add(this, msDelay);
+
         // 自动分库分表，影响后面的Meta.Session
         using var split = Meta.CreateShard((this as TEntity)!);
-        if (!HasDirty) return false;
 
         return Meta.Session.Queue.Add(this, msDelay);
     }
@@ -346,6 +350,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
 
         AutoFillSnowIdPrimaryKey();
+
+        if (Meta.InShard) return func();
 
         // 自动分库分表
         using var split = Meta.CreateShard((this as TEntity)!);
@@ -605,6 +611,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         return Find(exp);
     }
+
     /// <summary>根据属性列表以及对应的值列表，查找单个实体</summary>
     /// <param name="names">属性名称集合</param>
     /// <param name="values">属性值集合</param>
@@ -816,13 +823,21 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             return Meta.Factory.Create(true) as TEntity;
         }
 
-        // 自动分库分表
-        var keyEntity = new TEntity();
-        keyEntity[field.Name] = key;
-        using var split = Meta.CreateShard(keyEntity);
+        TEntity? entity = null;
+        if (Meta.InShard)
+        {
+            entity = Find(field.Name, key);
+        }
+        else
+        {
+            // 自动分库分表
+            var keyEntity = new TEntity();
+            keyEntity[field.Name] = key;
+            using var split = Meta.CreateShard(keyEntity);
 
-        // 此外，一律返回 查找值，即使可能是空。而绝不能在找不到数据的情况下给它返回空，因为可能是找不到数据而已，而返回新实例会导致前端以为这里是新增数据
-        var entity = Find(field.Name, key);
+            // 此外，一律返回 查找值，即使可能是空。而绝不能在找不到数据的情况下给它返回空，因为可能是找不到数据而已，而返回新实例会导致前端以为这里是新增数据
+            entity = Find(field.Name, key);
+        }
 
         // 判断实体
         if (entity == null)
@@ -1010,7 +1025,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         #endregion
 
         // 自动分表
-        var shards = where == null ? null : Meta.ShardPolicy?.Shards(where);
+        var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0)
         {
             var builder = CreateBuilder(where, order, selects);
@@ -1333,7 +1348,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         #endregion
 
         // 自动分表
-        var shards = Meta.ShardPolicy?.Shards(where);
+        var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0)
         {
             var builder = CreateBuilder(where, order, selects);
@@ -1376,7 +1391,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
                 // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
                 var skipCount = 0;
-                if (i < shards.Length) skipCount = (Int32)(await session.QueryCountAsync(builder));
+                if (i < shards.Length) skipCount = (Int32)await session.QueryCountAsync(builder);
 
                 max -= list2.Count;
                 // 后边表索引记录数应该是减去前张表查询出来的记录总数，有可能负数
@@ -1481,7 +1496,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (!builder.GroupBy.IsNullOrEmpty()) builder.Column = selects;
 
         // 自动分表
-        var shards = where == null ? null : Meta.ShardPolicy?.Shards(where);
+        var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0) return await session.QueryCountAsync(builder);
 
         var rs = 0L;
@@ -1563,10 +1578,10 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (!builder.GroupBy.IsNullOrEmpty()) builder.Column = selects;
 
         // 自动分表
-        var shards = where == null ? null : Meta.ShardPolicy?.Shards(where);
+        var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0) return session.QueryCount(builder);
 
-        var rs = 0;
+        var rs = 0L;
         foreach (var shard in shards)
         {
             var connName = shard.ConnName ?? session.ConnName;

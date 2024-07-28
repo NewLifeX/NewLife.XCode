@@ -9,7 +9,7 @@ public class ConcatExpression : Expression
 {
     #region 属性
     /// <summary>内置表达式集合</summary>
-    public IList<Expression> Expressions { get; set; } = new List<Expression>();
+    public IList<Expression> Expressions { get; set; } = [];
 
     /// <summary>是否为空</summary>
     public override Boolean IsEmpty => Expressions.Count == 0;
@@ -21,7 +21,7 @@ public class ConcatExpression : Expression
 
     /// <summary>实例化</summary>
     /// <param name="exp"></param>
-    public ConcatExpression(String exp) => Expressions.Add(new Expression(exp));
+    public ConcatExpression(String exp) => Expressions.Add(new Expression(exp) { DetectOr = false });
     #endregion
 
     #region 方法
@@ -32,7 +32,7 @@ public class ConcatExpression : Expression
     {
         if (String.IsNullOrEmpty(exp)) return this;
 
-        Expressions.Add(new Expression(exp));
+        Expressions.Add(new Expression(exp) { DetectOr = false });
 
         return this;
     }

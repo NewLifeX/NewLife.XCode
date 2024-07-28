@@ -14,6 +14,9 @@ public class Expression
     /// <summary>文本表达式</summary>
     public String? Text { get; private set; }
 
+    /// <summary>是否检测Or关键字并加上括号。默认true</summary>
+    public Boolean DetectOr { get; set; } = true;
+
     /// <summary>是否为空</summary>
     public virtual Boolean IsEmpty => Text.IsNullOrEmpty();
 
@@ -54,7 +57,7 @@ public class Expression
         var txt = Text;
         if (txt.IsNullOrEmpty()) return;
 
-        if (_regOr.IsMatch(txt))
+        if (DetectOr && _regOr.IsMatch(txt))
             builder.AppendFormat("({0})", txt);
         else
             builder.Append(txt);

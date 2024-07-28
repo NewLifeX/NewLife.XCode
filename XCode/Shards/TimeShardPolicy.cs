@@ -49,6 +49,9 @@ public class TimeShardPolicy : IShardPolicy
     {
         _fieldName = fieldName;
         Factory = factory;
+
+        // 异步加载字段
+        Task.Run(GetField);
     }
 
     private FieldItem? GetField() => Field ??= _fieldName == null ? null : Factory?.Table.FindByName(_fieldName);

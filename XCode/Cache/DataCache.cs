@@ -33,6 +33,7 @@ public class DataCache
         {
             try
             {
+                file.EnsureDirectory(true);
                 File.Move(old, file);
             }
             catch

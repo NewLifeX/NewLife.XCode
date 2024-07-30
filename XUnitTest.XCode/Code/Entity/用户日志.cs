@@ -329,6 +329,16 @@ public partial class UserLog : IUserLog, IEntity<IUserLog>
 
         return FindAll(_.CreateUserID == createUserId);
     }
+
+    /// <summary>根据数据时间查找</summary>
+    /// <param name="dataTime">数据时间</param>
+    /// <returns>实体列表</returns>
+    public static IList<UserLog> FindAllByDataTime(DateTime dataTime)
+    {
+        if (dataTime.Year < 1000) return [];
+
+        return FindAll(_.DataTime == dataTime);
+    }
     #endregion
 
     #region 数据清理

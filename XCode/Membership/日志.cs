@@ -273,6 +273,29 @@ public partial class Log : ILog, IEntity<LogModel>
     #endregion
 
     #region 扩展查询
+    /// <summary>根据操作、类别查找</summary>
+    /// <param name="action">操作</param>
+    /// <param name="category">类别</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByActionAndCategory(String action, String? category)
+    {
+        if (action.IsNullOrEmpty()) return [];
+        if (category == null) return [];
+
+        return FindAll(_.Action == action & _.Category == category);
+    }
+
+    /// <summary>根据类别、链接查找</summary>
+    /// <param name="category">类别</param>
+    /// <param name="linkId">链接</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByCategoryAndLinkID(String? category, Int64 linkId)
+    {
+        if (category == null) return [];
+        if (linkId < 0) return [];
+
+        return FindAll(_.Category == category & _.LinkID == linkId);
+    }
     #endregion
 
     #region 数据清理

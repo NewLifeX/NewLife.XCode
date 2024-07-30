@@ -186,7 +186,7 @@
         <Index Columns="Name" />
       </Indexes>
     </Table>
-    <Table Name="Parameter" Description="字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合" UsingCache="False">
+    <Table Name="Parameter" Description="字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="UserID" DataType="Int32" Map="User@Id@$" Description="用户。按用户区分参数，用户0表示系统级" />
@@ -248,7 +248,7 @@
         <Index Columns="UpdateTime,ID" />
       </Indexes>
     </Table>
-    <Table Name="Log" Description="日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除" ConnName="Log" InsertOnly="True">
+    <Table Name="Log" Description="日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除" ConnName="Log" InsertOnly="True" UsingCache="False">
       <Columns>
         <Column Name="ID" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
         <Column Name="Category" DataType="String" Description="类别" />

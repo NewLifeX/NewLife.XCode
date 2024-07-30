@@ -192,30 +192,6 @@ public partial class Log : Entity<Log>
         return FindAll(_.CreateUserID == createUserId & _.ID == id);
     }
 
-    /// <summary>根据操作、类别查找</summary>
-    /// <param name="action">操作</param>
-    /// <param name="category">类别</param>
-    /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByActionAndCategory(String action, String category)
-    {
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Action.EqualIgnoreCase(action) && e.Category.EqualIgnoreCase(category));
-
-        return FindAll(_.Action == action & _.Category == category);
-    }
-
-    /// <summary>根据类别、链接查找</summary>
-    /// <param name="category">类别</param>
-    /// <param name="linkId">链接</param>
-    /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCategoryAndLinkID(String category, Int64 linkId)
-    {
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.LinkID == linkId);
-
-        return FindAll(_.Category == category & _.LinkID == linkId);
-    }
-
     /// <summary>根据创建用户查找</summary>
     /// <param name="createUserId">创建用户</param>
     /// <returns>实体列表</returns>
@@ -257,16 +233,3 @@ public partial class Log : Entity<Log>
     public override String ToString() => $"{Category} {Action} {UserName} {CreateTime:yyyy-MM-dd HH:mm:ss} {Remark}";
     #endregion
 }
-
-///// <summary>日志接口</summary>
-//public partial interface ILog
-//{
-//    /// <summary>保存</summary>
-//    /// <returns></returns>
-//    Int32 Save();
-
-//    /// <summary>异步保存</summary>
-//    /// <param name="msDelay">延迟保存的时间。默认0ms近实时保存</param>
-//    /// <returns></returns>
-//    Boolean SaveAsync(Int32 msDelay = 0);
-//}

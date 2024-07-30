@@ -218,45 +218,6 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
         return user;
     }
 
-    /// <summary>根据邮件查找</summary>
-    /// <param name="mail">邮件</param>
-    /// <returns>实体列表</returns>
-    public static IList<User> FindAllByMail(String mail)
-    {
-        if (mail.IsNullOrEmpty()) return new List<User>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mail.EqualIgnoreCase(mail));
-
-        return FindAll(_.Mail == mail);
-    }
-
-    /// <summary>根据手机查找</summary>
-    /// <param name="mobile">手机</param>
-    /// <returns>实体列表</returns>
-    public static IList<User> FindAllByMobile(String mobile)
-    {
-        if (mobile.IsNullOrEmpty()) return new List<User>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mobile.EqualIgnoreCase(mobile));
-
-        return FindAll(_.Mobile == mobile);
-    }
-
-    /// <summary>根据代码查找</summary>
-    /// <param name="code">代码</param>
-    /// <returns>实体列表</returns>
-    public static IList<User> FindAllByCode(String code)
-    {
-        if (code.IsNullOrEmpty()) return new List<User>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
-
-        return FindAll(_.Code == code);
-    }
-
     /// <summary>根据角色查找</summary>
     /// <param name="roleId">角色</param>
     /// <returns>实体列表</returns>

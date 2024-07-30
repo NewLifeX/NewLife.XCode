@@ -314,45 +314,6 @@ public partial class Area : Entity<Area>
 
         return rs;
     }
-
-    /// <summary>根据拼音查找</summary>
-    /// <param name="pinYin">拼音</param>
-    /// <returns>实体列表</returns>
-    public static IList<Area> FindAllByPinYin(String pinYin)
-    {
-        if (pinYin.IsNullOrEmpty()) return new List<Area>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.PinYin.EqualIgnoreCase(pinYin));
-
-        return FindAll(_.PinYin == pinYin);
-    }
-
-    /// <summary>根据简拼查找</summary>
-    /// <param name="jianPin">简拼</param>
-    /// <returns>实体列表</returns>
-    public static IList<Area> FindAllByJianPin(String jianPin)
-    {
-        if (jianPin.IsNullOrEmpty()) return new List<Area>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.JianPin.EqualIgnoreCase(jianPin));
-
-        return FindAll(_.JianPin == jianPin);
-    }
-
-    /// <summary>根据地址编码查找</summary>
-    /// <param name="geoHash">地址编码</param>
-    /// <returns>实体列表</returns>
-    public static IList<Area> FindAllByGeoHash(String geoHash)
-    {
-        if (geoHash.IsNullOrEmpty()) return new List<Area>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.GeoHash.EqualIgnoreCase(geoHash));
-
-        return FindAll(_.GeoHash == geoHash);
-    }
     #endregion
 
     #region 高级查询

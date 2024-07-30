@@ -327,6 +327,16 @@ public partial class MemberLog : IMemberLog, IEntity<IMemberLog>
 
         return FindAll(_.CreateUserID == createUserId);
     }
+
+    /// <summary>根据数据分区查找</summary>
+    /// <param name="ds">数据分区</param>
+    /// <returns>实体列表</returns>
+    public static IList<MemberLog> FindAllByDs(String? ds)
+    {
+        if (ds == null) return [];
+
+        return FindAll(_.Ds == ds);
+    }
     #endregion
 
     #region 数据清理

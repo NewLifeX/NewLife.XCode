@@ -385,7 +385,7 @@ public partial class Department : IDepartment, IEntity<DepartmentModel>
     {
         if (tenantId < 0) return null;
         if (parentId < 0) return null;
-        if (name == null) return null;
+        if (name.IsNullOrEmpty()) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
@@ -406,6 +406,19 @@ public partial class Department : IDepartment, IEntity<DepartmentModel>
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId);
 
         return FindAll(_.TenantId == tenantId & _.ParentID == parentId);
+    }
+
+    /// <summary>根据代码查找</summary>
+    /// <param name="code">代码</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByCode(String? code)
+    {
+        if (code == null) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
+
+        return FindAll(_.Code == code);
     }
     #endregion
 

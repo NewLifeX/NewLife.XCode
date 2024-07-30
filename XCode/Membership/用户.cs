@@ -480,6 +480,45 @@ public partial class User : IUser, IEntity<UserModel>
     #endregion
 
     #region 扩展查询
+    /// <summary>根据邮件查找</summary>
+    /// <param name="mail">邮件</param>
+    /// <returns>实体列表</returns>
+    public static IList<User> FindAllByMail(String? mail)
+    {
+        if (mail == null) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mail.EqualIgnoreCase(mail));
+
+        return FindAll(_.Mail == mail);
+    }
+
+    /// <summary>根据手机查找</summary>
+    /// <param name="mobile">手机</param>
+    /// <returns>实体列表</returns>
+    public static IList<User> FindAllByMobile(String? mobile)
+    {
+        if (mobile == null) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mobile.EqualIgnoreCase(mobile));
+
+        return FindAll(_.Mobile == mobile);
+    }
+
+    /// <summary>根据代码查找</summary>
+    /// <param name="code">代码</param>
+    /// <returns>实体列表</returns>
+    public static IList<User> FindAllByCode(String? code)
+    {
+        if (code == null) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
+
+        return FindAll(_.Code == code);
+    }
+
     /// <summary>根据部门查找</summary>
     /// <param name="departmentId">部门</param>
     /// <returns>实体列表</returns>

@@ -459,7 +459,7 @@
     <xs:attribute name="DataScale" type="xs:string">
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">
-          数据规模。time表示这是大数据单表的数据时间字段，shard:yyMMdd表示这是大数据多表的分表字段
+          数据规模。time表示这是大数据单表的数据时间字段，timeShard:yyMMdd表示这是大数据多表的分表字段
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

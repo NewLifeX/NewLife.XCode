@@ -93,10 +93,10 @@ class XField : SerializableDataMember, IDataColumn, ICloneable
     [Description("允许空")]
     public Boolean Nullable { get; set; }
 
-    /// <summary>数据规模。time表示这是大数据单表的数据时间字段，shard:yyMMdd表示这是大数据多表的分表字段</summary>
+    /// <summary>数据规模。time表示这是大数据单表的数据时间字段，timeShard:yyMMdd表示这是大数据多表的分表字段</summary>
     [XmlAttribute]
     [DisplayName("数据规模")]
-    [Description("数据规模。time表示这是大数据单表的数据时间字段，shard:yyMMdd表示这是大数据多表的分表字段")]
+    [Description("数据规模。time表示这是大数据单表的数据时间字段，timeShard:yyMMdd表示这是大数据多表的分表字段")]
     public String? DataScale { get; set; }
 
     /// <summary>默认值</summary>

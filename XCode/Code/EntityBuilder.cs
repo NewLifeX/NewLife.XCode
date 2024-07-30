@@ -1614,6 +1614,17 @@ public class EntityBuilder : ClassBuilder
             }
         }
 
+        // 时间数据字段，生成查询
+        foreach (var dc in Table.Columns)
+        {
+            if (dc.PrimaryKey || dc.Identity) continue;
+
+            if (dc.DataScale.StartsWithIgnoreCase("time"))
+            {
+                if (BuildExtendFindAll([dc], methods)) methods++;
+            }
+        }
+
         WriteLine("#endregion");
     }
 
@@ -1658,8 +1669,8 @@ public class EntityBuilder : ClassBuilder
                     else
                         WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.CamelName());
                 }
-                else if (dc.DataType == typeof(DateTime) && dc.ItemType.EqualIgnoreCase("date"))
-                    WriteLine("if ({0}.Year < 2000) return null;", dc.CamelName());
+                else if (dc.DataType == typeof(DateTime) && IsDataTime(dc))
+                    WriteLine("if ({0}.Year < 1000) return null;", dc.CamelName());
 
                 header |= CanSearch(dc);
             }
@@ -1759,8 +1770,8 @@ public class EntityBuilder : ClassBuilder
                     else
                         WriteLine("if ({0}.IsNullOrEmpty()) return [];", dc.CamelName(), ClassName);
                 }
-                else if (dc.DataType == typeof(DateTime) && dc.ItemType.EqualIgnoreCase("date"))
-                    WriteLine("if ({0}.Year < 2000) return [];", dc.CamelName());
+                else if (dc.DataType == typeof(DateTime) && IsDataTime(dc))
+                    WriteLine("if ({0}.Year < 1000) return [];", dc.CamelName());
 
                 header |= CanSearch(dc);
             }
@@ -2025,7 +2036,7 @@ public class EntityBuilder : ClassBuilder
     #endregion 业务类
 
     #region 辅助
-    /// <summary>该列是否能够搜索。整型、字符串以及日期类型可以搜索</summary>
+    /// <summary>该列是否能够搜索。整型、字符串以及时间日期类型可以搜索</summary>
     /// <param name="column"></param>
     /// <returns></returns>
     private Boolean CanSearch(IDataColumn column)
@@ -2034,7 +2045,17 @@ public class EntityBuilder : ClassBuilder
 
         if (column.DataType.IsInt()) return true;
         if (column.DataType == typeof(String)) return true;
-        if (column.DataType == typeof(DateTime) && column.ItemType.EqualIgnoreCase("date")) return true;
+        if (column.DataType == typeof(DateTime) && IsDataTime(column)) return true;
+
+        return false;
+    }
+
+    /// <summary>是否数据时间字段</summary>
+    /// <param name="column"></param>
+    /// <returns></returns>
+    private Boolean IsDataTime(IDataColumn column)
+    {
+        if (column.DataType == typeof(DateTime) && (column.ItemType.EqualIgnoreCase("date") || column.DataScale.StartsWithIgnoreCase("time"))) return true;
 
         return false;
     }

@@ -129,7 +129,7 @@ public class DbCache : NewLife.Caching.Cache
         e.Value = value!.ToJson();
         e.ExpiredTime = TimerX.Now.AddSeconds(expire);
 
-        if (e.CreateTime.Year < 2000) e.CreateTime = TimerX.Now;
+        if (e.CreateTime.Year < 1000) e.CreateTime = TimerX.Now;
         e.SaveAsync();
 
         return true;

@@ -63,7 +63,7 @@ public class TimeExtracter : IExtracter<DbTable>
         var name = db.FormatName(field);
 
         // 第一次查询，不带时间条件，目的是为了找到第一个时间
-        if (StartTime.Year < 2000)
+        if (StartTime.Year < 1000)
         {
             // 查询数据
             var sb = Builder.Clone();
@@ -75,7 +75,7 @@ public class TimeExtracter : IExtracter<DbTable>
 
             StartTime = dt.Get<DateTime>(0, field.ColumnName);
 
-            if (StartTime.Year < 2000) yield break;
+            if (StartTime.Year < 1000) yield break;
         }
 
         // 时间步进，分页查询

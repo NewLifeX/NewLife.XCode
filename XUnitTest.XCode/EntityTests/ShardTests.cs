@@ -461,4 +461,24 @@ public class ShardTests
         Assert.Single(shards);
         Assert.Equal("Log2_20240529", shards[0].TableName);
     }
+
+    [Fact]
+    public void 跨年Shards()
+    {
+        var policy = new TimeShardPolicy(Log2._.CreateTime, Log2.Meta.Factory)
+        {
+            TablePolicy = "{0}_{1:yyyy}",
+        };
+
+        var start = "2024-05-29".ToDateTime();
+        var end = start.AddYears(1).AddDays(-7);
+        var fi = policy.Field;
+        var where = fi >= start & fi < end;
+
+        var shards = policy.Shards(where);
+        Assert.NotNull(shards);
+        Assert.Equal(2, shards.Length);
+        Assert.Equal("Log2_2024", shards[0].TableName);
+        Assert.Equal("Log2_2025", shards[1].TableName);
+    }
 }

@@ -468,17 +468,18 @@ public class ShardTests
         var policy = new TimeShardPolicy(Log2._.CreateTime, Log2.Meta.Factory)
         {
             TablePolicy = "{0}_{1:yyyy}",
+            Step = TimeSpan.FromDays(365),
         };
 
-        var start = "2024-05-29".ToDateTime();
-        var end = start.AddYears(1).AddDays(-7);
+        var start = "2023-12-31".ToDateTime();
+        var end = DateTime.Today;
         var fi = policy.Field;
         var where = fi >= start & fi < end;
 
         var shards = policy.Shards(where);
         Assert.NotNull(shards);
         Assert.Equal(2, shards.Length);
-        Assert.Equal("Log2_2024", shards[0].TableName);
-        Assert.Equal("Log2_2025", shards[1].TableName);
+        Assert.Equal("Log2_2023", shards[0].TableName);
+        Assert.Equal("Log2_2024", shards[1].TableName);
     }
 }

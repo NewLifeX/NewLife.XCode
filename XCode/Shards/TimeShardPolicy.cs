@@ -250,7 +250,7 @@ public class TimeShardPolicy : IShardPolicy
                 level = StatLevels.Hour;
         }
 
-        // 根据不仅，把start调整到整点
+        // 根据步进，把start调整到整点
         if (st.TotalDays >= 1)
             start = start.Date;
         else if (start.Hour >= 1)
@@ -272,13 +272,24 @@ public class TimeShardPolicy : IShardPolicy
 
             // 根据时间步进级别调整时间，解决每月每年时间不固定的问题
             if (level == StatLevels.Year)
+            {
                 dt = dt.AddYears(1);
+                dt = new DateTime(dt.Year, 1, 1);
+            }
             else if (level == StatLevels.Month)
+            {
                 dt = dt.AddMonths(1);
+                dt = new DateTime(dt.Year, dt.Month, 1);
+            }
             else if (level == StatLevels.Day)
-                dt = dt.AddDays(1);
+            {
+                dt = dt.AddDays(1).Date;
+            }
             else if (level == StatLevels.Hour)
+            {
                 dt = dt.AddHours(1);
+                dt = dt.Date.AddHours(dt.Hour);
+            }
             else
                 dt = dt.Add(st);
         }

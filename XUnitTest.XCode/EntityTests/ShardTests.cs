@@ -482,4 +482,25 @@ public class ShardTests
         Assert.Equal("Log2_2023", shards[0].TableName);
         Assert.Equal("Log2_2024", shards[1].TableName);
     }
+
+    [Fact]
+    public void 跨月Shards()
+    {
+        var policy = new TimeShardPolicy(Log2._.CreateTime, Log2.Meta.Factory)
+        {
+            TablePolicy = "{0}_{1:yyyyMM}",
+            Step = TimeSpan.FromDays(31),
+        };
+
+        var start = "2024/7/25 12:00:00".ToDateTime().ToShortDateString().ToDateTime();
+        var end = "2024/8/1 12:00:00".ToDateTime().ToShortDateString().ToDateTime();
+        var fi = policy.Field;
+        var where = fi >= start & fi < end;
+
+        var shards = policy.Shards(where);
+        Assert.NotNull(shards);
+        Assert.Equal(2, shards.Length);
+        Assert.Equal("Log2_202407", shards[0].TableName);
+        Assert.Equal("Log2_202408", shards[1].TableName);
+    }
 }

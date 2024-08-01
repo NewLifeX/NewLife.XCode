@@ -5,6 +5,7 @@ using NewLife.Data;
 using NewLife.Log;
 using NewLife.Security;
 using NewLife.UnitTest;
+using XCode;
 using XCode.DataAccessLayer;
 using XCode.Shards;
 using Xunit;
@@ -492,10 +493,12 @@ public class ShardTests
             Step = TimeSpan.FromDays(31),
         };
 
-        var start = "2024/7/25 12:00:00".ToDateTime().ToShortDateString().ToDateTime();
-        var end = "2024/8/1 12:00:00".ToDateTime().ToShortDateString().ToDateTime();
+        // 起止都是整数日期，末尾加1天
+        var start = "2024/7/25 00:00:00".ToDateTime();
+        var end = "2024/8/1 00:00:00".ToDateTime();
         var fi = policy.Field;
-        var where = fi >= start & fi < end;
+        //var where = fi >= start & fi < end;
+        var where = fi.Between(start, end);
 
         var shards = policy.Shards(where);
         Assert.NotNull(shards);

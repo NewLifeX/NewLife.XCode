@@ -223,7 +223,7 @@ public abstract class EntityModule : IEntityModule
     protected virtual Boolean SetItem(ICollection<FieldItem> fields, IEntity entity, String name, Object value)
     {
         // 没有这个字段，就不想了
-        var fi = fields.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
+        var fi = fields.FirstOrDefault(e => name.EqualIgnoreCase(e.Name, e.ColumnName));
         if (fi == null) return false;
 
         name = fi.Name;

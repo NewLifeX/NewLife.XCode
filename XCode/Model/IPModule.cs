@@ -69,7 +69,7 @@ public class IPModule : EntityModule
                     {
                         foreach (var fi in fs2)
                         {
-                            SetItem(fs2, entity, fi, ip);
+                            SetItem(fs2, entity, fi.Name, ip);
                         }
                     }
                     break;
@@ -92,5 +92,5 @@ public class IPModule : EntityModule
     /// <summary>获取实体类的字段名。带缓存</summary>
     /// <param name="entityType"></param>
     /// <returns></returns>
-    protected static FieldItem[] GetIPFieldNames(Type entityType) => _ipFieldNames.GetOrAdd(entityType, t => GetFields(t).Where(e => e.Name.EqualIgnoreCase("CreateIP", "UpdateIP")).ToArray());
+    protected static FieldItem[] GetIPFieldNames(Type entityType) => _ipFieldNames.GetOrAdd(entityType, t => GetFields(t).Where(e => e.Name.EqualIgnoreCase(__.CreateIP, __.UpdateIP)).ToArray());
 }

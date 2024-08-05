@@ -341,6 +341,7 @@ public class DbPackage
             // 二进制读写器
             var bn = new Binary
             {
+                FullTime = true,
                 EncodeInt = true,
                 Stream = stream,
             };
@@ -666,6 +667,7 @@ public class DbPackage
             // 二进制读写器
             _Binary = new Binary
             {
+                FullTime = true,
                 EncodeInt = true,
                 Stream = Stream,
             };

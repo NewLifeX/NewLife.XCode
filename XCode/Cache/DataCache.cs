@@ -25,7 +25,9 @@ public class DataCache
     #region 方法
     private static DataCache Load()
     {
-        var path = Path.GetTempPath().CombinePath(SysConfig.Current.Name);
+        //var path = Path.GetTempPath().CombinePath(SysConfig.Current.Name);
+        // 使用Data数据目录保存缓存数据，某些系统IIS无权访问Temp临时目录
+        var path = NewLife.Setting.Current.DataPath;
         var file = path.CombinePath("DataCache.config").GetBasePath();
         var old = @"Config\DataCache.config".GetBasePath();
 
@@ -47,7 +49,8 @@ public class DataCache
 
     private static void Save(DataCache? data)
     {
-        var path = Path.GetTempPath().CombinePath(SysConfig.Current.Name);
+        //var path = Path.GetTempPath().CombinePath(SysConfig.Current.Name);
+        var path = NewLife.Setting.Current.DataPath;
         var file = path.CombinePath("DataCache.config").GetBasePath();
 
         if (data != null)

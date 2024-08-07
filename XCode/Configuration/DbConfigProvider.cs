@@ -39,7 +39,8 @@ public class DbConfigProvider : ConfigProvider
 
         // 本地缓存。兼容旧版配置文件
         var name = Category;
-        var path = Path.GetTempPath().CombinePath(SysConfig.Current.Name);
+        //var path = Path.GetTempPath().CombinePath(SysConfig.Current.Name);
+        var path = NewLife.Setting.Current.DataPath;
         var file = path.CombinePath($"dbConfig_{name}.json").GetFullPath();
         var old = $"Config/dbConfig_{name}.json".GetFullPath();
         if (!File.Exists(file) && File.Exists(old))
@@ -195,7 +196,8 @@ public class DbConfigProvider : ConfigProvider
         if (CacheLevel > ConfigCacheLevel.NoCache)
         {
             var name = Category;
-            var path = Path.GetTempPath().CombinePath(SysConfig.Current.Name);
+            //var path = Path.GetTempPath().CombinePath(SysConfig.Current.Name);
+            var path = NewLife.Setting.Current.DataPath;
             var file = path.CombinePath($"dbConfig_{name}.json").GetFullPath();
             var txt = configs.ToJson(true);
 

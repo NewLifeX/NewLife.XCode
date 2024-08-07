@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Web.Script.Serialization;
@@ -7,6 +8,7 @@ using NewLife;
 using NewLife.Caching;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Reflection;
 using XCode.Transform;
 
 namespace XCode.Membership;
@@ -468,6 +470,8 @@ public partial class Area : Entity<Area>
         return set.OrderByDescending(e => e.Value).Take(count).ToList();
     }
 
+    private static Func<String, (String, String)>? _GetIp;
+    private static Boolean _initGetIp;
     //private static String[] _zzq = new[] { "广西", "西藏", "新疆", "宁夏", "内蒙古" };
     /// <summary>根据IP地址搜索地区</summary>
     /// <param name="ip"></param>
@@ -475,12 +479,44 @@ public partial class Area : Entity<Area>
     /// <returns></returns>
     public static IList<Area> SearchIP(String ip, Int32 maxLevel = 3)
     {
+        if (!_initGetIp)
+        {
+            var ipr = NetHelper.IpResolver;
+            if (ipr != null)
+            {
+                _GetIp = ipr.GetType().GetMethod("GetAddress", [typeof(String)]).As<Func<String, (String, String)>>(ipr);
+
+                _initGetIp = true;
+            }
+        }
+
         var list = new List<Area>();
 
-        var address = ip.IPToAddress();
-        if (address.IsNullOrEmpty()) return list;
+        // 新的IP解析器
+        if (_GetIp != null)
+        {
+            var (area, addr) = _GetIp(ip);
+            area = area?.TrimStart("中国\u2013");
+            if (area.IsNullOrEmpty()) return list;
 
-        return SearchAddress(address, maxLevel);
+            var ss = area.Split("\u2013");
+            var r = FindByNames(ss);
+            if (r != null)
+            {
+                list.AddRange(r.AllParents);
+                list.Add(r);
+
+                if (maxLevel > 0 && list.Count > maxLevel) list = list.Take(maxLevel).ToList();
+            }
+            return list;
+        }
+        else
+        {
+            var address = ip.IPToAddress();
+            if (address.IsNullOrEmpty()) return list;
+
+            return SearchAddress(address, maxLevel);
+        }
     }
 
     /// <summary>根据地址搜索地区，2字符逐级进行前缀匹配，支持越级</summary>

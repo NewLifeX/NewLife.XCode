@@ -249,12 +249,12 @@ class Program
             if (ss != null && ss.Length >= 2 && Version.TryParse(ss[1], out var ver))
             {
                 var dt = new DateTime(ver.Build, ver.Revision / 100, ver.Revision % 100);
-                if (dt.AddMonths(3) < DateTime.Now)
+                if (dt.AddMonths(1) < DateTime.Now)
                 {
                     rs = Execute("dotnet", "tool update xcodetool -g --prerelease");
                     XTrace.WriteLine(rs);
                 }
-                else if (dt.AddMonths(1) < DateTime.Now)
+                else if (dt.AddDays(7) < DateTime.Now)
                 {
                     //rs = Execute("dotnet", "tool install -g --prerelease xcodetool");
                     rs = Execute("dotnet", "tool update xcodetool -g");

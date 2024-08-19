@@ -1994,7 +1994,9 @@ public class EntityBuilder : ClassBuilder
             WriteLine();
             foreach (var dc in cs)
             {
-                if (dc.DataType.IsInt())
+                if (dc.DataType.IsInt() && dc.DataType.IsEnum)
+                    WriteLine("if ({0} > 0) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
+                else if (dc.DataType.IsInt())
                     WriteLine("if ({0} >= 0) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
                 else if (dc.DataType == typeof(Boolean))
                     WriteLine("if ({0} != null) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);

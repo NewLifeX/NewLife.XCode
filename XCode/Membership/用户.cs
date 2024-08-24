@@ -76,6 +76,14 @@ public partial class User : IUser, IEntity<UserModel>
     [BindColumn("Mail", "邮件。支持登录", "", ItemType = "mail")]
     public String? Mail { get => _Mail; set { if (OnPropertyChanging("Mail", value)) { _Mail = value; OnPropertyChanged("Mail"); } } }
 
+    private Boolean _MailVerified;
+    /// <summary>邮箱是否验证。</summary>
+    [DisplayName("邮箱是否验证")]
+    [Description("邮箱是否验证。")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MailVerified", "邮箱是否验证。", "")]
+    public Boolean MailVerified { get => _MailVerified; set { if (OnPropertyChanging("MailVerified", value)) { _MailVerified = value; OnPropertyChanged("MailVerified"); } } }
+
     private String? _Mobile;
     /// <summary>手机。支持登录</summary>
     [DisplayName("手机")]
@@ -83,6 +91,14 @@ public partial class User : IUser, IEntity<UserModel>
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Mobile", "手机。支持登录", "", ItemType = "mobile")]
     public String? Mobile { get => _Mobile; set { if (OnPropertyChanging("Mobile", value)) { _Mobile = value; OnPropertyChanged("Mobile"); } } }
+
+    private Boolean _MobileVerified;
+    /// <summary>手机是否验证。</summary>
+    [DisplayName("手机是否验证")]
+    [Description("手机是否验证。")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MobileVerified", "手机是否验证。", "")]
+    public Boolean MobileVerified { get => _MobileVerified; set { if (OnPropertyChanging("MobileVerified", value)) { _MobileVerified = value; OnPropertyChanged("MobileVerified"); } } }
 
     private String? _Code;
     /// <summary>代码。身份证、员工编码等，支持登录</summary>
@@ -335,7 +351,9 @@ public partial class User : IUser, IEntity<UserModel>
         DisplayName = model.DisplayName;
         Sex = model.Sex;
         Mail = model.Mail;
+        MailVerified = model.MailVerified;
         Mobile = model.Mobile;
+        MobileVerified = model.MobileVerified;
         Code = model.Code;
         AreaId = model.AreaId;
         Avatar = model.Avatar;
@@ -376,7 +394,9 @@ public partial class User : IUser, IEntity<UserModel>
             "DisplayName" => _DisplayName,
             "Sex" => _Sex,
             "Mail" => _Mail,
+            "MailVerified" => _MailVerified,
             "Mobile" => _Mobile,
+            "MobileVerified" => _MobileVerified,
             "Code" => _Code,
             "AreaId" => _AreaId,
             "Avatar" => _Avatar,
@@ -416,7 +436,9 @@ public partial class User : IUser, IEntity<UserModel>
                 case "DisplayName": _DisplayName = Convert.ToString(value); break;
                 case "Sex": _Sex = (XCode.Membership.SexKinds)value.ToInt(); break;
                 case "Mail": _Mail = Convert.ToString(value); break;
+                case "MailVerified": _MailVerified = value.ToBoolean(); break;
                 case "Mobile": _Mobile = Convert.ToString(value); break;
+                case "MobileVerified": _MobileVerified = value.ToBoolean(); break;
                 case "Code": _Code = Convert.ToString(value); break;
                 case "AreaId": _AreaId = value.ToInt(); break;
                 case "Avatar": _Avatar = Convert.ToString(value); break;
@@ -555,8 +577,14 @@ public partial class User : IUser, IEntity<UserModel>
         /// <summary>邮件。支持登录</summary>
         public static readonly Field Mail = FindByName("Mail");
 
+        /// <summary>邮箱是否验证。</summary>
+        public static readonly Field MailVerified = FindByName("MailVerified");
+
         /// <summary>手机。支持登录</summary>
         public static readonly Field Mobile = FindByName("Mobile");
+
+        /// <summary>手机是否验证。</summary>
+        public static readonly Field MobileVerified = FindByName("MobileVerified");
 
         /// <summary>代码。身份证、员工编码等，支持登录</summary>
         public static readonly Field Code = FindByName("Code");
@@ -663,8 +691,14 @@ public partial class User : IUser, IEntity<UserModel>
         /// <summary>邮件。支持登录</summary>
         public const String Mail = "Mail";
 
+        /// <summary>邮箱是否验证。</summary>
+        public const String MailVerified = "MailVerified";
+
         /// <summary>手机。支持登录</summary>
         public const String Mobile = "Mobile";
+
+        /// <summary>手机是否验证。</summary>
+        public const String MobileVerified = "MobileVerified";
 
         /// <summary>代码。身份证、员工编码等，支持登录</summary>
         public const String Code = "Code";

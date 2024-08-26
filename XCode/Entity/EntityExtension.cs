@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using NewLife;
 using NewLife.Data;
@@ -999,6 +1000,85 @@ public static class EntityExtension
             span?.SetError(ex, entity);
             throw;
         }
+    }
+
+    /// <summary>已有数据集合并新数据集，未存在时插入、存在时更新、多余则删除，常用于更新统计表</summary>
+    /// <remarks>
+    /// 合并操作应用于实体层，不同于数据库的MergeTo。
+    /// 常用于数据分析场景，将新数据合并到已有数据中，已有数据中没有的数据插入，已有数据中有的数据更新，已有数据中多余的数据删除。
+    /// 数据统计时，为了方便会构建新的数据集，然后合并到已有数据集中。
+    /// </remarks>
+    /// <typeparam name="T">已有数据集实体类型</typeparam>
+    /// <typeparam name="T2">新数据集实体类型</typeparam>
+    /// <param name="source">已有数据集。例如：该日已有统计数据列表</param>
+    /// <param name="news">新数据集。例如：根据原始数据统计得到的数据列表</param>
+    /// <param name="keys">业务主键。比较新旧两行统计对象的业务主键是否相同</param>
+    /// <param name="trim">删除多余数据。默认true</param>
+    /// <returns></returns>
+    public static IList<T> Merge<T, T2>(this IList<T> source, IEnumerable<T2> news, String[] keys, Boolean trim = true) where T : class, IEntity where T2 : IModel => source.Merge(news, (x, y) => keys.All(k => x[k] == y[k]), trim);
+
+    /// <summary>已有数据集合并新数据集，未存在时插入、存在时更新、多余则删除，常用于更新统计表</summary>
+    /// <remarks>
+    /// 合并操作应用于实体层，不同于数据库的MergeTo。
+    /// 常用于数据分析场景，将新数据合并到已有数据中，已有数据中没有的数据插入，已有数据中有的数据更新，已有数据中多余的数据删除。
+    /// 数据统计时，为了方便会构建新的数据集，然后合并到已有数据集中。
+    /// </remarks>
+    /// <typeparam name="T">数据集实体类型</typeparam>
+    /// <param name="source">已有数据集。例如：该日已有统计数据列表</param>
+    /// <param name="news">新数据集。例如：根据原始数据统计得到的数据列表</param>
+    /// <param name="comparer">比较器。比较新旧两行统计对象是否相同业务维度</param>
+    /// <param name="trim">删除多余数据。默认true</param>
+    /// <returns></returns>
+    public static IList<T> Merge<T>(this IList<T> source, IEnumerable<T> news, IEqualityComparer<T> comparer, Boolean trim = true) where T : class, IEntity => source.Merge(news, comparer.Equals, trim);
+
+    /// <summary>已有数据集合并新数据集，未存在时插入、存在时更新、多余则删除，常用于更新统计表</summary>
+    /// <remarks>
+    /// 合并操作应用于实体层，不同于数据库的MergeTo。
+    /// 常用于数据分析场景，将新数据合并到已有数据中，已有数据中没有的数据插入，已有数据中有的数据更新，已有数据中多余的数据删除。
+    /// 数据统计时，为了方便会构建新的数据集，然后合并到已有数据集中。
+    /// </remarks>
+    /// <typeparam name="T">已有数据集实体类型</typeparam>
+    /// <typeparam name="T2">新数据集实体类型</typeparam>
+    /// <param name="source">已有数据集。例如：该日已有统计数据列表</param>
+    /// <param name="news">新数据集。例如：根据原始数据统计得到的数据列表</param>
+    /// <param name="predicate">比较器。比较新旧两行统计对象是否相同业务维度</param>
+    /// <param name="trim">删除多余数据。默认true</param>
+    /// <returns></returns>
+    public static IList<T> Merge<T, T2>(this IList<T> source, IEnumerable<T2> news, Func<T, T2, Boolean> predicate, Boolean trim = true) where T : class, IEntity where T2 : IModel
+    {
+        var rs = new List<T>();
+        var fact = typeof(T).AsFactory();
+        foreach (var model in news)
+        {
+            var entity = source.FirstOrDefault(e => predicate(e, model));
+            if (entity == null)
+            {
+                entity = model as T;
+                if (entity == null)
+                {
+                    entity = (T)fact.Create(true);
+                    entity.CopyFrom(model, true);
+                }
+
+                rs.Add(entity);
+            }
+            else
+            {
+                // 启用脏数据，仅复制有脏数据的字段，同时避免拷贝主键
+                entity.CopyFrom(model, true);
+
+                rs.Add(entity);
+                source.Remove(entity);
+            }
+        }
+
+        // 删除多余的
+        if (trim) source.Delete(true);
+
+        // 保存数据，插入或更新
+        rs.Save();
+
+        return rs;
     }
 
     /// <summary>获取可用于插入的数据列</summary>

@@ -124,9 +124,9 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     /// <returns></returns>
     internal protected abstract IEntity CloneEntityInternal(Boolean setDirty = true);
 
-    /// <summary>复制来自指定模型的成员，可以是不同类型</summary>
+    /// <summary>复制来自指定模型的成员，可以是不同类型。脏数据用于控制局部复制</summary>
     /// <param name="model">来源实体对象</param>
-    /// <param name="setDirty">是否设置脏数据</param>
+    /// <param name="setDirty">是否设置脏数据。默认true，仅拷贝有脏数据的源字段，也设置目标脏数据</param>
     /// <returns>实际复制成员数</returns>
     public virtual Int32 CopyFrom(IModel model, Boolean setDirty = true)
     {
@@ -146,7 +146,11 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
                 if (destNames.Contains(item))
                 {
                     if (setDirty)
-                        dest.SetItem(item, source[item]);
+                    {
+                        // 启用脏数据，仅复制有脏数据的字段，同时避免拷贝主键
+                        if (source.Dirtys[item])
+                            dest.SetItem(item, source[item]);
+                    }
                     else
                         dest[item] = source[item];
                 }

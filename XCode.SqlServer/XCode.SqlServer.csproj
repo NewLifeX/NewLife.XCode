@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
-    <TargetFrameworks>net45;net461;netstandard2.0;netstandard2.1</TargetFrameworks>
-    <AssemblyTitle>数据中间件SQLite包</AssemblyTitle>
-    <Description>引入SQLite数据库驱动包</Description>
+    <TargetFrameworks>net451;net461;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <AssemblyTitle>数据中间件SqlServer包</AssemblyTitle>
+    <Description>引入SqlServer数据库驱动包</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2024 NewLife</Copyright>
     <VersionPrefix>11.15</VersionPrefix>
@@ -36,7 +36,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XCode\XCode.csproj" />

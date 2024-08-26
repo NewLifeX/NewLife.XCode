@@ -26,6 +26,10 @@ jobs:
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCodeTool/XCodeTool.csproj
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.MySql/XCode.MySql.csproj
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.SQLite/XCode.SQLite.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.SqlServer/XCode.SqlServer.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.Oracle/XCode.Oracle.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.PostgreSQL/XCode.PostgreSQL.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.DaMeng/XCode.DaMeng.csproj
     - name: Publish
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}

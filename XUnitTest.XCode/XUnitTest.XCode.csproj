@@ -88,6 +88,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\XCode.DaMeng\XCode.DaMeng.csproj" />
+    <ProjectReference Include="..\XCode.DB2\XCode.DB2.csproj" />
+    <ProjectReference Include="..\XCode.HighGo\XCode.HighGo.csproj" />
+    <ProjectReference Include="..\XCode.KingBase\XCode.KingBase.csproj" />
     <ProjectReference Include="..\XCode\XCode.csproj" />
   </ItemGroup>
   <ItemGroup>

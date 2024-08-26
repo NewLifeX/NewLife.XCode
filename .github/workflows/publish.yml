@@ -30,6 +30,9 @@ jobs:
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.Oracle/XCode.Oracle.csproj
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.PostgreSQL/XCode.PostgreSQL.csproj
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.DaMeng/XCode.DaMeng.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.DB2/XCode.DB2.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.KingBase/XCode.KingBase.csproj
+        dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode.HighGo/XCode.HighGo.csproj
     - name: Publish
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}

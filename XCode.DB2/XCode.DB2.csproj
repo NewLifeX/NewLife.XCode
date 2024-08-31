@@ -36,7 +36,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Net.IBM.Data.Db2" Version="8.0.0.200" />
+    <PackageReference Include="Net.IBM.Data.Db2" Version="8.0.0.300" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XCode\XCode.csproj" />

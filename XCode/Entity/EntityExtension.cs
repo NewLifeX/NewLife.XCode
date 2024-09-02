@@ -1046,6 +1046,8 @@ public static class EntityExtension
     /// <returns></returns>
     public static IList<T> Merge<T, T2>(this IList<T> source, IEnumerable<T2> news, Func<T, T2, Boolean> predicate, Boolean trim = true) where T : class, IEntity where T2 : IModel
     {
+        if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+
         var rs = new List<T>();
         var fact = typeof(T).AsFactory();
         foreach (var model in news)

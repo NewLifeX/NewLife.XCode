@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net452;net462;netstandard2.0;netstandard2.1</TargetFrameworks>
     <AssemblyTitle>数据中间件MySql包</AssemblyTitle>
     <Description>引入MySql数据库驱动包</Description>
     <Company>新生命开发团队</Company>
@@ -35,8 +35,11 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'!='net452'">
     <PackageReference Include="MySql.Data" Version="9.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net452'">
+    <PackageReference Include="MySql.Data" Version="8.0.32.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XCode\XCode.csproj" />

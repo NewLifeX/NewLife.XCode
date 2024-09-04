@@ -37,45 +37,45 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     }
 
     /// <summary>实体树操作者</summary>
-    protected static IEntityTreeSetting Setting;
+    public static IEntityTreeSetting Setting;
     #endregion
 
     #region 扩展属性
     /// <summary>排序值</summary>
     private Int32 Sort
     {
-        get { return String.IsNullOrEmpty(Setting.Sort) ? 0 : (Int32)this[Setting.Sort]; }
-        set { if (!String.IsNullOrEmpty(Setting.Sort) && (Int32)this[Setting.Sort] != value) SetItem(Setting.Sort, value); }
+        get { return String.IsNullOrEmpty(Setting.Sort) ? 0 : (Int32)this[Setting.Sort]!; }
+        set { if (!String.IsNullOrEmpty(Setting.Sort) && (Int32)this[Setting.Sort]! != value) SetItem(Setting.Sort, value); }
     }
 
     /// <summary>子节点</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public virtual IList<TEntity> Childs => Extends.Get(nameof(Childs), e => FindChilds());
+    public virtual IList<TEntity> Childs => Extends.Get(nameof(Childs), e => FindChilds())!;
 
     /// <summary>子节点</summary>
-    protected virtual IList<TEntity> FindChilds() => FindAllByParent((TKey)this[Setting.Key]);
+    protected virtual IList<TEntity> FindChilds() => FindAllByParent((TKey)this[Setting.Key]!);
 
     /// <summary>父节点</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public virtual TEntity Parent => Extends.Get(nameof(Parent), e => FindParent());
+    public virtual TEntity? Parent => Extends.Get(nameof(Parent), e => FindParent());
 
     /// <summary>父节点</summary>
-    protected virtual TEntity FindParent() => FindByKeyWithCache((TKey)this[Setting.Parent]);
+    protected virtual TEntity FindParent() => FindByKeyWithCache((TKey)this[Setting.Parent]!);
 
     /// <summary>在缓存中查找节点</summary>
     protected static TEntity FindByKeyWithCache(TKey key) => Meta.Session.Cache.Find(e => Equals(e[Setting.Key], key));
 
     /// <summary>子孙节点</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public virtual IList<TEntity> AllChilds => Extends.Get(nameof(AllChilds), e => FindAllChilds(this));
+    public virtual IList<TEntity> AllChilds => Extends.Get(nameof(AllChilds), e => FindAllChilds(this))!;
 
     /// <summary>子孙节点，包含自己</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public virtual IList<TEntity> MyAllChilds => Extends.Get(nameof(MyAllChilds), e => FindAllChilds(this, true));
+    public virtual IList<TEntity> MyAllChilds => Extends.Get(nameof(MyAllChilds), e => FindAllChilds(this, true))!;
 
     /// <summary>父节点集合</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public virtual IList<TEntity> AllParents => Extends.Get(nameof(AllParents), e => FindAllParents(this));
+    public virtual IList<TEntity> AllParents => Extends.Get(nameof(AllParents), e => FindAllParents(this))!;
 
     /// <summary>深度</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
@@ -92,7 +92,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
         }
     }
 
-    private static TEntity _Root;
+    private static TEntity _Root = null!;
     /// <summary>根</summary>
     public static TEntity Root
     {
@@ -101,29 +101,29 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
             if (_Root == null)
             {
                 _Root = new TEntity();
-                Meta.Session.OnDataChange += delegate { _Root = null; };
+                Meta.Session.OnDataChange += delegate { _Root = null!; };
             }
             return _Root;
         }
-        set { _Root = null; }
+        set { _Root = null!; }
     }
 
     /// <summary>节点名</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public virtual String NodeName
+    public virtual String? NodeName
     {
         get
         {
             var key = Setting.Name;
             if (String.IsNullOrEmpty(key)) return String.Empty;
 
-            return (String)this[key];
+            return (String?)this[key];
         }
     }
 
     /// <summary>父级节点名</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public virtual String ParentNodeName
+    public virtual String? ParentNodeName
     {
         get
         {
@@ -133,7 +133,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
             var parent = Parent;
             if (parent == null) return String.Empty;
 
-            return (String)parent[key];
+            return (String?)parent[key];
         }
     }
 
@@ -225,7 +225,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
                 if (item1.Sort != item2.Sort)
                     return -n * item1.Sort.CompareTo(item2.Sort);
                 else
-                    return (item1[Setting.Key] as IComparable).CompareTo(item2[Setting.Key]);
+                    return (item1[Setting.Key] as IComparable)!.CompareTo(item2[Setting.Key]);
             });
         }
         return list;
@@ -236,7 +236,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     public static IList<TEntity> FindAllNoParent()
     {
         // 有父节点的跳过，父节点为空的跳过
-        return Meta.Session.Cache.FindAll(e => !IsNull((TKey)e[Setting.Parent]) && e.Parent == null);
+        return Meta.Session.Cache.FindAll(e => !IsNull((TKey)e[Setting.Parent]!) && e.Parent == null);
     }
 
     /// <summary>查找指定键的所有子节点，以深度层次树结构输出，包括当前节点作为根节点。空父节点返回顶级列表，无效父节点返回空列表</summary>
@@ -246,7 +246,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     public static IList<TEntity> FindAllChildsByParent(TKey parentKey)
     {
         var entity = IsNull(parentKey) ? Root : FindByKeyWithCache(parentKey);
-        if (entity == null) return new List<TEntity>();
+        if (entity == null) return [];
 
         return FindAllChilds(entity, true);
     }
@@ -258,7 +258,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     public static IList<TEntity> FindAllChildsNoParent(TKey parentKey)
     {
         var entity = IsNull(parentKey) ? Root : FindByKeyWithCache(parentKey);
-        if (entity == null) return new List<TEntity>();
+        if (entity == null) return [];
 
         return FindAllChilds(entity, false);
     }
@@ -274,10 +274,10 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     [DataObjectMethod(DataObjectMethodType.Select)]
     public static IList<TEntity> FindAllParentsByKey(TKey key)
     {
-        if (IsNull(key)) return new List<TEntity>();
+        if (IsNull(key)) return [];
 
         var entity = FindByKeyWithCache(key);
-        if (entity == null) return new List<TEntity>();
+        if (entity == null) return [];
 
         return FindAllParents(entity);
     }
@@ -288,18 +288,19 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     /// <param name="entity">根节点</param>
     /// <param name="includeSelf">返回列表是否包含根节点，默认false</param>
     /// <param name="exclude">要排除的节点</param>
+    /// <param name="depth">深度。仅返回指定深度层级的节点</param>
     /// <returns></returns>
-    protected static IList<TEntity> FindAllChilds(IEntityTree entity, Boolean includeSelf = false, IEntityTree exclude = null)
+    public static IList<TEntity> FindAllChilds(IEntityTree entity, Boolean includeSelf = false, IEntityTree? exclude = null, Int32 depth = -1)
     {
-        if (entity == null) return new List<TEntity>();
+        if (entity == null) return [];
         var childlist = entity.Childs;
-        if (childlist == null) return new List<TEntity>();
+        if (childlist == null) return [];
 
         var list = new List<TEntity>();
         // 不使用递归，避免死循环
         // 使用堆栈而不使用队列，因为树的构造一般是深度搜索而不是广度搜索
         var stack = new Stack<TEntity>();
-        stack.Push(entity as TEntity);
+        stack.Push((entity as TEntity)!);
 
         while (stack.Count > 0)
         {
@@ -321,7 +322,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
                 // 已进入待处理队列的，不再处理
                 if (stack.Contains(childs[i])) continue;
 
-                stack.Push(childs[i]);
+                if (depth < 0 || childs[i].Deepth <= depth) stack.Push(childs[i]);
             }
         }
         //// 去掉第一个，那是自身
@@ -337,7 +338,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     protected static IList<TEntity> FindAllParents(IEntityTree entity, Boolean includeSelf = false)
     {
         var pkey = Setting.Parent;
-        if (entity == null || pkey.IsNullOrEmpty() || IsNull((TKey)entity[pkey]) || entity.Parent == null) return new List<TEntity>();
+        if (entity == null || pkey.IsNullOrEmpty() || IsNull((TKey)entity[pkey]!) || entity.Parent == null) return [];
 
         var list = new List<TEntity>();
         var item = entity as TEntity;
@@ -363,7 +364,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     /// <param name="path">层次路径</param>
     /// <param name="keys">用于在每一层匹配实体的键值，默认是NameKeyName</param>
     /// <returns></returns>
-    public TEntity FindByPath(String path, params String[] keys)
+    public TEntity? FindByPath(String path, params String[] keys)
     {
         if (String.IsNullOrEmpty(path)) return null;
 
@@ -386,11 +387,11 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
         if (ss == null || ss.Length <= 0) return null;
 
         // 找第一级
-        TEntity entity = null;
+        TEntity? entity = null;
         foreach (var item in keys)
         {
             //entity = list.Find(item, ss[0]);
-            entity = list.FirstOrDefault(e => (String)e[item] == ss[0]);
+            entity = list.FirstOrDefault(e => (String?)e[item] == ss[0]);
             if (entity != null) break;
         }
         if (entity == null) return null;
@@ -413,7 +414,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
         if (IsNull(key)) return false;
 
         // 自身
-        if (Equals((TKey)this[Setting.Key], key)) return true;
+        if (Equals((TKey)this[Setting.Key]!, key)) return true;
 
         // 子级
         var list = Childs;
@@ -433,7 +434,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     /// <param name="separator">分隔符</param>
     /// <param name="func">回调</param>
     /// <returns></returns>
-    public String GetFullPath(Boolean includeSelf = true, String separator = @"\", Func<TEntity, String> func = null)
+    public String? GetFullPath(Boolean includeSelf = true, String separator = @"\", Func<TEntity, String>? func = null)
     {
         var list = FindAllParents(this, includeSelf);
         if (list == null || list.Count <= 0) return null;
@@ -502,41 +503,69 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     /// <summary>排序上升</summary>
     public void Up()
     {
-        var list = FindAllByParent((TKey)this[Setting.Parent]);
+        var list = FindAllByParent((TKey)this[Setting.Parent]!);
         if (list == null || list.Count <= 0) return;
 
-        var n = Setting.BigSort ? 1 : -1;
+        //var n = Setting.BigSort ? 1 : -1;
 
+        //for (var i = 0; i < list.Count; i++)
+        //{
+        //    var s = list.Count - i;
+        //    // 当前项，排序增加。原来比较实体相等有问题，也许新旧实体类不对应，现在改为比较主键值
+        //    if (EqualTo(list[i])) s += n;
+        //    // 下一项是当前项，排序减少
+        //    if (i < list.Count - 1 && EqualTo(list[i + 1])) s -= n;
+        //    list[i].Sort = s;
+        //}
+        //list.Save();
+
+        // 跟前一个交换位置
         for (var i = 0; i < list.Count; i++)
         {
-            var s = list.Count - i;
-            // 当前项，排序增加。原来比较实体相等有问题，也许新旧实体类不对应，现在改为比较主键值
-            if (EqualTo(list[i])) s += n;
-            // 下一项是当前项，排序减少
-            if (i < list.Count - 1 && EqualTo(list[i + 1])) s -= n;
-            list[i].Sort = s;
+            var cur = list[i];
+            if (i > 1 && EqualTo(cur))
+            {
+                var prev = list[i - 1];
+                (prev.Sort, cur.Sort) = (cur.Sort, prev.Sort);
+
+                cur.Update();
+                prev.Update();
+            }
         }
-        list.Save();
     }
 
     /// <summary>排序下降</summary>
     public void Down()
     {
-        var list = FindAllByParent((TKey)this[Setting.Parent]);
+        var list = FindAllByParent((TKey)this[Setting.Parent]!);
         if (list == null || list.Count <= 0) return;
 
-        var n = Setting.BigSort ? 1 : -1;
+        //var n = Setting.BigSort ? 1 : -1;
 
+        //for (var i = 0; i < list.Count; i++)
+        //{
+        //    var s = list.Count - i;
+        //    // 当前项，排序减少
+        //    if (EqualTo(list[i])) s -= n;
+        //    // 上一项是当前项，排序增加
+        //    if (i >= 1 && EqualTo(list[i - 1])) s += n;
+        //    list[i].Sort = s;
+        //}
+        //list.Save();
+
+        // 跟前一个交换位置
         for (var i = 0; i < list.Count; i++)
         {
-            var s = list.Count - i;
-            // 当前项，排序减少
-            if (EqualTo(list[i])) s -= n;
-            // 上一项是当前项，排序增加
-            if (i >= 1 && EqualTo(list[i - 1])) s += n;
-            list[i].Sort = s;
+            var cur = list[i];
+            if (i < list.Count - 1 && EqualTo(cur))
+            {
+                var next = list[i + 1];
+                (next.Sort, cur.Sort) = (cur.Sort, next.Sort);
+
+                cur.Update();
+                next.Update();
+            }
         }
-        list.Save();
     }
 
     Boolean EqualTo(IEntity entity)
@@ -560,8 +589,8 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
 
         if (!base.Valid(method)) return false;
 
-        var key = (TKey)this[Setting.Key];
-        var pkey = (TKey)this[Setting.Parent];
+        var key = (TKey)this[Setting.Key]!;
+        var pkey = (TKey)this[Setting.Parent]!;
 
         var isnull = IsNull(key);
         var pisnull = IsNull(pkey);
@@ -624,7 +653,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
 
     #region IEntityTree 成员
     /// <summary>父实体</summary>
-    IEntity IEntityTree.Parent => Parent;
+    IEntity? IEntityTree.Parent => Parent;
 
     /// <summary>子实体集合</summary>
     IList<IEntity> IEntityTree.Childs => Childs.Cast<IEntity>().ToList();

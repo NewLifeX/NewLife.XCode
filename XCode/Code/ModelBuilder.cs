@@ -95,6 +95,8 @@ public class ModelBuilder : ClassBuilder
             baseClass += "IModel";
         }
 
+        baseClass = baseClass?.TrimStart(',');
+
         return baseClass;
     }
 

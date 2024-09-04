@@ -288,8 +288,9 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     /// <param name="entity">根节点</param>
     /// <param name="includeSelf">返回列表是否包含根节点，默认false</param>
     /// <param name="exclude">要排除的节点</param>
+    /// <param name="depth">深度。仅返回指定深度层级的节点</param>
     /// <returns></returns>
-    protected static IList<TEntity> FindAllChilds(IEntityTree entity, Boolean includeSelf = false, IEntityTree? exclude = null)
+    public static IList<TEntity> FindAllChilds(IEntityTree entity, Boolean includeSelf = false, IEntityTree? exclude = null, Int32 depth = -1)
     {
         if (entity == null) return [];
         var childlist = entity.Childs;
@@ -321,7 +322,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
                 // 已进入待处理队列的，不再处理
                 if (stack.Contains(childs[i])) continue;
 
-                stack.Push(childs[i]);
+                if (depth < 0 || childs[i].Deepth <= depth) stack.Push(childs[i]);
             }
         }
         //// 去掉第一个，那是自身

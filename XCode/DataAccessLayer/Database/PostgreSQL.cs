@@ -238,13 +238,13 @@ internal class PostgreSQLSession : RemoteDbSession
     /// <returns>新增行的自动编号</returns>
     public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
     {
-        sql += " RETURNING id";
+        sql = sql + $" RETURNING *";
         return base.InsertAndGetIdentity(sql, type, ps);
     }
 
     public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
     {
-        sql += " RETURNING id";
+        sql = sql + $" RETURNING *";
         return base.InsertAndGetIdentityAsync(sql, type, ps);
     }
 

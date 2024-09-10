@@ -148,7 +148,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
                     if (setDirty)
                     {
                         // 启用脏数据，仅复制有脏数据的字段，同时避免拷贝主键
-                        if (source.Dirtys[item])
+                        if (source.IsFromDatabase || source.Dirtys[item])
                             dest.SetItem(item, source[item]);
                     }
                     else

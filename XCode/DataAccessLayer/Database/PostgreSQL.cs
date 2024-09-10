@@ -385,7 +385,7 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
 
     public override String FieldClause(IDataColumn field, Boolean onlyDefine)
     {
-        if (field.Identity) return $"{field.Name} serial NOT NULL";
+        if (field.Identity) return $"{FormatName(field)} serial NOT NULL";
 
         var sql = base.FieldClause(field, onlyDefine);
 

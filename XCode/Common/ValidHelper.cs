@@ -59,4 +59,36 @@ public static partial class ValidHelper
     {
         return Convert.ToString(value);
     }
+
+    /// <summary>
+    /// Convert.ToByte
+    /// </summary>
+    public static Byte ToByte(object? value)
+    {
+        return Convert.ToByte(value);
+    }
+
+    /// <summary>
+    /// Convert.ToDecimal
+    /// </summary>
+    public static Decimal ToDecimal(object? value)
+    {
+        return Convert.ToDecimal(value);
+    }
+
+    /// <summary>
+    /// Convert.ToInt16
+    /// </summary>
+    public static Int16 ToInt16(object? value)
+    {
+        return Convert.ToInt16(value);
+    }
+
+    /// <summary>
+    /// Convert.ToUInt64
+    /// </summary>
+    public static UInt64 ToUInt64(object? value)
+    {
+        return Convert.ToUInt64(value);
+    }
 }

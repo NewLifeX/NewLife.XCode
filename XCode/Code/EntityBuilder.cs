@@ -775,7 +775,7 @@ public class EntityBuilder : ClassBuilder
         {
             WriteLine("switch (name)");
             WriteLine("{");
-            var conv = typeof(Convert);
+            var conv = typeof(ValidHelper);
             foreach (var column in Table.Columns)
             {
                 // 跳过排除项
@@ -787,7 +787,7 @@ public class EntityBuilder : ClassBuilder
 
                 if (!type.IsNullOrEmpty())
                 {
-                    var method = "ValidHelper.To";
+                    var method = "To";
                     var typePara = string.Empty;
                     if (type.Contains("."))
                     {
@@ -807,8 +807,15 @@ public class EntityBuilder : ClassBuilder
                         method += type;
                     }
                     if (column.IsArray) method += "Array";
-                    if (!string.IsNullOrWhiteSpace(typePara)) method += $"<{typePara}>";
-                    WriteLine("case \"{0}\": _{0} = {1}(value); break;", column.Name, method);
+                    if (conv.GetMethod(method, [typeof(object)]) != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(typePara)) method += $"<{typePara}>";
+                        WriteLine("case \"{0}\": _{0} = ValidHelper.{1}(value); break;", column.Name, method);
+                    }
+                    else
+                    {
+                        WriteLine("case \"{0}\": _{0} = ({1})value; break;", column.Name, type);
+                    }
                 }
             }
             WriteLine("default: base[name] = value; break;");

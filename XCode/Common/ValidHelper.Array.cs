@@ -2,17 +2,20 @@
 
 namespace XCode;
 
+/// <remarks>
+/// Array 部分的实现，先尽量保持简洁。
+/// 后续更强大的转换，再补充。
+/// </remarks>
 public partial class ValidHelper
 {
     /// <summary>
     /// 将给定的对象转换为字符串数组。
     /// </summary>
     /// <param name="value">要转换的对象。</param>
-    public static String[] ToStringArray(object? value)
+    public static String[]? ToStringArray(object? value)
     {
-        if (value == null) return Empty<String>();
-        if (Convert.IsDBNull(value)) return Empty<String>();
         if (value is String[] arr) return arr;
+        if (value == null || Convert.IsDBNull(value)) return default;
         if (value is IEnumerable<string> list) return list.ToArray();
         if (value is string str) return new string[] { str };
         if (value is IEnumerable)
@@ -24,7 +27,6 @@ public partial class ValidHelper
             }
             return ret.ToArray();
         }
-
-        return Empty<String>();
+        return default;
     }
 }

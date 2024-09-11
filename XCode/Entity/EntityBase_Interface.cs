@@ -45,6 +45,32 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
 
         if (v1 == null || v2 == null) return Equals(v1, v2);
 
+        if (v1.GetType().IsArray || v2.GetType().IsArray)
+        {
+            //如果两个对象是同一个引用，逐个对比就没意义。直接返回 true
+            if (Equals(v1, v2)) return true;
+            // 如果两个对象都是数组
+            if (v1 is Array a1 && v2 is Array a2)
+            {
+                // 如果数组长度不同，直接返回 false
+                if (a1.Length != a2.Length) return false;
+
+                // 逐个比较数组元素
+                for (var i = 0; i < a1.Length; i++)
+                {
+                    if (!CheckEqual(a1.GetValue(i), a2.GetValue(i))) return false;
+                }
+
+                // 所有元素都相等，返回 true
+                return true;
+            }
+            else
+            {
+                // 如果只有一个是数组，返回 false
+                return false;
+            }
+        }
+
         switch (Type.GetTypeCode(v1.GetType()))
         {
             case TypeCode.DateTime:

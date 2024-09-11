@@ -91,4 +91,26 @@ public static partial class ValidHelper
     {
         return Convert.ToUInt64(value);
     }
+
+    /// <summary>
+    /// 转换为枚举
+    /// </summary>
+    public static T ToEnum<T>(object? value) where T : struct
+    {
+        if (value is T t) return t;
+        if (value is null || Convert.IsDBNull(value)) return default;
+        if (typeof(T).IsEnum)
+        {
+            if (value is string str) return (T)Enum.Parse(typeof(T), str, true);
+        }
+        return (T)value;
+    }
+
+    public static T? ToObject<T>(object? value) where T : class
+    {
+        if (value is T t) return t;
+        if (value is null || Convert.IsDBNull(value)) return default;
+        //这里怎么实现呢？
+        return default;
+    }
 }

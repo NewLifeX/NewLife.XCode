@@ -8,25 +8,33 @@ namespace XCode;
 /// </remarks>
 public partial class ValidHelper
 {
-    /// <summary>
-    /// 将给定的对象转换为字符串数组。
-    /// </summary>
-    /// <param name="value">要转换的对象。</param>
-    public static String[]? ToStringArray(object? value)
+    private static T[]? ToArray<T>(Object? value, Func<object?, T> converter)
     {
-        if (value is String[] arr) return arr;
-        if (value == null || Convert.IsDBNull(value)) return default;
-        if (value is IEnumerable<string> list) return list.ToArray();
-        if (value is string str) return new string[] { str };
+        if (value is T[] arr) return arr;
+        if (value is null || Convert.IsDBNull(value)) return default;
+        if (value is IEnumerable<T> list) return list.ToArray();
+        if (value is T v) return new T[] { v };
         if (value is IEnumerable)
         {
-            var ret = new List<String>();
+            var ret = new List<T>();
             foreach (var item in (IEnumerable)value)
             {
-                ret.Add(Convert.ToString(item));
+                ret.Add(converter.Invoke(item));
             }
             return ret.ToArray();
         }
         return default;
     }
+    public static Int32[]? ToInt32Array(Object? value) => ToArray(value, ToInt32);
+    public static Int64[]? ToInt64Array(Object? value) => ToArray(value, ToInt64);
+    public static Double[]? ToDoubleArray(Object? value) => ToArray(value, ToDouble);
+    public static Boolean[]? ToBooleanArray(Object? value) => ToArray(value, ToBoolean);
+    public static DateTime[]? ToDateTimeArray(Object? value) => ToArray(value, ToDateTime);
+    public static String[]? ToStringArray(Object? value) => ToArray(value, ToString);
+    public static Byte[]? ToByteArray(Object? value) => ToArray(value, ToByte);
+    public static Decimal[]? ToDecimalArray(Object? value) => ToArray(value, ToDecimal);
+    public static Int16[]? ToInt16Array(Object? value) => ToArray(value, ToInt16);
+    public static UInt64[]? ToUInt64Array(Object? value) => ToArray(value, ToUInt64);
+    public static T[]? ToEnumArray<T>(Object? value) where T : struct => ToArray(value, ToEnum<T>);
+    public static T[]? ToObjectArray<T>(Object? value) where T : class => ToArray(value, ToObject<T>);
 }

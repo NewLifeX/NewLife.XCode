@@ -723,6 +723,9 @@ public class EntityBuilder : ClassBuilder
         // 数据规模
         if (!dc.DataScale.IsNullOrEmpty()) sb.AppendFormat(", DataScale = \"{0}\"", dc.DataScale);
 
+        // 是否数组
+        if (dc.IsArray) sb.Append(", IsArray = true");
+
         ////添加自定义控件默认值
         //if (!dc.ItemDefaultValue.IsNullOrEmpty()) sb.AppendFormat(", ItemDefaultValue = \"{0}\"", dc.ItemDefaultValue);
 

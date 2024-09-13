@@ -93,18 +93,18 @@ internal class PostgreSQL : RemoteDb
     public override String FormatValue(IDataColumn? column, Object? value)
     {
         var isNullable = true;
-        var isArray = false;
+        var isArrayField = false;
         Type? type = null;
         if (column != null)
         {
             type = column.DataType;
             isNullable = column.Nullable;
-            isArray = column.IsArray;
+            isArrayField = column.IsArray;
         }
         else if (value != null)
         {
             type = value.GetType();
-            isArray = type.IsArray;
+            isArrayField = type.IsArray;
         }
 
         // 如果类型是Nullable的，则获取对应的类型
@@ -112,14 +112,14 @@ internal class PostgreSQL : RemoteDb
         //如果是数组，就取数组的元素类型
         if (type?.IsArray == true)
         {
-            var element = type.GetElementType();
-            if (element != typeof(byte))//blob类型需要特殊处理
+            //Byte[] 数组可能是 Blob，不应该当作数组字段处理
+            if (column?.IsArray == true || type != typeof(Byte[]))
             {
-                isArray = true;
-                type = element;
+                isArrayField = true;
+                type = type.GetElementType();
             }
         }
-        if (isArray)
+        if (isArrayField)
         {
             if (value is null) return isNullable ? "NULL" : "ARRAY[]";
             var count = 0;

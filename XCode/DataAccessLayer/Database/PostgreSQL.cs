@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections;
+using System.Data;
 using System.Data.Common;
 using System.Net;
 using System.Text;
@@ -6,6 +7,7 @@ using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Reflection;
 
 namespace XCode.DataAccessLayer;
 
@@ -88,18 +90,100 @@ internal class PostgreSQL : RemoteDb
     /// <param name="field">字段</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    public override String FormatValue(IDataColumn field, Object? value)
+    public override String FormatValue(IDataColumn? column, Object? value)
     {
-        if (field.DataType == typeof(String))
+        var isNullable = true;
+        var isArray = false;
+        Type? type = null;
+        if (column != null)
         {
-            if (value == null) return field.Nullable ? "null" : "''";
+            type = column.DataType;
+            isNullable = column.Nullable;
+            isArray = column.IsArray;
+        }
+        else if (value != null)
+        {
+            type = value.GetType();
+            isArray = type.IsArray;
+        }
+
+        // 如果类型是Nullable的，则获取对应的类型
+        type = Nullable.GetUnderlyingType(type) ?? type;
+        //如果是数组，就取数组的元素类型
+        if (type?.IsArray == true)
+        {
+            var element = type.GetElementType();
+            if (element != typeof(byte))//blob类型需要特殊处理
+            {
+                isArray = true;
+                type = element;
+            }
+        }
+        if (isArray)
+        {
+            if (value is null) return isNullable ? "NULL" : "ARRAY[]";
+            var count = 0;
+            var builder = new StringBuilder();
+            builder.Append("ARRAY[");
+            foreach (var v in (IEnumerable)value)
+            {
+                builder.Append(ValueToSQL(type, isNullable, v));
+                builder.Append(',');
+                count++;
+            }
+            if (count != 0) builder.Length--;
+            builder.Append("]");
+            return builder.ToString();
+        }
+        else
+        {
+            return ValueToSQL(type, isNullable, value);
+        }
+    }
+
+    private string ValueToSQL(Type? type, bool isNullable, object? value)
+    {
+        if (type == typeof(String))
+        {
+            if (value is null) return isNullable ? "null" : "''";
             return "'" + value.ToString().Replace("'", "''") + "'";
         }
-        else if (field.DataType == typeof(Boolean))
+        if (type == typeof(DateTime))
         {
-            return (Boolean)value ? "true" : "false";
+            if (value == null) return isNullable ? "null" : "''";
+            var dt = Convert.ToDateTime(value);
+
+            if (isNullable && (dt <= DateTime.MinValue || dt >= DateTime.MaxValue)) return "null";
+
+            return FormatDateTime(dt);
         }
-        return base.FormatValue(field, value);
+        if (type == typeof(Boolean))
+        {
+            if (value == null) return isNullable ? "null" : "";
+            return Convert.ToBoolean(value) ? "true" : "false";
+        }
+        if (type == typeof(Byte[]))
+        {
+            if (value is not Byte[] bts || bts.Length <= 0) return isNullable ? "null" : "0x0";
+
+            return "0x" + BitConverter.ToString(bts).Replace("-", null);
+        }
+        if (type == typeof(Guid))
+        {
+            if (value == null) return isNullable ? "null" : "''";
+
+            return $"'{value}'";
+        }
+
+        if (value == null) return isNullable ? "null" : "";
+        // 枚举
+        if (type != null && type.IsEnum) type = typeof(Int32);
+
+        // 转为目标类型，比如枚举转为数字
+        if (type != null) value = value.ChangeType(type);
+        if (value == null) return isNullable ? "null" : "";
+
+        return value.ToString();
     }
 
     /// <summary>长文本长度</summary>

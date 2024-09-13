@@ -564,4 +564,75 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is ''";
 
     #endregion 架构定义
+
+    #region 表构架
+    protected override List<IDataTable> OnGetTables(String[]? names)
+    {
+        var tables = base.OnGetTables(names);
+        var session = Database.CreateSession();
+        using var _ = session.SetShowSql(false);
+        const string sql = @"with tables as (
+  select c
+    .oid,
+    ns.nspname as schema_name,
+    c.relname as table_name,
+    d.description as table_description,
+    pg_get_userbyid ( c.relowner ) as table_owner 
+  from
+    pg_catalog.pg_class
+    as c join pg_catalog.pg_namespace as ns on c.relnamespace = ns.
+    oid left join pg_catalog.pg_description d on c.oid = d.objoid 
+    and d.objsubid = 0 
+  where
+    ns.nspname not in ( 'pg_catalog' ) 
+)  select 
+c.table_name as table_name,
+t.table_description,
+c.column_name as column_name,
+c.ordinal_position,
+d.description as column_description
+from
+  tables
+  t join information_schema.columns c on c.table_schema = t.schema_name 
+  and c.table_name = t.
+  table_name left join pg_catalog.pg_description d on d.objoid = t.oid 
+  and d.objsubid = c.ordinal_position 
+  and d.objsubid > 0 
+where
+  c.table_schema = 'public' 
+order by
+  t.schema_name,
+  t.table_name,
+  c.ordinal_position";
+        var ds = session.Query(sql);
+        if (ds.Tables.Count != 0)
+        {
+            var dt = ds.Tables[0]!;
+            foreach (var table in tables)
+            {
+                var rows = dt.Select($"table_name = '{table.TableName}'");
+                if (rows is { Length: > 0 })
+                {
+                    if (string.IsNullOrWhiteSpace(table.Description))
+                    {
+                        foreach (var row in rows)
+                        {
+                            table.Description = Convert.ToString(row["table_description"]);
+                            break;
+                        }
+                    }
+                    foreach (var row in rows)
+                    {
+                        string columnName = Convert.ToString(row["column_name"]);
+                        if (string.IsNullOrWhiteSpace(columnName)) continue;
+                        var col = table.GetColumn(columnName);
+                        if (col == null) continue;
+                        if (string.IsNullOrWhiteSpace(col.Description)) col.Description = Convert.ToString(row["column_description"]);
+                    }
+                }
+            }
+        }
+        return tables;
+    }
+    #endregion
 }

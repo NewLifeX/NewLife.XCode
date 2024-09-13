@@ -223,6 +223,7 @@ public class FieldItem
             dc.DefaultValue = col.DefaultValue;
             //dc.ItemDefaultValue = col.ItemDefaultValue;
             dc.DataScale = col.DataScale;
+            dc.IsArray = col.IsArray;
         }
 
         // 特别处理，兼容旧版本

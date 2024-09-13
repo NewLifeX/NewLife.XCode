@@ -334,6 +334,8 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         { typeof(String), new String[] { "varchar({0})", "character varying", "text" } },
     };
 
+    protected override String? ArrayTypePostfix => "[]";
+
     #endregion 数据类型
 
     protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable> data)

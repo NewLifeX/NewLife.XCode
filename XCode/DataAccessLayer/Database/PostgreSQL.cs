@@ -420,6 +420,19 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
 
     protected override String? ArrayTypePostfix => "[]";
 
+    protected override Type? GetDataType(IDataColumn field)
+    {
+        var postfix = this.ArrayTypePostfix!;
+        if (field.RawType?.EndsWith(postfix) == true)
+        {
+            field.IsArray = true;
+            var clone = field.Clone(field.Table);
+            clone.RawType = field.RawType.Substring(0, field.RawType.Length - postfix.Length);
+            var type = base.GetDataType(clone);
+            if (type != null) return type.MakeArrayType();
+        }
+        return base.GetDataType(field);
+    }
     #endregion 数据类型
 
     protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable> data)

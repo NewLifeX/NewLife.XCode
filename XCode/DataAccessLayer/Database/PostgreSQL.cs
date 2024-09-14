@@ -336,19 +336,11 @@ internal class PostgreSQLSession : RemoteDbSession
 
     #region 批量操作
 
-    /*
-    insert into stat (siteid,statdate,`count`,cost,createtime,updatetime) values
-    (1,'2018-08-11 09:34:00',1,123,now(),now()),
-    (2,'2018-08-11 09:34:00',1,456,now(),now()),
-    (3,'2018-08-11 09:34:00',1,789,now(),now()),
-    (2,'2018-08-11 09:34:00',1,456,now(),now())
-    on duplicate key update
-    `count`=`count`+values(`count`),cost=cost+values(cost),
-    updatetime=values(updatetime);
-     */
 
-    private String GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
+    public override Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
     {
+        const string action = "Insert Into";
+
         var sb = Pool.StringBuilder.Get();
         var db = Database as DbBase;
 
@@ -361,21 +353,99 @@ internal class PostgreSQLSession : RemoteDbSession
         sb.Append(" Values");
         BuildBatchValues(sb, db, action, table, columns, list);
 
-        // 重复键执行update
-        BuildDuplicateKey(sb, db, columns, updateColumns, addColumns);
-
-        return sb.Put(true);
-    }
-
-    public override Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
-    {
-        var sql = GetBatchSql("Insert Into", table, columns, null, null, list);
+        var sql = sb.Put(true);
         return Execute(sql);
     }
 
     public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
     {
-        var sql = GetBatchSql("Insert Into", table, columns, updateColumns, addColumns, list);
+        /*
+         * INSERT INTO table_name (列1, 列2, 列3, ...)
+         * VALUES (值1, 值2, 值3, ...),(值1, 值2, 值3, ...),(值1, 值2, 值3, ...)...
+         * ON conflict ( 索引列，主键或者唯一索引 ) 
+         * DO UPDATE
+         * SET 列1 = EXCLUDED.列1, ...
+         *     列2 = EXCLUDED.列1 + table_name.列2 ...
+         *  ;
+         */
+        const string action = "Insert Into";
+
+        var sb = Pool.StringBuilder.Get();
+        var db = Database as DbBase;
+
+        // 字段列表
+        columns ??= table.Columns.ToArray();
+        BuildInsert(sb, db, action, table, columns);
+        DefaultSpan.Current?.AppendTag(sb.ToString());
+
+        // 值列表
+        sb.Append(" Values");
+        BuildBatchValues(sb, db, action, table, columns, list);
+
+        if (updateColumns is { Count: > 0 } || addColumns is { Count: > 0 })
+        {
+            //取唯一索引或主键
+            var keys = table.PrimaryKeys.Select(f => f.ColumnName).ToArray();
+            foreach (var idx in table.Indexes)
+            {
+                if (idx.Unique && idx.Columns is { Length: > 0 })
+                {
+                    if (idx.Columns.All(c => columns.Any(f => f.ColumnName == c)))
+                    {
+                        keys = idx.Columns;
+                        break;
+                    }
+                }
+            }
+
+            if (keys is { Length: > 0 })
+            {
+                var conflict = string.Join(",", keys.Select(f => db.FormatName(f)));
+                var tb = db.FormatName(table.TableName);
+                var setters = new List<string>(columns.Length);
+
+                if (updateColumns is { Count: > 0 })
+                {
+                    foreach (var dc in columns)
+                    {
+                        if (dc.Identity || dc.PrimaryKey) continue;
+
+                        if (updateColumns.Contains(dc.Name) && (addColumns?.Contains(dc.Name) != true))
+                        {
+                            if (dc.Nullable)
+                            {
+                                setters.Add(String.Format("{0} = EXCLUDED.{0},", db.FormatName(dc)));
+                            }
+                            else
+                            {
+                                setters.Add(String.Format("{0} = COALESCE(EXCLUDED.{0},{1}.{0}),", db.FormatName(dc), tb));
+                            }
+                        }
+                    }
+                }
+
+                if (addColumns is { Count: > 0 })
+                {
+                    foreach (var dc in columns)
+                    {
+                        if (dc.Identity || dc.PrimaryKey) continue;
+
+                        if (addColumns.Contains(dc.Name))
+                        {
+                            setters.Add(String.Format("{0} = EXCLUDED.{0} + {1}.{0},", db.FormatName(dc), tb));
+                        }
+                    }
+                }
+
+                if (setters.Count != 0)
+                {
+                    sb.Append($" ON conflict ({conflict}) DO UPDATE SET ");
+                    sb.Append(string.Join(",", setters));
+                }
+            }
+        }
+
+        var sql = sb.Put(true);
         return Execute(sql);
     }
 

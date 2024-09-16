@@ -121,7 +121,7 @@ internal class PostgreSQL : RemoteDb
         }
         if (isArrayField)
         {
-            if (value is null) return isNullable ? "NULL" : "ARRAY[]";
+            if (value is null) return isNullable ? "NULL" : "'{}'";
             var count = 0;
             var builder = new StringBuilder();
             builder.Append("ARRAY[");
@@ -131,8 +131,16 @@ internal class PostgreSQL : RemoteDb
                 builder.Append(',');
                 count++;
             }
-            if (count != 0) builder.Length--;
-            builder.Append("]");
+            if (count != 0)
+            {
+                builder.Length--;
+                builder.Append("]");
+            }
+            else
+            {
+                builder.Clear();
+                builder.Append("'{}'");
+            }
             return builder.ToString();
         }
         else
@@ -414,11 +422,11 @@ internal class PostgreSQLSession : RemoteDbSession
                         {
                             if (dc.Nullable)
                             {
-                                setters.Add(String.Format("{0} = EXCLUDED.{0},", db.FormatName(dc)));
+                                setters.Add(String.Format("{0} = EXCLUDED.{0}", db.FormatName(dc)));
                             }
                             else
                             {
-                                setters.Add(String.Format("{0} = COALESCE(EXCLUDED.{0},{1}.{0}),", db.FormatName(dc), tb));
+                                setters.Add(String.Format("{0} = COALESCE(EXCLUDED.{0},{1}.{0})", db.FormatName(dc), tb));
                             }
                         }
                     }
@@ -432,7 +440,7 @@ internal class PostgreSQLSession : RemoteDbSession
 
                         if (addColumns.Contains(dc.Name))
                         {
-                            setters.Add(String.Format("{0} = EXCLUDED.{0} + {1}.{0},", db.FormatName(dc), tb));
+                            setters.Add(String.Format("{0} = EXCLUDED.{0} + {1}.{0}", db.FormatName(dc), tb));
                         }
                     }
                 }

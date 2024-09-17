@@ -31,8 +31,14 @@ public partial class ExtendUser : Object, IxxUser, IModel
     /// <summary>邮件。支持登录</summary>
     public String Mail { get; set; }
 
+    /// <summary>邮箱是否验证。</summary>
+    public Boolean MailVerified { get; set; }
+
     /// <summary>手机。支持登录</summary>
     public String Mobile { get; set; }
+
+    /// <summary>手机是否验证。</summary>
+    public Boolean MobileVerified { get; set; }
 
     /// <summary>代码。身份证、员工编码等，支持登录</summary>
     public String Code { get; set; }
@@ -120,7 +126,9 @@ public partial class ExtendUser : Object, IxxUser, IModel
                 "DisplayName" => DisplayName,
                 "Sex" => Sex,
                 "Mail" => Mail,
+                "MailVerified" => MailVerified,
                 "Mobile" => Mobile,
+                "MobileVerified" => MobileVerified,
                 "Code" => Code,
                 "AreaId" => AreaId,
                 "Avatar" => Avatar,
@@ -157,7 +165,9 @@ public partial class ExtendUser : Object, IxxUser, IModel
                 case "DisplayName": DisplayName = Convert.ToString(value); break;
                 case "Sex": Sex = (XCode.Membership.SexKinds)value.ToInt(); break;
                 case "Mail": Mail = Convert.ToString(value); break;
+                case "MailVerified": MailVerified = value.ToBoolean(); break;
                 case "Mobile": Mobile = Convert.ToString(value); break;
+                case "MobileVerified": MobileVerified = value.ToBoolean(); break;
                 case "Code": Code = Convert.ToString(value); break;
                 case "AreaId": AreaId = value.ToInt(); break;
                 case "Avatar": Avatar = Convert.ToString(value); break;
@@ -198,7 +208,9 @@ public partial class ExtendUser : Object, IxxUser, IModel
         DisplayName = model.DisplayName;
         Sex = model.Sex;
         Mail = model.Mail;
+        MailVerified = model.MailVerified;
         Mobile = model.Mobile;
+        MobileVerified = model.MobileVerified;
         Code = model.Code;
         AreaId = model.AreaId;
         Avatar = model.Avatar;

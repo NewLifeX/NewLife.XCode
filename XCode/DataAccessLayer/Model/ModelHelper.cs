@@ -434,6 +434,10 @@ public static class ModelHelper
                             dc.RawType = null;
                         }
                         (dc as IXmlSerializable)!.ReadXml(reader);
+
+                        // 未指定DataType，但指定了Type，修正为枚举整型
+                        if (dc.DataType == null && dc.Properties.ContainsKey("Type")) dc.DataType = typeof(Int32);
+
                         table.Columns.Add(dc);
                     }
                     reader.ReadEndElement();

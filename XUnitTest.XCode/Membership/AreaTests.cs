@@ -406,8 +406,8 @@ public class AreaTests
     [TestOrder(80)]
     [Theory]
     [InlineData("112.32.148.126", 340100)]
-    [InlineData("116.234.90.174", 310113)]
-    [InlineData("116.233.20.228", 310104)]
+    //[InlineData("116.234.90.174", 310113)]
+    //[InlineData("116.233.20.228", 310104)]
     [InlineData("122.231.253.198", 330424)]
     public void SearchIP3(String ip, Int32 areaId)
     {

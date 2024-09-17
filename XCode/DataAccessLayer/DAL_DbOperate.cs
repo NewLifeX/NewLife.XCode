@@ -581,8 +581,16 @@ partial class DAL
             var tableName = item.Groups[1].Value;
             if (trimShard)
             {
-                var p = tableName.LastIndexOf('_');
-                if (p > 0 && tableName[(p + 1)..].ToInt() > 0)
+                // 从尾部开始找到第一个数字，然后再找到下划线
+                var p = -1;
+                for (var i = tableName.Length - 1; i >= 0; i--)
+                {
+                    if (!Char.IsDigit(tableName[i])) break;
+                    p = i;
+                }
+                if (p > 0 && tableName[p - 1] == '_') p--;
+                // 数字长度至少是2，否则不是分表
+                if (p > 0 && p + 2 <= tableName.Length)
                 {
                     tableName = tableName[..p];
                 }

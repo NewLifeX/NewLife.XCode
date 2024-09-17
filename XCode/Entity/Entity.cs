@@ -1872,7 +1872,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="extend">是否序列化扩展属性</param>
     protected virtual Boolean OnRead(Stream stream, Object? context, Boolean extend)
     {
-        if (context is not Binary bn) bn = new Binary { Stream = stream, EncodeInt = true };
+        if (context is not Binary bn) bn = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
 
         var fs = extend ? Meta.AllFields : Meta.Fields;
         foreach (var fi in fs)
@@ -1890,7 +1890,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="extend">是否序列化扩展属性</param>
     protected virtual Boolean OnWrite(Stream stream, Object? context, Boolean extend)
     {
-        if (context is not Binary bn) bn = new Binary { Stream = stream, EncodeInt = true };
+        if (context is not Binary bn) bn = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
 
         var fs = extend ? Meta.AllFields : Meta.Fields;
         foreach (var fi in fs)
@@ -2046,8 +2046,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (entity != null) return entity;
 
         // 加锁，避免同一个key并发新增
-        var keyLock = $"{typeof(TEntity).FullName}-{key}";
-        lock (keyLock)
+        lock (KeyedLocker<TEntity>.SharedLock(key!.ToString()))
         {
             // 打开事务，提升可靠性也避免读写分离造成数据不一致
             using var trans = Meta.CreateTrans();
@@ -2096,8 +2095,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (entity != null) return entity;
 
         // 加锁，避免同一个key并发新增
-        var keyLock = $"{typeof(TEntity).FullName}-{key}";
-        lock (keyLock)
+        lock (KeyedLocker<TEntity>.SharedLock(key!.ToString()))
         {
             // 打开事务，提升可靠性也避免读写分离造成数据不一致
             using var trans = Meta.CreateTrans();

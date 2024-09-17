@@ -93,15 +93,12 @@ internal class PostgreSQL : RemoteDb
         if (field.DataType == typeof(String))
         {
             if (value == null) return field.Nullable ? "null" : "''";
-            //云飞扬：这里注释掉，应该返回``而不是null字符
-            //if (String.IsNullOrEmpty(value.ToString()) && field.Nullable) return "null";
-            return "'" + value + "'";
+            return "'" + value.ToString().Replace("'", "''") + "'";
         }
         else if (field.DataType == typeof(Boolean))
         {
             return (Boolean)value ? "true" : "false";
         }
-
         return base.FormatValue(field, value);
     }
 
@@ -241,13 +238,13 @@ internal class PostgreSQLSession : RemoteDbSession
     /// <returns>新增行的自动编号</returns>
     public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
     {
-        sql += " RETURNING id";
+        sql = sql + $" RETURNING *";
         return base.InsertAndGetIdentity(sql, type, ps);
     }
 
     public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
     {
-        sql += " RETURNING id";
+        sql = sql + $" RETURNING *";
         return base.InsertAndGetIdentityAsync(sql, type, ps);
     }
 
@@ -385,7 +382,7 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
 
     public override String FieldClause(IDataColumn field, Boolean onlyDefine)
     {
-        if (field.Identity) return $"{field.Name} serial NOT NULL";
+        if (field.Identity) return $"{FormatName(field)} serial NOT NULL";
 
         var sql = base.FieldClause(field, onlyDefine);
 

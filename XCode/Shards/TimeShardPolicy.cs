@@ -165,6 +165,13 @@ public class TimeShardPolicy : IShardPolicy
 
         if (fi.Type == typeof(DateTime))
         {
+            var qf = exps.FirstOrDefault(e => e.Action is "=");
+            if (qf != null)
+            {
+                var time = qf.Value.ToDateTime();
+                if (time.Year > 1) return GetModels(time, time.AddSeconds(1));
+            }
+
             var sf = exps.FirstOrDefault(e => e.Action is ">" or ">=");
             var ef = exps.FirstOrDefault(e => e.Action is "<" or "<=");
             if (sf != null)

@@ -48,10 +48,16 @@ public class UserModule : EntityModule
     {
         var fs = GetFields(entityType);
         foreach (var fi in fs)
+        {
             if (fi.Type == typeof(Int32) || fi.Type == typeof(Int64))
+            {
                 if (fi.Name.EqualIgnoreCase(__.CreateUserID, __.UpdateUserID)) return true;
-                else if (fi.Type == typeof(String))
-                    if (fi.Name.EqualIgnoreCase(__.CreateUser, __.UpdateUser)) return true;
+            }
+            else if (fi.Type == typeof(String))
+            {
+                if (fi.Name.EqualIgnoreCase(__.CreateUser, __.UpdateUser)) return true;
+            }
+        }
 
         return false;
     }

@@ -1,11 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
-    <AssemblyName>xcodetool</AssemblyName>
-    <RootNamespace>XCode</RootNamespace>
-    <AssemblyTitle>数据中间件工具</AssemblyTitle>
-    <Description>数据中间件，代码生成</Description>
+    <TargetFrameworks>net80</TargetFrameworks>
+    <AssemblyTitle>数据中间件DB2包</AssemblyTitle>
+    <Description>引入DB2数据库驱动包</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2024 NewLife</Copyright>
     <VersionPrefix>11.15</VersionPrefix>
@@ -13,33 +10,35 @@
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
     <AssemblyVersion>$(VersionPrefix).$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</AssemblyVersion>
-    <OutputPath>..\Bin</OutputPath>
-    <LangVersion>latest</LangVersion>
-    <PackAsTool>true</PackAsTool>
-    <ToolCommandName>xcode</ToolCommandName>
-    <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035</NoWarn>
+    <!--打包时不包含编译输出的文件-->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>$(AssemblyName)</PackageId>
     <Authors>$(Company)</Authors>
     <PackageProjectUrl>https://newlifex.com/xcode</PackageProjectUrl>
-    <PackageIcon>content\leaf.png</PackageIcon>
+    <PackageIcon>leaf.png</PackageIcon>
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>强化FormatName支持反向生成下划线字段名；重构实体类代码生成，支持独立生成模型类和接口</PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageReadmeFile>Readme.MD</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="..\Doc\leaf.png" Link="leaf.png" />
+    <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="..\XCode\Model.xml" Link="Model.xml" />
-    <EmbeddedResource Include="Program.cs" />
+    <None Include="..\Readme.MD">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Net.IBM.Data.Db2" Version="8.0.0.300" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XCode\XCode.csproj" />
   </ItemGroup>
-
 </Project>

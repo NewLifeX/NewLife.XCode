@@ -182,7 +182,10 @@ public partial class DAL
         return dal;
     }
 
-    private void Reset()
+    /// <summary>
+    /// 重置Dal，注意，此操作会引起表结构重新检查，用于删除表后再次执行表检查，适用于一些删库删表需要重新建表的操作
+    /// </summary>
+    public void Reset()
     {
         _Db.TryDispose();
 

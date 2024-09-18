@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections;
+using System.Data;
 using System.Data.Common;
 using System.Net;
 using System.Text;
@@ -6,6 +7,7 @@ using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Reflection;
 
 namespace XCode.DataAccessLayer;
 
@@ -88,18 +90,108 @@ internal class PostgreSQL : RemoteDb
     /// <param name="field">字段</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    public override String FormatValue(IDataColumn field, Object? value)
+    public override String FormatValue(IDataColumn? column, Object? value)
     {
-        if (field.DataType == typeof(String))
+        var isNullable = true;
+        var isArrayField = false;
+        Type? type = null;
+        if (column != null)
         {
-            if (value == null) return field.Nullable ? "null" : "''";
+            type = column.DataType;
+            isNullable = column.Nullable;
+            isArrayField = column.IsArray;
+        }
+        else if (value != null)
+        {
+            type = value.GetType();
+            isArrayField = type.IsArray;
+        }
+
+        // 如果类型是Nullable的，则获取对应的类型
+        type = Nullable.GetUnderlyingType(type) ?? type;
+        //如果是数组，就取数组的元素类型
+        if (type?.IsArray == true)
+        {
+            //Byte[] 数组可能是 Blob，不应该当作数组字段处理
+            if (column?.IsArray == true || type != typeof(Byte[]))
+            {
+                isArrayField = true;
+                type = type.GetElementType();
+            }
+        }
+        if (isArrayField)
+        {
+            if (value is null) return isNullable ? "NULL" : "'{}'";
+            var count = 0;
+            var builder = new StringBuilder();
+            builder.Append("ARRAY[");
+            foreach (var v in (IEnumerable)value)
+            {
+                builder.Append(ValueToSQL(type, isNullable, v));
+                builder.Append(',');
+                count++;
+            }
+            if (count != 0)
+            {
+                builder.Length--;
+                builder.Append("]");
+            }
+            else
+            {
+                builder.Clear();
+                builder.Append("'{}'");
+            }
+            return builder.ToString();
+        }
+        else
+        {
+            return ValueToSQL(type, isNullable, value);
+        }
+    }
+
+    private string ValueToSQL(Type? type, bool isNullable, object? value)
+    {
+        if (type == typeof(String))
+        {
+            if (value is null) return isNullable ? "null" : "''";
             return "'" + value.ToString().Replace("'", "''") + "'";
         }
-        else if (field.DataType == typeof(Boolean))
+        if (type == typeof(DateTime))
         {
-            return (Boolean)value ? "true" : "false";
+            if (value == null) return isNullable ? "null" : "''";
+            var dt = Convert.ToDateTime(value);
+
+            if (isNullable && (dt <= DateTime.MinValue || dt >= DateTime.MaxValue)) return "null";
+
+            return FormatDateTime(dt);
         }
-        return base.FormatValue(field, value);
+        if (type == typeof(Boolean))
+        {
+            if (value == null) return isNullable ? "null" : "";
+            return Convert.ToBoolean(value) ? "true" : "false";
+        }
+        if (type == typeof(Byte[]))
+        {
+            if (value is not Byte[] bts || bts.Length <= 0) return isNullable ? "null" : "0x0";
+
+            return "0x" + BitConverter.ToString(bts).Replace("-", null);
+        }
+        if (type == typeof(Guid))
+        {
+            if (value == null) return isNullable ? "null" : "''";
+
+            return $"'{value}'";
+        }
+
+        if (value == null) return isNullable ? "null" : "";
+        // 枚举
+        if (type != null && type.IsEnum) type = typeof(Int32);
+
+        // 转为目标类型，比如枚举转为数字
+        if (type != null) value = value.ChangeType(type);
+        if (value == null) return isNullable ? "null" : "";
+
+        return value.ToString();
     }
 
     /// <summary>长文本长度</summary>
@@ -252,19 +344,11 @@ internal class PostgreSQLSession : RemoteDbSession
 
     #region 批量操作
 
-    /*
-    insert into stat (siteid,statdate,`count`,cost,createtime,updatetime) values
-    (1,'2018-08-11 09:34:00',1,123,now(),now()),
-    (2,'2018-08-11 09:34:00',1,456,now(),now()),
-    (3,'2018-08-11 09:34:00',1,789,now(),now()),
-    (2,'2018-08-11 09:34:00',1,456,now(),now())
-    on duplicate key update
-    `count`=`count`+values(`count`),cost=cost+values(cost),
-    updatetime=values(updatetime);
-     */
 
-    private String GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
+    public override Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
     {
+        const string action = "Insert Into";
+
         var sb = Pool.StringBuilder.Get();
         var db = Database as DbBase;
 
@@ -277,21 +361,99 @@ internal class PostgreSQLSession : RemoteDbSession
         sb.Append(" Values");
         BuildBatchValues(sb, db, action, table, columns, list);
 
-        // 重复键执行update
-        BuildDuplicateKey(sb, db, columns, updateColumns, addColumns);
-
-        return sb.Put(true);
-    }
-
-    public override Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
-    {
-        var sql = GetBatchSql("Insert Into", table, columns, null, null, list);
+        var sql = sb.Put(true);
         return Execute(sql);
     }
 
     public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
     {
-        var sql = GetBatchSql("Insert Into", table, columns, updateColumns, addColumns, list);
+        /*
+         * INSERT INTO table_name (列1, 列2, 列3, ...)
+         * VALUES (值1, 值2, 值3, ...),(值1, 值2, 值3, ...),(值1, 值2, 值3, ...)...
+         * ON conflict ( 索引列，主键或者唯一索引 ) 
+         * DO UPDATE
+         * SET 列1 = EXCLUDED.列1, ...
+         *     列2 = EXCLUDED.列1 + table_name.列2 ...
+         *  ;
+         */
+        const string action = "Insert Into";
+
+        var sb = Pool.StringBuilder.Get();
+        var db = Database as DbBase;
+
+        // 字段列表
+        columns ??= table.Columns.ToArray();
+        BuildInsert(sb, db, action, table, columns);
+        DefaultSpan.Current?.AppendTag(sb.ToString());
+
+        // 值列表
+        sb.Append(" Values");
+        BuildBatchValues(sb, db, action, table, columns, list);
+
+        if (updateColumns is { Count: > 0 } || addColumns is { Count: > 0 })
+        {
+            //取唯一索引或主键
+            var keys = table.PrimaryKeys.Select(f => f.ColumnName).ToArray();
+            foreach (var idx in table.Indexes)
+            {
+                if (idx.Unique && idx.Columns is { Length: > 0 })
+                {
+                    if (idx.Columns.All(c => columns.Any(f => f.ColumnName == c)))
+                    {
+                        keys = idx.Columns;
+                        break;
+                    }
+                }
+            }
+
+            if (keys is { Length: > 0 })
+            {
+                var conflict = string.Join(",", keys.Select(f => db.FormatName(f)));
+                var tb = db.FormatName(table.TableName);
+                var setters = new List<string>(columns.Length);
+
+                if (updateColumns is { Count: > 0 })
+                {
+                    foreach (var dc in columns)
+                    {
+                        if (dc.Identity || dc.PrimaryKey) continue;
+
+                        if (updateColumns.Contains(dc.Name) && (addColumns?.Contains(dc.Name) != true))
+                        {
+                            if (dc.Nullable)
+                            {
+                                setters.Add(String.Format("{0} = EXCLUDED.{0}", db.FormatName(dc)));
+                            }
+                            else
+                            {
+                                setters.Add(String.Format("{0} = COALESCE(EXCLUDED.{0},{1}.{0})", db.FormatName(dc), tb));
+                            }
+                        }
+                    }
+                }
+
+                if (addColumns is { Count: > 0 })
+                {
+                    foreach (var dc in columns)
+                    {
+                        if (dc.Identity || dc.PrimaryKey) continue;
+
+                        if (addColumns.Contains(dc.Name))
+                        {
+                            setters.Add(String.Format("{0} = EXCLUDED.{0} + {1}.{0}", db.FormatName(dc), tb));
+                        }
+                    }
+                }
+
+                if (setters.Count != 0)
+                {
+                    sb.Append($" ON conflict ({conflict}) DO UPDATE SET ");
+                    sb.Append(string.Join(",", setters));
+                }
+            }
+        }
+
+        var sql = sb.Put(true);
         return Execute(sql);
     }
 
@@ -334,6 +496,21 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         { typeof(String), new String[] { "varchar({0})", "character varying", "text" } },
     };
 
+    protected override String? ArrayTypePostfix => "[]";
+
+    protected override Type? GetDataType(IDataColumn field)
+    {
+        var postfix = this.ArrayTypePostfix!;
+        if (field.RawType?.EndsWith(postfix) == true)
+        {
+            field.IsArray = true;
+            var clone = field.Clone(field.Table);
+            clone.RawType = field.RawType.Substring(0, field.RawType.Length - postfix.Length);
+            var type = base.GetDataType(clone);
+            if (type != null) return type.MakeArrayType();
+        }
+        return base.GetDataType(field);
+    }
     #endregion 数据类型
 
     protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable> data)
@@ -382,7 +559,14 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
 
     public override String FieldClause(IDataColumn field, Boolean onlyDefine)
     {
-        if (field.Identity) return $"{FormatName(field)} serial NOT NULL";
+        if (field.Identity)
+        {
+            if (field.DataType == typeof(Int64))
+            {
+                return $"{FormatName(field)} serial8 NOT NULL";
+            }
+            return $"{FormatName(field)} serial NOT NULL";
+        }
 
         var sql = base.FieldClause(field, onlyDefine);
 
@@ -471,4 +655,75 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is ''";
 
     #endregion 架构定义
+
+    #region 表构架
+    protected override List<IDataTable> OnGetTables(String[]? names)
+    {
+        var tables = base.OnGetTables(names);
+        var session = Database.CreateSession();
+        using var _ = session.SetShowSql(false);
+        const string sql = @"with tables as (
+  select c
+    .oid,
+    ns.nspname as schema_name,
+    c.relname as table_name,
+    d.description as table_description,
+    pg_get_userbyid ( c.relowner ) as table_owner 
+  from
+    pg_catalog.pg_class
+    as c join pg_catalog.pg_namespace as ns on c.relnamespace = ns.
+    oid left join pg_catalog.pg_description d on c.oid = d.objoid 
+    and d.objsubid = 0 
+  where
+    ns.nspname not in ( 'pg_catalog' ) 
+)  select 
+c.table_name as table_name,
+t.table_description,
+c.column_name as column_name,
+c.ordinal_position,
+d.description as column_description
+from
+  tables
+  t join information_schema.columns c on c.table_schema = t.schema_name 
+  and c.table_name = t.
+  table_name left join pg_catalog.pg_description d on d.objoid = t.oid 
+  and d.objsubid = c.ordinal_position 
+  and d.objsubid > 0 
+where
+  c.table_schema = 'public' 
+order by
+  t.schema_name,
+  t.table_name,
+  c.ordinal_position";
+        var ds = session.Query(sql);
+        if (ds.Tables.Count != 0)
+        {
+            var dt = ds.Tables[0]!;
+            foreach (var table in tables)
+            {
+                var rows = dt.Select($"table_name = '{table.TableName}'");
+                if (rows is { Length: > 0 })
+                {
+                    if (string.IsNullOrWhiteSpace(table.Description))
+                    {
+                        foreach (var row in rows)
+                        {
+                            table.Description = Convert.ToString(row["table_description"]);
+                            break;
+                        }
+                    }
+                    foreach (var row in rows)
+                    {
+                        string columnName = Convert.ToString(row["column_name"]);
+                        if (string.IsNullOrWhiteSpace(columnName)) continue;
+                        var col = table.GetColumn(columnName);
+                        if (col == null) continue;
+                        if (string.IsNullOrWhiteSpace(col.Description)) col.Description = Convert.ToString(row["column_description"]);
+                    }
+                }
+            }
+        }
+        return tables;
+    }
+    #endregion
 }

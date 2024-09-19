@@ -74,7 +74,7 @@ public class XCodeSetting : Config<XCodeSetting>
     public Migration Migration { get; set; } = Migration.On;
 
     /// <summary></summary>
-    [Description("表名称、字段名大小写格式。Default 根据模型生成;Upper 全大写;Lower 全小写;Underline下划线")]
+    [Description("表名称、字段名大小写格式。Default 默认(由数据库决定);None 与模型保持一致;Upper 全大写;Lower 全小写;Underline下划线")]
     public NameFormats NameFormat { get; set; } = NameFormats.Default;
 
     /// <summary>全表查行数下限。在获取数据表行数时，先根据索引表进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。默认1000万</summary>

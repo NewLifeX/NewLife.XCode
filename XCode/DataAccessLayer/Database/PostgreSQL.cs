@@ -208,20 +208,17 @@ internal class PostgreSQL : RemoteDb
     /// <returns></returns>
     public override String StringConcat(String left, String right) => (!String.IsNullOrEmpty(left) ? left : "''") + "||" + (!String.IsNullOrEmpty(right) ? right : "''");
 
-    /// <summary>
-    /// 格式化数据库名称，表名称，字段名称 增加双引号（""）
-    /// PGSQL 默认情况下创建库表时自动转为小写，增加引号强制区分大小写
-    /// 以解决数据库创建查询时大小写问题
-    /// </summary>
-    /// <param name="name"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public override String FormatName(String name)
     {
         name = base.FormatName(name);
 
         if (name.StartsWith("\"") || name.EndsWith("\"")) return name;
 
-        return $"\"{name}\"";
+        //如果包含大写字符，就加上引号
+        if (name.Any(char.IsUpper)) return $"\"{name}\"";
+
+        return name;
     }
 
     /// <inheritdoc/>

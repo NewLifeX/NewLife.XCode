@@ -202,6 +202,9 @@ internal class PostgreSQL : RemoteDb
     /// <summary>系统数据库名</summary>
     public override String SystemDatabaseName => "postgres";
 
+    /// <inheritdoc/>
+    public override NameFormats DefaultNameFormat => NameFormats.Underline;
+
     /// <summary>字符串相加</summary>
     /// <param name="left"></param>
     /// <param name="right"></param>

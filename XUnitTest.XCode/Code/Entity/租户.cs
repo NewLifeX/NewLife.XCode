@@ -216,23 +216,23 @@ public partial class Tenant : ITenant, IEntity<ITenant>
         {
             switch (name)
             {
-                case "Id": _Id = value.ToInt(); break;
-                case "Code": _Code = Convert.ToString(value); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "Enable": _Enable = value.ToBoolean(); break;
-                case "ManagerId": _ManagerId = value.ToInt(); break;
-                case "RoleIds": _RoleIds = Convert.ToString(value); break;
-                case "Logo": _Logo = Convert.ToString(value); break;
-                case "DatabaseName": _DatabaseName = Convert.ToString(value); break;
-                case "TableName": _TableName = Convert.ToString(value); break;
-                case "Expired": _Expired = value.ToDateTime(); break;
-                case "CreateUserId": _CreateUserId = value.ToInt(); break;
-                case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
-                case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
-                case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "Id": _Id = ValidHelper.ToInt32(value); break;
+                case "Code": _Code = ValidHelper.ToString(value); break;
+                case "Name": _Name = ValidHelper.ToString(value); break;
+                case "Enable": _Enable = ValidHelper.ToBoolean(value); break;
+                case "ManagerId": _ManagerId = ValidHelper.ToInt32(value); break;
+                case "RoleIds": _RoleIds = ValidHelper.ToString(value); break;
+                case "Logo": _Logo = ValidHelper.ToString(value); break;
+                case "DatabaseName": _DatabaseName = ValidHelper.ToString(value); break;
+                case "TableName": _TableName = ValidHelper.ToString(value); break;
+                case "Expired": _Expired = ValidHelper.ToDateTime(value); break;
+                case "CreateUserId": _CreateUserId = ValidHelper.ToInt32(value); break;
+                case "CreateTime": _CreateTime = ValidHelper.ToDateTime(value); break;
+                case "CreateIP": _CreateIP = ValidHelper.ToString(value); break;
+                case "UpdateUserId": _UpdateUserId = ValidHelper.ToInt32(value); break;
+                case "UpdateTime": _UpdateTime = ValidHelper.ToDateTime(value); break;
+                case "UpdateIP": _UpdateIP = ValidHelper.ToString(value); break;
+                case "Remark": _Remark = ValidHelper.ToString(value); break;
                 default: base[name] = value; break;
             }
         }

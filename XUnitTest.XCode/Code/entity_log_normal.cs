@@ -211,24 +211,24 @@ public partial class Log
         {
             switch (name)
             {
-                case "ID": _ID = value.ToLong(); break;
-                case "Category": _Category = Convert.ToString(value); break;
-                case "Action": _Action = Convert.ToString(value); break;
-                case "LinkID": _LinkID = value.ToLong(); break;
-                case "Success": _Success = value.ToBoolean(); break;
-                case "UserName": _UserName = Convert.ToString(value); break;
-                case "Ex1": _Ex1 = value.ToInt(); break;
-                case "Ex2": _Ex2 = value.ToInt(); break;
-                case "Ex3": _Ex3 = value.ToDouble(); break;
-                case "Ex4": _Ex4 = Convert.ToString(value); break;
-                case "Ex5": _Ex5 = Convert.ToString(value); break;
-                case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "TraceId": _TraceId = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": _CreateUserID = value.ToInt(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
-                case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "ID": _ID = ValidHelper.ToInt64(value); break;
+                case "Category": _Category = ValidHelper.ToString(value); break;
+                case "Action": _Action = ValidHelper.ToString(value); break;
+                case "LinkID": _LinkID = ValidHelper.ToInt64(value); break;
+                case "Success": _Success = ValidHelper.ToBoolean(value); break;
+                case "UserName": _UserName = ValidHelper.ToString(value); break;
+                case "Ex1": _Ex1 = ValidHelper.ToInt32(value); break;
+                case "Ex2": _Ex2 = ValidHelper.ToInt32(value); break;
+                case "Ex3": _Ex3 = ValidHelper.ToDouble(value); break;
+                case "Ex4": _Ex4 = ValidHelper.ToString(value); break;
+                case "Ex5": _Ex5 = ValidHelper.ToString(value); break;
+                case "Ex6": _Ex6 = ValidHelper.ToString(value); break;
+                case "TraceId": _TraceId = ValidHelper.ToString(value); break;
+                case "CreateUser": _CreateUser = ValidHelper.ToString(value); break;
+                case "CreateUserID": _CreateUserID = ValidHelper.ToInt32(value); break;
+                case "CreateIP": _CreateIP = ValidHelper.ToString(value); break;
+                case "CreateTime": _CreateTime = ValidHelper.ToDateTime(value); break;
+                case "Remark": _Remark = ValidHelper.ToString(value); break;
                 default: base[name] = value; break;
             }
         }

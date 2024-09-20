@@ -77,6 +77,14 @@ public partial class User
     [BindColumn("Mail", "邮件。支持登录", "", ItemType = "mail")]
     public String? Mail { get => _Mail; set { if (OnPropertyChanging("Mail", value)) { _Mail = value; OnPropertyChanged("Mail"); } } }
 
+    private Boolean _MailVerified;
+    /// <summary>邮箱是否验证。</summary>
+    [DisplayName("邮箱是否验证")]
+    [Description("邮箱是否验证。")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MailVerified", "邮箱是否验证。", "")]
+    public Boolean MailVerified { get => _MailVerified; set { if (OnPropertyChanging("MailVerified", value)) { _MailVerified = value; OnPropertyChanged("MailVerified"); } } }
+
     private String? _Mobile;
     /// <summary>手机。支持登录</summary>
     [DisplayName("手机")]
@@ -84,6 +92,14 @@ public partial class User
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Mobile", "手机。支持登录", "", ItemType = "mobile")]
     public String? Mobile { get => _Mobile; set { if (OnPropertyChanging("Mobile", value)) { _Mobile = value; OnPropertyChanged("Mobile"); } } }
+
+    private Boolean _MobileVerified;
+    /// <summary>手机是否验证。</summary>
+    [DisplayName("手机是否验证")]
+    [Description("手机是否验证。")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MobileVerified", "手机是否验证。", "")]
+    public Boolean MobileVerified { get => _MobileVerified; set { if (OnPropertyChanging("MobileVerified", value)) { _MobileVerified = value; OnPropertyChanged("MobileVerified"); } } }
 
     private String? _Code;
     /// <summary>代码。身份证、员工编码等，支持登录</summary>
@@ -339,7 +355,9 @@ public partial class User
             "DisplayName" => _DisplayName,
             "Sex" => _Sex,
             "Mail" => _Mail,
+            "MailVerified" => _MailVerified,
             "Mobile" => _Mobile,
+            "MobileVerified" => _MobileVerified,
             "Code" => _Code,
             "AreaId" => _AreaId,
             "Avatar" => _Avatar,
@@ -373,40 +391,42 @@ public partial class User
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "Password": _Password = Convert.ToString(value); break;
-                case "DisplayName": _DisplayName = Convert.ToString(value); break;
-                case "Sex": _Sex = (XCode.Membership.SexKinds)value.ToInt(); break;
-                case "Mail": _Mail = Convert.ToString(value); break;
-                case "Mobile": _Mobile = Convert.ToString(value); break;
-                case "Code": _Code = Convert.ToString(value); break;
-                case "AreaId": _AreaId = value.ToInt(); break;
-                case "Avatar": _Avatar = Convert.ToString(value); break;
-                case "RoleID": _RoleID = value.ToInt(); break;
-                case "RoleIds": _RoleIds = Convert.ToString(value); break;
-                case "DepartmentID": _DepartmentID = value.ToInt(); break;
-                case "Online": _Online = value.ToBoolean(); break;
-                case "Enable": _Enable = value.ToBoolean(); break;
-                case "Age": _Age = value.ToInt(); break;
-                case "Birthday": _Birthday = value.ToDateTime(); break;
-                case "Logins": _Logins = value.ToInt(); break;
-                case "LastLogin": _LastLogin = value.ToDateTime(); break;
-                case "LastLoginIP": _LastLoginIP = Convert.ToString(value); break;
-                case "RegisterTime": _RegisterTime = value.ToDateTime(); break;
-                case "RegisterIP": _RegisterIP = Convert.ToString(value); break;
-                case "OnlineTime": _OnlineTime = value.ToInt(); break;
-                case "Ex1": _Ex1 = value.ToInt(); break;
-                case "Ex2": _Ex2 = value.ToInt(); break;
-                case "Ex3": _Ex3 = value.ToDouble(); break;
-                case "Ex4": _Ex4 = Convert.ToString(value); break;
-                case "Ex5": _Ex5 = Convert.ToString(value); break;
-                case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
-                case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "ID": _ID = ValidHelper.ToInt32(value); break;
+                case "Name": _Name = ValidHelper.ToString(value); break;
+                case "Password": _Password = ValidHelper.ToString(value); break;
+                case "DisplayName": _DisplayName = ValidHelper.ToString(value); break;
+                case "Sex": _Sex = ValidHelper.ToEnum<XCode.Membership.SexKinds>(value); break;
+                case "Mail": _Mail = ValidHelper.ToString(value); break;
+                case "MailVerified": _MailVerified = ValidHelper.ToBoolean(value); break;
+                case "Mobile": _Mobile = ValidHelper.ToString(value); break;
+                case "MobileVerified": _MobileVerified = ValidHelper.ToBoolean(value); break;
+                case "Code": _Code = ValidHelper.ToString(value); break;
+                case "AreaId": _AreaId = ValidHelper.ToInt32(value); break;
+                case "Avatar": _Avatar = ValidHelper.ToString(value); break;
+                case "RoleID": _RoleID = ValidHelper.ToInt32(value); break;
+                case "RoleIds": _RoleIds = ValidHelper.ToString(value); break;
+                case "DepartmentID": _DepartmentID = ValidHelper.ToInt32(value); break;
+                case "Online": _Online = ValidHelper.ToBoolean(value); break;
+                case "Enable": _Enable = ValidHelper.ToBoolean(value); break;
+                case "Age": _Age = ValidHelper.ToInt32(value); break;
+                case "Birthday": _Birthday = ValidHelper.ToDateTime(value); break;
+                case "Logins": _Logins = ValidHelper.ToInt32(value); break;
+                case "LastLogin": _LastLogin = ValidHelper.ToDateTime(value); break;
+                case "LastLoginIP": _LastLoginIP = ValidHelper.ToString(value); break;
+                case "RegisterTime": _RegisterTime = ValidHelper.ToDateTime(value); break;
+                case "RegisterIP": _RegisterIP = ValidHelper.ToString(value); break;
+                case "OnlineTime": _OnlineTime = ValidHelper.ToInt32(value); break;
+                case "Ex1": _Ex1 = ValidHelper.ToInt32(value); break;
+                case "Ex2": _Ex2 = ValidHelper.ToInt32(value); break;
+                case "Ex3": _Ex3 = ValidHelper.ToDouble(value); break;
+                case "Ex4": _Ex4 = ValidHelper.ToString(value); break;
+                case "Ex5": _Ex5 = ValidHelper.ToString(value); break;
+                case "Ex6": _Ex6 = ValidHelper.ToString(value); break;
+                case "UpdateUser": _UpdateUser = ValidHelper.ToString(value); break;
+                case "UpdateUserID": _UpdateUserID = ValidHelper.ToInt32(value); break;
+                case "UpdateIP": _UpdateIP = ValidHelper.ToString(value); break;
+                case "UpdateTime": _UpdateTime = ValidHelper.ToDateTime(value); break;
+                case "Remark": _Remark = ValidHelper.ToString(value); break;
                 default: base[name] = value; break;
             }
         }
@@ -563,8 +583,14 @@ public partial class User
         /// <summary>邮件。支持登录</summary>
         public static readonly Field Mail = FindByName("Mail");
 
+        /// <summary>邮箱是否验证。</summary>
+        public static readonly Field MailVerified = FindByName("MailVerified");
+
         /// <summary>手机。支持登录</summary>
         public static readonly Field Mobile = FindByName("Mobile");
+
+        /// <summary>手机是否验证。</summary>
+        public static readonly Field MobileVerified = FindByName("MobileVerified");
 
         /// <summary>代码。身份证、员工编码等，支持登录</summary>
         public static readonly Field Code = FindByName("Code");
@@ -671,8 +697,14 @@ public partial class User
         /// <summary>邮件。支持登录</summary>
         public const String Mail = "Mail";
 
+        /// <summary>邮箱是否验证。</summary>
+        public const String MailVerified = "MailVerified";
+
         /// <summary>手机。支持登录</summary>
         public const String Mobile = "Mobile";
+
+        /// <summary>手机是否验证。</summary>
+        public const String MobileVerified = "MobileVerified";
 
         /// <summary>代码。身份证、员工编码等，支持登录</summary>
         public const String Code = "Code";

@@ -45,10 +45,20 @@ public partial class User
     [DisplayName("邮件")]
     public String Mail { get; set; }
 
+    /// <summary>邮箱是否验证。</summary>
+    [Description("邮箱是否验证。")]
+    [DisplayName("邮箱是否验证")]
+    public Boolean MailVerified { get; set; }
+
     /// <summary>手机。支持登录</summary>
     [Description("手机。支持登录")]
     [DisplayName("手机")]
     public String Mobile { get; set; }
+
+    /// <summary>手机是否验证。</summary>
+    [Description("手机是否验证。")]
+    [DisplayName("手机是否验证")]
+    public Boolean MobileVerified { get; set; }
 
     /// <summary>代码。身份证、员工编码等，支持登录</summary>
     [Description("代码。身份证、员工编码等，支持登录")]

@@ -405,7 +405,7 @@ partial class DbMetaData
         if (type == null) return null;
 
         //处理数组
-        if (type.IsArray) type = type.GetElementType();
+        if (field.IsArray && type.IsArray) type = type.GetElementType();
 
         // 处理枚举
         if (type.IsEnum) type = typeof(Int32);

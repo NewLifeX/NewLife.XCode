@@ -101,7 +101,9 @@ public partial class User : Entity<User>
     //    entity.DisplayName = "abc";
     //    entity.Sex = 0;
     //    entity.Mail = "abc";
+    //    entity.MailVerified = true;
     //    entity.Mobile = "abc";
+    //    entity.MobileVerified = true;
     //    entity.Code = "abc";
     //    entity.AreaId = 0;
     //    entity.Avatar = "abc";

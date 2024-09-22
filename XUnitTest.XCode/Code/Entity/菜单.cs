@@ -331,33 +331,33 @@ public partial class Menu : IMenu, IEntity<IMenu>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "DisplayName": _DisplayName = Convert.ToString(value); break;
-                case "FullName": _FullName = Convert.ToString(value); break;
-                case "ParentID": _ParentID = value.ToInt(); break;
-                case "Url": _Url = Convert.ToString(value); break;
-                case "Sort": _Sort = value.ToInt(); break;
-                case "Icon": _Icon = Convert.ToString(value); break;
-                case "Visible": _Visible = value.ToBoolean(); break;
-                case "Necessary": _Necessary = value.ToBoolean(); break;
-                case "NewWindow": _NewWindow = value.ToBoolean(); break;
-                case "Permission": _Permission = Convert.ToString(value); break;
-                case "Ex1": _Ex1 = value.ToInt(); break;
-                case "Ex2": _Ex2 = value.ToInt(); break;
-                case "Ex3": _Ex3 = value.ToDouble(); break;
-                case "Ex4": _Ex4 = Convert.ToString(value); break;
-                case "Ex5": _Ex5 = Convert.ToString(value); break;
-                case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": _CreateUserID = value.ToInt(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
-                case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
-                case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "ID": _ID = ValidHelper.ToInt32(value); break;
+                case "Name": _Name = ValidHelper.ToString(value); break;
+                case "DisplayName": _DisplayName = ValidHelper.ToString(value); break;
+                case "FullName": _FullName = ValidHelper.ToString(value); break;
+                case "ParentID": _ParentID = ValidHelper.ToInt32(value); break;
+                case "Url": _Url = ValidHelper.ToString(value); break;
+                case "Sort": _Sort = ValidHelper.ToInt32(value); break;
+                case "Icon": _Icon = ValidHelper.ToString(value); break;
+                case "Visible": _Visible = ValidHelper.ToBoolean(value); break;
+                case "Necessary": _Necessary = ValidHelper.ToBoolean(value); break;
+                case "NewWindow": _NewWindow = ValidHelper.ToBoolean(value); break;
+                case "Permission": _Permission = ValidHelper.ToString(value); break;
+                case "Ex1": _Ex1 = ValidHelper.ToInt32(value); break;
+                case "Ex2": _Ex2 = ValidHelper.ToInt32(value); break;
+                case "Ex3": _Ex3 = ValidHelper.ToDouble(value); break;
+                case "Ex4": _Ex4 = ValidHelper.ToString(value); break;
+                case "Ex5": _Ex5 = ValidHelper.ToString(value); break;
+                case "Ex6": _Ex6 = ValidHelper.ToString(value); break;
+                case "CreateUser": _CreateUser = ValidHelper.ToString(value); break;
+                case "CreateUserID": _CreateUserID = ValidHelper.ToInt32(value); break;
+                case "CreateIP": _CreateIP = ValidHelper.ToString(value); break;
+                case "CreateTime": _CreateTime = ValidHelper.ToDateTime(value); break;
+                case "UpdateUser": _UpdateUser = ValidHelper.ToString(value); break;
+                case "UpdateUserID": _UpdateUserID = ValidHelper.ToInt32(value); break;
+                case "UpdateIP": _UpdateIP = ValidHelper.ToString(value); break;
+                case "UpdateTime": _UpdateTime = ValidHelper.ToDateTime(value); break;
+                case "Remark": _Remark = ValidHelper.ToString(value); break;
                 default: base[name] = value; break;
             }
         }

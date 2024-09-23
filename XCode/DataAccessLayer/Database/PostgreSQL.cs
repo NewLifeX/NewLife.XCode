@@ -87,7 +87,7 @@ internal class PostgreSQL : RemoteDb
     }
 
     /// <summary>格式化数据为SQL数据</summary>
-    /// <param name="field">字段</param>
+    /// <param name="column">字段</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
     public override String FormatValue(IDataColumn? column, Object? value)
@@ -110,14 +110,10 @@ internal class PostgreSQL : RemoteDb
         // 如果类型是Nullable的，则获取对应的类型
         type = Nullable.GetUnderlyingType(type) ?? type;
         //如果是数组，就取数组的元素类型
-        if (type?.IsArray == true)
+        if (type?.IsArray == true && column?.IsArray == true)
         {
-            //Byte[] 数组可能是 Blob，不应该当作数组字段处理
-            if (column?.IsArray == true || type != typeof(Byte[]))
-            {
-                isArrayField = true;
-                type = type.GetElementType();
-            }
+            isArrayField = true;
+            type = type.GetElementType();
         }
         if (isArrayField)
         {
@@ -135,6 +131,8 @@ internal class PostgreSQL : RemoteDb
             {
                 builder.Length--;
                 builder.Append("]");
+                var ts = GetElementType(type);
+                if (!string.IsNullOrWhiteSpace(ts)) builder.Append("::").Append(ts).Append("[]");
             }
             else
             {
@@ -147,6 +145,21 @@ internal class PostgreSQL : RemoteDb
         {
             return ValueToSQL(type, isNullable, value);
         }
+    }
+
+    private static string? GetElementType(Type? type)
+    {
+        if (type != null)
+        {
+            if (type == typeof(String)) return "varchar";
+            if (type == typeof(DateTime)) return "timestamp";
+            if (type == typeof(Int32)) return "integer";
+            if (type == typeof(Int64)) return "bigint";
+            if (type == typeof(Decimal)) return "numeric";
+            if (type == typeof(double)) return "numeric";
+            if (type == typeof(float)) return "numeric";
+        }
+        return string.Empty;
     }
 
     private string ValueToSQL(Type? type, bool isNullable, object? value)

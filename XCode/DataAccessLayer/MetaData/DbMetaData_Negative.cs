@@ -202,7 +202,7 @@ internal partial class DbMetaData
     {
         var sb = new StringBuilder();
         var etdic = entitytable.Columns.ToDictionary(e => this.FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
-        var dbdic = dbtable.Columns.ToDictionary(e => e.ColumnName.ToLower(), e => e, StringComparer.OrdinalIgnoreCase);
+        var dbdic = dbtable.Columns.ToDictionary(e => this.FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
 
         #region 新增列
         foreach (var item in entitytable.Columns)
@@ -237,7 +237,7 @@ internal partial class DbMetaData
         for (var i = dbtable.Columns.Count - 1; i >= 0; i--)
         {
             var item = dbtable.Columns[i];
-            if (!etdic.ContainsKey(item.ColumnName))
+            if (!etdic.ContainsKey(this.FormatName(item)))
             {
                 if (!String.IsNullOrEmpty(item.Description)) PerformSchema(sb, @readonly || onlyCreate, DDLSchema.DropColumnDescription, item);
                 PerformSchema(sbDelete, @readonly || onlyCreate, DDLSchema.DropColumn, item);

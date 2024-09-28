@@ -31,13 +31,13 @@ public partial class ExtendUser2 : IModel
     /// <summary>邮件。支持登录</summary>
     public String Mail { get; set; }
 
-    /// <summary>邮箱是否验证。</summary>
+    /// <summary>邮箱验证。邮箱是否已通过验证</summary>
     public Boolean MailVerified { get; set; }
 
     /// <summary>手机。支持登录</summary>
     public String Mobile { get; set; }
 
-    /// <summary>手机是否验证。</summary>
+    /// <summary>手机验证。手机是否已通过验证</summary>
     public Boolean MobileVerified { get; set; }
 
     /// <summary>代码。身份证、员工编码等，支持登录</summary>

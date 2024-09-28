@@ -77,11 +77,11 @@ public partial class User : IUser, IEntity<UserModel>
     public String? Mail { get => _Mail; set { if (OnPropertyChanging("Mail", value)) { _Mail = value; OnPropertyChanged("Mail"); } } }
 
     private Boolean _MailVerified;
-    /// <summary>邮箱是否验证。</summary>
-    [DisplayName("邮箱是否验证")]
-    [Description("邮箱是否验证。")]
+    /// <summary>邮箱验证。邮箱是否已通过验证</summary>
+    [DisplayName("邮箱验证")]
+    [Description("邮箱验证。邮箱是否已通过验证")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("MailVerified", "邮箱是否验证。", "")]
+    [BindColumn("MailVerified", "邮箱验证。邮箱是否已通过验证", "")]
     public Boolean MailVerified { get => _MailVerified; set { if (OnPropertyChanging("MailVerified", value)) { _MailVerified = value; OnPropertyChanged("MailVerified"); } } }
 
     private String? _Mobile;
@@ -93,11 +93,11 @@ public partial class User : IUser, IEntity<UserModel>
     public String? Mobile { get => _Mobile; set { if (OnPropertyChanging("Mobile", value)) { _Mobile = value; OnPropertyChanged("Mobile"); } } }
 
     private Boolean _MobileVerified;
-    /// <summary>手机是否验证。</summary>
-    [DisplayName("手机是否验证")]
-    [Description("手机是否验证。")]
+    /// <summary>手机验证。手机是否已通过验证</summary>
+    [DisplayName("手机验证")]
+    [Description("手机验证。手机是否已通过验证")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("MobileVerified", "手机是否验证。", "")]
+    [BindColumn("MobileVerified", "手机验证。手机是否已通过验证", "")]
     public Boolean MobileVerified { get => _MobileVerified; set { if (OnPropertyChanging("MobileVerified", value)) { _MobileVerified = value; OnPropertyChanged("MobileVerified"); } } }
 
     private String? _Code;
@@ -577,13 +577,13 @@ public partial class User : IUser, IEntity<UserModel>
         /// <summary>邮件。支持登录</summary>
         public static readonly Field Mail = FindByName("Mail");
 
-        /// <summary>邮箱是否验证。</summary>
+        /// <summary>邮箱验证。邮箱是否已通过验证</summary>
         public static readonly Field MailVerified = FindByName("MailVerified");
 
         /// <summary>手机。支持登录</summary>
         public static readonly Field Mobile = FindByName("Mobile");
 
-        /// <summary>手机是否验证。</summary>
+        /// <summary>手机验证。手机是否已通过验证</summary>
         public static readonly Field MobileVerified = FindByName("MobileVerified");
 
         /// <summary>代码。身份证、员工编码等，支持登录</summary>
@@ -691,13 +691,13 @@ public partial class User : IUser, IEntity<UserModel>
         /// <summary>邮件。支持登录</summary>
         public const String Mail = "Mail";
 
-        /// <summary>邮箱是否验证。</summary>
+        /// <summary>邮箱验证。邮箱是否已通过验证</summary>
         public const String MailVerified = "MailVerified";
 
         /// <summary>手机。支持登录</summary>
         public const String Mobile = "Mobile";
 
-        /// <summary>手机是否验证。</summary>
+        /// <summary>手机验证。手机是否已通过验证</summary>
         public const String MobileVerified = "MobileVerified";
 
         /// <summary>代码。身份证、员工编码等，支持登录</summary>

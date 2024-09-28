@@ -12,14 +12,14 @@ public static partial class ValidHelper
     /// <summary>转为整数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）、时间（Unix秒不转UTC）</summary>
     /// <remarks>Int16/UInt32/Int64等，可以先转为最常用的Int32后再二次处理</remarks>
     /// <param name="value">待转换对象</param>
-    public static Int32 ToInt32(object? value)
+    public static Int32 ToInt32(Object? value)
     {
         return value.ToInt();
     }
 
     /// <summary>转为长整数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）、时间（Unix毫秒不转UTC）</summary>
     /// <param name="value">待转换对象</param>
-    public static Int64 ToInt64(object? value)
+    public static Int64 ToInt64(Object? value)
     {
         return value.ToLong();
     }
@@ -27,14 +27,14 @@ public static partial class ValidHelper
     /// <summary>转为浮点数，转换失败时返回默认值。支持字符串、全角、字节数组（小端）</summary>
     /// <remarks>Single可以先转为最常用的Double后再二次处理</remarks>
     /// <param name="value">待转换对象</param>
-    public static Double ToDouble(object? value)
+    public static Double ToDouble(Object? value)
     {
         return value.ToDouble();
     }
 
     /// <summary>转为布尔型，转换失败时返回默认值。支持大小写True/False、0和非零</summary>
     /// <param name="value">待转换对象</param>
-    public static Boolean ToBoolean(object? value)
+    public static Boolean ToBoolean(Object? value)
     {
         return value.ToBoolean();
     }
@@ -47,7 +47,7 @@ public static partial class ValidHelper
     /// 因为设备和服务端可能不在同一时区，甚至多个设备也没有处于同一个时区。
     /// </remarks>
     /// <param name="value">待转换对象</param>
-    public static DateTime ToDateTime(object? value)
+    public static DateTime ToDateTime(Object? value)
     {
         return value.ToDateTime();
     }
@@ -55,7 +55,7 @@ public static partial class ValidHelper
     /// <summary>
     /// 将指定的值转换为其等效的字符串表示形式。
     /// </summary>
-    public static String ToString(object? value)
+    public static String ToString(Object? value)
     {
         return Convert.ToString(value);
     }
@@ -63,7 +63,7 @@ public static partial class ValidHelper
     /// <summary>
     /// Convert.ToByte
     /// </summary>
-    public static Byte ToByte(object? value)
+    public static Byte ToByte(Object? value)
     {
         return Convert.ToByte(value);
     }
@@ -71,7 +71,7 @@ public static partial class ValidHelper
     /// <summary>
     /// Convert.ToDecimal
     /// </summary>
-    public static Decimal ToDecimal(object? value)
+    public static Decimal ToDecimal(Object? value)
     {
         return Convert.ToDecimal(value);
     }
@@ -79,7 +79,7 @@ public static partial class ValidHelper
     /// <summary>
     /// Convert.ToInt16
     /// </summary>
-    public static Int16 ToInt16(object? value)
+    public static Int16 ToInt16(Object? value)
     {
         return Convert.ToInt16(value);
     }
@@ -87,7 +87,7 @@ public static partial class ValidHelper
     /// <summary>
     /// Convert.ToUInt64
     /// </summary>
-    public static UInt64 ToUInt64(object? value)
+    public static UInt64 ToUInt64(Object? value)
     {
         return Convert.ToUInt64(value);
     }
@@ -95,18 +95,18 @@ public static partial class ValidHelper
     /// <summary>
     /// 转换为枚举
     /// </summary>
-    public static T ToEnum<T>(object? value) where T : struct
+    public static T ToEnum<T>(Object? value) where T : struct
     {
         if (value is T t) return t;
         if (value is null || Convert.IsDBNull(value)) return default;
         if (typeof(T).IsEnum)
         {
-            if (value is string str) return (T)Enum.Parse(typeof(T), str, true);
+            if (value is String str) return (T)Enum.Parse(typeof(T), str, true);
         }
         return (T)value;
     }
 
-    public static T? ToObject<T>(object? value) where T : class
+    public static T? ToObject<T>(Object? value) where T : class
     {
         if (value is T t) return t;
         if (value is null || Convert.IsDBNull(value)) return default;

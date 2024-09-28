@@ -775,7 +775,6 @@ public class EntityBuilder : ClassBuilder
         {
             WriteLine("switch (name)");
             WriteLine("{");
-            var conv = typeof(ValidHelper);
             foreach (var column in Table.Columns)
             {
                 // 跳过排除项
@@ -787,34 +786,65 @@ public class EntityBuilder : ClassBuilder
 
                 if (!type.IsNullOrEmpty())
                 {
-                    var method = "To";
-                    var typePara = string.Empty;
-                    if (type.Contains("."))
+                    if (!type.Contains(".") && typeof(Convert).GetMethod("To" + type, [typeof(Object)]) != null)
                     {
-                        //说明使用了自定义类型，比如：枚举
-                        typePara = type;
-                        if (column.DataType?.IsInt() == true)
+                        switch (type)
                         {
-                            method += "Enum";
+                            case "Int32":
+                                WriteLine("case \"{0}\": _{0} = value.ToInt(); break;", column.Name);
+                                break;
+
+                            case "Int64":
+                                WriteLine("case \"{0}\": _{0} = value.ToLong(); break;", column.Name);
+                                break;
+
+                            case "Double":
+                                WriteLine("case \"{0}\": _{0} = value.ToDouble(); break;", column.Name);
+                                break;
+
+                            case "Boolean":
+                                WriteLine("case \"{0}\": _{0} = value.ToBoolean(); break;", column.Name);
+                                break;
+
+                            case "DateTime":
+                                WriteLine("case \"{0}\": _{0} = value.ToDateTime(); break;", column.Name);
+                                break;
+
+                            default:
+                                WriteLine("case \"{0}\": _{0} = Convert.To{1}(value); break;", column.Name, type);
+                                break;
+                        }
+                    }
+                    // 特殊支持枚举
+                    else if (column.DataType != null && column.DataType.IsInt())
+                        WriteLine("case \"{0}\": _{0} = ({1})value.ToInt(); break;", column.Name, type);
+                    else
+                    {
+                        var method = "To";
+                        var typePara = String.Empty;
+                        if (type.Contains("."))
+                        {
+                            // 说明使用了自定义类型，比如：枚举
+                            typePara = type;
+                            if (column.DataType?.IsInt() == true)
+                                method += "Enum";
+                            else
+                                method += "Object";
                         }
                         else
                         {
-                            method += "Object";
+                            method += type;
                         }
-                    }
-                    else
-                    {
-                        method += type;
-                    }
-                    if (column.IsArray) method += "Array";
-                    if (conv.GetMethod(method, [typeof(object)]) != null)
-                    {
-                        if (!string.IsNullOrWhiteSpace(typePara)) method += $"<{typePara}>";
-                        WriteLine("case \"{0}\": _{0} = ValidHelper.{1}(value); break;", column.Name, method);
-                    }
-                    else
-                    {
-                        WriteLine("case \"{0}\": _{0} = ({1})value; break;", column.Name, type);
+                        if (column.IsArray) method += "Array";
+                        if (typeof(ValidHelper).GetMethod(method, [typeof(Object)]) != null)
+                        {
+                            if (!String.IsNullOrWhiteSpace(typePara)) method += $"<{typePara}>";
+                            WriteLine("case \"{0}\": _{0} = ValidHelper.{1}(value); break;", column.Name, method);
+                        }
+                        else
+                        {
+                            WriteLine("case \"{0}\": _{0} = ({1})value; break;", column.Name, type);
+                        }
                     }
                 }
             }

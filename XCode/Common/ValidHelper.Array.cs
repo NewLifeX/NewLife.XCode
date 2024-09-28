@@ -8,7 +8,7 @@ namespace XCode;
 /// </remarks>
 public partial class ValidHelper
 {
-    private static T[]? ToArray<T>(Object? value, Func<object?, T> converter)
+    private static T[]? ToArray<T>(Object? value, Func<Object?, T> converter)
     {
         if (value is T[] arr) return arr;
         if (value is null || Convert.IsDBNull(value)) return default;

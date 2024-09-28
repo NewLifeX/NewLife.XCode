@@ -644,7 +644,7 @@ public static class ModelHelper
             //var dc2 = def as IDataColumn;
             //var value2 = value as IDataColumn;
             // 需要重新创建，因为GetDefault带有缓存
-            var dc2 = type.CreateInstance() as IDataColumn;
+            var dc2 = (type.CreateInstance() as IDataColumn)!;
             dc2.DataType = value2.DataType;
             dc2.Length = value2.Length;
             def = FixDefaultByType(dc2, value2);
@@ -655,7 +655,7 @@ public static class ModelHelper
             //ignoreNameCase = (value3.IgnoreNameCase).ToBoolean(true);
         }
 
-        String name = null;
+        String? name = null;
 
         // 基本类型，输出为特性
         foreach (var pi in type.GetProperties(true))
@@ -665,9 +665,8 @@ public static class ModelHelper
             // 忽略ID
             if (pi.Name == "ID") continue;
             // IDataIndex跳过默认Name
-            if (value is IDataIndex && pi.Name.EqualIgnoreCase("Name"))
+            if (value is IDataIndex di && pi.Name.EqualIgnoreCase("Name"))
             {
-                var di = value as IDataIndex;
                 if (di.Name.EqualIgnoreCase(ModelResolver.Current.GetName(di))) continue;
             }
 

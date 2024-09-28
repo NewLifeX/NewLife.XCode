@@ -87,7 +87,7 @@ internal class PostgreSQL : RemoteDb
     }
 
     /// <summary>格式化数据为SQL数据</summary>
-    /// <param name="field">字段</param>
+    /// <param name="column">字段</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
     public override String FormatValue(IDataColumn? column, Object? value)
@@ -99,7 +99,7 @@ internal class PostgreSQL : RemoteDb
         {
             type = column.DataType;
             isNullable = column.Nullable;
-            isArrayField = column.IsArray;
+            isArrayField = type.IsArray;
         }
         else if (value != null)
         {
@@ -113,7 +113,7 @@ internal class PostgreSQL : RemoteDb
         if (type?.IsArray == true)
         {
             //Byte[] 数组可能是 Blob，不应该当作数组字段处理
-            if (column?.IsArray == true || type != typeof(Byte[]))
+            if (/*column?.IsArray == true ||*/ type != typeof(Byte[]))
             {
                 isArrayField = true;
                 type = type.GetElementType();
@@ -500,12 +500,14 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
 
     protected override Type? GetDataType(IDataColumn field)
     {
-        var postfix = this.ArrayTypePostfix!;
+        var postfix = ArrayTypePostfix!;
         if (field.RawType?.EndsWith(postfix) == true)
         {
-            field.IsArray = true;
+            //field.IsArray = true;
+
             var clone = field.Clone(field.Table);
             clone.RawType = field.RawType.Substring(0, field.RawType.Length - postfix.Length);
+
             var type = base.GetDataType(clone);
             if (type != null) return type.MakeArrayType();
         }

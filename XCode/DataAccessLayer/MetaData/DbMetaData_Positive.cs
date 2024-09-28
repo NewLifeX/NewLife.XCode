@@ -394,7 +394,7 @@ partial class DbMetaData
     }
 
     /// <summary>数组类型后缀。为空则表示该数据库类型不支持数组。</summary>
-    protected virtual string? ArrayTypePostfix { get; } = null;
+    protected virtual String? ArrayTypePostfix { get; } = null;
 
     /// <summary>取字段类型</summary>
     /// <param name="field">字段</param>
@@ -422,12 +422,14 @@ partial class DbMetaData
             else
                 typeName = String.Format(typeName, field.Length);
         }
-        if (field.IsArray)
+
+        if (type.IsArray)
         {
-            var postfix = this.ArrayTypePostfix;
-            if (string.IsNullOrWhiteSpace(postfix)) throw new XCodeException($"数据库不支持数组类型");
+            var postfix = ArrayTypePostfix;
+            if (String.IsNullOrWhiteSpace(postfix)) throw new XCodeException($"数据库不支持数组类型");
             typeName += postfix;
         }
+
         return typeName;
     }
 

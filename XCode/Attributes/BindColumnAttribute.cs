@@ -43,8 +43,8 @@ public sealed class BindColumnAttribute : Attribute
     /// <summary>数据规模。time表示这是大数据单表的数据时间字段，timeShard:yyMMdd表示这是大数据多表的分表字段</summary>
     public String? DataScale { get; set; }
 
-    /// <summary>是否数组</summary>
-    public Boolean IsArray { get; set; }
+    ///// <summary>是否数组</summary>
+    //public Boolean IsArray { get; set; }
     #endregion
 
     #region 构造
@@ -69,18 +69,18 @@ public sealed class BindColumnAttribute : Attribute
         RawType = rawType;
     }
 
-    /// <summary>构造函数</summary>
-    /// <param name="name">名称</param>
-    /// <param name="description"></param>
-    /// <param name="rawType"></param>
-    /// <param name="isArray">是否数组</param>
-    public BindColumnAttribute(String name, String description, String rawType, bool isArray)
-    {
-        Name = name;
-        Description = description;
-        RawType = rawType;
-        IsArray = isArray;
-    }
+    ///// <summary>构造函数</summary>
+    ///// <param name="name">名称</param>
+    ///// <param name="description"></param>
+    ///// <param name="rawType"></param>
+    ///// <param name="isArray">是否数组</param>
+    //public BindColumnAttribute(String name, String description, String rawType, bool isArray)
+    //{
+    //    Name = name;
+    //    Description = description;
+    //    RawType = rawType;
+    //    IsArray = isArray;
+    //}
     #endregion
 
     #region 方法

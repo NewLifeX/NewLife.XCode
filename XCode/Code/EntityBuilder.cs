@@ -667,7 +667,7 @@ public class EntityBuilder : ClassBuilder
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
         if (type == "String" && Option.Nullable && column.Nullable) type = "String?";
-        if (column.IsArray) type = $"{type}[]";
+        //if (column.IsArray) type = $"{type}[]";
 
         // 字段
         if (type == "String" && Option.Nullable)
@@ -724,8 +724,8 @@ public class EntityBuilder : ClassBuilder
         // 数据规模
         if (!dc.DataScale.IsNullOrEmpty()) sb.AppendFormat(", DataScale = \"{0}\"", dc.DataScale);
 
-        // 是否数组
-        if (dc.IsArray) sb.Append(", IsArray = true");
+        //// 是否数组
+        //if (dc.IsArray) sb.Append(", IsArray = true");
 
         ////添加自定义控件默认值
         //if (!dc.ItemDefaultValue.IsNullOrEmpty()) sb.AppendFormat(", ItemDefaultValue = \"{0}\"", dc.ItemDefaultValue);
@@ -734,7 +734,7 @@ public class EntityBuilder : ClassBuilder
 
         sb.Append(")]");
 
-        WriteLine(sb.Put(true));
+        WriteLine(sb.Return(true));
 
         WriteLine("public {0} {1} {{ get => _{1}; set {{ if (OnPropertyChanging(\"{1}\", value)) {{ _{1} = value; OnPropertyChanged(\"{1}\"); }} }} }}", type, dc.Name);
     }
@@ -835,7 +835,8 @@ public class EntityBuilder : ClassBuilder
                         {
                             method += type;
                         }
-                        if (column.IsArray) method += "Array";
+                        //if (column.IsArray) method += "Array";
+                        if (column.DataType != null && column.DataType.IsArray) method += "Array";
                         if (typeof(ValidHelper).GetMethod(method, [typeof(Object)]) != null)
                         {
                             if (!String.IsNullOrWhiteSpace(typePara)) method += $"<{typePara}>";

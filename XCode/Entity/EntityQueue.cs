@@ -249,7 +249,7 @@ public class EntityQueue : DisposeBase
         if (Debug || list.Count > 10000)
         {
             var msg = $"实体队列[{ss.TableName}/{ss.ConnName}]\t保存 {list.Count:n0}\t耗时 {ms:n0}ms\t速度 {speed:n0}tps\t周期 {p:n0}ms";
-            DefaultSpan.Current?.AppendTag(ms);
+            DefaultSpan.Current?.AppendTag($"Cost: {ms}ms");
             XTrace.WriteLine(msg);
         }
 

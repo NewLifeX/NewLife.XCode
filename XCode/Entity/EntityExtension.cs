@@ -130,7 +130,7 @@ public static class EntityExtension
         // Oracle/MySql批量插入
         if (session2.Dal.SupportBatch && list.Count() > 1)
         {
-            DefaultSpan.Current?.AppendTag("SupportBatch");
+            //DefaultSpan.Current?.AppendTag("SupportBatch");
 
             if (list is not IList<T> es) es = list.ToList();
             foreach (IEntity item in es.ToArray())
@@ -145,7 +145,7 @@ public static class EntityExtension
             // 如果未指定会话，需要支持自动分表，并且需要考虑实体列表可能落入不同库表
             if (session == null && fact.ShardPolicy != null)
             {
-                DefaultSpan.Current?.AppendTag("ShardPolicy");
+                DefaultSpan.Current?.AppendTag($"ShardPolicy: {fact.ShardPolicy.Field}");
 
                 // 提前计算分表，按库表名分组
                 var dic = list.GroupBy(e =>
@@ -500,6 +500,8 @@ public static class EntityExtension
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
+        span?.AppendTag($"BatchSize: {option.BatchSize}");
+        span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
         try
         {
             var rs = 0;
@@ -587,6 +589,8 @@ public static class EntityExtension
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:InsertIgnore:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
+        span?.AppendTag($"BatchSize: {option.BatchSize}");
+        span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
         try
         {
             var rs = 0;
@@ -674,6 +678,8 @@ public static class EntityExtension
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchReplace:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
+        span?.AppendTag($"BatchSize: {option.BatchSize}");
+        span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
         try
         {
             var rs = 0;
@@ -761,6 +767,10 @@ public static class EntityExtension
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
+        span?.AppendTag($"BatchSize: {option.BatchSize}");
+        span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
+        span?.AppendTag($"UpdateColumns: {updateColumns?.Join()}");
+        span?.AppendTag($"AddColumns: {addColumns.Join()}");
         try
         {
             var rs = 0;
@@ -902,6 +912,8 @@ public static class EntityExtension
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
+        span?.AppendTag($"BatchSize: {option.BatchSize}");
+        span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
         try
         {
             var rs = 0;

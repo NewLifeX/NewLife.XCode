@@ -460,7 +460,7 @@ partial class DAL
         }
         else if (action == nameof(InsertAndGetIdentity) || action == nameof(InsertAndGetIdentityAsync))
         {
-            if (rs.ToInt() > 0) span.Value = 1;
+            if (rs.ToLong() > 0) span.Value = 1;
 
             span.Tag = $"{sql} [id={rs}]";
         }

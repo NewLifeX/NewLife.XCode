@@ -99,6 +99,12 @@ class XField : SerializableDataMember, IDataColumn, ICloneable
     [Description("数据规模。time表示这是大数据单表的数据时间字段，timeShard:yyMMdd表示这是大数据多表的分表字段")]
     public String? DataScale { get; set; }
 
+    /// <summary>是否数组</summary>
+    [XmlAttribute]
+    [DisplayName("是否数组")]
+    [Description("是否数组")]
+    public bool IsArray { get; set; }
+
     /// <summary>默认值</summary>
     [XmlAttribute]
     [DisplayName("默认值")]

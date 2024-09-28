@@ -667,6 +667,7 @@ public class EntityBuilder : ClassBuilder
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
         if (type == "String" && Option.Nullable && column.Nullable) type = "String?";
+        if (column.IsArray) type = $"{type}[]";
 
         // 字段
         if (type == "String" && Option.Nullable)
@@ -723,6 +724,9 @@ public class EntityBuilder : ClassBuilder
         // 数据规模
         if (!dc.DataScale.IsNullOrEmpty()) sb.AppendFormat(", DataScale = \"{0}\"", dc.DataScale);
 
+        // 是否数组
+        if (dc.IsArray) sb.Append(", IsArray = true");
+
         ////添加自定义控件默认值
         //if (!dc.ItemDefaultValue.IsNullOrEmpty()) sb.AppendFormat(", ItemDefaultValue = \"{0}\"", dc.ItemDefaultValue);
 
@@ -771,7 +775,7 @@ public class EntityBuilder : ClassBuilder
         {
             WriteLine("switch (name)");
             WriteLine("{");
-            var conv = typeof(Convert);
+            var conv = typeof(ValidHelper);
             foreach (var column in Table.Columns)
             {
                 // 跳过排除项
@@ -783,50 +787,34 @@ public class EntityBuilder : ClassBuilder
 
                 if (!type.IsNullOrEmpty())
                 {
-                    if (!type.Contains(".") && conv.GetMethod("To" + type, [typeof(Object)]) != null)
+                    var method = "To";
+                    var typePara = string.Empty;
+                    if (type.Contains("."))
                     {
-                        switch (type)
+                        //说明使用了自定义类型，比如：枚举
+                        typePara = type;
+                        if (column.DataType?.IsInt() == true)
                         {
-                            case "Int32":
-                                WriteLine("case \"{0}\": _{0} = value.ToInt(); break;", column.Name);
-                                break;
-
-                            case "Int64":
-                                WriteLine("case \"{0}\": _{0} = value.ToLong(); break;", column.Name);
-                                break;
-
-                            case "Double":
-                                WriteLine("case \"{0}\": _{0} = value.ToDouble(); break;", column.Name);
-                                break;
-
-                            case "Boolean":
-                                WriteLine("case \"{0}\": _{0} = value.ToBoolean(); break;", column.Name);
-                                break;
-
-                            case "DateTime":
-                                WriteLine("case \"{0}\": _{0} = value.ToDateTime(); break;", column.Name);
-                                break;
-
-                            default:
-                                WriteLine("case \"{0}\": _{0} = Convert.To{1}(value); break;", column.Name, type);
-                                break;
+                            method += "Enum";
+                        }
+                        else
+                        {
+                            method += "Object";
                         }
                     }
                     else
                     {
-                        try
-                        {
-                            // 特殊支持枚举
-                            if (column.DataType.IsInt())
-                                WriteLine("case \"{0}\": _{0} = ({1})value.ToInt(); break;", column.Name, type);
-                            else
-                                WriteLine("case \"{0}\": _{0} = ({1})value; break;", column.Name, type);
-                        }
-                        catch (Exception ex)
-                        {
-                            XTrace.WriteException(ex);
-                            WriteLine("case \"{0}\": _{0} = ({1})value; break;", column.Name, type);
-                        }
+                        method += type;
+                    }
+                    if (column.IsArray) method += "Array";
+                    if (conv.GetMethod(method, [typeof(object)]) != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(typePara)) method += $"<{typePara}>";
+                        WriteLine("case \"{0}\": _{0} = ValidHelper.{1}(value); break;", column.Name, method);
+                    }
+                    else
+                    {
+                        WriteLine("case \"{0}\": _{0} = ({1})value; break;", column.Name, type);
                     }
                 }
             }

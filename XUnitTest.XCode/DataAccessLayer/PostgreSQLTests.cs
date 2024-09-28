@@ -101,7 +101,7 @@ public class PostgreSQLTests
         var dal = DAL.Create("sysPgSql");
         try
         {
-            dal.Execute("drop database membership_test");
+            dal.Execute("drop database Membership_Test");
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
 
@@ -131,7 +131,7 @@ public class PostgreSQLTests
         // 清理现场
         try
         {
-            dal.Execute("drop database membership_test");
+            dal.Execute("drop database Membership_Test");
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
     }

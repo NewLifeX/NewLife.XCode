@@ -594,6 +594,18 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         return str;
     }
 
+    /// <summary>默认值</summary>
+    /// <param name="field"></param>
+    /// <param name="onlyDefine"></param>
+    /// <returns></returns>
+    protected override String? GetDefault(IDataColumn field, Boolean onlyDefine)
+    {
+        if (field.DataType == typeof(Boolean))
+            return $" DEFAULT {(field.DefaultValue.ToBoolean())}";
+
+        return base.GetDefault(field, onlyDefine);
+    }
+
     #region 架构定义
 
     //public override object SetSchema(DDLSchema schema, params object[] values)

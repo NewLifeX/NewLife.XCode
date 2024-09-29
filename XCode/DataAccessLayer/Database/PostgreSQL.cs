@@ -122,7 +122,7 @@ internal class PostgreSQL : RemoteDb
             builder.Append("ARRAY[");
             foreach (var v in (IEnumerable)value)
             {
-                builder.Append(ValueToSQL(type, isNullable, v, out fieldType));
+                builder.Append(ValueToSQL(type, isNullable, v, ref fieldType));
                 builder.Append(',');
                 count++;
             }
@@ -146,17 +146,16 @@ internal class PostgreSQL : RemoteDb
         }
         else
         {
-            return ValueToSQL(type, isNullable, value, out fieldType);
+            return ValueToSQL(type, isNullable, value, ref fieldType);
         }
     }
 
 
-    private string ValueToSQL(Type? type, bool isNullable, object? value, out string fieldType)
+    private string ValueToSQL(Type? type, bool isNullable, object? value, ref string fieldType)
     {
-        fieldType = string.Empty;
         if (type == typeof(String))
         {
-            fieldType = "varchar";
+            if (string.IsNullOrWhiteSpace(fieldType)) fieldType = "varchar";
             if (value is null) return isNullable ? "null" : "''";
             return "'" + value.ToString().Replace("'", "''") + "'";
         }

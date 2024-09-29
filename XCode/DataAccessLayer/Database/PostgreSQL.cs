@@ -64,6 +64,7 @@ internal class PostgreSQL : RemoteDb
 
     #region 数据库特性
 
+    private static Boolean IsArrayField(Type? type) => type?.IsArray == true && type != typeof(Byte[]);
     protected override String ReservedWordsStr
     {
         get
@@ -99,35 +100,29 @@ internal class PostgreSQL : RemoteDb
         {
             type = column.DataType;
             isNullable = column.Nullable;
-            isArrayField = type.IsArray;
         }
         else if (value != null)
         {
             type = value.GetType();
-            isArrayField = type.IsArray;
         }
-
+        string fieldType = string.Empty;
         // 如果类型是Nullable的，则获取对应的类型
         type = Nullable.GetUnderlyingType(type) ?? type;
         //如果是数组，就取数组的元素类型
-        if (type?.IsArray == true)
+        if (IsArrayField(type))
         {
-            //Byte[] 数组可能是 Blob，不应该当作数组字段处理
-            if (/*column?.IsArray == true ||*/ type != typeof(Byte[]))
-            {
-                isArrayField = true;
-                type = type.GetElementType();
-            }
+            isArrayField = true;
+            type = type!.GetElementType();
         }
         if (isArrayField)
         {
             if (value is null) return isNullable ? "NULL" : "'{}'";
             var count = 0;
-            var builder = new StringBuilder();
+            var builder = Pool.StringBuilder.Get();
             builder.Append("ARRAY[");
             foreach (var v in (IEnumerable)value)
             {
-                builder.Append(ValueToSQL(type, isNullable, v));
+                builder.Append(ValueToSQL(type, isNullable, v, out fieldType));
                 builder.Append(',');
                 count++;
             }
@@ -135,24 +130,33 @@ internal class PostgreSQL : RemoteDb
             {
                 builder.Length--;
                 builder.Append("]");
+                //在进行数组运算时，因字符串可能会被映射为多种类型造成方法签名不匹配，所以需要指定类型
+                //这里仅处理了字符串，如果其他类型也出现了类似情况，仅需在 ValueToSQL 中添加对应的类型即可
+                if (!string.IsNullOrWhiteSpace(fieldType))
+                {
+                    builder.Append("::").Append(fieldType).Append("[]");
+                }
             }
             else
             {
                 builder.Clear();
                 builder.Append("'{}'");
             }
-            return builder.ToString();
+            return builder.Return();
         }
         else
         {
-            return ValueToSQL(type, isNullable, value);
+            return ValueToSQL(type, isNullable, value, out fieldType);
         }
     }
 
-    private string ValueToSQL(Type? type, bool isNullable, object? value)
+
+    private string ValueToSQL(Type? type, bool isNullable, object? value, out string fieldType)
     {
+        fieldType = string.Empty;
         if (type == typeof(String))
         {
+            fieldType = "varchar";
             if (value is null) return isNullable ? "null" : "''";
             return "'" + value.ToString().Replace("'", "''") + "'";
         }
@@ -503,8 +507,6 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         var postfix = ArrayTypePostfix!;
         if (field.RawType?.EndsWith(postfix) == true)
         {
-            //field.IsArray = true;
-
             var clone = field.Clone(field.Table);
             clone.RawType = field.RawType.Substring(0, field.RawType.Length - postfix.Length);
 

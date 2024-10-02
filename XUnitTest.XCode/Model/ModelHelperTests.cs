@@ -119,10 +119,11 @@ public class ModelHelperTests
 
     private String ReadTarget(String file, String text, Boolean overwrite = true)
     {
-        //var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
-        //if (overwrite) File.WriteAllText(file2.EnsureDirectory(true), text);
+        var target = "";
+        var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
+        if (File.Exists(file2)) target = File.ReadAllText(file2.GetFullPath());
 
-        var target = File.ReadAllText(file.GetFullPath());
+        //File.WriteAllText(file2, text);
 
         return target;
     }

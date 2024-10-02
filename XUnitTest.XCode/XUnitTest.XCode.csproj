@@ -45,6 +45,10 @@
     <None Include="Code\Models\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Remove="DataAccessLayer\Sqls\**" />
+    <None Include="DataAccessLayer\Sqls\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="Code\BuildTT\UserTT.cs">
@@ -136,5 +140,8 @@
     <None Update="Model\Member2012.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DataAccessLayer\Sqls\" />
   </ItemGroup>
 </Project>

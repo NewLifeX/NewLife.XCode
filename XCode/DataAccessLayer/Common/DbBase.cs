@@ -287,6 +287,9 @@ abstract class DbBase : DisposeBase, IDatabase
 
     /// <summary>性能追踪器</summary>
     public ITracer? Tracer { get; set; }
+
+    /// <summary>数据库引擎默认的反向工程表名、字段名大小写设置</summary>
+    public virtual NameFormats DefaultNameFormat => NameFormats.None;
     #endregion
 
     #region 方法
@@ -704,23 +707,26 @@ abstract class DbBase : DisposeBase, IDatabase
         if (!pf.IsNullOrEmpty()) name = pf + name;
 
         // 名称格式化，只有表名跟名称相同时才处理。否则认为用户指定了表名
-        switch (NameFormat)
+        if (table.TableName == table.Name)
         {
-            case NameFormats.Upper:
-                name = name.ToUpper();
-                break;
-            case NameFormats.Lower:
-                name = name.ToLower();
-                break;
-            case NameFormats.Underline:
-                if (table.TableName == table.Name)
-                    name = ChangeUnderline(name).ToLower();
-                else
-                    name = name.ToLower();
-                break;
-            case NameFormats.Default:
-            default:
-                break;
+            var fmt = this.DefaultNameFormat;
+            if (this.NameFormat != NameFormats.Default) fmt = this.NameFormat;
+            switch (fmt)
+            {
+                case NameFormats.Upper:
+                    name = name.ToUpperInvariant();
+                    break;
+                case NameFormats.Lower:
+                    name = name.ToLowerInvariant();
+                    break;
+                case NameFormats.Underline:
+                    name = ChangeUnderline(name).ToLowerInvariant();
+                    break;
+                case NameFormats.Default:
+                case NameFormats.None:
+                default:
+                    break;
+            }
         }
 
         return formatKeyword ? FormatName(name) : name;
@@ -736,23 +742,26 @@ abstract class DbBase : DisposeBase, IDatabase
         var name = column.ColumnName;
 
         // 名称格式化，只有字段名名跟名称相同时才处理。否则认为用户指定了字段名
-        switch (NameFormat)
+        if (column.ColumnName == column.Name)
         {
-            case NameFormats.Upper:
-                name = name.ToUpper();
-                break;
-            case NameFormats.Lower:
-                name = name.ToLower();
-                break;
-            case NameFormats.Underline:
-                if (column.ColumnName == column.Name)
-                    name = ChangeUnderline(name).ToLower();
-                else
-                    name = name.ToLower();
-                break;
-            case NameFormats.Default:
-            default:
-                break;
+            var fmt = this.DefaultNameFormat;
+            if (this.NameFormat != NameFormats.Default) fmt = this.NameFormat;
+            switch (fmt)
+            {
+                case NameFormats.Upper:
+                    name = name.ToUpperInvariant();
+                    break;
+                case NameFormats.Lower:
+                    name = name.ToLowerInvariant();
+                    break;
+                case NameFormats.Underline:
+                    name = ChangeUnderline(name).ToLowerInvariant();
+                    break;
+                case NameFormats.Default:
+                case NameFormats.None:
+                default:
+                    break;
+            }
         }
 
         return FormatName(name);

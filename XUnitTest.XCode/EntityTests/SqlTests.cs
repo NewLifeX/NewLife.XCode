@@ -48,7 +48,7 @@ public class SqlTests
         };
 
         var sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Insert);
-        Assert.Equal(@"Insert Into User(Name,DisplayName,Sex,AreaId,RoleID,DepartmentID,Online,Enable,Age,Logins,RegisterTime,OnlineTime,Ex1,Ex2,Ex3,UpdateUser,UpdateUserID,UpdateTime) Values('Stone','大石头',0,0,0,0,0,1,0,0,'2020-08-22 00:00:00',0,0,0,0,'newlife',0,'2020-09-01 00:00:00')", sql);
+        Assert.Equal(@"Insert Into User(Name,DisplayName,Sex,MailVerified,MobileVerified,AreaId,RoleID,DepartmentID,Online,Enable,Age,Logins,RegisterTime,OnlineTime,Ex1,Ex2,Ex3,UpdateUser,UpdateUserID,UpdateTime) Values('Stone','大石头',0,0,0,0,0,0,0,1,0,0,'2020-08-22 00:00:00',0,0,0,0,'newlife',0,'2020-09-01 00:00:00')", sql);
     }
 
     [TestOrder(10)]
@@ -75,7 +75,7 @@ public class SqlTests
         };
 
         var sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Insert);
-        Assert.Equal(@"Insert Into `user`(name,display_name,sex,area_id,role_id,department_id,online,enable,age,logins,register_time,online_time,ex1,ex2,ex3,update_user,update_user_id,update_time) Values('Stone','大石头',0,0,0,0,0,1,0,0,'2020-08-22 00:00:00',0,0,0,0,'newlife',0,'2020-09-01 00:00:00')", sql);
+        Assert.Equal(@"Insert Into `user`(name,display_name,sex,mail_verified,mobile_verified,area_id,role_id,department_id,online,enable,age,logins,register_time,online_time,ex1,ex2,ex3,update_user,update_user_id,update_time) Values('Stone','大石头',0,0,0,0,0,0,0,1,0,0,'2020-08-22 00:00:00',0,0,0,0,'newlife',0,'2020-09-01 00:00:00')", sql);
     }
 
     [TestOrder(20)]

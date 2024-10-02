@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -201,24 +201,24 @@ public partial class CorePerson
         {
             switch (name)
             {
-                case "PersonID": _PersonID = value.ToInt(); break;
-                case "Pname": _Pname = Convert.ToString(value); break;
-                case "Psex": _Psex = value.ToInt(); break;
-                case "CreditNo": _CreditNo = Convert.ToString(value); break;
-                case "Mobile": _Mobile = Convert.ToString(value); break;
-                case "BuildID": _BuildID = value.ToInt(); break;
-                case "Build_ID": _Build_ID = value.ToInt(); break;
-                case "UnitNum": _UnitNum = Convert.ToString(value); break;
-                case "HouseNum": _HouseNum = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                case "CreateUserId": _CreateUserId = value.ToInt(); break;
-                case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
-                case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
-                case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "PersonID": _PersonID = ValidHelper.ToInt32(value); break;
+                case "Pname": _Pname = ValidHelper.ToString(value); break;
+                case "Psex": _Psex = ValidHelper.ToInt32(value); break;
+                case "CreditNo": _CreditNo = ValidHelper.ToString(value); break;
+                case "Mobile": _Mobile = ValidHelper.ToString(value); break;
+                case "BuildID": _BuildID = ValidHelper.ToInt32(value); break;
+                case "Build_ID": _Build_ID = ValidHelper.ToInt32(value); break;
+                case "UnitNum": _UnitNum = ValidHelper.ToString(value); break;
+                case "HouseNum": _HouseNum = ValidHelper.ToString(value); break;
+                case "CreateUser": _CreateUser = ValidHelper.ToString(value); break;
+                case "CreateUserId": _CreateUserId = ValidHelper.ToInt32(value); break;
+                case "CreateTime": _CreateTime = ValidHelper.ToDateTime(value); break;
+                case "CreateIP": _CreateIP = ValidHelper.ToString(value); break;
+                case "UpdateUser": _UpdateUser = ValidHelper.ToString(value); break;
+                case "UpdateUserId": _UpdateUserId = ValidHelper.ToInt32(value); break;
+                case "UpdateTime": _UpdateTime = ValidHelper.ToDateTime(value); break;
+                case "UpdateIP": _UpdateIP = ValidHelper.ToString(value); break;
+                case "Remark": _Remark = ValidHelper.ToString(value); break;
                 default: base[name] = value; break;
             }
         }

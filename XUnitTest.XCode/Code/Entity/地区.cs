@@ -233,24 +233,24 @@ public partial class Area : IArea, IEntity<IArea>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "FullName": _FullName = Convert.ToString(value); break;
-                case "ParentID": _ParentID = value.ToInt(); break;
-                case "Level": _Level = value.ToInt(); break;
-                case "Kind": _Kind = Convert.ToString(value); break;
-                case "English": _English = Convert.ToString(value); break;
-                case "PinYin": _PinYin = Convert.ToString(value); break;
-                case "JianPin": _JianPin = Convert.ToString(value); break;
-                case "TelCode": _TelCode = Convert.ToString(value); break;
-                case "ZipCode": _ZipCode = Convert.ToString(value); break;
-                case "Longitude": _Longitude = value.ToDouble(); break;
-                case "Latitude": _Latitude = value.ToDouble(); break;
-                case "GeoHash": _GeoHash = Convert.ToString(value); break;
-                case "Enable": _Enable = value.ToBoolean(); break;
-                case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "ID": _ID = ValidHelper.ToInt32(value); break;
+                case "Name": _Name = ValidHelper.ToString(value); break;
+                case "FullName": _FullName = ValidHelper.ToString(value); break;
+                case "ParentID": _ParentID = ValidHelper.ToInt32(value); break;
+                case "Level": _Level = ValidHelper.ToInt32(value); break;
+                case "Kind": _Kind = ValidHelper.ToString(value); break;
+                case "English": _English = ValidHelper.ToString(value); break;
+                case "PinYin": _PinYin = ValidHelper.ToString(value); break;
+                case "JianPin": _JianPin = ValidHelper.ToString(value); break;
+                case "TelCode": _TelCode = ValidHelper.ToString(value); break;
+                case "ZipCode": _ZipCode = ValidHelper.ToString(value); break;
+                case "Longitude": _Longitude = ValidHelper.ToDouble(value); break;
+                case "Latitude": _Latitude = ValidHelper.ToDouble(value); break;
+                case "GeoHash": _GeoHash = ValidHelper.ToString(value); break;
+                case "Enable": _Enable = ValidHelper.ToBoolean(value); break;
+                case "CreateTime": _CreateTime = ValidHelper.ToDateTime(value); break;
+                case "UpdateTime": _UpdateTime = ValidHelper.ToDateTime(value); break;
+                case "Remark": _Remark = ValidHelper.ToString(value); break;
                 default: base[name] = value; break;
             }
         }

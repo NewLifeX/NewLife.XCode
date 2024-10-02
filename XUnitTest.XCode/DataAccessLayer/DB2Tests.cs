@@ -19,7 +19,9 @@ public class DB2Tests
     [Fact]
     public void LoadDllTest()
     {
-        var file = "IBM.Data.DB2.Core.dll".GetFullPath();
+        var file = "IBM.Data.DB2.dll".GetFullPath();
+        if (!File.Exists(file)) file = "Plugins\\IBM.Data.DB2.dll".GetFullPath();
+        if (!File.Exists(file)) file = "IBM.Data.DB2.Core.dll".GetFullPath();
         if (!File.Exists(file)) file = "Plugins\\IBM.Data.DB2.Core.dll".GetFullPath();
         var asm = Assembly.LoadFrom(file);
         Assert.NotNull(asm);
@@ -28,7 +30,8 @@ public class DB2Tests
         var t = types.FirstOrDefault(t => t.Name == "DB2Factory");
         Assert.NotNull(t);
 
-        var type = asm.GetType("IBM.Data.DB2.Core.DB2Factory");
+        var type = asm.GetType("IBM.Data.Db2.DB2Factory");
+        type ??= asm.GetType("IBM.Data.DB2.Core.DB2Factory");
         Assert.NotNull(type);
     }
 

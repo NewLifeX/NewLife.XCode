@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Data;
 using System.Data.Common;
 using System.Text;
@@ -9,6 +8,7 @@ using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
+using NewLife.Web;
 using XCode.Common;
 
 namespace XCode.DataAccessLayer;
@@ -21,7 +21,16 @@ class DB2 : RemoteDb
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory? CreateFactory() => GetProviderFactory("IBM.Data.DB2", "IBM.Data.DB2.Core.dll", "IBM.Data.DB2.Core.DB2Factory");
+    protected override DbProviderFactory? CreateFactory()
+    {
+        var type =
+            PluginHelper.LoadPlugin("IBM.Data.Db2.DB2Factory", null, "IBM.Data.Db2.dll", null) ??
+            PluginHelper.LoadPlugin("IBM.Data.DB2.Core.DB2Factory", null, "IBM.Data.DB2.Core.dll", null);
+
+        return GetProviderFactory(type) ??
+            GetProviderFactory(null, "IBM.Data.Db2.dll", "IBM.Data.Db2.DB2Factory", false, false) ??
+            GetProviderFactory(null, "IBM.Data.DB2.Core.dll", "IBM.Data.DB2.Core.DB2Factory", true, true);
+    }
 
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {

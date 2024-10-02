@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
-    <TargetFrameworks>net80</TargetFrameworks>
+    <TargetFrameworks>net8.0;netstandard2.1</TargetFrameworks>
     <AssemblyTitle>数据中间件DB2包</AssemblyTitle>
     <Description>引入DB2数据库驱动包</Description>
     <Company>新生命开发团队</Company>
@@ -35,8 +35,11 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='net8.0'">
     <PackageReference Include="Net.IBM.Data.Db2" Version="8.0.0.300" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'!='net8.0'">
+    <PackageReference Include="IBM.Data.DB2.Core" Version="3.1.0.600" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XCode\XCode.csproj" />

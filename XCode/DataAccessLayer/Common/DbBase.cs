@@ -460,7 +460,7 @@ abstract class DbBase : DisposeBase, IDatabase
         {
             if (name.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(assemblyFile);
             var links = GetLinkNames(name, strict);
-            var type = PluginHelper.LoadPlugin(className, null!, assemblyFile, links.Join(","));
+            var type = PluginHelper.LoadPlugin(className, null, assemblyFile, links.Join(","));
 
             var factory = GetProviderFactory(type);
             if (factory != null) return factory;

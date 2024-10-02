@@ -31,7 +31,7 @@ internal class SQLite : FileDbBase
             PluginHelper.LoadPlugin("System.Data.SQLite.SQLiteFactory", null, "System.Data.SQLite.dll", null) ??
             PluginHelper.LoadPlugin("Microsoft.Data.Sqlite.SqliteFactory", null, "Microsoft.Data.Sqlite.dll", null);
 
-#if NETCOREAPP ||NETSTANDARD
+#if NETCOREAPP || NETSTANDARD
         if (RuntimeInformation.ProcessArchitecture is not Architecture.X86 and not Architecture.X64)
         {
             return GetProviderFactory(type) ??

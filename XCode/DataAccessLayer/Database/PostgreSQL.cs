@@ -410,7 +410,7 @@ internal class PostgreSQLSession : RemoteDbSession
             if (keys is { Length: > 0 })
             {
                 var conflict = String.Join(",", keys.Select(f => db.FormatName(f)));
-                var tb = db.FormatName(table.TableName);
+                var tb = db.FormatName(table);
                 var setters = new List<String>(columns.Length);
 
                 if (updateColumns is { Count: > 0 })

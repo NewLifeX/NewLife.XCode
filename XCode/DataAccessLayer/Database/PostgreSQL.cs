@@ -739,6 +739,33 @@ order by
                 }
             }
         }
+
+        var idxs = tables.SelectMany(f => f.Indexes.Select(f => f.Name)).ToArray();
+        if (idxs.Length > 0)
+        {
+            var idx_sql = $"SELECT conname FROM pg_constraint WHERE contype = 'p' AND conname IN (" +
+                $"{string.Join(",", idxs.Select(f => $"'{f}'"))})";
+            ds = session.Query(idx_sql);
+            if (ds.Tables.Count != 0)
+            {
+                var dt = ds.Tables[0]!;
+                var set = new HashSet<string>();
+                foreach (DataRow dr in dt.Rows)
+                {
+                    set.Add(Convert.ToString(dr[0]));
+                }
+                if (set.Count > 0)
+                {
+                    foreach (var tbl in tables)
+                    {
+                        foreach (var idx in tbl.Indexes)
+                        {
+                            if (!string.IsNullOrWhiteSpace(idx.Name) && set.Contains(idx.Name!)) idx.PrimaryKey = true;
+                        }
+                    }
+                }
+            }
+        }
         return tables;
     }
     #endregion

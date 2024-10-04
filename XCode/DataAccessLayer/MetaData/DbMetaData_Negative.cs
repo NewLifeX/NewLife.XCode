@@ -321,6 +321,30 @@ internal partial class DbMetaData
         return sb.ToString();
     }
 
+    /// <summary>根据字段名数组获取字段数组</summary>
+    protected virtual IDataColumn[] MatchColumns(IDataTable table, String[] names)
+    {
+        if (names == null || names.Length <= 0) return [];
+        var dcs = new List<IDataColumn>();
+        foreach (var name in names)
+        {
+            var dc = MatchColumn(table, name);
+            if (dc != null) dcs.Add(dc);
+        }
+        return dcs.ToArray();
+    }
+
+    private IDataColumn? MatchColumn(IDataTable table, String name)
+    {
+        foreach (var col in table.Columns)
+        {
+            if (string.Equals(col.Name, name, StringComparison.OrdinalIgnoreCase)) return col;
+            if (string.Equals(col.ColumnName, name, StringComparison.OrdinalIgnoreCase)) return col;
+            if (string.Equals(FormatName(col), name, StringComparison.OrdinalIgnoreCase)) return col;
+        }
+        return null;
+    }
+
     /// <summary>检查新增索引</summary>
     /// <param name="entitytable"></param>
     /// <param name="dbtable"></param>
@@ -343,7 +367,7 @@ internal partial class DbMetaData
                 if (item.PrimaryKey) continue;
 
                 // 实体类中索引列名可能是属性名而不是字段名，需要转换
-                var dcs = entitytable.GetColumns(item.Columns);
+                var dcs = MatchColumns(entitytable, item.Columns);
 
                 var di = ModelHelper.GetIndex(dbtable, dcs.Select(e => e.ColumnName).ToArray());
                 //// 计算出来的索引，也表示没有，需要创建
@@ -398,7 +422,7 @@ internal partial class DbMetaData
                 if (item.PrimaryKey) continue;
 
                 // 实体类中索引列名可能是属性名而不是字段名，需要转换
-                var dcs = entitytable.GetColumns(item.Columns);
+                var dcs = MatchColumns(entitytable, item.Columns);
 
                 var di = ModelHelper.GetIndex(entitytable, dcs.Select(e => e.ColumnName).ToArray());
                 if (di == null)

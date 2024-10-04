@@ -105,7 +105,7 @@ internal class PostgreSQL : RemoteDb
         {
             type = value.GetType();
         }
-        string fieldType = string.Empty;
+        var fieldType = String.Empty;
         // 如果类型是Nullable的，则获取对应的类型
         type = Nullable.GetUnderlyingType(type) ?? type;
         //如果是数组，就取数组的元素类型
@@ -132,7 +132,7 @@ internal class PostgreSQL : RemoteDb
                 builder.Append("]");
                 //在进行数组运算时，因字符串可能会被映射为多种类型造成方法签名不匹配，所以需要指定类型
                 //这里仅处理了字符串，如果其他类型也出现了类似情况，仅需在 ValueToSQL 中添加对应的类型即可
-                if (!string.IsNullOrWhiteSpace(fieldType))
+                if (!String.IsNullOrWhiteSpace(fieldType))
                 {
                     builder.Append("::").Append(fieldType).Append("[]");
                 }
@@ -151,11 +151,11 @@ internal class PostgreSQL : RemoteDb
     }
 
 
-    private string ValueToSQL(Type? type, bool isNullable, object? value, ref string fieldType)
+    private String ValueToSQL(Type? type, Boolean isNullable, Object? value, ref String fieldType)
     {
         if (type == typeof(String))
         {
-            if (string.IsNullOrWhiteSpace(fieldType)) fieldType = "varchar";
+            if (String.IsNullOrWhiteSpace(fieldType)) fieldType = "varchar";
             if (value is null) return isNullable ? "null" : "''";
             return "'" + value.ToString().Replace("'", "''") + "'";
         }
@@ -221,8 +221,8 @@ internal class PostgreSQL : RemoteDb
 
         if (name.StartsWith("\"") || name.EndsWith("\"")) return name;
 
-        //如果包含大写字符，就加上引号
-        if (name.Any(char.IsUpper)) return $"\"{name}\"";
+        ////如果包含大写字符，就加上引号
+        //if (name.Any(Char.IsUpper)) return $"\"{name}\"";
 
         return name;
     }
@@ -231,9 +231,9 @@ internal class PostgreSQL : RemoteDb
     public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
     {
         if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, 0);
-        var xWhere = string.Empty;
-        var xTable = this.FormatName(tableName);
-        if (!string.IsNullOrWhiteSpace(where)) xWhere = " Where " + where;
+        var xWhere = String.Empty;
+        var xTable = FormatName(tableName);
+        if (!String.IsNullOrWhiteSpace(where)) xWhere = " Where " + where;
         var sql = $"WITH to_delete AS (SELECT ctid FROM {xTable} {xWhere} LIMIT {batchSize}) ";
         sql += $"DELETE FROM {xTable} where ctid in (SELECT ctid from to_delete)";
         return sql;
@@ -346,11 +346,9 @@ internal class PostgreSQLSession : RemoteDbSession
     #endregion 基本方法 查询/执行
 
     #region 批量操作
-
-
     public override Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
     {
-        const string action = "Insert Into";
+        const String action = "Insert Into";
 
         var sb = Pool.StringBuilder.Get();
         var db = Database as DbBase;
@@ -368,7 +366,7 @@ internal class PostgreSQLSession : RemoteDbSession
         return Execute(sql);
     }
 
-    public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
+    public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         /*
          * INSERT INTO table_name (列1, 列2, 列3, ...)
@@ -379,7 +377,7 @@ internal class PostgreSQLSession : RemoteDbSession
          *     列2 = EXCLUDED.列1 + table_name.列2 ...
          *  ;
          */
-        const string action = "Insert Into";
+        const String action = "Insert Into";
 
         var sb = Pool.StringBuilder.Get();
         var db = Database as DbBase;
@@ -411,9 +409,9 @@ internal class PostgreSQLSession : RemoteDbSession
 
             if (keys is { Length: > 0 })
             {
-                var conflict = string.Join(",", keys.Select(f => db.FormatName(f)));
+                var conflict = String.Join(",", keys.Select(f => db.FormatName(f)));
                 var tb = db.FormatName(table.TableName);
-                var setters = new List<string>(columns.Length);
+                var setters = new List<String>(columns.Length);
 
                 if (updateColumns is { Count: > 0 })
                 {
@@ -451,12 +449,12 @@ internal class PostgreSQLSession : RemoteDbSession
                 if (setters.Count != 0)
                 {
                     sb.Append($" ON conflict ({conflict}) DO UPDATE SET ");
-                    sb.Append(string.Join(",", setters));
+                    sb.Append(String.Join(",", setters));
                 }
             }
         }
 
-        var sql = sb.Put(true);
+        var sql = sb.Return(true);
         return Execute(sql);
     }
 
@@ -516,7 +514,7 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     }
     #endregion 数据类型
 
-    protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable> data)
+    protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable?>? data)
     {
         // 注释
         if (TryGetDataRowValue(dr, "TABLE_COMMENT", out String? comment)) table.Description = comment;
@@ -677,7 +675,7 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         var tables = base.OnGetTables(names);
         var session = Database.CreateSession();
         using var _ = session.SetShowSql(false);
-        const string sql = @"with tables as (
+        const String sql = @"with tables as (
   select c
     .oid,
     ns.nspname as schema_name,
@@ -719,7 +717,7 @@ order by
                 var rows = dt.Select($"table_name = '{table.TableName}'");
                 if (rows is { Length: > 0 })
                 {
-                    if (string.IsNullOrWhiteSpace(table.Description))
+                    if (String.IsNullOrWhiteSpace(table.Description))
                     {
                         foreach (var row in rows)
                         {
@@ -729,11 +727,11 @@ order by
                     }
                     foreach (var row in rows)
                     {
-                        string columnName = Convert.ToString(row["column_name"]);
-                        if (string.IsNullOrWhiteSpace(columnName)) continue;
+                        var columnName = Convert.ToString(row["column_name"]);
+                        if (String.IsNullOrWhiteSpace(columnName)) continue;
                         var col = table.GetColumn(columnName);
                         if (col == null) continue;
-                        if (string.IsNullOrWhiteSpace(col.Description)) col.Description = Convert.ToString(row["column_description"]);
+                        if (String.IsNullOrWhiteSpace(col.Description)) col.Description = Convert.ToString(row["column_description"]);
                     }
                 }
             }

@@ -464,6 +464,12 @@ public static class EntityExtension
 
         var entity = list.First();
         var fact = entity.GetType().AsFactory();
+        session ??= fact.Session;
+        session.InitData();
+
+        var dal = session.Dal;
+        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
+
         if (option.Columns == null)
         {
             var columns = fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).ToArray();
@@ -484,18 +490,12 @@ public static class EntityExtension
             //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             if (!option.FullInsert && !fact.FullInsert)
             {
-                var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+                var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
                 columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             }
 
             option.Columns = columns;
         }
-
-        session ??= fact.Session;
-        session.InitData();
-
-        var dal = session.Dal;
-        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
@@ -558,6 +558,12 @@ public static class EntityExtension
 
         var entity = list.First();
         var fact = entity.GetType().AsFactory();
+        session ??= fact.Session;
+        session.InitData();
+
+        var dal = session.Dal;
+        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
+
         if (option.Columns == null)
         {
             var columns = fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).ToArray();
@@ -573,18 +579,12 @@ public static class EntityExtension
             // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
             if (!option.FullInsert && !fact.FullInsert)
             {
-                var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+                var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
                 columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             }
 
             option.Columns = columns;
         }
-
-        session ??= fact.Session;
-        session.InitData();
-
-        var dal = session.Dal;
-        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
@@ -647,6 +647,12 @@ public static class EntityExtension
 
         var entity = list.First();
         var fact = entity.GetType().AsFactory();
+        session ??= fact.Session;
+        session.InitData();
+
+        var dal = session.Dal;
+        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
+
         if (option.Columns == null)
         {
             var columns = fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).ToArray();
@@ -662,18 +668,12 @@ public static class EntityExtension
             // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
             if (!option.FullInsert && !fact.FullInsert)
             {
-                var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+                var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
                 columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             }
 
             option.Columns = columns;
         }
-
-        session ??= fact.Session;
-        session.InitData();
-
-        var dal = session.Dal;
-        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
@@ -742,12 +742,18 @@ public static class EntityExtension
 
         var entity = list.First();
         var fact = entity.GetType().AsFactory();
+        session ??= fact.Session;
+        session.InitData();
+
+        var dal = session.Dal;
+        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
+
         option.Columns ??= fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).Where(e => !e.Identity).ToArray();
         //if (updateColumns == null) updateColumns = entity.Dirtys.Keys;
         if (option.UpdateColumns == null)
         {
             // 所有实体对象的脏字段作为更新字段
-            var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+            var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
             // 创建时间等字段不参与Update
             dirtys = dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).ToArray();
 
@@ -757,12 +763,6 @@ public static class EntityExtension
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
 
         if ((updateColumns == null || updateColumns.Count <= 0) && (addColumns == null || addColumns.Count <= 0)) return 0;
-
-        session ??= fact.Session;
-        session.InitData();
-
-        var dal = session.Dal;
-        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
@@ -836,6 +836,10 @@ public static class EntityExtension
         var entity = list.First();
         var fact = entity.GetType().AsFactory();
         session ??= fact.Session;
+        session.InitData();
+
+        var dal = session.Dal;
+        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
         // 批量Upsert需要主键参与，哪怕是自增，构建update的where时用到主键
         if (option.Columns == null)
@@ -844,7 +848,7 @@ public static class EntityExtension
 
             if (!option.FullInsert && !fact.FullInsert)
             {
-                var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+                var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
                 columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
             }
 
@@ -893,7 +897,7 @@ public static class EntityExtension
         if (option.UpdateColumns == null)
         {
             // 所有实体对象的脏字段作为更新字段
-            var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+            var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
             // 创建时间等字段不参与Update
             dirtys = dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).ToArray();
 
@@ -903,11 +907,6 @@ public static class EntityExtension
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
         // 没有任何数据变更则直接返回0
         if ((updateColumns == null || updateColumns.Count <= 0) && (addColumns == null || addColumns.Count <= 0)) return 0;
-
-        session.InitData();
-
-        var dal = session.Dal;
-        if (option.BatchSize <= 0) option.BatchSize = dal.GetBatchSize();
 
         var total = list.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
@@ -971,6 +970,11 @@ public static class EntityExtension
         option ??= new BatchOption();
 
         var fact = entity.GetType().AsFactory();
+        session ??= fact.Session;
+        session.InitData();
+
+        var dal = session.Dal;
+
         if (option.Columns == null)
         {
             var columns = fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).ToArray();
@@ -984,7 +988,7 @@ public static class EntityExtension
             //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             if (!option.FullInsert && !fact.FullInsert)
             {
-                var dirtys = GetDirtyColumns(fact, [entity]);
+                var dirtys = GetDirtyColumns(dal, fact, [entity]);
                 columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e.Name)).ToArray();
             }
             option.Columns = columns;
@@ -992,10 +996,6 @@ public static class EntityExtension
         option.UpdateColumns ??= entity.Dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).Distinct().ToArray();
         option.AddColumns ??= fact.AdditionalFields;
 
-        session ??= fact.Session;
-        session.InitData();
-
-        var dal = session.Dal;
         //dal.CheckDatabase();
         //var tableName = dal.Db.FormatTableName(session.TableName);
 
@@ -1096,17 +1096,18 @@ public static class EntityExtension
     }
 
     /// <summary>获取可用于插入的数据列</summary>
+    /// <param name="dal"></param>
     /// <param name="fact"></param>
     /// <param name="list"></param>
     /// <returns></returns>
-    private static IList<String> GetDirtyColumns(IEntityFactory fact, IEnumerable<IEntity> list)
+    private static IList<String> GetDirtyColumns(DAL dal, IEntityFactory fact, IEnumerable<IEntity> list)
     {
         // 任意实体来自数据库，则全部都是目标字段。因为有可能是从数据库查询出来的实体，然后批量插入
         if (list.Any(e => e.IsFromDatabase)) return fact.Fields.Select(e => e.Name).ToList();
 
         // 构建集合，已经标记为脏数据的字段不再搜索，减少循环次数
         var fields = fact.Fields.ToList();
-        var columns = new List<String>();
+        var columns = new List<FieldItem>();
 
         // 非空非字符串字段，都是目标字段
         foreach (var fi in fields)
@@ -1114,31 +1115,39 @@ public static class EntityExtension
             // 非空字符串和时间日期类型不参与插入，因为数据库会自动填充默认值。这一点跟单体插入不同。
             if (!fi.IsNullable && fi.Type != typeof(String) && fi.Type != typeof(DateTime))
             {
-                columns.Add(fi.Name);
+                columns.Add(fi);
             }
         }
-        fields.RemoveAll(e => columns.Contains(e.Name));
-        if (fields.Count == 0) return columns;
-
-        // 获取所有带有脏数据的字段
-        foreach (var entity in list)
+        fields.RemoveAll(e => columns.Contains(e));
+        if (fields.Count > 0)
         {
-            var tmps = new List<String>();
-            foreach (var fi in fields)
+            // 获取所有带有脏数据的字段
+            foreach (var entity in list)
             {
-                // 脏数据
-                if (entity.Dirtys[fi.Name]) tmps.Add(fi.Name);
-            }
+                var tmps = new List<FieldItem>();
+                foreach (var fi in fields)
+                {
+                    // 脏数据
+                    if (entity.Dirtys[fi.Name]) tmps.Add(fi);
+                }
 
-            if (tmps.Count > 0)
-            {
-                columns.AddRange(tmps);
-                fields.RemoveAll(e => tmps.Contains(e.Name));
-                if (fields.Count == 0) break;
+                if (tmps.Count > 0)
+                {
+                    columns.AddRange(tmps);
+                    fields.RemoveAll(e => tmps.Contains(e));
+                    if (fields.Count == 0) break;
+                }
             }
         }
 
-        return columns;
+        var rs = new List<String>();
+        foreach (var item in columns)
+        {
+            var dc = item.Field;
+            if (dc != null) rs.Add(dal.Db.FormatName(dc));
+        }
+
+        return rs;
     }
     #endregion
 

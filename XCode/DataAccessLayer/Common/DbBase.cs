@@ -709,8 +709,8 @@ abstract class DbBase : DisposeBase, IDatabase
         // 名称格式化，只有表名跟名称相同时才处理。否则认为用户指定了表名
         if (table.TableName == table.Name)
         {
-            var fmt = this.DefaultNameFormat;
-            if (this.NameFormat != NameFormats.Default) fmt = this.NameFormat;
+            var fmt = DefaultNameFormat;
+            if (NameFormat != NameFormats.Default) fmt = NameFormat;
             switch (fmt)
             {
                 case NameFormats.Upper:
@@ -744,8 +744,8 @@ abstract class DbBase : DisposeBase, IDatabase
         // 名称格式化，只有字段名名跟名称相同时才处理。否则认为用户指定了字段名
         if (column.ColumnName == column.Name)
         {
-            var fmt = this.DefaultNameFormat;
-            if (this.NameFormat != NameFormats.Default) fmt = this.NameFormat;
+            var fmt = DefaultNameFormat;
+            if (NameFormat != NameFormats.Default) fmt = NameFormat;
             switch (fmt)
             {
                 case NameFormats.Upper:

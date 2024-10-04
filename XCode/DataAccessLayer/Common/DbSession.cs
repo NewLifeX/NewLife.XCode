@@ -835,7 +835,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         sb.Length--;
     }
 
-    protected virtual void BuildDuplicateKey(StringBuilder sb, DbBase db, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns)
+    protected virtual void BuildDuplicateKey(StringBuilder sb, DbBase db, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns)
     {
         // 重复键执行update
         if ((updateColumns != null && updateColumns.Count > 0) || (addColumns != null && addColumns.Count > 0))

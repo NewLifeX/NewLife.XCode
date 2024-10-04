@@ -19,7 +19,7 @@ internal class Hana : RemoteDb
     /// <returns></returns>
     protected override DbProviderFactory CreateFactory()
     {
-        return GetProviderFactory("Sap.Data.Hana", "Sap.Data.Hana.Core.v2.1.dll", "Sap.Data.Hana.HanaFactory");
+        return GetProviderFactory("Sap.Data.Hana", "Sap.Data.Hana.Core.dll", "Sap.Data.Hana.HanaFactory")!;
     }
 
     private const String Server_Key = "Server";

@@ -310,7 +310,7 @@ internal class MySqlSession : RemoteDbSession
     updatetime=values(updatetime);
      */
 
-    private String GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
+    private String GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var sb = Pool.StringBuilder.Get();
         var db = Database as DbBase;
@@ -327,7 +327,7 @@ internal class MySqlSession : RemoteDbSession
         // 重复键执行update
         BuildDuplicateKey(sb, db, columns, updateColumns, addColumns);
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     public override Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
@@ -348,7 +348,7 @@ internal class MySqlSession : RemoteDbSession
         return Execute(sql);
     }
 
-    public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
+    public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var sql = GetBatchSql("Insert Into", table, columns, updateColumns, addColumns, list);
         return Execute(sql);

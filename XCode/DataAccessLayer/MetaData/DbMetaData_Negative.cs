@@ -201,13 +201,13 @@ internal partial class DbMetaData
     protected virtual String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean @readonly, Boolean onlyCreate)
     {
         var sb = new StringBuilder();
-        var etdic = entitytable.Columns.ToDictionary(e => this.FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
-        var dbdic = dbtable.Columns.ToDictionary(e => this.FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
+        var etdic = entitytable.Columns.ToDictionary(e => FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
+        var dbdic = dbtable.Columns.ToDictionary(e => FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
 
         #region 新增列
         foreach (var item in entitytable.Columns)
         {
-            if (!dbdic.ContainsKey(this.FormatName(item)))
+            if (!dbdic.ContainsKey(FormatName(item)))
             {
                 // 非空字段需要重建表
                 if (!item.Nullable)
@@ -237,7 +237,7 @@ internal partial class DbMetaData
         for (var i = dbtable.Columns.Count - 1; i >= 0; i--)
         {
             var item = dbtable.Columns[i];
-            if (!etdic.ContainsKey(this.FormatName(item)))
+            if (!etdic.ContainsKey(FormatName(item)))
             {
                 if (!String.IsNullOrEmpty(item.Description)) PerformSchema(sb, @readonly || onlyCreate, DDLSchema.DropColumnDescription, item);
                 PerformSchema(sbDelete, @readonly || onlyCreate, DDLSchema.DropColumn, item);
@@ -265,7 +265,7 @@ internal partial class DbMetaData
 
         foreach (var item in entitytable.Columns)
         {
-            if (!dbdic.TryGetValue(this.FormatName(item), out var dbf)) continue;
+            if (!dbdic.TryGetValue(FormatName(item), out var dbf)) continue;
 
             // 对于修改列，只读或者只创建，都只要sql
             if (IsColumnTypeChanged(item, dbf))

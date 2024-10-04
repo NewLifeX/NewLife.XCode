@@ -101,7 +101,7 @@ public class PostgreSQLTests
         var dal = DAL.Create("sysPgSql");
         try
         {
-            dal.Execute("drop database Membership_Test");
+            dal.Execute("drop database \"Membership_Test\"");
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
 
@@ -131,7 +131,7 @@ public class PostgreSQLTests
         // 清理现场
         try
         {
-            dal.Execute("drop database Membership_Test");
+            dal.Execute("drop database \"Membership_Test\"");
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
     }
@@ -143,7 +143,7 @@ public class PostgreSQLTests
         var dal = DAL.Create("sysPgSql");
         try
         {
-            dal.Execute("drop database membership_table_prefix");
+            dal.Execute("drop database \"Membership_Table_Prefix\"");
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
 
@@ -171,7 +171,7 @@ public class PostgreSQLTests
         // 清理现场
         try
         {
-            dal.Execute("drop database membership_table_prefix");
+            dal.Execute("drop database \"Membership_Table_Prefix\"");
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
     }

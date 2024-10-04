@@ -631,10 +631,13 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
 
-    //public override string CreateDatabaseSQL(string dbname, string file)
-    //{
-    //    return String.Format("Create Database Binary {0}", FormatKeyWord(dbname));
-    //}
+    /// <summary>
+    /// 创建数据库的 SQL 语句，强制带上双引号。
+    /// </summary>
+    public override string CreateDatabaseSQL(string dbname, string? file)
+    {
+        return String.Format("Create Database \"{0}\"", dbname.Replace("\"", "\"\""));
+    }
 
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";
 

@@ -29,7 +29,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>新增数据规模概念，增强对大数据表的支持</PackageReleaseNotes>
+    <PackageReleaseNotes>完善对PostgreSql的支持，包括添删改查、批操作和正反向工程</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -44,7 +44,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.0.2024.927-beta1339" />
+    <PackageReference Include="NewLife.Core" Version="11.0.2024.1001" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

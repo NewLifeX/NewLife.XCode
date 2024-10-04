@@ -491,7 +491,8 @@ public static class EntityExtension
             if (!option.FullInsert && !fact.FullInsert)
             {
                 var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
-                columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
+                //columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
+                columns.Where(e => dirtys.Contains(dal.Db.FormatName(e))).ToArray();
             }
 
             option.Columns = columns;

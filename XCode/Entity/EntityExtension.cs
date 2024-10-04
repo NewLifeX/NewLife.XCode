@@ -490,9 +490,8 @@ public static class EntityExtension
             //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             if (!option.FullInsert && !fact.FullInsert)
             {
-                var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
-                //columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
-                columns.Where(e => dirtys.Contains(dal.Db.FormatName(e))).ToArray();
+                var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+                columns = columns.Where(e => dirtys.Contains(e)).ToArray();
             }
 
             option.Columns = columns;
@@ -580,8 +579,8 @@ public static class EntityExtension
             // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
             if (!option.FullInsert && !fact.FullInsert)
             {
-                var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
-                columns = columns.Where(e => dirtys.Contains(dal.Db.FormatName(e))).ToArray();
+                var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+                columns = columns.Where(e => dirtys.Contains(e)).ToArray();
             }
 
             option.Columns = columns;
@@ -669,8 +668,8 @@ public static class EntityExtension
             // 每个列要么有脏数据，要么允许空。不允许空又没有脏数据的字段插入没有意义
             if (!option.FullInsert && !fact.FullInsert)
             {
-                var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
-                columns = columns.Where(e => dirtys.Contains(dal.Db.FormatName(e))).ToArray();
+                var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+                columns = columns.Where(e => dirtys.Contains(e)).ToArray();
             }
 
             option.Columns = columns;
@@ -754,11 +753,11 @@ public static class EntityExtension
         if (option.UpdateColumns == null)
         {
             // 所有实体对象的脏字段作为更新字段
-            var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
+            var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
             // 创建时间等字段不参与Update
-            dirtys = dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).ToArray();
+            dirtys = dirtys.Where(e => !e.Name.StartsWithIgnoreCase("Create")).ToArray();
 
-            if (dirtys.Count > 0) option.UpdateColumns = dirtys;
+            if (dirtys.Count > 0) option.UpdateColumns = dirtys.Select(e => dal.Db.FormatName(e)).ToArray();
         }
         var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
@@ -849,8 +848,8 @@ public static class EntityExtension
 
             if (!option.FullInsert && !fact.FullInsert)
             {
-                var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
-                columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(dal.Db.FormatName(e))).ToArray();
+                var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
+                columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e)).ToArray();
             }
 
             // 遇到自增字段，需要谨慎处理，部分insert部分update则无法执行upsert
@@ -898,11 +897,11 @@ public static class EntityExtension
         if (option.UpdateColumns == null)
         {
             // 所有实体对象的脏字段作为更新字段
-            var dirtys = GetDirtyColumns(dal, fact, list.Cast<IEntity>());
+            var dirtys = GetDirtyColumns(fact, list.Cast<IEntity>());
             // 创建时间等字段不参与Update
-            dirtys = dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).ToArray();
+            dirtys = dirtys.Where(e => !e.Name.StartsWithIgnoreCase("Create")).ToArray();
 
-            if (dirtys.Count > 0) option.UpdateColumns = dirtys;
+            if (dirtys.Count > 0) option.UpdateColumns = dirtys.Select(e => dal.Db.FormatName(e)).ToArray();
         }
         var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
@@ -989,8 +988,8 @@ public static class EntityExtension
             //    columns = columns.Where(e => dirtys.Contains(e.Name)).ToArray();
             if (!option.FullInsert && !fact.FullInsert)
             {
-                var dirtys = GetDirtyColumns(dal, fact, [entity]);
-                columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(dal.Db.FormatName(e))).ToArray();
+                var dirtys = GetDirtyColumns(fact, [entity]);
+                columns = columns.Where(e => e.PrimaryKey || dirtys.Contains(e)).ToArray();
             }
             option.Columns = columns;
         }
@@ -1097,14 +1096,13 @@ public static class EntityExtension
     }
 
     /// <summary>获取可用于插入的数据列</summary>
-    /// <param name="dal"></param>
     /// <param name="fact"></param>
     /// <param name="list"></param>
     /// <returns></returns>
-    private static IList<String> GetDirtyColumns(DAL dal, IEntityFactory fact, IEnumerable<IEntity> list)
+    public static IList<IDataColumn> GetDirtyColumns(this IEntityFactory fact, IEnumerable<IEntity> list)
     {
         // 任意实体来自数据库，则全部都是目标字段。因为有可能是从数据库查询出来的实体，然后批量插入
-        if (list.Any(e => e.IsFromDatabase)) return fact.Fields.Select(e => e.Name).ToList();
+        if (list.Any(e => e.IsFromDatabase)) return fact.Fields.Select(e => e.Field).ToList();
 
         // 构建集合，已经标记为脏数据的字段不再搜索，减少循环次数
         var fields = fact.Fields.ToList();
@@ -1141,11 +1139,11 @@ public static class EntityExtension
             }
         }
 
-        var rs = new List<String>();
+        var rs = new List<IDataColumn>();
         foreach (var item in columns)
         {
             var dc = item.Field;
-            if (dc != null) rs.Add(dal.Db.FormatName(dc));
+            if (dc != null) rs.Add(dc);
         }
 
         return rs;

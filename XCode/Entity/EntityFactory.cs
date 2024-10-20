@@ -251,19 +251,23 @@ public static class EntityFactory
             // 反向工程检查
             if (dal.Db.Migration > Migration.Off)
             {
-                //var tables = facts.Select(e => e.Table.DataTable).ToArray();
                 var tables = new List<IDataTable>();
                 foreach (var item in facts)
                 {
+                    // 带有分表策略的实体类不参与反向工程
+                    if (item.ShardPolicy != null) continue;
+                    if (item.Table.DataTable.Columns.Any(e => e.DataScale.StartsWithIgnoreCase("shard:", "timeShard:"))) continue;
+
                     // 克隆一份，防止修改
                     var table = item.Table.DataTable;
                     table = (table.Clone() as IDataTable)!;
 
-                    if (/*table != null &&*/ table.TableName != item.TableName)
+                    if (table.TableName != item.TableName)
                     {
                         // 表名去掉前缀
                         var name = item.TableName;
-                        if (name.Contains(".")) name = name.Substring(".");
+                        var p = name.IndexOf('.');
+                        if (p > 0) name = name.Substring(p + 1);
 
                         table.TableName = name;
                     }
@@ -276,10 +280,6 @@ public static class EntityFactory
             // 实体类初始化数据
             foreach (var item in facts)
             {
-                //if (item.Default is EntityBase entity)
-                //{
-                //    entity.InitData();
-                //}
                 item.Session.InitData();
 
                 if (span != null) span.Value++;

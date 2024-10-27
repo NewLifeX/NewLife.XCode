@@ -89,8 +89,14 @@ public class MapProvider
             key = fi.Name;
         }
 
+        var where = new WhereExpression();
+        if (Membership.TenantContext.CurrentId > 0 && fact.FieldNames.Contains("TenantId"))
+        {
+            where &= Membership.TenantUser._.TenantId == Membership.TenantContext.CurrentId;
+        }
+
         // 数据较少时，从缓存读取
-        var list = fact.Session.Count < 1000 ? fact.FindAllWithCache() : fact.FindAll("", null, null, 0, 100);
+        var list = fact.Session.Count < 1000 && Membership.TenantContext.CurrentId == 0 ? fact.FindAllWithCache() : fact.FindAll(where, null, null, 0, 100);
 
         //return list.Where(e => e[key] != null).ToDictionary(e => e[key], e => e[mst] + "");
         return list.Where(e => e[key] != null).ToDictionary(e => e[key]!, e => e.ToString());//用ToString()可以显示更多信息 2023-08-11

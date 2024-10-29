@@ -435,7 +435,13 @@ abstract class DbBase : DisposeBase, IDatabase
             if (ver.Major <= 3)
                 links.Add($"{name}_netcore{ver.Major}{ver.Minor}");
             else
+            {
                 links.Add($"{name}_net{ver.Major}{ver.Minor}");
+                for (var i = ver.Major - 1; i >= 5; i--)
+                {
+                    links.Add($"{name}_net{i}0");
+                }
+            }
 
             if (ver.Major >= 3) links.Add($"{name}_netstandard21");
             links.Add($"{name}_netstandard20");

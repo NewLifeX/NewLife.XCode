@@ -141,7 +141,7 @@ public partial class Log : Entity<Log>
         if (linkId >= 0) exp &= _.LinkID == linkId;
         if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
         exp &= _.CreateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Category.Contains(key) | _.Action.Contains(key) | _.UserName.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.TraceId.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.Remark.Contains(key);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);
     }

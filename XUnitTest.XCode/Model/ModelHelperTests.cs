@@ -2,7 +2,6 @@
 using System.IO;
 using NewLife;
 using NewLife.Collections;
-using NewLife.Data;
 using XCode.Code;
 using XCode.DataAccessLayer;
 using Xunit;

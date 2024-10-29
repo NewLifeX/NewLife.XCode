@@ -146,7 +146,7 @@ public partial class Role : Entity<Role>
 
         if (!name.IsNullOrEmpty()) exp &= _.Name == name;
         exp &= _.UpdateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.Permission.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);
     }

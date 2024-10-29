@@ -172,7 +172,7 @@ public partial class CorePerson : Entity<CorePerson>
         if (buildId >= 0) exp &= _.BuildID == buildId;
         if (build_ID >= 0) exp &= _.Build_ID == build_ID;
         exp &= _.UpdateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Pname.Contains(key) | _.CreditNo.Contains(key) | _.Mobile.Contains(key) | _.UnitNum.Contains(key) | _.HouseNum.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);
     }

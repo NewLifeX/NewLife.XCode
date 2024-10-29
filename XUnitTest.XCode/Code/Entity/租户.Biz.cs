@@ -132,7 +132,7 @@ public partial class Tenant : Entity<Tenant>
 
         if (!code.IsNullOrEmpty()) exp &= _.Code == code;
         exp &= _.UpdateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.RoleIds.Contains(key) | _.Logo.Contains(key) | _.DatabaseName.Contains(key) | _.TableName.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);
     }

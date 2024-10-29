@@ -1975,9 +1975,6 @@ public class EntityBuilder : ClassBuilder
         if (Members.Contains(key)) return cs;
         Members.Add(key);
 
-        // 可用于关键字模糊搜索的字段
-        var keys = Table.Columns.Where(e => e.DataType == typeof(String)).ToList();
-
         // 注释部分
         WriteLine("/// <summary>高级查询</summary>");
         foreach (var dc in cs)
@@ -2028,8 +2025,7 @@ public class EntityBuilder : ClassBuilder
             else if (dcTime != null)
                 WriteLine("exp &= _.{0}.Between(start, end);", dcTime.Name);
 
-            if (keys.Count > 0)
-                WriteLine("if (!key.IsNullOrEmpty()) exp &= {0};", keys.Join(" | ", k => $"_.{k.Name}.Contains(key)"));
+            WriteLine("if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);");
 
             // 查询返回
             WriteLine();

@@ -135,7 +135,7 @@ public partial class Area : Entity<Area>
         if (!jianPin.IsNullOrEmpty()) exp &= _.JianPin == jianPin;
         if (!geoHash.IsNullOrEmpty()) exp &= _.GeoHash == geoHash;
         exp &= _.UpdateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.FullName.Contains(key) | _.Kind.Contains(key) | _.English.Contains(key) | _.PinYin.Contains(key) | _.JianPin.Contains(key) | _.TelCode.Contains(key) | _.ZipCode.Contains(key) | _.GeoHash.Contains(key) | _.Remark.Contains(key);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);
     }

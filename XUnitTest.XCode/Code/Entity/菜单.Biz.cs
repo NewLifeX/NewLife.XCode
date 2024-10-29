@@ -148,7 +148,7 @@ public partial class Menu : Entity<Menu>
         if (!name.IsNullOrEmpty()) exp &= _.Name == name;
         if (parentId >= 0) exp &= _.ParentID == parentId;
         exp &= _.UpdateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Name.Contains(key) | _.DisplayName.Contains(key) | _.FullName.Contains(key) | _.Url.Contains(key) | _.Icon.Contains(key) | _.Permission.Contains(key) | _.Ex4.Contains(key) | _.Ex5.Contains(key) | _.Ex6.Contains(key) | _.CreateUser.Contains(key) | _.CreateIP.Contains(key) | _.UpdateUser.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);
     }

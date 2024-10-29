@@ -131,7 +131,7 @@ public partial class TenantUser : Entity<TenantUser>
         if (tenantId >= 0) exp &= _.TenantId == tenantId;
         if (userId >= 0) exp &= _.UserId == userId;
         exp &= _.UpdateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.RoleIds.Contains(key) | _.CreateIP.Contains(key) | _.UpdateIP.Contains(key) | _.Remark.Contains(key);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);
     }

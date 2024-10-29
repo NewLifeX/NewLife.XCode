@@ -241,10 +241,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         // 克隆一份，防止修改
         table = (table.Clone() as IDataTable)!;
 
-        // 带有分表策略的实体类不参与反向工程
-        if (Factory.ShardPolicy != null) return;
-        if (table.Columns.Any(e => e.DataScale.StartsWithIgnoreCase("shard:", "timeShard:"))) return;
-
+        // 表名改变时，一定要检查架构，创建新表
         if (table.TableName != TableName)
         {
             // 表名去掉前缀
@@ -252,6 +249,12 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
             if (name.Contains(".")) name = name.Substring(".");
 
             table.TableName = name;
+        }
+        else
+        {
+            // 带有分表策略的实体类不参与反向工程
+            if (Factory.ShardPolicy != null) return;
+            if (table.Columns.Any(e => e.DataScale.StartsWithIgnoreCase("shard:", "timeShard:"))) return;
         }
 
         dal.SetTables(table);

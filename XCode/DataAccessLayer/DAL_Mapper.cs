@@ -504,7 +504,7 @@ public partial class DAL
             var i = 0;
             foreach (var pi in where.GetType().GetProperties(true))
             {
-                if (i++ > 0) sb.Append("And ");
+                if (i++ > 0) sb.Append(" And ");
 
                 var p = Db.CreateParameter(pi.Name, pi.GetValue(where, null), pi.PropertyType);
                 dps.Add(p);

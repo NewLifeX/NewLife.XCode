@@ -176,6 +176,11 @@ public class WhereBuilder
             if (ctx == null || ctx.TenantId != source.TenantId) return false;
         }
 
+        if (TenantContext.CurrentId > 0 && entity is User)//如果租户修改用户可以通过
+        {
+            return true;
+        }
+
         return EvalParse(Expression, entity);
     }
 

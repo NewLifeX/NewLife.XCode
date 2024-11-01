@@ -97,6 +97,10 @@ public partial class Area : Entity<Area>
             }, null);
         }
     }
+
+    /// <summary>已重载。返回路径</summary>
+    /// <returns></returns>
+    public override String ToString() => Path;
     #endregion
 
     #region 扩展属性

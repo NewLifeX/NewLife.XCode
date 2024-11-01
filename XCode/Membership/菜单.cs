@@ -20,7 +20,7 @@ namespace XCode.Membership;
 [BindIndex("IU_Menu_ParentID_Name", true, "ParentID,Name")]
 [BindIndex("IX_Menu_Name", false, "Name")]
 [BindTable("Menu", Description = "菜单。功能权限，大多数时候也是可见页面", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class Menu : IMenu, IEntity<MenuModel>
+public partial class Menu : IMenu, IEntity<IMenu>
 {
     #region 属性
     private Int32 _ID;
@@ -258,7 +258,7 @@ public partial class Menu : IMenu, IEntity<MenuModel>
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(MenuModel model)
+    public void Copy(IMenu model)
     {
         ID = model.ID;
         Name = model.Name;

@@ -21,7 +21,7 @@ namespace XCode.Membership;
 [BindIndex("IX_Log_Category_LinkID_ID", false, "Category,LinkID,ID")]
 [BindIndex("IX_Log_CreateUserID_ID", false, "CreateUserID,ID")]
 [BindTable("Log", Description = "日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除", ConnName = "Log", DbType = DatabaseType.None)]
-public partial class Log : ILog, IEntity<LogModel>
+public partial class Log : ILog, IEntity<ILog>
 {
     #region 属性
     private Int64 _ID;
@@ -181,7 +181,7 @@ public partial class Log : ILog, IEntity<LogModel>
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(LogModel model)
+    public void Copy(ILog model)
     {
         ID = model.ID;
         Category = model.Category;

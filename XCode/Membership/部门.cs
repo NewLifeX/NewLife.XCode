@@ -23,7 +23,7 @@ namespace XCode.Membership;
 [BindIndex("IX_Department_Code", false, "Code")]
 [BindIndex("IX_Department_UpdateTime", false, "UpdateTime")]
 [BindTable("Department", Description = "部门。组织机构，多级树状结构，支持多租户", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class Department : IDepartment, IEntity<DepartmentModel>
+public partial class Department : IDepartment, IEntity<IDepartment>
 {
     #region 属性
     private Int32 _ID;
@@ -253,7 +253,7 @@ public partial class Department : IDepartment, IEntity<DepartmentModel>
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(DepartmentModel model)
+    public void Copy(IDepartment model)
     {
         ID = model.ID;
         TenantId = model.TenantId;

@@ -19,7 +19,7 @@ namespace XCode.Membership;
 [Description("租户。多租户SAAS平台，用于隔离业务数据")]
 [BindIndex("IU_Tenant_Code", true, "Code")]
 [BindTable("Tenant", Description = "租户。多租户SAAS平台，用于隔离业务数据", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class Tenant : ITenant, IEntity<TenantModel>
+public partial class Tenant : ITenant, IEntity<ITenant>
 {
     #region 属性
     private Int32 _Id;
@@ -169,7 +169,7 @@ public partial class Tenant : ITenant, IEntity<TenantModel>
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(TenantModel model)
+    public void Copy(ITenant model)
     {
         Id = model.Id;
         Code = model.Code;

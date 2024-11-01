@@ -440,7 +440,7 @@ public partial class User
 
     /// <summary>地区</summary>
     [Map(nameof(AreaId), typeof(XCode.Membership.Area), "Id")]
-    public String? AreaPath => Area?.Path;
+    public String? AreaPath => Area?.ToString();
 
     /// <summary>角色</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]

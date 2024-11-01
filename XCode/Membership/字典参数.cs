@@ -21,7 +21,7 @@ namespace XCode.Membership;
 [BindIndex("IX_Parameter_Category_Name", false, "Category,Name")]
 [BindIndex("IX_Parameter_UpdateTime", false, "UpdateTime")]
 [BindTable("Parameter", Description = "字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class Parameter : IParameter, IEntity<ParameterModel>
+public partial class Parameter : IParameter, IEntity<IParameter>
 {
     #region 属性
     private Int32 _ID;
@@ -227,7 +227,7 @@ public partial class Parameter : IParameter, IEntity<ParameterModel>
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(ParameterModel model)
+    public void Copy(IParameter model)
     {
         ID = model.ID;
         UserID = model.UserID;

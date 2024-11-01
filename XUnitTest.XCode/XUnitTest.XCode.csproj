@@ -81,7 +81,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
-    <PackageReference Include="NewLife.Core" Version="11.0.2024.1029-beta0215" />
+    <PackageReference Include="NewLife.Core" Version="11.0.2024.1101" />
     <PackageReference Include="NewLife.IP" Version="2.2.2024.1004-beta0930" />
     <PackageReference Include="NewLife.UnitTest" Version="1.0.2024.1006" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.1" />

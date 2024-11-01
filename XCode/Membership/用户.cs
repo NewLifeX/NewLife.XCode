@@ -25,7 +25,7 @@ namespace XCode.Membership;
 [BindIndex("IX_User_DepartmentID", false, "DepartmentID")]
 [BindIndex("IX_User_UpdateTime", false, "UpdateTime")]
 [BindTable("User", Description = "用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class User : IUser, IEntity<UserModel>
+public partial class User : IUser, IEntity<IUser>
 {
     #region 属性
     private Int32 _ID;
@@ -343,7 +343,7 @@ public partial class User : IUser, IEntity<UserModel>
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(UserModel model)
+    public void Copy(IUser model)
     {
         ID = model.ID;
         Name = model.Name;
@@ -479,7 +479,7 @@ public partial class User : IUser, IEntity<UserModel>
 
     /// <summary>地区</summary>
     [Map(nameof(AreaId), typeof(XCode.Membership.Area), "ID")]
-    public String? AreaPath => Area?.Path;
+    public String? AreaPath => Area?.ToString();
 
     /// <summary>角色</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]

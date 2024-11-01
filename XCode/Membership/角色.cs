@@ -19,7 +19,7 @@ namespace XCode.Membership;
 [Description("角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限")]
 [BindIndex("IU_Role_Name", true, "Name")]
 [BindTable("Role", Description = "角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限", ConnName = "Membership", DbType = DatabaseType.None)]
-public partial class Role : IRole, IEntity<RoleModel>
+public partial class Role : IRole, IEntity<IRole>
 {
     #region 属性
     private Int32 _ID;
@@ -209,7 +209,7 @@ public partial class Role : IRole, IEntity<RoleModel>
     #region 拷贝
     /// <summary>拷贝模型对象</summary>
     /// <param name="model">模型</param>
-    public void Copy(RoleModel model)
+    public void Copy(IRole model)
     {
         ID = model.ID;
         Name = model.Name;

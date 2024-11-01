@@ -14,7 +14,7 @@
     <!--是否使用中文文件名。默认false-->
     <ChineseFileName>True</ChineseFileName>
     <!--用于生成Copy函数的参数类型。例如{name}或I{name}-->
-    <ModelNameForCopy>{name}Model</ModelNameForCopy>
+    <ModelNameForCopy></ModelNameForCopy>
     <!--带有索引器。实现IModel接口-->
     <HasIModel>True</HasIModel>
     <!--可为null上下文。生成String?等-->
@@ -49,7 +49,7 @@
         <Column Name="Mail" DataType="String" ItemType="mail" Description="邮件。支持登录" />
         <Column Name="Mobile" DataType="String" ItemType="mobile" Description="手机。支持登录" />
         <Column Name="Code" DataType="String" Description="代码。身份证、员工编码等，支持登录" />
-        <Column Name="AreaId" DataType="Int32" Map="XCode.Membership.Area@Id@Path@AreaPath" Description="地区。省市区" />
+        <Column Name="AreaId" DataType="Int32" Map="XCode.Membership.Area@Id@$@AreaPath" Description="地区。省市区" />
         <Column Name="Avatar" DataType="String" ItemType="image" Length="200" Description="头像" />
         <Column Name="RoleID" DataType="Int32" Map="Role@Id@Name" DefaultValue="3" Description="角色。主要角色" Category="登录信息" />
         <Column Name="RoleIds" DataType="String" Length="200" Description="角色组。次要角色集合" Category="登录信息" />

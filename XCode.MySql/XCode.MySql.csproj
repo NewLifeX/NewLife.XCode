@@ -36,7 +36,7 @@
     </None>
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'!='net452'">
-    <PackageReference Include="MySql.Data" Version="9.0.0" />
+    <PackageReference Include="MySql.Data" Version="9.1.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='net452'">
     <PackageReference Include="MySql.Data" Version="8.0.32.1" />

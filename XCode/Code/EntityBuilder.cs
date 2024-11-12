@@ -988,7 +988,7 @@ public class EntityBuilder : ClassBuilder
                     else if (mapName.DataType == typeof(String))
                         WriteLine("public {3} {0} => {1}?.{2};", myName, name, mapName.Name, type);
                     else
-                        WriteLine("public {3} {0} => {1} != null ? {1}.{2} : 0;", myName, name, mapName.Name, mapName.DataType.Name);
+                        WriteLine("public {3} {0} => {1} != null ? {1}.{2} : default;", myName, name, mapName.Name, mapName.DataType.Name);
                 }
             }
 

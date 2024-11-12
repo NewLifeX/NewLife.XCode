@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Data;
 using XCode.Configuration;
 using XCode.Shards;
+using XCode.Statistics;
 
 namespace XCode;
 
@@ -277,12 +278,45 @@ public partial class Entity<TEntity>
                 {
                     // 找到所有数字字段，进行求和统计
                     var concat = new ConcatExpression();
+                    foreach (var item in StatFields)
+                    {
+                        concat &= item.Mode switch
+                        {
+                            StatModes.Max => item.Field.Max(),
+                            StatModes.Min => item.Field.Min(),
+                            StatModes.Avg => item.Field.Avg(),
+                            StatModes.Sum => item.Field.Sum(),
+                            StatModes.Count => item.Field.Count(),
+                            _ => item.Field.Max(),
+                        };
+                    }
+
+                    // 至少有个空字符串，避免重入
+                    _SelectStat = concat + "";
+                }
+
+                return _SelectStat;
+            }
+            set => _SelectStat = value;
+        }
+
+        private IList<StatField> _StatFields;
+        /// <summary>统计字段集合</summary>
+        public IList<StatField> StatFields
+        {
+            get
+            {
+                if (_StatFields == null)
+                {
+                    var list = new List<StatField>();
+
                     //// 先来个行数
                     //if (!Fields.Any(e => e.Name.EqualIgnoreCase("Count"))) concat &= "Count(*) as Count";
                     foreach (var item in Fields)
                     {
                         // 自增和主键不参与
                         if (item.IsIdentity || item.PrimaryKey) continue;
+
                         // 只要Int32和Int64，一般Int16太小不适合聚合
                         if (item.Type != typeof(Int32) &&
                             item.Type != typeof(Int64) &&
@@ -303,23 +337,23 @@ public partial class Entity<TEntity>
                         while (name2.Length > 1 && Char.IsDigit(name2[^1])) name2 = name2[0..^1];
 
                         if (name.StartsWith("Max") && name.Length > 3 && Char.IsUpper(name[3]))
-                            concat &= item.Max();
+                            list.Add(new(item, StatModes.Max));
                         else if (name.StartsWith("Min") && name.Length > 3 && Char.IsUpper(name[3]))
-                            concat &= item.Min();
+                            list.Add(new(item, StatModes.Min));
                         else if (name.StartsWith("Avg") && name.Length > 3 && Char.IsUpper(name[3]))
-                            concat &= item.Avg();
+                            list.Add(new(item, StatModes.Avg));
                         else if (name2.EndsWith("Rate") || name2.EndsWith("Ratio"))
-                            concat &= item.Max();
+                            list.Add(new(item, StatModes.Max));
                         else
-                            concat &= item.Sum();
+                            list.Add(new(item, StatModes.Sum));
                     }
-                    // 至少有个空字符串，避免重入
-                    _SelectStat = concat + "";
+
+                    _StatFields = list;
                 }
 
-                return _SelectStat;
+                return _StatFields;
             }
-            set => _SelectStat = value;
+            set => _StatFields = value;
         }
 
         /// <summary>实体模块集合</summary>

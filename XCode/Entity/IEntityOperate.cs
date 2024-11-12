@@ -4,6 +4,7 @@ using System.Data;
 using NewLife.Data;
 using XCode.Configuration;
 using XCode.Shards;
+using XCode.Statistics;
 
 namespace XCode;
 
@@ -220,6 +221,9 @@ public interface IEntityFactory
 
     /// <summary>默认选择统计语句</summary>
     String? SelectStat { get; set; }
+
+    /// <summary>统计字段集合</summary>
+    IList<StatField> StatFields { get; set; }
 
     /// <summary>实体模块集合</summary>
     EntityModules Modules { get; }

@@ -218,6 +218,8 @@ internal class DaMengSession : RemoteDbSession
                 var m = reg_SEQ.Match(sql);
                 if (m != null && m.Success && m.Groups != null && m.Groups.Count > 0)
                     rs = ExecuteScalar<Int64>($"Select {m.Groups[1].Value}.currval From dual");
+                else
+                    rs = ExecuteScalar<Int64>("Select @@Identity");
             }
             Commit();
             return rs;
@@ -253,6 +255,8 @@ internal class DaMengSession : RemoteDbSession
                 var m = reg_SEQ.Match(sql);
                 if (m != null && m.Success && m.Groups != null && m.Groups.Count > 0)
                     rs = await ExecuteScalarAsync<Int64>($"Select {m.Groups[1].Value}.currval From dual");
+                else
+                    rs = await ExecuteScalarAsync<Int64>("Select @@Identity");
             }
             Commit();
             return rs;

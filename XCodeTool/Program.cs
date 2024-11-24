@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
+using NewLife.Model;
 using XCode;
 using XCode.Code;
 
@@ -41,6 +42,15 @@ class Program
         // 检查工具
         var task = Task.Run(CheckTool);
 
+        // 加载插件
+        var manager = new PluginManager
+        {
+            Identity = "CodeBuild",
+            Log = XTrace.Log,
+        };
+        manager.Load();
+        manager.Init();
+
         // 在当前目录查找模型文件
         var file = "";
         if (args.Length > 0) file = args.LastOrDefault();
@@ -57,7 +67,7 @@ class Program
                 return;
             }
 
-            Build(file, log);
+            Build(file, log, manager);
         }
         else
         {
@@ -77,7 +87,7 @@ class Program
                 // 循环处理
                 foreach (var item in files)
                 {
-                    Build(item, log);
+                    Build(item, log, manager);
                 }
             }
             else
@@ -96,7 +106,7 @@ class Program
 
     /// <summary>生成实体类。用户可以调整该方法可以改变生成实体类代码的逻辑，从而得到自己的代码生成器</summary>
     /// <param name="modelFile"></param>
-    static void Build(String modelFile, ILog log)
+    static void Build(String modelFile, ILog log, PluginManager manager)
     {
         XTrace.WriteLine("正在处理：{0}", modelFile);
 
@@ -115,6 +125,21 @@ class Program
         try
         {
             XTrace.WriteLine("修正模型：{0}", modelFile);
+            foreach (var item in manager.Plugins)
+            {
+                if (item is ICodePlugin plugin)
+                {
+                    try
+                    {
+                        plugin.FixTables(tables);
+                    }
+                    catch (Exception ex)
+                    {
+                        XTrace.WriteException(ex);
+                    }
+                }
+            }
+
             EntityBuilder.FixModelFile(modelFile, option, atts, tables, log);
         }
         catch (Exception ex)

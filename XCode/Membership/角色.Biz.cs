@@ -9,7 +9,7 @@ using NewLife.Log;
 namespace XCode.Membership;
 
 /// <summary>角色</summary>
-public partial class Role : LogEntity<Role>, IRole
+public partial class Role : LogEntity<Role>, IRole, ITenantSource
 {
     #region 对象操作
 

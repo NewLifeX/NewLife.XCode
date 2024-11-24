@@ -23,6 +23,9 @@ public partial interface IRole
     /// <summary>系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</summary>
     Boolean IsSystem { get; set; }
 
+    /// <summary>租户。角色所属组合，0表示全局角色</summary>
+    Int32 TenantId { get; set; }
+
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
     String? Permission { get; set; }
 

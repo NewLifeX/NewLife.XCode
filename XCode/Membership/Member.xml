@@ -131,6 +131,7 @@
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="IsSystem" DataType="Boolean" Description="系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除" />
+        <Column Name="TenantId" DataType="Int32" Map="Tenant@Id@$" Description="租户。角色所属组合，0表示全局角色" />
         <Column Name="Permission" DataType="String" Length="-1" Description="权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔" />
         <Column Name="Sort" DataType="Int32" Description="排序" />
         <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />

@@ -25,6 +25,9 @@ public partial class RoleModel : IModel
     /// <summary>系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</summary>
     public Boolean IsSystem { get; set; }
 
+    /// <summary>租户。角色所属组合，0表示全局角色</summary>
+    public Int32 TenantId { get; set; }
+
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
     public String? Permission { get; set; }
 
@@ -91,6 +94,7 @@ public partial class RoleModel : IModel
                 "Name" => Name,
                 "Enable" => Enable,
                 "IsSystem" => IsSystem,
+                "TenantId" => TenantId,
                 "Permission" => Permission,
                 "Sort" => Sort,
                 "Ex1" => Ex1,
@@ -119,6 +123,7 @@ public partial class RoleModel : IModel
                 case "Name": Name = Convert.ToString(value); break;
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "IsSystem": IsSystem = value.ToBoolean(); break;
+                case "TenantId": TenantId = value.ToInt(); break;
                 case "Permission": Permission = Convert.ToString(value); break;
                 case "Sort": Sort = value.ToInt(); break;
                 case "Ex1": Ex1 = value.ToInt(); break;
@@ -151,6 +156,7 @@ public partial class RoleModel : IModel
         Name = model.Name;
         Enable = model.Enable;
         IsSystem = model.IsSystem;
+        TenantId = model.TenantId;
         Permission = model.Permission;
         Sort = model.Sort;
         Ex1 = model.Ex1;

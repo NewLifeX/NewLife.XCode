@@ -54,6 +54,14 @@ public partial class Role : IRole, IEntity<IRole>
     [BindColumn("IsSystem", "系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除", "")]
     public Boolean IsSystem { get => _IsSystem; set { if (OnPropertyChanging("IsSystem", value)) { _IsSystem = value; OnPropertyChanged("IsSystem"); } } }
 
+    private Int32 _TenantId;
+    /// <summary>租户。角色所属组合，0表示全局角色</summary>
+    [DisplayName("租户")]
+    [Description("租户。角色所属组合，0表示全局角色")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("TenantId", "租户。角色所属组合，0表示全局角色", "")]
+    public Int32 TenantId { get => _TenantId; set { if (OnPropertyChanging("TenantId", value)) { _TenantId = value; OnPropertyChanged("TenantId"); } } }
+
     private String? _Permission;
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
     [DisplayName("权限")]
@@ -215,6 +223,7 @@ public partial class Role : IRole, IEntity<IRole>
         Name = model.Name;
         Enable = model.Enable;
         IsSystem = model.IsSystem;
+        TenantId = model.TenantId;
         Permission = model.Permission;
         Sort = model.Sort;
         Ex1 = model.Ex1;
@@ -247,6 +256,7 @@ public partial class Role : IRole, IEntity<IRole>
             "Name" => _Name,
             "Enable" => _Enable,
             "IsSystem" => _IsSystem,
+            "TenantId" => _TenantId,
             "Permission" => _Permission,
             "Sort" => _Sort,
             "Ex1" => _Ex1,
@@ -274,6 +284,7 @@ public partial class Role : IRole, IEntity<IRole>
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "IsSystem": _IsSystem = value.ToBoolean(); break;
+                case "TenantId": _TenantId = value.ToInt(); break;
                 case "Permission": _Permission = Convert.ToString(value); break;
                 case "Sort": _Sort = value.ToInt(); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
@@ -298,6 +309,14 @@ public partial class Role : IRole, IEntity<IRole>
     #endregion
 
     #region 关联映射
+    /// <summary>租户</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Tenant? Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+
+    /// <summary>租户</summary>
+    [Map(nameof(TenantId), typeof(Tenant), "Id")]
+    public String? TenantName => Tenant?.ToString();
+
     #endregion
 
     #region 扩展查询
@@ -318,6 +337,9 @@ public partial class Role : IRole, IEntity<IRole>
 
         /// <summary>系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</summary>
         public static readonly Field IsSystem = FindByName("IsSystem");
+
+        /// <summary>租户。角色所属组合，0表示全局角色</summary>
+        public static readonly Field TenantId = FindByName("TenantId");
 
         /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
         public static readonly Field Permission = FindByName("Permission");
@@ -387,6 +409,9 @@ public partial class Role : IRole, IEntity<IRole>
 
         /// <summary>系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</summary>
         public const String IsSystem = "IsSystem";
+
+        /// <summary>租户。角色所属组合，0表示全局角色</summary>
+        public const String TenantId = "TenantId";
 
         /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
         public const String Permission = "Permission";

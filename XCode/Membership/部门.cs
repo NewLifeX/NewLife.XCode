@@ -17,7 +17,7 @@ namespace XCode.Membership;
 [Serializable]
 [DataObject]
 [Description("部门。组织机构，多级树状结构，支持多租户")]
-[BindIndex("IU_Department_TenantId_ParentID_Name", true, "TenantId,ParentID,Name")]
+[BindIndex("IX_Department_TenantId_ParentID_Name", false, "TenantId,ParentID,Name")]
 [BindIndex("IX_Department_Name", false, "Name")]
 [BindIndex("IX_Department_ParentID_Name", false, "ParentID,Name")]
 [BindIndex("IX_Department_Code", false, "Code")]
@@ -380,32 +380,17 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <param name="tenantId">租户</param>
     /// <param name="parentId">父级</param>
     /// <param name="name">名称</param>
-    /// <returns>实体对象</returns>
-    public static Department? FindByTenantIdAndParentIDAndName(Int32 tenantId, Int32 parentId, String name)
-    {
-        if (tenantId < 0) return null;
-        if (parentId < 0) return null;
-        if (name.IsNullOrEmpty()) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
-
-        return Find(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
-    }
-
-    /// <summary>根据租户、父级查找</summary>
-    /// <param name="tenantId">租户</param>
-    /// <param name="parentId">父级</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByTenantIdAndParentID(Int32 tenantId, Int32 parentId)
+    public static IList<Department> FindAllByTenantIdAndParentIDAndName(Int32 tenantId, Int32 parentId, String name)
     {
         if (tenantId < 0) return [];
         if (parentId < 0) return [];
+        if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId);
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
-        return FindAll(_.TenantId == tenantId & _.ParentID == parentId);
+        return FindAll(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
     }
 
     /// <summary>根据代码查找</summary>

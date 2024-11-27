@@ -17,7 +17,8 @@ namespace XCode.Membership;
 [Serializable]
 [DataObject]
 [Description("角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限")]
-[BindIndex("IU_Role_Name", true, "Name")]
+[BindIndex("IX_Role_Name", false, "Name")]
+[BindIndex("IX_Role_TenantId_Name", false, "TenantId,Name")]
 [BindTable("Role", Description = "角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class Role : IRole, IEntity<IRole>
 {
@@ -320,6 +321,33 @@ public partial class Role : IRole, IEntity<IRole>
     #endregion
 
     #region 扩展查询
+    /// <summary>根据名称查找</summary>
+    /// <param name="name">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<Role> FindAllByName(String name)
+    {
+        if (name.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+
+        return FindAll(_.Name == name);
+    }
+
+    /// <summary>根据租户、名称查找</summary>
+    /// <param name="tenantId">租户</param>
+    /// <param name="name">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<Role> FindAllByTenantIdAndName(Int32 tenantId, String name)
+    {
+        if (tenantId < 0) return [];
+        if (name.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.Name.EqualIgnoreCase(name));
+
+        return FindAll(_.TenantId == tenantId & _.Name == name);
+    }
     #endregion
 
     #region 字段名

@@ -118,7 +118,7 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="TenantId,ParentID,Name" Unique="True" />
+        <Index Columns="TenantId,ParentID,Name" />
         <Index Columns="Name" />
         <Index Columns="ParentID,Name" />
         <Index Columns="Code" />
@@ -151,7 +151,8 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="Name" Unique="True" />
+        <Index Columns="Name" />
+        <Index Columns="TenantId,Name" />
       </Indexes>
     </Table>
     <Table Name="Menu" Description="菜单。功能权限，大多数时候也是可见页面" BaseType="EntityTree">

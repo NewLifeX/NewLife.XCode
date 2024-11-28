@@ -489,7 +489,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             if (name.IsNullOrEmpty()) name = typeof(TEntity).Name;
             sb.AppendFormat(" 的{0}已存在！", name);
 
-            throw new ArgumentOutOfRangeException(String.Join(",", names), this[names[0]], sb.Put(true));
+            throw new ArgumentOutOfRangeException(String.Join(",", names), this[names[0]], sb.Return(true));
         }
     }
 
@@ -921,7 +921,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                         sb.AppendFormat("{0} {1}", fn, od);
                     }
 
-                    order2 = sb.Put(true).Replace("★", ",");
+                    order2 = sb.Return(true).Replace("★", ",");
                 }
                 #endregion
 
@@ -1244,7 +1244,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                         sb.AppendFormat("{0} {1}", fn, od);
                     }
 
-                    order2 = sb.Put(true).Replace("★", ",");
+                    order2 = sb.Return(true).Replace("★", ",");
                 }
                 #endregion
 
@@ -1979,7 +1979,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                     if (Meta.FieldNames.Contains(dc.Name)) sb.Append(this[dc.Name]);
                 }
 
-                var vs = sb.Put(true);
+                var vs = sb.Return(true);
                 if (columns.Length > 1)
                     return $"[{vs}]";
                 else

@@ -68,8 +68,8 @@ public class InsertBuilder
                 sbValues.Append(database.FormatValue(field, value));
         }
 
-        var ns = sbNames.Put(true);
-        var vs = sbValues.Put(true);
+        var ns = sbNames.Return(true);
+        var vs = sbValues.Return(true);
         if (ns.IsNullOrEmpty()) return null;
 
         if (dps.Count > 0) Parameters = dps.ToArray();

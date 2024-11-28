@@ -840,7 +840,7 @@ public partial class DAL
                     sb.Append(item);
                 }
 
-                di.Name = sb.Put(true);
+                di.Name = sb.Return(true);
             }
         }
     }

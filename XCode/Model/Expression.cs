@@ -45,7 +45,7 @@ public class Expression
         var sb = Pool.StringBuilder.Get();
         GetString(db, sb, ps);
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     /// <summary>获取字符串</summary>

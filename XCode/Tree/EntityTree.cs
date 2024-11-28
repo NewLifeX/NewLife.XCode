@@ -455,7 +455,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
                     sb.Append(item[namekey]);
             }
         }
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     /// <summary>删除子级到本级的关系。导出数据前可以先删除关系，以减少导出的大小</summary>

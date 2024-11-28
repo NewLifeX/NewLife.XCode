@@ -275,7 +275,7 @@ public partial class Parameter : Entity<Parameter>
             if (sb.Length > 0) sb.Append(',');
             sb.Append(item);
         }
-        SetValueInternal(sb.Put(true));
+        SetValueInternal(sb.Return(true));
     }
 
     /// <summary>设置名值对</summary>
@@ -290,7 +290,7 @@ public partial class Parameter : Entity<Parameter>
             if (sb.Length > 0) sb.Append(',');
             sb.AppendFormat("{0}={1}", item.Key, item.Value);
         }
-        SetValueInternal(sb.Put(true));
+        SetValueInternal(sb.Return(true));
     }
     #endregion
 }

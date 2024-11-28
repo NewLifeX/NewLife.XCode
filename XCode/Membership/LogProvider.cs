@@ -234,7 +234,7 @@ public class LogProvider
         var category = fact.Table.DataTable.DisplayName;
         if (category.IsNullOrEmpty()) category = type.GetDisplayName() ?? type.GetDescription() ?? type.Name;
 
-        var log = CreateLog(category, action, error.IsNullOrEmpty(), sb.Put(true), userid, name);
+        var log = CreateLog(category, action, error.IsNullOrEmpty(), sb.Return(true), userid, name);
         log.LinkID = linkId;
 
         log.SaveAsync();

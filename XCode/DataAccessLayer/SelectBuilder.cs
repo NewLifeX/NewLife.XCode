@@ -154,7 +154,7 @@ $";
         if (!OrderBy.IsNullOrEmpty()) sb.Append(" Order By " + OrderBy);
         if (!Limit.IsNullOrEmpty()) sb.Append(Limit.EnsureStart(" "));
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     /// <summary>获取记录数的语句</summary>

@@ -349,7 +349,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
             if (sb.Length > 0) sb.Append(',');
             sb.AppendFormat("{0}#{1}", item.Key, (Int32)item.Value);
         }
-        SetItem(__.Permission, sb.Put(true));
+        SetItem(__.Permission, sb.Return(true));
     }
 
     /// <summary>当前角色拥有的资源</summary>

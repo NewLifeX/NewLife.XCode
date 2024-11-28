@@ -371,7 +371,7 @@ public partial class DAL
             }
         }
 
-        var sql = sb.Put(true);
+        var sql = sb.Return(true);
 
         return ExecuteWrap(sql, "", dps.ToArray(), (ss, s, t, p) => ss.Execute(s, CommandType.Text, p), nameof(Update));
     }
@@ -474,7 +474,7 @@ public partial class DAL
         }
         sb.Length -= " And ".Length;
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     /// <summary>删除数据</summary>
@@ -512,7 +512,7 @@ public partial class DAL
             }
         }
 
-        return (sb.Put(true), dps);
+        return (sb.Return(true), dps);
     }
 
     /// <summary>插入数据</summary>
@@ -590,7 +590,7 @@ public partial class DAL
             sb.AppendFormat("{0}={1}", pi.Name, p.ParameterName);
         }
 
-        var sql = sb.Put(true);
+        var sql = sb.Return(true);
 
         return ExecuteAsyncWrap(sql, "", dps.ToArray(), (ss, s, t, p) => ss.ExecuteAsync(s, CommandType.Text, p), nameof(UpdateAsync));
     }

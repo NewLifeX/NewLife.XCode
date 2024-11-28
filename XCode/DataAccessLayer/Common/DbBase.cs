@@ -796,7 +796,7 @@ abstract class DbBase : DisposeBase, IDatabase
             sb.Append(ch);
         }
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     /// <summary>格式化数据为SQL数据</summary>

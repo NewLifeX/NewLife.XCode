@@ -84,7 +84,7 @@ public class WhereExpression : Expression, IEnumerable<Expression>
             }
         }
 
-        builder.Append(sb.Put(true));
+        builder.Append(sb.Return(true));
     }
 
     private void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object> ps, Expression exp)

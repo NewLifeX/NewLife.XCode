@@ -340,7 +340,7 @@ partial class DAL
             Append(sb, k1);
             Append(sb, k2);
             Append(sb, k3);
-            key = sb.Put(true);
+            key = sb.Return(true);
 
             if (cache.TryGetValue<TResult>(key, out var value)) return value!;
         }
@@ -503,7 +503,7 @@ partial class DAL
             Append(sb, k1);
             Append(sb, k2);
             Append(sb, k3);
-            key = sb.Put(true);
+            key = sb.Return(true);
 
             if (cache.TryGetValue<TResult>(key, out var value)) return value!;
         }

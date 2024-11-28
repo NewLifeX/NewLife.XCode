@@ -77,7 +77,7 @@ public static class SqlBuilder
             if (item.Value) sb.Append(" Desc");
         }
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     /// <summary>获取排序子句</summary>

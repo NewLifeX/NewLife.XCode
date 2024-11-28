@@ -299,7 +299,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
             if (sb.Length > 0) sb.Append(',');
             sb.AppendFormat("{0}#{1}", item.Key, item.Value);
         }
-        SetItem(__.Permission, sb.Put(true));
+        SetItem(__.Permission, sb.Return(true));
     }
     #endregion
 

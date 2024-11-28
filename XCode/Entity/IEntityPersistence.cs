@@ -373,8 +373,8 @@ public class EntityPersistence : IEntityPersistence
             //sbv.Append(SqlDataFormat(values[i], fs[names[i]]));
             sbv.Append(db.FormatValue(column, values[i]));
         }
-        var sn = sbn.Put(true);
-        var sv = sbv.Put(true);
+        var sn = sbn.Return(true);
+        var sv = sbv.Return(true);
         return session.Execute($"Insert Into {session.FormatedTableName}({sn}) values({sv})");
     }
 
@@ -476,7 +476,7 @@ public class EntityPersistence : IEntityPersistence
             sb.Append(db.FormatValue(column, values[i]));
         }
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
     #endregion
 
@@ -609,8 +609,8 @@ public class EntityPersistence : IEntityPersistence
                 sbValues.Append(db.FormatValue(fi.Field, value));
         }
 
-        var ns = sbNames.Put(true);
-        var vs = sbValues.Put(true);
+        var ns = sbNames.Return(true);
+        var vs = sbValues.Return(true);
         if (ns.IsNullOrEmpty()) return null;
 
         if (dps.Count > 0) parameters = dps.ToArray();
@@ -720,7 +720,7 @@ public class EntityPersistence : IEntityPersistence
         // 重置累加数据
         if (dfs != null && dfs.Count > 0) entity.Addition?.Reset(dfs);
 
-        var str = sb.Put(true);
+        var str = sb.Return(true);
         if (str.IsNullOrEmpty()) return null;
 
         // Where条件里面的参数化
@@ -925,8 +925,8 @@ public class EntityPersistence : IEntityPersistence
             sbValues.Separate(", ").Append(db.FormatParameterName(fi.Name));
         }
 
-        var ns = sbNames.Put(true);
-        var vs = sbValues.Put(true);
+        var ns = sbNames.Return(true);
+        var vs = sbValues.Return(true);
         if (ns.IsNullOrEmpty()) return null;
 
         return $"Insert Into {session.FormatedTableName}({ns}) Values({vs})";

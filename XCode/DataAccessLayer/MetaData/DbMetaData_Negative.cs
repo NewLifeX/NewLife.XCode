@@ -1035,7 +1035,7 @@ internal partial class DbMetaData
         var dcs = index.Table.GetColumns(index.Columns);
         sb.AppendFormat(" On {0} ({1})", FormatName(index.Table), dcs.Join(",", FormatName));
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     public virtual String DropIndexSQL(IDataIndex index) => $"Drop Index {index.Name} On {FormatName(index.Table)}";

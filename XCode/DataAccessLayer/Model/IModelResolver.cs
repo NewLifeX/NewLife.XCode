@@ -99,7 +99,7 @@ public class ModelResolver : IModelResolver
                     sb.Append(item);
                 }
             }
-            name = sb.Put(true);
+            name = sb.Return(true);
         }
         if (name.Length > 2 && (name == name.ToUpper() || name == name.ToLower()))
         {
@@ -156,7 +156,7 @@ public class ModelResolver : IModelResolver
             sb.Append(ch);
         }
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     /// <summary>根据字段名等信息计算索引的名称</summary>
@@ -184,7 +184,7 @@ public class ModelResolver : IModelResolver
             sb.Append('_');
             sb.Append(di.Columns[i]);
         }
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     /// <summary>获取显示名，如果描述不存在，则使用名称，否则使用描述前面部分，句号（中英文皆可）、换行分隔</summary>

@@ -326,7 +326,7 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
             if (Success > 0) sb.AppendFormat("，命中{0,11:n0}（{1,6:P02}）", Success, (Double)Success / Total);
             sb.AppendFormat("\t[{0}]", typeof(TEntity).FullName);
 
-            XTrace.WriteLine(sb.Put(true));
+            XTrace.WriteLine(sb.Return(true));
         }
     }
     #endregion

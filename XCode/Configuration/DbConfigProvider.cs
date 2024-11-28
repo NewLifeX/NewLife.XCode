@@ -1,6 +1,5 @@
 ﻿using System.Security.Cryptography;
 using NewLife;
-using NewLife.Common;
 using NewLife.Configuration;
 using NewLife.Data;
 using NewLife.Log;
@@ -31,6 +30,10 @@ public class DbConfigProvider : ConfigProvider
 
     #region 方法
     /// <summary>初始化提供者，如有必要，此时加载缓存文件</summary>
+    /// <remarks>
+    /// 大多数基于数据的配置（如魔方CubeSetting），默认配置提供者都是Xml，在静态构造函数里面执行的是Xml配置提供者的Init。
+    /// 后来基于数据库的配置提供者，再由LoadAll触发执行Init。
+    /// </remarks>
     /// <param name="value"></param>
     public override void Init(String? value)
     {
@@ -93,7 +96,7 @@ public class DbConfigProvider : ConfigProvider
         var list = Parameter.FindAllByUserID(UserId, Category);
         foreach (var item in list)
         {
-            if (!item.Enable) continue;
+            if (!item.Enable || item.Name.IsNullOrEmpty()) continue;
 
             dic[item.Name] = item.Value;
 

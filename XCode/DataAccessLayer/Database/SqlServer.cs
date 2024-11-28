@@ -185,7 +185,7 @@ internal class SqlServer : RemoteDb
         if (!String.IsNullOrEmpty(builder.Having)) sb.Append(" Having " + builder.Having);
         if (!String.IsNullOrEmpty(builder.OrderBy)) sb.Append(" Order By " + builder.OrderBy);
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     public override SelectBuilder PageSplit(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
@@ -644,10 +644,17 @@ internal class SqlServerSession : RemoteDbSession
         sb.Length--;
         sb.Append(')');
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
-    public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
+    /// <summary>批量插入或更新</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="columns">要插入的字段，默认所有字段</param>
+    /// <param name="updateColumns">主键已存在时，要更新的字段。属性名，不是字段名</param>
+    /// <param name="addColumns">主键已存在时，要累加更新的字段。属性名，不是字段名</param>
+    /// <param name="list">实体列表</param>
+    /// <returns></returns>
+    public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var ps = new HashSet<String>();
         var insert = GetInsertSql(table, columns, ps);
@@ -662,14 +669,14 @@ internal class SqlServerSession : RemoteDbSession
         sb.Append(insert);
         sb.AppendLine(";");
         sb.AppendLine("END;");
-        var sql = sb.Put(true);
+        var sql = sb.Return(true);
         DefaultSpan.Current?.AppendTag(sql);
 
         var dpsList = GetParametersList(columns, ps, list, true);
         return BatchExecute(sql, dpsList);
     }
 
-    private String GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, ICollection<String> ps)
+    private String GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps)
     {
         var sb = Pool.StringBuilder.Get();
         var db = Database as DbBase;
@@ -714,7 +721,7 @@ internal class SqlServerSession : RemoteDbSession
         }
         sb.Length -= " And ".Length;
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
     #endregion
 

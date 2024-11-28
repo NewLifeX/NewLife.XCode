@@ -443,7 +443,7 @@ public static class EntityExtension
     /// </returns>
     public static Int32 BatchInsert<T>(this IEnumerable<T> list, IDataColumn[] columns, IEntitySession? session = null) where T : IEntity
     {
-        var option = new BatchOption { Columns = columns };
+        var option = new BatchOption(columns, null, null);
         return BatchInsert(list, option, session);
     }
 
@@ -537,7 +537,7 @@ public static class EntityExtension
     /// </returns>
     public static Int32 BatchInsertIgnore<T>(this IEnumerable<T> list, IDataColumn[] columns, IEntitySession? session = null) where T : IEntity
     {
-        var option = new BatchOption { Columns = columns };
+        var option = new BatchOption(columns, null, null);
         return BatchInsertIgnore(list, option, session);
     }
 
@@ -626,7 +626,7 @@ public static class EntityExtension
     /// </returns>
     public static Int32 BatchReplace<T>(this IEnumerable<T> list, IDataColumn[] columns, IEntitySession? session = null) where T : IEntity
     {
-        var option = new BatchOption { Columns = columns };
+        var option = new BatchOption(columns, null, null);
         return BatchReplace(list, option, session);
     }
 
@@ -719,7 +719,7 @@ public static class EntityExtension
     /// <returns></returns>
     public static Int32 BatchUpdate<T>(this IEnumerable<T> list, IDataColumn[] columns, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null) where T : IEntity
     {
-        var option = new BatchOption { Columns = columns, UpdateColumns = updateColumns, AddColumns = addColumns };
+        var option = new BatchOption(columns, updateColumns, addColumns);
         return BatchUpdate(list, option, session);
     }
 
@@ -757,7 +757,8 @@ public static class EntityExtension
             // 创建时间等字段不参与Update
             dirtys = dirtys.Where(e => !e.Name.StartsWithIgnoreCase("Create")).ToArray();
 
-            if (dirtys.Count > 0) option.UpdateColumns = dirtys.Select(e => dal.Db.FormatName(e)).ToArray();
+            // 统一约定，updateColumns 外部传入Name，内部再根据columns转为专用字段名
+            if (dirtys.Count > 0) option.UpdateColumns = dirtys.Select(e => e.Name).ToArray();
         }
         var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
@@ -811,7 +812,7 @@ public static class EntityExtension
     /// </returns>
     public static Int32 Upsert<T>(this IEnumerable<T> list, IDataColumn[]? columns, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null) where T : IEntity
     {
-        var option = new BatchOption { Columns = columns, UpdateColumns = updateColumns, AddColumns = addColumns };
+        var option = new BatchOption(columns, updateColumns, addColumns);
         return BatchUpsert(list, option, session);
     }
 
@@ -901,7 +902,8 @@ public static class EntityExtension
             // 创建时间等字段不参与Update
             dirtys = dirtys.Where(e => !e.Name.StartsWithIgnoreCase("Create")).ToArray();
 
-            if (dirtys.Count > 0) option.UpdateColumns = dirtys.Select(e => dal.Db.FormatName(e)).ToArray();
+            // 统一约定，updateColumns 外部传入Name，内部再根据columns转为专用字段名
+            if (dirtys.Count > 0) option.UpdateColumns = dirtys.Select(e => e.Name).ToArray();
         }
         var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
@@ -951,7 +953,7 @@ public static class EntityExtension
     /// </returns>
     public static Int32 Upsert(this IEntity entity, IDataColumn[]? columns, ICollection<String>? updateColumns = null, ICollection<String>? addColumns = null, IEntitySession? session = null)
     {
-        var option = new BatchOption { Columns = columns, UpdateColumns = updateColumns, AddColumns = addColumns };
+        var option = new BatchOption(columns, updateColumns, addColumns);
         return Upsert(entity, option, session);
     }
 

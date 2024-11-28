@@ -267,7 +267,7 @@ internal class HanaSession : RemoteDbSession
     updatetime=values(updatetime);
      */
 
-    private String GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
+    private String GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var sb = Pool.StringBuilder.Get();
         var db = Database as DbBase;
@@ -284,7 +284,7 @@ internal class HanaSession : RemoteDbSession
         // 重复键执行update
         BuildDuplicateKey(sb, db, columns, updateColumns, addColumns);
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     public override Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
@@ -305,7 +305,14 @@ internal class HanaSession : RemoteDbSession
         return Execute(sql);
     }
 
-    public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, IEnumerable<IModel> list)
+    /// <summary>批量插入或更新</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="columns">要插入的字段，默认所有字段</param>
+    /// <param name="updateColumns">主键已存在时，要更新的字段。属性名，不是字段名</param>
+    /// <param name="addColumns">主键已存在时，要累加更新的字段。属性名，不是字段名</param>
+    /// <param name="list">实体列表</param>
+    /// <returns></returns>
+    public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var sql = GetBatchSql("Insert Into", table, columns, updateColumns, addColumns, list);
         return Execute(sql);
@@ -586,7 +593,7 @@ internal class HanaMetaData : RemoteDbMetaData
         sb.Append(" DEFAULT CHARSET=utf8mb4");
         sb.Append(';');
 
-        return sb.Put(true);
+        return sb.Return(true);
     }
 
     public override String? AddTableDescriptionSQL(IDataTable table)

@@ -362,10 +362,17 @@ internal class PostgreSQLSession : RemoteDbSession
         sb.Append(" Values");
         BuildBatchValues(sb, db, action, table, columns, list);
 
-        var sql = sb.Put(true);
+        var sql = sb.Return(true);
         return Execute(sql);
     }
 
+    /// <summary>批量插入或更新</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="columns">要插入的字段，默认所有字段</param>
+    /// <param name="updateColumns">主键已存在时，要更新的字段。属性名，不是字段名</param>
+    /// <param name="addColumns">主键已存在时，要累加更新的字段。属性名，不是字段名</param>
+    /// <param name="list">实体列表</param>
+    /// <returns></returns>
     public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         /*

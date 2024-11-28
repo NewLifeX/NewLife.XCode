@@ -763,8 +763,8 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <summary>批量插入或更新</summary>
     /// <param name="table">数据表</param>
     /// <param name="columns">要插入的字段，默认所有字段</param>
-    /// <param name="updateColumns">主键已存在时，要更新的字段</param>
-    /// <param name="addColumns">主键已存在时，要累加更新的字段</param>
+    /// <param name="updateColumns">主键已存在时，要更新的字段。属性名，不是字段名</param>
+    /// <param name="addColumns">主键已存在时，要累加更新的字段。属性名，不是字段名</param>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
     public virtual Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list) => throw new NotSupportedException();
@@ -835,6 +835,12 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         sb.Length--;
     }
 
+    /// <summary>生成重复键更新语句</summary>
+    /// <param name="sb">SQL拼接器</param>
+    /// <param name="db">数据库</param>
+    /// <param name="columns">所有字段</param>
+    /// <param name="updateColumns">需要更新的字段。属性名，不是字段名</param>
+    /// <param name="addColumns">需要累加的字段。属性名，不是字段名</param>
     protected virtual void BuildDuplicateKey(StringBuilder sb, DbBase db, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns)
     {
         // 重复键执行update
@@ -1024,7 +1030,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                     sb.AppendFormat("{0}={1}", ps[i].ParameterName, sv);
                 }
                 sb.Append(']');
-                sql = sb.Put(true);
+                sql = sb.Return(true);
             }
 
             // 截断超长字符串

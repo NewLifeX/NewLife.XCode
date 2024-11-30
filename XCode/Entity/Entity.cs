@@ -1156,7 +1156,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         // 优待主键查询
         if (where is FieldExpression fe && fe.Field != null && fe.Field.PrimaryKey) max = 0;
 
-        var list = await FindAllAsync(where, null, null, 0, max);
+        var list = await FindAllAsync(where, null, null, 0, max).ConfigureAwait(false);
         return list.Count <= 0 ? null : list[0];
     }
 
@@ -1257,7 +1257,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
                     var start = (Int32)(count - (startRowIndex + maximumRows));
                     var builder2 = CreateBuilder(where, order2, selects);
-                    var list = LoadData(await session.QueryAsync(builder2, start, max));
+                    var list = LoadData(await session.QueryAsync(builder2, start, max).ConfigureAwait(false));
                     if (list.Count <= 0) return list;
 
                     // 如果正在使用单对象缓存，则批量进入
@@ -1276,7 +1276,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (shards == null || shards.Length == 0)
         {
             var builder = CreateBuilder(where, order, selects);
-            var list2 = LoadData(await session.QueryAsync(builder, startRowIndex, maximumRows));
+            var list2 = LoadData(await session.QueryAsync(builder, startRowIndex, maximumRows).ConfigureAwait(false));
 
             // 如果正在使用单对象缓存，则批量进入
             if (selects.IsNullOrEmpty() || selects == "*") LoadSingleCache(list2);
@@ -1307,7 +1307,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
                 var builder = CreateBuilder(where, order, selects);
                 builder.Table = session.FormatedTableName;
-                var list2 = LoadData(await session.QueryAsync(builder, row, max));
+                var list2 = LoadData(await session.QueryAsync(builder, row, max).ConfigureAwait(false));
                 if (list2.Count > 0) rs.AddRange(list2);
 
                 // 总数已满足要求，返回
@@ -1315,7 +1315,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
                 // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
                 var skipCount = 0;
-                if (i < shards.Length) skipCount = (Int32)await session.QueryCountAsync(builder);
+                if (i < shards.Length) skipCount = (Int32)await session.QueryCountAsync(builder).ConfigureAwait(false);
 
                 max -= list2.Count;
                 // 后边表索引记录数应该是减去前张表查询出来的记录总数，有可能负数
@@ -1334,7 +1334,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     public static async Task<IList<TEntity>> FindAllAsync(Expression where, PageParameter? page = null, String? selects = null)
     {
-        if (page == null) return await FindAllAsync(where, null, selects, 0, 0);
+        if (page == null) return await FindAllAsync(where, null, selects, 0, 0).ConfigureAwait(false);
 
         // 页面参数携带进来的扩展查询
         if (page.State is Expression exp)
@@ -1355,7 +1355,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             if (where.IsEmpty && session.LongCount > 100_000)
                 rows = session.LongCount;
             else
-                rows = await FindCountAsync(where, null, selects, 0, 0);
+                rows = await FindCountAsync(where, null, selects, 0, 0).ConfigureAwait(false);
             if (rows <= 0) return new List<TEntity>();
 
             page.TotalCount = rows;
@@ -1367,9 +1367,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         // 采用起始行还是分页
         IList<TEntity> list;
         if (page.StartRow >= 0)
-            list = await FindAllAsync(where, orderby, selects, page.StartRow, page.PageSize);
+            list = await FindAllAsync(where, orderby, selects, page.StartRow, page.PageSize).ConfigureAwait(false);
         else
-            list = await FindAllAsync(where, orderby, selects, (page.PageIndex - 1) * page.PageSize, page.PageSize);
+            list = await FindAllAsync(where, orderby, selects, (page.PageIndex - 1) * page.PageSize, page.PageSize).ConfigureAwait(false);
 
         if (list.Count == 0) return list;
 
@@ -1380,7 +1380,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             )
         {
             var selectStat = Meta.Factory.SelectStat;
-            if (!selectStat.IsNullOrEmpty()) page.State = (await FindAllAsync(where, null, selectStat)).FirstOrDefault();
+            if (!selectStat.IsNullOrEmpty()) page.State = (await FindAllAsync(where, null, selectStat).ConfigureAwait(false)).FirstOrDefault();
         }
 
         return list;
@@ -1421,7 +1421,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         // 自动分表
         var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
-        if (shards == null || shards.Length == 0) return await session.QueryCountAsync(builder);
+        if (shards == null || shards.Length == 0) return await session.QueryCountAsync(builder).ConfigureAwait(false);
 
         var rs = 0L;
         foreach (var shard in shards)
@@ -1435,7 +1435,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
             session = EntitySession<TEntity>.Create(connName, tableName);
             builder.Table = session.FormatedTableName;
-            rs += await session.QueryCountAsync(builder);
+            rs += await session.QueryCountAsync(builder).ConfigureAwait(false);
         }
         return rs;
     }

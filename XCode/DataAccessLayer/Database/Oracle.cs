@@ -484,10 +484,10 @@ internal class OracleSession : RemoteDbSession
         using var cmd = OnCreateCommand(sql, CommandType.Text, ps);
         return ExecuteAsync(cmd, true, async cmd2 =>
         {
-            using var dr = await cmd2.ExecuteReaderAsync();
+            using var dr = await cmd2.ExecuteReaderAsync().ConfigureAwait(false);
             var dt = new DbTable();
             dt.ReadHeader(dr);
-            await dt.ReadDataAsync(dr, GetFields(dt, dr));
+            await dt.ReadDataAsync(dr, GetFields(dt, dr)).ConfigureAwait(false);
             return dt;
         });
     }
@@ -497,12 +497,12 @@ internal class OracleSession : RemoteDbSession
         BeginTransaction(IsolationLevel.Serializable);
         try
         {
-            Int64 rs = await ExecuteAsync(sql, type, ps);
+            Int64 rs = await ExecuteAsync(sql, type, ps).ConfigureAwait(false);
             if (rs > 0)
             {
                 var m = reg_SEQ.Match(sql);
                 if (m != null && m.Success && m.Groups != null && m.Groups.Count > 0)
-                    rs = await ExecuteScalarAsync<Int64>($"Select {m.Groups[1].Value}.currval From dual");
+                    rs = await ExecuteScalarAsync<Int64>($"Select {m.Groups[1].Value}.currval From dual").ConfigureAwait(false);
             }
             Commit();
             return rs;

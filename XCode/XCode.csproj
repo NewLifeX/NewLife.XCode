@@ -20,6 +20,8 @@
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
     <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035</NoWarn>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <WarningsAsErrors>CA2007</WarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>NewLife.XCode</PackageId>
@@ -44,7 +46,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.0.2024.1124-beta1518" />
+    <PackageReference Include="NewLife.Core" Version="11.0.2024.1130-beta0449" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="build\**" />

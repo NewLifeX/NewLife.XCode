@@ -212,7 +212,7 @@ public static class EntityFactory
                 if (span != null) span.Value++;
             }
 
-            await Task.WhenAll(ts);
+            await Task.WhenAll(ts).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

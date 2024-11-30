@@ -725,7 +725,7 @@ public class DbPackage
             else
                 dt.WriteData(bn);
 
-            await Stream.FlushAsync();
+            await Stream.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 

@@ -263,7 +263,7 @@ public class EntityPersistence : IEntityPersistence
         var bAllow = factory.AllowInsertIdentity;
         if (field != null && field.IsIdentity && !bAllow && factory.AutoIdentity)
         {
-            var id = await session.InsertAndGetIdentityAsync(sql, CommandType.Text, dps);
+            var id = await session.InsertAndGetIdentityAsync(sql, CommandType.Text, dps).ConfigureAwait(false);
             if (id > 0) entity[field.Name] = id;
             rs = id > 0 ? 1 : 0;
         }
@@ -279,7 +279,7 @@ public class EntityPersistence : IEntityPersistence
                     if (bAllow) sql = $"SET IDENTITY_INSERT {session.FormatedTableName} ON;{sql};SET IDENTITY_INSERT {session.FormatedTableName} OFF";
                 }
             }
-            rs = await session.ExecuteAsync(sql, CommandType.Text, dps);
+            rs = await session.ExecuteAsync(sql, CommandType.Text, dps).ConfigureAwait(false);
         }
 
         // 清除脏数据，避免连续两次调用Save造成重复提交
@@ -312,7 +312,7 @@ public class EntityPersistence : IEntityPersistence
             entity.Dirtys.Clear();
         }
 
-        var rs = await session.ExecuteAsync(sql, CommandType.Text, dps);
+        var rs = await session.ExecuteAsync(sql, CommandType.Text, dps).ConfigureAwait(false);
 
         //EntityAddition.ClearValues(entity as EntityBase);
 
@@ -329,7 +329,7 @@ public class EntityPersistence : IEntityPersistence
         var sql = SQL(session, entity, DataObjectMethodType.Delete, ref dps);
         if (sql.IsNullOrEmpty()) return 0;
 
-        var rs = await session.ExecuteAsync(sql, CommandType.Text, dps);
+        var rs = await session.ExecuteAsync(sql, CommandType.Text, dps).ConfigureAwait(false);
 
         // 清除脏数据，避免重复提交保存
         entity.Dirtys.Clear();

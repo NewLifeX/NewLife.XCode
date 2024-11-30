@@ -157,8 +157,8 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         {
             try
             {
-                using var conn = await Database.OpenConnectionAsync();
-                return await callback(conn);
+                using var conn = await Database.OpenConnectionAsync().ConfigureAwait(false);
+                return await callback(conn).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -194,7 +194,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         {
             try
             {
-                return await callback();
+                return await callback().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -584,9 +584,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         using var cmd = OnCreateCommand(sql, CommandType.Text, ps);
         return ExecuteAsync(cmd, true, async cmd2 =>
         {
-            using var dr = await cmd2.ExecuteReaderAsync();
+            using var dr = await cmd2.ExecuteReaderAsync().ConfigureAwait(false);
             var dt = new DbTable();
-            await dt.ReadAsync(dr);
+            await dt.ReadAsync(dr).ConfigureAwait(false);
             return dt;
         });
     }
@@ -650,7 +650,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
         return ExecuteAsync(cmd, false, async cmd2 =>
         {
-            var rs = await cmd.ExecuteScalarAsync();
+            var rs = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
             if (rs == null || rs == DBNull.Value) return 0;
 
             return Reflect.ChangeType<Int64>(rs);
@@ -668,7 +668,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         using var cmd = OnCreateCommand(sql, type, ps);
         return ExecuteAsync(cmd, true, async cmd2 =>
         {
-            var rs = await cmd.ExecuteScalarAsync();
+            var rs = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
             if (rs == null || rs == DBNull.Value) return default;
             if (rs is T t) return t;
 

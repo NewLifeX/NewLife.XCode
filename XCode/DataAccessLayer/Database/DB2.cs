@@ -366,12 +366,12 @@ internal class DB2Session : RemoteDbSession
         BeginTransaction(IsolationLevel.Serializable);
         try
         {
-            Int64 rs = await ExecuteAsync(sql, type, ps);
+            Int64 rs = await ExecuteAsync(sql, type, ps).ConfigureAwait(false);
             if (rs > 0)
             {
                 var m = reg_SEQ.Match(sql);
                 if (m != null && m.Success && m.Groups != null && m.Groups.Count > 0)
-                    rs = await ExecuteScalarAsync<Int64>($"Select {m.Groups[1].Value}.currval From dual");
+                    rs = await ExecuteScalarAsync<Int64>($"Select {m.Groups[1].Value}.currval From dual").ConfigureAwait(false);
             }
             Commit();
             return rs;

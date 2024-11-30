@@ -393,7 +393,7 @@ abstract class DbBase : DisposeBase, IDatabase
 
         var conn = Factory.CreateConnection();
         conn.ConnectionString = GetConnectionString();
-        await conn.OpenAsync();
+        await conn.OpenAsync().ConfigureAwait(false);
 
         return conn;
     }

@@ -484,7 +484,7 @@ partial class DAL
         // 读写分离
         if (Strategy != null && Strategy.TryGet(this, k1 + "", action, out var rd) && rd != null)
         {
-            return await rd.QueryAsyncWrap(k1, k2, k3, callback, action);
+            return await rd.QueryAsyncWrap(k1, k2, k3, callback, action).ConfigureAwait(false);
         }
 
         //CheckDatabase();
@@ -509,7 +509,7 @@ partial class DAL
         }
 
         Interlocked.Increment(ref _QueryTimes);
-        var rs = await InvokeAsync(AsyncSession, k1, k2, k3, callback, action);
+        var rs = await InvokeAsync(AsyncSession, k1, k2, k3, callback, action).ConfigureAwait(false);
 
         cache?.Set(key, rs, Expire);
 
@@ -525,7 +525,7 @@ partial class DAL
 
         //CheckDatabase();
 
-        var rs = await InvokeAsync(AsyncSession, k1, k2, k3, callback, action);
+        var rs = await InvokeAsync(AsyncSession, k1, k2, k3, callback, action).ConfigureAwait(false);
 
         GetCache()?.Clear();
 
@@ -554,7 +554,7 @@ partial class DAL
         using var span = tracer?.NewSpan(traceName, sql);
         try
         {
-            var rs = await callback(session, k1, k2, k3);
+            var rs = await callback(session, k1, k2, k3).ConfigureAwait(false);
             AppendTag(span, sql, rs, action);
 
             return rs;

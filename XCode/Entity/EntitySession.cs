@@ -899,7 +899,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     {
         if (DataTable.IsView) throw new NotSupportedException("视图无法添删改！");
 
-        var rs = await Factory.Persistence.InsertAsync(this, entity);
+        var rs = await Factory.Persistence.InsertAsync(this, entity).ConfigureAwait(false);
 
         var e = entity as TEntity;
 

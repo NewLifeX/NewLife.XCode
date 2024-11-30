@@ -105,7 +105,7 @@ public partial class DAL
     {
         if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
-        var dt = await QueryAsyncWrap(sql, param, "", (ss, s, p, k3) => ss.QueryAsync(s, Db.CreateParameters(p)), nameof(QueryAsync));
+        var dt = await QueryAsyncWrap(sql, param, "", (ss, s, p, k3) => ss.QueryAsync(s, Db.CreateParameters(p)), nameof(QueryAsync)).ConfigureAwait(false);
 
         // 优先特殊处理基础类型，选择第一字段
         var type = typeof(T);
@@ -121,7 +121,7 @@ public partial class DAL
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public async Task<T> QuerySingleAsync<T>(String sql, Object? param = null) => (await QueryAsync<T>(sql, param)).FirstOrDefault();
+    public async Task<T> QuerySingleAsync<T>(String sql, Object? param = null) => (await QueryAsync<T>(sql, param).ConfigureAwait(false)).FirstOrDefault();
 
     private static Boolean IsValueTuple(Type type)
     {

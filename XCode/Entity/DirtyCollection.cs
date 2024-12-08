@@ -65,11 +65,11 @@ public class DirtyCollection : IEnumerable<String>
                     // 扩容
                     var arr = new String[ks.Length * 2];
                     Array.Copy(ks, arr, ks.Length);
-                    ks = _keys = arr;
 
                     var arr2 = new Object[arr.Length];
                     Array.Copy(vs, arr2, vs.Length);
                     vs = _values = arr2;
+                    ks = _keys = arr;
                 }
             }
         }

@@ -10,8 +10,8 @@ namespace XCode.Cache;
 public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<TEntity>, new()
 {
     private readonly String _fieldName;
-    private FieldItem? _field;
-    private FieldItem? _Unique;
+    private FieldItem _field = null!;
+    private FieldItem _Unique = null!;
 
     /// <summary>最大行数。默认50</summary>
     public Int32 MaxRows { get; set; } = 50;
@@ -23,7 +23,7 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
     public String OrderBy { get; set; } = "group_count desc";
 
     /// <summary>获取显示名的委托</summary>
-    public Func<TEntity, String> GetDisplay { get; set; }
+    public Func<TEntity, String>? GetDisplay { get; set; }
 
     /// <summary>显示名格式化字符串，两个参数是名称和个数</summary>
     public String DisplayFormat { get; set; } = "{0} ({1:n0})";
@@ -42,7 +42,7 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
 
     private void Init()
     {
-        if (_field == null && !_fieldName.IsNullOrEmpty()) _field = Entity<TEntity>.Meta.Table.FindByName(_fieldName);
+        if (_field == null && !_fieldName.IsNullOrEmpty()) _field = Entity<TEntity>.Meta.Table.FindByName(_fieldName)!;
 
         if (_field != null && _Unique == null)
         {
@@ -65,7 +65,7 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
         }
     }
 
-    private IList<TEntity> Search() => Entity<TEntity>.FindAll(Where.GroupBy(_field), OrderBy, _Unique.Count("group_count") & _field, 0, MaxRows);
+    private IList<TEntity> Search() => Entity<TEntity>.FindAll(Where?.GroupBy(_field), OrderBy, _Unique.Count("group_count")! & _field, 0, MaxRows);
 
     private IDictionary<String, String> GetAll()
     {
@@ -101,7 +101,7 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
         return dic;
     }
 
-    private Task<IDictionary<String, String>> _task;
+    private Task<IDictionary<String, String>>? _task;
     /// <summary>获取所有类别名称</summary>
     /// <returns></returns>
     public IDictionary<String, String> FindAllName()

@@ -51,6 +51,8 @@ class Program
         manager.Load();
         manager.Init();
 
+        XTrace.WriteLine("代码插件[{0}]：{1}", manager.Plugins.Length, manager.Plugins.Join(",", e => e.GetType().Name));
+
         // 在当前目录查找模型文件
         var file = "";
         if (args.Length > 0) file = args.LastOrDefault();
@@ -309,6 +311,7 @@ class Program
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8,
             };
             var process = Process.Start(psi);
             if (process == null) return null;

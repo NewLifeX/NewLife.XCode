@@ -1,10 +1,7 @@
 ﻿using System.Collections;
-using System.Runtime.Serialization;
-using System.Xml.Serialization;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
-using NewLife.Model;
 using NewLife.Reflection;
 using XCode;
 

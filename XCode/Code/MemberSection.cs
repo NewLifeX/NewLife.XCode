@@ -166,7 +166,7 @@ internal class MemberSection
         var rs = new List<MemberSection>();
         if (txt.IsNullOrEmpty()) return rs;
 
-        var reg = new Regex(@"([\w\<\>,]+)\s(\w+)\(([^\)]*)\)\s*(?://)*(?:{|=>)");
+        var reg = new Regex(@"([\w\<\>,\?]+)\s(\w+)\(([^\)]*)\)\s*(?://)*(?:{|=>)");
         foreach (Match item in reg.Matches(txt))
         {
             var types = new List<String>();

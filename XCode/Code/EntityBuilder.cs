@@ -1892,7 +1892,7 @@ public class EntityBuilder : ClassBuilder
 
                 WriteLine();
                 WriteLine($"// Select Count({pname}) as {pname},{name} From {Table.TableName} Where {tname}>'2020-01-24 00:00:00' Group By {name} Order By {pname} Desc limit 20");
-                WriteLine($"static readonly FieldCache<{returnName}> _{name}Cache = new FieldCache<{returnName}>(nameof({name}))");
+                WriteLine($"static readonly FieldCache<{returnName}> _{name}Cache = new(nameof({name}))");
                 WriteLine("{");
                 {
                     WriteLine($"//Where = _.{tname} > DateTime.Today.AddDays(-30) & Expression.Empty");
@@ -1911,7 +1911,7 @@ public class EntityBuilder : ClassBuilder
             {
                 WriteLine();
                 WriteLine($"// Select Count({pname}) as {pname},Category From {Table.TableName} Where {tname}>'2020-01-24 00:00:00' Group By Category Order By {pname} Desc limit 20");
-                WriteLine($"//static readonly FieldCache<{returnName}> _CategoryCache = new FieldCache<{returnName}>(nameof(Category))");
+                WriteLine($"//static readonly FieldCache<{returnName}> _CategoryCache = new(nameof(Category))");
                 WriteLine("//{");
                 {
                     WriteLine($"//Where = _.{tname} > DateTime.Today.AddDays(-30) & Expression.Empty");

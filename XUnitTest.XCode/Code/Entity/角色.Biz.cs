@@ -152,7 +152,7 @@ public partial class Role : Entity<Role>
     }
 
     // Select Count(ID) as ID,Category From Role Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
-    //static readonly FieldCache<Role> _CategoryCache = new FieldCache<Role>(nameof(Category))
+    //static readonly FieldCache<Role> _CategoryCache = new(nameof(Category))
     //{
     //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     //};

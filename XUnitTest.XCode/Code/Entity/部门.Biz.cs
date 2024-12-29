@@ -155,7 +155,7 @@ public partial class Department : Entity<Department>
     }
 
     // Select Count(ID) as ID,Code From Department Where CreateTime>'2020-01-24 00:00:00' Group By Code Order By ID Desc limit 20
-    static readonly FieldCache<Department> _CodeCache = new FieldCache<Department>(nameof(Code))
+    static readonly FieldCache<Department> _CodeCache = new(nameof(Code))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };

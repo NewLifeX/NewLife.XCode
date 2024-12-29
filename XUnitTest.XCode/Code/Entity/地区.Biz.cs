@@ -141,7 +141,7 @@ public partial class Area : Entity<Area>
     }
 
     // Select Count(Id) as Id,PinYin From Area Where CreateTime>'2020-01-24 00:00:00' Group By PinYin Order By Id Desc limit 20
-    static readonly FieldCache<Area> _PinYinCache = new FieldCache<Area>(nameof(PinYin))
+    static readonly FieldCache<Area> _PinYinCache = new(nameof(PinYin))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };
@@ -151,7 +151,7 @@ public partial class Area : Entity<Area>
     public static IDictionary<String, String> GetPinYinList() => _PinYinCache.FindAllName();
 
     // Select Count(Id) as Id,JianPin From Area Where CreateTime>'2020-01-24 00:00:00' Group By JianPin Order By Id Desc limit 20
-    static readonly FieldCache<Area> _JianPinCache = new FieldCache<Area>(nameof(JianPin))
+    static readonly FieldCache<Area> _JianPinCache = new(nameof(JianPin))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };
@@ -161,7 +161,7 @@ public partial class Area : Entity<Area>
     public static IDictionary<String, String> GetJianPinList() => _JianPinCache.FindAllName();
 
     // Select Count(Id) as Id,GeoHash From Area Where CreateTime>'2020-01-24 00:00:00' Group By GeoHash Order By Id Desc limit 20
-    static readonly FieldCache<Area> _GeoHashCache = new FieldCache<Area>(nameof(GeoHash))
+    static readonly FieldCache<Area> _GeoHashCache = new(nameof(GeoHash))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };

@@ -178,7 +178,7 @@ public partial class CorePerson : Entity<CorePerson>
     }
 
     // Select Count(PersonID) as PersonID,Pname From core_person Where CreateTime>'2020-01-24 00:00:00' Group By Pname Order By PersonID Desc limit 20
-    static readonly FieldCache<CorePerson> _PnameCache = new FieldCache<CorePerson>(nameof(Pname))
+    static readonly FieldCache<CorePerson> _PnameCache = new(nameof(Pname))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };

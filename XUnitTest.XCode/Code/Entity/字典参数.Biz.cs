@@ -149,7 +149,7 @@ public partial class Parameter : Entity<Parameter>
     }
 
     // Select Count(ID) as ID,Category From Parameter Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
-    static readonly FieldCache<Parameter> _CategoryCache = new FieldCache<Parameter>(nameof(Category))
+    static readonly FieldCache<Parameter> _CategoryCache = new(nameof(Category))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };

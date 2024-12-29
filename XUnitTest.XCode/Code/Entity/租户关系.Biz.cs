@@ -137,7 +137,7 @@ public partial class TenantUser : Entity<TenantUser>
     }
 
     // Select Count(Id) as Id,Category From TenantUser Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-    //static readonly FieldCache<TenantUser> _CategoryCache = new FieldCache<TenantUser>(nameof(Category))
+    //static readonly FieldCache<TenantUser> _CategoryCache = new(nameof(Category))
     //{
     //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     //};

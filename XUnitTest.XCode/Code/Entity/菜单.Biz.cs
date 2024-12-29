@@ -154,7 +154,7 @@ public partial class Menu : Entity<Menu>
     }
 
     // Select Count(ID) as ID,Category From Menu Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
-    //static readonly FieldCache<Menu> _CategoryCache = new FieldCache<Menu>(nameof(Category))
+    //static readonly FieldCache<Menu> _CategoryCache = new(nameof(Category))
     //{
     //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     //};

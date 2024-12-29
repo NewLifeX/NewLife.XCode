@@ -182,7 +182,7 @@ public partial class User : Entity<User>
     }
 
     // Select Count(ID) as ID,Mail From User Where CreateTime>'2020-01-24 00:00:00' Group By Mail Order By ID Desc limit 20
-    static readonly FieldCache<User> _MailCache = new FieldCache<User>(nameof(Mail))
+    static readonly FieldCache<User> _MailCache = new(nameof(Mail))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };
@@ -192,7 +192,7 @@ public partial class User : Entity<User>
     public static IDictionary<String, String> GetMailList() => _MailCache.FindAllName();
 
     // Select Count(ID) as ID,Mobile From User Where CreateTime>'2020-01-24 00:00:00' Group By Mobile Order By ID Desc limit 20
-    static readonly FieldCache<User> _MobileCache = new FieldCache<User>(nameof(Mobile))
+    static readonly FieldCache<User> _MobileCache = new(nameof(Mobile))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };
@@ -202,7 +202,7 @@ public partial class User : Entity<User>
     public static IDictionary<String, String> GetMobileList() => _MobileCache.FindAllName();
 
     // Select Count(ID) as ID,Code From User Where CreateTime>'2020-01-24 00:00:00' Group By Code Order By ID Desc limit 20
-    static readonly FieldCache<User> _CodeCache = new FieldCache<User>(nameof(Code))
+    static readonly FieldCache<User> _CodeCache = new(nameof(Code))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };

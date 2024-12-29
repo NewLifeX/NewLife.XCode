@@ -151,7 +151,7 @@ public partial class Log : Entity<Log>
     }
 
     // Select Count(Id) as Id,Action From Log Where CreateTime>'2020-01-24 00:00:00' Group By Action Order By Id Desc limit 20
-    static readonly FieldCache<Log> _ActionCache = new FieldCache<Log>(nameof(Action))
+    static readonly FieldCache<Log> _ActionCache = new(nameof(Action))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };
@@ -161,7 +161,7 @@ public partial class Log : Entity<Log>
     public static IDictionary<String, String> GetActionList() => _ActionCache.FindAllName();
 
     // Select Count(Id) as Id,Category From Log Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
-    static readonly FieldCache<Log> _CategoryCache = new FieldCache<Log>(nameof(Category))
+    static readonly FieldCache<Log> _CategoryCache = new(nameof(Category))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
     };

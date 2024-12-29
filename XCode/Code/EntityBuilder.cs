@@ -219,9 +219,13 @@ public class EntityBuilder : ClassBuilder
             //{
             //    option.ModelNameForToModel = item.Name;
             //}
-            if (builder.EntityOption.ModelNameForToModel.IsNullOrEmpty())
+            var eoption = builder.EntityOption;
+            if (eoption.ModelNameForToModel.IsNullOrEmpty())
             {
-                builder.EntityOption.ModelNameForToModel = item.Name;
+                if (!eoption.ModelNameForCopy.IsNullOrEmpty() && !eoption.ModelNameForCopy.StartsWith("I"))
+                    eoption.ModelNameForToModel = eoption.ModelNameForCopy;
+                else
+                    eoption.ModelNameForToModel = item.Name;
             }
 
             // 如果已存在重复中文名，则使用英文名

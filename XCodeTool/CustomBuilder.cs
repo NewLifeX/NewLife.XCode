@@ -99,9 +99,13 @@ public class CustomBuilder : EntityBuilder
                 Log = log
             };
 
-            if (option.ModelNameForToModel.IsNullOrEmpty())
+            var eoption = builder.EntityOption;
+            if (eoption.ModelNameForToModel.IsNullOrEmpty())
             {
-                builder.EntityOption.ModelNameForToModel = item.Name;
+                if (!eoption.ModelNameForCopy.IsNullOrEmpty() && !eoption.ModelNameForCopy.StartsWith("I"))
+                    eoption.ModelNameForToModel = eoption.ModelNameForCopy;
+                else
+                    eoption.ModelNameForToModel = item.Name;
             }
 
             builder.Load(item);

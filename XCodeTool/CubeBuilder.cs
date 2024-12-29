@@ -375,6 +375,9 @@ public class CubeBuilder : ClassBuilder
             sb.AppendLine();
             sb.AppendLine("        var start = p[\"dtStart\"].ToDateTime();");
             sb.AppendLine("        var end = p[\"dtEnd\"].ToDateTime();");
+
+            pis.Add("start");
+            pis.Add("end");
         }
 
         sb.AppendLine();

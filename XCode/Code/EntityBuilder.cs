@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Text;
+﻿using System.Text;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
@@ -1655,11 +1654,11 @@ public class EntityBuilder : ClassBuilder
         var methodName = columns.Select(e => e.Name).Join("And");
         methodName = $"FindBy{methodName}";
 
-        var (ps, ps2) = GetParameters(columns);
+        var ps = GetParameters(columns);
         var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
 
         // 如果方法名已存在，则不生成
-        var key = $"{methodName}({ps2.Join(",", e => e.Value)})";
+        var key = $"{methodName}({ps.Join(",", e => e.Value)})";
         if (Members.Contains(key)) return false;
         Members.Add(key);
 
@@ -1758,11 +1757,11 @@ public class EntityBuilder : ClassBuilder
         var methodName = columns.Select(e => e.Name).Join("And");
         methodName = $"FindAllBy{methodName}";
 
-        var (ps, ps2) = GetParameters(columns);
+        var ps = GetParameters(columns);
         var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
 
         // 如果方法名已存在，则不生成
-        var key = $"{methodName}({ps2.Join(",", e => e.Value)})";
+        var key = $"{methodName}({ps.Join(",", e => e.Value)})";
         if (Members.Contains(key)) return false;
         Members.Add(key);
 
@@ -1824,7 +1823,7 @@ public class EntityBuilder : ClassBuilder
         return true;
     }
 
-    private (IDictionary<String, String>, IDictionary<String, String>) GetParameters(IList<IDataColumn> columns)
+    private IDictionary<String, String> GetParameters(IList<IDataColumn> columns)
     {
         var ps = new Dictionary<String, String>();
         var ps2 = new Dictionary<String, String>();
@@ -1850,7 +1849,8 @@ public class EntityBuilder : ClassBuilder
             ps2[dc.CamelName()] = type;
         }
 
-        return (ps, ps2);
+        //return (ps, ps2);
+        return ps2;
     }
 
     /// <summary>自定义查询区域</summary>
@@ -1931,47 +1931,16 @@ public class EntityBuilder : ClassBuilder
     protected virtual IList<IDataColumn> BuildAdvanceSearch()
     {
         // 收集索引信息，索引中的所有字段都参与，构造一个高级查询模板
-        var idx = Table.Indexes ?? [];
-        var cs = new List<IDataColumn>();
-        if (idx != null && idx.Count > 0)
-        {
-            // 索引中的所有字段，按照表字段顺序
-            var dcs = idx.SelectMany(e => e.Columns).Distinct().ToArray();
-            foreach (var dc in Table.Columns)
-            {
-                // 主键和自增，不参与
-                if (dc.PrimaryKey || dc.Identity) continue;
-
-                if (dc.Name.EqualIgnoreCase(dcs) || dc.ColumnName.EqualIgnoreCase(dcs)) cs.Add(dc);
-            }
-        }
-
-        if (cs.Count <= 0) return cs;
+        var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
+        var cs = builder.GetColumns();
+        if (cs.Count == 0) return [];
 
         var returnName = ClassName;
 
-        // 时间字段。无差别支持UpdateTime/CreateTime
-        var dcTime = cs.FirstOrDefault(e => e.DataScale.StartsWithIgnoreCase("time"));
-        dcTime ??= cs.FirstOrDefault(e => e.DataType == typeof(DateTime));
-        dcTime ??= Table.GetColumns(["UpdateTime", "CreateTime"])?.FirstOrDefault();
-        var dcSnow = cs.FirstOrDefault(e => e.PrimaryKey && !e.Identity && e.DataType == typeof(Int64));
-
-        if (dcTime != null) cs.Remove(dcTime);
-        cs.RemoveAll(e => e.Name.EqualIgnoreCase("key", "page"));
-        if (dcSnow != null || dcTime != null)
-            cs.RemoveAll(e => e.Name.EqualIgnoreCase("start", "end"));
-
-        var (ps, ps2) = GetParameters(cs);
+        var ps = builder.GetParameters(cs, true, true, true);
 
         // 如果方法名已存在，则不生成
-        if (dcTime != null)
-        {
-            ps2["start"] = "DateTime";
-            ps2["end"] = "DateTime";
-        }
-        ps2["key"] = "String";
-        ps2["page"] = "PageParameter";
-        var key = $"Search({ps2.Join(",", e => e.Value)})";
+        var key = $"Search({ps.Join(",", e => e.Value)})";
         if (Members.Contains(key)) return cs;
         Members.Add(key);
 
@@ -1981,15 +1950,12 @@ public class EntityBuilder : ClassBuilder
         {
             WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.Description);
         }
+
+        var dcTime = builder.DataTime;
         if (dcTime != null)
         {
             WriteLine("/// <param name=\"start\">{0}开始</param>", dcTime.DisplayName);
             WriteLine("/// <param name=\"end\">{0}结束</param>", dcTime.DisplayName);
-        }
-        else if (dcSnow != null)
-        {
-            WriteLine("/// <param name=\"start\">{0}开始</param>", dcSnow.DisplayName);
-            WriteLine("/// <param name=\"end\">{0}结束</param>", dcSnow.DisplayName);
         }
         WriteLine("/// <param name=\"key\">关键字</param>");
         WriteLine("/// <param name=\"page\">分页参数信息。可携带统计和数据权限扩展查询等信息</param>");
@@ -1997,11 +1963,7 @@ public class EntityBuilder : ClassBuilder
 
         // 参数部分
         var pis = ps.Join(", ", e => $"{e.Value} {e.Key}");
-        var piTime = dcTime == null ? "" : "DateTime start, DateTime end, ";
-        if (pis.Length > 0)
-            WriteLine("public static IList<{0}> Search({1}, {2}String key, PageParameter page)", returnName, pis, piTime);
-        else
-            WriteLine("public static IList<{0}> Search({2}String key, PageParameter page)", returnName, pis, piTime);
+        WriteLine("public static IList<{0}> Search({1})", returnName, pis);
         WriteLine("{");
         {
             WriteLine("var exp = new WhereExpression();");
@@ -2020,10 +1982,13 @@ public class EntityBuilder : ClassBuilder
                     WriteLine("if (!{0}.IsNullOrEmpty()) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
             }
 
-            if (dcSnow != null)
-                WriteLine("exp &= _.{0}.Between(start, end, Meta.Factory.Snow);", dcSnow.Name);
-            else if (dcTime != null)
-                WriteLine("exp &= _.{0}.Between(start, end);", dcTime.Name);
+            if (dcTime != null)
+            {
+                if (dcTime.DataType == typeof(Int64))
+                    WriteLine("exp &= _.{0}.Between(start, end, Meta.Factory.Snow);", dcTime.Name);
+                else
+                    WriteLine("exp &= _.{0}.Between(start, end);", dcTime.Name);
+            }
 
             WriteLine("if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);");
 

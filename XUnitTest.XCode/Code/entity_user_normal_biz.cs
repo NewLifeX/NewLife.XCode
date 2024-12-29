@@ -157,12 +157,14 @@ public partial class User : Entity<User>
     /// <param name="code">代码。身份证、员工编码等，支持登录</param>
     /// <param name="roleId">角色。主要角色</param>
     /// <param name="departmentId">部门。组织机构</param>
+    /// <param name="areaId">地区。省市区</param>
+    /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<User> Search(String name, String? mail, String? mobile, String? code, Int32 roleId, Int32 departmentId, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<User> Search(String name, String? mail, String? mobile, String? code, Int32 roleId, Int32 departmentId, Int32 areaId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -172,6 +174,8 @@ public partial class User : Entity<User>
         if (!code.IsNullOrEmpty()) exp &= _.Code == code;
         if (roleId >= 0) exp &= _.RoleID == roleId;
         if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
+        if (areaId >= 0) exp &= _.AreaId == areaId;
+        if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 

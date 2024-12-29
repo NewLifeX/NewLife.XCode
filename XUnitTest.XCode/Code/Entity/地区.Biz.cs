@@ -120,12 +120,13 @@ public partial class Area : Entity<Area>
     /// <param name="pinYin">拼音</param>
     /// <param name="jianPin">简拼</param>
     /// <param name="geoHash">地址编码。字符串前缀相同越多，地理距离越近，8位精度19米，6位610米</param>
+    /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Area> Search(String? name, Int32 parentId, String? pinYin, String? jianPin, String? geoHash, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Area> Search(String? name, Int32 parentId, String? pinYin, String? jianPin, String? geoHash, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -134,6 +135,7 @@ public partial class Area : Entity<Area>
         if (!pinYin.IsNullOrEmpty()) exp &= _.PinYin == pinYin;
         if (!jianPin.IsNullOrEmpty()) exp &= _.JianPin == jianPin;
         if (!geoHash.IsNullOrEmpty()) exp &= _.GeoHash == geoHash;
+        if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 

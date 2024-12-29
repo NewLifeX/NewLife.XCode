@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using NewLife;
+using NewLife.Collections;
 using NewLife.Log;
+using NewLife.Reflection;
 using XCode.Code;
 using XCode.DataAccessLayer;
 
@@ -310,6 +312,15 @@ public class CubeBuilder : ClassBuilder
         if (Table.Columns.Any(c => c.Name.EqualIgnoreCase("TraceId")))
             code = code.Replace("//ListFields.TraceUrl(", "ListFields.TraceUrl(");
 
+        var ss = BuildSearch();
+        if (!ss.IsNullOrEmpty())
+        {
+            var p1 = code.IndexOf("        //var deviceId = p[\"deviceId\"].ToInt(-1);");
+            var p2 = code.IndexOf("p);", p1);
+
+            code = code.Substring(0, p1) + ss + code.Substring(p2 + "p);".Length);
+        }
+
         Writer.Write(code);
     }
 
@@ -321,15 +332,55 @@ public class CubeBuilder : ClassBuilder
     #endregion
 
     #region 辅助
-    ///// <summary>写入</summary>
-    ///// <param name="value"></param>
-    //protected override void WriteLine(String value = null)
-    //{
-    //    if (!value.IsNullOrEmpty() && value.Length > 2 && value[0] == '<' && value[1] == '/') SetIndent(false);
+    private String BuildSearch()
+    {
+        // 收集索引信息，索引中的所有字段都参与，构造一个高级查询模板
+        var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
+        var cs = builder.GetColumns();
+        if (cs.Count <= 0) return null;
 
-    //    base.WriteLine(value);
+        var ps = builder.GetParameters(cs, true, true, true);
 
-    //    if (!value.IsNullOrEmpty() && value.Length > 2 && value[0] == '<' && value[1] != '/' && !value.Contains("</")) SetIndent(true);
-    //}
+        var sb = Pool.StringBuilder.Get();
+
+        var pis = new List<String>();
+        foreach (var dc in cs)
+        {
+            var name = dc.CamelName();
+
+            if (dc.DataType.IsInt())
+            {
+                if (dc.DataType.IsEnum)
+                    sb.AppendLine($"        var {name} = ({dc.DataType.Name})p[\"{name}\"].ToInt();");
+                else if (dc.DataType == typeof(Int64))
+                    sb.AppendLine($"        var {name} = p[\"{name}\"].ToLong(-1);");
+                else
+                    sb.AppendLine($"        var {name} = p[\"{name}\"].ToInt(-1);");
+            }
+            else if (dc.DataType == typeof(Boolean))
+                sb.AppendLine($"        var {name} = p[\"{name}\"]?.ToBoolean();");
+            else if (dc.DataType == typeof(DateTime))
+                sb.AppendLine($"        var {name} = p[\"{name}\"].ToDateTime();");
+            else if (dc.DataType == typeof(String))
+                sb.AppendLine($"        var {name} = p[\"{name}\"];");
+            else
+                // 不支持的类型，跳过
+                continue;
+
+            pis.Add(name);
+        }
+
+        if (builder.DataTime != null)
+        {
+            sb.AppendLine();
+            sb.AppendLine("        var start = p[\"dtStart\"].ToDateTime();");
+            sb.AppendLine("        var end = p[\"dtEnd\"].ToDateTime();");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine($"        return {Table.Name}.Search({pis.Join(", ")}, p[\"Q\"], p);");
+
+        return sb.Return(true).TrimEnd();
+    }
     #endregion
 }

@@ -9,11 +9,11 @@ using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Department;
 
-namespace Membership.Web.Areas..Controllers;
+namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>部门。组织机构，多级树状结构，支持多租户</summary>
 [Menu(0, true, Icon = "fa-table")]
-[Area]
+[AdminArea]
 public class Department : EntityController<Department>
 {
     static Department()
@@ -58,12 +58,13 @@ public class Department : EntityController<Department>
         var code = p["code"];
         var name = p["name"];
         var parentId = p["parentId"].ToInt(-1);
+        var visible = p["visible"]?.ToBoolean();
         var managerId = p["managerId"].ToInt(-1);
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Department.Search(tenantId, code, name, parentId, managerId, enable, start, end, p["Q"], p);
+        return Department.Search(tenantId, code, name, parentId, visible, managerId, enable, start, end, p["Q"], p);
     }
 }

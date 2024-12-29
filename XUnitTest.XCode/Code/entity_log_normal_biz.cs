@@ -127,12 +127,13 @@ public partial class Log : Entity<Log>
     /// <param name="action">操作</param>
     /// <param name="linkId">链接</param>
     /// <param name="createUserId">创建用户</param>
-    /// <param name="start">时间开始</param>
-    /// <param name="end">时间结束</param>
+    /// <param name="success">成功</param>
+    /// <param name="start">编号开始</param>
+    /// <param name="end">编号结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> Search(String? category, String action, Int64 linkId, Int32 createUserId, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Log> Search(String? category, String action, Int64 linkId, Int32 createUserId, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -140,7 +141,8 @@ public partial class Log : Entity<Log>
         if (!action.IsNullOrEmpty()) exp &= _.Action == action;
         if (linkId >= 0) exp &= _.LinkID == linkId;
         if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
-        exp &= _.CreateTime.Between(start, end);
+        if (success != null) exp &= _.Success == success;
+        exp &= _.ID.Between(start, end, Meta.Factory.Snow);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);

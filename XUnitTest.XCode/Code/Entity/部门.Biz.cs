@@ -135,6 +135,7 @@ public partial class Department : Entity<Department>
     /// <param name="code">代码</param>
     /// <param name="name">名称</param>
     /// <param name="parentId">父级</param>
+    /// <param name="visible">可见</param>
     /// <param name="managerId">管理者</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
@@ -142,7 +143,7 @@ public partial class Department : Entity<Department>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> Search(Int32 tenantId, String? code, String name, Int32 parentId, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Department> Search(Int32 tenantId, String? code, String name, Int32 parentId, Boolean? visible, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -150,6 +151,7 @@ public partial class Department : Entity<Department>
         if (!code.IsNullOrEmpty()) exp &= _.Code == code;
         if (!name.IsNullOrEmpty()) exp &= _.Name == name;
         if (parentId >= 0) exp &= _.ParentID == parentId;
+        if (visible != null) exp &= _.Visible == visible;
         if (managerId >= 0) exp &= _.ManagerId == managerId;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);

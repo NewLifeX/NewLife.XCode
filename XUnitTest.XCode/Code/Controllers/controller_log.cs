@@ -9,11 +9,11 @@ using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Log;
 
-namespace Membership.Web.Areas..Controllers;
+namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除</summary>
 [Menu(0, true, Icon = "fa-table")]
-[Area]
+[AdminArea]
 public class Log : ReadOnlyEntityController<Log>
 {
     static Log()
@@ -58,10 +58,11 @@ public class Log : ReadOnlyEntityController<Log>
         var action = p["action"];
         var linkId = p["linkId"].ToLong(-1);
         var createUserId = p["createUserId"].ToInt(-1);
+        var success = p["success"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Log.Search(category, action, linkId, createUserId, start, end, p["Q"], p);
+        return Log.Search(category, action, linkId, createUserId, success, start, end, p["Q"], p);
     }
 }

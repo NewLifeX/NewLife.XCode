@@ -9,11 +9,11 @@ using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Tenant;
 
-namespace Membership.Web.Areas..Controllers;
+namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>租户。多租户SAAS平台，用于隔离业务数据</summary>
 [Menu(0, true, Icon = "fa-table")]
-[Area]
+[AdminArea]
 public class Tenant : EntityController<Tenant>
 {
     static Tenant()

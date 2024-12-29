@@ -9,11 +9,11 @@ using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Menu;
 
-namespace Membership.Web.Areas..Controllers;
+namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>菜单。功能权限，大多数时候也是可见页面</summary>
 [Menu(0, true, Icon = "fa-table")]
-[Area]
+[AdminArea]
 public class Menu : EntityController<Menu>
 {
     static Menu()
@@ -56,10 +56,13 @@ public class Menu : EntityController<Menu>
     {
         var name = p["name"];
         var parentId = p["parentId"].ToInt(-1);
+        var visible = p["visible"]?.ToBoolean();
+        var necessary = p["necessary"]?.ToBoolean();
+        var newWindow = p["newWindow"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Menu.Search(name, parentId, start, end, p["Q"], p);
+        return Menu.Search(name, parentId, visible, necessary, newWindow, start, end, p["Q"], p);
     }
 }

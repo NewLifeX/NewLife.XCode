@@ -47,11 +47,20 @@ public class SearchBuilder(IDataTable table)
         {
             if (cs.Contains(dc)) continue;
 
+            // 数据时间字段可用于搜索
+            if (!dc.DataScale.IsNullOrEmpty())
+                cs.Add(dc);
+            // 整型枚举
             if (dc.DataType.IsInt() && dc.DataType.IsEnum)
                 cs.Add(dc);
+            // 整型有映射
             else if (dc.DataType.IsInt() && !dc.Map.IsNullOrEmpty())
                 cs.Add(dc);
+            // 布尔型
+            else if (dc.DataType == typeof(Boolean) && !dc.Name.EqualIgnoreCase("enable", "isDeleted"))
+                cs.Add(dc);
         }
+        // enable和isDeleted字段放在最后
         foreach (var dc in Table.Columns)
         {
             if (cs.Contains(dc)) continue;

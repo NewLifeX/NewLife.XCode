@@ -9,11 +9,11 @@ using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Parameter;
 
-namespace Membership.Web.Areas..Controllers;
+namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合</summary>
 [Menu(0, true, Icon = "fa-table")]
-[Area]
+[AdminArea]
 public class Parameter : EntityController<Parameter>
 {
     static Parameter()

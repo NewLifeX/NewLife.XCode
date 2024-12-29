@@ -9,11 +9,11 @@ using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.User;
 
-namespace Membership.Web.Areas..Controllers;
+namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户</summary>
 [Menu(0, true, Icon = "fa-table")]
-[Area]
+[AdminArea]
 public class User : EntityController<User>
 {
     static User()
@@ -60,12 +60,15 @@ public class User : EntityController<User>
         var code = p["code"];
         var roleId = p["roleId"].ToInt(-1);
         var departmentId = p["departmentId"].ToInt(-1);
+        var mailVerified = p["mailVerified"]?.ToBoolean();
+        var mobileVerified = p["mobileVerified"]?.ToBoolean();
         var areaId = p["areaId"].ToInt(-1);
+        var online = p["online"]?.ToBoolean();
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return User.Search(name, mail, mobile, code, roleId, departmentId, areaId, enable, start, end, p["Q"], p);
+        return User.Search(name, mail, mobile, code, roleId, departmentId, mailVerified, mobileVerified, areaId, online, enable, start, end, p["Q"], p);
     }
 }

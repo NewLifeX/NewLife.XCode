@@ -9,11 +9,11 @@ using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Role;
 
-namespace Membership.Web.Areas..Controllers;
+namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限</summary>
 [Menu(0, true, Icon = "fa-table")]
-[Area]
+[AdminArea]
 public class Role : EntityController<Role>
 {
     static Role()
@@ -56,11 +56,12 @@ public class Role : EntityController<Role>
     {
         var name = p["name"];
         var tenantId = p["tenantId"].ToInt(-1);
+        var isSystem = p["isSystem"]?.ToBoolean();
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Role.Search(name, tenantId, enable, start, end, p["Q"], p);
+        return Role.Search(name, tenantId, isSystem, enable, start, end, p["Q"], p);
     }
 }

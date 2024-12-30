@@ -339,8 +339,6 @@ public class CubeBuilder : ClassBuilder
         var cs = builder.GetColumns();
         if (cs.Count <= 0) return null;
 
-        var ps = builder.GetParameters(cs, true, true, true);
-
         var sb = Pool.StringBuilder.Get();
 
         var pis = new List<String>();
@@ -351,7 +349,9 @@ public class CubeBuilder : ClassBuilder
             if (dc.DataType.IsInt())
             {
                 if (dc.DataType.IsEnum)
-                    sb.AppendLine($"        var {name} = ({dc.DataType.Name})p[\"{name}\"].ToInt();");
+                    sb.AppendLine($"        var {name} = ({dc.DataType.FullName})p[\"{name}\"].ToInt();");
+                else if (!dc.Properties["Type"].IsNullOrEmpty())
+                    sb.AppendLine($"        var {name} = ({dc.Properties["Type"]})p[\"{name}\"].ToInt();");
                 else if (dc.DataType == typeof(Int64))
                     sb.AppendLine($"        var {name} = p[\"{name}\"].ToLong(-1);");
                 else

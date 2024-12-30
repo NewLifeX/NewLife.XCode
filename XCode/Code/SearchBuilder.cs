@@ -50,12 +50,18 @@ public class SearchBuilder(IDataTable table)
             // 数据时间字段可用于搜索
             if (!dc.DataScale.IsNullOrEmpty())
                 cs.Add(dc);
-            // 整型枚举
-            if (dc.DataType.IsInt() && dc.DataType.IsEnum)
-                cs.Add(dc);
-            // 整型有映射
-            else if (dc.DataType.IsInt() && !dc.Map.IsNullOrEmpty())
-                cs.Add(dc);
+            // 整型
+            else if (dc.DataType.IsInt())
+            {
+                // 整型枚举
+                if (dc.DataType.IsEnum)
+                    cs.Add(dc);
+                else if (!dc.Properties["Type"].IsNullOrEmpty())
+                    cs.Add(dc);
+                // 整型有映射
+                else if (!dc.Map.IsNullOrEmpty())
+                    cs.Add(dc);
+            }
             // 布尔型
             else if (dc.DataType == typeof(Boolean) && !dc.Name.EqualIgnoreCase("enable", "isDeleted"))
                 cs.Add(dc);
@@ -87,15 +93,55 @@ public class SearchBuilder(IDataTable table)
         return cs;
     }
 
-    /// <summary>获取参数列表。名称+类型</summary>
+    ///// <summary>获取参数列表。名称+类型</summary>
+    ///// <param name="columns"></param>
+    ///// <param name="includeTime"></param>
+    ///// <param name="includeKey"></param>
+    ///// <param name="includePage"></param>
+    ///// <returns></returns>
+    //public IDictionary<String, String> GetParameters(IList<IDataColumn> columns, Boolean includeTime = false, Boolean includeKey = false, Boolean includePage = false)
+    //{
+    //    var ps = new Dictionary<String, String>();
+    //    foreach (var dc in columns)
+    //    {
+    //        var type = dc.Properties["Type"];
+    //        if (type.IsNullOrEmpty()) type = dc.DataType?.Name + "";
+
+    //        if (dc.DataType == typeof(Boolean))
+    //            type += "?";
+    //        else if (dc.DataType == typeof(String))
+    //        {
+    //            if (Nullable && dc.Nullable)
+    //            {
+    //                type += "?";
+    //            }
+    //        }
+
+    //        //var p = type.LastIndexOf('.');
+    //        //if (p > 0) type = type[(p + 1)..];
+    //        ps[dc.CamelName()] = type;
+    //    }
+
+    //    if (includeTime && DataTime != null)
+    //    {
+    //        ps["start"] = "DateTime";
+    //        ps["end"] = "DateTime";
+    //    }
+    //    if (includeKey)
+    //        ps["key"] = "String";
+    //    if (includePage)
+    //        ps["page"] = "PageParameter";
+
+    //    return ps;
+    //}
+
+    /// <summary>获取参数列表。名称+类型(全名+简名)</summary>
     /// <param name="columns"></param>
-    /// <param name="includeTime"></param>
-    /// <param name="includeKey"></param>
-    /// <param name="includePage"></param>
+    /// <param name="extend"></param>
     /// <returns></returns>
-    public IDictionary<String, String> GetParameters(IList<IDataColumn> columns, Boolean includeTime = false, Boolean includeKey = false, Boolean includePage = false)
+    public IList<ParameterModel> GetParameters(IList<IDataColumn> columns, Boolean extend = false)
     {
-        var ps = new Dictionary<String, String>();
+        var ps = new List<ParameterModel>();
         foreach (var dc in columns)
         {
             var type = dc.Properties["Type"];
@@ -103,28 +149,27 @@ public class SearchBuilder(IDataTable table)
 
             if (dc.DataType == typeof(Boolean))
                 type += "?";
-            else if (dc.DataType == typeof(String))
-            {
-                if (Nullable && dc.Nullable)
-                {
-                    type += "?";
-                }
-            }
+            else if (dc.DataType == typeof(String) && Nullable && dc.Nullable)
+                type += "?";
+
+            var model = new ParameterModel { Name = dc.CamelName(), TypeName = type, TypeFullName = type };
 
             var p = type.LastIndexOf('.');
-            if (p > 0) type = type[(p + 1)..];
-            ps[dc.CamelName()] = type;
+            if (p > 0) model.TypeName = type[(p + 1)..];
+
+            ps.Add(model);
         }
 
-        if (includeTime && DataTime != null)
+        if (extend)
         {
-            ps["start"] = "DateTime";
-            ps["end"] = "DateTime";
+            if (DataTime != null)
+            {
+                ps.Add(new ParameterModel { Name = "start", TypeName = "DateTime", TypeFullName = "DateTime" });
+                ps.Add(new ParameterModel { Name = "end", TypeName = "DateTime", TypeFullName = "DateTime" });
+            }
+            ps.Add(new ParameterModel { Name = "key", TypeName = "String", TypeFullName = "String" });
+            ps.Add(new ParameterModel { Name = "page", TypeName = "PageParameter", TypeFullName = "PageParameter" });
         }
-        if (includeKey)
-            ps["key"] = "String";
-        if (includePage)
-            ps["page"] = "PageParameter";
 
         return ps;
     }

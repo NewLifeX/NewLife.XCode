@@ -1658,11 +1658,11 @@ public class EntityBuilder : ClassBuilder
         var methodName = columns.Select(e => e.Name).Join("And");
         methodName = $"FindBy{methodName}";
 
-        var ps = GetParameters(columns);
-        var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
+        var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
+        var ps = builder.GetParameters(columns);
 
         // 如果方法名已存在，则不生成
-        var key = $"{methodName}({ps.Join(",", e => e.Value)})";
+        var key = $"{methodName}({ps.Join(",", e => e.TypeName)})";
         if (Members.Contains(key)) return false;
         Members.Add(key);
 
@@ -1675,6 +1675,7 @@ public class EntityBuilder : ClassBuilder
 
         var nullable = EntityOption.Nullable;
 
+        var args = ps.Join(", ", e => $"{e.TypeFullName} {e.Name}");
         WriteLine("/// <returns>实体对象</returns>");
         WriteLine("public static {2} {0}({1})", methodName, args, ClassName + (nullable ? "?" : ""));
         WriteLine("{");
@@ -1761,11 +1762,11 @@ public class EntityBuilder : ClassBuilder
         var methodName = columns.Select(e => e.Name).Join("And");
         methodName = $"FindAllBy{methodName}";
 
-        var ps = GetParameters(columns);
-        var args = ps.Join(", ", e => $"{e.Value} {e.Key}");
+        var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
+        var ps = builder.GetParameters(columns);
 
         // 如果方法名已存在，则不生成
-        var key = $"{methodName}({ps.Join(",", e => e.Value)})";
+        var key = $"{methodName}({ps.Join(",", e => e.TypeName)})";
         if (Members.Contains(key)) return false;
         Members.Add(key);
 
@@ -1776,6 +1777,7 @@ public class EntityBuilder : ClassBuilder
             WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.DisplayName);
         }
 
+        var args = ps.Join(", ", e => $"{e.TypeFullName} {e.Name}");
         WriteLine("/// <returns>实体列表</returns>");
         WriteLine("public static IList<{2}> {0}({1})", methodName, args, ClassName);
         WriteLine("{");
@@ -1825,36 +1827,6 @@ public class EntityBuilder : ClassBuilder
         WriteLine("}");
 
         return true;
-    }
-
-    private IDictionary<String, String> GetParameters(IList<IDataColumn> columns)
-    {
-        var ps = new Dictionary<String, String>();
-        var ps2 = new Dictionary<String, String>();
-        foreach (var dc in columns)
-        {
-            var type = dc.Properties["Type"];
-            if (type.IsNullOrEmpty()) type = dc.DataType?.Name + "";
-
-            if (dc.DataType == typeof(Boolean))
-                type += "?";
-            else if (dc.DataType == typeof(String))
-            {
-                if (Option.Nullable && dc.Nullable)
-                {
-                    type += "?";
-                }
-            }
-
-            ps[dc.CamelName()] = type;
-
-            var p = type.LastIndexOf('.');
-            if (p > 0) type = type[(p + 1)..];
-            ps2[dc.CamelName()] = type;
-        }
-
-        //return (ps, ps2);
-        return ps2;
     }
 
     /// <summary>自定义查询区域</summary>
@@ -1941,10 +1913,10 @@ public class EntityBuilder : ClassBuilder
 
         var returnName = ClassName;
 
-        var ps = builder.GetParameters(cs, true, true, true);
+        var ps = builder.GetParameters(cs, true);
 
         // 如果方法名已存在，则不生成
-        var key = $"Search({ps.Join(",", e => e.Value)})";
+        var key = $"Search({ps.Join(",", e => e.TypeName)})";
         if (Members.Contains(key)) return cs;
         Members.Add(key);
 
@@ -1966,7 +1938,7 @@ public class EntityBuilder : ClassBuilder
         WriteLine("/// <returns>实体列表</returns>");
 
         // 参数部分
-        var pis = ps.Join(", ", e => $"{e.Value} {e.Key}");
+        var pis = ps.Join(", ", e => $"{e.TypeFullName} {e.Name}");
         WriteLine("public static IList<{0}> Search({1})", returnName, pis);
         WriteLine("{");
         {
@@ -1976,7 +1948,7 @@ public class EntityBuilder : ClassBuilder
             WriteLine();
             foreach (var dc in cs)
             {
-                if (dc.DataType.IsInt() && dc.DataType.IsEnum)
+                if (dc.DataType.IsInt() && (dc.DataType.IsEnum || !dc.Properties["Type"].IsNullOrEmpty()))
                     WriteLine("if ({0} > 0) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
                 else if (dc.DataType.IsInt())
                     WriteLine("if ({0} >= 0) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);

@@ -60,6 +60,7 @@ public class User : EntityController<User>
         var code = p["code"];
         var roleId = p["roleId"].ToInt(-1);
         var departmentId = p["departmentId"].ToInt(-1);
+        var sex = (XCode.Membership.SexKinds)p["sex"].ToInt();
         var mailVerified = p["mailVerified"]?.ToBoolean();
         var mobileVerified = p["mobileVerified"]?.ToBoolean();
         var areaId = p["areaId"].ToInt(-1);
@@ -69,6 +70,6 @@ public class User : EntityController<User>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return User.Search(name, mail, mobile, code, roleId, departmentId, mailVerified, mobileVerified, areaId, online, enable, start, end, p["Q"], p);
+        return User.Search(name, mail, mobile, code, roleId, departmentId, sex, mailVerified, mobileVerified, areaId, online, enable, start, end, p["Q"], p);
     }
 }

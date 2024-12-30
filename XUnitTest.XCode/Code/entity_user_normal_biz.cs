@@ -157,6 +157,7 @@ public partial class User : Entity<User>
     /// <param name="code">代码。身份证、员工编码等，支持登录</param>
     /// <param name="roleId">角色。主要角色</param>
     /// <param name="departmentId">部门。组织机构</param>
+    /// <param name="sex">性别。未知、男、女</param>
     /// <param name="mailVerified">邮箱验证。邮箱是否已通过验证</param>
     /// <param name="mobileVerified">手机验证。手机是否已通过验证</param>
     /// <param name="areaId">地区。省市区</param>
@@ -167,7 +168,7 @@ public partial class User : Entity<User>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<User> Search(String name, String? mail, String? mobile, String? code, Int32 roleId, Int32 departmentId, Boolean? mailVerified, Boolean? mobileVerified, Int32 areaId, Boolean? online, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<User> Search(String name, String? mail, String? mobile, String? code, Int32 roleId, Int32 departmentId, XCode.Membership.SexKinds sex, Boolean? mailVerified, Boolean? mobileVerified, Int32 areaId, Boolean? online, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -177,6 +178,7 @@ public partial class User : Entity<User>
         if (!code.IsNullOrEmpty()) exp &= _.Code == code;
         if (roleId >= 0) exp &= _.RoleID == roleId;
         if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
+        if (sex > 0) exp &= _.Sex == sex;
         if (mailVerified != null) exp &= _.MailVerified == mailVerified;
         if (mobileVerified != null) exp &= _.MobileVerified == mobileVerified;
         if (areaId >= 0) exp &= _.AreaId == areaId;

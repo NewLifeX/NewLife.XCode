@@ -57,11 +57,12 @@ public class Parameter : EntityController<Parameter>
         var userId = p["userId"].ToInt(-1);
         var category = p["category"];
         var name = p["name"];
+        var kind = (XCode.Membership.ParameterKinds)p["kind"].ToInt();
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Parameter.Search(userId, category, name, enable, start, end, p["Q"], p);
+        return Parameter.Search(userId, category, name, kind, enable, start, end, p["Q"], p);
     }
 }

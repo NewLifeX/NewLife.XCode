@@ -331,6 +331,29 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
 
         return FindAll(exp, page);
     }
+    public static IList<User>? SearchWithTenant(Int32 tencentId, Int32[] roleIds, Int32[] departmentIds, Int32[] areaIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = TenantUser._.TenantId == tencentId;
+        if (roleIds != null && roleIds.Length > 0)
+        {
+            var exp2 = new WhereExpression();
+            exp2 |= _.RoleID.In(roleIds);
+            foreach (var rid in roleIds)
+            {
+                exp2 |= _.RoleIds.Contains("," + rid + ",");
+            }
+            exp &= exp2;
+        }
+        if (departmentIds != null && departmentIds.Length > 0) exp &= _.DepartmentID.In(departmentIds);
+        if (areaIds != null && areaIds.Length > 0) exp &= _.AreaId.In(areaIds);
+        if (enable != null) exp &= _.Enable == enable.Value;
+        exp &= _.LastLogin.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= _.Code.StartsWith(key) | _.Name.StartsWith(key) | _.DisplayName.StartsWith(key) | _.Mobile.StartsWith(key) | _.Mail.StartsWith(key);
+
+        var sql = $"SELECT User.* FROM User INNER JOIN TenantUser ON User.ID= TenantUser.UserId where {exp} ";
+
+        return Meta.Session.Dal.Query<User>(sql, null, page)?.ToList();
+    }
     #endregion
 
     #region 扩展操作

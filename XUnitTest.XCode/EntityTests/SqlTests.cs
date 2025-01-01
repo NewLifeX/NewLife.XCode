@@ -288,12 +288,14 @@ public class SqlTests
         Assert.StartsWith($"[test_{time:yyyy}] Delete From Log2_{time:yyyyMMdd} Where", sqls[^1]);
 
         var list = Log2.Search(null, null, -1, null, -1, time.AddHours(-24), time, null, new PageParameter { PageSize = 100 });
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
+        sqls.RemoveAll(e => e.EndsWith("sqlite_master"));
+        Assert.StartsWith($"[test_{time.AddHours(-24):yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-00):yyyyMMdd} Where", sqls[^1]);
 
         list = Log2.Search(null, null, -1, null, -1, time.AddHours(-24), time, null, new PageParameter { PageIndex = 2, PageSize = 100 });
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^3]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select Count(*) From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
+        sqls.RemoveAll(e => e.EndsWith("sqlite_master"));
+        Assert.StartsWith($"[test_{time.AddHours(-24):yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^3]);
+        Assert.StartsWith($"[test_{time.AddHours(-24):yyyy}] Select Count(*) From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-00):yyyyMMdd} Where", sqls[^1]);
 
         // logs.Delete();
@@ -366,9 +368,9 @@ public class SqlTests
         var exp = new WhereExpression();
         exp &= Log2._.CreateTime.Between(time.Date, time.Date.AddDays(2));
         var list = Log2.FindAll(exp);
-
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where CreateTime>=", sqls[^3]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(1):yyyyMMdd} Where CreateTime>=", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(2):yyyyMMdd} Where CreateTime>=", sqls[^1]);
+        sqls.RemoveAll(e => e.EndsWith("sqlite_master"));
+        Assert.StartsWith($"[test_{time.AddDays(0):yyyy}] Select * From Log2_{time.AddDays(0):yyyyMMdd} Where CreateTime>=", sqls[^3]);
+        Assert.StartsWith($"[test_{time.AddDays(1):yyyy}] Select * From Log2_{time.AddDays(1):yyyyMMdd} Where CreateTime>=", sqls[^2]);
+        Assert.StartsWith($"[test_{time.AddDays(2):yyyy}] Select * From Log2_{time.AddDays(2):yyyyMMdd} Where CreateTime>=", sqls[^1]);
     }
 }

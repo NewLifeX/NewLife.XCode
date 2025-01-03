@@ -487,7 +487,7 @@ public class ShardTests
         };
 
         var start = "2023-12-31".ToDateTime();
-        var end = DateTime.Today;
+        var end = start.AddDays(300);
         var fi = policy.Field;
         var where = fi >= start & fi < end;
 
@@ -526,18 +526,48 @@ public class ShardTests
     {
         var policy = new TimeShardPolicy(Log2._.CreateTime, Log2.Meta.Factory)
         {
-            TablePolicy = "{0}_{1:yyyyMM}",
-            Step = TimeSpan.FromDays(31),
+            TablePolicy = "{0}_{1:yyyyMMdd}",
+            Step = TimeSpan.FromDays(1),
         };
 
         // 起止都是整数日期，末尾加1天
-        var start = "2024/7/25 00:00:00".ToDateTime();
+        var start = "2024/7/30 00:00:00".ToDateTime();
+        var end = start.AddDays(3);
         var fi = policy.Field;
-        var where = fi.Equal(start);
+        //var where = fi.Equal(start);
+        var where = fi.Between(start, end);
 
         var shards = policy.Shards(where);
         Assert.NotNull(shards);
-        Assert.Equal(1, shards.Length);
-        Assert.Equal("Log2_202407", shards[0].TableName);
+        Assert.Equal(4, shards.Length);
+        Assert.Equal("Log2_20240730", shards[0].TableName);
+        Assert.Equal("Log2_20240731", shards[1].TableName);
+        Assert.Equal("Log2_20240801", shards[2].TableName);
+        Assert.Equal("Log2_20240802", shards[3].TableName);
+    }
+
+    [Fact]
+    public void 循环天表Shards()
+    {
+        var policy = new TimeShardPolicy(Log2._.CreateTime, Log2.Meta.Factory)
+        {
+            TablePolicy = "{0}_{1:dd}",
+            Step = TimeSpan.FromDays(1),
+        };
+
+        // 起止都是整数日期，末尾加1天
+        var start = "2024/7/30 00:00:00".ToDateTime();
+        var end = start.AddDays(3);
+        var fi = policy.Field;
+        //var where = fi.Equal(start);
+        var where = fi.Between(start, end);
+
+        var shards = policy.Shards(where);
+        Assert.NotNull(shards);
+        Assert.Equal(4, shards.Length);
+        Assert.Equal("Log2_30", shards[0].TableName);
+        Assert.Equal("Log2_31", shards[1].TableName);
+        Assert.Equal("Log2_01", shards[2].TableName);
+        Assert.Equal("Log2_02", shards[3].TableName);
     }
 }

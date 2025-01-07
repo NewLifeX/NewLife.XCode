@@ -65,7 +65,12 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
         }
     }
 
-    private IList<TEntity> Search() => Entity<TEntity>.FindAll(Where?.GroupBy(_field), OrderBy, _Unique.Count("group_count")! & _field, 0, MaxRows);
+    private IList<TEntity> Search()
+    {
+        Expression? exp = Where?.GroupBy(_field);
+        exp ??= _field.GroupBy();
+        return Entity<TEntity>.FindAll(exp, OrderBy, _Unique.Count("group_count")! & _field, 0, MaxRows);
+    }
 
     private IDictionary<String, String> GetAll()
     {

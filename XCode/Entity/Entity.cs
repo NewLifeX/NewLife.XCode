@@ -416,9 +416,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                     if (uk == null || this[uk.Name] is String str2 && str2.Length > 50) uk = Meta.Unique;
 
                     if (uk != null)
-                        throw new ArgumentOutOfRangeException(fi.Name, $"[{fi.Name}/{fi.DisplayName}]长度限制{fi.Length}字符[{uk.Name}={this[uk.Name]}]");
+                        throw new ArgumentOutOfRangeException(fi.Name, $"[{fi.Name}/{fi.DisplayName}@{factory.TableName}]长度限制{fi.Length}字符[{uk.Name}={this[uk.Name]}]");
                     else
-                        throw new ArgumentOutOfRangeException(fi.Name, $"[{fi.Name}/{fi.DisplayName}]长度限制{fi.Length}字符");
+                        throw new ArgumentOutOfRangeException(fi.Name, $"[{fi.Name}/{fi.DisplayName}@{factory.TableName}]长度限制{fi.Length}字符");
                 }
             }
         }

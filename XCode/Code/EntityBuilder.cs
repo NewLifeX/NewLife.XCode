@@ -317,6 +317,7 @@ public class EntityBuilder : ClassBuilder
             {
                 var us = Option.Usings;
                 us.Add("System.Linq");
+                us.Add("NewLife");
                 us.Add("NewLife.Log");
             }
         }

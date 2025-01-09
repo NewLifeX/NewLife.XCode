@@ -77,8 +77,9 @@ public class ModelBuilder : ClassBuilder
         var us = Option.Usings;
         if (Option.HasIModel)
         {
-            if (!us.Contains("NewLife.Data")) us.Add("NewLife.Data");
-            if (!us.Contains("NewLife.Reflection")) us.Add("NewLife.Reflection");
+            us.Add("NewLife");
+            us.Add("NewLife.Data");
+            us.Add("NewLife.Reflection");
         }
 
         base.Prepare();

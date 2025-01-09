@@ -1,4 +1,5 @@
-﻿using NewLife.Reflection;
+﻿using NewLife;
+using NewLife.Reflection;
 
 namespace XCode.Statistics;
 

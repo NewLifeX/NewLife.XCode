@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using NewLife;
 using XCode.Configuration;
 
 namespace XCode;

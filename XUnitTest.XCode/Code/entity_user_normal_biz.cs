@@ -178,7 +178,7 @@ public partial class User : Entity<User>
         if (!code.IsNullOrEmpty()) exp &= _.Code == code;
         if (roleId >= 0) exp &= _.RoleID == roleId;
         if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
-        if (sex > 0) exp &= _.Sex == sex;
+        if (sex >= 0) exp &= _.Sex == sex;
         if (mailVerified != null) exp &= _.MailVerified == mailVerified;
         if (mobileVerified != null) exp &= _.MobileVerified == mobileVerified;
         if (areaId >= 0) exp &= _.AreaId == areaId;

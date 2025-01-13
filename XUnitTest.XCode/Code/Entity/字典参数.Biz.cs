@@ -144,7 +144,7 @@ public partial class Parameter : Entity<Parameter>
         if (userId >= 0) exp &= _.UserID == userId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-        if (kind > 0) exp &= _.Kind == kind;
+        if (kind >= 0) exp &= _.Kind == kind;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -262,7 +262,7 @@ public partial class CorePerson
     /// <returns>实体列表</returns>
     public static IList<CorePerson> FindAllByBuildID(Int32 buildId)
     {
-        if (buildId < 0) return [];
+        if (buildId <= 0) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.BuildID == buildId);

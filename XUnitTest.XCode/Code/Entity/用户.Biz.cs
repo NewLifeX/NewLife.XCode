@@ -179,7 +179,7 @@ public partial class User : Entity<User>
         if (!mobile.IsNullOrEmpty()) exp &= _.Mobile == mobile;
         if (!code.IsNullOrEmpty()) exp &= _.Code == code;
         if (roleId >= 0) exp &= _.RoleID == roleId;
-        if (sex > 0) exp &= _.Sex == sex;
+        if (sex >= 0) exp &= _.Sex == sex;
         if (areaId >= 0) exp &= _.AreaId == areaId;
         if (online != null) exp &= _.Online == online;
         if (enable != null) exp &= _.Enable == enable;

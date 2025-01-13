@@ -60,7 +60,7 @@ public class User : EntityController<User>
         var code = p["code"];
         var roleId = p["roleId"].ToInt(-1);
         var departmentId = p["departmentId"].ToInt(-1);
-        var sex = (XCode.Membership.SexKinds)p["sex"].ToInt();
+        var sex = (XCode.Membership.SexKinds)p["sex"].ToInt(-1);
         var mailVerified = p["mailVerified"]?.ToBoolean();
         var mobileVerified = p["mobileVerified"]?.ToBoolean();
         var areaId = p["areaId"].ToInt(-1);

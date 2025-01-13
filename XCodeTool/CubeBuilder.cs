@@ -349,9 +349,9 @@ public class CubeBuilder : ClassBuilder
             if (dc.DataType.IsInt())
             {
                 if (dc.DataType.IsEnum)
-                    sb.AppendLine($"        var {name} = ({dc.DataType.FullName})p[\"{name}\"].ToInt();");
+                    sb.AppendLine($"        var {name} = ({dc.DataType.FullName})p[\"{name}\"].ToInt(-1);");
                 else if (!dc.Properties["Type"].IsNullOrEmpty())
-                    sb.AppendLine($"        var {name} = ({dc.Properties["Type"]})p[\"{name}\"].ToInt();");
+                    sb.AppendLine($"        var {name} = ({dc.Properties["Type"]})p[\"{name}\"].ToInt(-1);");
                 else if (dc.DataType == typeof(Int64))
                     sb.AppendLine($"        var {name} = p[\"{name}\"].ToLong(-1);");
                 else

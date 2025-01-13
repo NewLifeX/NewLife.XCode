@@ -57,7 +57,7 @@ public class Parameter : EntityController<Parameter>
         var userId = p["userId"].ToInt(-1);
         var category = p["category"];
         var name = p["name"];
-        var kind = (XCode.Membership.ParameterKinds)p["kind"].ToInt();
+        var kind = (XCode.Membership.ParameterKinds)p["kind"].ToInt(-1);
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();

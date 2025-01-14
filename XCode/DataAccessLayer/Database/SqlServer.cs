@@ -1252,6 +1252,11 @@ internal class SqlServerMetaData : RemoteDbMetaData
             var recoverDir = "";
             switch (schema)
             {
+                case DDLSchema.CreateDatabase:
+                    var rs = base.SetSchema(schema, values);
+                    // 等待一会，否则立即使用数据库会报错
+                    Thread.Sleep(5_000);
+                    return rs;
                 case DDLSchema.BackupDatabase:
                     if (values != null)
                     {

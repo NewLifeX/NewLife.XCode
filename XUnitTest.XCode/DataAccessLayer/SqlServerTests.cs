@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
@@ -17,7 +19,7 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class SqlServerTests
 {
-    private static String _ConnStr = "Server=127.0.0.1;Database=sys;Uid=root;Pwd=root;Connection Timeout=2";
+    private static String _ConnStr = "Server=127.0.0.1;Database=sys;Uid=sa;Pwd=sa;Connection Timeout=2";
 
     public SqlServerTests()
     {
@@ -50,7 +52,7 @@ public class SqlServerTests
         Assert.NotNull(dp);
     }
 
-    [Fact(Skip = "跳过")]
+    [Fact]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.SqlServer);
@@ -62,7 +64,7 @@ public class SqlServerTests
         conn.Open();
     }
 
-    [Fact(Skip = "跳过")]
+    [Fact]
     public void DALTest()
     {
         DAL.AddConnStr("sysSqlServer", _ConnStr, null, "SqlServer");
@@ -80,7 +82,7 @@ public class SqlServerTests
         Assert.NotEmpty(ver);
     }
 
-    [Fact(Skip = "跳过")]
+    [Fact]
     public void MetaTest()
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
@@ -99,7 +101,7 @@ public class SqlServerTests
         Assert.NotEmpty(tb.Description);
     }
 
-    [Fact(Skip = "跳过")]
+    [Fact]
     public void SelectTest()
     {
         DAL.AddConnStr("sysSqlServer", _ConnStr, null, "SqlServer");
@@ -118,6 +120,9 @@ public class SqlServerTests
 
         Role.Meta.Session.InitData();
 
+        //// 创建数据库后，等待一段时间，否则可能出现找不到数据库的情况
+        //Thread.Sleep(5_000);
+
         var count = Role.Meta.Count;
         Assert.True(count > 0);
 
@@ -134,14 +139,22 @@ public class SqlServerTests
         Area.FetchAndSave();
 
         // 清理现场
-        try
+        Task.Run(() =>
         {
-            dal.Execute("drop database membership_test");
-        }
-        catch (Exception ex) { XTrace.WriteException(ex); }
+            try
+            {
+                //dal.Execute("drop database membership_test");
+                dal.Db.CreateMetaData().SetSchema(DDLSchema.DropDatabase, "membership_test");
+            }
+            catch (Exception ex)
+            {
+                //XTrace.WriteException(ex);
+                XTrace.WriteLine(ex.Message);
+            }
+        });
     }
 
-    [Fact(Skip = "跳过")]
+    [Fact]
     public void TablePrefixTest()
     {
         DAL.AddConnStr("sysSqlServer", _ConnStr, null, "SqlServer");
@@ -174,11 +187,19 @@ public class SqlServerTests
         Assert.Equal(2, list3.Count);
 
         // 清理现场
-        try
+        Task.Run(() =>
         {
-            dal.Execute("drop database membership_table_prefix");
-        }
-        catch (Exception ex) { XTrace.WriteException(ex); }
+            try
+            {
+                //dal.Execute("drop database membership_table_prefix");
+                dal.Db.CreateMetaData().SetSchema(DDLSchema.DropDatabase, "membership_table_prefix");
+            }
+            catch (Exception ex)
+            {
+                //XTrace.WriteException(ex);
+                XTrace.WriteLine(ex.Message);
+            }
+        });
     }
 
     private IDisposable CreateForBatch(String action)
@@ -201,7 +222,7 @@ public class SqlServerTests
         return split;
     }
 
-    [Fact(Skip = "跳过")]
+    [Fact]
     public void BatchInsert()
     {
         using var split = CreateForBatch("BatchInsert");
@@ -293,7 +314,7 @@ public class SqlServerTests
     //    Assert.NotEqual(gly.ID, gly2.ID);
     //}
 
-    [Fact(Skip = "跳过")]
+    [Fact]
     public void PositiveAndNegative()
     {
         var connName = GetType().Name;
@@ -368,7 +389,7 @@ public class SqlServerTests
 
     }
 
-    [Fact(Skip = "跳过")]
+    [Fact]
     public void QuerySqlTest()
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
@@ -376,6 +397,8 @@ public class SqlServerTests
         DAL.AddConnStr("sysSqlServerv", connStr, null, "SqlServer");
         var dal = DAL.Create("sysSqlServerv");
 
+        //dal.SetTables(Role.Meta.Table.DataTable);
+        Role.Meta.Session.InitData();
 
         dal.Query<Role>("select * from Role order by id");
 

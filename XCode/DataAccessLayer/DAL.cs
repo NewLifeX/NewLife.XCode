@@ -611,7 +611,7 @@ public partial class DAL
 
     private IList<IDataTable> GetTables()
     {
-        if (Db is DbBase db2 && !db2.SupportSchema) return new List<IDataTable>();
+        if (Db is DbBase db2 && !db2.SupportSchema) return [];
 
         var tracer = Tracer ?? GlobalTracer;
         using var span = tracer?.NewSpan($"db:{ConnName}:GetTables", ConnName);
@@ -634,7 +634,7 @@ public partial class DAL
     /// <summary>
     /// 获取所有表名，带缓存，不区分大小写
     /// </summary>
-    public ICollection<String> TableNames => _cache.GetOrAdd("tableNames", k => new HashSet<String>(GetTableNames(), StringComparer.OrdinalIgnoreCase), 60) ?? new HashSet<String>();
+    public ICollection<String> TableNames => _cache.GetOrAdd("tableNames", k => new HashSet<String>(GetTableNames(), StringComparer.OrdinalIgnoreCase), 60) ?? [];
 
     /// <summary>
     /// 快速获取所有表名，无缓存，区分大小写
@@ -735,7 +735,7 @@ public partial class DAL
         }
     }
 
-    internal List<String> HasCheckTables = new();
+    internal List<String> HasCheckTables = [];
     /// <summary>检查是否已存在，如果不存在则添加</summary>
     /// <param name="tableName"></param>
     /// <returns></returns>

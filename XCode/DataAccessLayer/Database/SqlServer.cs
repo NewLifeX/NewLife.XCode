@@ -1690,7 +1690,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         { typeof(Double), new String[] { "float" } },
         { typeof(Decimal), new String[] { "money", "decimal({0}, {1})", "numeric({0}, {1})", "smallmoney" } },
         { typeof(DateTime), new String[] { "datetime", "smalldatetime", "datetime2({0})", "date" } },
-        { typeof(String), new String[] { "nvarchar({0})", "ntext", "text", "varchar({0})", "char({0})", "nchar({0})", "xml" } }
+        { typeof(String), new String[] { "nvarchar({0})", "ntext", "text", "varchar({0})", "char({0})", "nchar({0})", "xml", "sql_variant" } }
     };
 
     #region 辅助函数

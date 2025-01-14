@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -478,5 +480,46 @@ public class SqlServerTests
             )
             """;
         Assert.Equal(targetSql, sql);
+    }
+
+    [Fact]
+    public void GetTables()
+    {
+        DAL.AddConnStr("sysSqlServer", _ConnStr, null, "SqlServer");
+        var dal = DAL.Create("sysSqlServer");
+
+        var dbprovider = dal.DbType.ToString();
+        var builder = new DbConnectionStringBuilder
+        {
+            ConnectionString = dal.ConnStr
+        };
+
+        var dt = dal.Db.CreateSession().GetSchema(null, "Databases", null);
+        var sysdbnames = new String[] { "master", "tempdb", "model", "msdb" };
+        foreach (DataRow dr in dt.Rows)
+        {
+            var dbname = dr[0].ToString();
+            if (Array.IndexOf(sysdbnames, dbname) >= 0) continue;
+
+            var connName = String.Format("{0}_{1}", "ms", dbname);
+
+            builder["Database"] = dbname;
+            var connstr = builder.ToString();
+            DAL.AddConnStr(connName, connstr, null, dbprovider);
+
+            try
+            {
+                var dal2 = DAL.Create(connName);
+                var tables = dal2.Tables;
+                XTrace.WriteLine("数据库{0}有表{1}张", dbname, tables.Count);
+
+                var xml = DAL.Export(tables);
+                File.WriteAllText($"data\\{connName}.xml".GetFullPath(), xml);
+            }
+            catch
+            {
+                if (DAL.ConnStrs.ContainsKey(connName)) DAL.ConnStrs.Remove(connName);
+            }
+        }
     }
 }

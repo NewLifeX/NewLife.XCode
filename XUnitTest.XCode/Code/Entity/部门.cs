@@ -381,7 +381,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <returns>实体对象</returns>
     public static Department? FindByID(Int32 id)
     {
-        if (id <= 0) return null;
+        if (id < 0) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
@@ -411,7 +411,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <returns>实体列表</returns>
     public static IList<Department> FindAllByParentIDAndName(Int32 parentId, String name)
     {
-        if (parentId <= 0) return [];
+        if (parentId < 0) return [];
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
@@ -438,7 +438,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <returns>实体列表</returns>
     public static IList<Department> FindAllByTenantId(Int32 tenantId)
     {
-        if (tenantId <= 0) return [];
+        if (tenantId < 0) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);

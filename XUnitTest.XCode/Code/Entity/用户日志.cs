@@ -291,7 +291,7 @@ public partial class UserLog : IUserLog, IEntity<IUserLog>
     /// <returns>实体对象</returns>
     public static UserLog? FindByID(Int64 id)
     {
-        if (id <= 0) return null;
+        if (id < 0) return null;
 
         return Find(_.ID == id);
     }
@@ -315,7 +315,7 @@ public partial class UserLog : IUserLog, IEntity<IUserLog>
     public static IList<UserLog> FindAllByCategoryAndLinkID(String? category, Int32 linkId)
     {
         if (category == null) return [];
-        if (linkId <= 0) return [];
+        if (linkId < 0) return [];
 
         return FindAll(_.Category == category & _.LinkID == linkId);
     }
@@ -325,7 +325,7 @@ public partial class UserLog : IUserLog, IEntity<IUserLog>
     /// <returns>实体列表</returns>
     public static IList<UserLog> FindAllByCreateUserID(Int32 createUserId)
     {
-        if (createUserId <= 0) return [];
+        if (createUserId < 0) return [];
 
         return FindAll(_.CreateUserID == createUserId);
     }

@@ -1685,7 +1685,7 @@ public class EntityBuilder : ClassBuilder
             foreach (var dc in columns)
             {
                 if (dc.DataType != null && dc.DataType.IsInt())
-                    WriteLine("if ({0} <= 0) return null;", dc.CamelName());
+                    WriteLine("if ({0} < 0) return null;", dc.CamelName());
                 else if (dc.DataType == typeof(String))
                 {
                     if (nullable && dc.Nullable)
@@ -1787,7 +1787,7 @@ public class EntityBuilder : ClassBuilder
             foreach (var dc in columns)
             {
                 if (dc.DataType != null && dc.DataType.IsInt())
-                    WriteLine("if ({0} <= 0) return [];", dc.CamelName(), ClassName);
+                    WriteLine("if ({0} < 0) return [];", dc.CamelName(), ClassName);
                 else if (dc.DataType == typeof(String))
                 {
                     if (Option.Nullable && dc.Nullable)

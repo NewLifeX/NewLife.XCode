@@ -127,7 +127,7 @@ public partial class CorePerson : Entity<CorePerson>
     /// <returns>实体对象</returns>
     public static CorePerson FindByPersonID(Int32 personId)
     {
-        if (personId <= 0) return null;
+        if (personId < 0) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.PersonID == personId);
@@ -143,7 +143,7 @@ public partial class CorePerson : Entity<CorePerson>
     /// <returns>实体列表</returns>
     public static IList<CorePerson> FindAllByBuild_ID(Int32 build_ID)
     {
-        if (build_ID <= 0) return new List<CorePerson>();
+        if (build_ID < 0) return new List<CorePerson>();
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Build_ID == build_ID);

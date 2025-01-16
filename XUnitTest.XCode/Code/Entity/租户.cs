@@ -256,7 +256,7 @@ public partial class Tenant : ITenant, IEntity<ITenant>
     /// <returns>实体对象</returns>
     public static Tenant? FindById(Int32 id)
     {
-        if (id <= 0) return null;
+        if (id < 0) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);

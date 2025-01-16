@@ -280,7 +280,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <returns>实体对象</returns>
     public static Log? FindByID(Int64 id)
     {
-        if (id <= 0) return null;
+        if (id < 0) return null;
 
         return Find(_.ID == id);
     }
@@ -304,7 +304,7 @@ public partial class Log : ILog, IEntity<ILog>
     public static IList<Log> FindAllByCategoryAndLinkID(String? category, Int32 linkId)
     {
         if (category == null) return [];
-        if (linkId <= 0) return [];
+        if (linkId < 0) return [];
 
         return FindAll(_.Category == category & _.LinkID == linkId);
     }
@@ -314,7 +314,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <returns>实体列表</returns>
     public static IList<Log> FindAllByCreateUserID(Int32 createUserId)
     {
-        if (createUserId <= 0) return [];
+        if (createUserId < 0) return [];
 
         return FindAll(_.CreateUserID == createUserId);
     }

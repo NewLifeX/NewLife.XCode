@@ -229,7 +229,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
     /// <returns>实体对象</returns>
     public static TenantUser? FindById(Int32 id)
     {
-        if (id <= 0) return null;
+        if (id < 0) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
@@ -246,8 +246,8 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
     /// <returns>实体对象</returns>
     public static TenantUser? FindByTenantIdAndUserId(Int32 tenantId, Int32 userId)
     {
-        if (tenantId <= 0) return null;
-        if (userId <= 0) return null;
+        if (tenantId < 0) return null;
+        if (userId < 0) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.UserId == userId);
@@ -260,7 +260,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
     /// <returns>实体列表</returns>
     public static IList<TenantUser> FindAllByTenantId(Int32 tenantId)
     {
-        if (tenantId <= 0) return [];
+        if (tenantId < 0) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
@@ -273,7 +273,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
     /// <returns>实体列表</returns>
     public static IList<TenantUser> FindAllByUserId(Int32 userId)
     {
-        if (userId <= 0) return [];
+        if (userId < 0) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserId == userId);

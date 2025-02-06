@@ -247,7 +247,7 @@ public partial class Department : Entity<Department>, ITenantSource
         if (parentId >= 0) exp &= _.ParentID == parentId;
         if (enable != null) exp &= _.Enable == enable.Value;
         if (visible != null) exp &= _.Visible == visible.Value;
-        if (!key.IsNullOrEmpty()) exp &= _.Code.StartsWith(key) | _.Name.StartsWith(key) | _.FullName.StartsWith(key);
+        if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.FullName.Contains(key);
 
         return FindAll(exp, page);
     }

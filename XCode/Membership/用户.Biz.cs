@@ -283,7 +283,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
         if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
         if (enable != null) exp &= _.Enable == enable.Value;
         exp &= _.LastLogin.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Code.StartsWith(key) | _.Name.StartsWith(key) | _.DisplayName.StartsWith(key) | _.Mobile.StartsWith(key) | _.Mail.StartsWith(key);
+        if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Mobile.Contains(key) | _.Mail.Contains(key);
 
         return FindAll(exp, page);
     }
@@ -327,10 +327,22 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
         if (areaIds != null && areaIds.Length > 0) exp &= _.AreaId.In(areaIds);
         if (enable != null) exp &= _.Enable == enable.Value;
         exp &= _.LastLogin.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Code.StartsWith(key) | _.Name.StartsWith(key) | _.DisplayName.StartsWith(key) | _.Mobile.StartsWith(key) | _.Mail.StartsWith(key);
+        if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Mobile.Contains(key) | _.Mail.Contains(key);
 
         return FindAll(exp, page);
     }
+
+    /// <summary>在租户中搜索</summary>
+    /// <param name="tencentId"></param>
+    /// <param name="roleIds"></param>
+    /// <param name="departmentIds"></param>
+    /// <param name="areaIds"></param>
+    /// <param name="enable"></param>
+    /// <param name="start"></param>
+    /// <param name="end"></param>
+    /// <param name="key"></param>
+    /// <param name="page"></param>
+    /// <returns></returns>
     public static IList<User>? SearchWithTenant(Int32 tencentId, Int32[] roleIds, Int32[] departmentIds, Int32[] areaIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = TenantUser._.TenantId == tencentId;
@@ -348,7 +360,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
         if (areaIds != null && areaIds.Length > 0) exp &= _.AreaId.In(areaIds);
         if (enable != null) exp &= _.Enable == enable.Value;
         exp &= _.LastLogin.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= _.Code.StartsWith(key) | _.Name.StartsWith(key) | _.DisplayName.StartsWith(key) | _.Mobile.StartsWith(key) | _.Mail.StartsWith(key);
+        if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Mobile.Contains(key) | _.Mail.Contains(key);
 
         var sql = $"SELECT User.* FROM User INNER JOIN TenantUser ON User.ID= TenantUser.UserId where {exp} ";
 

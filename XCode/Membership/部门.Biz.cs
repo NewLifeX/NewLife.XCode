@@ -112,11 +112,11 @@ public partial class Department : Entity<Department>, ITenantSource
 
     /// <summary>父级</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    public Department Parent => Extends.Get(nameof(Department), k => FindByID(ParentID));
+    public Department? Parent => Extends.Get(nameof(Department), k => FindByID(ParentID));
 
     /// <summary>父级</summary>
     [Map(__.ParentID, typeof(Department), __.ID)]
-    public String ParentName => Parent?.ToString();
+    public String? ParentName => Parent?.ToString();
 
     /// <summary>父级路径</summary>
     public String ParentPath
@@ -151,6 +151,18 @@ public partial class Department : Entity<Department>, ITenantSource
             return p + "/" + Name;
         }
     }
+
+    /// <summary>
+    /// 获取子集合
+    /// </summary>
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    public IEnumerable<Department>? ChildList => Extends.Get(nameof(ChildList), k => FindAllByParentId(ID).OrderBy(e => e.ID));
+
+    /// <summary>
+    ///是否存在子集
+    /// </summary>
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    public Boolean subset { get; set; }
     #endregion
 
     #region 扩展查询
@@ -230,6 +242,17 @@ public partial class Department : Entity<Department>, ITenantSource
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
 
         return FindAll(_.TenantId == tenantId);
+    }
+
+    /// <summary>根据所属父级Id查找</summary>
+    /// <param name="parentID">所属父级Id</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByParentId(Int32 parentID)
+    {
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentID);
+
+        return FindAll(_.ParentID == parentID);
     }
     #endregion
 

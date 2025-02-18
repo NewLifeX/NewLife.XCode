@@ -821,7 +821,17 @@ public class EntityBuilder : ClassBuilder
                     }
                     // 特殊支持枚举
                     else if (column.DataType != null && column.DataType.IsInt())
-                        WriteLine("case \"{0}\": _{0} = ({1})value.ToInt(); break;", column.Name, type);
+                    {
+                        switch (column.DataType.Name)
+                        {
+                            case "Int64":
+                                WriteLine("case \"{0}\": _{0} = ({1})value.ToLong(); break;", column.Name, type);
+                                break;
+                            default:
+                                WriteLine("case \"{0}\": _{0} = ({1})value.ToInt(); break;", column.Name, type);
+                                break;
+                        }
+                    }
                     else
                     {
                         var method = "To";

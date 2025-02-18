@@ -414,7 +414,19 @@ partial class DbMetaData
         if (isArrayField) type = type.GetElementType();
 
         // 处理枚举
-        if (type.IsEnum) type = typeof(Int32);
+        if (type.IsEnum)
+        {
+            var trueType = Enum.GetUnderlyingType(type);
+            switch (trueType.Name)
+            {
+                case "Int64":
+                    type = typeof(long);
+                    break; 
+                default:
+                    type = typeof(Int32);
+                    break;
+            }
+        }
 
         if (!Types.TryGetValue(type, out var ns)) return null;
 

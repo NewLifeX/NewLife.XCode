@@ -416,7 +416,21 @@ public class ClassBuilder
                             // 特殊支持枚举
                             var type2 = type.GetTypeEx();
                             if (type2 != null && type2.IsEnum)
-                                WriteLine("case \"{0}\": {0} = ({1})value.ToInt(); break;", column.Name, type);
+                            {
+                                var enumType = Enum.GetUnderlyingType(type2);
+                                switch (enumType.Name)
+                                {
+                                    case "Int32":
+                                        WriteLine("case \"{0}\": {0} = ({1})value.ToInt(); break;", column.Name, type);
+                                        break;
+                                    case "Int64":
+                                        WriteLine("case \"{0}\": {0} = ({1})value.ToLong(); break;", column.Name, type);
+                                        break;
+                                    default:
+                                        WriteLine("case \"{0}\": {0} = ({1})value.ToInt(); break;", column.Name, type);
+                                        break;
+                                }
+                            }
                             else
                                 WriteLine("case \"{0}\": {0} = ({1})value; break;", column.Name, type);
                         }

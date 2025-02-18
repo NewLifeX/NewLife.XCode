@@ -175,5 +175,22 @@
         <Column Name="Temp" DataType="Single" Description="温度" />
       </Columns>
     </Table>
+    <Table Name="ExpressLogs" TableName="DH_ExpressLogs" Description="快递单号记录" IgnoreNameCase="False">
+      <Columns>
+        <Column Name="Id" DataType="Int64" PrimaryKey="True" DataScale="timeShard:yyyy" Description="编号" />
+        <Column Name="Code" DataType="String" Nullable="False" Description="条形码" />
+        <Column Name="CreateUser" DataType="String" Description="创建者" />
+        <Column Name="CreateUserID" DataType="Int32" Description="创建者" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+        <Column Name="CreateIP" DataType="String" Description="创建地址" />
+        <Column Name="UpdateUser" DataType="String" Description="更新者" />
+        <Column Name="UpdateUserID" DataType="Int32" Description="更新者" />
+        <Column Name="UpdateTime" DataType="DateTime" Description="更新时间" />
+        <Column Name="UpdateIP" DataType="String" Description="更新地址" />
+      </Columns>
+      <Indexes>
+        <Index Columns="Code" Unique="True" />
+      </Indexes>
+    </Table>
   </Tables>
 </EntityModel>

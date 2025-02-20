@@ -86,7 +86,7 @@ public partial class DAL
     public IAsyncDbSession AsyncSession => (Db as DbBase)!.CreateSessionForAsync();
 
     private String? _mapTo;
-    private readonly ICache _cache = new MemoryCache();
+    private static ICache _cache = new MemoryCache();
     #endregion
 
     #region 创建函数
@@ -634,7 +634,7 @@ public partial class DAL
     /// <summary>
     /// 获取所有表名，带缓存，不区分大小写
     /// </summary>
-    public ICollection<String> TableNames => _cache.GetOrAdd("tableNames", k => new HashSet<String>(GetTableNames(), StringComparer.OrdinalIgnoreCase), 60) ?? [];
+    public ICollection<String> TableNames => _cache.GetOrAdd($"tableNames:{ConnName}", k => new HashSet<String>(GetTableNames(), StringComparer.OrdinalIgnoreCase), 60) ?? [];
 
     /// <summary>
     /// 快速获取所有表名，无缓存，区分大小写
@@ -680,7 +680,7 @@ public partial class DAL
     /// <returns></returns>
     public static IList<IDataTable> Import(String xml)
     {
-        if (xml.IsNullOrEmpty()) return new IDataTable[0];
+        if (xml.IsNullOrEmpty()) return [];
 
         return ModelHelper.FromXml(xml, CreateTable);
     }
@@ -819,6 +819,10 @@ public partial class DAL
         {
             span?.SetError(ex, null);
             throw;
+        }
+        finally
+        {
+            _cache.Remove($"tableNames:{ConnName}");
         }
     }
 

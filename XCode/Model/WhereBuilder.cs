@@ -93,7 +93,7 @@ public class WhereBuilder
         // StartSiteId in {#SiteIds} or CityId={#CityId}
 
         // 解析表达式
-        var model = Parse(exp, new[] { "==", "!=", "<>", "=", " in" });
+        var model = Parse(exp, ["==", "!=", "<>", "=", " in"]);
         if (model != null)
         {
             switch (model.Action)
@@ -222,7 +222,7 @@ public class WhereBuilder
 
         // 等号运算
         // 解析表达式
-        var model = Parse(exp, new[] { "==", "!=", "<>", "=", " in" });
+        var model = Parse(exp, ["==", "!=", "<>", "=", " in"]);
         if (model != null)
         {
             var eval = entity[model.Field.Name];

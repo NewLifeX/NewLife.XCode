@@ -561,7 +561,7 @@ public static class ModelHelper
 
             if (pi.PropertyType == typeof(String[]))
             {
-                var ss = v.Split(new String[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                var ss = v.Split([","], StringSplitOptions.RemoveEmptyEntries);
                 // 去除前后空格，因为手工修改xml的时候，可能在逗号后加上空格
                 for (var i = 0; i < ss.Length; i++)
                 {

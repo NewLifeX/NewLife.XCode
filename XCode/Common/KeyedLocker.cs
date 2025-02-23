@@ -11,16 +11,16 @@ namespace XCode.Common;
 /// </summary>
 internal class KeyedLocker<TEntity>
 {
-    private static object[] Lockers;
+    private static Object[] Lockers;
     static KeyedLocker()
     {
-        int Length = 8;
-        var temp = new object[Length];
-        for (int i = 0; i < Length; i++) temp[i] = new object();
+        var Length = 8;
+        var temp = new Object[Length];
+        for (var i = 0; i < Length; i++) temp[i] = new Object();
         Lockers = temp;
     }
 
-    public static object SharedLock(string key)
+    public static Object SharedLock(String key)
     {
         if (key is null) throw new ArgumentNullException(nameof(key));
         var code = key.GetHashCode();

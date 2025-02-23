@@ -482,7 +482,7 @@ public class EntityBuilder : ClassBuilder
     public void Merge(String fileName)
     {
         // 新旧代码分组
-        var newLines = ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+        var newLines = ToString().Split([Environment.NewLine], StringSplitOptions.None);
         var oldLines = File.ReadAllLines(fileName).ToList();
 
         var changed = 0;

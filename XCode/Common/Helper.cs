@@ -54,7 +54,7 @@ static class Helper
 
     public static DataRow[] ToArray(this DataRowCollection collection)
     {
-        if (collection == null) return new DataRow[0];
+        if (collection == null) return [];
 
         var list = new List<DataRow>();
         foreach (var item in collection)

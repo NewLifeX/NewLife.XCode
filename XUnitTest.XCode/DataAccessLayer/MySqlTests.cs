@@ -76,7 +76,8 @@ public class MySqlTests
         var connstr = db.ConnectionString;
         Assert.Equal("sys", db.DatabaseName);
         //Assert.EndsWith("CharSet=utf8mb4;Sslmode=none;AllowPublicKeyRetrieval=true", connstr);
-        Assert.EndsWith("CharSet=utf8mb4;Sslmode=none", connstr);
+        //Assert.EndsWith("CharSet=utf8mb4;Sslmode=none", connstr);
+        Assert.EndsWith("sslmode=none;CharSet=utf8mb4", connstr);
 
         using var conn = db.OpenConnection();
         connstr = conn.ConnectionString;

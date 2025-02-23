@@ -3,7 +3,6 @@ using System.Data;
 using System.Data.Common;
 using System.Net;
 using System.Text;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
@@ -20,7 +19,7 @@ internal class PostgreSQL : RemoteDb
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory() => GetProviderFactory(null, "Npgsql.dll", "Npgsql.NpgsqlFactory");
+    protected override DbProviderFactory? CreateFactory() => GetProviderFactory(null, "Npgsql.dll", "Npgsql.NpgsqlFactory");
 
     private const String Server_Key = "Server";
 
@@ -333,13 +332,13 @@ internal class PostgreSQLSession : RemoteDbSession
     /// <returns>新增行的自动编号</returns>
     public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
     {
-        sql = sql + $" RETURNING *";
+        sql += $" RETURNING *";
         return base.InsertAndGetIdentity(sql, type, ps);
     }
 
     public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
     {
-        sql = sql + $" RETURNING *";
+        sql += $" RETURNING *";
         return base.InsertAndGetIdentityAsync(sql, type, ps);
     }
 
@@ -634,14 +633,14 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
 
         var session = Database.CreateSession();
         //var dt = GetSchema(_.Databases, new String[] { databaseName.ToLower() });
-        var dt = GetSchema(_.Databases, new String[] { databaseName });
+        var dt = GetSchema(_.Databases, [databaseName]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
 
     /// <summary>
     /// 创建数据库的 SQL 语句，强制带上双引号。
     /// </summary>
-    public override string CreateDatabaseSQL(string dbname, string? file)
+    public override String CreateDatabaseSQL(String dbname, String? file)
     {
         return String.Format("Create Database \"{0}\"", dbname.Replace("\"", "\"\""));
     }
@@ -751,12 +750,12 @@ order by
         if (idxs.Length > 0)
         {
             var idx_sql = $"SELECT conname FROM pg_constraint WHERE contype = 'p' AND conname IN (" +
-                $"{string.Join(",", idxs.Select(f => $"'{f}'"))})";
+                $"{String.Join(",", idxs.Select(f => $"'{f}'"))})";
             ds = session.Query(idx_sql);
             if (ds.Tables.Count != 0)
             {
                 var dt = ds.Tables[0]!;
-                var set = new HashSet<string>();
+                var set = new HashSet<String>();
                 foreach (DataRow dr in dt.Rows)
                 {
                     set.Add(Convert.ToString(dr[0]));
@@ -767,7 +766,7 @@ order by
                     {
                         foreach (var idx in tbl.Indexes)
                         {
-                            if (!string.IsNullOrWhiteSpace(idx.Name) && set.Contains(idx.Name!)) idx.PrimaryKey = true;
+                            if (!String.IsNullOrWhiteSpace(idx.Name) && set.Contains(idx.Name!)) idx.PrimaryKey = true;
                         }
                     }
                 }

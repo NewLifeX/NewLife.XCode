@@ -21,7 +21,7 @@ internal class Oracle : RemoteDb
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory() => GetProviderFactory(null, "Oracle.ManagedDataAccess.dll", "Oracle.ManagedDataAccess.Client.OracleClientFactory");
+    protected override DbProviderFactory? CreateFactory() => GetProviderFactory(null, "Oracle.ManagedDataAccess.dll", "Oracle.ManagedDataAccess.Client.OracleClientFactory");
 
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
@@ -754,7 +754,7 @@ internal class OracleMeta : RemoteDbMetaData
         var owner = Owner;
         //if (owner.IsNullOrEmpty()) owner = UserID;
 
-        dt = GetSchema(_.Tables, new String[] { owner, tableName });
+        dt = GetSchema(_.Tables, [owner, tableName]);
         if (!dt.Columns.Contains("TABLE_TYPE"))
         {
             dt.Columns.Add("TABLE_TYPE", typeof(String));
@@ -763,7 +763,7 @@ internal class OracleMeta : RemoteDbMetaData
                 dr["TABLE_TYPE"] = "Table";
             }
         }
-        var dtView = GetSchema(_.Views, new String[] { owner, tableName });
+        var dtView = GetSchema(_.Views, [owner, tableName]);
         if (dtView != null && dtView.Rows.Count != 0)
         {
             foreach (var dr in dtView.Rows?.ToArray())
@@ -796,7 +796,7 @@ internal class OracleMeta : RemoteDbMetaData
         data["IndexColumns"] = Get("all_ind_columns", owner, tableName, mulTable, "Table_Owner");
 
         // 主键
-        if (MetaDataCollections.Contains(_.PrimaryKeys)) data["PrimaryKeys"] = GetSchema(_.PrimaryKeys, new String[] { owner, tableName, null });
+        if (MetaDataCollections.Contains(_.PrimaryKeys)) data["PrimaryKeys"] = GetSchema(_.PrimaryKeys, [owner, tableName, null]);
 
         // 序列
         data["Sequences"] = Get("all_sequences", owner, null, null, "Sequence_Owner");
@@ -820,7 +820,7 @@ internal class OracleMeta : RemoteDbMetaData
     {
         var list = new List<String>();
 
-        var dt = GetSchema(_.Tables, new String[] { Owner, null });
+        var dt = GetSchema(_.Tables, [Owner, null]);
         if (dt?.Rows == null || dt.Rows.Count <= 0) return list;
 
         foreach (DataRow dr in dt.Rows)

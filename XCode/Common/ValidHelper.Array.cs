@@ -13,7 +13,7 @@ public partial class ValidHelper
         if (value is T[] arr) return arr;
         if (value is null || Convert.IsDBNull(value)) return default;
         if (value is IEnumerable<T> list) return list.ToArray();
-        if (value is T v) return new T[] { v };
+        if (value is T v) return [v];
         if (value is IEnumerable)
         {
             var ret = new List<T>();

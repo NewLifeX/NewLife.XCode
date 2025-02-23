@@ -20,7 +20,7 @@ class SqlCe : FileDbBase
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory()
+    protected override DbProviderFactory? CreateFactory()
     {
         // 找不到驱动时，再到线上下载
         var factory = GetProviderFactory(null, "System.Data.SqlServerCe.dll", "System.Data.SqlServerCe.SqlCeProviderFactory");

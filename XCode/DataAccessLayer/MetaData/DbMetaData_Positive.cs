@@ -393,7 +393,7 @@ partial class DbMetaData
         }
     }
 
-    protected virtual bool IsArrayField(Type type)
+    protected virtual Boolean IsArrayField(Type type)
     {
         return type.IsArray && !Types.ContainsKey(type);
     }
@@ -420,7 +420,7 @@ partial class DbMetaData
             switch (trueType.Name)
             {
                 case "Int64":
-                    type = typeof(long);
+                    type = typeof(Int64);
                     break; 
                 default:
                     type = typeof(Int32);

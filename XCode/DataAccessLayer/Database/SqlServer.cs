@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
@@ -21,7 +20,7 @@ internal class SqlServer : RemoteDb
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory()
+    protected override DbProviderFactory? CreateFactory()
     {
         // Microsoft 是最新的跨平台版本，优先使用
         //if (_Factory == null) _Factory = GetProviderFactory("Microsoft.Data.SqlClient.dll", "Microsoft.Data.SqlClient.SqlClientFactory", false, true);
@@ -210,7 +209,7 @@ internal class SqlServer : RemoteDb
         // 如果包含分组，则必须作为子查询
         var builder1 = builder.CloneWithGroupBy("XCode_T0", true);
         // *替换为{builder.Column}，否则会出现查询字段不一致的问题
-        var column = string.IsNullOrEmpty(builder.Column) ? "*" : builder.Column;
+        var column = String.IsNullOrEmpty(builder.Column) ? "*" : builder.Column;
         builder1.Column = $"{column}, row_number() over(Order By {builder.OrderBy ?? builder.Key}) as rowNumber";
 
         var builder2 = builder1.AsChild("XCode_T1", true);
@@ -252,7 +251,7 @@ internal class SqlServer : RemoteDb
 
         #region Max/Min分页
         // 如果要使用max/min分页法，首先keyColumn必须有asc或者desc
-        if (!String.IsNullOrEmpty(keyColumn))
+        if (!keyColumn.IsNullOrEmpty())
         {
             var kc = keyColumn.ToLower();
             if (kc.EndsWith(" desc") || kc.EndsWith(" asc") || kc.EndsWith(" unknown"))
@@ -1329,7 +1328,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
     /// <returns></returns>
     protected override Boolean DatabaseExist(String dbname)
     {
-        var dt = GetSchema(_.Databases, new String[] { dbname });
+        var dt = GetSchema(_.Databases, [dbname]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
 
@@ -1498,7 +1497,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
     /// <returns></returns>
     public Boolean TableExist(IDataTable table)
     {
-        var dt = GetSchema(_.Tables, new String[] { null, null, table.TableName, null });
+        var dt = GetSchema(_.Tables, [null, null, table.TableName, null]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
 

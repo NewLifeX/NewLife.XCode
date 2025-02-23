@@ -338,9 +338,9 @@ internal partial class DbMetaData
     {
         foreach (var col in table.Columns)
         {
-            if (string.Equals(col.Name, name, StringComparison.OrdinalIgnoreCase)) return col;
-            if (string.Equals(col.ColumnName, name, StringComparison.OrdinalIgnoreCase)) return col;
-            if (string.Equals(FormatName(col), name, StringComparison.OrdinalIgnoreCase)) return col;
+            if (String.Equals(col.Name, name, StringComparison.OrdinalIgnoreCase)) return col;
+            if (String.Equals(col.ColumnName, name, StringComparison.OrdinalIgnoreCase)) return col;
+            if (String.Equals(FormatName(col), name, StringComparison.OrdinalIgnoreCase)) return col;
         }
         return null;
     }
@@ -860,7 +860,7 @@ internal partial class DbMetaData
         if (/*schema == DDLSchema.TableExist ||*/ schema == DDLSchema.DatabaseExist) return session.QueryCount(sql) > 0;
 
         // 分隔符是分号加换行，如果不想被拆开执行（比如有事务），可以在分号和换行之间加一个空格
-        var sqls = sql.Split(new[] { ";" + Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+        var sqls = sql.Split([";" + Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
         if (sqls == null || sqls.Length <= 1) return session.Execute(sql);
 
         session.BeginTransaction(IsolationLevel.Serializable);

@@ -103,7 +103,7 @@ class XField : SerializableDataMember, IDataColumn, ICloneable
     [XmlAttribute]
     [DisplayName("是否数组")]
     [Description("是否数组")]
-    public bool IsArray { get; set; }
+    public Boolean IsArray { get; set; }
 
     /// <summary>默认值</summary>
     [XmlAttribute]

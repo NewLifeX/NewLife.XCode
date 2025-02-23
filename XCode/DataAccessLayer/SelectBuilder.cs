@@ -127,7 +127,7 @@ $";
         // 分析排序字句，从中分析出分页用的主键
         if (!value.IsNullOrEmpty() && Key.IsNullOrEmpty())
         {
-            var p = value.IndexOfAny(new[] { ',', ' ' });
+            var p = value.IndexOfAny([',', ' ']);
             if (p > 0)
                 Key = value[..p];
             else

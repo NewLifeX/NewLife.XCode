@@ -55,7 +55,7 @@ public class ModelResolver : IModelResolver
     public Boolean Camel { get; set; } = true;
 
     /// <summary>描述信息分隔符。从描述信息前部分隔出显示名</summary>
-    public Char[] SeparateChars { get; set; } = new Char[] { '.', '。', ',', '，', ';', '；', ':', '：', '\r', '\n' };
+    public Char[] SeparateChars { get; set; } = ['.', '。', ',', '，', ';', '；', ':', '：', '\r', '\n'];
     #endregion
 
     #region 名称处理
@@ -342,7 +342,7 @@ public class ModelResolver : IModelResolver
                 if (di == null)
                 {
                     di = table.CreateIndex();
-                    di.Columns = new String[] { dc.ColumnName };
+                    di.Columns = [dc.ColumnName];
                     //di.Computed = true;
                 }
                 // 不管是不是原来有的索引，都要唯一

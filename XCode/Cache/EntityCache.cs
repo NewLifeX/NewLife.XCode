@@ -54,7 +54,7 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
     #endregion
 
     #region 缓存核心
-    private TEntity[] _Entities = new TEntity[0];
+    private TEntity[] _Entities = [];
     /// <summary>实体集合。无数据返回空集合而不是null</summary>
     public IList<TEntity> Entities
     {

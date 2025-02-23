@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Net;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
@@ -11,16 +10,12 @@ namespace XCode.DataAccessLayer;
 internal class Hana : RemoteDb
 {
     #region 属性
-
     /// <summary>返回数据库类型。</summary>
     public override DatabaseType Type => DatabaseType.Hana;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory()
-    {
-        return GetProviderFactory("Sap.Data.Hana", "Sap.Data.Hana.Core.dll", "Sap.Data.Hana.HanaFactory")!;
-    }
+    protected override DbProviderFactory? CreateFactory() => GetProviderFactory("Sap.Data.Hana", "Sap.Data.Hana.Core.dll", "Sap.Data.Hana.HanaFactory");
 
     private const String Server_Key = "Server";
 
@@ -105,7 +100,7 @@ internal class Hana : RemoteDb
         return base.FormatValue(field, value);
     }
 
-    private static readonly Char[] _likeKeys = new[] { '\\', '\'', '\"', '%', '_' };
+    private static readonly Char[] _likeKeys = ['\\', '\'', '\"', '%', '_'];
 
     /// <summary>格式化模糊搜索的字符串。处理转义字符</summary>
     /// <param name="column">字段</param>
@@ -382,7 +377,7 @@ internal class HanaMetaData : RemoteDbMetaData
             var dt = ss.Query(sql, null);
             if (dt.Rows.Count == 0) return null;
 
-            var hs = new HashSet<String>(names ?? new String[0], StringComparer.OrdinalIgnoreCase);
+            var hs = new HashSet<String>(names ?? [], StringComparer.OrdinalIgnoreCase);
 
             // 所有表
             foreach (var dr in dt)
@@ -552,7 +547,7 @@ internal class HanaMetaData : RemoteDbMetaData
 
     protected override Boolean DatabaseExist(String databaseName)
     {
-        var dt = GetSchema(_.Databases, new String[] { databaseName });
+        var dt = GetSchema(_.Databases, [databaseName]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
 

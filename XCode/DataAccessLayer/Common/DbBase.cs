@@ -101,7 +101,7 @@ abstract class DbBase : DisposeBase, IDatabase
         set => _providerFactory = value;
     }
 
-    private static Dictionary<Type, DbProviderFactory> _factories = new();
+    private static readonly Dictionary<Type, DbProviderFactory> _factories = [];
     private Boolean _inited;
     protected DbProviderFactory? GetFactory(Boolean create)
     {
@@ -870,7 +870,7 @@ abstract class DbBase : DisposeBase, IDatabase
         return value.ToString();
     }
 
-    private static readonly Char[] _likeKeys = new[] { '\'', '%', '_' };
+    private static readonly Char[] _likeKeys = ['\'', '%', '_'];
     /// <summary>格式化模糊搜索的字符串。处理转义字符</summary>
     /// <param name="column">字段</param>
     /// <param name="format">格式化字符串</param>
@@ -1020,9 +1020,9 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <returns></returns>
     public virtual IDataParameter[] CreateParameters(Object? model)
     {
-        if (model == null) return new IDataParameter[0];
+        if (model == null) return [];
         if (model is IDataParameter[] dps) return dps;
-        if (model is IDataParameter dp) return new[] { dp };
+        if (model is IDataParameter dp) return [dp];
         if (model is IDictionary<String, Object> dic) return CreateParameters(dic);
 
         var list = new List<IDataParameter>();

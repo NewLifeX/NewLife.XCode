@@ -284,7 +284,7 @@ class TDengineMetaData : RemoteDbMetaData
             var dt = ss.Query(sql, null);
             if (dt.Rows.Count == 0) return null;
 
-            var hs = new HashSet<String>(names ?? new String[0], StringComparer.OrdinalIgnoreCase);
+            var hs = new HashSet<String>(names ?? [], StringComparer.OrdinalIgnoreCase);
 
             // 所有表
             foreach (var dr in dt)

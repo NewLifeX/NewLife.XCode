@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
@@ -21,11 +20,11 @@ internal class SQLite : FileDbBase
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory()
+    protected override DbProviderFactory? CreateFactory()
     {
         // Mono有自己的驱动，因为SQLite是混合编译，里面的C++代码与平台相关，不能通用;注意大小写问题
         if (Runtime.Mono)
-            return GetProviderFactory(null, "Mono.Data.Sqlite.dll", "System.Data.SqliteFactory");
+            return GetProviderFactory(null, "Mono.Data.Sqlite.dll", "System.Data.SqliteFactory")!;
 
         var type =
             PluginHelper.LoadPlugin("System.Data.SQLite.SQLiteFactory", null, "System.Data.SQLite.dll", null) ??
@@ -498,7 +497,7 @@ internal class SQLiteMetaData : FileDbMetaData
         var ds = ss.Query(sql, null);
         if (ds.Rows.Count == 0) return list;
 
-        var hs = new HashSet<String>(names ?? new String[0], StringComparer.OrdinalIgnoreCase);
+        var hs = new HashSet<String>(names ?? [], StringComparer.OrdinalIgnoreCase);
 
         var dts = Select(ds, "type", "table");
         var dis = Select(ds, "type", "index");
@@ -824,7 +823,7 @@ internal class SQLiteMetaData : FileDbMetaData
             sb.Append("Create Index ");
 
         // SQLite索引优先采用自带索引名
-        if (!String.IsNullOrEmpty(index.Name) && index.Name.Contains(index.Table.TableName))
+        if (!index.Name.IsNullOrEmpty() && index.Name.Contains(index.Table.TableName))
             sb.Append(index.Name);
         else
         {

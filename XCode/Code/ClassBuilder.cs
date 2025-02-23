@@ -380,7 +380,7 @@ public class ClassBuilder
 
                 if (!type.IsNullOrEmpty())
                 {
-                    if (!type.Contains(".") && conv.GetMethod("To" + type, new Type[] { typeof(Object) }) != null)
+                    if (!type.Contains(".") && conv.GetMethod("To" + type, [typeof(Object)]) != null)
                     {
                         switch (type)
                         {

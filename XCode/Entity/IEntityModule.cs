@@ -39,7 +39,7 @@ public class EntityModules : IEnumerable<IEntityModule>
     public Type? EntityType { get; set; }
 
     /// <summary>模块集合</summary>
-    public IEntityModule[] Modules { get; set; } = new IEntityModule[0];
+    public IEntityModule[] Modules { get; set; } = [];
     #endregion
 
     #region 构造

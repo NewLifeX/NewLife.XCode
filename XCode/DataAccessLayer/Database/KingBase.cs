@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using System.Data.Common;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
@@ -14,12 +13,16 @@ internal class KingBase : RemoteDb
     #region 属性
     /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
     public override DatabaseType Type => DatabaseType.KingBase;
+
     /// <summary>数据库版本</summary>
     public Version Version { get; set; }
+
     /// <summary>模式</summary>
-    public string? TableSchema { get; set; }
+    public String? TableSchema { get; set; }
+
     /// <summary>目前只支持兼容 Oracle、PostgreSQL、MySql</summary>
     public DatabaseType DataBaseMode { get; set; } = DatabaseType.None;
+
     /// <summary>系统数据库名</summary>
     public override String SystemDatabaseName => "security";
     #endregion
@@ -38,12 +41,13 @@ internal class KingBase : RemoteDb
     public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
     {
         if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, 0);
-        var sb = Pool.StringBuilder.Get();
-        var xWhere = string.Empty;
-        var xTable = this.FormatName(tableName);
-        if (!string.IsNullOrWhiteSpace(where)) xWhere = " Where " + where;
+
+        var xWhere = String.Empty;
+        var xTable = FormatName(tableName);
+        if (!String.IsNullOrWhiteSpace(where)) xWhere = " Where " + where;
         var sql = $"WITH to_delete AS (SELECT \"ctid\" FROM {xTable} {xWhere} LIMIT {batchSize}) ";
         sql += $"DELETE FROM {xTable} where \"ctid\" in (SELECT \"ctid\" from to_delete)";
+
         return sql;
     }
 
@@ -53,6 +57,7 @@ internal class KingBase : RemoteDb
         return base.FormatLike(column, format);
     }
     #endregion
+
     protected override void OnSetConnectionString(ConnectionStringBuilder builder) => base.OnSetConnectionString(builder);
 
     protected override DbProviderFactory? CreateFactory()
@@ -82,6 +87,7 @@ internal class KingBase : RemoteDb
     public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn) => PostgreSQL.PageSplitByOffsetLimit(sql, startRowIndex, maximumRows);
     #endregion
 }
+
 /// <summary>人大金仓(KingBase)数据库</summary>
 internal class KingBaseSession : RemoteDbSession
 {
@@ -93,30 +99,31 @@ internal class KingBaseSession : RemoteDbSession
     public override Int64 QueryCountFast(String tableName)
     {
         var db = Database as KingBase;
-        var sql = $"SELECT \"n_live_tup\" FROM \"sys_stat_user_tables\" WHERE \"schemaname\"='{db.TableSchema}' AND \"relname\" = '{tableName.Replace("\"", string.Empty)}'";
+        var sql = $"SELECT \"n_live_tup\" FROM \"sys_stat_user_tables\" WHERE \"schemaname\"='{db.TableSchema}' AND \"relname\" = '{tableName.Replace("\"", String.Empty)}'";
         return ExecuteScalar<Int64>(sql);
     }
     public override Task<Int64> QueryCountFastAsync(String tableName)
     {
         var db = Database as KingBase;
-        var sql = $"SELECT \"n_live_tup\" FROM \"sys_stat_user_tables\" WHERE \"schemaname\"='{db.TableSchema}' AND \"relname\" = '{tableName.Replace("\"", string.Empty)}'";
+        var sql = $"SELECT \"n_live_tup\" FROM \"sys_stat_user_tables\" WHERE \"schemaname\"='{db.TableSchema}' AND \"relname\" = '{tableName.Replace("\"", String.Empty)}'";
         return ExecuteScalarAsync<Int64>(sql);
     }
     #endregion
 
     public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
-        sql = sql + $" RETURNING *";
+        sql += $" RETURNING *";
         return base.InsertAndGetIdentity(sql, type, ps);
     }
+
     public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
-        sql = sql + $" RETURNING *";
+        sql += $" RETURNING *";
         return base.InsertAndGetIdentityAsync(sql, type, ps);
     }
 
     #region 批量操作
-    string GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
+    String GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var sb = Pool.StringBuilder.Get();
         var db = Database as DbBase;
@@ -135,7 +142,7 @@ internal class KingBaseSession : RemoteDbSession
 
         return sb.Return(true);
     }
-  
+
     public override Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
     {
         var sql = GetBatchSql("Insert Into", table, columns, null, null, list);
@@ -156,12 +163,13 @@ internal class KingBaseSession : RemoteDbSession
     }
     #endregion
 }
+
 /// <summary>人大金仓(KingBase)元数据</summary>
 internal class KingBaseMetaData : RemoteDbMetaData
 {
     #region 属性
     KingBase _KingBase => Database as KingBase;
-    string GetTablesSql
+    String GetTablesSql
     {
         get
         {
@@ -174,7 +182,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
             };
         }
     }
-    string GetColumnsSql
+    String GetColumnsSql
     {
         get
         {
@@ -211,7 +219,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
             };
         }
     }
-    string GetIndexsSql
+    String GetIndexsSql
     {
         get
         {
@@ -328,7 +336,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
             var dt = ss.Query(GetTablesSql, null);
             if (dt.Rows == null || dt.Rows.Count == 0) return list;
             //字段
-            sql = string.Format(GetColumnsSql, names != null && names.Length > 0 ? " and tablename in ('" + names.Join("','") + "')" : string.Empty);
+            sql = String.Format(GetColumnsSql, names != null && names.Length > 0 ? " and tablename in ('" + names.Join("','") + "')" : String.Empty);
             var columns = ss.Query(sql, null);
             //索引
             sql = GetIndexsSql;
@@ -356,7 +364,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
                 if (columns.Rows != null && columns.Rows.Count > 0)
                 {
                     var cols = columns.Where(o => $"{o["TableName"]}" == table.TableName);
-                    if (cols is null || 0 >= cols.Count()) { continue; }
+                    if (cols is null || !cols.Any()) { continue; }
                     foreach (var dc in cols)
                     {
                         var field = table.CreateColumn();
@@ -383,7 +391,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
                 if (indexes.Rows != null && indexes.Rows.Count > 0)
                 {
                     var ins = indexes.Where(o => $"{o["tablename"]}" == table.TableName);
-                    if (ins is null || 0 >= ins.Count()) { continue; }
+                    if (ins is null || !ins.Any()) { continue; }
                     foreach (var dr2 in ins)
                     {
                         var dname = $"{dr2["indexname"]}";
@@ -392,7 +400,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
                         di.Unique = indexdef.Contains("UNIQUE");
                         var startIndex = indexdef.IndexOf("(") + 1;
                         var endIndex = indexdef.LastIndexOf(")");
-                        var cname = indexdef?.Substring(startIndex, endIndex - startIndex).Replace("\"", string.Empty).Split(",").Select(o => o.Trim()).ToArray();
+                        var cname = indexdef?.Substring(startIndex, endIndex - startIndex).Replace("\"", String.Empty).Split(",").Select(o => o.Trim()).ToArray();
                         if (cname is null || 0 >= cname.Length) continue;
 
                         var cs = new List<String>();

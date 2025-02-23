@@ -55,7 +55,7 @@ class XIndex : SerializableDataMember, IDataIndex, ICloneable
     /// <summary>实例化</summary>
     public XIndex()
     {
-        Columns = new String[0];
+        Columns = [];
     }
     #endregion
 

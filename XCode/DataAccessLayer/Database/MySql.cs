@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Net;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
@@ -17,12 +16,12 @@ internal class MySql : RemoteDb
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory()
+    protected override DbProviderFactory? CreateFactory()
     {
         //_Factory = GetProviderFactory("NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory") ??
         //           GetProviderFactory("MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
         // MewLife.MySql 在开发过程中，数据驱动下载站点没有它的包，暂时不支持下载
-        return GetProviderFactory("NewLife.MySql", null, "NewLife.MySql.MySqlClientFactory", true, true) ??
+        return GetProviderFactory("NewLife.MySql", "NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory", true, true) ??
             GetProviderFactory(null, "MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
     }
 
@@ -283,13 +282,13 @@ internal class MySqlSession : RemoteDbSession
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql += ";Select LAST_INSERT_ID()";
         return base.InsertAndGetIdentity(sql, type, ps);
     }
 
-    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql += ";Select LAST_INSERT_ID()";
         return base.InsertAndGetIdentityAsync(sql, type, ps);

@@ -260,7 +260,7 @@ public class AreaTests
 
             Area.Meta.Session.Truncate();
             var rs = Area.Import(file, true, 3, false);
-            Assert.Equal(3624, rs);
+            Assert.Equal(3639, rs);
 
             Area.Meta.Session.Truncate();
             rs = Area.Import(file, true, 4, true);

@@ -620,7 +620,7 @@ public partial class DAL
             //CheckDatabase();
             var tables = Db.CreateMetaData().GetTables();
 
-            if (span != null) span.Tag += ": " + tables.Join(",");
+            span?.AppendTag(tables.Join(","), tables.Count);
 
             return tables;
         }

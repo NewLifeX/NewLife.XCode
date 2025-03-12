@@ -217,7 +217,7 @@ public partial class User2
 
     private String _Ex6;
     /// <summary>扩展6</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     [DisplayName("扩展6")]
     [Description("扩展6")]
     [DataObjectField(false, false, true, 50)]

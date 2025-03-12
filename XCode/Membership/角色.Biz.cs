@@ -231,7 +231,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
     private IDictionary<Int32, PermissionFlags> _Permissions;
 
     /// <summary>本角色权限集合</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IDictionary<Int32, PermissionFlags> Permissions => _Permissions ??= new Dictionary<Int32, PermissionFlags>();
 
     /// <summary>是否拥有指定资源的指定权限</summary>
@@ -353,7 +353,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
     }
 
     /// <summary>当前角色拥有的资源</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Int32[] Resources => Permissions.Keys.ToArray();
 
     #endregion 扩展权限

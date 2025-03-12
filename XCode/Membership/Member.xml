@@ -71,7 +71,7 @@
         <Column Name="Ex3" DataType="Double" Description="扩展3" Category="扩展" />
         <Column Name="Ex4" DataType="String" Description="扩展4" Category="扩展" />
         <Column Name="Ex5" DataType="String" Description="扩展5" Category="扩展" />
-        <Column Name="Ex6" DataType="String" Description="扩展6" Attribute="XmlIgnore, ScriptIgnore, IgnoreDataMember" Category="扩展" />
+        <Column Name="Ex6" DataType="String" Description="扩展6" Attribute="XmlIgnore, IgnoreDataMember, ScriptIgnore" Category="扩展" />
         <Column Name="UpdateUser" DataType="String" Nullable="False" DefaultValue="''" Description="更新者" Model="False" Category="扩展" />
         <Column Name="UpdateUserID" DataType="Int32" Description="更新用户" Model="False" Category="扩展" />
         <Column Name="UpdateIP" DataType="String" Description="更新地址" Model="False" Category="扩展" />

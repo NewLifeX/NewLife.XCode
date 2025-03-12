@@ -95,7 +95,7 @@ public partial class Department : Entity<Department>, ITenantSource
 
     #region 扩展属性
     ///// <summary>租户</summary>
-    //[XmlIgnore, IgnoreDataMember]
+    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
     //public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
 
     ///// <summary>租户</summary>
@@ -103,7 +103,7 @@ public partial class Department : Entity<Department>, ITenantSource
     //public String TenantName => Tenant?.Name;
 
     ///// <summary>管理者</summary>
-    //[XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
     //public User Manager => Extends.Get(nameof(Manager), k => User.FindByID(ManagerId));
 
     ///// <summary>管理者</summary>
@@ -111,7 +111,7 @@ public partial class Department : Entity<Department>, ITenantSource
     //public String ManagerName => Manager?.ToString();
 
     /// <summary>父级</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Department? Parent => Extends.Get(nameof(Department), k => FindByID(ParentID));
 
     /// <summary>父级</summary>
@@ -155,13 +155,13 @@ public partial class Department : Entity<Department>, ITenantSource
     /// <summary>
     /// 获取子集合
     /// </summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IEnumerable<Department>? ChildList => Extends.Get(nameof(ChildList), k => FindAllByParentId(ID).OrderBy(e => e.ID));
 
     /// <summary>
     ///是否存在子集
     /// </summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Boolean subset { get; set; }
     #endregion
 

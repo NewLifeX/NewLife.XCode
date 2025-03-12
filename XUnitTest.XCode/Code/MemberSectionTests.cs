@@ -146,15 +146,15 @@ public class MemberSectionTests
 
     #region 扩展属性
     /// <summary>顶级根。它的Childs就是各个省份</summary>
-    [XmlIgnore, ScriptIgnore]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public static Area Root { get; } = new Area();
 
     /// <summary>父级</summary>
-    [XmlIgnore, ScriptIgnore]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Area Parent => Extends.Get(nameof(Parent), k => FindByID(ParentID) ?? Root);
 
     /// <summary>所有父级</summary>
-    [XmlIgnore, ScriptIgnore]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IList<Area> AllParents => Extends.Get(nameof(AllParents), k =>
     {
         var list = new List<Area>();
@@ -200,11 +200,11 @@ public class MemberSectionTests
     }
 
     /// <summary>下级地区</summary>
-    [XmlIgnore, ScriptIgnore]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IList<Area> Childs => Extends.Get(nameof(Childs), k => FindAllByParentID(ID).Where(e => e.Enable).ToList());
 
     /// <summary>子孙级区域。支持省市区，不支持乡镇街道</summary>
-    [XmlIgnore, ScriptIgnore]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IList<Area> AllChilds => Extends.Get(nameof(AllChilds), k =>
     {
         var list = new List<Area>();
@@ -408,13 +408,13 @@ public class MemberSectionTests
         var code =
 """
     #region 扩展属性
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Product Product => Extends.Get(nameof(Product), k => Product.FindById(ProductId));
 
     [Map(nameof(ProductId), typeof(Product), "Id")]
     public String ProductName => Product?.Name;
 
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public DeviceGroup Group => Extends.Get(nameof(Group), k => DeviceGroup.FindById(GroupId));
 
     [Map(nameof(GroupId), typeof(DeviceGroup), "Id")]
@@ -425,7 +425,7 @@ public class MemberSectionTests
     public String AreaName => Area.FindByIDs(CityId, ProvinceId)?.Path;
 
     /// <summary>父级设备</summary>
-    [XmlIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     //[ScriptIgnore]
     public Device Parent => Extends.Get(nameof(Parent), k => Device.FindById(ParentId));
 
@@ -434,18 +434,18 @@ public class MemberSectionTests
     public String ParentName => Parent?.Name;
 
     /// <summary>子设备。借助扩展属性缓存</summary>
-    [XmlIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IList<Device> Childs => Extends.Get(nameof(Childs), k => FindAllByParent(Id));
 
     /// <summary>设备属性。借助扩展属性缓存</summary>
-    [XmlIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IList<DeviceProperty> Properties => Extends.Get(nameof(Properties), k => DeviceProperty.FindAllByDeviceId(Id));
 
     /// <summary>设备服务。借助扩展属性缓存</summary>
-    [XmlIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IList<DeviceService> Services => Extends.Get(nameof(Services), k => DeviceService.FindAllByDeviceId(Id));
 
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     protected Boolean IgnoreVaild { get; set; } = false;
     #endregion
 """;

@@ -125,7 +125,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     public String LastLoginAddress => LastLoginIP.IPToAddress();
 
     ///// <summary>部门</summary>
-    //[XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
     //public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
 
     ///// <summary>部门</summary>
@@ -602,11 +602,11 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     #region 权限
     /// <summary>角色</summary>
     /// <remarks>扩展属性不缓存空对象，一般来说，每个管理员都有对应的角色，如果没有，可能是在初始化</remarks>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     IRole IUser.Role => Role;
 
     /// <summary>角色集合</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).ToArray());
 
     /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>

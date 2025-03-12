@@ -1,6 +1,7 @@
 ﻿using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -105,15 +106,15 @@ public partial class Area : Entity<Area>
 
     #region 扩展属性
     /// <summary>顶级根。它的Childs就是各个省份</summary>
-    [XmlIgnore, ScriptIgnore]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public static Area Root { get; } = new Area();
 
     /// <summary>父级</summary>
-    [XmlIgnore, ScriptIgnore]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Area Parent => Extends.Get(nameof(Parent), k => FindByID(ParentID) ?? Root)!;
 
     /// <summary>所有父级，从高到底</summary>
-    [XmlIgnore, ScriptIgnore]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IList<Area> AllParents => Extends.Get(nameof(AllParents), k =>
     {
         var list = new List<Area>();
@@ -159,11 +160,11 @@ public partial class Area : Entity<Area>
     }
 
     /// <summary>下级地区</summary>
-    [XmlIgnore, ScriptIgnore]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IList<Area> Childs => Extends.Get(nameof(Childs), k => FindAllByParentID(ID).Where(e => e.Enable).ToList())!;
 
     /// <summary>子孙级区域。支持省市区，不支持乡镇街道</summary>
-    [XmlIgnore, ScriptIgnore]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IList<Area> AllChilds => Extends.Get(nameof(AllChilds), k =>
     {
         var list = new List<Area>();

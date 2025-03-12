@@ -50,7 +50,7 @@ public partial class TenantUser : Entity<TenantUser>
     #region 扩展属性
 
     ///// <summary>租户</summary>
-    //[XmlIgnore, IgnoreDataMember]
+    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
     ////[ScriptIgnore]
     //public Tenant Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
 
@@ -59,7 +59,7 @@ public partial class TenantUser : Entity<TenantUser>
     //public String TenantName => Tenant?.Name;
 
     ///// <summary>用户</summary>
-    //[XmlIgnore, IgnoreDataMember]
+    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
     ////[ScriptIgnore]
     //public User User => Extends.Get(nameof(User), k => User.FindByID(UserId));
 
@@ -68,7 +68,7 @@ public partial class TenantUser : Entity<TenantUser>
     //public String UserName => User?.Name;
 
     /// <summary>角色</summary>
-    [XmlIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     IRole ITenantUser.Role => Role;
 
     ///// <summary>角色</summary>
@@ -76,7 +76,7 @@ public partial class TenantUser : Entity<TenantUser>
     //public String RoleName => Role?.Name;
 
     /// <summary>角色集合</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).ToArray());
 
     /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>

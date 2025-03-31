@@ -113,9 +113,14 @@ public partial class Area : Entity<Area>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Area Parent => Extends.Get(nameof(Parent), k => FindByID(ParentID) ?? Root)!;
 
+    ///// <summary>所有父级，从高到底</summary>
+    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    //[Obsolete("=>GetAllParents")]
+    //public IList<Area> AllParents => Extends.Get(nameof(AllParents), k => GetAllParents())!;
+
     /// <summary>所有父级，从高到底</summary>
-    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public IList<Area> AllParents => Extends.Get(nameof(AllParents), k =>
+    /// <returns></returns>
+    public IList<Area> GetAllParents()
     {
         var list = new List<Area>();
         var entity = Parent;
@@ -132,14 +137,14 @@ public partial class Area : Entity<Area>
         list.Reverse();
 
         return list;
-    })!;
+    }
 
     /// <summary>父级路径</summary>
-    public String ParentPath
+    public String? ParentPath
     {
         get
         {
-            var list = AllParents;
+            var list = GetAllParents();
             if (list != null && list.Count > 0) return list.Where(r => !r.IsVirtual).Join("/", r => r.Name);
 
             return Parent?.Name;
@@ -163,18 +168,22 @@ public partial class Area : Entity<Area>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IList<Area> Childs => Extends.Get(nameof(Childs), k => FindAllByParentID(ID).Where(e => e.Enable).ToList())!;
 
+    ///// <summary>子孙级区域。支持省市区，不支持乡镇街道</summary>
+    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    //[Obsolete("=>GetAllChilds")]
+    //public IList<Area> AllChilds => Extends.Get(nameof(AllChilds), k => GetAllChilds())!;
+
     /// <summary>子孙级区域。支持省市区，不支持乡镇街道</summary>
-    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public IList<Area> AllChilds => Extends.Get(nameof(AllChilds), k =>
+    public IList<Area> GetAllChilds()
     {
         var list = new List<Area>();
         foreach (var item in Childs)
         {
             list.Add(item);
-            if (item.Level < 3) list.AddRange(item.AllChilds);
+            if (item.Level < 3) list.AddRange(item.GetAllChilds());
         }
         return list;
-    });
+    }
 
     /// <summary>是否虚拟地区</summary>
     public Boolean IsVirtual => Name.EqualIgnoreCase("市辖区", "直辖县", "直辖镇");
@@ -508,7 +517,7 @@ public partial class Area : Entity<Area>
             var r = FindByNames(ss);
             if (r != null)
             {
-                list.AddRange(r.AllParents);
+                list.AddRange(r.GetAllParents());
                 list.Add(r);
 
                 if (maxLevel > 0 && list.Count > maxLevel) list = list.Take(maxLevel).ToList();
@@ -539,7 +548,7 @@ public partial class Area : Entity<Area>
         var r = FindAddress(Root, address, maxLevel);
         if (r != null)
         {
-            list.AddRange(r.AllParents);
+            list.AddRange(r.GetAllParents());
             list.Add(r);
         }
 

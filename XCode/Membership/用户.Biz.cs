@@ -122,7 +122,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     #region 扩展属性
     /// <summary>物理地址</summary>
     [DisplayName("物理地址")]
-    public String LastLoginAddress => LastLoginIP.IPToAddress();
+    public String? LastLoginAddress => LastLoginIP?.IPToAddress();
 
     ///// <summary>部门</summary>
     //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
@@ -137,7 +137,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     /// 地区名
     /// </summary>
     [Map(nameof(AreaId))]
-    public String AreaName => Area.FindByID(AreaId)?.Path;
+    public String? AreaName => Area.FindByID(AreaId)?.Path;
     #endregion
 
     #region 扩展查询
@@ -693,7 +693,7 @@ public partial interface IUser
     IRole[] Roles { get; }
 
     /// <summary>角色名</summary>
-    String RoleName { get; }
+    String? RoleName { get; }
 
     /// <summary>用户是否拥有当前菜单的指定权限</summary>
     /// <param name="menu">指定菜单</param>

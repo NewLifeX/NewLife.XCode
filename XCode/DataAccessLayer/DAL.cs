@@ -70,7 +70,9 @@ public partial class DAL
                 if (db is DbBase dbBase) dbBase.Tracer = Tracer;
 
                 // 设置连接字符串时，可能触发内部的一系列动作，因此放在最后
-                if (!ConnStr.IsNullOrEmpty()) db.ConnectionString = DecodeConnStr(ConnStr);
+                var connStr = ConnStr;
+                if (!_mapConnStr.IsNullOrEmpty()) connStr = _mapConnStr;
+                if (!connStr.IsNullOrEmpty()) db.ConnectionString = DecodeConnStr(connStr);
 
                 _Db = db;
 
@@ -86,6 +88,7 @@ public partial class DAL
     public IAsyncDbSession AsyncSession => (Db as DbBase)!.CreateSessionForAsync();
 
     private String? _mapTo;
+    private String? _mapConnStr;
     private static ICache _cache = new MemoryCache();
     #endregion
 
@@ -122,12 +125,31 @@ public partial class DAL
                 AddConnStr(connName, connstr, null, "SQLite");
             }
 
-            ConnStr = css[connName];
-            if (ConnStr.IsNullOrEmpty()) throw new XCodeException("请在使用数据库前设置[" + connName + "]连接字符串");
+            var connStr = ConnStr = css[connName];
+            if (connStr.IsNullOrEmpty()) throw new XCodeException("请在使用数据库前设置[" + connName + "]连接字符串");
 
             // 连接映射
-            var vs = ConnStr.SplitAsDictionary("=", ",", true);
-            if (vs.TryGetValue("MapTo", out var map) && !map.IsNullOrEmpty()) _mapTo = map;
+            var vs = connStr.SplitAsDictionary("=", ";", true);
+            if (vs.TryGetValue("MapTo", out var map) && !map.IsNullOrEmpty() && !map.EqualIgnoreCase(connName))
+            {
+                // 如果连接字符串除了MapTo还有其它设置，则需要复制后覆盖
+                if (vs.Count <= 1)
+                    _mapTo = map;
+                else
+                {
+                    var dal = Create(map);
+                    var builder = new ConnectionStringBuilder(dal.ConnStr);
+                    foreach (var item in vs)
+                    {
+                        if (!item.Key.EqualIgnoreCase("MapTo"))
+                            builder[item.Key] = item.Value;
+                    }
+
+                    _mapConnStr = builder.ToString();
+                    ProviderType = dal.ProviderType;
+                    DbType = dal.DbType;
+                }
+            }
 
             if (_infos!.TryGetValue(connName, out var t) && t.Type != null)
             {

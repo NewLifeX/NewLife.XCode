@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using NewLife;
 using XCode.Configuration;
 using XCode.Membership;
 
@@ -53,6 +52,7 @@ public class IPModule : EntityModule
         var fs = GetFields(entity.GetType());
 
         var ip = ManageProvider.UserHost;
+        ip ??= NetHelper.MyIP()?.ToString();
         if (!ip.IsNullOrEmpty())
         {
             // 如果不是IPv6，去掉后面端口

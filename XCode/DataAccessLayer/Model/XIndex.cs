@@ -1,8 +1,6 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
-using NewLife;
 
 namespace XCode.DataAccessLayer;
 
@@ -11,7 +9,7 @@ namespace XCode.DataAccessLayer;
 [DisplayName("索引模型")]
 [Description("索引模型")]
 [XmlRoot("Index")]
-class XIndex : SerializableDataMember, IDataIndex, ICloneable
+class XIndex : /*SerializableDataMember,*/ IDataIndex, ICloneable
 {
     #region 属性
     /// <summary>名称</summary>

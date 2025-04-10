@@ -81,6 +81,7 @@
     <Compile Remove="DataAccessLayer\Common\ConnectionPool.cs" />
     <Compile Remove="DataAccessLayer\Database\Firebird.cs" />
     <Compile Remove="DataAccessLayer\Database\Network.cs" />
+    <Compile Remove="DataAccessLayer\Model\SerializableDataMember.cs" />
     <Compile Remove="DataAccessLayer\MSPageSplit.cs" />
     <Compile Remove="Membership\IPasswordProvider.cs" />
     <Compile Remove="Membership\MenuProvider.cs" />

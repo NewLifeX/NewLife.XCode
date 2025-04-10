@@ -16,7 +16,7 @@ namespace XCode.DataAccessLayer;
 [DisplayName("表模型")]
 [Description("表模型")]
 [XmlRoot("Table")]
-class XTable : IDataTable, ICloneable, IXmlSerializable
+class XTable : IDataTable, ICloneable//, IXmlSerializable
 {
     #region 基本属性
     ///// <summary>编号</summary>
@@ -243,16 +243,16 @@ class XTable : IDataTable, ICloneable, IXmlSerializable
     #endregion
 
     #region IXmlSerializable 成员
-    /// <summary>获取架构</summary>
-    /// <returns></returns>
-    XmlSchema IXmlSerializable.GetSchema() => null;
+    ///// <summary>获取架构</summary>
+    ///// <returns></returns>
+    //XmlSchema IXmlSerializable.GetSchema() => null;
 
-    /// <summary>读取</summary>
-    /// <param name="reader"></param>
-    void IXmlSerializable.ReadXml(XmlReader reader) => ModelHelper.ReadXml(this, reader);
+    ///// <summary>读取</summary>
+    ///// <param name="reader"></param>
+    //void IXmlSerializable.ReadXml(XmlReader reader) => ModelHelper.ReadXml(this, reader);
 
-    /// <summary>写入</summary>
-    /// <param name="writer"></param>
-    void IXmlSerializable.WriteXml(XmlWriter writer) => ModelHelper.WriteXml(this, writer);
+    ///// <summary>写入</summary>
+    ///// <param name="writer"></param>
+    //void IXmlSerializable.WriteXml(XmlWriter writer) => ModelHelper.WriteXml(this, writer);
     #endregion
 }

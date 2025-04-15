@@ -73,6 +73,18 @@ public class XCodeSetting : Config<XCodeSetting>
     [Description("反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除")]
     public Migration Migration { get; set; } = Migration.On;
 
+    /// <summary>检查注释。表注释或字段注释，反向工程，默认打开</summary>  
+    [Description("检查注释。表注释或字段注释，反向工程，默认打开")]
+    public Boolean CheckComment { get; set; } = true;
+
+    /// <summary>检查删除索引。反向工程，默认打开</summary>  
+    [Description("检查删除索引。反向工程，默认打开")]
+    public Boolean CheckDeleteIndex { get; set; } = true;
+
+    /// <summary>检查添加索引。反向工程，默认打开</summary>  
+    [Description("检查添加索引。反向工程，默认打开")]
+    public Boolean CheckAddIndex { get; set; } = true;
+
     /// <summary>是否检查索引重复。默认打开</summary>  
     [Description("检查索引重复。默认打开")]
     public Boolean CheckDuplicateIndex { get; set; } = true;

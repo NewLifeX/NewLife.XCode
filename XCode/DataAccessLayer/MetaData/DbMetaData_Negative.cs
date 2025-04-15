@@ -69,14 +69,16 @@ internal partial class DbMetaData
     {
         if (mode == Migration.Off) return;
 
-        OnSetTables(tables, mode);
+        var set = XCodeSetting.Current;
+
+        OnSetTables(tables, mode, set);
     }
 
-    protected virtual void OnSetTables(IDataTable[] tables, Migration mode)
+    protected virtual void OnSetTables(IDataTable[] tables, Migration mode, XCodeSetting set)
     {
         var dbExist = CheckDatabase(mode);
 
-        CheckAllTables(tables, mode, dbExist);
+        CheckAllTables(tables, mode, dbExist, set);
     }
 
     private Boolean? hasCheckedDatabase;
@@ -119,7 +121,7 @@ internal partial class DbMetaData
         return dbExist;
     }
 
-    private void CheckAllTables(IDataTable[] tables, Migration mode, Boolean dbExit)
+    private void CheckAllTables(IDataTable[] tables, Migration mode, Boolean dbExit, XCodeSetting set)
     {
         IList<IDataTable>? dbtables = null;
         if (dbExit)
@@ -141,9 +143,9 @@ internal partial class DbMetaData
 
                 // 判断指定表是否存在于数据库中，以决定是创建表还是修改表
                 if (dbtable != null)
-                    CheckTable(item, dbtable, mode);
+                    CheckTable(item, dbtable, mode, set);
                 else
-                    CheckTable(item, null, mode);
+                    CheckTable(item, null, mode, set);
             }
             catch (Exception ex)
             {
@@ -152,7 +154,7 @@ internal partial class DbMetaData
         }
     }
 
-    protected virtual void CheckTable(IDataTable entitytable, IDataTable? dbtable, Migration mode)
+    protected virtual void CheckTable(IDataTable entitytable, IDataTable? dbtable, Migration mode, XCodeSetting set)
     {
         var @readonly = mode <= Migration.ReadOnly;
         if (dbtable == null)
@@ -174,19 +176,30 @@ internal partial class DbMetaData
             var onlyCreate = mode < Migration.Full;
             var sb = new StringBuilder();
 
-            var sql = CheckTableDescription(entitytable, dbtable, mode);
-            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
+            if (set.CheckComment)
+            {
+                var sql = CheckTableDescription(entitytable, dbtable, mode);
+                if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
+            }
 
-            // 先删除索引，后面才有可能删除字段
-            sql = CheckDeleteIndex(entitytable, dbtable, mode);
-            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
+            if (set.CheckDeleteIndex)
+            {
+                // 先删除索引，后面才有可能删除字段
+                var sql = CheckDeleteIndex(entitytable, dbtable, mode);
+                if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
+            }
 
-            sql = CheckColumnsChange(entitytable, dbtable, @readonly, onlyCreate);
-            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
+            {
+                var sql = CheckColumnsChange(entitytable, dbtable, @readonly, onlyCreate, set);
+                if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
+            }
 
-            // 新增字段后，可能需要删除索引
-            sql = CheckAddIndex(entitytable, dbtable, mode);
-            if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
+            if (set.CheckAddIndex)
+            {
+                // 新增字段后，可能需要删除索引
+                var sql = CheckAddIndex(entitytable, dbtable, mode);
+                if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
+            }
 
             if (sb.Length > 0) WriteLog($"DDL模式[{mode}]，请手工修改表[{dbtable.TableName}]：{Environment.NewLine}{sb}");
         }
@@ -197,8 +210,9 @@ internal partial class DbMetaData
     /// <param name="dbtable"></param>
     /// <param name="readonly"></param>
     /// <param name="onlyCreate"></param>
+    /// <param name="set"></param>
     /// <returns>返回未执行语句</returns>
-    protected virtual String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean @readonly, Boolean onlyCreate)
+    protected virtual String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean @readonly, Boolean onlyCreate, XCodeSetting set)
     {
         var sb = new StringBuilder();
         var etdic = entitytable.Columns.ToDictionary(e => FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
@@ -279,7 +293,7 @@ internal partial class DbMetaData
                 PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
 
             //if (item.Description + "" != dbf.Description + "")
-            if (FormatDescription(item.Description) != FormatDescription(dbf.Description))
+            if (set.CheckComment && FormatDescription(item.Description) != FormatDescription(dbf.Description))
             {
                 // 先删除旧注释
                 //if (dbf.Description != null) PerformSchema(sb, noDelete, DDLSchema.DropColumnDescription, dbf);

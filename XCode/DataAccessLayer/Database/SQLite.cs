@@ -847,7 +847,7 @@ internal class SQLiteMetaData : FileDbMetaData
     /// <returns></returns>
     public override String DropIndexSQL(IDataIndex index) => $"Drop Index {index.Name}";
 
-    protected override String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean onlySql, Boolean noDelete)
+    protected override String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean onlySql, Boolean noDelete, XCodeSetting set)
     {
         foreach (var item in entitytable.Columns)
         {
@@ -864,7 +864,7 @@ internal class SQLiteMetaData : FileDbMetaData
         }
 
         // 把onlySql设为true，让基类只产生语句而不执行
-        var sql = base.CheckColumnsChange(entitytable, dbtable, onlySql, true);
+        var sql = base.CheckColumnsChange(entitytable, dbtable, onlySql, true, set);
         if (sql.IsNullOrEmpty()) return sql;
 
         // SQLite 3.35.0 起支持 Drop Column
@@ -879,7 +879,7 @@ internal class SQLiteMetaData : FileDbMetaData
 
             Database.CreateSession().Execute(sql);
 
-            return null;
+            return "";
         }
         if (sql.Contains("Drop Column") && v != null && v >= new Version(3, 35))
         {
@@ -887,11 +887,11 @@ internal class SQLiteMetaData : FileDbMetaData
 
             Database.CreateSession().Execute(sql);
 
-            return null;
+            return "";
         }
 
         var db = Database as DbBase;
-        using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:SetSchema:RebuildTable", sql);
+        using var span = db!.Tracer?.NewSpan($"db:{db.ConnName}:SetSchema:RebuildTable", sql);
 
         var sql2 = sql;
 
@@ -941,7 +941,7 @@ internal class SQLiteMetaData : FileDbMetaData
             throw;
         }
 
-        return null;
+        return "";
     }
     #endregion
 
@@ -965,16 +965,17 @@ internal class SQLiteMetaData : FileDbMetaData
     /// <param name="entitytable"></param>
     /// <param name="dbtable"></param>
     /// <param name="mode"></param>
-    protected override void CheckTable(IDataTable entitytable, IDataTable dbtable, Migration mode)
+    /// <param name="set"></param>
+    protected override void CheckTable(IDataTable entitytable, IDataTable? dbtable, Migration mode, XCodeSetting set)
     {
-        if (dbtable == null && (Database as SQLite).IsMemoryDatabase)
+        if (dbtable == null && (Database as SQLite)!.IsMemoryDatabase)
         {
             if (memoryTables.Any(t => t.TableName.EqualIgnoreCase(entitytable.TableName))) return;
 
             memoryTables.Add(entitytable);
         }
 
-        base.CheckTable(entitytable, dbtable, mode);
+        base.CheckTable(entitytable, dbtable, mode, set);
     }
 
     protected override Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)

@@ -73,6 +73,10 @@ public class XCodeSetting : Config<XCodeSetting>
     [Description("反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除")]
     public Migration Migration { get; set; } = Migration.On;
 
+    /// <summary>是否检查索引重复。默认打开</summary>  
+    [Description("检查索引重复。默认打开")]
+    public Boolean CheckDuplicateIndex { get; set; } = true;
+
     /// <summary></summary>
     [Description("表名称、字段名大小写格式。Default 默认(由数据库决定);None 与模型保持一致;Upper 全大写;Lower 全小写;Underline下划线")]
     public NameFormats NameFormat { get; set; } = NameFormats.Default;

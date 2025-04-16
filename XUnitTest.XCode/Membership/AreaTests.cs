@@ -40,16 +40,16 @@ public class AreaTests
 
         XTrace.WriteLine("北京");
         r = Area.FindByName(0, "北京");
-        Assert.Equal(17, r.AllChilds.Count);
-        Assert.Equal("北京/延庆", r.AllChilds[^1].Path);
+        Assert.Equal(17, r.GetAllChilds().Count);
+        Assert.Equal("北京/延庆", r.GetAllChilds()[^1].Path);
 
         XTrace.WriteLine("容县");
         r = Area.FindByID(450921);
         Assert.Equal("容县", r.Name);
-        Assert.Equal(2, r.AllParents.Count);
+        Assert.Equal(2, r.GetAllParents().Count);
         Assert.Equal("广西/玉林", r.ParentPath);
-        Assert.Equal(15, r.AllChilds.Count);
-        Assert.Equal("广西/玉林/容县/容州", r.AllChilds[0].Path);
+        Assert.Equal(15, r.GetAllChilds().Count);
+        Assert.Equal("广西/玉林/容县/容州", r.GetAllChilds()[0].Path);
 
         var r2 = Area.FindByIDs(450921102, 450921, 450900, 450000);
         Assert.Equal("杨梅", r2.Name);
@@ -151,6 +151,51 @@ public class AreaTests
             Assert.Equal("县级市", rs[0].Kind);
             Assert.Equal("直辖县", rs[0].Parent.Name);
         }
+    }
+
+    [TestOrder(50)]
+    [Fact]
+    public void ParentTest()
+    {
+        var ar = Area.FindByID(450921102);
+        Assert.Equal("杨梅", ar.Name);
+
+        var ps = ar.GetAllParents();
+        Assert.Equal(3, ps.Count);
+
+        ar = ar.Parent;
+        Assert.Equal("容县", ar.Name);
+
+        ar = ar.Parent;
+        Assert.Equal("玉林", ar.Name);
+
+        ar = ar.Parent;
+        Assert.Equal("广西", ar.Name);
+
+        ar = ar.Parent;
+        Assert.Equal(0, ar.ID);
+        Assert.Equal(Area.Root, ar);
+    }
+
+    [TestOrder(50)]
+    [Fact]
+    public void ParentTest2()
+    {
+        var ar = Area.FindByID(310116);
+        Assert.Equal("金山", ar.Name);
+
+        var ps = ar.GetAllParents();
+        Assert.Equal(2, ps.Count);
+
+        ar = ar.Parent;
+        Assert.Equal("市辖区", ar.Name);
+
+        ar = ar.Parent;
+        Assert.Equal("上海", ar.Name);
+
+        ar = ar.Parent;
+        Assert.Equal(0, ar.ID);
+        Assert.Equal(Area.Root, ar);
     }
 
     [Fact]

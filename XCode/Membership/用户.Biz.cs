@@ -122,10 +122,10 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     #region 扩展属性
     /// <summary>物理地址</summary>
     [DisplayName("物理地址")]
-    public String LastLoginAddress => LastLoginIP.IPToAddress();
+    public String? LastLoginAddress => LastLoginIP?.IPToAddress();
 
     ///// <summary>部门</summary>
-    //[XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
     //public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
 
     ///// <summary>部门</summary>
@@ -137,7 +137,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     /// 地区名
     /// </summary>
     [Map(nameof(AreaId))]
-    public String AreaName => Area.FindByID(AreaId)?.Path;
+    public String? AreaName => Area.FindByID(AreaId)?.Path;
     #endregion
 
     #region 扩展查询
@@ -602,11 +602,11 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     #region 权限
     /// <summary>角色</summary>
     /// <remarks>扩展属性不缓存空对象，一般来说，每个管理员都有对应的角色，如果没有，可能是在初始化</remarks>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     IRole IUser.Role => Role;
 
     /// <summary>角色集合</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).ToArray());
 
     /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>
@@ -693,7 +693,7 @@ public partial interface IUser
     IRole[] Roles { get; }
 
     /// <summary>角色名</summary>
-    String RoleName { get; }
+    String? RoleName { get; }
 
     /// <summary>用户是否拥有当前菜单的指定权限</summary>
     /// <param name="menu">指定菜单</param>

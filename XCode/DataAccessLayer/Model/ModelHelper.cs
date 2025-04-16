@@ -6,9 +6,9 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using NewLife;
 using NewLife.Log;
 using NewLife.Reflection;
+using XCode.Code;
 
 namespace XCode.DataAccessLayer;
 
@@ -231,14 +231,15 @@ public static class ModelHelper
             writer.WriteEndElement();
         }
 
+        var nameFormat = option is EntityBuilderOption opt ? opt.NameFormat : NameFormats.Default;
         {
             writer.WriteStartElement("Tables");
 
             // 回写xml模型,排除IsHistory=true的表单，仅仅保留原始表单
-            foreach (var item in tables.Where(x => x is not XTable xt || !xt.IsHistory))
+            foreach (var table in tables.Where(x => x is not XTable xt || !xt.IsHistory))
             {
                 writer.WriteStartElement("Table");
-                (item as IXmlSerializable)!.WriteXml(writer);
+                table.WriteXml(writer, nameFormat);
                 writer.WriteEndElement();
             }
 
@@ -312,10 +313,10 @@ public static class ModelHelper
             {
                 if (option != null)
                 {
-                    if (option is IXmlSerializable xml2)
-                        xml2.ReadXml(reader);
-                    else
-                        ReadXml(reader, option);
+                    //if (option is IXmlSerializable xml2)
+                    //    xml2.ReadXml(reader);
+                    //else
+                    ReadXml(reader, option);
                 }
                 else
                 {
@@ -345,7 +346,7 @@ public static class ModelHelper
     static void ReadTable(XmlReader reader, Func<IDataTable> createTable, IList<IDataTable> list)
     {
         var table = createTable();
-        (table as IXmlSerializable)!.ReadXml(reader);
+        table.ReadXml(reader);
 
         // 判断是否存在属性NeedHistory设置且为true
         var needHistory = table.Properties.FirstOrDefault(x => x.Key.EqualIgnoreCase("NeedHistory"));
@@ -433,7 +434,9 @@ public static class ModelHelper
                             // 清空默认的原始类型，让其从xml读取
                             dc.RawType = null;
                         }
-                        (dc as IXmlSerializable)!.ReadXml(reader);
+                        ReadXmlAttribute(reader, dc);
+                        // 跳过当前节点
+                        reader.Skip();
 
                         // 未指定DataType，但指定了Type，修正为枚举整型
                         if (dc.DataType == null && dc.Properties.ContainsKey("Type")) dc.DataType = typeof(Int32);
@@ -454,7 +457,10 @@ public static class ModelHelper
                     while (reader.IsStartElement())
                     {
                         var di = table.CreateIndex();
-                        (di as IXmlSerializable)!.ReadXml(reader);
+                        ReadXmlAttribute(reader, di);
+                        // 跳过当前节点
+                        reader.Skip();
+
                         di.Fix();
                         table.Indexes.Add(di);
                     }
@@ -483,18 +489,21 @@ public static class ModelHelper
     /// <summary>写入</summary>
     /// <param name="table"></param>
     /// <param name="writer"></param>
-    public static IDataTable WriteXml(this IDataTable table, XmlWriter writer)
+    /// <param name="nameFormat"></param>
+    public static IDataTable WriteXml(this IDataTable table, XmlWriter writer, NameFormats nameFormat = NameFormats.Default)
     {
-        WriteXml(writer, table);
+        var ignoreNameCase = nameFormat <= NameFormats.Default;
+
+        WriteXml(writer, table, false, ignoreNameCase);
 
         // 写字段
         if (table.Columns.Count > 0)
         {
             writer.WriteStartElement("Columns");
-            foreach (IXmlSerializable item in table.Columns)
+            foreach (var dc in table.Columns)
             {
                 writer.WriteStartElement("Column");
-                item.WriteXml(writer);
+                WriteXml(writer, dc, false, ignoreNameCase);
                 writer.WriteEndElement();
             }
             writer.WriteEndElement();
@@ -502,10 +511,10 @@ public static class ModelHelper
         if (table.Indexes.Count > 0)
         {
             writer.WriteStartElement("Indexes");
-            foreach (IXmlSerializable item in table.Indexes)
+            foreach (var di in table.Indexes)
             {
                 writer.WriteStartElement("Index");
-                item.WriteXml(writer);
+                WriteXml(writer, di, false, true);
                 writer.WriteEndElement();
             }
             writer.WriteEndElement();
@@ -634,7 +643,8 @@ public static class ModelHelper
     /// <param name="writer"></param>
     /// <param name="value">数值</param>
     /// <param name="writeDefaultValueMember">是否写数值为默认值的成员。为了节省空间，默认不写。</param>
-    public static void WriteXml(XmlWriter writer, Object value, Boolean writeDefaultValueMember = false)
+    /// <param name="ignoreNameCase">忽略名称大小写</param>
+    public static void WriteXml(XmlWriter writer, Object value, Boolean writeDefaultValueMember = false, Boolean ignoreNameCase = true)
     {
         var type = value.GetType();
         var def = GetDefault(type);
@@ -681,16 +691,24 @@ public static class ModelHelper
                 if (code == TypeCode.String && "" + obj == "" + dobj) continue;
             }
 
-            if (code == TypeCode.String)
+            if (code == TypeCode.String && obj is String str)
             {
                 // 如果别名与名称相同，则跳过，不区分大小写
                 // 改为区分大小写，避免linux环境下 mysql 数据库存在
                 if (pi.Name == "Name")
-                    name = (String)obj;
+                    name = str;
                 else if (pi.Name is "TableName" or "ColumnName")
                 {
-                    if (name == (String)obj) continue;
-                    if (/*ignoreNameCase &&*/ name.EqualIgnoreCase((String)obj)) continue;
+                    if (name == str) continue;
+                    if (ignoreNameCase)
+                    {
+                        if (name.EqualIgnoreCase(str)) continue;
+                    }
+                    else
+                    {
+                        // 如果全小写或者全大写，也不缺分大小写比较
+                        if ((str == str.ToLower() || str == str.ToUpper()) && name.EqualIgnoreCase(str)) continue;
+                    }
                 }
             }
             else if (code == TypeCode.Object)
@@ -723,9 +741,8 @@ public static class ModelHelper
             if (obj != null) writer.WriteAttributeString(pi.Name, obj + "");
         }
 
-        if (value is IDataTable)
+        if (value is IDataTable table)
         {
-            var table = value as IDataTable;
             // 写入扩展属性作为特性
             if (table.Properties.Count > 0)
             {
@@ -735,9 +752,8 @@ public static class ModelHelper
                 }
             }
         }
-        else if (value is IDataColumn)
+        else if (value is IDataColumn column)
         {
-            var column = value as IDataColumn;
             // 写入扩展属性作为特性
             if (column.Properties.Count > 0)
             {

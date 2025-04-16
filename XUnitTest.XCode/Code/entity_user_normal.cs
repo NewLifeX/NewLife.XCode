@@ -287,7 +287,7 @@ public partial class User
 
     private String? _Ex6;
     /// <summary>扩展6</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     [Category("扩展")]
     [DisplayName("扩展6")]
     [Description("扩展6")]

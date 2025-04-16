@@ -95,6 +95,27 @@ public class SQLiteTests
         Assert.Equal(dal1, dal2);
         Assert.Equal("sysSQLite", dal2.ConnName);
         Assert.Equal(DatabaseType.SQLite, dal2.DbType);
+        Assert.Equal($"Data Source={db}", dal2.ConnStr);
+    }
+
+    [Fact]
+    public void MapToTest2()
+    {
+        var db = "Data\\Membership.db";
+        var dbf = db.GetFullPath();
+
+        DAL.AddConnStr("sysSQLite", $"Data Source={db}", null, "SQLite");
+        DAL.AddConnStr("mapTest", "MapTo=sysSQLite;TablePrefix=xcwl_", null, null);
+
+        var dal1 = DAL.Create("sysSQLite");
+        var dal2 = DAL.Create("mapTest");
+        Assert.NotNull(dal2);
+        Assert.NotEqual(dal1, dal2);
+        Assert.Equal("mapTest", dal2.ConnName);
+        Assert.Equal(DatabaseType.SQLite, dal2.DbType);
+        Assert.NotEqual($"Data Source={db};TablePrefix=xcwl_", dal2.ConnStr);
+        //Assert.EndsWith(";TablePrefix=xcwl_", dal2.Db.ConnectionString);
+        Assert.Equal(dbf, (dal2.Db as FileDbBase).DatabaseName);
     }
 
     [Fact]

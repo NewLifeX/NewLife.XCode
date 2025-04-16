@@ -4,6 +4,7 @@ using System.Net;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Web;
 
 namespace XCode.DataAccessLayer;
 
@@ -18,8 +19,14 @@ internal class MySql : RemoteDb
     /// <returns></returns>
     protected override DbProviderFactory? CreateFactory()
     {
-        //_Factory = GetProviderFactory("NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory") ??
-        //           GetProviderFactory("MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
+        var type = PluginHelper.LoadPlugin("NewLife.MySql.MySqlClientFactory", null, "NewLife.MySql.dll", null);
+        var factory = GetProviderFactory(type);
+        if (factory != null) return factory;
+
+        type = PluginHelper.LoadPlugin("MySql.Data.MySqlClient.MySqlClientFactory", null, "MySql.Data.dll", null);
+        factory = GetProviderFactory(type);
+        if (factory != null) return factory;
+
         // MewLife.MySql 在开发过程中，数据驱动下载站点没有它的包，暂时不支持下载
         return GetProviderFactory("NewLife.MySql", "NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory", true, true) ??
             GetProviderFactory(null, "MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");

@@ -253,7 +253,7 @@ public class TableItem
             }
 
             // 检查索引重复，最左原则
-            for (var i = 0; i < table.Indexes.Count; i++)
+            for (var i = 0; i < table.Indexes.Count && XCodeSetting.Current.CheckDuplicateIndex; i++)
             {
                 var di = table.Indexes[i];
                 for (var j = i + 1; j < table.Indexes.Count; j++)

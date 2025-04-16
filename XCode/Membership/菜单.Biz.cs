@@ -265,7 +265,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
 
     #region 扩展权限
     /// <summary>可选权限子项</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Dictionary<Int32, String> Permissions { get; set; } = new Dictionary<Int32, String>();
 
     private void LoadPermission()

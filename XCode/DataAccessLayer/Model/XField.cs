@@ -2,7 +2,6 @@
 using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Serialization;
-using NewLife;
 using NewLife.Collections;
 
 namespace XCode.DataAccessLayer;
@@ -12,7 +11,7 @@ namespace XCode.DataAccessLayer;
 [DisplayName("字段模型")]
 [Description("字段模型")]
 [XmlRoot("Column")]
-class XField : SerializableDataMember, IDataColumn, ICloneable
+class XField : /*SerializableDataMember,*/ IDataColumn, ICloneable
 {
     #region 属性
     /// <summary>名称</summary>

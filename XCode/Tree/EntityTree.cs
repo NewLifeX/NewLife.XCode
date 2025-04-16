@@ -49,14 +49,14 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     }
 
     /// <summary>子节点</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual IList<TEntity> Childs => Extends.Get(nameof(Childs), e => FindChilds())!;
 
     /// <summary>子节点</summary>
     protected virtual IList<TEntity> FindChilds() => FindAllByParent((TKey)this[Setting.Key]!);
 
     /// <summary>父节点</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual TEntity? Parent => Extends.Get(nameof(Parent), e => FindParent());
 
     /// <summary>父节点</summary>
@@ -66,19 +66,19 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     protected static TEntity FindByKeyWithCache(TKey key) => Meta.Session.Cache.Find(e => Equals(e[Setting.Key], key));
 
     /// <summary>子孙节点</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual IList<TEntity> AllChilds => Extends.Get(nameof(AllChilds), e => FindAllChilds(this))!;
 
     /// <summary>子孙节点，包含自己</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual IList<TEntity> MyAllChilds => Extends.Get(nameof(MyAllChilds), e => FindAllChilds(this, true))!;
 
     /// <summary>父节点集合</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual IList<TEntity> AllParents => Extends.Get(nameof(AllParents), e => FindAllParents(this))!;
 
     /// <summary>深度</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual Int32 Deepth
     {
         get
@@ -109,7 +109,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     }
 
     /// <summary>节点名</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual String? NodeName
     {
         get
@@ -122,7 +122,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     }
 
     /// <summary>父级节点名</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual String? ParentNodeName
     {
         get
@@ -139,7 +139,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
 
     /// <summary>树形节点名，根据深度带全角空格前缀</summary>
     [DisplayName("节点名")]
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual String TreeNodeName
     {
         get
@@ -156,7 +156,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     }
 
     /// <summary>树形节点名，根据深度带全角空格前缀</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual String TreeNodeName2
     {
         get
@@ -173,7 +173,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     }
 
     /// <summary>树形节点名，根据深度带全角空格前缀</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual String TreeNodeText
     {
         get
@@ -195,11 +195,11 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     }
 
     /// <summary>斜杠分隔的全路径</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public String FullPath => @"\" + GetFullPath(true);
 
     /// <summary>斜杠分隔的全父路径</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public String FullParentPath => @"\" + GetFullPath(false);
     #endregion
 

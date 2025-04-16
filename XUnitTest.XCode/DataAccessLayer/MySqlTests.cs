@@ -153,6 +153,34 @@ public class MySqlTests
     }
 
     [Fact]
+    public void MembershipTest()
+    {
+        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
+        DAL.AddConnStr("MySql_member", connStr, null, "MySql");
+
+        User.Meta.ConnName = "MySql_member";
+        Role.Meta.ConnName = "MySql_member";
+
+        User.Meta.Session.InitData();
+        Role.Meta.Session.InitData();
+
+        var count = User.Meta.Count;
+        Assert.True(count > 0);
+
+        count = Role.Meta.Count;
+        Assert.True(count > 0);
+
+        var list = Role.FindAll();
+        Assert.Equal(4, list.Count);
+
+        var list2 = Role.FindAll(Role._.Name == "管理员");
+        Assert.Single(list2);
+
+        var list3 = Role.Search("用户", null);
+        Assert.Equal(2, list3.Count);
+    }
+
+    [Fact]
     public void TablePrefixTest()
     {
         DAL.AddConnStr("sysMySql", _ConnStr, null, "MySql");

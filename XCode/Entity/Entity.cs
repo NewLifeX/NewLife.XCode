@@ -789,26 +789,26 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="field">指定字段</param>
     /// <param name="where">条件字句</param>
     /// <returns></returns>
-    public static Int32 FindMin(String field, Expression? where = null)
+    public static Decimal FindMin(String field, Expression? where = null)
     {
         var fd = Meta.Table.FindByName(field);
         if (ReferenceEquals(fd, null)) throw new ArgumentOutOfRangeException(nameof(field), $"{field} not found");
 
         var list = FindAll(where, fd, null, 0, 1);
-        return list.Count <= 0 ? 0 : Convert.ToInt32(list[0][fd.Name]);
+        return list.Count <= 0 ? 0 : Convert.ToDecimal(list[0][fd.Name]);
     }
 
     /// <summary>查询指定字段的最大值</summary>
     /// <param name="field">指定字段</param>
     /// <param name="where">条件字句</param>
     /// <returns></returns>
-    public static Int32 FindMax(String field, Expression? where = null)
+    public static Decimal FindMax(String field, Expression? where = null)
     {
         var fd = Meta.Table.FindByName(field);
         if (ReferenceEquals(fd, null)) throw new ArgumentOutOfRangeException(nameof(field), $"{field} not found");
 
         var list = FindAll(where, fd.Desc(), null, 0, 1);
-        return list.Count <= 0 ? 0 : Convert.ToInt32(list[0][fd.Name]);
+        return list.Count <= 0 ? 0 : Convert.ToDecimal(list[0][fd.Name]);
     }
     #endregion
 

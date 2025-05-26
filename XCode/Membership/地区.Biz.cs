@@ -120,7 +120,12 @@ public partial class Area : Entity<Area>
 
     /// <summary>所有父级，从高到底</summary>
     /// <returns></returns>
-    public IList<Area> GetAllParents()
+    public IList<Area> GetAllParents() => GetAllParents(false);
+
+    /// <summary>所有父级，从高到底</summary>
+    /// <param name="includeSelf">是否包括自己</param>
+    /// <returns></returns>
+    public IList<Area> GetAllParents(Boolean includeSelf)
     {
         var list = new List<Area>();
         var entity = Parent;
@@ -135,6 +140,8 @@ public partial class Area : Entity<Area>
 
         // 倒序
         list.Reverse();
+
+        if (includeSelf && !list.Any(e => e.ID == ID)) list.Add(this);
 
         return list;
     }
@@ -254,6 +261,11 @@ public partial class Area : Entity<Area>
             if (!item.IsNullOrEmpty())
             {
                 var r2 = r.Childs.Find(e => e.Name == item || e.FullName == item);
+                // 可能中间不叫市辖区，而是跟第一段同名。例如 上海-上海市-徐汇区
+                if (r2 == null && item.EqualIgnoreCase(r.Name, r.FullName))
+                {
+                    r2 = r.Childs.FirstOrDefault(e => e.IsVirtual);
+                }
                 // 可能中间隔了一层市辖区，如上海青浦
                 if (r2 == null)
                 {
@@ -407,8 +419,9 @@ public partial class Area : Entity<Area>
     private static IDictionary<Area, Double> SearchLike(Int32 parentid, String key, Boolean? enable, Int32 count)
     {
         // 两级搜索，特殊处理直辖
-        var list = FindAllByParentID(parentid) as List<Area>;
-        if (list.Count == 1 && list[0].Name.StartsWithIgnoreCase("直辖", "省辖", "市辖")) list = FindAllByParentID(list[0].ID) as List<Area>;
+        var list = (FindAllByParentID(parentid) as List<Area>)!;
+        if (list.Count == 1 && list[0].Name.StartsWithIgnoreCase("直辖", "省辖", "市辖"))
+            list = (FindAllByParentID(list[0].ID) as List<Area>)!;
         foreach (var item in list.ToArray())
         {
             var list2 = FindAllByParentID(item.ID);
@@ -435,7 +448,7 @@ public partial class Area : Entity<Area>
         }
 
         // 近似搜索
-        return list.Match(key, e => e.FullName).OrderByDescending(e => e.Value).Take(count).ToDictionary(e => e.Key, e => e.Value);
+        return list.Match(key, e => e.FullName!).OrderByDescending(e => e.Value).Take(count).ToDictionary(e => e.Key, e => e.Value);
     }
 
     /// <summary>搜索地址所属地区（模糊匹配）</summary>
@@ -504,30 +517,27 @@ public partial class Area : Entity<Area>
             }
         }
 
-        var list = new List<Area>();
-
         // 新的IP解析器
         if (_GetIp != null)
         {
             var (area, addr) = _GetIp(ip);
             area = area?.TrimStart("中国\u2013");
-            if (area.IsNullOrEmpty()) return list;
+            if (area.IsNullOrEmpty()) return [];
 
             var ss = area.Split("\u2013");
             var r = FindByNames(ss);
-            if (r != null)
-            {
-                list.AddRange(r.GetAllParents());
-                list.Add(r);
+            if (r == null) return [];
 
-                if (maxLevel > 0 && list.Count > maxLevel) list = list.Take(maxLevel).ToList();
-            }
+            var list = r.GetAllParents(true);
+
+            if (maxLevel > 0 && list.Count > maxLevel) list = list.Take(maxLevel).ToList();
+
             return list;
         }
         else
         {
             var address = ip.IPToAddress();
-            if (address.IsNullOrEmpty()) return list;
+            if (address.IsNullOrEmpty()) return [];
 
             return SearchAddress(address, maxLevel);
         }
@@ -542,17 +552,12 @@ public partial class Area : Entity<Area>
     /// <returns></returns>
     public static IList<Area> SearchAddress(String address, Int32 maxLevel = 3)
     {
-        var list = new List<Area>();
-        if (address.IsNullOrEmpty() || maxLevel <= 0) return list;
+        if (address.IsNullOrEmpty() || maxLevel <= 0) return [];
 
         var r = FindAddress(Root, address, maxLevel);
-        if (r != null)
-        {
-            list.AddRange(r.GetAllParents());
-            list.Add(r);
-        }
+        if (r == null) return [];
 
-        return list;
+        return r.GetAllParents(true);
 
         //// IP数据库里，缺失自治区分隔符
         //foreach (var item in _zzq)

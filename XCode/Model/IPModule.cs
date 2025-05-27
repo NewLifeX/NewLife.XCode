@@ -52,7 +52,11 @@ public class IPModule : EntityModule
         var fs = GetFields(entity.GetType());
 
         var ip = ManageProvider.UserHost;
-        ip ??= NetHelper.MyIP()?.ToString();
+
+        // 新增时如果没有IP信息，尝试获取当前IP。更新时不适用，避免原来的更新IP被覆盖为本机IP
+        if (ip.IsNullOrEmpty() && method == DataMethod.Insert)
+            ip = NetHelper.MyIP()?.ToString();
+
         if (!ip.IsNullOrEmpty())
         {
             // 如果不是IPv6，去掉后面端口

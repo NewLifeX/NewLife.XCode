@@ -83,7 +83,11 @@ public class UserModule : EntityModule
         // 当前登录用户
         var prv = Provider ?? ManageProvider.Provider;
         var user = prv?.Current;
-        user ??= new User { Name = Environment.UserName };
+
+        // 新增时如果没有当前用户，尝试使用环境变量中的用户名
+        if (user == null && method == DataMethod.Insert)
+            user = new User { Name = Environment.UserName };
+
         if (user != null)
         {
             switch (method)

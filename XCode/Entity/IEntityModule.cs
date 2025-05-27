@@ -205,12 +205,14 @@ public abstract class EntityModule : IEntityModule
     /// <param name="name"></param>
     /// <param name="value"></param>
     /// <returns>返回是否成功设置了数据</returns>
-    protected virtual Boolean SetNoDirtyItem(ICollection<FieldItem> fields, IEntity entity, String name, Object value)
+    protected virtual Boolean SetNoDirtyItem(ICollection<FieldItem> fields, IEntity entity, String name, Object? value)
     {
         var fi = fields.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
-        if (fi == null) { return false; }
+        if (fi == null) return false;
+
         name = fi.Name;
         if (!entity.IsDirty(name)) return entity.SetItem(name, value);
+
         return false;
     }
 

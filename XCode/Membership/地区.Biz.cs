@@ -749,7 +749,7 @@ public partial class Area : Entity<Area>
 
             // 分析数据
             var ss = html[s..e].Split("<td", "</td>");
-            if (ss.Length > 4)
+            if (ss.Length >= 6)
             {
                 var id = ss[3];
                 var p2 = id.LastIndexOf('>');
@@ -765,6 +765,7 @@ public partial class Area : Entity<Area>
                     else
                         name = name[(p3 + 1)..];
                 }
+                name = name?.Trim().Trim('*').Trim();
 
                 if (!id.IsNullOrEmpty() && id.ToInt() > 10_00_00 && !name.IsNullOrEmpty())
                 {
@@ -911,7 +912,8 @@ public partial class Area : Entity<Area>
     {
         //if (url.IsNullOrEmpty()) url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
         //if (url.IsNullOrEmpty()) url = "https://www.mca.gov.cn/mzsj/xzqh/2022/202201xzqh.html";
-        if (url.IsNullOrEmpty()) url = "http://x.newlifex.com/202301xzqh.html";
+        //if (url.IsNullOrEmpty()) url = "http://x.newlifex.com/202301xzqh.html";
+        if (url.IsNullOrEmpty()) url = "http://x.newlifex.com/data/202401xzqh.html";
 
         var http = new HttpClient();
         var html = Task.Run(() => http.GetStringAsync(url)).Result;

@@ -214,9 +214,40 @@ public class AreaTests
     }
 
     [Fact]
+    public async void Download2024()
+    {
+        //var url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
+        //var url = "http://x.newlifex.com/202301xzqh.html";
+        var url = "http://x.newlifex.com/data/202401xzqh.html";
+        var file = "area2024.html".GetFullPath();
+        //if (!File.Exists(file))
+        {
+            var http = new HttpClient();
+            await http.DownloadFileAsync(url, file);
+        }
+
+        Assert.True(File.Exists(file));
+    }
+
+    [Fact]
     public void ParseTest()
     {
         var file = "area.html".GetFullPath();
+        var txt = File.ReadAllText(file);
+        //foreach (var item in Area.Parse(txt))
+        //{
+        //    XTrace.WriteLine("{0} {1}", item.ID, item.Name);
+        //}
+
+        var rs = Parse(txt).ToList();
+        Assert.NotNull(rs);
+        Assert.True(rs.Count > 3000);
+    }
+
+    [Fact]
+    public void ParseTest2024()
+    {
+        var file = "area2024.html".GetFullPath();
         var txt = File.ReadAllText(file);
         //foreach (var item in Area.Parse(txt))
         //{
@@ -246,11 +277,11 @@ public class AreaTests
     [Fact]
     public void ParseAndSave()
     {
-        var file = "area.html".GetFullPath();
+        var file = "area2024.html".GetFullPath();
         var txt = File.ReadAllText(file);
 
         var rs = Area.ParseAndSave(txt);
-        Assert.Equal(3208, rs.Count);
+        Assert.Equal(3213, rs.Count);
 
         var r = Area.Find(_.ParentID == 0 & _.Name == "上海");
         Assert.NotNull(r);
@@ -274,7 +305,7 @@ public class AreaTests
         Area.Meta.Session.Truncate();
         var rs = Area.FetchAndSave();
         //Assert.Equal(3208, rs);
-        Assert.Equal(3217, rs);
+        Assert.Equal(3222, rs);
 
         var r = Area.Find(_.ParentID == 0 & _.Name == "上海");
         Assert.NotNull(r);
@@ -324,7 +355,7 @@ public class AreaTests
 
         var rs = Area.Export(file);
         XTrace.WriteLine("rs={0}", rs);
-        Assert.Equal(46558, rs);
+        Assert.Equal(46565, rs);
         Assert.True(File.Exists(file.GetFullPath()));
 
         //File.Delete(file.GetFullPath());

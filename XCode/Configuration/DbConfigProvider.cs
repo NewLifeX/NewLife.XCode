@@ -26,9 +26,6 @@ public class DbConfigProvider : ConfigProvider
     public Int32 Period { get; set; } = 15;
 
     private IDictionary<String, Object?>? _cache;
-
-    /// <summary>保存操作锁，防止与定时刷新冲突</summary>
-    private readonly Object _saveLock = new();
     #endregion
 
     #region 方法
@@ -218,26 +215,13 @@ public class DbConfigProvider : ConfigProvider
     /// <summary>保存配置树到数据源</summary>
     public override Boolean SaveAll()
     {
-        lock (_saveLock)
-        {
-            XTrace.WriteLine("[{0}/{1}]开始保存配置", Category, UserId);
+        var list = Parameter.FindAllByUserID(UserId, Category);
+        Save(list, Root, null);
 
-            var list = Parameter.FindAllByUserID(UserId, Category);
-            Save(list, Root, null);
+        // 通知绑定对象，配置数据有改变
+        NotifyChange();
 
-            // 重新加载配置以更新缓存，避免被DoRefresh覆盖
-            var dic = GetAll();
-            if (dic != null)
-            {
-                SaveCache(dic);
-                XTrace.WriteLine("[{0}/{1}]配置保存完成，已更新缓存", Category, UserId);
-            }
-
-            // 通知绑定对象，配置数据有改变
-            NotifyChange();
-
-            return true;
-        }
+        return true;
     }
 
     void Save(IList<Parameter> list, IConfigSection root, String? prefix)
@@ -269,9 +253,6 @@ public class DbConfigProvider : ConfigProvider
                 pi.Save();
             }
         }
-
-        // 确保所有数据库操作完成，避免事务延迟导致的读取不一致
-        Thread.Sleep(10);
     }
     #endregion
 
@@ -309,49 +290,35 @@ public class DbConfigProvider : ConfigProvider
     /// <param name="state"></param>
     protected void DoRefresh(Object state)
     {
-        // 使用TryEnter避免在保存操作期间阻塞
-        if (!Monitor.TryEnter(_saveLock, 100))
+        using var showSql = Parameter.Meta.Session.Dal.Session.SetShowSql(false);
+
+        var dic = GetAll();
+        if (dic == null) return;
+
+        var changed = new Dictionary<String, Object?>();
+        if (_cache != null)
         {
-            // 如果无法获取锁，说明正在保存，跳过本次刷新
-            return;
-        }
-
-        try
-        {
-            using var showSql = Parameter.Meta.Session.Dal.Session.SetShowSql(false);
-
-            var dic = GetAll();
-            if (dic == null) return;
-
-            var changed = new Dictionary<String, Object?>();
-            if (_cache != null)
+            foreach (var item in dic)
             {
-                foreach (var item in dic)
+                // 跳过备注
+                if (item.Key[0] == '#') continue;
+                if (!_cache.TryGetValue(item.Key, out var v) || v + "" != item.Value + "")
                 {
-                    // 跳过备注
-                    if (item.Key[0] == '#') continue;
-                    if (!_cache.TryGetValue(item.Key, out var v) || v + "" != item.Value + "")
-                    {
-                        changed.Add(item.Key, item.Value);
-                    }
+                    changed.Add(item.Key, item.Value);
                 }
             }
-
-            if (changed.Count > 0)
-            {
-                XTrace.WriteLine("[{0}/{1}]定时检测到配置改变，重新加载如下键：{2}", Category, UserId, changed.ToJson());
-
-                Root = Build(dic);
-
-                // 缓存
-                SaveCache(dic);
-
-                NotifyChange();
-            }
         }
-        finally
+
+        if (changed.Count > 0)
         {
-            Monitor.Exit(_saveLock);
+            XTrace.WriteLine("[{0}/{1}]配置改变，重新加载如下键：{2}", Category, UserId, changed.ToJson());
+
+            Root = Build(dic);
+
+            // 缓存
+            SaveCache(dic);
+
+            NotifyChange();
         }
     }
     #endregion

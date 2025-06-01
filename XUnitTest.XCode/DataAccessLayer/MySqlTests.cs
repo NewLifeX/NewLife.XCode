@@ -161,6 +161,7 @@ public class MySqlTests
         User.Meta.ConnName = "MySql_member";
         Role.Meta.ConnName = "MySql_member";
 
+        Role.Meta.Session.Truncate();
         User.Meta.Session.InitData();
         Role.Meta.Session.InitData();
 

@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Reflection;
@@ -124,10 +123,10 @@ public partial class Parameter : Entity<Parameter>
     #region 业务操作
     /// <summary>根据种类返回数据</summary>
     /// <returns></returns>
-    public Object GetValue()
+    public Object? GetValue()
     {
-        var str = Value;
-        if (str.IsNullOrEmpty()) str = LongValue;
+        var str = Value?.Trim();
+        if (str.IsNullOrEmpty()) str = LongValue?.Trim();
         if (str.IsNullOrEmpty()) return null;
 
         switch (Kind)
@@ -240,11 +239,11 @@ public partial class Parameter : Entity<Parameter>
     /// <returns></returns>
     public T[] GetList<T>()
     {
-        var str = Value;
-        if (str.IsNullOrEmpty()) str = LongValue;
+        var str = Value?.Trim();
+        if (str.IsNullOrEmpty()) str = LongValue?.Trim();
 
-        var arr = Value.Split(",", ";");
-        return arr.Select(e => e.ChangeType<T>()).ToArray();
+        var arr = Value.Split(",", ";", "，");
+        return arr.Select(e => e.ChangeType<T>()!).ToArray();
     }
 
     /// <summary>获取名值对</summary>
@@ -253,11 +252,11 @@ public partial class Parameter : Entity<Parameter>
     /// <returns></returns>
     public IDictionary<TKey, TValue> GetHash<TKey, TValue>()
     {
-        var str = Value;
-        if (str.IsNullOrEmpty()) str = LongValue;
+        var str = Value?.Trim();
+        if (str.IsNullOrEmpty()) str = LongValue?.Trim();
 
         var dic = Value.SplitAsDictionary("=", ",");
-        return dic.ToDictionary(e => e.Key.ChangeType<TKey>(), e => e.Value.ChangeType<TValue>());
+        return dic.ToDictionary(e => e.Key.ChangeType<TKey>()!, e => e.Value.ChangeType<TValue>()!);
     }
 
     /// <summary>设置列表</summary>

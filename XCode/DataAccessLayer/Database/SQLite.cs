@@ -23,8 +23,9 @@ internal class SQLite : FileDbBase
     protected override DbProviderFactory? CreateFactory()
     {
         // Mono有自己的驱动，因为SQLite是混合编译，里面的C++代码与平台相关，不能通用;注意大小写问题
-        if (Runtime.Mono)
-            return GetProviderFactory(null, "Mono.Data.Sqlite.dll", "System.Data.SqliteFactory")!;
+        //Microsoft.Data.Sqlite.Core 10.0.0 以上的版本就可以支持在 Xamarin.Android 上运行
+        //if (Runtime.Mono)
+        //    return GetProviderFactory(null, "Mono.Data.Sqlite.dll", "System.Data.SqliteFactory")!;
 
         var type =
             PluginHelper.LoadPlugin("System.Data.SQLite.SQLiteFactory", null, "System.Data.SQLite.dll", null) ??

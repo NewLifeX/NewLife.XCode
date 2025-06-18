@@ -1679,6 +1679,42 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     public static Int32 Delete(String[] names, Object[] values) => Persistence.Delete(Meta.Session, names, values);
+
+    /// <summary>从数据库中删除指定条件表达式的实体对象，支持分表。</summary>
+    /// <param name="where">条件表达式</param>
+    /// <returns></returns>
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    public static Int32 Delete(Expression? where)
+    {
+        if (where == null || where.IsEmpty) return 0;
+
+        var session = Meta.Session;
+
+        // 自动分表
+        var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
+        if (shards == null || shards.Length == 0)
+        {
+            // 非分表情况，直接调用现有的参数化Delete方法
+            var db = session.Dal.Db;
+            var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+            var whereClause = where?.GetString(db, ps) ?? String.Empty;
+
+            return Persistence.Delete(session, whereClause);
+        }
+        else
+        {
+            var count = 0;
+            foreach (var shard in shards)
+            {
+                var connName = shard.ConnName ?? session.ConnName;
+                var tableName = shard.TableName ?? session.TableName;
+
+                var shardSession = EntitySession<TEntity>.Create(connName, tableName);
+                count += Persistence.Delete(shardSession, where?.ToString() ?? String.Empty);
+            }
+            return count;
+        }
+    }
     #endregion
 
     #region 构造SQL语句

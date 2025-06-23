@@ -23,12 +23,21 @@ internal class MySql : RemoteDb
         var factory = GetProviderFactory(type);
         if (factory != null) return factory;
 
+#if NETSTANDARD
+        type = PluginHelper.LoadPlugin("MySqlConnector.MySqlConnectorFactory", null, "MySqlConnector.dll", null);
+        factory = GetProviderFactory(type);
+        if (factory != null) return factory;
+#endif
+
         type = PluginHelper.LoadPlugin("MySql.Data.MySqlClient.MySqlClientFactory", null, "MySql.Data.dll", null);
         factory = GetProviderFactory(type);
         if (factory != null) return factory;
 
         // MewLife.MySql 在开发过程中，数据驱动下载站点没有它的包，暂时不支持下载
-        return GetProviderFactory("NewLife.MySql", "NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory", true, true) ??
+        return GetProviderFactory(null, "NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory", true, true) ??
+#if NETSTANDARD
+            GetProviderFactory(null, "MySqlConnector.dll", "MySqlConnector.MySqlConnectorFactory", true, true) ??
+#endif
             GetProviderFactory(null, "MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
     }
 
@@ -695,6 +704,13 @@ internal class MySqlMetaData : RemoteDbMetaData
 
     protected override Boolean DatabaseExist(String databaseName)
     {
+        // MySqlConnector 不支持获取单个数据库架构，需要整体获取后再过滤
+        if (Database.Factory.GetType().Name.Contains("MySqlConnector"))
+        {
+            var dbs = GetSchema(_.Databases, null);
+            return dbs != null && dbs.Select($"schema_name='{databaseName}'").Length > 0;
+        }
+
         var dt = GetSchema(_.Databases, [databaseName]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }

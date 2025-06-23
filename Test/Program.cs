@@ -142,8 +142,6 @@ public class Program
         //};
         //p.Insert();
 
-        throw new Exception("error");
-
         var list = Role.FindAll();
         XTrace.WriteLine("Roles: {0}", list.Count);
 

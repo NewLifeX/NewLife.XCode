@@ -11,11 +11,12 @@ public partial class DAL
     /// </remarks>
     /// <param name="table">数据表</param>
     /// <param name="stream">目标数据流</param>
+    /// <param name="cancellationToken">取消令牌</param>
     /// <returns></returns>
-    public Int32 Backup(IDataTable table, Stream stream)
+    public Int32 Backup(IDataTable table, Stream stream, CancellationToken cancellationToken)
     {
         var dpk = new DbPackage { Dal = this, Tracer = Tracer ?? GlobalTracer, Log = XTrace.Log };
-        return dpk.Backup(table, stream);
+        return dpk.Backup(table, stream, cancellationToken);
     }
 
     /// <summary>备份单表数据到文件</summary>
@@ -33,11 +34,12 @@ public partial class DAL
     /// <param name="file">zip压缩文件</param>
     /// <param name="backupSchema">备份架构</param>
     /// <param name="ignoreError">忽略错误，继续恢复下一张表</param>
+    /// <param name="cancellationToken">取消令牌</param>
     /// <returns></returns>
-    public Int32 BackupAll(IList<IDataTable> tables, String file, Boolean backupSchema = true, Boolean ignoreError = true)
+    public Int32 BackupAll(IList<IDataTable> tables, String file, Boolean backupSchema = true, Boolean ignoreError = true, CancellationToken cancellationToken = default)
     {
         var dpk = new DbPackage { Dal = this, IgnoreError = ignoreError, Tracer = Tracer ?? GlobalTracer, Log = XTrace.Log };
-        return dpk.BackupAll(tables, file, backupSchema);
+        return dpk.BackupAll(tables, file, backupSchema, cancellationToken);
     }
     #endregion
 
@@ -45,11 +47,12 @@ public partial class DAL
     /// <summary>从数据流恢复数据</summary>
     /// <param name="stream">数据流</param>
     /// <param name="table">数据表</param>
+    /// <param name="cancellationToken">取消令牌</param>
     /// <returns></returns>
-    public Int32 Restore(Stream stream, IDataTable table)
+    public Int32 Restore(Stream stream, IDataTable table, CancellationToken cancellationToken = default)
     {
         var dpk = new DbPackage { Dal = this, Tracer = Tracer ?? GlobalTracer, Log = XTrace.Log };
-        return dpk.Restore(stream, table);
+        return dpk.Restore(stream, table, cancellationToken);
     }
 
     /// <summary>从文件恢复数据</summary>
@@ -68,11 +71,12 @@ public partial class DAL
     /// <param name="tables">数据表。为空时从压缩包读取xml模型文件</param>
     /// <param name="setSchema">是否设置数据表模型，自动建表</param>
     /// <param name="ignoreError">忽略错误，继续下一张表</param>
+    /// <param name="cancellationToken">取消令牌</param>
     /// <returns></returns>
-    public IDataTable[]? RestoreAll(String file, IDataTable[]? tables = null, Boolean setSchema = true, Boolean ignoreError = true)
+    public IDataTable[]? RestoreAll(String file, IDataTable[]? tables = null, Boolean setSchema = true, Boolean ignoreError = true, CancellationToken cancellationToken = default)
     {
         var dpk = new DbPackage { Dal = this, IgnoreError = ignoreError, Tracer = Tracer ?? GlobalTracer, Log = XTrace.Log };
-        return dpk.RestoreAll(file, tables, setSchema);
+        return dpk.RestoreAll(file, tables, setSchema, cancellationToken);
     }
     #endregion
 
@@ -84,11 +88,12 @@ public partial class DAL
     /// <param name="table">数据表</param>
     /// <param name="connName">目标连接名</param>
     /// <param name="syncSchema">同步架构</param>
+    /// <param name="cancellationToken">取消令牌</param>
     /// <returns></returns>
-    public Int32 Sync(IDataTable table, String connName, Boolean syncSchema = true)
+    public Int32 Sync(IDataTable table, String connName, Boolean syncSchema = true, CancellationToken cancellationToken = default)
     {
         var dpk = new DbPackage { Dal = this, Tracer = Tracer ?? GlobalTracer, Log = XTrace.Log };
-        return dpk.Sync(table, connName, syncSchema);
+        return dpk.Sync(table, connName, syncSchema, cancellationToken);
     }
 
     /// <summary>备份一批表到另一个库</summary>
@@ -96,11 +101,12 @@ public partial class DAL
     /// <param name="connName">目标连接名</param>
     /// <param name="syncSchema">同步架构</param>
     /// <param name="ignoreError">忽略错误，继续下一张表</param>
+    /// <param name="cancellationToken">取消令牌</param>
     /// <returns></returns>
-    public IDictionary<String, Int32> SyncAll(IDataTable[] tables, String connName, Boolean syncSchema = true, Boolean ignoreError = true)
+    public IDictionary<String, Int32> SyncAll(IDataTable[] tables, String connName, Boolean syncSchema = true, Boolean ignoreError = true, CancellationToken cancellationToken = default)
     {
         var dpk = new DbPackage { Dal = this, IgnoreError = ignoreError, Tracer = Tracer ?? GlobalTracer, Log = XTrace.Log };
-        return dpk.SyncAll(tables, connName, syncSchema);
+        return dpk.SyncAll(tables, connName, syncSchema, cancellationToken);
     }
     #endregion
 }

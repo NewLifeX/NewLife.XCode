@@ -24,8 +24,9 @@ public class TimeShardTests
         Assert.Throws<XSqlException>(() => ExpressLogs.FindCount());
 
         // 分表查询，没有数据
-        var time = DateTime.Now.AddHours(1);
-        var list = ExpressLogs.Search(time.Date, time, null, null);
+        var start = DateTime.Now;
+        var time = start.AddHours(1);
+        var list = ExpressLogs.Search(start.Date, time, null, null);
         Assert.Empty(list);
 
         // 写入数据
@@ -35,7 +36,7 @@ public class TimeShardTests
         };
         entity.Insert();
 
-        list = ExpressLogs.Search(time.Date, time, null, null);
+        list = ExpressLogs.Search(start.Date, time, null, null);
         Assert.Single(list);
 
         //var n = ExpressLogs.Meta.Count;

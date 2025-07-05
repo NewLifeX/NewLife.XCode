@@ -9,10 +9,6 @@ namespace XCode.Cache;
 [DisplayName("统计字段")]
 public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<TEntity>, new()
 {
-    private readonly String _fieldName;
-    private FieldItem _field = null!;
-    private FieldItem _Unique = null!;
-
     /// <summary>最大行数。默认50</summary>
     public Int32 MaxRows { get; set; } = 50;
 
@@ -28,6 +24,11 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
     /// <summary>显示名格式化字符串，两个参数是名称和个数</summary>
     public String DisplayFormat { get; set; } = "{0} ({1:n0})";
 
+    private readonly String _fieldName;
+    private FieldItem _field = null!;
+    private FieldItem _Unique = null!;
+    private Boolean _inited;
+
     /// <summary>对指定字段使用实体缓存</summary>
     /// <param name="fieldName"></param>
     public FieldCache(String fieldName)
@@ -42,6 +43,8 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
 
     private void Init()
     {
+        if (_inited) return;
+
         if (_field == null && !_fieldName.IsNullOrEmpty()) _field = Entity<TEntity>.Meta.Table.FindByName(_fieldName)!;
 
         if (_field != null && _Unique == null)
@@ -63,10 +66,15 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
 
             Expire = exp;
         }
+
+        _inited = true;
     }
 
     private IList<TEntity> Search()
     {
+        // 这里也要初始化，因为外部可能直接访问Entities属性
+        Init();
+
         Expression? exp = Where?.GroupBy(_field);
         exp ??= _field.GroupBy();
         return Entity<TEntity>.FindAll(exp, OrderBy, _Unique.Count("group_count")! & _field, 0, MaxRows);

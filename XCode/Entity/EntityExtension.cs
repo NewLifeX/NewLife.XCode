@@ -1220,9 +1220,10 @@ public static class EntityExtension
         var compressed = file.EndsWithIgnoreCase(".gz");
         return file.AsFile().OpenWrite(compressed, fs =>
         {
+            var bn = new Binary { Stream = fs, EncodeInt = true, FullTime = true };
             foreach (var entity in list)
             {
-                if (entity is IAccessor acc) acc.Write(fs, null);
+                if (entity is IAccessor acc) acc.Write(fs, bn);
             }
         });
     }
@@ -1347,11 +1348,12 @@ public static class EntityExtension
         var compressed = file.EndsWithIgnoreCase(".gz");
         file.AsFile().OpenRead(compressed, fs =>
         {
+            var bn = new Binary { Stream = fs, EncodeInt = true, FullTime = true };
             var fact = typeof(T).AsFactory();
             while (fs.Position < fs.Length)
             {
                 var entity = (T)fact.Create();
-                if (entity is IAccessor acc) acc.Read(fs, null);
+                if (entity is IAccessor acc) acc.Read(fs, bn);
 
                 list.Add(entity);
             }

@@ -40,7 +40,7 @@
     <PackageReference Include="MySqlConnector" Version="2.4.0" />
     <PackageReference Include="NewLife.Redis" Version="6.3.2025.701" />
     <PackageReference Include="NewLife.Remoting" Version="3.3.2025.701" />
-    <PackageReference Include="NewLife.Stardust" Version="3.4.2025.601" />
+    <PackageReference Include="NewLife.Stardust" Version="3.4.2025.701" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.8.0" />
     <PackageReference Include="SapHana.DotNetCore.Data.Provider" Version="2.11.14" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />

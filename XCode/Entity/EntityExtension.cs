@@ -1,7 +1,6 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Data;
-using NewLife;
+using System.IO.Compression;
 using NewLife.Data;
 using NewLife.IO;
 using NewLife.Log;
@@ -1200,10 +1199,11 @@ public static class EntityExtension
     {
         if (list == null) return 0;
 
+        var bn = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
         var p = stream.Position;
         foreach (var entity in list)
         {
-            if (entity is IAccessor acc) acc.Write(stream, null);
+            if (entity is IAccessor acc) acc.Write(stream, bn);
         }
 
         return stream.Position - p;
@@ -1299,35 +1299,16 @@ public static class EntityExtension
     /// <param name="list">实体列表</param>
     /// <param name="stream">数据流</param>
     /// <returns>实体列表</returns>
-    public static IList<T> Read<T>(this IList<T> list, Stream stream) where T : IEntity
-    {
-        if (stream == null) return list;
-
-        var fact = typeof(T).AsFactory();
-        while (stream.Position < stream.Length)
-        {
-            var entity = (T)fact.Create();
-            if (entity is IAccessor acc) acc.Read(stream, null);
-
-            list.Add(entity);
-        }
-
-        return list;
-    }
-
-    /// <summary>从数据流读取列表</summary>
-    /// <param name="list">实体列表</param>
-    /// <param name="stream">数据流</param>
-    /// <returns>实体列表</returns>
-    public static IEnumerable<T> ReadEnumerable<T>(this IList<T> list, Stream stream) where T : IEntity
+    public static IEnumerable<T> Read<T>(this IList<T> list, Stream stream) where T : IEntity
     {
         if (stream == null) yield break;
 
+        var bn = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
         var fact = typeof(T).AsFactory();
         while (stream.Position < stream.Length)
         {
             var entity = (T)fact.Create();
-            if (entity is IAccessor acc) acc.Read(stream, null);
+            if (entity is IAccessor acc) acc.Read(stream, bn);
 
             list.Add(entity);
 
@@ -1345,35 +1326,27 @@ public static class EntityExtension
         file = file.GetFullPath();
         if (!File.Exists(file)) return list;
 
-        var compressed = file.EndsWithIgnoreCase(".gz");
-        file.AsFile().OpenRead(compressed, fs =>
-        {
-            var bn = new Binary { Stream = fs, EncodeInt = true, FullTime = true };
-            var fact = typeof(T).AsFactory();
-            while (fs.Position < fs.Length)
-            {
-                var entity = (T)fact.Create();
-                if (entity is IAccessor acc) acc.Read(fs, bn);
+        Stream fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var bn = new Binary { Stream = fs, EncodeInt = true, FullTime = true };
 
-                list.Add(entity);
-            }
-        });
+        if (file.EndsWithIgnoreCase(".gz"))
+            fs = new GZipStream(fs, CompressionMode.Decompress);
 
-        return list;
+        return Read(list, fs).ToList();
     }
 
     /// <summary>从数据流读取列表，Csv格式</summary>
     /// <param name="list">实体列表</param>
     /// <param name="stream">数据流</param>
     /// <returns>实体列表</returns>
-    public static IList<T> LoadCsv<T>(this IList<T> list, Stream stream) where T : IEntity
+    public static IEnumerable<T> LoadCsv<T>(this IList<T> list, Stream stream) where T : IEntity
     {
         var fact = typeof(T).AsFactory();
         using var csv = new CsvFile(stream, true);
 
         // 匹配字段
         var names = csv.ReadLine();
-        if (names == null || names.Length == 0) return list;
+        if (names == null || names.Length == 0) yield break;
 
         var fields = new FieldItem[names.Length];
         for (var i = 0; i < names.Length; i++)
@@ -1395,9 +1368,9 @@ public static class EntityExtension
             }
 
             list.Add(entity);
-        }
 
-        return list;
+            yield return entity;
+        }
     }
 
     /// <summary>从文件读取列表，Csv格式</summary>
@@ -1411,7 +1384,7 @@ public static class EntityExtension
         if (!File.Exists(file)) return list;
 
         var compressed = file.EndsWithIgnoreCase(".gz");
-        file.AsFile().OpenRead(compressed, fs => LoadCsv(list, fs));
+        file.AsFile().OpenRead(compressed, fs => LoadCsv(list, fs).ToList());
 
         return list;
     }

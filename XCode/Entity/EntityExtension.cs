@@ -120,23 +120,24 @@ public static class EntityExtension
     public static Int32 Insert<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
-        var entity = list.FirstOrDefault(e => e != null);
+        var list2 = list.AsList();
+        var entity = list2.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         var fact = entity.GetType().AsFactory();
         var session2 = session ?? fact.Session;
 
         // Oracle/MySql批量插入
-        if (session2.Dal.SupportBatch && list.Count() > 1)
+        if (session2.Dal.SupportBatch && list2.Count() > 1)
         {
             //DefaultSpan.Current?.AppendTag("SupportBatch");
 
-            if (list is not IList<T> es) es = list.ToList();
-            foreach (IEntity item in es.ToArray())
+            //if (list is not IList<T> es) es = list.ToList();
+            for (var i = list2.Count - 1; i >= 0; i--)
             {
-                if (item is EntityBase entity2)
+                if (list2[i] is EntityBase entity2)
                 {
-                    if (!entity2.Valid(DataMethod.Insert)) es.Remove((T)item);
+                    if (!entity2.Valid(DataMethod.Insert)) list2.RemoveAt(i);
                 }
                 //if (!fact.Modules.Valid(item, item.IsNullKey)) es.Remove((T)item);
             }
@@ -147,7 +148,7 @@ public static class EntityExtension
                 DefaultSpan.Current?.AppendTag($"ShardPolicy: {fact.ShardPolicy.Field}");
 
                 // 提前计算分表，按库表名分组
-                var dic = list.GroupBy(e =>
+                var dic = list2.GroupBy(e =>
                 {
                     var shard = fact.ShardPolicy.Shard(e);
                     return fact.GetSession(shard?.ConnName ?? session2.ConnName, shard?.TableName ?? session2.TableName);
@@ -161,10 +162,10 @@ public static class EntityExtension
                 return rs;
             }
 
-            return BatchInsert(list, option: null, session2);
+            return BatchInsert(list2, option: null, session2);
         }
 
-        return DoAction(list, useTransition, e => e.Insert(), session2);
+        return DoAction(list2, useTransition, e => e.Insert(), session2);
     }
 
     /// <summary>把整个集合更新到数据库</summary>
@@ -175,16 +176,17 @@ public static class EntityExtension
     public static Int32 Update<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
-        var entity = list.FirstOrDefault(e => e != null);
+        var list2 = list.AsList();
+        var entity = list2.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         var fact = entity.GetType().AsFactory();
         session ??= fact.Session;
 
         // Oracle批量更新
-        return session.Dal.DbType == DatabaseType.Oracle && list.Count() > 1
-            ? BatchUpdate(list.Valid(false), null, session)
-            : DoAction(list, useTransition, e => e.Update(), session);
+        return session.Dal.DbType == DatabaseType.Oracle && list2.Count() > 1
+            ? BatchUpdate(list2.Valid(false), null, session)
+            : DoAction(list2, useTransition, e => e.Update(), session);
     }
 
     /// <summary>把整个保存更新到数据库</summary>
@@ -202,7 +204,8 @@ public static class EntityExtension
        */
 
         // 避免列表内实体对象为空
-        var entity = list.FirstOrDefault(e => e != null);
+        var list2 = list.AsList();
+        var entity = list2.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         var rs = 0;
@@ -210,15 +213,15 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
-        if (session.Dal.SupportBatch && list.Count() > 1)
+        if (session.Dal.SupportBatch && list2.Count() > 1)
         {
             // 根据是否来自数据库，拆分为两组
-            var ts = Split(list);
-            list = ts.Item1;
+            var ts = Split(list2);
+            list2 = ts.Item1;
             rs += BatchSave(session, ts.Item2.Valid(true));
         }
 
-        return rs + DoAction(list, useTransition, e => e.Save(), session);
+        return rs + DoAction(list2, useTransition, e => e.Save(), session);
     }
 
     /// <summary>把整个保存更新到数据库，保存时不需要验证</summary>
@@ -229,7 +232,8 @@ public static class EntityExtension
     public static Int32 SaveWithoutValid<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
-        var entity = list.FirstOrDefault(e => e != null);
+        var list2 = list.AsList();
+        var entity = list2.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         var rs = 0;
@@ -237,15 +241,15 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
-        if (session.Dal.SupportBatch && list.Count() > 1)
+        if (session.Dal.SupportBatch && list2.Count() > 1)
         {
             // 根据是否来自数据库，拆分为两组
-            var ts = Split(list);
-            list = ts.Item1;
+            var ts = Split(list2);
+            list2 = ts.Item1;
             rs += BatchSave(session, ts.Item2);
         }
 
-        return rs + DoAction(list, useTransition, e => e.SaveWithoutValid(), session);
+        return rs + DoAction(list2, useTransition, e => e.SaveWithoutValid(), session);
     }
 
     private static Tuple<IList<T>, IList<T>> Split<T>(IEnumerable<T> list) where T : IEntity
@@ -310,7 +314,8 @@ public static class EntityExtension
     public static Int32 Delete<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
-        var entity = list.FirstOrDefault(e => e != null);
+        var list2 = list.AsList();
+        var entity = list2.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         var fact = entity.GetType().AsFactory();
@@ -318,14 +323,14 @@ public static class EntityExtension
 
         // 单一主键，采用批量操作
         var pks = fact.Table.PrimaryKeys;
-        if (pks != null && pks.Length == 1 && list.Count() > 1)
+        if (pks != null && pks.Length == 1 && list2.Count() > 1)
         {
             var pk = pks[0];
             var count = 0;
             var rs = 0;
             var ks = new List<Object>();
             var sql = $"Delete From {session.FormatedTableName} Where ";
-            foreach (var item in list)
+            foreach (var item in list2)
             {
                 var val = item[pk.Name];
                 if (val == null) continue;
@@ -350,15 +355,16 @@ public static class EntityExtension
             return rs;
         }
 
-        return DoAction(list, useTransition, e => e.Delete(), session);
+        return DoAction(list2, useTransition, e => e.Delete(), session);
     }
 
     private static Int32 DoAction<T>(this IEnumerable<T> list, Boolean? useTransition, Func<T, Int32> func, IEntitySession session) where T : IEntity
     {
-        if (!list.Any()) return 0;
+        var list2 = list.AsList();
+        if (!list2.Any()) return 0;
 
         // 避免列表内实体对象为空
-        var entity = list.First(e => e != null);
+        var entity = list2.First(e => e != null);
         if (entity == null) return 0;
 
         //var fact = entity.GetType().AsFactory();
@@ -377,13 +383,13 @@ public static class EntityExtension
             if (session == null) throw new ArgumentNullException(nameof(session));
 
             using var trans = session.CreateTrans();
-            count = DoAction(list, func, count);
+            count = DoAction(list2, func, count);
 
             trans.Commit();
         }
         else
         {
-            count = DoAction(list, func, count);
+            count = DoAction(list2, func, count);
         }
 
         return count;
@@ -409,14 +415,15 @@ public static class EntityExtension
     {
         var rs = new List<T>();
 
-        var entity = list.FirstOrDefault(e => e != null);
+        var list2 = list.AsList();
+        var entity = list2.FirstOrDefault(e => e != null);
         if (entity == null) return rs;
 
         var fact = entity.GetType().AsFactory();
         var modules = fact.Modules;
 
         // 验证对象
-        foreach (IEntity item in list)
+        foreach (IEntity item in list2)
         {
             if (item is EntityBase entity2)
             {

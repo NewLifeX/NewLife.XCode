@@ -1335,12 +1335,12 @@ public static class EntityExtension
         file = file.GetFullPath();
         if (!File.Exists(file)) return [];
 
-        Stream fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
 
         if (file.EndsWithIgnoreCase(".gz"))
-            fs = new GZipStream(fs, CompressionMode.Decompress);
-
-        return Read(factory, fs);
+            return Read(factory, new GZipStream(fs, CompressionMode.Decompress));
+        else
+            return Read(factory, fs);
     }
 
     /// <summary>从文件读取实体列表，二进制格式</summary>

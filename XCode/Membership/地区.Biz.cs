@@ -1150,7 +1150,7 @@ public partial class Area : Entity<Area>
                 stream = new GZipStream(stream, CompressionMode.Decompress, true);
                 stream = new BufferedStream(stream);
             }
-            list.LoadCsv(stream);
+            list = Meta.Factory.LoadCsv(stream).Cast<Area>().ToList();
         }
         else
             list.LoadCsv(csvFile);

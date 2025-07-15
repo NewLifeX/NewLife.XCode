@@ -1164,7 +1164,7 @@ public static class EntityExtension
     #endregion
 
     #region 读写数据流
-    /// <summary>转为DbTable</summary>
+    /// <summary>实体列表转为DbTable</summary>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
     public static DbTable ToTable<T>(this IEnumerable<T> list) where T : IEntity
@@ -1204,7 +1204,7 @@ public static class EntityExtension
         return dt;
     }
 
-    /// <summary>写入数据流</summary>
+    /// <summary>实体列表以二进制序列化写入数据流</summary>
     /// <param name="list">实体列表</param>
     /// <param name="stream">数据流</param>
     /// <returns></returns>
@@ -1212,6 +1212,7 @@ public static class EntityExtension
     {
         if (list == null) return 0;
 
+        //todo Binary需要字段记录已经写入多少字节，部分数据流不支持Position
         var bn = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
         var p = stream.Position;
         foreach (var entity in list)
@@ -1285,9 +1286,7 @@ public static class EntityExtension
         if (list == null) return 0;
 
         var compressed = file.EndsWithIgnoreCase(".gz");
-        return displayfields != null
-            ? file.AsFile().OpenWrite(compressed, fs => SaveCsv(list, fs, fields, displayfields))
-            : file.AsFile().OpenWrite(compressed, fs => SaveCsv(list, fs, fields));
+        return file.AsFile().OpenWrite(compressed, fs => SaveCsv(list, fs, fields, displayfields));
     }
 
     /// <summary>写入文件，Csv格式</summary>
@@ -1308,28 +1307,43 @@ public static class EntityExtension
 
     }
 
-    /// <summary>从数据流读取列表</summary>
-    /// <param name="list">实体列表</param>
+    /// <summary>从数据流读取实体列表</summary>
+    /// <param name="factory">实体工厂</param>
     /// <param name="stream">数据流</param>
     /// <returns>实体列表</returns>
-    public static IEnumerable<T> Read<T>(this IList<T> list, Stream stream) where T : IEntity
+    public static IEnumerable<IEntity> Read(this IEntityFactory factory, Stream stream)
     {
-        if (stream == null) yield break;
+        if (factory == null || stream == null) yield break;
 
         var bn = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
-        var fact = typeof(T).AsFactory();
         while (stream.Position < stream.Length)
         {
-            var entity = (T)fact.Create();
+            var entity = factory.Create();
             if (entity is IAccessor acc) acc.Read(stream, bn);
-
-            list.Add(entity);
 
             yield return entity;
         }
     }
 
-    /// <summary>从文件读取列表，二进制格式</summary>
+    /// <summary>从文件读取实体列表，二进制格式</summary>
+    /// <param name="factory">实体工厂</param>
+    /// <param name="file">文件</param>
+    /// <returns>实体列表</returns>
+    public static IEnumerable<IEntity> LoadFile(this IEntityFactory factory, String file)
+    {
+        if (file.IsNullOrEmpty()) return [];
+        file = file.GetFullPath();
+        if (!File.Exists(file)) return [];
+
+        Stream fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+        if (file.EndsWithIgnoreCase(".gz"))
+            fs = new GZipStream(fs, CompressionMode.Decompress);
+
+        return Read(factory, fs);
+    }
+
+    /// <summary>从文件读取实体列表，二进制格式</summary>
     /// <param name="list">实体列表</param>
     /// <param name="file">文件</param>
     /// <returns>实体列表</returns>
@@ -1339,22 +1353,21 @@ public static class EntityExtension
         file = file.GetFullPath();
         if (!File.Exists(file)) return list;
 
-        Stream fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-        var bn = new Binary { Stream = fs, EncodeInt = true, FullTime = true };
+        var factory = typeof(T).AsFactory();
+        foreach (var entity in factory.LoadFile(file))
+        {
+            list.Add((T)entity);
+        }
 
-        if (file.EndsWithIgnoreCase(".gz"))
-            fs = new GZipStream(fs, CompressionMode.Decompress);
-
-        return Read(list, fs).ToList();
+        return list;
     }
 
-    /// <summary>从数据流读取列表，Csv格式</summary>
-    /// <param name="list">实体列表</param>
+    /// <summary>从数据流读取实体列表，Csv格式</summary>
+    /// <param name="factory">实体工厂</param>
     /// <param name="stream">数据流</param>
     /// <returns>实体列表</returns>
-    public static IEnumerable<T> LoadCsv<T>(this IList<T> list, Stream stream) where T : IEntity
+    public static IEnumerable<IEntity> LoadCsv(this IEntityFactory factory, Stream stream)
     {
-        var fact = typeof(T).AsFactory();
         using var csv = new CsvFile(stream, true);
 
         // 匹配字段
@@ -1364,7 +1377,7 @@ public static class EntityExtension
         var fields = new FieldItem[names.Length];
         for (var i = 0; i < names.Length; i++)
         {
-            fields[i] = fact.Fields.FirstOrDefault(e => names[i].EqualIgnoreCase(e.Name, e.DisplayName, e.ColumnName));
+            fields[i] = factory.Fields.FirstOrDefault(e => names[i].EqualIgnoreCase(e.Name, e.DisplayName, e.ColumnName));
         }
 
         // 读取数据
@@ -1373,14 +1386,12 @@ public static class EntityExtension
             var line = csv.ReadLine();
             if (line == null || line.Length == 0) break;
 
-            var entity = (T)fact.Create();
+            var entity = factory.Create();
             for (var i = 0; i < fields.Length && i < line.Length; i++)
             {
                 var fi = fields[i];
                 if (fi != null && !line[i].IsNullOrEmpty()) entity.SetItem(fi.Name, line[i].ChangeType(fi.Type));
             }
-
-            list.Add(entity);
 
             yield return entity;
         }
@@ -1397,7 +1408,14 @@ public static class EntityExtension
         if (!File.Exists(file)) return list;
 
         var compressed = file.EndsWithIgnoreCase(".gz");
-        file.AsFile().OpenRead(compressed, fs => LoadCsv(list, fs).ToList());
+        file.AsFile().OpenRead(compressed, fs =>
+        {
+            var factory = typeof(T).AsFactory();
+            foreach (var entity in factory.LoadCsv(fs))
+            {
+                list.Add((T)entity);
+            }
+        });
 
         return list;
     }

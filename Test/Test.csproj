@@ -41,7 +41,7 @@
     <PackageReference Include="NewLife.Redis" Version="6.3.2025.701" />
     <PackageReference Include="NewLife.Remoting" Version="3.3.2025.701" />
     <PackageReference Include="NewLife.Stardust" Version="3.4.2025.701" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.0" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.1" />
     <PackageReference Include="SapHana.DotNetCore.Data.Provider" Version="2.11.14" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
   </ItemGroup>

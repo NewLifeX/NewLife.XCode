@@ -24,7 +24,7 @@ public interface IModelResolver
     /// <summary>根据字段名等信息计算索引的名称</summary>
     /// <param name="di"></param>
     /// <returns></returns>
-    String GetName(IDataIndex di);
+    String? GetName(IDataIndex di);
 
     /// <summary>获取显示名，如果描述不存在，则使用名称，否则使用描述前面部分，句号（中英文皆可）、换行分隔</summary>
     /// <param name="name">名称</param>
@@ -162,7 +162,7 @@ public class ModelResolver : IModelResolver
     /// <summary>根据字段名等信息计算索引的名称</summary>
     /// <param name="di"></param>
     /// <returns></returns>
-    public virtual String GetName(IDataIndex di)
+    public virtual String? GetName(IDataIndex di)
     {
         if (di.Columns == null || di.Columns.Length <= 0) return null;
 
@@ -179,11 +179,15 @@ public class ModelResolver : IModelResolver
             sb.Append('_');
             sb.Append(di.Table.TableName);
         }
-        for (var i = 0; i < di.Columns.Length; i++)
+        foreach (var item in di.Columns)
         {
+            // mysql索引名不能超过64个字符
+            if (sb.Length + item.Length + 1 > 64) break;
+
             sb.Append('_');
-            sb.Append(di.Columns[i]);
+            sb.Append(item);
         }
+
         return sb.Return(true);
     }
 

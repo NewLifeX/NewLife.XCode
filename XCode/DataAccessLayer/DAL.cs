@@ -862,6 +862,9 @@ public partial class DAL
                 sb.AppendFormat("IX_{0}", Db.FormatName(table, false));
                 foreach (var item in di.Columns)
                 {
+                    // mysql索引名不能超过64个字符
+                    if (sb.Length + item.Length + 1 > 64) break;
+
                     sb.Append('_');
                     sb.Append(item);
                 }

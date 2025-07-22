@@ -187,6 +187,38 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns></returns>
     protected virtual Int32 OnDelete() => Meta.Session.Delete(this);
 
+    /// <summary>执行操作。Valid后，自动填充雪花Id主键</summary>
+    private TResult DoAction<TResult>(Func<TResult> func, DataMethod method)
+    {
+        if (Meta.Table.DataTable.InsertOnly)
+        {
+            switch (method)
+            {
+                case DataMethod.Update:
+                    throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止修改！");
+                case DataMethod.Delete:
+                    throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止删除！");
+            }
+        }
+
+        if (_enableValid)
+        {
+            var rt = Valid(method);
+
+            // 没有更新任何数据
+            if (!rt) return (TResult)(Object)0;
+        }
+
+        AutoFillSnowIdPrimaryKey();
+
+        if (Meta.InShard) return func();
+
+        // 自动分库分表
+        using var split = Meta.CreateShard((this as TEntity)!);
+
+        return func();
+    }
+
     /// <summary>保存。Insert/Update/Upsert</summary>
     /// <remarks>
     /// Save的几个场景：
@@ -279,7 +311,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
     /// <summary>插入数据，Valid后调用<see cref="OnInsertAsync"/>。</summary>
     /// <returns></returns>
-    public override Task<Int32> InsertAsync() => DoAction(OnInsertAsync, DataMethod.Insert);
+    public override Task<Int32> InsertAsync() => DoActionAsync(OnInsertAsync, DataMethod.Insert);
 
     /// <summary>把该对象持久化到数据库，添加/更新实体缓存。</summary>
     /// <returns></returns>
@@ -298,7 +330,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
     /// <summary>更新数据，Valid后调用<see cref="OnUpdateAsync"/>。</summary>
     /// <returns></returns>
-    public override Task<Int32> UpdateAsync() => DoAction(OnUpdateAsync, DataMethod.Update);
+    public override Task<Int32> UpdateAsync() => DoActionAsync(OnUpdateAsync, DataMethod.Update);
 
     /// <summary>更新数据库，同时更新实体缓存</summary>
     /// <returns></returns>
@@ -319,7 +351,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// 如果需要避开该机制，请清空脏数据。
     /// </remarks>
     /// <returns></returns>
-    public override Task<Int32> DeleteAsync() => DoAction(OnDeleteAsync, DataMethod.Delete);
+    public override Task<Int32> DeleteAsync() => DoActionAsync(OnDeleteAsync, DataMethod.Delete);
 
     /// <summary>从数据库中删除该对象，同时从实体缓存中删除</summary>
     /// <returns></returns>
@@ -328,7 +360,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 #if NETCOREAPP
     [StackTraceHidden]
 #endif
-    private TResult DoAction<TResult>(Func<TResult> func, DataMethod method)
+
+    /// <summary>执行操作。Valid后，自动填充雪花Id主键</summary>
+    private async Task<TResult> DoActionAsync<TResult>(Func<Task<TResult>> func, DataMethod method)
     {
         if (Meta.Table.DataTable.InsertOnly)
         {
@@ -346,17 +380,17 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             var rt = Valid(method);
 
             // 没有更新任何数据
-            if (!rt) return typeof(TResult) == typeof(Task<Int32>) ? (TResult)(Object)Task.FromResult(0) : (TResult)(Object)0;
+            if (!rt) return (TResult)(Object)0;
         }
 
         AutoFillSnowIdPrimaryKey();
 
-        if (Meta.InShard) return func();
+        if (Meta.InShard) return await func().ConfigureAwait(false);
 
         // 自动分库分表
         using var split = Meta.CreateShard((this as TEntity)!);
 
-        return func();
+        return await func().ConfigureAwait(false);
     }
 
     [NonSerialized]

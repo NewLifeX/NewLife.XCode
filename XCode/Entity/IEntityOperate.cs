@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using NewLife.Data;
 using XCode.Configuration;
 using XCode.Shards;
@@ -9,14 +7,13 @@ using XCode.Statistics;
 namespace XCode;
 
 /// <summary>指定实体工厂</summary>
-public class EntityFactoryAttribute : Attribute
+/// <remarks>指定实体工厂</remarks>
+/// <param name="type"></param>
+[AttributeUsage(AttributeTargets.Class)]
+public class EntityFactoryAttribute(Type type) : Attribute
 {
     /// <summary>实体工厂类型</summary>
-    public Type Type { get; set; }
-
-    /// <summary>指定实体工厂</summary>
-    /// <param name="type"></param>
-    public EntityFactoryAttribute(Type type) => Type = type;
+    public Type Type { get; set; } = type;
 }
 
 /// <summary>数据实体操作接口</summary>

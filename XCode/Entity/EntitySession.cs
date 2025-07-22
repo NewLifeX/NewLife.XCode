@@ -530,7 +530,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
 
         // Count提供的是非精确数据，避免频繁更新
         //_Count = -1L;
-        //_NextCount = DateTime.MinValue;
+        _NextCount = DateTime.MinValue;
     }
 
     String CacheKey => $"{ConnName}_{TableName}_{ThisType.Name}";

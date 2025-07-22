@@ -20,7 +20,6 @@ public static class EntityExtension
     /// <param name="list">实体列表</param>
     /// <param name="valueField">作为Value部分的字段，默认为空表示整个实体对象为值</param>
     /// <returns></returns>
-    //[Obsolete("将来不再支持实体列表，请改用Linq")]
     public static IDictionary ToDictionary<T>(this IEnumerable<T> list, String? valueField = null) where T : IEntity
     {
         if (list == null || !list.Any()) return new Dictionary<String, String>();
@@ -128,7 +127,7 @@ public static class EntityExtension
         var session2 = session ?? fact.Session;
 
         // Oracle/MySql批量插入
-        if (session2.Dal.SupportBatch && list2.Count() > 1)
+        if (session2.Dal.SupportBatch && list2.Count > 1)
         {
             //DefaultSpan.Current?.AppendTag("SupportBatch");
 
@@ -392,6 +391,9 @@ public static class EntityExtension
             count = DoAction(list2, func, count);
         }
 
+        // 统一清空缓存，避免因事务回滚等原因导致缓存数据不一致
+        session?.ClearCache(func + "", true);
+
         return count;
     }
 
@@ -524,6 +526,8 @@ public static class EntityExtension
                 }
             }
 
+            session.ClearCache(nameof(BatchInsert), true);
+
             return rs;
         }
         catch (Exception ex)
@@ -614,6 +618,8 @@ public static class EntityExtension
                 }
             }
 
+            session.ClearCache(nameof(BatchInsertIgnore), true);
+
             return rs;
         }
         catch (Exception ex)
@@ -703,6 +709,8 @@ public static class EntityExtension
                     item.Dirtys.Clear();
                 }
             }
+
+            session.ClearCache(nameof(BatchReplace), true);
 
             return rs;
         }
@@ -796,6 +804,8 @@ public static class EntityExtension
                     item.Dirtys.Clear();
                 }
             }
+
+            session.ClearCache(nameof(BatchUpdate), true);
 
             return rs;
         }
@@ -941,6 +951,8 @@ public static class EntityExtension
                 }
             }
 
+            session.ClearCache(nameof(BatchUpsert), true);
+
             return rs;
         }
         catch (Exception ex)
@@ -1018,7 +1030,11 @@ public static class EntityExtension
         {
             if (span != null) span.Tag = $"{session.TableName}[{entity}]";
 
-            return dal.Session.Upsert(session.DataTable, option.Columns, option.UpdateColumns, option.AddColumns, [entity as IModel]);
+            var rs = dal.Session.Upsert(session.DataTable, option.Columns, option.UpdateColumns, option.AddColumns, [entity]);
+
+            session.ClearCache(nameof(Upsert), true);
+
+            return rs;
         }
         catch (Exception ex)
         {

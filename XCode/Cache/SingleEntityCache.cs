@@ -456,6 +456,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     {
         if (entity == null) return;
         if (GetKeyMethod == null) return;
+
         var key = GetKeyMethod(entity);
         RemoveKey(key);
     }
@@ -472,10 +473,10 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         if (es == null) return;
 
         // 不要清空单对象缓存，而是设为过期
-        var now = TimerX.Now;
+        var exp = TimerX.Now.AddSeconds(-1);
         foreach (var item in es)
         {
-            item.Value.ExpireTime = now.AddSeconds(-1);
+            item.Value.ExpireTime = exp;
         }
 
         Using = false;

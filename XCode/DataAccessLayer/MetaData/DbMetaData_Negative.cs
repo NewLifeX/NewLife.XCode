@@ -237,7 +237,9 @@ internal partial class DbMetaData
                     //return String.Empty;
 
                     // 非空字段作为可空字段新增，避开重建表
-                    item.Nullable = true;
+                    // 如果新字段是非空，但是没有默认值，那么强制改为允许空
+                    if (item.DefaultValue == null)
+                        item.Nullable = true;
                 }
 
                 PerformSchema(sb, @readonly, DDLSchema.AddColumn, item);

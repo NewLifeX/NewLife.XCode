@@ -1942,13 +1942,16 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="extend">是否序列化扩展属性</param>
     protected virtual Boolean OnRead(Stream stream, Object? context, Boolean extend)
     {
-        if (context is not Binary bn) bn = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
+        if (context is not Binary binary) binary = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
 
         var fs = extend ? Meta.AllFields : Meta.Fields;
         foreach (var fi in fs)
         {
+            Object? value = null;
+            if (!binary.TryRead(fi.Type, ref value)) return false;
+
             // 顺序要求很高
-            SetItem(fi.Name, bn.Read(fi.Type));
+            SetItem(fi.Name, value);
         }
 
         return true;
@@ -1960,12 +1963,12 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="extend">是否序列化扩展属性</param>
     protected virtual Boolean OnWrite(Stream stream, Object? context, Boolean extend)
     {
-        if (context is not Binary bn) bn = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
+        if (context is not Binary binary) binary = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
 
         var fs = extend ? Meta.AllFields : Meta.Fields;
         foreach (var fi in fs)
         {
-            bn.Write(this[fi.Name], fi.Type);
+            binary.Write(this[fi.Name], fi.Type);
         }
 
         return true;

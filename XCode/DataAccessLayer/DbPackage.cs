@@ -361,7 +361,7 @@ public class DbPackage
         try
         {
             // 二进制读写器
-            var bn = new Binary
+            var binary = new Binary
             {
                 FullTime = true,
                 EncodeInt = true,
@@ -369,7 +369,7 @@ public class DbPackage
             };
 
             var dt = new DbTable();
-            dt.ReadHeader(bn);
+            dt.ReadHeader(binary);
             WriteLog("恢复[{0}/{1}]开始，共[{2:n0}]行", table.Name, connName, dt.Total);
 
             // 输出日志
@@ -394,7 +394,7 @@ public class DbPackage
                 //修复总行数是pageSize的倍数无法退出循环的情况
                 if (dt.Total == row) break;
                 // 读取数据
-                dt.ReadData(bn, Math.Min(dt.Total - row, pageSize));
+                dt.ReadData(binary, Math.Min(dt.Total - row, pageSize));
 
                 var rs = dt.Rows;
                 if (rs == null || rs.Count == 0) break;

@@ -1228,15 +1228,14 @@ public static class EntityExtension
     {
         if (list == null) return 0;
 
-        //todo Binary需要字段记录已经写入多少字节，部分数据流不支持Position
-        var bn = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
-        var p = stream.Position;
+        // Binary需要字段记录已经写入多少字节，部分数据流不支持Position
+        var binary = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
         foreach (var entity in list)
         {
-            if (entity is IAccessor acc) acc.Write(stream, bn);
+            if (entity is IAccessor acc) acc.Write(stream, binary);
         }
 
-        return stream.Position - p;
+        return binary.Total;
     }
 
     /// <summary>写入文件，二进制格式</summary>
@@ -1250,10 +1249,10 @@ public static class EntityExtension
         var compressed = file.EndsWithIgnoreCase(".gz");
         return file.AsFile().OpenWrite(compressed, fs =>
         {
-            var bn = new Binary { Stream = fs, EncodeInt = true, FullTime = true };
+            var binary = new Binary { Stream = fs, EncodeInt = true, FullTime = true };
             foreach (var entity in list)
             {
-                if (entity is IAccessor acc) acc.Write(fs, bn);
+                if (entity is IAccessor acc) acc.Write(fs, binary);
             }
         });
     }
@@ -1331,11 +1330,14 @@ public static class EntityExtension
     {
         if (factory == null || stream == null) yield break;
 
-        var bn = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
-        while (stream.Position < stream.Length)
+        var binary = new Binary { Stream = stream, EncodeInt = true, FullTime = true };
+        while (!binary.EndOfStream)
         {
             var entity = factory.Create();
-            if (entity is IAccessor acc) acc.Read(stream, bn);
+            if (entity is IAccessor acc)
+            {
+                if (!acc.Read(stream, binary)) yield break;
+            }
 
             yield return entity;
         }

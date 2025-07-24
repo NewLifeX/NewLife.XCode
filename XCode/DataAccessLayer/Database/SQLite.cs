@@ -549,12 +549,8 @@ internal class SQLiteMetaData : FileDbMetaData
         return list;
     }
 
-    static readonly Regex _reg = new("""
-        (?:^|,)\s*(\[\w+\]|\w+)
-        \s*(\w+(?:\(\d+(?:,\s*\d+)?\))?)
-        \s*([^,]*)?
-        """,
-        RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.IgnoreCase);
+    static readonly Regex _reg = new("""(?:^|,)\s*("[^"]+"|\[\w+\]|\w+)\s*(\w+(?:\(\d+(?:,\s*\d+)?\))?)\s*([^,]*)?""",
+        RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.IgnoreCase);   
     public void ParseColumns(IDataTable table, String sqlCreateTable)
     {
         if (sqlCreateTable.StartsWithIgnoreCase("create table"))
@@ -579,10 +575,17 @@ internal class SQLiteMetaData : FileDbMetaData
 
             var str = m.Groups[3].Value;
             if (str.Contains("AUTOINCREMENT")) field.Identity = true;
-            if (str.Contains("Primary Key")) field.PrimaryKey = true;
+            //增加PRIMARY KEY大写判断
+            if (str.Contains("Primary Key") || str.Contains("PRIMARY KEY")) field.PrimaryKey = true;
 
             if (str.Contains("NOT NULL"))
+            {
                 field.Nullable = false;
+                if (str.Contains("DEFAULT"))
+                {//增加默认值读取
+                    field.DefaultValue = str.Split("DEFAULT")[1].Split(" ")[1].Trim('\'');
+                }
+            }
             else if (str.Contains("NULL"))
                 field.Nullable = true;
 

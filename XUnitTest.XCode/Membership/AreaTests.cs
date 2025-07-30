@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Http;
 using NewLife.IP;
@@ -199,7 +200,7 @@ public class AreaTests
     }
 
     [Fact]
-    public async void Download()
+    public async Task Download()
     {
         //var url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
         var url = "http://x.newlifex.com/202301xzqh.html";
@@ -214,7 +215,7 @@ public class AreaTests
     }
 
     [Fact]
-    public async void Download2024()
+    public async Task Download2024()
     {
         //var url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
         //var url = "http://x.newlifex.com/202301xzqh.html";
@@ -242,6 +243,7 @@ public class AreaTests
         var rs = Parse(txt).ToList();
         Assert.NotNull(rs);
         Assert.True(rs.Count > 3000);
+        Assert.Equal(3208, rs.Count);
     }
 
     [Fact]
@@ -257,6 +259,7 @@ public class AreaTests
         var rs = Parse(txt).ToList();
         Assert.NotNull(rs);
         Assert.True(rs.Count > 3000);
+        Assert.Equal(3213, rs.Count);
     }
 
     //[Fact]
@@ -320,7 +323,7 @@ public class AreaTests
 
     [TestOrder(0)]
     [Fact]
-    public async void Import()
+    public async Task Import()
     {
         Area.Meta.Session.Dal.Db.ShowSQL = false;
 
@@ -337,10 +340,12 @@ public class AreaTests
             Area.Meta.Session.Truncate();
             var rs = Area.Import(file, true, 3, false);
             Assert.Equal(3639, rs);
+            Assert.Equal(3639, Area.FindCount());
 
             Area.Meta.Session.Truncate();
             rs = Area.Import(file, true, 4, true);
             Assert.Equal(46533, rs);
+            Assert.Equal(46533, Area.FindCount());
         }
 
         Area.Meta.Session.Dal.Db.ShowSQL = true;

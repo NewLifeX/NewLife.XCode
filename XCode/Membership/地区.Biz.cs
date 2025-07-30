@@ -10,6 +10,7 @@ using NewLife.Caching;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
+using XCode.Model;
 using XCode.Transform;
 
 namespace XCode.Membership;
@@ -1060,7 +1061,11 @@ public partial class Area : Entity<Area>
             }
         }
 
-        bs.Save(true);
+        //Meta.Factory.FullInsert = true;
+        //count = bs.Save(true);
+        count = bs.BatchUpsert(new BatchOption { FullInsert = true });
+
+        XTrace.WriteLine("合并三级地址成功：{0:n0}", count);
 
         return count;
     }
@@ -1076,6 +1081,7 @@ public partial class Area : Entity<Area>
 
         // 一次性加载四级地址
         var rs = FindAll(_.ID < 99_99_99_999);
+        var bs = new List<Area>();
 
         var count = 0;
         foreach (var r in list)
@@ -1097,7 +1103,8 @@ public partial class Area : Entity<Area>
                 r.CreateTime = DateTime.Now;
                 r.UpdateTime = DateTime.Now;
                 r.Valid(DataMethod.Insert);
-                r.SaveAsync();
+                //r.SaveAsync();
+                bs.Add(r);
 
                 count++;
             }
@@ -1121,12 +1128,19 @@ public partial class Area : Entity<Area>
 
                     XTrace.Log.Debug(re.Dirtys.Join(",", e => $"{e}={r2[e]}"));
 
-                    r2.SaveAsync();
+                    //r2.SaveAsync();
+                    bs.Add(r2);
 
                     count++;
                 }
             }
         }
+
+        //Meta.Factory.FullInsert = true;
+        //count = bs.Save(true);
+        count = bs.BatchUpsert(new BatchOption { FullInsert = true });
+
+        XTrace.WriteLine("合并四级地址成功：{0:n0}", count);
 
         return count;
     }

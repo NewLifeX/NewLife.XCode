@@ -86,7 +86,12 @@ public class UserModule : EntityModule
 
         // 新增时如果没有当前用户，尝试使用环境变量中的用户名
         if (user == null && method == DataMethod.Insert)
-            user = new User { Name = Environment.UserName };
+        {
+            // 如果用户名为空，或者是root或Administrator，则使用计算机名
+            var name = Environment.UserName;
+            if (name.IsNullOrEmpty() || name.EqualIgnoreCase("root", "Administrator")) name = Environment.MachineName;
+            user = new User { Name = name };
+        }
 
         if (user != null)
         {

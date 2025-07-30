@@ -215,9 +215,9 @@ public static class EntityExtension
         if (session.Dal.SupportBatch && list2.Count() > 1)
         {
             // 根据是否来自数据库，拆分为两组
-            var ts = Split(list2);
-            list2 = ts.Item1;
-            rs += BatchSave(session, ts.Item2.Valid(true));
+            var (updates, others) = Split(list2);
+            list2 = updates;
+            rs += BatchSave(session, others.Valid(true), null);
         }
 
         return rs + DoAction(list2, useTransition, e => e.Save(), session);
@@ -243,15 +243,19 @@ public static class EntityExtension
         if (session.Dal.SupportBatch && list2.Count() > 1)
         {
             // 根据是否来自数据库，拆分为两组
-            var ts = Split(list2);
-            list2 = ts.Item1;
-            rs += BatchSave(session, ts.Item2);
+            var (updates, others) = Split(list2);
+            list2 = updates;
+            rs += BatchSave(session, others, null);
         }
 
         return rs + DoAction(list2, useTransition, e => e.SaveWithoutValid(), session);
     }
 
-    private static Tuple<IList<T>, IList<T>> Split<T>(IEnumerable<T> list) where T : IEntity
+    /// <summary>拆分为来自数据库的更新和其它的Upsert</summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="list"></param>
+    /// <returns></returns>
+    private static (IList<T> updates, IList<T> others) Split<T>(IEnumerable<T> list) where T : IEntity
     {
         var updates = new List<T>();
         var others = new List<T>();
@@ -263,10 +267,10 @@ public static class EntityExtension
                 others.Add(item);
         }
 
-        return new Tuple<IList<T>, IList<T>>(updates, others);
+        return (updates, others);
     }
 
-    private static Int32 BatchSave<T>(IEntitySession session, IEnumerable<T> list) where T : IEntity
+    private static Int32 BatchSave<T>(IEntitySession session, IEnumerable<T> list, BatchOption? option) where T : IEntity
     {
         // 没有其它唯一索引，且主键为空时，走批量插入
         var rs = 0;
@@ -289,18 +293,18 @@ public static class EntityExtension
             }
             list = upserts;
 
-            if (inserts.Count > 0) rs += BatchInsert(inserts, option: null, session);
+            if (inserts.Count > 0) rs += BatchInsert(inserts, option, session);
             if (updates.Count > 0)
             {
                 // 只有Oracle支持批量Update
                 if (session.Dal.DbType == DatabaseType.Oracle)
-                    rs += BatchUpdate(updates, null, session);
+                    rs += BatchUpdate(updates, option, session);
                 else
                     upserts.AddRange(upserts);
             }
         }
 
-        if (list.Any()) rs += BatchUpsert(list, null, session);
+        if (list.Any()) rs += BatchUpsert(list, option, session);
 
         return rs;
     }
@@ -1408,7 +1412,8 @@ public static class EntityExtension
             for (var i = 0; i < fields.Length && i < line.Length; i++)
             {
                 var fi = fields[i];
-                if (fi != null && !line[i].IsNullOrEmpty()) entity.SetItem(fi.Name, line[i].ChangeType(fi.Type));
+                //if (fi != null && !line[i].IsNullOrEmpty()) entity.SetItem(fi.Name, line[i].ChangeType(fi.Type));
+                if (fi != null && !line[i].IsNullOrEmpty()) entity[fi.Name] = line[i].ChangeType(fi.Type);
             }
 
             yield return entity;

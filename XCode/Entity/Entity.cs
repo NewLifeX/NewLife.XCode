@@ -1951,7 +1951,9 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             if (!binary.TryRead(fi.Type, ref value)) return false;
 
             // 顺序要求很高
-            SetItem(fi.Name, value);
+            //SetItem(fi.Name, value);
+            // 既然是反序列得到的值，直接赋值就行了。这里不需要SetItem，因为SetItem会设置脏数据，在实体对象很多时（>100w）造成巨大的内存开销
+            this[fi.Name] = value;
         }
 
         return true;

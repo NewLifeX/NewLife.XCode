@@ -784,6 +784,8 @@ public static class ModelHelper
             case TypeCode.Boolean:
                 dc.RawType = "bit";
                 dc.Nullable = false;
+                dc.Precision = 0;
+                dc.Scale = 0;
                 break;
             case TypeCode.Byte:
             case TypeCode.Char:
@@ -791,28 +793,34 @@ public static class ModelHelper
                 dc.RawType = "tinyint";
                 dc.Nullable = false;
                 dc.Precision = 3;
+                dc.Scale = 0;
                 break;
             case TypeCode.DateTime:
                 dc.RawType = "datetime";
                 dc.Nullable = true;
+                dc.Precision = 0;
+                dc.Scale = 0;
                 break;
             case TypeCode.Int16:
             case TypeCode.UInt16:
                 dc.RawType = "smallint";
                 dc.Nullable = false;
                 dc.Precision = 5;
+                dc.Scale = 0;
                 break;
             case TypeCode.Int32:
             case TypeCode.UInt32:
                 dc.RawType = "int";
                 dc.Nullable = false;
                 dc.Precision = 10;
+                dc.Scale = 0;
                 break;
             case TypeCode.Int64:
             case TypeCode.UInt64:
-                dc.Precision = oridc != null && oridc.RawType == "bigint unsigned" ? 20 : 19;
                 dc.RawType = "bigint";
                 dc.Nullable = false;
+                dc.Precision = oridc != null && oridc.RawType == "bigint unsigned" ? 20 : 19;
+                dc.Scale = 0;
                 break;
             case TypeCode.Single:
                 dc.RawType = "real";
@@ -831,6 +839,8 @@ public static class ModelHelper
                 dc.Nullable = false;
                 //dc.Precision = 20;
                 //dc.Scale = 4;
+                dc.Precision = 0;
+                dc.Scale = 0;
                 break;
             case TypeCode.String:
                 // 原来就是普通字符串，或者非ntext字符串，一律转nvarchar
@@ -863,6 +873,8 @@ public static class ModelHelper
                     }
                 }
                 dc.Nullable = true;
+                dc.Precision = 0;
+                dc.Scale = 0;
                 break;
             default:
                 if (dc.DataType == typeof(Byte[]))
@@ -874,7 +886,7 @@ public static class ModelHelper
         }
 
         // 默认值里面不要设置数据类型，否则写入模型文件的时候会漏掉数据类型
-        dc.DataType = null;
+        dc.DataType = null!;
         if (dc.RawType.IsNullOrEmpty()) dc.RawType = null;
 
         return dc;

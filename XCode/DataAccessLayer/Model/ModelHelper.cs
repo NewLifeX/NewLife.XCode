@@ -790,6 +790,7 @@ public static class ModelHelper
             case TypeCode.SByte:
                 dc.RawType = "tinyint";
                 dc.Nullable = false;
+                dc.Precision = 3;
                 break;
             case TypeCode.DateTime:
                 dc.RawType = "datetime";
@@ -799,28 +800,37 @@ public static class ModelHelper
             case TypeCode.UInt16:
                 dc.RawType = "smallint";
                 dc.Nullable = false;
+                dc.Precision = 5;
                 break;
             case TypeCode.Int32:
             case TypeCode.UInt32:
                 dc.RawType = "int";
                 dc.Nullable = false;
+                dc.Precision = 10;
                 break;
             case TypeCode.Int64:
             case TypeCode.UInt64:
+                dc.Precision = oridc != null && oridc.RawType == "bigint unsigned" ? 20 : 19;
                 dc.RawType = "bigint";
                 dc.Nullable = false;
                 break;
             case TypeCode.Single:
                 dc.RawType = "real";
                 dc.Nullable = false;
+                dc.Precision = 12;
+                dc.Scale = 2;
                 break;
             case TypeCode.Double:
                 dc.RawType = "float";
                 dc.Nullable = false;
+                dc.Precision = 22;
+                dc.Scale = 4;
                 break;
             case TypeCode.Decimal:
                 dc.RawType = "money";
                 dc.Nullable = false;
+                dc.Precision = 20;
+                dc.Scale = 4;
                 break;
             case TypeCode.String:
                 // 原来就是普通字符串，或者非ntext字符串，一律转nvarchar

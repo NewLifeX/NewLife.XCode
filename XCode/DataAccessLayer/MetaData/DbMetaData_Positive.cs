@@ -211,12 +211,12 @@ partial class DbMetaData
             // 长度
             field.Length = GetDataRowValue<Int32>(dr, "CHARACTER_MAXIMUM_LENGTH", "LENGTH", "COLUMN_SIZE");
 
-            if (field is XField fi)
+            //if (field is XField fi)
             {
                 // 精度 与 位数
-                fi.Precision = GetDataRowValue<Int32>(dr, "NUMERIC_PRECISION", "DATETIME_PRECISION", "PRECISION");
-                fi.Scale = GetDataRowValue<Int32>(dr, "NUMERIC_SCALE", "SCALE");
-                if (field.Length == 0) field.Length = fi.Precision;
+                field.Precision = GetDataRowValue<Int32>(dr, "NUMERIC_PRECISION", "DATETIME_PRECISION", "PRECISION");
+                field.Scale = GetDataRowValue<Int32>(dr, "NUMERIC_SCALE", "SCALE");
+                if (field.Length == 0) field.Length = field.Precision;
             }
 
             // 允许空
@@ -230,6 +230,9 @@ partial class DbMetaData
             {
                 if (!String.IsNullOrEmpty(str)) field.Nullable = "Y".EqualIgnoreCase(str);
             }
+
+            // 默认值
+            field.DefaultValue = GetDataRowValue<String>(dr, "COLUMN_DEFAULT");
 
             // 描述
             field.Description = GetDataRowValue<String>(dr, "DESCRIPTION");
@@ -421,7 +424,7 @@ partial class DbMetaData
             {
                 case "Int64":
                     type = typeof(Int64);
-                    break; 
+                    break;
                 default:
                     type = typeof(Int32);
                     break;

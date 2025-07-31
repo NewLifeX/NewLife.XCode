@@ -372,16 +372,20 @@ internal class KingBaseMetaData : RemoteDbMetaData
                         field.ColumnName = $"{dc["ColumnName"]}";
                         field.RawType = $"{dc["DataType"]}";
                         field.Description = $"{dc["ColumnDescription"]}";
+                        //field.DefaultValue = dc["Default"] as String;
 
                         field.Identity = dc["IsIdentity"].ToBoolean();
                         field.PrimaryKey = dc["IsPrimaryKey"].ToBoolean();
                         field.Nullable = dc["IsNullable"].ToBoolean();
 
+                        //field.Precision = dc["Precision"].ToInt();
+                        //field.Scale = dc["Scale"].ToInt();
                         field.Length = dc["Length"].ToInt();
 
-                        var type = GetDataType(field);
-                        field.DataType = type;
+                        field.DataType = GetDataType(field)!;
+
                         field.Fix();
+
                         table.Columns.Add(field);
                     }
                 }

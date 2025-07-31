@@ -550,7 +550,7 @@ internal class SQLiteMetaData : FileDbMetaData
     }
 
     static readonly Regex _reg = new("""(?:^|,)\s*("[^"]+"|\[\w+\]|\w+)\s*(\w+(?:\(\d+(?:,\s*\d+)?\))?)\s*([^,]*)?""",
-        RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.IgnoreCase);   
+        RegexOptions.Singleline | RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline | RegexOptions.IgnoreCase);
     public void ParseColumns(IDataTable table, String sqlCreateTable)
     {
         if (sqlCreateTable.StartsWithIgnoreCase("create table"))
@@ -604,7 +604,7 @@ internal class SQLiteMetaData : FileDbMetaData
                     field.Scale = ns[1];
                 }
             }
-            field.DataType = GetDataType(field);
+            field.DataType = GetDataType(field)!;
 
             // 如果数据库里面是integer或者autoincrement，识别类型是Int64，又是自增，则改为Int32，保持与大多数数据库的兼容
             if (field.Identity && field.DataType == typeof(Int64) && field.RawType.EqualIgnoreCase("integer", "autoincrement"))
@@ -659,12 +659,13 @@ internal class SQLiteMetaData : FileDbMetaData
         foreach (var row in ds.Rows)
         {
             var field = table.CreateColumn();
-            field.ColumnName = row[1].ToString().Replace(" ", "");
-            field.RawType = row[2].ToString().Replace(" ", "");//去除所有空格
+            field.ColumnName = row[1]!.ToString().Replace(" ", "");
+            field.RawType = row[2]!.ToString().Replace(" ", "");//去除所有空格
             field.Nullable = row[3].ToInt() != 1;
+            field.DefaultValue = row[4] as String;
             field.PrimaryKey = row[5].ToInt() == 1;
 
-            field.DataType = GetDataType(field);
+            field.DataType = GetDataType(field)!;
             if (field.DataType == null)
             {
                 if (field.RawType.StartsWithIgnoreCase("varchar2", "nvarchar2")) field.DataType = typeof(String);

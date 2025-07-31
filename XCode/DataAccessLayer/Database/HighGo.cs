@@ -342,19 +342,23 @@ internal class HighGoMetaData : RemoteDbMetaData
                     {
                         var field = table.CreateColumn();
 
-                        field.ColumnName = $"{dc["ColumnName"]}";
-                        field.RawType = $"{dc["DataType"]}";
-                        field.Description = $"{dc["ColumnDescription"]}";
+                        field.ColumnName = dc["ColumnName"] + "";
+                        field.RawType = dc["DataType"] as String;
+                        field.Description = dc["ColumnDescription"] as String;
+                        //field.DefaultValue = dc["Default"] as String;
 
                         field.Identity = dc["IsIdentity"].ToBoolean();
                         field.PrimaryKey = dc["IsPrimaryKey"].ToBoolean();
                         field.Nullable = dc["IsNullable"].ToBoolean();
 
+                        //field.Precision = dc["Precision"].ToInt();
+                        //field.Scale = dc["Scale"].ToInt();
                         field.Length = dc["Length"].ToInt();
 
-                        var type = GetDataType(field);
-                        field.DataType = type;
+                        field.DataType = GetDataType(field)!;
+
                         field.Fix();
+
                         table.Columns.Add(field);
                     }
                 }
@@ -430,7 +434,8 @@ internal class HighGoMetaData : RemoteDbMetaData
     public override String DropTableDescriptionSQL(IDataTable table) => $"COMMENT ON TABLE {FormatName(table)} IS NULL";
     public override String AddColumnDescriptionSQL(IDataColumn field)
     {
-        if (String.IsNullOrEmpty(field.Description)) { return null; };
+        if (String.IsNullOrEmpty(field.Description)) { return null; }
+        ;
         return $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS '{field.Description}'";
     }
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS NULL";

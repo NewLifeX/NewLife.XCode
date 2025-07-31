@@ -363,7 +363,7 @@ internal class HanaMetaData : RemoteDbMetaData
 
     #region 架构
 
-    protected override List<IDataTable> OnGetTables(String[] names)
+    protected override List<IDataTable> OnGetTables(String[]? names)
     {
         var ss = Database.CreateSession();
         var db = Database.DatabaseName;
@@ -401,13 +401,14 @@ internal class HanaMetaData : RemoteDbMetaData
                     field.ColumnName = dc["Field"] + "";
                     field.RawType = dc["Type"] + "";
                     field.Description = dc["Comment"] + "";
+                    field.DefaultValue = dc["Default"] as String;
 
                     if (dc["Extra"] + "" == "auto_increment") field.Identity = true;
                     if (dc["Key"] + "" == "PRI") field.PrimaryKey = true;
                     if (dc["Null"] + "" == "YES") field.Nullable = true;
 
                     field.Length = field.RawType.Substring("(", ")").ToInt();
-                    field.DataType = GetDataType(field);
+                    field.DataType = GetDataType(field)!;
 
                     if (field.DataType == null)
                     {

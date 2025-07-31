@@ -479,7 +479,18 @@ internal class MySqlMetaData : RemoteDbMetaData
                         if (dc["COLUMN_KEY"] + "" == "PRI") field.PrimaryKey = true;
                         if (dc["IS_NULLABLE"] + "" == "YES") field.Nullable = true;
 
+                        // 精度 与 位数
+                        field.Precision = dc["NUMERIC_PRECISION"].ToInt();
+                        field.Scale = dc["NUMERIC_SCALE"].ToInt();
+                        field.DefaultValue = dc["COLUMN_DEFAULT"] as String;
+
                         field.Length = field.RawType.Substring("(", ")").ToInt();
+
+                        // 在MySql8.0中，COLUMN_TYPE取得的类型，数字类型已经没有圆括号精度，需要额外处理
+                        //if (field.Length == 0 && field.RawType.EqualIgnoreCase("int", "bigint", "tinyint", "datetime"))
+                        //{
+                        //    field.Precision = dc["NUMERIC_PRECISION"].ToInt();
+                        //}
 
                         var type = GetDataType(field);
                         if (type == null)
@@ -508,13 +519,14 @@ internal class MySqlMetaData : RemoteDbMetaData
                         field.ColumnName = dc["Field"] + "";
                         field.RawType = dc["Type"] + "";
                         field.Description = dc["Comment"] + "";
+                        field.DefaultValue = dc["Default"] as String;
 
                         if (dc["Extra"] + "" == "auto_increment") field.Identity = true;
                         if (dc["Key"] + "" == "PRI") field.PrimaryKey = true;
                         if (dc["Null"] + "" == "YES") field.Nullable = true;
 
                         field.Length = field.RawType.Substring("(", ")").ToInt();
-                        field.DataType = GetDataType(field);
+                        field.DataType = GetDataType(field)!;
 
                         if (field.DataType == null)
                         {

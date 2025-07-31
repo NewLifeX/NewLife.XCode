@@ -775,7 +775,7 @@ public static class ModelHelper
     /// <param name="dc"></param>
     /// <param name="oridc"></param>
     /// <returns></returns>
-    private static IDataColumn FixDefaultByType(this IDataColumn dc, IDataColumn? oridc)
+    public static IDataColumn FixDefaultByType(this IDataColumn dc, IDataColumn? oridc)
     {
         if (dc.DataType == null) return dc;
 
@@ -829,8 +829,8 @@ public static class ModelHelper
             case TypeCode.Decimal:
                 dc.RawType = "money";
                 dc.Nullable = false;
-                dc.Precision = 20;
-                dc.Scale = 4;
+                //dc.Precision = 20;
+                //dc.Scale = 4;
                 break;
             case TypeCode.String:
                 // 原来就是普通字符串，或者非ntext字符串，一律转nvarchar

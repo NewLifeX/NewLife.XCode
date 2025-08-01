@@ -38,9 +38,9 @@
   <ItemGroup>
     <PackageReference Include="IBM.Data.DB2.Core" Version="3.1.0.600" />
     <PackageReference Include="MySqlConnector" Version="2.4.0" />
-    <PackageReference Include="NewLife.Redis" Version="6.3.2025.701" />
-    <PackageReference Include="NewLife.Remoting" Version="3.3.2025.701" />
-    <PackageReference Include="NewLife.Stardust" Version="3.4.2025.701" />
+    <PackageReference Include="NewLife.Redis" Version="6.3.2025.801" />
+    <PackageReference Include="NewLife.Remoting" Version="3.4.2025.801" />
+    <PackageReference Include="NewLife.Stardust" Version="3.4.2025.801" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.1" />
     <PackageReference Include="SapHana.DotNetCore.Data.Provider" Version="2.11.14" />
     <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />

@@ -176,7 +176,8 @@ public class HtmlBuilder : ClassBuilder
             else
                 WriteLine("<td></td>");
 
-            if (column.Precision > 0 || column.Scale > 0)
+            var def = ModelHelper.FixDefaultByType(column.Clone(column.Table), column);
+            if (column.Precision > 0 && column.Precision != def.Precision || column.Scale > 0 && column.Scale != def.Scale)
                 WriteLine("<td>({0}, {1})</td>", column.Precision, column.Scale);
             else
                 WriteLine("<td></td>");

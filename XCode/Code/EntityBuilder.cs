@@ -720,7 +720,7 @@ public class EntityBuilder : ClassBuilder
         if (!dc.ItemType.IsNullOrEmpty()) sb.AppendFormat(", ItemType = \"{0}\"", dc.ItemType);
 
         // 支持生成带精度的特性
-        var def = ModelHelper.FixDefaultByType(dc.Clone(dc.Table) as IDataColumn, dc);
+        var def = ModelHelper.FixDefaultByType(dc.Clone(dc.Table), dc);
         if (dc.Precision > 0 && dc.Precision != def.Precision) sb.AppendFormat(", Precision = {0}", dc.Precision);
         if (dc.Scale > 0 && dc.Scale != def.Scale) sb.AppendFormat(", Scale = {0}", dc.Scale);
 

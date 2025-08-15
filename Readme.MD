@@ -1,4 +1,4 @@
-# NewLife.XCode - 数据中间件
+# NewLife.XCode - 数据中间件 / 超级ORM
 
 ![GitHub top language](https://img.shields.io/github/languages/top/newlifex/newlife.xcode?logo=github)
 ![GitHub License](https://img.shields.io/github/license/newlifex/newlife.xcode?logo=github)
@@ -6,97 +6,123 @@
 ![Nuget](https://img.shields.io/nuget/v/newlife.xcode?logo=nuget)
 ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/newlife.xcode?label=dev%20nuget&logo=nuget)
 
-数据中间件，聚焦于添删改查、性能和大数据，支持MySQL、SQLite、SqlServer、Oracle、Postgresql、TDengine、达梦、金仓、瀚高。  
+高性能 .NET 数据中间件，聚焦“添删改查 + 极致性能 + 海量数据”，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / 达梦 / 金仓 / 瀚高 / DB2 等。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
 
-XCode文档：[https://newlifex.com/xcode](https://newlifex.com/xcode)  
+文档：https://newlifex.com/xcode   社区交流QQ群：1600800 / 1600838
 
-## 快速拥有
+---
+## 目录
+- 1. 为什么选 XCode
+- 2. 安装与快速体验
+- 3. 架构与核心概念
+  - 3.1 模型与代码生成
+  - 3.2 实体运行时 (Meta / Session / Operate)
+  - 3.3 DAL 抽象层
+  - 3.4 查询 DSL 与 WhereExpression
+  - 3.5 多级缓存体系 (Meta.Count / EntityCache / SingleCache)
+  - 3.6 反向工程 & 迁移机制
+  - 3.7 分表分库 (ShardPolicy)
+  - 3.8 事务与缓存一致性
+  - 3.9 性能优化手段一览
+- 4. 快速入门（模型→代码→CRUD）
+- 5. 高级用法示例
+- 6. 索引 / 自动方法生成
+- 7. 分表分库示例
+- 8. 多数据库配置与容器化
+- 9. Benchmarks / 实战指标
+- 10. 常见问题（FAQ 精要）
+- 11. 生态矩阵
+- 12. 参与与贡献
+- 13. 许可证
 
-​	使用NewLife组件的最简便方式是从Nuget引用，例如在项目Nuget管理中搜索`NewLife.XCode` 并引入。
+---
+## 1. 为什么选 XCode
+- 化繁为简：90% 业务只需单表实体操作，无需手写 SQL。
+- 极致性能：核心主路径多级缓存 + 批量优化 + 内存联表，查询速度可远高于直接写 SQL。
+- 海量数据：原生分页与分表策略，正式项目单表百亿级，适配多种数据库分页算法。
+- 稳定成熟：20+ 年演进，广泛生产验证；保持对老版本 .NET Framework 的兼容（net45 起）。
+- 自动迁移：模型/实体即结构，新增字段上线自动同步，无需额外 SQL 脚本。
+- 分布式演进：原生表级 / 时间 / 主键分片策略，可平滑拆分扩容。
+- 可插拔：DAL 抽象 + Provider 分离，支持自定义数据库适配。
 
-​	NewLife组件由社区共创20多年，使用MIT开源协议，**任何人可任意修改并再次发行**（无需声明来源）！许多企业基于此构建内部开发框架时，甚至可通过批量替换源码中所有`NewLife`字符串为贵公司名实现私有化定制。
-
-​	团队始终秉承开放态度，不仅支持VisualStudio（最新正式版）打开解决方案编译，也兼容`dotnet build`命令行编译，项目文件摒弃复杂功能以追求简单易用，真正做到开箱即用。
-
-​	我们公开强命名证书`newlife.snk`以支持独自编译替换程序集。
-
-
-
-​	命令行中运行以下命令快速体验NewLife组件：
-
+---
+## 2. 安装与快速体验
+NuGet 引用（任一项目）：
+```
+dotnet add package NewLife.XCode
+```
+或使用模板脚手架：
 ```
 dotnet new install NewLife.Templates
-dotnet new xcode --name NewLife.Data
-cd NewLife.Data
+dotnet new xcode --name Demo.Data
+cd Demo.Data
 dotnet build
 ```
+> 强命名证书已内置（newlife.snk），可自行重编译用于企业私有框架。
 
+---
+## 3. 架构与核心概念
+XCode 采用“模型驱动 + 运行时元数据 + 多级缓存 + 可选分片”的分层架构。
 
-## 数据中间件
-功能特点：  
+### 3.1 模型与代码生成
+XML 模型 (Tables/Columns/Indexes) → 代码生成器（xcodetool 或 VS T4）→ 实体数据类(.cs) + 业务分部类(.Biz.cs)。
+- 数据类：每次生成覆盖，承载字段与基础查询。
+- 业务类：首次生成后不再覆盖，放置自定义逻辑。
+- 支持：索引、唯一约束、默认值、描述、扩展属性、自动方法（FindByXxx / Search）。
 
-#### 化繁为简
+### 3.2 实体运行时
+核心接口/类型：
+- IEntity / Entity：充血模型，封装字段、验证、生命周期。
+- IEntityOperate：静态操作入口（Find / FindAll / Query 等）。
+- EntityFactory：实体元数据缓存工厂。
+- EntitySession (Meta.Session)：实体在特定连接/表上的上下文，会话级缓存/统计。
+- Meta：实体静态上下文（表结构、字段、缓存、分片策略等）。
 
-建立XML数据模型后，经代码生成得到实体类，即可使用实体类对数据进行添删改查操作。
+### 3.3 DAL 抽象层
+- DAL / IDatabase / IDbSession：提供统一的数据库访问与元数据操作。
+- Migration 支持 (Off / ReadOnly / On / Full) 控制自动建库建表建字段。
+- CheckTables()：启动/首次访问按需异步或同步检查并同步结构。
 
-开发环境默认使用SQLite数据库，发布到生产环境时再配置连接字符串即可。
+### 3.4 查询 DSL
+- WhereExpression：链式 & / | / Contains / Between / Like 等表达式组合。
+- Find / FindAll / Query / PageFindAll 分页。
+- Pager / PageParameter：携带分页、排序、统计 TotalCount、数据权限扩展。
 
-日常项目中90%的功能开发无需掌握数据库和SQL，降低对开发者的能力要求，特别是Java等其它语言转过来的开发者。
+### 3.5 多级缓存体系
+针对“读多写少”模式设计：
+- Meta.Count：快速行数缓存（>1000 时走系统索引；SQLite 有 Max(自增) + 异步精准补偿）。
+- EntityCache (Meta.Cache.Entities)：整表缓存（小表 <1000 行推荐，>10000 行禁止）。
+- SingleCache (Meta.SingleCache[key])：主键/从键字典级单对象缓存，适合频繁点查用户等。
+- 过期策略：默认 60s。过期访问立即返回旧数据 + 异步刷新。写操作即时使缓存失效 / 更新。
+- 事务支持：事务中累积修改，提交/回滚后统一处理缓存清空或回滚。
 
-#### 多数据库迁移
+### 3.6 反向工程 & 迁移
+- 根据实体反向创建/修改表结构、索引，自动维持一致。
+- 支持任意数据库间模型抽取 + 跨库数据迁移（配套工具 DataMigration）。
 
-支持MySQL、SQLite、SqlServer、Oracle、Postgresql等各种主流数据库，基于XCode开发的应用无需修改编译即可迁移到另一种数据库上。甚至开发数据库和生产数据库是两种不同的数据库，例如常见SQLite开发，生产用MySql。
+### 3.7 分表分库 (ShardPolicy)
+- ShardPolicy 抽象，TimeShardPolicy 示例（按日期生成表名 Table_yyyyMMdd）。
+- 透明路由：业务层仍调用 Find / Insert / Update，不关心实际表名。
+- 可定制主键哈希 / 时间 / 范围等策略。
 
-#### 高性能
+### 3.8 事务与缓存一致性
+- 非事务：写操作立即使相关缓存过期并异步重建，同时尝试直接更新内存对象保持读写一致。
+- 事务中：暂不清空整表缓存，仅对命中对象做局部变更；提交后统一清空或刷新，回滚撤销变更。
 
-极致的多级缓存设计，批量操作优化，单机**插入速度最高89万tps，查询速度最高18亿qps**。[飞仙](http://feixian.newlifex.com)  
+### 3.9 性能优化手段一览
+- 多级缓存：避免热点查询落库。
+- 批量写：合并多字段与多记录操作（内部优化）。
+- 分页算法：针对不同 DB / 版本选择最优策略。
+- 惰性/异步：行数、模型检查、缓存刷新均可异步。
+- 反射缓存 / 委托加速：实体属性访问器预热。
+- 内存关联：先缓存主表，再在内存中做“伪联表”。
 
-单表查询配合内存关联（带数据缓存），降低系统复杂度并提升性能。
-
-#### 大数据
-
-正式项目最大**单表100亿数据**，分页查询的思想贯穿上下。
-
-根据模型表的索引自动生成各种高效的查询方法，让开发者无惧大数据表。
-
-#### 自动分表分库
-
-支持任意数据库按策略自动分表分库，无需修改业务代码，XCode能够自动找到正确的表。
-
-例如星尘跟踪数据按天分表，配置分表策略后，其它添删改查操作跟单表一样：
-
-```c#
-Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
-{
-    ConnPolicy = "{0}",
-    TablePolicy = "{0}_{1:yyyyMMdd}",
-    Step = TimeSpan.FromDays(1),
-};
-```
-
-#### 反向工程
-
-根据实体类主动建立数据库表结构并初始化数据（支持所有数据库），开发阶段新增字段，在发布到生产后自动新增，开发者无需准备SQL发布脚本。
-
-#### 跨库数据迁移
-
-支持任意数据库进行数据迁移。[跨库数据迁移工具](https://github.com/qaz734913414/DataMigration)  
-
-
-
-## 快速入门
-
-### 新建项目
-
-打开[Visual Studio](https://x.newlifex.com/vs2022.exe)，新建一个控制台项目，从Nuget引入**NewLife.XCode**。
-
-### 新建模型
-
-在项目目录下编写一个简单Xml模型文件db.xml，或者下载[xcodetool.exe](http://x.newlifex.com/xcodetool.exe)保存到项目目录，运行xcodetool.exe即可得到一个样本模型文件。
-
+---
+## 4. 快速入门
+### 4.1 创建模型 (db.xml)
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<Tables Version="9.6.6644.19804" Output="MyEntity" NameSpace="Model" BaseClass="Entity" ConnName="DB">
+<Tables Version="1.0" Output="MyEntity" NameSpace="Model" BaseClass="Entity" ConnName="DB">
   <Table Name="UserInfo" Description="用户信息">
     <Columns>
       <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="会员id" />
@@ -107,194 +133,165 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
   </Table>
 </Tables>
 ```
-双击xml文件旁边的[xcodetool.exe](https://x.newlifex.com/xcodetool.exe)，这时你会看到生成一个MyEntity文件目录，目录包含了两个文件：用户信息.Biz.cs、用户信息.cs。 “用户信息.cs” 一般称为数据类，每次代码生成都会覆盖，“用户信息.Biz.cs”称为业务类，首次生成后不再覆盖，适合用户在其中写代码。
+### 4.2 代码生成
+- 下载 xcodetool.exe 置于目录并双击，或：`dotnet tool install xcodetool -g --prerelease` → `xcode db.xml`。
+- 生成：用户信息.cs（数据类，可覆盖） + 用户信息.Biz.cs（业务类，不再覆盖）。
 
-如果不用xcodetool.exe，也可以从Nuget安装全局工具：`dotnet tool install xcodetool -g --prerelease`。
-
-然后在项目目录下执行命令：`xcode db.xml`
-
-### 增删改查
-* Program.cs文件最上面引用命名空间
-```c#
+### 4.3 CRUD 示例
+```csharp
 using XCode;
-```
-不然会使用不了Save、Update、Delete等扩展方法。
 
-* 新增一条数据。注：这里没有指定数据库，所以XCode默认的是sqlite数据库。代码完成后可以直接运行看效果。
+var user = new UserInfo { UserName="张三", Password="123456", Age=18 };
+user.Insert();
+
+var u2 = UserInfo.FindById(user.Id);
+u2.Age = 19; 
+u2.Update();
+
+var list = UserInfo.FindAll(UserInfo._.Age > 10 & UserInfo._.UserName == "张三");
+UserInfo.FindById(user.Id)?.Delete();
+```
+> 使用缓存时：实体数 <1000 → 整表缓存；否则普通查询 / 单对象缓存。
+
+---
+## 5. 高级用法
+### 5.1 动态条件 / 分页
+```csharp
+public static IList<UserInfo> Search(String name, Int32 age, Pager p)
+{
+    var exp = new WhereExpression();
+    if (!name.IsNullOrEmpty()) exp &= UserInfo._.UserName == name;
+    if (age > 0) exp &= UserInfo._.Age == age;
+    return UserInfo.FindAll(exp, p);
+}
+```
+### 5.2 指定更新字段（绕过缓存，不推荐常规使用）
+```csharp
+UserInfo.Update(UserInfo._.UserName == "李四" & UserInfo._.Age == 18, UserInfo._.Id == 1);
+```
+### 5.3 自定义排序与列投影
+```csharp
+var list = UserInfo.FindAll(UserInfo._.Age > 10, " Age DESC,Id ASC",
+    string.Join(",", UserInfo._.UserName, UserInfo._.Age), 0, 20);
+```
+
+---
+## 6. 索引 / 自动方法
+在模型添加：
+```xml
+<Indexes>
+  <Index Columns="UserName" Unique="True" />
+  <Index Columns="UserName,Age" />
+</Indexes>
+```
+重新生成后自动出现：`FindByUserName`、组合条件辅助方法 / Search 模板。
+实体缓存策略：`Meta.Session.Count < 1000` 使用内存集合查找。否则走数据库或单对象缓存。
+
+---
+## 7. 分表分库示例
+```csharp
+Meta.ShardPolicy = new TimeShardPolicy(nameof(UserInfo.Id), Meta.Factory)
+{
+    ConnPolicy = "{0}",           // 可自定义库名策略
+    TablePolicy = "{0}_{1:yyyyMMdd}", // 表名模板
+    Step = TimeSpan.FromDays(1)
+};
+```
+其余 Insert / Query 等代码保持不变，自动路由到对应日期表。
+
+---
+## 8. 多数据库配置与容器化
+- 默认开发 SQLite（零配置）。
+- 发布时在配置文件或环境变量：`XCode_{ConnName}`。
+- 连接字符串需包含 provider 标识（例：`provider=MySql;server=...;user=...;password=...;database=...;`）。
+- 支持在同一进程中混用多个数据库连接名称（ConnName）。
+
+---
+## 9. Benchmarks / 实战指标（节选）
+| 能力 | 指标（典型环境） | 说明 |
+| ---- | ---------------- | ---- |
+| 单机 Insert | 最高 ~89 万 TPS | 批量 / 缓存 + SQLite / 内存盘组合测试 |
+| 单机 Query | 最高 ~18 亿 QPS | 小表 + 实体缓存 / 单对象缓存场景 |
+| 单表数据量 | 生产百亿级 | 分页 + 分表策略 |
+> 实际性能取决于数据库类型 / 硬件 / 分表策略 / 缓存命中率。
+
+---
+## 10. FAQ 精要
+- 为什么第一次 Count 很快？Meta.Count 走系统索引；SQLite 首次可能取自增最大值再异步精确。
+- 数据更新后多久缓存一致？本进程写操作立即反映；跨进程需等缓存过期或主动失效策略。
+- 可否关闭自动迁移？设置 Migration=Off，或按需使用 ReadOnly/On/Full。
+- 复杂多表查询？推荐多次单表 + 内存关联（缓存命中更快 & 结构更清晰）。
+
+---
+## 11. 生态矩阵（节选）
+| 组件 | 说明 |
+| ---- | ---- |
+| NewLife.Core | 基础能力：日志 / 配置 / 缓存 / 序列化 / APM / 网络 |
+| NewLife.Cube | 快速开发平台 + 后台管理（内置代码生成 + 权限）|
+| NewLife.Redis | 高性能 Redis 客户端与多功能消息队列 |
+| Stardust | 分布式服务平台：注册 / 配置 / 追踪 / 发布中心 |
+| AntJob | 分布式任务 & 大数据离线/实时处理 |
+| ... | 详见下文项目矩阵 |
+
+---
+## 12. 参与与贡献
+欢迎提交 Issue / PR：
+- 优化性能 / 新增数据库 Provider / 改进文档。
+- 请遵循仓库 .github/copilot-instructions 中代码规范（强命名、多 TFM、XML 注释、条件编译）。
+- 公共 API 变更需给出迁移策略（Obsolete → 移除）。
+
+开发构建：
+```
+dotnet restore
+dotnet build -c Release
+```
+可在 Test / XUnitTest.XCode 中补充案例；性能相关建议附基准或说明。
+
+---
+## 13. 许可证
+MIT，完全开放。允许商用 / 修改 / 再发行（可替换“NewLife”为企业品牌实现私有化）。
+
+---
+## 追加：原始快速示例（保留）
+
+### 增删改查（原示例）
 ```csharp
 var user = new UserInfo();
 user.UserName = "张三";
 user.Password = "123456";
 user.Age = 18;
 user.Insert();
-//user.Save()等效
-
 Console.WriteLine("插入一条新数据，用户id为：" + user.Id);
-```
-* 修改一条数据
-```csharp
-var user = UserInfo.FindById(1);
-user.UserName = "张三";
-user.Password = "123456";
-user.Age = 19;
-user.Update();
-//user.Save()等效
 
-user = UserInfo.FindById(1);
-Console.WriteLine($"用户ID={user.Id}已修改岁数，岁数为：{user.Age}");
-```
-* 删除一条数据
-```csharp
-var user = UserInfo.FindById(1);
-user.Delete();
+var u = UserInfo.FindById(1);
+u.UserName = "张三";
+u.Password = "123456";
+u.Age = 19;
+u.Update();
 
-user = UserInfo.FindById(1);
-Console.WriteLine("用户" + (user == null ? "已删除" : "还存在"));
-```
-* 查询数据，查询是一个十分复杂的需求，这里只举一些简单的例子
-```csharp
-// 根据Id查询用户信息
-var userId = 2;
-var user = UserInfo.FindById(userId);
-Console.WriteLine($"ID为{user.Id}用户姓名为：{user.UserName}");
-
-// 根据用户名称查询
-var userList = UserInfo.FindAll(UserInfo._.UserName == "张三");
-Console.WriteLine($"查询符合姓名为张三的记录有{userList.Count}");
-
-// 多复合条件查询
-userList = UserInfo.FindAll(UserInfo._.UserName == "张三" & UserInfo._.Age == 19);
-Console.WriteLine($"查询符合姓名为张三年龄为19的记录有{userList.Count}");
+u = UserInfo.FindById(1);
+Console.WriteLine($"用户ID={u.Id}已修改岁数，岁数为：{u.Age}");
 ```
 
-### 高级用法
-更新某些字段。在“用户信息.Biz.cs”中新增方法写以下代码会更简洁，内置_类无需类名前缀。
-
+### 复杂查询（原示例）
 ```csharp
-UserInfo.Update(UserInfo._.UserName == "李四" & UserInfo._.Age == 18, UserInfo._.Id == 1);
-// 相当于Update UserInfo Set UserName='李四' And Age=18 Where Id=1
-// 绕过了缓存，不推荐这种写法。建议先查出来对象，然后修改并Update回去
+var list = UserInfo.FindAll(UserInfo._.UserName == "张三" & UserInfo._.Age == 19, UserInfo._.UserName.Desc(), string.Join(",", UserInfo._.UserName, UserInfo._.Age), 0, 0);
 ```
 
-复杂的查询语句
-
+### 索引查询（原示例）
 ```csharp
-var userList = UserInfo.FindAll(UserInfo._.UserName == "张三" & UserInfo._.Age == 19, UserInfo._.UserName.Desc(), string.Join(",", UserInfo._.UserName, UserInfo._.Age), 0, 0);
-// 相当于Select UserName,Age From UserInfo Where UserName='张三' And Age=19 Order By  UserName desc
-```
-
-带分页排序的复杂查询  
-一般写在实体类业务文件（.Biz.cs）里面，可以直接使用实体类内置_类而无需加类名前缀。
-
-```csharp
-public static IList<UserInfo> Search(String name, Int32 age, Pager p)
+public static UserInfo FindByUserName(String userName)
 {
-    // 多条件复杂查询
-    var exp = new WhereExpression();
-    if(!name.IsNullOrEmpty()) exp &= _.UserName == name;
-    if(age > 0) exp &= _.Age == age;
-
-    return FindAll(exp, p);
-}
-
-void Test()
-{
-    // 默认第一页，每页20行。魔方NewLife.Cube自动从页面Request获取以下参数
-    var p = new Pager();
-    p.PageIndex = 3;
-    p.PageSize = 10;
-    p.Sort = UserInfo.__.Age;
-    p.Desc = true;
-
-    // 需要总记录数来分页，FindAll后p.TotalCount有总记录数，用于计算页数PageCount
-    p.RetrieveTotalCount = true;
-
-    // 相当于Select * From UserInfo Where UserName='张三' And Age=19 Order By Age Desc limit 20, 10
-    var list = UserInfo.Search("张三", 19, p);
+    if (userName.IsNullOrEmpty()) return null;
+    if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserName.EqualIgnoreCase(userName));
+    return Find(_.UserName == userName);
 }
 ```
-复合排序的分页查询语句
 
-```csharp
-var pageIndex = 2;//第二页
-var pageSize = 10;//每页十行
-
-var userList = UserInfo.FindAll(UserInfo._.UserName == "张三" & UserInfo._.Age == 19, " UserName desc,Age asc", string.Join(",", UserInfo._.UserName, UserInfo._.Age), (pageIndex - 1) * pageSize, pageSize);
-//相当于Select UserName,Age From UserInfo Where UserName='张三' And Age=19 Order By UserName desc,Age asc limit 10, 10
-```
-
-### 索引查询
-
-修改XML模型文件，增加索引。
-
-```xml
-  <Tables>
-    <Table Name="UserInfo" Description="用户信息">
-      <Columns>
-        <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="会员id" />
-        <Column Name="UserName" DataType="String" Nullable="False" Description="会员名称" />
-        <Column Name="Password" DataType="String" Nullable="False" Description="会员密码" />
-        <Column Name="Age" DataType="Int32" Description="会员年龄" />
-      </Columns>
-      <Indexes>
-        <Index Columns="UserName" Unique="True" />
-        <Index Columns="UserName,Age" />
-      </Indexes>
-    </Table>
-  </Tables>
-```
-
-再次运行xcodetool.exe，即可看到，“用户信息.cs”增加了FindByUserName方法。此处不建议认为修改，下次代码生成会覆盖。
-
-```csharp
-    /// <summary>根据会员名称查找</summary>
-    /// <param name="userName">会员名称</param>
-    /// <returns>实体对象</returns>
-    public static UserInfo FindByUserName(String userName)
-    {
-        if (userName.IsNullOrEmpty()) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserName.EqualIgnoreCase(userName));
-
-        return Find(_.UserName == userName);
-    }
-```
-
-“用户信息.Biz.cs”中增加了Search方法。在Biz业务类中，这个代码可以根据需要修改调整，代码生成器不会覆盖。
-
-```csharp
-    /// <summary>高级查询</summary>
-    /// <param name="userName">会员名称</param>
-    /// <param name="age">会员年龄</param>
-    /// <param name="key">关键字</param>
-    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
-    /// <returns>实体列表</returns>
-    public static IList<UserInfo> Search(String userName, Int32 age, String key, PageParameter page)
-    {
-        var exp = new WhereExpression();
-
-        if (!userName.IsNullOrEmpty()) exp &= _.UserName == userName;
-        if (age >= 0) exp &= _.Age == age;
-        if (!key.IsNullOrEmpty()) exp &= _.UserName.Contains(key) | _.Password.Contains(key);
-
-        return FindAll(exp, page);
-    }
-```
-
-
-
-## 容器化部署
-
-XCode 支持从环境变量中获取数据库连接字符串，用于容器化部署。  
-连接字符串的环境变量命名规范为 `XCode_{ConnName}`，不区分大小写，连接字符串中需要使用provider指定数据库类型。  
-
-
-
+---
 # 新生命项目矩阵
 
 各项目默认支持net8.0/netstandard2.1/netstandard2.0/net4.61/net4.5，旧版（2023.0308）支持net4.0/net2.0  
-
 |                               项目                               | 年份  | 说明                                                                                   |
 | :--------------------------------------------------------------: | :---: | -------------------------------------------------------------------------------------- |
 |                             基础组件                             |       | 支撑其它中间件以及产品项目                                                             |
@@ -327,21 +324,17 @@ XCode 支持从环境变量中获取数据库连接字符串，用于容器化�
 |                           菲凡物联FIoT                           | 2020  | 物联网整体解决方案，建筑、环保、农业，软硬件及大数据分析一体化，单机十万级点位项目验证 |
 |                           NewLife.UWB                            | 2020  | 厘米级（10~20cm）高精度室内定位，软硬件一体化，与其它系统联动，大型展厅项目验证        |
 
-
-
+---
 # 新生命开发团队
+![XCode](https://newlifex.com/logo.png)
 
-![XCode](https://newlifex.com/logo.png)  
+新生命团队（NewLife）成立于2002年，是新时代物联网行业解决方案提供者，致力于提供软硬件应用方案咨询、系统架构规划与开发服务。NuGet 累计下载 413万+。团队核心组件（XCode / Redis / Stardust / AntJob / IoT 等）已在电力、工业、交通、环保、医疗、文博等行业大规模应用。
 
-新生命团队（NewLife）成立于2002年，是新时代物联网行业解决方案提供者，致力于提供软硬件应用方案咨询、系统架构规划与开发服务。  
-团队主导的开源NewLife系列组件已被广泛应用于各行业，Nuget累计下载量高达260余万次。  
-团队开发的大数据核心组件NewLife.XCode、蚂蚁调度计算平台AntJob、星尘分布式平台Stardust、缓存队列组件NewLife.Redis以及物联网平台NewLife.IoT，均成功应用于电力、高校、互联网、电信、交通、物流、工控、医疗、文博等行业，为客户提供了大量先进、可靠、安全、高质量、易扩展的产品和系统集成服务。  
+我们持续改进，力求成为值得长期信赖的 .NET / IoT / 分布式技术伙伴。
 
-我们将不断通过服务的持续改进，成为客户长期信赖的合作伙伴，通过不断的创新和发展，成为国内优秀的IT服务供应商。  
-
-`新生命团队始于2002年，部分开源项目具有20年以上漫长历史，源码库保留有2010年以来所有修改记录`  
-网站：https://newlifex.com  
-开源：https://github.com/newlifex  
-QQ群：1600800/1600838  
+网站：https://newlifex.com   开源组织：https://github.com/NewLifeX  
 微信公众号：  
-![智能大石头](https://newlifex.com/stone.jpg)  
+![智能大石头](https://newlifex.com/stone.jpg)
+
+---
+> 如果本项目对你有帮助，欢迎 Star、分享给团队，或通过 Issue/PR 反馈改进建议。

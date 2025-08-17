@@ -58,6 +58,26 @@ public class TimeShardPolicy : IShardPolicy
     private FieldItem? GetField() => Field ??= _fieldName == null ? null : Factory?.Table.FindByName(_fieldName);
     #endregion
 
+    private StatLevels GetLevel()
+    {
+        var level = Level;
+        if (level <= 0)
+        {
+            var st = Step;
+            if (st.TotalDays >= 360)
+                level = StatLevels.Year;
+            else if (st.TotalDays >= 28 && st.TotalDays <= 31)
+                level = StatLevels.Month;
+            else if (st.TotalDays == 1)
+                level = StatLevels.Day;
+            else if (st.TotalHours == 1)
+                level = StatLevels.Hour;
+            Level = level;
+        }
+
+        return level;
+    }
+
     /// <summary>为实体对象、时间、雪花Id等计算分表分库</summary>
     /// <param name="value"></param>
     /// <returns></returns>
@@ -122,11 +142,12 @@ public class TimeShardPolicy : IShardPolicy
         var table = Factory.Table;
 
         // 这里不区分时区，而是直接使用时间
-        var model = new ShardModel();
-        if (!ConnPolicy.IsNullOrEmpty()) model.ConnName = String.Format(ConnPolicy, table.ConnName, time);
-        if (!TablePolicy.IsNullOrEmpty()) model.TableName = String.Format(TablePolicy, table.TableName, time);
+        String? connName = null;
+        String? tableName = null;
+        if (!ConnPolicy.IsNullOrEmpty()) connName = String.Format(ConnPolicy, table.ConnName, time);
+        if (!TablePolicy.IsNullOrEmpty()) tableName = String.Format(TablePolicy, table.TableName, time);
 
-        return model;
+        return new(connName, tableName);
     }
 
     /// <summary>从时间区间中计算多个分表分库，支持倒序。步进由Step指定，默认1天</summary>
@@ -191,12 +212,21 @@ public class TimeShardPolicy : IShardPolicy
                         {
                             end = time;
 
-                            // 不等于时，减少1秒
-                            if (ef.Action == "<") end = end.AddSeconds(-1);
+                            //// 不等于时，减少1秒
+                            //if (ef.Action == "<") end = end.AddSeconds(-1);
                         }
                     }
 
-                    return GetModels(start, end);
+                    var models = GetModels(start, end);
+
+                    // 如果只有一个分表模型，且时间是该时间段首尾，则自动去掉expression表达式中的Start/End条件
+                    if (expression is WhereExpression where2 && sf.Action == ">=" && ef?.Action == "<"
+                        && models.Length == 1 && IsFull(models[0], start, end))
+                    {
+                        Trim(where2, sf, ef);
+                    }
+
+                    return models;
                 }
             }
         }
@@ -219,7 +249,15 @@ public class TimeShardPolicy : IShardPolicy
                         end = time2;
                     }
 
-                    return GetModels(start, end);
+                    var models = GetModels(start, end);
+
+                    // 如果只有一个分表模型，且时间是该时间段首尾，则自动去掉expression表达式中的Start/End条件
+                    if (expression is WhereExpression where2 && models.Length == 1 && IsFull(models[0], start, end))
+                    {
+                        Trim(where2, sf, ef);
+                    }
+
+                    return models;
                 }
             }
 
@@ -244,18 +282,7 @@ public class TimeShardPolicy : IShardPolicy
 
         // 猜测时间步进级别
         var st = Step;
-        var level = Level;
-        if (level <= 0)
-        {
-            if (st.TotalDays >= 360)
-                level = StatLevels.Year;
-            else if (st.TotalDays >= 28 && st.TotalDays <= 31)
-                level = StatLevels.Month;
-            else if (st.TotalDays == 1)
-                level = StatLevels.Day;
-            else if (st.TotalHours == 1)
-                level = StatLevels.Hour;
-        }
+        var level = GetLevel();
 
         // 根据步进，把start调整到整点
         if (st.TotalDays >= 1)
@@ -278,27 +305,7 @@ public class TimeShardPolicy : IShardPolicy
             }
 
             // 根据时间步进级别调整时间，解决每月每年时间不固定的问题
-            if (level == StatLevels.Year)
-            {
-                dt = dt.AddYears(1);
-                dt = new DateTime(dt.Year, 1, 1);
-            }
-            else if (level == StatLevels.Month)
-            {
-                dt = dt.AddMonths(1);
-                dt = new DateTime(dt.Year, dt.Month, 1);
-            }
-            else if (level == StatLevels.Day)
-            {
-                dt = dt.AddDays(1).Date;
-            }
-            else if (level == StatLevels.Hour)
-            {
-                dt = dt.AddHours(1);
-                dt = dt.Date.AddHours(dt.Hour);
-            }
-            else
-                dt = dt.Add(st);
+            dt = GetNext(level, dt, st);
         }
 
         //// 标准时间区间 start <= @fi < end ，但是要考虑到end有一部分落入新的分片，减一秒判断
@@ -316,5 +323,80 @@ public class TimeShardPolicy : IShardPolicy
         //}
 
         return models.ToArray();
+    }
+
+    private DateTime GetNext(StatLevels level, DateTime dt, TimeSpan span)
+    {
+        if (level == StatLevels.Year)
+        {
+            dt = dt.AddYears(1);
+            dt = new DateTime(dt.Year, 1, 1);
+        }
+        else if (level == StatLevels.Month)
+        {
+            dt = dt.AddMonths(1);
+            dt = new DateTime(dt.Year, dt.Month, 1);
+        }
+        else if (level == StatLevels.Day)
+        {
+            dt = dt.AddDays(1).Date;
+        }
+        else if (level == StatLevels.Hour)
+        {
+            dt = dt.AddHours(1);
+            dt = dt.Date.AddHours(dt.Hour);
+        }
+        else
+            dt = dt.Add(span);
+
+        return dt;
+    }
+
+    private Boolean IsFull(ShardModel model, DateTime start, DateTime end)
+    {
+        var level = GetLevel();
+        var dt = GetNext(level, start, Step);
+        switch (level)
+        {
+            case StatLevels.Year:
+                return dt == end && dt.AddYears(-1) == start;
+            case StatLevels.Month:
+                return dt == end && dt.AddMonths(-1) == start;
+            case StatLevels.Day:
+                return dt == end && dt.AddDays(-1) == start;
+            case StatLevels.Hour:
+                return dt == end && dt.AddHours(-1) == start;
+            default:
+                break;
+        }
+
+        return false;
+    }
+
+    private void Trim(WhereExpression where, FieldExpression fieldStart, FieldExpression? fieldEnd)
+    {
+        {
+            if (where.Left is FieldExpression fe)
+            {
+                if (fe == fieldStart || fe == fieldEnd)
+                    where.Left = null!;
+            }
+            if (where.Left is WhereExpression where2)
+            {
+                Trim(where2, fieldStart, fieldEnd);
+            }
+        }
+
+        {
+            if (where.Right is FieldExpression fe)
+            {
+                if (fe == fieldStart || fe == fieldEnd)
+                    where.Right = null!;
+            }
+            if (where.Right is WhereExpression where2)
+            {
+                Trim(where2, fieldStart, fieldEnd);
+            }
+        }
     }
 }

@@ -63,7 +63,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns>实体数组</returns>
     public static IList<TEntity> LoadData(DataSet ds)
     {
-        if (ds == null || ds.Tables.Count <= 0) return new List<TEntity>();
+        if (ds == null || ds.Tables.Count <= 0) return [];
 
         return LoadData(ds.Tables[0]);
     }
@@ -73,7 +73,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns>实体数组</returns>
     public static IList<TEntity> LoadData(DataTable dt)
     {
-        if (dt == null) return new List<TEntity>();
+        if (dt == null) return [];
 
         var list = Meta.Factory.Accessor.LoadData<TEntity>(dt);
         OnLoadData(list);
@@ -86,7 +86,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns>实体数组</returns>
     public static IList<TEntity> LoadData(DbTable ds)
     {
-        if (ds == null) return new List<TEntity>();
+        if (ds == null) return [];
 
         var list = Meta.Factory.Accessor.LoadData<TEntity>(ds);
         OnLoadData(list);
@@ -99,7 +99,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <returns>实体数组</returns>
     public static IList<TEntity> LoadData(IDataReader dr)
     {
-        if (dr == null) return new List<TEntity>();
+        if (dr == null) return [];
 
         var list = Meta.Factory.Accessor.LoadData<TEntity>(dr);
         OnLoadData(list);
@@ -964,7 +964,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                 {
                     // 最大可用行数改为实际最大可用行数
                     var max = (Int32)Math.Min(maximumRows, count - startRowIndex);
-                    if (max <= 0) return new List<TEntity>();
+                    if (max <= 0) return [];
 
                     var start = (Int32)(count - (startRowIndex + maximumRows));
                     var builder2 = CreateBuilder(where, order2, selects);
@@ -1114,7 +1114,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                 rows = session.LongCount;
             else
                 rows = FindCount(where, null, selects, 0, 0);
-            if (rows <= 0) return new List<TEntity>();
+            if (rows <= 0) return [];
 
             page.TotalCount = rows;
         }
@@ -1287,7 +1287,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                 {
                     // 最大可用行数改为实际最大可用行数
                     var max = (Int32)Math.Min(maximumRows, count - startRowIndex);
-                    if (max <= 0) return new List<TEntity>();
+                    if (max <= 0) return [];
 
                     var start = (Int32)(count - (startRowIndex + maximumRows));
                     var builder2 = CreateBuilder(where, order2, selects);
@@ -1390,7 +1390,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                 rows = session.LongCount;
             else
                 rows = await FindCountAsync(where, null, selects, 0, 0).ConfigureAwait(false);
-            if (rows <= 0) return new List<TEntity>();
+            if (rows <= 0) return [];
 
             page.TotalCount = rows;
         }
@@ -1454,8 +1454,12 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (!builder.GroupBy.IsNullOrEmpty()) builder.Column = selects;
 
         // 自动分表
-        var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
+        var where2 = where is WhereExpression we ? we?.Clone() : where;
+        var shards = Meta.InShard || where2 == null ? null : Meta.ShardPolicy?.Shards(where2);
         if (shards == null || shards.Length == 0) return await session.QueryCountAsync(builder).ConfigureAwait(false);
+
+        // Shards内部可能改变了Where条件，为了避免影响后续FindAll，因此这里克隆一份
+        builder.Where = where2?.GetString(db, ps);
 
         var rs = 0L;
         foreach (var shard in shards)
@@ -1536,8 +1540,12 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (!builder.GroupBy.IsNullOrEmpty()) builder.Column = selects;
 
         // 自动分表
-        var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
+        var where2 = where is WhereExpression we ? we?.Clone() : where;
+        var shards = Meta.InShard || where2 == null ? null : Meta.ShardPolicy?.Shards(where2);
         if (shards == null || shards.Length == 0) return session.QueryCount(builder);
+
+        // Shards内部可能改变了Where条件，为了避免影响后续FindAll，因此这里克隆一份
+        builder.Where = where2?.GetString(db, ps);
 
         var rs = 0L;
         foreach (var shard in shards)

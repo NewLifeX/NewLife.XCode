@@ -476,6 +476,31 @@ public class ShardTests
         Assert.NotNull(shards);
         Assert.Single(shards);
         Assert.Equal("Log2_20240529", shards[0].TableName);
+
+        //Assert.False(where.IsEmpty);
+        //Assert.Equal("CreateTime>='2024-05-29 00:00:00' And CreateTime<'2024-05-30 00:00:00'", where.ToString());
+    }
+
+    [Fact]
+    public void ExpressionShardsFullDay()
+    {
+        var policy = new TimeShardPolicy(Log2._.CreateTime, Log2.Meta.Factory)
+        {
+            TablePolicy = "{0}_{1:yyyyMMdd}",
+        };
+
+        var start = "2024-05-29".ToDateTime();
+        var end = start.AddDays(1);
+        var fi = policy.Field;
+        var where = fi >= start & fi < end;
+
+        var shards = policy.Shards(where);
+        Assert.NotNull(shards);
+        Assert.Single(shards);
+        Assert.Equal("Log2_20240529", shards[0].TableName);
+
+        Assert.True(where.IsEmpty);
+        Assert.Equal("", where.ToString());
     }
 
     [Fact]

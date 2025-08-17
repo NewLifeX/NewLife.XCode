@@ -87,14 +87,14 @@ public class WhereExpression : Expression, IEnumerable<Expression>
         builder.Append(sb.Return(true));
     }
 
-    private void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object> ps, Expression exp)
+    private void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object>? ps, Expression exp)
     {
-        exp = Flatten(exp);
-        if (exp == null || exp.IsEmpty) return;
+        var exp2 = Flatten(exp);
+        if (exp2 == null || exp2.IsEmpty) return;
 
         // 递归构建，下级运算符优先级较低时加括号
         var bracket = false;
-        if (exp is WhereExpression where)
+        if (exp2 is WhereExpression where)
         {
             //if (where.IsEmpty) return;
 
@@ -102,14 +102,14 @@ public class WhereExpression : Expression, IEnumerable<Expression>
         }
 
         if (bracket) builder.Append('(');
-        exp.GetString(db, builder, ps);
+        exp2.GetString(db, builder, ps);
         if (bracket) builder.Append(')');
     }
 
     /// <summary>拉平表达式，避免空子项</summary>
     /// <param name="exp"></param>
     /// <returns></returns>
-    private Expression Flatten(Expression exp)
+    private Expression? Flatten(Expression exp)
     {
         if (exp == null) return null;
 
@@ -125,6 +125,15 @@ public class WhereExpression : Expression, IEnumerable<Expression>
 
         return exp;
     }
+
+    /// <summary>克隆表达式</summary>
+    /// <returns></returns>
+    public WhereExpression Clone() => new()
+    {
+        Left = Left is WhereExpression whl ? whl.Clone() : Left,
+        Right = Right is WhereExpression whr ? whr.Clone() : Right,
+        Operator = Operator
+    };
 
     ///// <summary>访问表达式</summary>
     ///// <param name="visitor"></param>

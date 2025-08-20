@@ -230,6 +230,7 @@ internal class PostgreSQL : RemoteDb
     public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
     {
         if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, 0);
+
         var xWhere = String.Empty;
         var xTable = FormatName(tableName);
         if (!String.IsNullOrWhiteSpace(where)) xWhere = " Where " + where;

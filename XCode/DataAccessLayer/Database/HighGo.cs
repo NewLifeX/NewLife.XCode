@@ -44,9 +44,9 @@ internal class HighGo : RemoteDb
     public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
     {
         if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, 0);
-        var sb = Pool.StringBuilder.Get();
+
         var xWhere = String.Empty;
-        var xTable = this.FormatName(tableName);
+        var xTable = FormatName(tableName);
         if (!String.IsNullOrWhiteSpace(where)) xWhere = " Where " + where;
         var sql = $"WITH to_delete AS (SELECT \"ctid\" FROM {xTable} {xWhere} LIMIT {batchSize}) ";
         sql += $"DELETE FROM {xTable} where \"ctid\" in (SELECT \"ctid\" from to_delete)";

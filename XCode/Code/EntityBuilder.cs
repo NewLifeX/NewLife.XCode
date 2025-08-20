@@ -1022,8 +1022,9 @@ public class EntityBuilder : ClassBuilder
         WriteLine("/// <summary>清理指定时间段内的数据</summary>");
         WriteLine("/// <param name=\"start\">开始时间。未指定时清理小于指定时间的所有数据</param>");
         WriteLine("/// <param name=\"end\">结束时间</param>");
+        WriteLine("/// <param name=\"maximumRows\">最大删除行数。清理历史数据时，避免一次性删除过多导致数据库IO跟不上，0表示所有</param>");
         WriteLine("/// <returns>清理行数</returns>");
-        WriteLine("public static Int32 DeleteWith(DateTime start, DateTime end)");
+        WriteLine("public static Int32 DeleteWith(DateTime start, DateTime end, Int32 maximumRows = 0)");
         WriteLine("{");
         {
             // 分为时间、雪花Id、字符串三种
@@ -1032,23 +1033,23 @@ public class EntityBuilder : ClassBuilder
             {
                 WriteLine("if (start == end) return Delete(_.{0} == start);", column.Name);
                 WriteLine();
-                WriteLine("return Delete(_.{0}.Between(start, end));", column.Name);
+                WriteLine("return Delete(_.{0}.Between(start, end), maximumRows);", column.Name);
             }
             else if (type == typeof(Int64))
             {
                 //WriteLine("var where = new WhereExpression()");
                 //WriteLine("if (start.Year > 2000) where &= _.{0} >= Meta.Factory.Snow.GetId(start)", column.Name);
                 //WriteLine("if (end.Year > 2000) where &= _.{0} < Meta.Factory.Snow.GetId(end)", column.Name);
-                WriteLine("return Delete(_.{0}.Between(start, end, Meta.Factory.Snow));", column.Name);
+                WriteLine("return Delete(_.{0}.Between(start, end, Meta.Factory.Snow), maximumRows);", column.Name);
             }
             else if (type == typeof(String))
             {
-                WriteLine("if (start == end) return Delete(_.{0} == start);", column.Name);
+                WriteLine("if (start == end) return Delete(_.{0} == start, maximumRows);", column.Name);
                 WriteLine();
                 WriteLine("var where = new WhereExpression();");
                 WriteLine("if (start.Year > 2000) where &= _.{0} >= start;", column.Name);
                 WriteLine("if (end.Year > 2000) where &= _.{0} < end;", column.Name);
-                WriteLine("return Delete(where);");
+                WriteLine("return Delete(where, maximumRows);");
             }
         }
         WriteLine("}");

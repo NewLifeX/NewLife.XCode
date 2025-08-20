@@ -1726,7 +1726,14 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="where">条件表达式</param>
     /// <returns></returns>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public static Int32 Delete(Expression? where)
+    public static Int32 Delete(Expression? where) => Delete(where, 0);
+
+    /// <summary>从数据库中删除指定条件表达式的实体对象，支持分表。</summary>
+    /// <param name="where">条件表达式</param>
+    /// <param name="maximumRows">最大删除行数。清理历史数据时，避免一次性删除过多导致数据库IO跟不上，0表示所有</param>
+    /// <returns></returns>
+    [EditorBrowsable(EditorBrowsableState.Advanced)]
+    public static Int32 Delete(Expression? where, Int32 maximumRows = 0)
     {
         if (where == null || where.IsEmpty) return 0;
 
@@ -1741,7 +1748,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
             var whereClause = where?.GetString(db, ps) ?? String.Empty;
 
-            return Persistence.Delete(session, whereClause);
+            return Persistence.Delete(session, whereClause, maximumRows);
         }
         else
         {
@@ -1752,7 +1759,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                 var tableName = shard.TableName ?? session.TableName;
 
                 var shardSession = EntitySession<TEntity>.Create(connName, tableName);
-                count += Persistence.Delete(shardSession, where?.ToString() ?? String.Empty);
+                count += Persistence.Delete(shardSession, where?.ToString() ?? String.Empty, maximumRows);
             }
             return count;
         }

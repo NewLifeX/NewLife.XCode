@@ -81,8 +81,9 @@ public interface IEntityPersistence
     /// <summary>从数据库中删除指定条件的实体对象。</summary>
     /// <param name="session">实体会话</param>
     /// <param name="whereClause">限制条件</param>
+    /// <param name="maximumRows">最大删除行数。清理历史数据时，避免一次性删除过多导致数据库IO跟不上，0表示所有</param>
     /// <returns></returns>
-    Int32 Delete(IEntitySession session, String whereClause);
+    Int32 Delete(IEntitySession session, String whereClause, Int32 maximumRows = 0);
 
     /// <summary>从数据库中删除指定属性列表和值列表所限定的实体对象。</summary>
     /// <param name="session">实体会话</param>
@@ -410,28 +411,35 @@ public class EntityPersistence : IEntityPersistence
     /// <summary>从数据库中删除指定条件的实体对象。</summary>
     /// <param name="session">实体会话</param>
     /// <param name="whereClause">限制条件</param>
+    /// <param name="maximumRows">最大删除行数。清理历史数据时，避免一次性删除过多导致数据库IO跟不上，0表示所有</param>
     /// <returns></returns>
-    public virtual Int32 Delete(IEntitySession session, String whereClause)
+    public virtual Int32 Delete(IEntitySession session, String whereClause, Int32 maximumRows = 0)
     {
         var batchSize = session.Dal.GetBatchSize(10_000);
-        var interval = XCodeSetting.Current.BatchInterval;
+        if (maximumRows <= 0) maximumRows = Int32.MaxValue;
+        var set = XCodeSetting.Current;
+        var interval = set.BatchInterval;
+        var timeout = set.CommandTimeout > 0 ? 5 * set.CommandTimeout : 5 * 60;
 
         // 部分数据库支持分批删除
         var rs = 0;
         while (true)
         {
+            var size = Math.Min(batchSize, maximumRows);
+
             // 生成分批删除SQL，如果失败则退出，回归默认整体删除逻辑
-            var sql = session.Dal.Db.BuildDeleteSql(session.FormatedTableName, whereClause, batchSize);
+            var sql = session.Dal.Db.BuildDeleteSql(session.FormatedTableName, whereClause, size);
             if (sql.IsNullOrEmpty())
             {
                 rs = -1;
                 break;
             }
 
-            var rows = session.Dal.Execute(sql, 5 * 60);
+            var rows = session.Dal.Execute(sql, timeout);
             rs += rows;
 
-            if (rows < batchSize) break;
+            maximumRows -= rows;
+            if (rows < size || maximumRows <= 0) break;
 
             // 延迟一点，避免太快影响数据库性能
             if (interval > 0) Thread.Sleep(interval);
@@ -442,7 +450,7 @@ public class EntityPersistence : IEntityPersistence
         {
             // 加大超时时间
             var sql = session.Dal.Db.BuildDeleteSql(session.FormatedTableName, whereClause, 0);
-            return session.Dal.Execute(sql!, 5 * 60);
+            return session.Dal.Execute(sql!, timeout);
         }
     }
 

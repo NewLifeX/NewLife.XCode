@@ -155,8 +155,8 @@ public class EntityBuilder : ClassBuilder
         }
 
         // 更新xsd
-        atts["xmlns"] = "https://newlifex.com/Model202407.xsd";
-        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202407.xsd";
+        atts["xmlns"] = "https://newlifex.com/Model202509.xsd";
+        atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202509.xsd";
 
         // 版本和教程
         //var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());

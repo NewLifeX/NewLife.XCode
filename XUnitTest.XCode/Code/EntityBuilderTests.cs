@@ -54,6 +54,9 @@ public class EntityBuilderTests
             Option = option,
         };
 
+        // 加载已有业务类文件，防止覆盖
+        builder.LoadCodeFile("Code\\entity_user_normal_biz.cs");
+
         // 数据类
         builder.Execute();
 
@@ -93,6 +96,9 @@ public class EntityBuilderTests
             Option = option,
         };
 
+        // 加载已有业务类文件，防止覆盖
+        builder.LoadCodeFile("Code\\entity_log_normal_biz.cs");
+
         // 数据类
         builder.Execute();
 
@@ -131,6 +137,9 @@ public class EntityBuilderTests
             Table = _table,
             Option = option,
         };
+
+        // 加载已有业务类文件，防止覆盖
+        builder.LoadCodeFile("Code\\entity_user_normal_biz.cs");
 
         // 数据类
         builder.Execute();

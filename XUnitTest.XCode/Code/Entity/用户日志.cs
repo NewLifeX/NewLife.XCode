@@ -341,6 +341,34 @@ public partial class UserLog : IUserLog, IEntity<IUserLog>
     }
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="category">类别</param>
+    /// <param name="action">操作</param>
+    /// <param name="linkId">链接</param>
+    /// <param name="createUserId">创建用户</param>
+    /// <param name="success">成功</param>
+    /// <param name="start">数据时间开始</param>
+    /// <param name="end">数据时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<UserLog> Search(String? category, String? action, Int32 linkId, Int32 createUserId, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+        if (!action.IsNullOrEmpty()) exp &= _.Action == action;
+        if (linkId >= 0) exp &= _.LinkID == linkId;
+        if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
+        if (success != null) exp &= _.Success == success;
+        exp &= _.DataTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 数据清理
     /// <summary>清理指定时间段内的数据</summary>
     /// <param name="start">开始时间。未指定时清理小于指定时间的所有数据</param>

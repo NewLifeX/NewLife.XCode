@@ -116,31 +116,6 @@ public partial class MemberLog : Entity<MemberLog>
     #endregion
 
     #region 高级查询
-    /// <summary>高级查询</summary>
-    /// <param name="category">类别</param>
-    /// <param name="action">操作</param>
-    /// <param name="linkId">链接</param>
-    /// <param name="createUserId">创建用户</param>
-    /// <param name="success">成功</param>
-    /// <param name="start">数据分区开始</param>
-    /// <param name="end">数据分区结束</param>
-    /// <param name="key">关键字</param>
-    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
-    /// <returns>实体列表</returns>
-    public static IList<MemberLog> Search(String? category, String? action, Int32 linkId, Int32 createUserId, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
-    {
-        var exp = new WhereExpression();
-
-        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
-        if (!action.IsNullOrEmpty()) exp &= _.Action == action;
-        if (linkId >= 0) exp &= _.LinkID == linkId;
-        if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
-        if (success != null) exp &= _.Success == success;
-        exp &= _.Ds.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
-
-        return FindAll(exp, page);
-    }
 
     // Select Count(ID) as ID,Action From MemberLog Where CreateTime>'2020-01-24 00:00:00' Group By Action Order By ID Desc limit 20
     static readonly FieldCache<MemberLog> _ActionCache = new(nameof(Action))

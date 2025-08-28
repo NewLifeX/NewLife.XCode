@@ -126,31 +126,6 @@ public partial class Parameter : Entity<Parameter>
     #endregion
 
     #region 高级查询
-    /// <summary>高级查询</summary>
-    /// <param name="userId">用户。按用户区分参数，用户0表示系统级</param>
-    /// <param name="category">类别</param>
-    /// <param name="name">名称</param>
-    /// <param name="kind">种类。0普通，21列表，22名值</param>
-    /// <param name="enable">启用</param>
-    /// <param name="start">更新时间开始</param>
-    /// <param name="end">更新时间结束</param>
-    /// <param name="key">关键字</param>
-    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
-    /// <returns>实体列表</returns>
-    public static IList<Parameter> Search(Int32 userId, String? category, String? name, XCode.Membership.ParameterKinds kind, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
-    {
-        var exp = new WhereExpression();
-
-        if (userId >= 0) exp &= _.UserID == userId;
-        if (!category.IsNullOrEmpty()) exp &= _.Category == category;
-        if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-        if (kind >= 0) exp &= _.Kind == kind;
-        if (enable != null) exp &= _.Enable == enable;
-        exp &= _.UpdateTime.Between(start, end);
-        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
-
-        return FindAll(exp, page);
-    }
 
     // Select Count(ID) as ID,Category From Parameter Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
     static readonly FieldCache<Parameter> _CategoryCache = new(nameof(Category))

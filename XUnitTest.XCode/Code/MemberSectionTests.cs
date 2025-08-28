@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using XCode.Code;
 using Xunit;
 
@@ -584,13 +583,38 @@ public class MemberSectionTests
 
                 return FindAll(_.ParentID == parentId & _.Name == name);
             }
+
+            /// <summary>高级查询</summary>
+            /// <param name="key"></param>
+            /// <param name="roleId"></param>
+            /// <param name="isEnable"></param>
+            /// <param name="start"></param>
+            /// <param name="end"></param>
+            /// <param name="p"></param>
+            /// <returns></returns>
+            public static IList<User> Search(String key, Int32 roleId, Boolean? isEnable, DateTime start, DateTime end, PageParameter p)
+            {
+                var exp = _.LastLogin.Between(start, end);
+                if (roleId > 0) exp &= _.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",");
+                if (isEnable != null) exp &= _.Enable == isEnable;
         
+                // 先精确查询，再模糊
+                if (!key.IsNullOrEmpty())
+                {
+                    var list = FindAll(exp & (_.Code == key | _.Name == key | _.DisplayName == key | _.Mail == key | _.Mobile == key), p);
+                    if (list.Count > 0) return list;
+        
+                    exp &= (_.Code.Contains(key) | _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Mail.Contains(key) | _.Mobile.Contains(key));
+                }
+        
+                return FindAll(exp, p);
+            }
         """;
 
         var list = MemberSection.GetMethods(code);
 
         Assert.NotNull(list);
-        Assert.Equal(8, list.Count);
+        Assert.Equal(9, list.Count);
 
         Assert.Equal("FindByID", list[0].Name);
         Assert.Equal("FindByName", list[1].Name);
@@ -600,6 +624,7 @@ public class MemberSectionTests
         Assert.Equal("FindAllByRoleID", list[5].Name);
         Assert.Equal("FindAllByName", list[6].Name);
         Assert.Equal("FindAllByParentIDAndName", list[7].Name);
+        Assert.Equal("Search", list[8].Name);
 
         Assert.Equal("FindByID(Int32)", list[0].FullName);
         Assert.Equal("FindByName(String)", list[1].FullName);
@@ -609,6 +634,7 @@ public class MemberSectionTests
         Assert.Equal("FindAllByRoleID(Int32)", list[5].FullName);
         Assert.Equal("FindAllByName(String)", list[6].FullName);
         Assert.Equal("FindAllByParentIDAndName(Int32,String)", list[7].FullName);
+        Assert.Equal("Search(String,Int32,Boolean,DateTime,DateTime,PageParameter)", list[8].FullName);
 
         //Assert.Equal(lines.Length, list.Sum(e => e.Lines.Length));
     }

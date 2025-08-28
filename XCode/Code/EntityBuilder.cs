@@ -581,7 +581,7 @@ public class EntityBuilder : ClassBuilder
             //WriteLine();
             //BuildExtendSearch();
 
-            WriteLine();
+            //WriteLine();
             BuildSearch();
 
             WriteLine();
@@ -610,8 +610,8 @@ public class EntityBuilder : ClassBuilder
             WriteLine();
             BuildExtendSearch();
 
-            //todo 条件暂时未成熟，生成的高级查询有些缺陷，需要人工介入修改
-            //BuildAdvanceSearch();
+            //WriteLine();
+            BuildSearchForData();
 
             if (ScaleColumn != null)
             {
@@ -1676,7 +1676,7 @@ public class EntityBuilder : ClassBuilder
         var ps = builder.GetParameters(columns);
 
         // 如果方法名已存在，则不生成
-        var key = $"{methodName}({ps.Join(",", e => e.TypeName)})";
+        var key = $"{methodName}({ps.Join(",", e => e.TypeName.TrimEnd('?'))})";
         if (Members.Contains(key)) return false;
         Members.Add(key);
 
@@ -1780,7 +1780,7 @@ public class EntityBuilder : ClassBuilder
         var ps = builder.GetParameters(columns);
 
         // 如果方法名已存在，则不生成
-        var key = $"{methodName}({ps.Join(",", e => e.TypeName)})";
+        var key = $"{methodName}({ps.Join(",", e => e.TypeName.TrimEnd('?'))})";
         if (Members.Contains(key)) return false;
         Members.Add(key);
 
@@ -1846,9 +1846,15 @@ public class EntityBuilder : ClassBuilder
     /// <summary>自定义查询区域</summary>
     protected virtual void BuildSearch()
     {
+        // 收集索引信息，索引中的所有字段都参与，构造一个高级查询模板
+        var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
+        var cs = builder.GetColumns();
+        if (cs.Count == 0) return;
+
+        WriteLine();
         WriteLine("#region 高级查询");
 
-        var cs = BuildAdvanceSearch();
+        cs = BuildAdvanceSearch(builder);
 
         var idx = Table.Indexes ?? [];
         var returnName = ClassName;
@@ -1917,11 +1923,32 @@ public class EntityBuilder : ClassBuilder
         WriteLine("#endregion");
     }
 
-    /// <summary>生成高级查询</summary>
-    protected virtual IList<IDataColumn> BuildAdvanceSearch()
+    /// <summary>自定义查询区域</summary>
+    protected virtual void BuildSearchForData()
     {
         // 收集索引信息，索引中的所有字段都参与，构造一个高级查询模板
         var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
+        var cs = builder.GetColumns();
+        if (cs.Count == 0) return;
+
+        // 如果方法名已存在，则不生成
+        var ps = builder.GetParameters(cs, true);
+        var key = $"Search({ps.Join(",", e => e.TypeName.TrimEnd('?'))})";
+        if (Members.Contains(key)) return;
+
+        WriteLine();
+        WriteLine("#region 高级查询");
+
+        BuildAdvanceSearch(builder);
+
+        WriteLine("#endregion");
+    }
+
+    /// <summary>生成高级查询</summary>
+    protected virtual IList<IDataColumn> BuildAdvanceSearch(SearchBuilder builder)
+    {
+        // 收集索引信息，索引中的所有字段都参与，构造一个高级查询模板
+        //var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
         var cs = builder.GetColumns();
         if (cs.Count == 0) return [];
 
@@ -1930,7 +1957,7 @@ public class EntityBuilder : ClassBuilder
         var ps = builder.GetParameters(cs, true);
 
         // 如果方法名已存在，则不生成
-        var key = $"Search({ps.Join(",", e => e.TypeName)})";
+        var key = $"Search({ps.Join(",", e => e.TypeName.TrimEnd('?'))})";
         if (Members.Contains(key)) return cs;
         Members.Add(key);
 

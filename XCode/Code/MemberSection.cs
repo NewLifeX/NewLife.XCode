@@ -1,5 +1,4 @@
 ﻿using System.Text.RegularExpressions;
-using NewLife;
 
 namespace XCode.Code;
 
@@ -180,7 +179,7 @@ internal class MemberSection
                     p = str.LastIndexOf('.');
                     if (p > 0) str = str[(p + 1)..];
 
-                    types.Add(str);
+                    types.Add(str.TrimEnd('?'));
                 }
             }
             rs.Add(new MemberSection

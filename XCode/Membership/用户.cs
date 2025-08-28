@@ -555,6 +555,48 @@ public partial class User : IUser, IEntity<IUser>
     }
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="name">名称。登录用户名</param>
+    /// <param name="mail">邮件。支持登录</param>
+    /// <param name="mobile">手机。支持登录</param>
+    /// <param name="code">代码。身份证、员工编码等，支持登录</param>
+    /// <param name="roleId">角色。主要角色</param>
+    /// <param name="departmentId">部门。组织机构</param>
+    /// <param name="sex">性别。未知、男、女</param>
+    /// <param name="mailVerified">邮箱验证。邮箱是否已通过验证</param>
+    /// <param name="mobileVerified">手机验证。手机是否已通过验证</param>
+    /// <param name="areaId">地区。省市区</param>
+    /// <param name="online">在线</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<User> Search(String name, String? mail, String? mobile, String? code, Int32 roleId, Int32 departmentId, XCode.Membership.SexKinds sex, Boolean? mailVerified, Boolean? mobileVerified, Int32 areaId, Boolean? online, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (!name.IsNullOrEmpty()) exp &= _.Name == name;
+        if (!mail.IsNullOrEmpty()) exp &= _.Mail == mail;
+        if (!mobile.IsNullOrEmpty()) exp &= _.Mobile == mobile;
+        if (!code.IsNullOrEmpty()) exp &= _.Code == code;
+        if (roleId >= 0) exp &= _.RoleID == roleId;
+        if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
+        if (sex >= 0) exp &= _.Sex == sex;
+        if (mailVerified != null) exp &= _.MailVerified == mailVerified;
+        if (mobileVerified != null) exp &= _.MobileVerified == mobileVerified;
+        if (areaId >= 0) exp &= _.AreaId == areaId;
+        if (online != null) exp &= _.Online == online;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得用户字段信息的快捷方式</summary>
     public partial class _

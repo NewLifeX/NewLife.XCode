@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema id="Model202407"
-    targetNamespace="https://newlifex.com/Model202407.xsd"
+<xs:schema id="Model202509"
+    targetNamespace="https://newlifex.com/Model202509.xsd"
     elementFormDefault="qualified"
-    xmlns="https://newlifex.com/Model202407.xsd"
-    xmlns:mstns="https://newlifex.com/Model202407.xsd"
+    xmlns="https://newlifex.com/Model202509.xsd"
+    xmlns:mstns="https://newlifex.com/Model202509.xsd"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
 >
   <xs:annotation>
@@ -453,6 +453,13 @@
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">
           元素类型。主要用于魔方页面显示
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="ShowIn" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="zh-cn">
+          显示选项。按List/Detail/AddForm/EditForm/Search五区三态划分显示与否或，如Auto,-Search全部自动但搜索不显示，等同写法为A|A|A|A|N或11110
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

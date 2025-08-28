@@ -372,7 +372,6 @@ public partial class Menu : IMenu, IEntity<IMenu>
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="name">名称</param>
     /// <param name="parentId">父编号</param>
     /// <param name="visible">可见</param>
     /// <param name="necessary">必要。必要的菜单，必须至少有角色拥有这些权限，如果没有则自动授权给系统角色</param>
@@ -382,11 +381,10 @@ public partial class Menu : IMenu, IEntity<IMenu>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Menu> Search(String name, Int32 parentId, Boolean? visible, Boolean? necessary, Boolean? newWindow, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Menu> Search(Int32 parentId, Boolean? visible, Boolean? necessary, Boolean? newWindow, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (!name.IsNullOrEmpty()) exp &= _.Name == name;
         if (parentId >= 0) exp &= _.ParentID == parentId;
         if (visible != null) exp &= _.Visible == visible;
         if (necessary != null) exp &= _.Necessary == necessary;

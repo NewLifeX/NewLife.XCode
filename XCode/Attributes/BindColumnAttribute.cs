@@ -25,6 +25,9 @@ public sealed class BindColumnAttribute : Attribute
     /// <summary>元素类型</summary>
     public String? ItemType { get; set; }
 
+    /// <summary>显示选项</summary>
+    public String? ShowIn { get; set; }
+
     /// <summary>精度</summary>
     public Int32 Precision { get; set; }
 

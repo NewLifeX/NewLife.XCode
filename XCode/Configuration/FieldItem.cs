@@ -218,6 +218,7 @@ public class FieldItem
         {
             dc.RawType = col.RawType;
             dc.ItemType = col.ItemType;
+            dc.ShowIn = col.ShowIn;
             dc.Precision = col.Precision;
             dc.Scale = col.Scale;
             dc.DefaultValue = col.DefaultValue;

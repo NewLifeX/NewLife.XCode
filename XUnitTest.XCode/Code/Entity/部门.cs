@@ -451,7 +451,6 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <summary>高级查询</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="code">代码</param>
-    /// <param name="name">名称</param>
     /// <param name="parentId">父级</param>
     /// <param name="visible">可见</param>
     /// <param name="managerId">管理者</param>
@@ -461,13 +460,12 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> Search(Int32 tenantId, String? code, String name, Int32 parentId, Boolean? visible, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Department> Search(Int32 tenantId, String? code, Int32 parentId, Boolean? visible, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (tenantId >= 0) exp &= _.TenantId == tenantId;
         if (!code.IsNullOrEmpty()) exp &= _.Code == code;
-        if (!name.IsNullOrEmpty()) exp &= _.Name == name;
         if (parentId >= 0) exp &= _.ParentID == parentId;
         if (visible != null) exp &= _.Visible == visible;
         if (managerId >= 0) exp &= _.ManagerId == managerId;

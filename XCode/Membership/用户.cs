@@ -73,7 +73,7 @@ public partial class User : IUser, IEntity<IUser>
     [DisplayName("邮件")]
     [Description("邮件。支持登录")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Mail", "邮件。支持登录", "", ItemType = "mail")]
+    [BindColumn("Mail", "邮件。支持登录", "", ItemType = "mail", ShowIn = "Auto,-Search")]
     public String? Mail { get => _Mail; set { if (OnPropertyChanging("Mail", value)) { _Mail = value; OnPropertyChanged("Mail"); } } }
 
     private Boolean _MailVerified;
@@ -89,7 +89,7 @@ public partial class User : IUser, IEntity<IUser>
     [DisplayName("手机")]
     [Description("手机。支持登录")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Mobile", "手机。支持登录", "", ItemType = "mobile")]
+    [BindColumn("Mobile", "手机。支持登录", "", ItemType = "mobile", ShowIn = "Y|Y|A|A|N")]
     public String? Mobile { get => _Mobile; set { if (OnPropertyChanging("Mobile", value)) { _Mobile = value; OnPropertyChanged("Mobile"); } } }
 
     private Boolean _MobileVerified;
@@ -105,7 +105,7 @@ public partial class User : IUser, IEntity<IUser>
     [DisplayName("代码")]
     [Description("代码。身份证、员工编码等，支持登录")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Code", "代码。身份证、员工编码等，支持登录", "")]
+    [BindColumn("Code", "代码。身份证、员工编码等，支持登录", "", ShowIn = "11110")]
     public String? Code { get => _Code; set { if (OnPropertyChanging("Code", value)) { _Code = value; OnPropertyChanged("Code"); } } }
 
     private Int32 _AreaId;
@@ -557,10 +557,6 @@ public partial class User : IUser, IEntity<IUser>
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="name">名称。登录用户名</param>
-    /// <param name="mail">邮件。支持登录</param>
-    /// <param name="mobile">手机。支持登录</param>
-    /// <param name="code">代码。身份证、员工编码等，支持登录</param>
     /// <param name="roleId">角色。主要角色</param>
     /// <param name="departmentId">部门。组织机构</param>
     /// <param name="sex">性别。未知、男、女</param>
@@ -574,14 +570,10 @@ public partial class User : IUser, IEntity<IUser>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<User> Search(String name, String? mail, String? mobile, String? code, Int32 roleId, Int32 departmentId, XCode.Membership.SexKinds sex, Boolean? mailVerified, Boolean? mobileVerified, Int32 areaId, Boolean? online, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<User> Search(Int32 roleId, Int32 departmentId, XCode.Membership.SexKinds sex, Boolean? mailVerified, Boolean? mobileVerified, Int32 areaId, Boolean? online, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-        if (!mail.IsNullOrEmpty()) exp &= _.Mail == mail;
-        if (!mobile.IsNullOrEmpty()) exp &= _.Mobile == mobile;
-        if (!code.IsNullOrEmpty()) exp &= _.Code == code;
         if (roleId >= 0) exp &= _.RoleID == roleId;
         if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
         if (sex >= 0) exp &= _.Sex == sex;

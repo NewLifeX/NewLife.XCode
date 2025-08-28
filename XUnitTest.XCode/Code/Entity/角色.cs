@@ -336,7 +336,6 @@ public partial class Role : IRole, IEntity<IRole>
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="name">名称</param>
     /// <param name="isSystem">系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
@@ -344,11 +343,10 @@ public partial class Role : IRole, IEntity<IRole>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Role> Search(String name, Boolean? isSystem, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Role> Search(Boolean? isSystem, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (!name.IsNullOrEmpty()) exp &= _.Name == name;
         if (isSystem != null) exp &= _.IsSystem == isSystem;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);

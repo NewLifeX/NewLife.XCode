@@ -557,7 +557,6 @@ public partial class User : IUser, IEntity<IUser>
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="name">名称。登录用户名</param>
     /// <param name="mail">邮件</param>
     /// <param name="mobile">手机</param>
     /// <param name="code">代码。身份证、员工编号等</param>
@@ -571,11 +570,10 @@ public partial class User : IUser, IEntity<IUser>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<User> Search(String name, String? mail, String? mobile, String? code, Int32 roleId, XCode.Membership.SexKinds sex, Int32 areaId, Boolean? online, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<User> Search(String? mail, String? mobile, String? code, Int32 roleId, XCode.Membership.SexKinds sex, Int32 areaId, Boolean? online, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (!name.IsNullOrEmpty()) exp &= _.Name == name;
         if (!mail.IsNullOrEmpty()) exp &= _.Mail == mail;
         if (!mobile.IsNullOrEmpty()) exp &= _.Mobile == mobile;
         if (!code.IsNullOrEmpty()) exp &= _.Code == code;

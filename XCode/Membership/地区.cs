@@ -303,7 +303,6 @@ public partial class Area : IArea, IEntity<IArea>
 
     #region 高级查询
     /// <summary>高级查询</summary>
-    /// <param name="name">名称</param>
     /// <param name="parentId">父级</param>
     /// <param name="pinYin">拼音</param>
     /// <param name="jianPin">简拼</param>
@@ -314,11 +313,10 @@ public partial class Area : IArea, IEntity<IArea>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Area> Search(String name, Int32 parentId, String? pinYin, String? jianPin, String? geoHash, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Area> Search(Int32 parentId, String? pinYin, String? jianPin, String? geoHash, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
-        if (!name.IsNullOrEmpty()) exp &= _.Name == name;
         if (parentId >= 0) exp &= _.ParentID == parentId;
         if (!pinYin.IsNullOrEmpty()) exp &= _.PinYin == pinYin;
         if (!jianPin.IsNullOrEmpty()) exp &= _.JianPin == jianPin;

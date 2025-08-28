@@ -54,7 +54,6 @@ public class Area : EntityController<Area>
     /// <returns></returns>
     protected override IEnumerable<Area> Search(Pager p)
     {
-        var name = p["name"];
         var parentId = p["parentId"].ToInt(-1);
         var pinYin = p["pinYin"];
         var jianPin = p["jianPin"];
@@ -64,6 +63,6 @@ public class Area : EntityController<Area>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Area.Search(name, parentId, pinYin, jianPin, geoHash, enable, start, end, p["Q"], p);
+        return Area.Search(parentId, pinYin, jianPin, geoHash, enable, start, end, p["Q"], p);
     }
 }

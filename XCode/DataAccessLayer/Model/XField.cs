@@ -44,6 +44,12 @@ class XField : /*SerializableDataMember,*/ IDataColumn, ICloneable
     [Description("元素类型")]
     public String? ItemType { get; set; }
 
+    /// <summary>显示选项</summary>
+    [XmlAttribute]
+    [DisplayName("显示选项")]
+    [Description("显示选项")]
+    public String? ShowIn { get; set; }
+
     /// <summary>映射，表间关联，格式Role.Id.Name</summary>
     [XmlAttribute]
     [DisplayName("映射")]

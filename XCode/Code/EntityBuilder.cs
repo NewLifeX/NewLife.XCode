@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Reflection;
@@ -718,6 +717,7 @@ public class EntityBuilder : ClassBuilder
 
         // 元素类型
         if (!dc.ItemType.IsNullOrEmpty()) sb.AppendFormat(", ItemType = \"{0}\"", dc.ItemType);
+        if (!dc.ShowIn.IsNullOrEmpty()) sb.AppendFormat(", ShowIn = \"{0}\"", dc.ShowIn);
 
         // 支持生成带精度的特性
         var def = ModelHelper.FixDefaultByType(dc.Clone(dc.Table), dc);
@@ -2040,6 +2040,13 @@ public class EntityBuilder : ClassBuilder
     /// <returns></returns>
     private Boolean CanSearch(IDataColumn column)
     {
+        //// 如果显式设置里指定了搜索，则按指定的来
+        //if (!column.ShowIn.IsNullOrEmpty())
+        //{
+        //    var opt = ShowInOption.Parse(column.ShowIn);
+        //    if (opt.Detail != TriState.Auto) return opt.Detail == TriState.Show;
+        //}
+
         if (column.DataType == null) return false;
 
         if (column.DataType.IsInt()) return true;

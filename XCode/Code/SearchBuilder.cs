@@ -1,5 +1,5 @@
-﻿using NewLife;
-using NewLife.Reflection;
+﻿using NewLife.Reflection;
+using XCode.Configuration;
 using XCode.DataAccessLayer;
 
 namespace XCode.Code;
@@ -37,6 +37,14 @@ public class SearchBuilder(IDataTable table)
             {
                 // 主键和自增，不参与
                 if (dc.PrimaryKey || dc.Identity) continue;
+                if (dc.Master) continue;
+
+                // 如果显式设置里指定了搜索，则按指定的来
+                if (!dc.ShowIn.IsNullOrEmpty())
+                {
+                    var opt = ShowInOption.Parse(dc.ShowIn);
+                    if (opt.Search == TriState.Hide) continue;
+                }
 
                 if (dc.Name.EqualIgnoreCase(dcs) || dc.ColumnName.EqualIgnoreCase(dcs)) cs.Add(dc);
             }
@@ -46,6 +54,21 @@ public class SearchBuilder(IDataTable table)
         foreach (var dc in Table.Columns)
         {
             if (cs.Contains(dc)) continue;
+
+            // 如果显式设置里指定了搜索，则按指定的来
+            if (!dc.ShowIn.IsNullOrEmpty())
+            {
+                var opt = ShowInOption.Parse(dc.ShowIn);
+                if (opt.Search == TriState.Show)
+                {
+                    cs.Add(dc);
+                    continue;
+                }
+                else if (opt.Search == TriState.Hide)
+                {
+                    continue;
+                }
+            }
 
             // 数据时间字段可用于搜索
             if (!dc.DataScale.IsNullOrEmpty())

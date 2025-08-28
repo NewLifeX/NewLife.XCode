@@ -55,8 +55,6 @@ public class Department : EntityController<Department>
     protected override IEnumerable<Department> Search(Pager p)
     {
         var tenantId = p["tenantId"].ToInt(-1);
-        var code = p["code"];
-        var name = p["name"];
         var parentId = p["parentId"].ToInt(-1);
         var visible = p["visible"]?.ToBoolean();
         var managerId = p["managerId"].ToInt(-1);
@@ -65,6 +63,6 @@ public class Department : EntityController<Department>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Department.Search(tenantId, code, name, parentId, visible, managerId, enable, start, end, p["Q"], p);
+        return Department.Search(tenantId, parentId, visible, managerId, enable, start, end, p["Q"], p);
     }
 }

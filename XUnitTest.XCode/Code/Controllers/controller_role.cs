@@ -54,7 +54,6 @@ public class Role : EntityController<Role>
     /// <returns></returns>
     protected override IEnumerable<Role> Search(Pager p)
     {
-        var name = p["name"];
         var tenantId = p["tenantId"].ToInt(-1);
         var isSystem = p["isSystem"]?.ToBoolean();
         var enable = p["enable"]?.ToBoolean();
@@ -62,6 +61,6 @@ public class Role : EntityController<Role>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Role.Search(name, tenantId, isSystem, enable, start, end, p["Q"], p);
+        return Role.Search(tenantId, isSystem, enable, start, end, p["Q"], p);
     }
 }

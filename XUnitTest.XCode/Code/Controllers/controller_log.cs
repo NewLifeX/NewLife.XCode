@@ -57,12 +57,11 @@ public class Log : ReadOnlyEntityController<Log>
         var category = p["category"];
         var action = p["action"];
         var linkId = p["linkId"].ToLong(-1);
-        var createUserId = p["createUserId"].ToInt(-1);
         var success = p["success"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Log.Search(category, action, linkId, createUserId, success, start, end, p["Q"], p);
+        return Log.Search(category, action, linkId, success, start, end, p["Q"], p);
     }
 }

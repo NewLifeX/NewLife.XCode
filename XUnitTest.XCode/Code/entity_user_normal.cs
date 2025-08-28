@@ -74,7 +74,7 @@ public partial class User
     [DisplayName("邮件")]
     [Description("邮件。支持登录")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Mail", "邮件。支持登录", "", ItemType = "mail")]
+    [BindColumn("Mail", "邮件。支持登录", "", ItemType = "mail", ShowIn = "Auto,-Search")]
     public String? Mail { get => _Mail; set { if (OnPropertyChanging("Mail", value)) { _Mail = value; OnPropertyChanged("Mail"); } } }
 
     private Boolean _MailVerified;
@@ -90,7 +90,7 @@ public partial class User
     [DisplayName("手机")]
     [Description("手机。支持登录")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Mobile", "手机。支持登录", "", ItemType = "mobile")]
+    [BindColumn("Mobile", "手机。支持登录", "", ItemType = "mobile", ShowIn = "Y|Y|A|A|N")]
     public String? Mobile { get => _Mobile; set { if (OnPropertyChanging("Mobile", value)) { _Mobile = value; OnPropertyChanged("Mobile"); } } }
 
     private Boolean _MobileVerified;
@@ -106,7 +106,7 @@ public partial class User
     [DisplayName("代码")]
     [Description("代码。身份证、员工编码等，支持登录")]
     [DataObjectField(false, false, true, 50)]
-    [BindColumn("Code", "代码。身份证、员工编码等，支持登录", "")]
+    [BindColumn("Code", "代码。身份证、员工编码等，支持登录", "", ShowIn = "11110")]
     public String? Code { get => _Code; set { if (OnPropertyChanging("Code", value)) { _Code = value; OnPropertyChanged("Code"); } } }
 
     private Int32 _AreaId;

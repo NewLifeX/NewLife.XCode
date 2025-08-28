@@ -150,7 +150,7 @@ public partial class Log
     [DisplayName("创建用户")]
     [Description("创建用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建用户", "")]
+    [BindColumn("CreateUserID", "创建用户", "", ShowIn = "Auto,-Search")]
     public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
     private String? _CreateIP;

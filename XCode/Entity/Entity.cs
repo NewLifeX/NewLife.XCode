@@ -2125,14 +2125,14 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <remarks>常规操作是插入数据前检查是否已存在，但可能存在并行冲突问题，GetOrAdd能很好解决该问题</remarks>
     /// <typeparam name="TKey"></typeparam>
     /// <param name="key">业务主键，如果是多字段混合索引，则建立一个模型类</param>
-    /// <param name="find">查找函数</param>
+    /// <param name="findWithCache">查找函数</param>
     /// <param name="create">创建对象</param>
     /// <returns></returns>
-    public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, TEntity?> find, Func<TKey, TEntity> create)
+    public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, TEntity?> findWithCache, Func<TKey, TEntity> create)
     {
         //if (key == null) return null;
 
-        var entity = find != null ? find(key, true) : FindByKey(key!);
+        var entity = findWithCache != null ? findWithCache(key, true) : FindByKey(key!);
         if (entity != null) return entity;
 
         // 加锁，避免同一个key并发新增
@@ -2141,7 +2141,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             // 打开事务，提升可靠性也避免读写分离造成数据不一致
             using var trans = Meta.CreateTrans();
 
-            entity = find != null ? find(key, false) : FindByKey(key!);
+            entity = findWithCache != null ? findWithCache(key, false) : FindByKey(key!);
             if (entity != null) return entity;
 
             if (create != null)
@@ -2159,7 +2159,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
             catch (Exception ex)
             {
-                entity = find != null ? find(key, false) : FindByKey(key!);
+                entity = findWithCache != null ? findWithCache(key, false) : FindByKey(key!);
                 if (entity == null) throw ex.GetTrue();
             }
 

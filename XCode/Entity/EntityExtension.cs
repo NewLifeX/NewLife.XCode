@@ -1357,10 +1357,11 @@ public static class EntityExtension
         file = file.GetFullPath();
         if (!File.Exists(file)) return [];
 
-        using var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+        // 这里不能使用using，否则流会被关闭，返回的枚举器无法读取
+        var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
 
         if (file.EndsWithIgnoreCase(".gz"))
-            return Read(factory, new GZipStream(fs, CompressionMode.Decompress));
+            return Read(factory, new GZipStream(fs, CompressionMode.Decompress, false));
         else
             return Read(factory, fs);
     }

@@ -23,11 +23,12 @@ internal class MySql : RemoteDb
         var factory = GetProviderFactory(type);
         if (factory != null) return factory;
 
-#if NETSTANDARD
-        type = PluginHelper.LoadPlugin("MySqlConnector.MySqlConnectorFactory", null, "MySqlConnector.dll", null);
-        factory = GetProviderFactory(type);
-        if (factory != null) return factory;
-#endif
+        // 已按需求停用 MySqlConnector 自动加载逻辑（否则在存在包时会优先于 MySql.Data 被采用）
+        //#if NETSTANDARD
+        //type = PluginHelper.LoadPlugin("MySqlConnector.MySqlConnectorFactory", null, "MySqlConnector.dll", null);
+        //factory = GetProviderFactory(type);
+        //if (factory != null) return factory;
+        //#endif
 
         type = PluginHelper.LoadPlugin("MySql.Data.MySqlClient.MySqlClientFactory", null, "MySql.Data.dll", null);
         factory = GetProviderFactory(type);
@@ -35,9 +36,9 @@ internal class MySql : RemoteDb
 
         // MewLife.MySql 在开发过程中，数据驱动下载站点没有它的包，暂时不支持下载
         return GetProviderFactory(null, "NewLife.MySql.dll", "NewLife.MySql.MySqlClientFactory", true, true) ??
-#if NETSTANDARD
-            GetProviderFactory(null, "MySqlConnector.dll", "MySqlConnector.MySqlConnectorFactory", true, true) ??
-#endif
+            // #if NETSTANDARD
+            // GetProviderFactory(null, "MySqlConnector.dll", "MySqlConnector.MySqlConnectorFactory", true, true) ??
+            // #endif
             GetProviderFactory(null, "MySql.Data.dll", "MySql.Data.MySqlClient.MySqlClientFactory");
     }
 

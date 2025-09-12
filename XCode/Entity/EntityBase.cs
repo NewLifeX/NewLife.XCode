@@ -236,7 +236,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     /// <summary>仅用于扩展数据的索引器</summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    Object? IExtend.this[String key] { get => _Items?[key]; set => (this as IExtend).Items[key] = value; }
+    Object? IExtend.this[String key] { get => _Items != null && _Items.TryGetValue(key, out var value) ? value : null; set => (this as IExtend).Items[key] = value; }
 
     ///// <summary>扩展数据键集合</summary>
     //IEnumerable<String> IExtend2.Keys => _Items?.Keys;

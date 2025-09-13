@@ -88,9 +88,14 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
                 return v1 + "" == v2 + "";
             case TypeCode.Single:
             case TypeCode.Double:
+                var d1 = v1.ToDouble();
+                var d2 = v2.ToDouble();
+                // 如果其中一个是0，则使用绝对相等比较，避免无法赋值为0
+                if (d1 == 0 || d2 == 0) return d1 == d2;
                 return Math.Abs(v1.ToDouble() - v2.ToDouble()) < 0.000_001;
             case TypeCode.Decimal:
-                return Math.Abs((Decimal)v1 - Convert.ToDecimal(v2)) < 0.000_000_000_001m;
+                return (Decimal)v1 == v2.ToDecimal();
+            //return Math.Abs((Decimal)v1 - Convert.ToDecimal(v2)) < 0.000_000_000_001m;
             default:
                 break;
         }

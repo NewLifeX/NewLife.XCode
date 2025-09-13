@@ -211,12 +211,31 @@ internal class KingBaseMetaData : RemoteDbMetaData
 	                                where sys_constraint.contype='p'
                                 ) pkey on pcolumn.table_name = pkey.relname
                                 order by ptables.tablename";
-            return _KingBase.DataBaseMode switch
+            switch (_KingBase.DataBaseMode)
             {
-                DatabaseType.PostgreSQL => sql.Replace("sys_", "pg_"),
-                DatabaseType.SqlServer => sql.Replace("sys_constraint.conkey[1]", "sys_constraint.conkey{{1}}"),
-                _ => sql
-            };
+                case DatabaseType.PostgreSQL:
+                    return sql.Replace("sys_", "pg_");
+                case DatabaseType.SqlServer:
+                    sql = sql.Replace("sys_", "pg_");
+                    sql = sql.Replace("pg_constraint.conkey[1]", "pg_constraint.conkey{{1}}");
+                    sql = sql.Replace("UPPER(", "pg_catalog.upper(");
+                    sql = sql.Replace("lower(", "pg_catalog.lower(");
+                    sql = sql.Replace("NEXTVAL%", "%nextval%");
+                    sql = sql.Replace("pcolumn.udt_name", "pcolumn.data_type");
+                    sql = sql.Replace("case when pkey.colname = pcolumn.column_name", "case when pkey.colname::text = pcolumn.column_name::text");
+                    sql = sql.Replace("pcolumn on pcolumn.table_name = ptables.tablename", "pcolumn on pcolumn.table_name::text = ptables.tablename::text ");
+                    sql = sql.Replace("pkey on pcolumn.table_name = pkey.relname", "pkey on pcolumn.table_name::text = pkey.relname::text ");
+                    return sql;
+                case DatabaseType.MySql:
+                    //, StringComparison.OrdinalIgnoreCase 
+                    sql = sql.Replace("UPPER(", "pg_catalog.upper(");
+                    //, StringComparison.OrdinalIgnoreCase
+                    sql = sql.Replace("lower(", "pg_catalog.lower(");
+                    sql = sql.Replace("pcolumn.udt_name", "pcolumn.data_type");
+                    return sql;
+                default:
+                    return sql;
+            }
         }
     }
     String GetIndexsSql
@@ -302,7 +321,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
             var sql = "show database_mode;";
             var ss = Database.CreateSession();
             var mode = ss.ExecuteScalar<String>(sql);
-            _KingBase.DataBaseMode = mode switch
+            _KingBase.DataBaseMode = mode?.ToLower() switch
             {
                 "mysql" => DatabaseType.MySql,
                 "oracle" => DatabaseType.Oracle,

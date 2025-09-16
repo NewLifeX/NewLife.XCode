@@ -301,12 +301,16 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
         if (!HasDirty) return false;
 
-        if (Meta.InShard) return Meta.Session.Queue.Add(this, msDelay);
+        // 更新只插入标记
+        var queue = Meta.Session.Queue;
+        queue.InsertOnly = Meta.Table.DataTable.InsertOnly;
+
+        if (Meta.InShard) return queue.Add(this, msDelay);
 
         // 自动分库分表，影响后面的Meta.Session
         using var split = Meta.CreateShard((this as TEntity)!);
 
-        return Meta.Session.Queue.Add(this, msDelay);
+        return queue.Add(this, msDelay);
     }
 
     /// <summary>插入数据，Valid后调用<see cref="OnInsertAsync"/>。</summary>

@@ -1060,7 +1060,7 @@ public static class EntityExtension
     /// <param name="keys">业务主键。比较新旧两行统计对象的业务主键是否相同</param>
     /// <param name="trim">删除多余数据。默认true</param>
     /// <returns></returns>
-    public static IList<T> Merge<T, T2>(this IList<T> source, IEnumerable<T2> news, String[] keys, Boolean trim = true) where T : class, IEntity where T2 : IModel => source.Merge(news, (x, y) => keys.All(k => x[k] == y[k]), trim);
+    public static IList<T> Merge<T, T2>(this IList<T> source, IEnumerable<T2> news, String[] keys, Boolean trim = true) where T : class, IEntity where T2 : IModel => source.Merge(news, (x, y) => keys.All(k => Equals(x[k], y[k])), trim);
 
     /// <summary>已有数据集合并新数据集，未存在时插入、存在时更新、多余则删除，常用于更新统计表</summary>
     /// <remarks>
@@ -1093,28 +1093,36 @@ public static class EntityExtension
     {
         if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-        var rs = new List<T>();
-        var fact = typeof(T).AsFactory();
+        var inserts = new List<T>();
+        var updates = new List<T>();
+        //var fact = typeof(T).AsFactory();
+        var fact = source.FirstOrDefault()?.GetType().AsFactory();
+        var type = typeof(T);
+        if (!type.IsInterface && type.As<IEntity>()) fact = type.AsFactory();
         foreach (var model in news)
         {
+            if (fact == null && model is IEntity e) fact = e.GetType().AsFactory();
+
             var entity = source.FirstOrDefault(e => predicate(e, model));
             if (entity == null)
             {
                 entity = model as T;
                 if (entity == null)
                 {
+                    if (fact == null) throw new InvalidDataException();
+
                     entity = (T)fact.Create(true);
                     entity.CopyFrom(model, true);
                 }
 
-                rs.Add(entity);
+                inserts.Add(entity);
             }
             else
             {
                 // 启用脏数据，仅复制有脏数据的字段，同时避免拷贝主键
                 entity.CopyFrom(model, true);
 
-                rs.Add(entity);
+                updates.Add(entity);
                 source.Remove(entity);
             }
         }
@@ -1122,8 +1130,13 @@ public static class EntityExtension
         // 删除多余的
         if (trim) source.Delete(true);
 
-        // 保存数据，插入或更新
-        rs.Save();
+        // 保存数据，先更新再插入，避免主外键约束问题
+        updates.Update();
+        inserts.Insert();
+
+        var rs = new List<T>();
+        rs.AddRange(inserts);
+        rs.AddRange(updates);
 
         return rs;
     }

@@ -26,11 +26,13 @@ public static class EntityFactory
     public static IEntityFactory CreateFactory(Type type)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
+        //if (type == typeof(IEntity)) return null;
+        //if (!type.As<IEntity>()) return null;
 
         if (_factories.TryGetValue(type, out var factory)) return factory;
 
         // 有可能有子类直接继承实体类，这里需要找到继承泛型实体类的那一层
-        while (!type.BaseType.IsGenericType) type = type.BaseType;
+        while (type.BaseType != null && !type.BaseType.IsGenericType) type = type.BaseType;
 
         if (_factories.TryGetValue(type, out factory)) return factory;
 
@@ -241,7 +243,7 @@ public static class EntityFactory
                 if (name != null && name == connName && mode == ModelCheckModes.CheckAllTablesWhenInit)
                 {
                     var fact = CreateFactory(type);
-                    facts.Add(fact);
+                    if (fact != null) facts.Add(fact);
                 }
             }
 

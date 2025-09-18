@@ -108,8 +108,9 @@ public interface IEntity : IModel
     /// <summary>复制来自指定模型的成员，可以是不同类型</summary>
     /// <param name="model">来源实体对象</param>
     /// <param name="setDirty">是否设置脏数据</param>
+    /// <param name="getDirty">仅拷贝有脏数据的源字段。仅对IEntity源有效，其它IModel源无效</param>
     /// <returns>实际复制成员数</returns>
-    Int32 CopyFrom(IModel model, Boolean setDirty);
+    Int32 CopyFrom(IModel model, Boolean setDirty, Boolean getDirty);
     #endregion
 
     #region 实体相等

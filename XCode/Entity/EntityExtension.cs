@@ -1066,7 +1066,9 @@ public static class EntityExtension
     /// <remarks>
     /// 合并操作应用于实体层，不同于数据库的MergeTo。
     /// 常用于数据分析场景，将新数据合并到已有数据中，已有数据中没有的数据插入，已有数据中有的数据更新，已有数据中多余的数据删除。
-    /// 数据统计时，为了方便会构建新的数据集，然后合并到已有数据集中。
+    /// 数据统计时，为了方便会构建新的数据集，然后合并到已有数据集中，getDirty需要用true。
+    /// 
+    /// 在反序列化场景，例如从Zip文件中读取数据，实体本身没有脏数据，不能使用拷贝脏数据方式，getDirty需要用false。
     /// </remarks>
     /// <typeparam name="T">数据集实体类型</typeparam>
     /// <param name="source">已有数据集。例如：该日已有统计数据列表</param>
@@ -1088,8 +1090,9 @@ public static class EntityExtension
     /// <param name="news">新数据集。例如：根据原始数据统计得到的数据列表</param>
     /// <param name="predicate">比较器。比较新旧两行统计对象是否相同业务维度</param>
     /// <param name="trim">删除多余数据。默认true</param>
+    /// <param name="getDirty">仅拷贝有脏数据的源字段。对于数据分析场景，实例化后赋值，应该用true；对于反序列化场景，本身没有脏数据，应该用false</param>
     /// <returns></returns>
-    public static IList<T> Merge<T, T2>(this IList<T> source, IEnumerable<T2> news, Func<T, T2, Boolean> predicate, Boolean trim = true) where T : class, IEntity where T2 : IModel
+    public static IList<T> Merge<T, T2>(this IList<T> source, IEnumerable<T2> news, Func<T, T2, Boolean> predicate, Boolean trim = true, Boolean getDirty = true) where T : class, IEntity where T2 : IModel
     {
         if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
@@ -1103,6 +1106,7 @@ public static class EntityExtension
         {
             if (fact == null && model is IEntity e) fact = e.GetType().AsFactory();
 
+            // 查找已有数据中是否存在，已有的更新，没有的插入
             var entity = source.FirstOrDefault(e => predicate(e, model));
             if (entity == null)
             {
@@ -1112,7 +1116,7 @@ public static class EntityExtension
                     if (fact == null) throw new InvalidDataException();
 
                     entity = (T)fact.Create(true);
-                    entity.CopyFrom(model, true);
+                    entity.CopyFrom(model, true, getDirty);
                 }
 
                 inserts.Add(entity);
@@ -1120,7 +1124,7 @@ public static class EntityExtension
             else
             {
                 // 启用脏数据，仅复制有脏数据的字段，同时避免拷贝主键
-                entity.CopyFrom(model, true);
+                entity.CopyFrom(model, true, getDirty);
 
                 updates.Add(entity);
                 source.Remove(entity);

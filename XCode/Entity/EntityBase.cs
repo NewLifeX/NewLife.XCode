@@ -126,9 +126,10 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
 
     /// <summary>复制来自指定模型的成员，可以是不同类型。脏数据用于控制局部复制</summary>
     /// <param name="model">来源实体对象</param>
-    /// <param name="setDirty">是否设置脏数据。默认true，仅拷贝有脏数据的源字段，也设置目标脏数据</param>
+    /// <param name="setDirty">是否设置脏数据</param>
+    /// <param name="getDirty">仅拷贝有脏数据的源字段。仅对IEntity源有效，其它IModel源无效</param>
     /// <returns>实际复制成员数</returns>
-    public virtual Int32 CopyFrom(IModel model, Boolean setDirty = true)
+    public virtual Int32 CopyFrom(IModel model, Boolean setDirty, Boolean getDirty)
     {
         if (model == this) return 0;
 
@@ -141,16 +142,16 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
             var srcNames = source.GetType().AsFactory().FieldNames;
             if (srcNames == null || srcNames.Count <= 0) return 0;
 
+            // 从IEntity复制数据比较复杂，需要考虑字段名匹配以及脏数据
             foreach (var item in srcNames)
             {
+                // 启用脏数据，仅复制有脏数据的字段，同时避免拷贝主键
+                if (getDirty && !source.Dirtys[item]) continue;
+
                 if (destNames.Contains(item))
                 {
                     if (setDirty)
-                    {
-                        // 启用脏数据，仅复制有脏数据的字段，同时避免拷贝主键
-                        if (source.IsFromDatabase || source.Dirtys[item])
-                            dest.SetItem(item, source[item]);
-                    }
+                        dest.SetItem(item, source[item]);
                     else
                         dest[item] = source[item];
                 }
@@ -175,6 +176,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
         }
         else
         {
+            // 从IModel复制数据比较简单
             foreach (var item in destNames)
             {
                 if (setDirty)

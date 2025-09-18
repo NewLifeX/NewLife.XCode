@@ -383,7 +383,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
         //TEntity entity = list.Find(name, path);
         //if (entity != null) return entity;
 
-        var ss = path.Split(['.', '/', '\\'], StringSplitOptions.RemoveEmptyEntries);
+        var ss = path.Split(new Char[] { '.', '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
         if (ss == null || ss.Length <= 0) return null;
 
         // 找第一级

@@ -6,6 +6,8 @@ using NewLife.Data;
 using NewLife.Reflection;
 using XCode.Common;
 using XCode.Configuration;
+using System.Reflection;
+using System.Collections;
 
 namespace XCode;
 
@@ -125,13 +127,13 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     internal protected abstract IEntity CloneEntityInternal(Boolean setDirty = true);
 
     /// <summary>复制来自指定模型的成员，可以是不同类型。脏数据用于控制局部复制</summary>
-    /// <param name="model">来源实体对象</param>
+    /// <param name="model">来源对象，可以是实体、模型或普通对象</param>
     /// <param name="setDirty">是否设置脏数据</param>
-    /// <param name="getDirty">仅拷贝有脏数据的源字段。仅对IEntity源有效，其它IModel源无效</param>
+    /// <param name="getDirty">仅拷贝有脏数据的源字段。仅对IEntity源有效，其它源无效</param>
     /// <returns>实际复制成员数</returns>
-    public virtual Int32 CopyFrom(IModel model, Boolean setDirty, Boolean getDirty)
+    public virtual Int32 CopyFrom(Object model, Boolean setDirty, Boolean getDirty)
     {
-        if (model == this) return 0;
+        if (model == null || ReferenceEquals(model, this)) return 0;
 
         IEntity dest = this;
 
@@ -148,24 +150,24 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
                 // 启用脏数据，仅复制有脏数据的字段，同时避免拷贝主键
                 if (getDirty && !source.Dirtys[item]) continue;
 
+                var value = source[item];
                 if (destNames.Contains(item))
                 {
                     if (setDirty)
-                        dest.SetItem(item, source[item]);
+                        dest.SetItem(item, value);
                     else
-                        dest[item] = source[item];
+                        dest[item] = value;
                 }
                 else
                 {
                     // 如果没有该字段，则写入到扩展属性里面去
                     if (setDirty) Dirtys.Add(item, dest[item]);
-                    dest[item] = source[item];
+                    dest[item] = value;
                 }
 
                 n++;
             }
             // 赋值扩展数据
-            //entity.Extends.CopyTo(src.Extends);
             if (source is EntityBase source2 && source2._Items != null && source2._Items.Count > 0)
             {
                 foreach (var item in source2._Items)
@@ -176,15 +178,81 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
         }
         else
         {
-            // 从IModel复制数据比较简单
-            foreach (var item in destNames)
+            // 非IEntity来源：支持字典与反射属性，按来源成员进行复制，避免拷贝不存在的字段导致null覆盖
+            if (model is IDictionary<String, Object?> dict)
             {
-                if (setDirty)
-                    dest.SetItem(item, model[item]);
-                else
-                    dest[item] = model[item];
+                foreach (var kv in dict)
+                {
+                    var name = kv.Key;
+                    var value = kv.Value;
 
-                n++;
+                    if (destNames.Contains(name))
+                    {
+                        if (setDirty) dest.SetItem(name, value);
+                        else dest[name] = value;
+                    }
+                    else
+                    {
+                        if (setDirty) Dirtys.Add(name, dest[name]);
+                        dest[name] = value;
+                    }
+                    n++;
+                }
+            }
+            else if (model is IDictionary rawDict)
+            {
+                foreach (DictionaryEntry de in rawDict)
+                {
+                    var name = de.Key?.ToString();
+                    if (String.IsNullOrEmpty(name)) continue;
+                    var value = de.Value;
+
+                    if (destNames.Contains(name))
+                    {
+                        if (setDirty) dest.SetItem(name, value);
+                        else dest[name] = value;
+                    }
+                    else
+                    {
+                        if (setDirty) Dirtys.Add(name, dest[name]);
+                        dest[name] = value;
+                    }
+                    n++;
+                }
+            }
+            else
+            {
+                // 通过反射复制可读公有属性（排除索引器）
+                var pis = model.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+                foreach (var pi in pis)
+                {
+                    if (!pi.CanRead) continue;
+                    if (pi.GetIndexParameters().Length > 0) continue; // 跳过索引器
+
+                    var name = pi.Name;
+                    Object? value = null;
+                    try
+                    {
+                        value = pi.GetValue(model, null);
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+
+                    if (destNames.Contains(name))
+                    {
+                        if (setDirty) dest.SetItem(name, value);
+                        else dest[name] = value;
+                    }
+                    else
+                    {
+                        if (setDirty) Dirtys.Add(name, dest[name]);
+                        dest[name] = value;
+                    }
+
+                    n++;
+                }
             }
         }
 

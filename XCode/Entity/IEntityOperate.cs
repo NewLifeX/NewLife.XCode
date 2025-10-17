@@ -187,7 +187,7 @@ public interface IEntityFactory
     IEnumerable<T> AutoShard<T>(DateTime start, DateTime end, Func<T> callback);
     #endregion
 
-    #region 高并发
+    #region 应用应用
     /// <summary>获取 或 新增 对象，常用于统计等高并发更新的情况，一般配合SaveAsync</summary>
     /// <typeparam name="TKey"></typeparam>
     /// <param name="key">业务主键</param>
@@ -195,6 +195,13 @@ public interface IEntityFactory
     /// <param name="create">创建对象</param>
     /// <returns></returns>
     IEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, IEntity?> find, Func<TKey, IEntity> create);
+
+    /// <summary>合并数据。查出表中已有数据匹配，能匹配的更新，无法匹配的批量插入</summary>
+    /// <remarks>一般用于数据导入等要求比较高的场合</remarks>
+    /// <param name="source">数据源。实体列表或模型对象列表</param>
+    /// <param name="fields">需要合并的字段，默认null合并所有字段</param>
+    /// <returns></returns>
+    Int32 Merge(IEnumerable<IModel> source, FieldItem[]? fields = null);
     #endregion
 
     #region 一些设置

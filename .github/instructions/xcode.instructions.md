@@ -1,13 +1,30 @@
-# XCode 协作指令（面向 Copilot）
+# XCode 协作指令（给 Copilot/自动化助手）
 
-本指令适用于新生命团队（NewLife）开源的数据中间件 XCode，指导在 .NET 项目中正确、统一地使用 XCode 及相关模板，帮助 Copilot（及类似助手）按步骤可靠执行。
+本指令面向新生命团队（NewLife）开源数据中间件 XCode，帮助 Copilot 在 .NET 项目中“可复现、无歧义、可回滚”地完成初始化与接入操作。
 
-> 说明：以下步骤面向 Windows、Linux、macOS 的通用 .NET CLI。关于“查找解决方案/项目文件”的操作，应由 Copilot 通过自身目录遍历与解析能力完成。
+> 适用平台：Windows / Linux / macOS（统一使用 .NET CLI）。
+> 目录检索：查找 .sln / .csproj 必须由 Copilot 通过遍历工作区完成（禁止在线搜索）。
+> 默认执行位置：除非特别说明，命令在“仓库根目录”执行；涉及项目命令时，可在对应项目目录执行。
 
 ## 摘要
 - 目标：规范化 XCode 项目初始化与接入，减少歧义，提升自动化效率。
 - 受众：Copilot 或开发者在本地仓库内执行初始化、定位项目、创建数据模型等操作。
 - 产物：规范的解决方案/项目结构、已安装的模板、已引入的 `NewLife.XCode` 包、可用的 `Model.xml` 数据模型。
+
+### 如何使用（TL;DR）
+- 获取系统名称：从用户需求中提取“{系统中文名}/{系统英文名}”；若未给出，则基于需求自动拟定一个中英文名（英文名用于目录/命名空间，中文名用于展示）。
+- 检查 .NET SDK ≥ 8.0；校验 NewLife.Templates 模板发布日期 > 2025-08-01，否则安装。
+- 扫描工作区定位 .sln；若不存在则创建一个解决方案。
+- 定位“数据类库”项目（通常以 `.Data` 结尾，且为 Library）；若缺失则新建 `xcode` 模板项目。
+- 确认数据类库已引用名为 `NewLife.XCode` 的 nuget 包；若无则添加包引用。
+- 校验/安装全局工具 `xcodetool`；在“数据类库项目根目录”运行 `xcode` 生成 `Model.xml`，并按约定重命名为 `{系统英文名}.xml`。
+- 如需自定义模型，按照下方“修改数据模型（说明与示例）”进行调整。
+
+提示（强约束汇总）：
+- 仅当 NewLife.Templates 未安装或其“发布日期 ≤ 2025-08-01”时才执行安装更新（避免无谓变更）。
+- 涉及“生成/写文件”的命令请在“数据类库项目根目录”执行，避免把输出写到意外目录。
+
+> 占位符与命名约定：本文中的“{系统英文名}”“{系统中文名}”分别代表系统的英文/中文名称。Copilot 应从用户需求中获取；若未提供，则基于需求自动生成一个中英文名（英文名用于目录/命名空间，中文名用于展示）。系统英文名优先使用现有解决方案名（.sln 不含扩展名），若不存在则使用仓库根目录名；若仍不明确，可自行拟定并在输出中显式声明。
 
 ## 1) 前置要求（环境与模板）
 1. 检查 .NET SDK 版本（要求 .NET 8.0+）：`dotnet --version`
@@ -18,30 +35,46 @@
        - 要求：发布日期需 > 2025.0801（即严格晚于 2025-08-01）。
    - 若未安装或版本不满足要求：`dotnet new install NewLife.Templates`
 
+> 判定要点（强约束）：仅当未安装或发布日期 ≤ 2025-08-01 时才执行安装；否则保持现状，避免无谓变更。
+
 ## 2) 解决方案与项目定位（已有项目）
 1. 查找解决方案（.sln）
    - 要求：Copilot 自动扫描仓库根及子目录定位现有 `.sln` 文件。
+   - 若存在多个sln，取更新最新的一个。
    - 若不存在，可创建：`dotnet new sln --name Zero`（“Zero”为示例名，请按系统英文名调整）。
 
 2. 定位数据类库项目（.csproj）
-   - 筛选建议：文件名包含 `Data` 后缀，或 `.csproj` 内有 `<OutputType>Library</OutputType>`，或完全无 `<OutputType>`（默认是类库）。
-   - 若缺失数据类库项目：`dotnet new xcode -n Zero.Data`（`Zero.Data` 为示例名，一般建议 `{系统英文名}.Data`）。
+   - 有些在当前目录查找，其次在解决方案根目录查找，再次在仓库根目录查找，筛选建议（按优先级）：
+     1) 文件名包含 `Data` 后缀；
+     2) `.csproj` 内含 `<OutputType>Library</OutputType>`；
+     3) `.csproj` 中无 `<OutputType>`（默认即类库）。
+   - 若存在多个候选：优先选择“名称包含 `Data` 的项目”。
+   - 若缺失数据类库项目：`dotnet new xcode -n Zero.Data`（`Zero.Data` 为示例名，推荐 `{系统英文名}.Data`）。
 
-3. 引入 XCode NuGet 包（若未引入）：`dotnet add package NewLife.XCode`
+3. 引入 XCode NuGet 包（若未引入），在数据类库项目目录中执行：`dotnet add package NewLife.XCode`
 
 4. 定位应用启动项目（.csproj）
    - 判定标准：`csproj` 中包含 `<OutputType>Exe</OutputType>`。
    - 新建 Web 项目：`dotnet new cube -n CubeWeb`
    - 新建控制台应用：`dotnet new nconsole -n CubeApp`（名称请按 `{系统英文名}` 或 `{系统英文名}.App` 规范调整）。
 
+目录与执行位置约定：
+- 解决方案（.sln）：默认在仓库/工作区根目录创建。
+- 数据类库项目与应用启动项目：在各自同名子目录中创建。
+- 涉及生成/写文件的命令（如 `xcode` 生成模型或依据 XML 生成实体）均在“数据类库项目根目录”执行。
+- “创建/添加包”的命令既可在仓库根目录使用相对路径，也可进入目标项目目录执行；统一使用相对路径可减少路径歧义。
+
 ## 3) 准备数据模型（Model.xml）
 1. 检查是否已有数据模型：Copilot 在数据类库项目范围内判断是否存在如 `Model.xml` 的数据模型文件（也可能是其它名为 `*.xml` 的文件）。
 2. 安装/校验 xcode 命令（dotnet 全局工具）：先执行 `dotnet tool list -g` 检查是否存在 `xcodetool`；如未安装则执行 `dotnet tool install xcodetool -g`（安装后提供 `xcode` 命令）。
-3. 生成数据模型：在“数据类库项目根目录或其下级子目录”执行 `xcode`（无参数）；默认在当前目录生成 `Model.xml`，即“执行目录即输出目录”，把它重命名为 `{系统英文名}.xml`。
+3. 生成数据模型：如果前面步骤找不到xml数据模型文件，则在“数据类库项目根目录或其下级子目录”执行 `xcode`（无参数）；默认在当前目录生成 `Model.xml`，即“执行目录即输出目录”，把它重命名为 `{系统英文名}.xml`。
 
-## 3) 修改数据模型
-XCode的数据模型文件完整描述的系统的数据表结构，定义每张表的字段和索引。
-数据模型文件的标准示例如下：
+提示：
+- 若已存在 `Model.xml` 且包含默认演示表，但项目实际需要自定义模型，请先备份原文件，再按“修改数据模型”一节指引进行替换或清理后重建。
+ - “xcode 创建模型文件，或根据 XML 模型生成实体代码”，均需在“数据类库项目所在目录”执行。
+
+## 4) 修改数据模型（说明与示例）
+XCode 的数据模型文件完整描述系统的数据表结构（字段、索引、关联、显示配置等）。以下为标准示例：
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202509.xsd">
@@ -79,7 +112,7 @@ XCode的数据模型文件完整描述的系统的数据表结构，定义每张
     <!--命名格式。Default/Upper/Lower/Underline-->
     <NameFormat>Default</NameFormat>
     <!--魔方区域显示名-->
-    <DisplayName>新生命用户</DisplayName>
+    <DisplayName>魔方示例</DisplayName>
     <!--魔方控制器输出目录-->
     <CubeOutput>../../CubeWeb/Areas/CubeWeb</CubeOutput>
   </Option>
@@ -164,8 +197,38 @@ XCode的数据模型文件完整描述的系统的数据表结构，定义每张
 </EntityModel>
 ```
 
+模型文件字段说明：
+- `Namespace`：命名空间，一般是`{数据类库项目名}`。
+- `ConnName`：数据库连接名，一般是`{系统名}`。
+- `DisplayName`：显示名，一般是系统中文名。
+- `CubeOutput`：web应用的输出目录，代码生成器将会自动生成MVC的Controller，其中的`CubeWeb`修改为系统应用启动项目的名称。
+- `Tables`：数据表集合。
+  - `Table`：单个数据表定义。
+    - `Name`：表名。
+    - `Description`：表中文名。
+    - `Columns`：字段集合。
+      - `Column`：单个字段定义。
+        - `Identity`：是否自增字段。
+        - `PrimaryKey`：是否主键字段。
+        - `Name`：字段名。
+        - `DataType`：数据类型（Int32、String、DateTime 等）。
+        - `Description`：字段中文名。
+        - `Length`：字段长度，一般对字符串字段有用。
+        - `DataScale`：数据类型精度（time、decimal 等）。
+        - 其他属性如 `PrimaryKey`、`Identity`、`Nullable` 等用于描述字段特性。
+    - `Indexes`：索引集合。
+      - `Index`：单个索引定义。
+        - `Columns`：索引包含的字段列表（逗号分隔）。
+        - `Unique`：是否唯一索引。
 
-## 4) 典型创建路径（从零开始）
+Copilot需要充分理解用户所需要创建的应用系统和模块，为它设计相应的数据表，并参考上述模型文件示例，在xml模型文件中添加所需要的数据表和字段索引。如果模型文件是默认生成的Model.xml，则先删除已有的Table。
+
+一切准备就绪后，xml模型文件所在目录执行`xcode`命令生成实体类代码，然后编译数据类库项目和应用启动项目，即可启动项目进行测试。
+
+执行小贴士：
+- 运行 `xcode` 生成实体类代码时，请确保当前目录为“模型文件所在目录”，以避免输出到错误位置。
+
+## 5) 典型创建路径（从零开始）
 1. 新建解决方案：`dotnet new sln --name Zero`
 2. 新建数据类库项目：`dotnet new xcode -n Zero.Data`
 3. 将项目加入解决方案：`dotnet sln add ./Zero.Data/Zero.Data.csproj`
@@ -173,16 +236,3 @@ XCode的数据模型文件完整描述的系统的数据表结构，定义每张
 5. 新建应用启动项目（任选其一）：
    - Web：`dotnet new cube -n CubeWeb`，然后 `dotnet sln add ./CubeWeb/CubeWeb.csproj`
    - 控制台：`dotnet new nconsole -n CubeApp`，然后 `dotnet sln add ./CubeApp/CubeApp.csproj`
-
-## 5) Copilot 执行要点（给自动化助手）
-- 使用 Copilot 自身能力定位 `.sln` 与 `*.csproj`，根据 `OutputType` 判定项目类型。
-- 模板策略：先 `dotnet new details NewLife.Templates` 检查；未安装或发布日期 ≤ 2025.0801 则 `dotnet new install NewLife.Templates`；不进行在线搜索。
-- 若缺失数据类库：`dotnet new xcode -n {系统英文名}.Data`。
-- 确保数据类库包含 `NewLife.XCode` 包；若无则执行添加命令。
-- 若缺失数据模型：先检查/安装 dotnet 工具（`dotnet tool list -g`；未装则 `dotnet tool install xcodetool -g`），再在“数据类库项目根目录或其下级子目录”执行 `xcode`（无参数），默认在当前目录生成 `Model.xml`。
-- 变更保持最小影响面，不做无关格式化；保留并补充必要注释。
-
-## 6) 待确认 / 不明确清单（请提供权威信息）
-1. `Model.xml` 的默认生成路径与命名；是否支持参数指定输出目录/文件名；推荐运行目录。
-2. 示例名 `Zero`、`Zero.Data`、`CubeWeb`、`CubeApp` 是否仅为示例；团队是否有统一命名约定。
-3. 模板 `cube` 与 `nconsole` 的最小可用版本、关键差异与推荐使用场景（Web vs 控制台）。

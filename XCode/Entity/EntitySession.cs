@@ -213,6 +213,54 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
             {
                 if (Factory.Default is EntityBase entity)
                 {
+                    // 在初始化数据前，确保表已创建
+                    // 因为CheckModel可能使用异步方式建表，导致InitData时表尚不存在
+                    if (!DataTable.IsView)
+                    {
+                        var dal = Dal;
+                        var needCheck = false;
+                        
+                        // 先用QueryCountFast快速检查(查information_schema，极快)
+                        var count = dal.Session.QueryCountFast(FormatedTableName);
+                        
+                        // count <= 0 可能表示表不存在，也可能是information_schema缓存未更新
+                        // 需要进一步精确验证
+                        if (count <= 0)
+                        {
+                            // 尝试真实查询表，验证表是否真的存在
+                            try
+                            {
+                                var builder = new SelectBuilder
+                                {
+                                    Table = FormatedTableName
+                                };
+                                FixBuilder(builder);
+                                dal.SelectCount(builder);
+                                // 查询成功，说明表存在(information_schema缓存延迟)
+                            }
+                            catch
+                            {
+                                // 查询失败，表确实不存在
+                                needCheck = true;
+                            }
+                        }
+                        
+                        if (needCheck)
+                        {
+                            // 表不存在，强制同步创建表
+                            if (DAL.Debug) DAL.WriteLog("InitData前检测到表[{0}]不存在，立即创建", TableName);
+                            try
+                            {
+                                CheckTable();
+                            }
+                            catch (Exception ex)
+                            {
+                                if (DAL.Debug) DAL.WriteLog("InitData前创建表[{0}]失败: {1}", TableName, ex.Message);
+                                throw;
+                            }
+                        }
+                    }
+                    
                     entity.InitData();
                 }
             }
@@ -530,7 +578,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                     // 建表失败,记录日志但不中断流程
                     if (DAL.Debug) DAL.WriteLog("创建表[{0}]失败: {1}", TableName, ex.Message);
                 }
-
+                
                 // 建表后返回0,后续访问会重新获取真实记录数
                 count = 0;
             }

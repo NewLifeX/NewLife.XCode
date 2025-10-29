@@ -68,8 +68,8 @@ internal class MySql : RemoteDb
         // 默认最大连接数1000
         if (builder["Pooling"].ToBoolean()) builder.TryAdd(MaxPoolSize, "1000");
 
-        // 如未设置Sslmode，默认为none
-        if (builder[Sslmode] == null) builder.TryAdd(Sslmode, "none");
+        // 如未设置Sslmode,默认为Preferred(兼容新旧版本MySQL驱动)
+        if (builder[Sslmode] == null) builder.TryAdd(Sslmode, "Preferred");
     }
 
     protected override void OnGetConnectionString(ConnectionStringBuilder builder)

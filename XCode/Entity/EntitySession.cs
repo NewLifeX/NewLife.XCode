@@ -503,12 +503,37 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
             };
             _NextFullCount = now.AddSeconds(exp);
 
-            var builder = new SelectBuilder
+            try
             {
-                Table = FormatedTableName
-            };
-            FixBuilder(builder);
-            count = dal.SelectCount(builder);
+                var builder = new SelectBuilder
+                {
+                    Table = FormatedTableName
+                };
+                FixBuilder(builder);
+                count = dal.SelectCount(builder);
+            }
+            catch
+            {
+                // 表可能尚未创建,主动触发建表
+                // CheckAndAdd机制会将表名加入HasCheckTables列表
+                // 这样后续的CheckTables()就会自动跳过此表,避免重复检查
+                try
+                {
+                    if (!dal.CheckAndAdd(TableName))
+                    {
+                        // 表名还未在检查列表中,立即创建表
+                        CheckTable();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 建表失败,记录日志但不中断流程
+                    if (DAL.Debug) DAL.WriteLog("创建表[{0}]失败: {1}", TableName, ex.Message);
+                }
+
+                // 建表后返回0,后续访问会重新获取真实记录数
+                count = 0;
+            }
         }
 
         return count;

@@ -15,13 +15,13 @@ using XUnitTest.XCode.TestEntity;
 namespace XUnitTest.XCode.DataAccessLayer;
 
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
-public class HighGoTests
+public class IRISTests
 {
-    private static String _ConnStr = "Server=127.0.0.1;User Id=highgo;Password=P12345!@;Database=highgo;Port=5866";
+    private static String _ConnStr = "Server=127.0.0.1;User Id=_SYSTEM;Password=sys;namespace=user;Port=51783";
 
-    public HighGoTests()
+    public IRISTests()
     {
-        var f = "Config\\HighGo.config".GetFullPath();
+        var f = "Config\\IRIS.config".GetFullPath();
         if (File.Exists(f))
             _ConnStr = File.ReadAllText(f);
         else
@@ -31,7 +31,7 @@ public class HighGoTests
     [Fact]
     public void InitTest()
     {
-        var db = DbFactory.Create(DatabaseType.HighGo);
+        var db = DbFactory.Create(DatabaseType.IRIS);
         Assert.NotNull(db);
 
         var factory = db.Factory;
@@ -53,7 +53,7 @@ public class HighGoTests
     [Fact(Skip = "跳过")]
     public void ConnectTest()
     {
-        var db = DbFactory.Create(DatabaseType.HighGo);
+        var db = DbFactory.Create(DatabaseType.IRIS);
         var factory = db.Factory;
         var conn = factory.CreateConnection();
         conn.ConnectionString = _ConnStr;
@@ -63,11 +63,11 @@ public class HighGoTests
     [Fact(Skip = "跳过")]
     public void DALTest()
     {
-        DAL.AddConnStr("HighGo", _ConnStr, null, "HighGo");
-        var dal = DAL.Create("HighGo");
+        DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
+        var dal = DAL.Create("IRIS");
         Assert.NotNull(dal);
-        Assert.Equal("HighGo", dal.ConnName);
-        Assert.Equal(DatabaseType.HighGo, dal.DbType);
+        Assert.Equal("IRIS", dal.ConnName);
+        Assert.Equal(DatabaseType.IRIS, dal.DbType);
 
         var db = dal.Db;
         var connstr = db.ConnectionString;
@@ -80,9 +80,9 @@ public class HighGoTests
     [Fact(Skip = "跳过")]
     public void MetaTest()
     {
-        DAL.AddConnStr("HighGo", _ConnStr, null, "HighGo");
-        DAL.AddConnStr("Membership", _ConnStr, null, "HighGo");
-        var dal = DAL.Create("HighGo");
+        DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
+        DAL.AddConnStr("Membership", _ConnStr, null, "IRIS");
+        var dal = DAL.Create("IRIS");
         // 反向工程
         dal.SetTables(User.Meta.Table.DataTable);
         EntityFactory.InitConnection("Membership");
@@ -99,19 +99,19 @@ public class HighGoTests
     [Fact(Skip = "跳过")]
     public void SelectTest()
     {
-        DAL.AddConnStr("HighGo", _ConnStr, null, "HighGo");
-        var dal = DAL.Create("HighGo");
+        DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
+        var dal = DAL.Create("IRIS");
         try
         {
             dal.Execute("drop database  if EXISTS \"test\"");
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
 
-        var connStr = _ConnStr.Replace("Database=highgo;", "Database=Membership_Test;");
-        DAL.AddConnStr("HighGo_Select", connStr, null, "HighGo");
+        var connStr = _ConnStr.Replace("Database=iris;", "Database=Membership_Test;");
+        DAL.AddConnStr("IRIS_Select", connStr, null, "IRIS");
 
-        Role.Meta.ConnName = "HighGo_Select";
-        Area.Meta.ConnName = "HighGo_Select";
+        Role.Meta.ConnName = "IRIS_Select";
+        Area.Meta.ConnName = "IRIS_Select";
 
         Role.Meta.Session.InitData();
 
@@ -147,19 +147,19 @@ public class HighGoTests
     [Fact(Skip = "跳过")]
     public void TablePrefixTest()
     {
-        DAL.AddConnStr("HighGo", _ConnStr, null, "HighGo");
-        var dal = DAL.Create("HighGo");
+        DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
+        var dal = DAL.Create("IRIS");
         try
         {
             dal.Execute("drop database if EXISTS \"Membership_Table_Prefix\"");
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
 
-        var connStr = _ConnStr.Replace("Database=highgo;", "Database=Membership_Table_Prefix;");
+        var connStr = _ConnStr.Replace("Database=iris;", "Database=Membership_Table_Prefix;");
         connStr += ";TablePrefix=member_";
-        DAL.AddConnStr("HighGo_Table_Prefix", connStr, null, "HighGo");
+        DAL.AddConnStr("IRIS_Table_Prefix", connStr, null, "IRIS");
 
-        Role.Meta.ConnName = "HighGo_Table_Prefix";
+        Role.Meta.ConnName = "IRIS_Table_Prefix";
 
         Role.Meta.Session.InitData();
 
@@ -179,8 +179,8 @@ public class HighGoTests
 
     private IDisposable CreateForBatch(String action)
     {
-        var connStr = _ConnStr.Replace("Database=highgo;", "Database=Membership_Batch;");
-        DAL.AddConnStr("Membership_Batch", connStr, null, "HighGo");
+        var connStr = _ConnStr.Replace("Database=iris;", "Database=Membership_Batch;");
+        DAL.AddConnStr("Membership_Batch", connStr, null, "IRIS");
         var dt = Role2.Meta.Table.DataTable.Clone() as IDataTable;
         dt.TableName = $"Role2_{action}";
 
@@ -222,7 +222,7 @@ public class HighGoTests
     public void PositiveAndNegative()
     {
         var connName = GetType().Name;
-        DAL.AddConnStr(connName, _ConnStr, null, "HighGo");
+        DAL.AddConnStr(connName, _ConnStr, null, "IRIS");
         var dal = DAL.Create(connName);
 
         var table = User.Meta.Table.DataTable.Clone() as IDataTable;
@@ -248,7 +248,7 @@ public class HighGoTests
     [Fact(Skip = "跳过")]
     public void QuerySqlTest()
     {
-        DAL.AddConnStr("Membership", _ConnStr, null, "HighGo");
+        DAL.AddConnStr("Membership", _ConnStr, null, "IRIS");
         var dal = DAL.Create("Membership");
         var a = dal.Query<Role>("select * from \"Role\" order by \"ID\"");
 
@@ -283,7 +283,7 @@ public class HighGoTests
 
         var str = """
             <EntityModel>
-             <Table Name="ActEvtLog" TableName="ACT_EVT_LOG" DbType="HighGo">
+             <Table Name="ActEvtLog" TableName="ACT_EVT_LOG" DbType="IRIS">
                 <Columns>
                   <Column Name="LogNr" ColumnName="LOG_NR_" DataType="Int32" RawType="numeric(19, 0)" Identity="True" PrimaryKey="True" />
                   <Column Name="Type" ColumnName="TYPE_" DataType="String" Length="64" />
@@ -305,9 +305,9 @@ public class HighGoTests
         Assert.NotNull(table);
         Assert.Equal("ActEvtLog", table.Name);
         Assert.Equal("ACT_EVT_LOG", table.TableName);
-        Assert.Equal(DatabaseType.HighGo, table.DbType);
+        Assert.Equal(DatabaseType.IRIS, table.DbType);
 
-        var db = DbFactory.Create(DatabaseType.HighGo);
+        var db = DbFactory.Create(DatabaseType.IRIS);
         var meta = db.CreateMetaData();
         var sql = meta.GetSchemaSQL(DDLSchema.CreateTable, table);
 
@@ -331,9 +331,9 @@ public class HighGoTests
     [Fact(Skip = "跳过")]
     public void BuildDeleteSql()
     {
-        DAL.AddConnStr("HighGo", _ConnStr, null, "HighGo");
-        var dal = DAL.Create("HighGo");
-        Role.Meta.ConnName = "HighGo";
+        DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
+        var dal = DAL.Create("IRIS");
+        Role.Meta.ConnName = "IRIS";
         Role.Meta.Session.InitData();
         var count = Role.Delete(Role._.Name == "管理员");
         Assert.Equal(count, 1);

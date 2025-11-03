@@ -65,6 +65,10 @@ public enum DatabaseType
     [Description("瀚高(HighGo)数据库")]
     HighGo = 14,
 
+    /// <summary>InterSystems IRIS数据库</summary>
+    [Description("IRIS数据库")]
+    IRIS = 15,
+
     ///// <summary>网络虚拟数据库</summary>
     //[Description("网络虚拟数据库")]
     //Network = 100,

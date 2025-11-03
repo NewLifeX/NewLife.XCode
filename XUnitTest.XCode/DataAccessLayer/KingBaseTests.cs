@@ -1,20 +1,15 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Security;
-
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
-
 using Xunit;
-
 using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
@@ -33,7 +28,7 @@ public class KingBaseTests
             File.WriteAllText(f.EnsureDirectory(), _ConnStr);
     }
 
-    [Fact(Skip = "跳过")]
+    [Fact]
     public void InitTest()
     {
         var db = DbFactory.Create(DatabaseType.KingBase);

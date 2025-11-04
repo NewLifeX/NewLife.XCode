@@ -202,9 +202,10 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
             initThread = Thread.CurrentThread.ManagedThreadId;
 
             // 如果该实体类是首次使用检查模型，则在这个时候检查
+            Task? task = null;
             try
             {
-                CheckModel();
+                task = CheckModel();
             }
             catch (Exception ex)
             {
@@ -219,47 +220,10 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                     // 因为CheckModel可能使用异步方式建表，导致InitData时表尚不存在
                     if (!DataTable.IsView)
                     {
-                        var dal = Dal;
-                        var needCheck = false;
-
-                        // 先用QueryCountFast快速检查(查information_schema，极快)
-                        var count = dal.Session.QueryCountFast(FormatedTableName);
-
-                        // count <= 0 可能表示表不存在，也可能是information_schema缓存未更新
-                        // 需要进一步精确验证
-                        if (count <= 0)
-                        {
-                            // 尝试真实查询表，验证表是否真的存在
-                            try
-                            {
-                                var builder = new SelectBuilder
-                                {
-                                    Table = FormatedTableName
-                                };
-                                FixBuilder(builder);
-                                dal.SelectCount(builder);
-                                // 查询成功，说明表存在(information_schema缓存延迟)
-                            }
-                            catch
-                            {
-                                // 查询失败，表确实不存在
-                                needCheck = true;
-                            }
-                        }
-
-                        if (needCheck)
+                        if (task != null && !task.Wait(5_000))
                         {
                             // 表不存在，强制同步创建表
-                            if (DAL.Debug) DAL.WriteLog("InitData前检测到表[{0}]不存在，立即创建", TableName);
-                            try
-                            {
-                                CheckTable();
-                            }
-                            catch (Exception ex)
-                            {
-                                if (DAL.Debug) DAL.WriteLog("InitData前创建表[{0}]失败: {1}", TableName, ex.Message);
-                                throw;
-                            }
+                            if (DAL.Debug) DAL.WriteLog("InitData前检测到表[{0}]不存在", TableName);
                         }
                     }
 

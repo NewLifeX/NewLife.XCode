@@ -125,13 +125,14 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (sc.Using)
         {
             // 查询列表异步加入对象缓存
-            ThreadPool.UnsafeQueueUserWorkItem(es =>
+            var es = list.AsList();
+            Task.Run(() =>
             {
-                foreach (var entity in (es as TEntity[])!)
+                foreach (var entity in es)
                 {
                     sc.Add(entity);
                 }
-            }, list.ToArray());
+            });
         }
     }
     #endregion

@@ -257,9 +257,9 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     /// <summary>根据主键获取实体数据</summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    public TEntity this[TKey key] { get => GetItem(Entities, key); set => Add(key, value); }
+    public TEntity? this[TKey key] { get => GetItem(Entities, key); set => Add(key, value); }
 
-    private TEntity GetItem<TKey2>(ConcurrentDictionary<TKey2, CacheItem> dic, TKey2 key)
+    private TEntity? GetItem<TKey2>(ConcurrentDictionary<TKey2, CacheItem> dic, TKey2 key)
     {
         // 为空的key，直接返回null，不进行缓存查找
         if (key == null) return null;
@@ -296,7 +296,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         {
             // 频繁更新下，采用异步更新缓存，以提升吞吐。非频繁访问时（2倍超时），同步更新
             if (sec < Expire)
-                ThreadPool.UnsafeQueueUserWorkItem(s => UpdateData(ci, key), null);
+                Task.Run(() => UpdateData(ci, key));
             else
                 UpdateData(ci, key);
         }
@@ -501,7 +501,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
 
     /// <summary>移除指定项</summary>
     /// <param name="entity"></param>
-    void ISingleEntityCache.Remove(IEntity entity) => Remove(entity as TEntity);
+    void ISingleEntityCache.Remove(IEntity entity) => Remove((entity as TEntity)!);
 
     /// <summary>向单对象缓存添加项</summary>
     /// <param name="value">实体对象</param>

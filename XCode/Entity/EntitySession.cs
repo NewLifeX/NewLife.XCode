@@ -2,13 +2,15 @@
 using System.Data;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Threading;
 using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
+#if !NET45
+using TaskEx = System.Threading.Tasks.Task;
+#endif
 
 /*
  * 检查表结构流程：
@@ -219,10 +221,10 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                     {
                         var dal = Dal;
                         var needCheck = false;
-                        
+
                         // 先用QueryCountFast快速检查(查information_schema，极快)
                         var count = dal.Session.QueryCountFast(FormatedTableName);
-                        
+
                         // count <= 0 可能表示表不存在，也可能是information_schema缓存未更新
                         // 需要进一步精确验证
                         if (count <= 0)
@@ -244,7 +246,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                                 needCheck = true;
                             }
                         }
-                        
+
                         if (needCheck)
                         {
                             // 表不存在，强制同步创建表
@@ -260,7 +262,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                             }
                         }
                     }
-                    
+
                     entity.InitData();
                 }
             }
@@ -312,12 +314,12 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     Boolean _hasCheckModel = false;
     readonly Object _checkLock = new();
     /// <summary>检查模型。依据反向工程设置、是否首次使用检查、是否已常规检查等</summary>
-    private void CheckModel()
+    private Task CheckModel()
     {
-        if (_hasCheckModel || DataTable.IsView) return;
+        if (_hasCheckModel || DataTable.IsView) return TaskEx.CompletedTask;
         lock (_checkLock)
         {
-            if (_hasCheckModel) return;
+            if (_hasCheckModel) return TaskEx.CompletedTask;
             _hasCheckModel = true;
 
             var cname = ConnName;
@@ -325,7 +327,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
             if (Dal.Db.Migration == Migration.Off || IsGenerated)
             {
                 _hasCheckModel = true;
-                return;
+                return TaskEx.CompletedTask;
             }
 
             // CheckTableWhenFirstUse的实体类，在这里检查，有点意思，记下来
@@ -346,7 +348,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                 if (dal.Db.Migration > Migration.ReadOnly /*|| def != this*/)
                     CheckTable();
                 else
-                    ThreadPool.UnsafeQueueUserWorkItem(s =>
+                    return Task.Run(() =>
                     {
                         try
                         {
@@ -356,8 +358,10 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                         {
                             XTrace.WriteException(ex);
                         }
-                    }, null);
+                    });
             }
+
+            return TaskEx.CompletedTask;
         }
     }
     #endregion
@@ -441,7 +445,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                 {
                     _NextCount = now.AddSeconds(60);
                     // 异步更新
-                    ThreadPool.UnsafeQueueUserWorkItem(s =>
+                    Task.Run(() =>
                     {
                         try
                         {
@@ -451,7 +455,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                         {
                             XTrace.WriteException(ex);
                         }
-                    }, null);
+                    });
                 }
 
                 return n;
@@ -578,7 +582,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                     // 建表失败,记录日志但不中断流程
                     if (DAL.Debug) DAL.WriteLog("创建表[{0}]失败: {1}", TableName, ex.Message);
                 }
-                
+
                 // 建表后返回0,后续访问会重新获取真实记录数
                 count = 0;
             }

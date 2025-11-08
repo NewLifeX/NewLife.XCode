@@ -24,6 +24,8 @@ internal class VastBase : RemoteDb
 
     private const String Server_Key = "Server";
 
+    internal String? _searchPath;
+
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
         base.OnSetConnectionString(builder);
@@ -36,6 +38,25 @@ internal class VastBase : RemoteDb
         }
 
         //if (builder.TryGetValue("Database", out var db) && db != db.ToLower()) builder["Database"] = db.ToLower();
+
+        // VastBase 必须指定 Search Path
+        if (!builder.TryGetValue("Search Path", out var searchPath) && !builder.TryGetValue("SearchPath", out searchPath))
+        {
+            throw new ArgumentException("VastBase 连接字符串中必须包含 Search Path 参数,例如: Search Path=public");
+        }
+
+        // 保存 Search Path,用于后续查询表结构
+        _searchPath = searchPath?.Split(',')[0].Trim();
+
+        // VastBase 不支持 DISCARD 语句,禁用连接重置
+        // 避免报错: DISCARD statement is not yet supported
+        builder.TryAdd("No Reset On Close", "true");
+
+        // 打印 Search Path 信息,便于调试
+        if (!String.IsNullOrEmpty(_searchPath))
+        {
+            DAL.WriteLog("[{0}]VastBase Search Path(Schema): {1}", ConnName, _searchPath);
+        }
     }
 
     #endregion 属性
@@ -220,10 +241,9 @@ internal class VastBase : RemoteDb
 
         if (name.StartsWith("\"") || name.EndsWith("\"")) return name;
 
-        ////如果包含大写字符，就加上引号
-        //if (name.Any(Char.IsUpper)) return $"\"{name}\"";
-
-        return name;
+        // VastBase/PostgreSQL 中未加引号的标识符会自动转为小写
+        // 为了与数据库实际存储的名称一致,这里也转为小写
+        return name.ToLower();
     }
 
     /// <inheritdoc/>
@@ -493,14 +513,16 @@ internal class VastBaseMetaData : RemoteDbMetaData
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
     {
         { typeof(Byte[]), new String[] { "bytea" } },
-        { typeof(Boolean), new String[] { "boolean" } },
-        { typeof(Int16), new String[] { "smallint" } },
-        { typeof(Int32), new String[] { "integer" } },
-        { typeof(Int64), new String[] { "bigint" } },
-        { typeof(Single), new String[] { "float" } },
-        { typeof(Double), new String[] { "float8", "double precision" } },
-        { typeof(Decimal), new String[] { "decimal" } },
-        { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "date" } },
+        // Byte 类型映射移除 - PostgreSQL/VastBase 的 smallint 是有符号 16 位整数,应映射到 Int16
+        // 如果需要存储 0-255 的 Byte 值,应使用 Int16 类型
+        { typeof(Boolean), new String[] { "boolean", "bool" } },
+        { typeof(Int16), new String[] { "smallint", "int2" } },
+        { typeof(Int32), new String[] { "integer", "int", "int4" } },
+        { typeof(Int64), new String[] { "bigint", "int8" } },
+        { typeof(Single), new String[] { "real", "float4" } },
+        { typeof(Double), new String[] { "double precision", "float8" } },
+        { typeof(Decimal), new String[] { "numeric", "decimal" } },
+        { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz", "date", "time" } },
         { typeof(String), new String[] { "varchar({0})", "character varying", "text" } },
     };
 
@@ -517,6 +539,15 @@ internal class VastBaseMetaData : RemoteDbMetaData
             var type = base.GetDataType(clone);
             if (type != null) return type.MakeArrayType();
         }
+
+        // 强制修正:smallint/int2 必须映射为 Int16,不能是 Byte
+        // 这样可以确保从数据库反向工程读取的类型与实体定义一致
+        var rawType = field.RawType?.ToLower();
+        if (rawType == "smallint" || rawType == "int2")
+        {
+            return typeof(Int16);
+        }
+
         return base.GetDataType(field);
     }
     #endregion 数据类型
@@ -565,17 +596,41 @@ internal class VastBaseMetaData : RemoteDbMetaData
         base.FixField(field, dr);
     }
 
-    public override String FieldClause(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldType(IDataColumn field)
     {
         if (field.Identity)
         {
-            if (field.DataType == typeof(Int64))
-            {
-                return $"{FormatName(field)} serial8 NOT NULL";
-            }
-            return $"{FormatName(field)} serial NOT NULL";
+            if (field.DataType == typeof(Int16)) return "smallserial";
+            if (field.DataType == typeof(Int32)) return "serial";
+            if (field.DataType == typeof(Int64)) return "bigserial";
         }
 
+        // 处理 Byte 类型:PostgreSQL/VastBase 没有无符号 8 位整数类型
+        // Byte (0-255) 使用 smallint (Int16) 存储
+        if (field.DataType == typeof(Byte))
+        {
+            WriteLog("字段[{0}]类型为Byte,VastBase不支持该类型,自动使用smallint(Int16)替代", field.Name);
+            return "smallint";
+        }
+
+        // VastBase/PostgreSQL 不支持 tinyint 或 int1,需要转换
+        // 当 RawType 是 tinyint 或 int1 时,根据 DataType 选择合适的类型
+        if (!field.RawType.IsNullOrEmpty())
+        {
+            var rawType = field.RawType.ToLower();
+            if (rawType.StartsWith("tinyint") || rawType.StartsWith("int1"))
+            {
+                // Boolean 使用 boolean,其他使用 smallint
+                if (field.DataType == typeof(Boolean)) return "boolean";
+                return "smallint";
+            }
+        }
+
+        return base.GetFieldType(field);
+    }
+
+    public override String FieldClause(IDataColumn field, Boolean onlyDefine)
+    {
         var sql = base.FieldClause(field, onlyDefine);
 
         //// 加上注释
@@ -587,9 +642,8 @@ internal class VastBaseMetaData : RemoteDbMetaData
     protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
         String? str = null;
-        if (!field.Nullable) str = " NOT NULL";
-
-        if (field.Identity) str = " serial NOT NULL";
+        // serial 类型已隐含 NOT NULL,不需要再添加
+        if (!field.Nullable && !field.Identity) str = " NOT NULL";
 
         // 默认值
         if (!field.Nullable && !field.Identity)
@@ -612,6 +666,87 @@ internal class VastBaseMetaData : RemoteDbMetaData
         return base.GetDefault(field, onlyDefine);
     }
 
+    protected override Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)
+    {
+        // 特殊兼容:Byte 和 Int16 在 VastBase 中都映射到 smallint
+        // 实体可能是 Byte,数据库反向工程返回 Int16,只要 RawType 都是 smallint 就视为兼容
+        var entityType = entityColumn.DataType;
+        var dbType = dbColumn.DataType;
+
+        if ((entityType == typeof(Byte) && dbType == typeof(Int16)) ||
+            (entityType == typeof(Int16) && dbType == typeof(Byte)))
+        {
+            var entityRaw = entityColumn.RawType;
+            var dbRaw = dbColumn.RawType;
+
+            // 如果都是 smallint 或 int2,则视为兼容（不区分大小写）
+            if (!String.IsNullOrEmpty(entityRaw) && !String.IsNullOrEmpty(dbRaw))
+            {
+                if ((entityRaw.EqualIgnoreCase("smallint") || entityRaw.EqualIgnoreCase("int2")) &&
+                    (dbRaw.EqualIgnoreCase("smallint") || dbRaw.EqualIgnoreCase("int2")))
+                    return false;
+            }
+        }
+
+        // 如果实体字段的 DataType 为 null,尝试从 RawType 反推
+        // (ModelHelper.FixDefaultByType 会将 DataType 设为 null,以便写入 XML 时不重复)
+        if (entityType == null && !String.IsNullOrEmpty(entityColumn.RawType))
+        {
+            var tempField = entityColumn.Table?.CreateColumn();
+            if (tempField != null)
+            {
+                tempField.RawType = entityColumn.RawType;
+                var dataType = GetDataType(tempField);
+                if (dataType != null && dataType == dbType)
+                    return false;
+            }
+        }
+
+        // 标准化 RawType:将 MySQL 的 tinyint/int1 转换为 VastBase 的标准类型
+        var entityRawType = NormalizeRawType(entityColumn.RawType, entityType);
+        var dbRawType = NormalizeRawType(dbColumn.RawType, dbType);
+
+        // 如果标准化后的 RawType 相同,则认为类型未改变
+        if (!String.IsNullOrEmpty(entityRawType) && !String.IsNullOrEmpty(dbRawType))
+        {
+            if (entityRawType.EqualIgnoreCase(dbRawType))
+                return false;
+
+            // 处理 PostgreSQL/VastBase 类型别名兼容(忽略长度)
+            var entityBaseType = entityRawType.Split('(')[0].Trim();
+            var dbBaseType = dbRawType.Split('(')[0].Trim();
+
+            // varchar ↔ character varying
+            if ((entityBaseType.EqualIgnoreCase("varchar") && dbBaseType.EqualIgnoreCase("character varying")) ||
+                (entityBaseType.EqualIgnoreCase("character varying") && dbBaseType.EqualIgnoreCase("varchar")))
+                return false;
+        }
+
+        return base.IsColumnTypeChanged(entityColumn, dbColumn);
+    }
+
+    /// <summary>标准化 RawType,将不支持的类型转换为 VastBase 支持的类型</summary>
+    private String? NormalizeRawType(String? rawType, Type? dataType)
+    {
+        if (String.IsNullOrEmpty(rawType)) return rawType;
+
+        // 优化:避免重复 ToLower,使用 OrdinalIgnoreCase 比较
+        if (rawType.StartsWith("tinyint", StringComparison.OrdinalIgnoreCase) ||
+            rawType.StartsWith("int1", StringComparison.OrdinalIgnoreCase))
+        {
+            if (dataType == typeof(Boolean)) return "boolean";
+            if (dataType == typeof(Byte)) return "smallint";
+        }
+
+        return rawType;
+    }
+
+    protected override Boolean IsColumnLengthChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
+        => base.IsColumnLengthChanged(entityColumn, dbColumn, entityDb);
+
+    protected override Boolean IsColumnChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
+        => base.IsColumnChanged(entityColumn, dbColumn, entityDb);
+
     #region 架构定义
 
     //public override object SetSchema(DDLSchema schema, params object[] values)
@@ -630,12 +765,13 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     protected override Boolean DatabaseExist(String databaseName)
     {
-        //return base.DatabaseExist(databaseName);
-
+        // 不使用 GetSchema,直接查询 pg_database 避免 pg_user 权限问题
         var session = Database.CreateSession();
-        //var dt = GetSchema(_.Databases, new String[] { databaseName.ToLower() });
-        var dt = GetSchema(_.Databases, [databaseName]);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
+
+        var sql = $"SELECT 1 FROM pg_catalog.pg_database WHERE datname = '{databaseName}'";
+        var ds = session.Query(sql);
+
+        return ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0;
     }
 
     /// <summary>
@@ -673,107 +809,270 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     public override String DropTableDescriptionSQL(IDataTable table) => $"Comment On Table {FormatName(table)} is ''";
 
+    public override String? AddColumnSQL(IDataColumn field)
+    {
+        // 使用 FieldClause 获取完整的字段定义(包含类型和约束)
+        var fieldDef = FieldClause(field, true);
+        // 从字段定义中移除字段名(FieldClause 返回格式: "字段名 类型 约束")
+        var parts = fieldDef.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries);
+        var typeAndConstraints = parts.Length > 1 ? parts[1] : fieldDef;
+
+        return $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {typeAndConstraints}";
+    }
+
+    public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
+    {
+        return $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
+    }
+
     public override String AddColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is '{field.Description}'";
 
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is ''";
+
+    public override String CreateIndexSQL(IDataIndex index)
+    {
+        // VastBase/PostgreSQL 中索引名不区分大小写
+        // 检查数据库中是否已存在同名索引(忽略大小写)
+        var table = index.Table;
+        if (table?.Indexes != null)
+        {
+            foreach (var existingIndex in table.Indexes)
+            {
+                // 不区分大小写比对索引名和列
+                if (existingIndex.Name.EqualIgnoreCase(index.Name) &&
+                    existingIndex.Columns != null && index.Columns != null &&
+                    existingIndex.Columns.Length == index.Columns.Length)
+                {
+                    var allMatch = true;
+                    for (var i = 0; i < existingIndex.Columns.Length; i++)
+                    {
+                        if (!existingIndex.Columns[i].EqualIgnoreCase(index.Columns[i]))
+                        {
+                            allMatch = false;
+                            break;
+                        }
+                    }
+
+                    if (allMatch)
+                        return String.Empty; // 索引已存在,跳过创建
+                }
+            }
+        }
+
+        return base.CreateIndexSQL(index);
+    }
 
     #endregion 架构定义
 
     #region 表构架
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
-        var tables = base.OnGetTables(names);
+        // VastBase 不使用 GetSchema,直接查询系统表避免 pg_user 权限问题
+        var list = new List<IDataTable>();
         var session = Database.CreateSession();
         using var _ = session.SetShowSql(false);
-        const String sql = @"with tables as (
-  select c
-    .oid,
-    ns.nspname as schema_name,
-    c.relname as table_name,
-    d.description as table_description,
-    pg_get_userbyid ( c.relowner ) as table_owner 
-  from
-    pg_catalog.pg_class
-    as c join pg_catalog.pg_namespace as ns on c.relnamespace = ns.
-    oid left join pg_catalog.pg_description d on c.oid = d.objoid 
-    and d.objsubid = 0 
-  where
-    ns.nspname not in ( 'pg_catalog' ) 
-)  select 
-c.table_name as table_name,
-t.table_description,
-c.column_name as column_name,
-c.ordinal_position,
-d.description as column_description
-from
-  tables
-  t join information_schema.columns c on c.table_schema = t.schema_name 
-  and c.table_name = t.
-  table_name left join pg_catalog.pg_description d on d.objoid = t.oid 
-  and d.objsubid = c.ordinal_position 
-  and d.objsubid > 0 
-where
-  c.table_schema = 'public' 
-order by
-  t.schema_name,
-  t.table_name,
-  c.ordinal_position";
-        var ds = session.Query(sql);
-        if (ds.Tables.Count != 0)
+
+        // 获取 Search Path (当前 schema)
+        var searchPath = "public";
+        if (Database is VastBase vb && !String.IsNullOrEmpty(vb._searchPath))
         {
-            var dt = ds.Tables[0]!;
-            foreach (var table in tables)
-            {
-                var rows = dt.Select($"table_name = '{table.TableName}'");
-                if (rows is { Length: > 0 })
-                {
-                    if (String.IsNullOrWhiteSpace(table.Description))
-                    {
-                        foreach (var row in rows)
-                        {
-                            table.Description = Convert.ToString(row["table_description"]);
-                            break;
-                        }
-                    }
-                    foreach (var row in rows)
-                    {
-                        var columnName = Convert.ToString(row["column_name"]);
-                        if (String.IsNullOrWhiteSpace(columnName)) continue;
-                        var col = table.GetColumn(columnName);
-                        if (col == null) continue;
-                        if (String.IsNullOrWhiteSpace(col.Description)) col.Description = Convert.ToString(row["column_description"]);
-                    }
-                }
-            }
+            searchPath = vb._searchPath;
         }
 
-        var idxs = tables.SelectMany(f => f.Indexes.Select(f => f.Name)).ToArray();
-        if (idxs.Length > 0)
+        DAL.WriteLog("[{0}]VastBase 查询表结构,使用 Schema: {1}", Database.ConnName, searchPath);
+
+        // 查询表列表和列信息
+        var sql = $@"
+SELECT 
+    t.tablename as table_name,
+    obj_description((quote_ident(t.schemaname)||'.'||quote_ident(t.tablename))::regclass) as table_description,
+    c.column_name,
+    c.ordinal_position,
+    c.data_type,
+    c.character_maximum_length,
+    c.numeric_precision,
+    c.numeric_scale,
+    c.is_nullable,
+    c.column_default,
+    col_description((quote_ident(t.schemaname)||'.'||quote_ident(t.tablename))::regclass, c.ordinal_position) as column_description
+FROM 
+    pg_catalog.pg_tables t
+    LEFT JOIN information_schema.columns c ON c.table_schema = t.schemaname AND c.table_name = t.tablename
+WHERE 
+    t.schemaname = '{searchPath}'
+ORDER BY 
+    t.tablename, c.ordinal_position";
+
+        var ds = session.Query(sql);
+        if (ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0)
         {
-            var idx_sql = $"SELECT conname FROM pg_constraint WHERE contype = 'p' AND conname IN (" +
-                $"{String.Join(",", idxs.Select(f => $"'{f}'"))})";
-            ds = session.Query(idx_sql);
-            if (ds.Tables.Count != 0)
+            DAL.WriteLog("[{0}]VastBase 在 Schema '{1}' 中未找到任何表", Database.ConnName, searchPath);
+            return list;
+        }
+
+        var dt = ds.Tables[0];
+
+        // 按表名分组
+        var tableDict = new Dictionary<String, List<DataRow>>(StringComparer.OrdinalIgnoreCase);
+        foreach (DataRow row in dt.Rows)
+        {
+            var tableName = row["table_name"]?.ToString();
+            if (String.IsNullOrEmpty(tableName)) continue;
+
+            if (!tableDict.ContainsKey(tableName!))
+                tableDict[tableName!] = new List<DataRow>();
+
+            tableDict[tableName!].Add(row);
+        }
+
+        foreach (var kvp in tableDict)
+        {
+            var tableName = kvp.Key;
+            var tableRows = kvp.Value;
+            if (String.IsNullOrEmpty(tableName)) continue;
+
+            // 表名过滤
+            if (names != null && names.Length > 0 && !names.Any(n => n.EqualIgnoreCase(tableName))) continue;
+
+            // 从数据库获取实际的表名(小写)
+            var dbTableName = tableRows[0]["table_name"]?.ToString();
+            if (String.IsNullOrEmpty(dbTableName)) continue;
+
+            var table = DAL.CreateTable();
+            // 使用数据库实际存储的表名(小写),这样生成的索引名也会是小写,与数据库匹配
+            table.TableName = dbTableName!;
+            table.DbType = Database.Type;
+
+            // 表描述(只取第一行)
+            if (tableRows.Count > 0)
             {
-                var dt = ds.Tables[0]!;
-                var set = new HashSet<String>();
-                foreach (DataRow dr in dt.Rows)
+                table.Description = tableRows[0]["table_description"]?.ToString();
+            }
+
+            // 添加列
+            foreach (var row in tableRows)
+            {
+                var columnName = row["column_name"]?.ToString();
+                if (String.IsNullOrEmpty(columnName)) continue;
+
+                var column = table.CreateColumn();
+                column.ColumnName = columnName!;
+                column.Description = row["column_description"]?.ToString();
+                column.RawType = row["data_type"]?.ToString();
+                column.Nullable = row["is_nullable"]?.ToString() == "YES";
+
+                var defaultValue = row["column_default"]?.ToString();
+                column.DefaultValue = defaultValue;
+
+                // 识别自增字段 (serial/bigserial 或 nextval)
+                var rawType = column.RawType ?? "";
+                if (defaultValue != null &&
+                    (defaultValue.Contains("nextval") || rawType == "serial" || rawType == "bigserial"))
                 {
-                    set.Add(Convert.ToString(dr[0]));
+                    column.Identity = true;
                 }
-                if (set.Count > 0)
+
+                // 解析数据类型
+                if (Int32.TryParse(row["character_maximum_length"]?.ToString(), out var len))
+                    column.Length = len;
+                if (Int32.TryParse(row["numeric_precision"]?.ToString(), out var precision))
+                    column.Precision = precision;
+                if (Int32.TryParse(row["numeric_scale"]?.ToString(), out var scale))
+                    column.Scale = scale;
+
+                table.Columns.Add(column);
+            }
+
+            // 让基类处理数据类型映射
+            foreach (var col in table.Columns)
+            {
+                // 调用 GetDataType 来设置正确的 C# 类型
+                var dataType = GetDataType(col);
+                if (dataType != null)
+                    col.DataType = dataType;
+            }
+
+            // 查询索引和主键(使用数据库实际表名)
+            var idxSql = $@"
+SELECT 
+    i.relname as index_name,
+    a.attname as column_name,
+    ix.indisprimary as is_primary,
+    ix.indisunique as is_unique
+FROM 
+    pg_catalog.pg_class t
+    JOIN pg_catalog.pg_namespace n ON n.oid = t.relnamespace
+    JOIN pg_catalog.pg_index ix ON ix.indrelid = t.oid
+    JOIN pg_catalog.pg_class i ON i.oid = ix.indexrelid
+    JOIN pg_catalog.pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
+WHERE 
+    n.nspname = '{searchPath}' AND t.relname = '{dbTableName}'
+ORDER BY 
+    i.relname, a.attnum";
+
+            var idxDs = session.Query(idxSql);
+            if (idxDs.Tables.Count > 0 && idxDs.Tables[0].Rows.Count > 0)
+            {
+                var idxDt = idxDs.Tables[0];
+
+                // 按索引名分组
+                var idxDict = new Dictionary<String, List<DataRow>>(StringComparer.OrdinalIgnoreCase);
+                foreach (DataRow row in idxDt.Rows)
                 {
-                    foreach (var tbl in tables)
+                    var indexName = row["index_name"]?.ToString();
+                    if (String.IsNullOrEmpty(indexName)) continue;
+
+                    if (!idxDict.ContainsKey(indexName!))
+                        idxDict[indexName!] = new List<DataRow>();
+
+                    idxDict[indexName!].Add(row);
+                }
+
+                foreach (var idxKvp in idxDict)
+                {
+                    var dbIndexName = idxKvp.Key;  // 数据库实际索引名(小写)
+                    var idxRows = idxKvp.Value;
+                    if (String.IsNullOrEmpty(dbIndexName) || idxRows.Count == 0) continue;
+
+                    var isPrimary = idxRows[0]["is_primary"]?.ToString() == "True";
+                    var isUnique = idxRows[0]["is_unique"]?.ToString() == "True";
+
+                    var index = table.CreateIndex();
+                    // 使用数据库实际的索引名(小写),便于在 CreateIndexSQL 中进行不区分大小写的比对
+                    index.Name = dbIndexName;
+                    index.PrimaryKey = isPrimary;
+                    index.Unique = isUnique;
+
+                    var colNames = new List<String>();
+                    foreach (var idxRow in idxRows)
                     {
-                        foreach (var idx in tbl.Indexes)
+                        var colName = idxRow["column_name"]?.ToString();
+                        if (!String.IsNullOrEmpty(colName))
+                            colNames.Add(colName!);
+                    }
+                    index.Columns = colNames.ToArray();
+
+                    table.Indexes.Add(index);
+
+                    // 标记主键列
+                    if (isPrimary)
+                    {
+                        foreach (var colName in index.Columns)
                         {
-                            if (!String.IsNullOrWhiteSpace(idx.Name) && set.Contains(idx.Name!)) idx.PrimaryKey = true;
+                            var col = table.GetColumn(colName);
+                            if (col != null) col.PrimaryKey = true;
                         }
                     }
                 }
             }
+
+            // 修正关系数据
+            table.Fix();
+            list.Add(table);
         }
-        return tables;
+
+        DAL.WriteLog("[{0}]VastBase 在 Schema '{1}' 中找到 {2} 个表", Database.ConnName, searchPath, list.Count);
+        return list;
     }
     #endregion
 }

@@ -579,25 +579,32 @@ partial class DAL
         {
             //list.Add(item.Groups[1].Value);
             var tableName = item.Groups[1].Value;
-            if (trimShard)
-            {
-                // 从尾部开始找到第一个数字，然后再找到下划线
-                var p = -1;
-                for (var i = tableName.Length - 1; i >= 0; i--)
-                {
-                    if (!Char.IsDigit(tableName[i])) break;
-                    p = i;
-                }
-                if (p > 0 && tableName[p - 1] == '_') p--;
-                // 数字长度至少是2，否则不是分表
-                if (p > 0 && p + 2 <= tableName.Length)
-                {
-                    tableName = tableName[..p];
-                }
-            }
+            if (trimShard) tableName = TrimTableName(tableName);
+
             if (!list.Contains(tableName)) list.Add(tableName);
         }
         return list.ToArray();
+    }
+
+    /// <summary>去掉表名后面的分表信息。如日期分表</summary>
+    /// <param name="tableName"></param>
+    /// <returns></returns>
+    public static String TrimTableName(String tableName)
+    {
+        // 从尾部开始找到第一个数字，然后再找到下划线
+        var p = -1;
+        for (var i = tableName.Length - 1; i >= 0; i--)
+        {
+            if (!Char.IsDigit(tableName[i])) break;
+            p = i;
+        }
+        if (p > 0 && tableName[p - 1] == '_') p--;
+        // 数字长度至少是2，否则不是分表
+        if (p > 0 && p + 2 <= tableName.Length)
+        {
+            tableName = tableName[..p];
+        }
+        return tableName;
     }
 
     private static void Append(StringBuilder sb, Object? value)

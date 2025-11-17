@@ -86,7 +86,7 @@ public partial class Area : Entity<Area>
         // 预热数据
         if (Meta.Session.Count > 0)
         {
-            Task.Run(() =>
+            Task.Factory.StartNew(() =>
             {
                 try
                 {
@@ -96,7 +96,7 @@ public partial class Area : Entity<Area>
                 {
                     XTrace.WriteException(ex);
                 }
-            });
+            }, TaskCreationOptions.LongRunning);
         }
     }
 

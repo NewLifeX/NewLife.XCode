@@ -312,7 +312,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                 if (dal.Db.Migration > Migration.ReadOnly /*|| def != this*/)
                     CheckTable();
                 else
-                    return Task.Run(() =>
+                    return Task.Factory.StartNew(() =>
                     {
                         try
                         {
@@ -322,7 +322,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
                         {
                             XTrace.WriteException(ex);
                         }
-                    });
+                    }, TaskCreationOptions.LongRunning);
             }
 
             return TaskEx.CompletedTask;
@@ -490,7 +490,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         // 100w数据时，没有预热Select Count需要3000ms，预热后需要500ms
         if (dal.DbType != DatabaseType.SQLite && (count <= 0 || count >= 1_000_000) && !DataTable.IsView)
         {
-            using var span = dal.Tracer?.NewSpan($"db:{ConnName}:QueryCountFast:{TableName}");
+            using var span = dal.Tracer?.NewSpan($"db:{ConnName}:QueryCountFast:{DAL.TrimTableName(TableName)}", TableName);
             try
             {
                 count = dal.Session.QueryCountFast(FormatedTableName);

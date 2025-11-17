@@ -512,7 +512,7 @@ public static class EntityExtension
 
         var total = list2.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
+        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
         span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
         try
@@ -604,7 +604,7 @@ public static class EntityExtension
 
         var total = list2.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{dal.ConnName}:InsertIgnore:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
+        using var span = tracer?.NewSpan($"db:{dal.ConnName}:InsertIgnore:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
         span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
         try
@@ -696,7 +696,7 @@ public static class EntityExtension
 
         var total = list2.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchReplace:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
+        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchReplace:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
         span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
         try
@@ -789,7 +789,7 @@ public static class EntityExtension
 
         var total = list2.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
+        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
         span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
         span?.AppendTag($"UpdateColumns: {updateColumns?.Join()}");
@@ -937,7 +937,7 @@ public static class EntityExtension
 
         var total = list2.Count();
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
-        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{fact.Table.TableName}", $"{session.TableName}[{total}]", total);
+        using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
         span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
         try

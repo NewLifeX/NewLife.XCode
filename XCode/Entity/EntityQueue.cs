@@ -81,16 +81,14 @@ public class EntityQueue : DisposeBase
     /// <returns>返回是否添加成功，实体对象已存在于队列中则返回false</returns>
     public Boolean Add(IEntity entity, Int32 msDelay)
     {
+        if (_count >= MaxEntity) return false;
+
         // 首次使用时初始化定时器
         if (_Timer == null)
         {
             lock (this)
             {
-                _Timer ??= new TimerX(Work, null, Period, Period, "EQ")
-                {
-                    Async = true,
-                    //CanExecute = () => DelayEntities.Any() || Entities.Any()
-                };
+                _Timer ??= new TimerX(Work, null, Period, Period, "EQ") { Async = true };
             }
         }
 
@@ -109,18 +107,23 @@ public class EntityQueue : DisposeBase
         if (_count >= MaxEntity)
         {
             var ss = Session;
-            using var span = DefaultTracer.Instance?.NewError($"db:MaxQueueOverflow", $"{ss.TableName}实体队列溢出，超过最大值{MaxEntity:n0}");
-            while (_count >= MaxEntity)
+            using var span = DefaultTracer.Instance?.NewError($"db:MaxQueueOverflow", $"{ss.TableName}实体队列溢出，超过最大值{MaxEntity:n0}", _count);
+
+            // 最多等待15秒，避免死等阻塞业务处理
+            var times = 150;
+            while (_count >= MaxEntity && --times > 0)
             {
                 Thread.Sleep(100);
             }
+
+            return _count < MaxEntity;
         }
 
         return true;
     }
 
     /// <summary>当前缓存个数</summary>
-    private Int32 _count;
+    private volatile Int32 _count;
 
     private void Work(Object? state)
     {
@@ -129,7 +132,7 @@ public class EntityQueue : DisposeBase
 
         // 检查是否有延迟保存
         var ds = DelayEntities;
-        if (ds.Any())
+        if (!ds.IsEmpty)
         {
             var now = TimerX.Now;
             foreach (var item in ds)
@@ -147,7 +150,7 @@ public class EntityQueue : DisposeBase
 
         // 检查是否有近实时保存
         var es = Entities;
-        if (es.Any())
+        if (!es.IsEmpty)
         {
             // 为了速度，不拷贝，直接创建一个新的集合
             Entities = new ConcurrentDictionary<IEntity, IEntity>();
@@ -166,7 +169,7 @@ public class EntityQueue : DisposeBase
 
             var ss = Session;
             DefaultSpan.Current = null;
-            using var span = Tracer?.NewSpan($"db:{ss.ConnName}:Queue:{ss.TableName}", list.Count, list.Count);
+            using var span = Tracer?.NewSpan($"db:{ss.ConnName}:Queue:{DAL.TrimTableName(ss.TableName)}", list.Count, list.Count);
             if (_lastTraceId != null) span?.Detach(_lastTraceId);
             _lastTraceId = null;
 
@@ -179,6 +182,9 @@ public class EntityQueue : DisposeBase
                 span?.SetError(ex, null);
                 throw;
             }
+
+            // 如果集合没有数据了，重置计数器
+            if (Entities.IsEmpty) _count = 0;
         }
     }
 

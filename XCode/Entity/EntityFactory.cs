@@ -209,7 +209,7 @@ public static class EntityFactory
                 if (name == null || connNames.Contains(name) || mode != ModelCheckModes.CheckAllTablesWhenInit) continue;
                 connNames.Add(name);
 
-                ts.Add(Task.Run(() => Init(name, types, false)));
+                ts.Add(Task.Factory.StartNew(() => Init(name, types, false), TaskCreationOptions.LongRunning));
 
                 if (span != null) span.Value++;
             }

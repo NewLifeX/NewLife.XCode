@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using NewLife;
 using NewLife.Data;
 using XCode.Common;
 using XCode.Configuration;
@@ -202,11 +201,34 @@ public partial class Entity<TEntity>
         public IEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, IEntity?> find, Func<TKey, IEntity> create) => Entity<TEntity>.GetOrAdd(key, (k, b) => find?.Invoke(k, b) as TEntity, k => (create?.Invoke(k) as TEntity)!);
 
         /// <summary>合并数据。查出表中已有数据匹配，能匹配的更新，无法匹配的批量插入</summary>
-        /// <remarks>一般用于数据导入等要求比较高的场合</remarks>
+        /// <remarks>
+        /// 一般用于数据导入等要求比较高的场合。
+        /// 主要场景：
+        /// 1，备份数据，原地恢复。按主键匹配，存在则更新，不存在则插入。
+        /// 2，导出数据，异地导入。抛弃主键，按业务唯一键匹配，存在则更新，不存在则插入。
+        /// 3，直接导入，如Excel导入。按业务唯一键匹配，存在则更新，不存在则插入。
+        /// 显然，主键匹配和业务唯一键匹配只需要二选一，调用前清空主键值即可使用业务唯一键匹配。
+        /// </remarks>
         /// <param name="source">数据源。实体列表或模型对象列表</param>
         /// <param name="fields">需要合并的字段，默认null合并所有字段</param>
         /// <returns></returns>
-        public Int32 Merge(IEnumerable<IModel> source, FieldItem[]? fields = null)
+        [Obsolete("=>Merge(source, olds, fields)")]
+        public Int32 Merge(IEnumerable<IModel> source, FieldItem[]? fields = null) => Merge(source, null, fields);
+
+        /// <summary>合并数据。查出表中已有数据匹配，能匹配的更新，无法匹配的批量插入</summary>
+        /// <remarks>
+        /// 一般用于数据导入等要求比较高的场合。
+        /// 主要场景：
+        /// 1，备份数据，原地恢复。按主键匹配，存在则更新，不存在则插入。
+        /// 2，导出数据，异地导入。抛弃主键，按业务唯一键匹配，存在则更新，不存在则插入。
+        /// 3，直接导入，如Excel导入。按业务唯一键匹配，存在则更新，不存在则插入。
+        /// 显然，主键匹配和业务唯一键匹配只需要二选一，调用前清空主键值即可使用业务唯一键匹配。
+        /// </remarks>
+        /// <param name="source">数据源。实体列表或模型对象列表</param>
+        /// <param name="targets">目标实体集合。待合并的目标，如果未指定则在全表数据小于10000时做全表查询</param>
+        /// <param name="fields">需要合并的字段，默认null合并所有字段</param>
+        /// <returns></returns>
+        public Int32 Merge(IEnumerable<IModel> source, IList<IEntity>? targets = null, FieldItem[]? fields = null)
         {
             if (source == null) return 0;
 
@@ -219,74 +241,57 @@ public partial class Entity<TEntity>
             var updates = new List<IEntity>();
 
             var uk = factory.Unique;
-            var table = factory.Table.DataTable;
-            // 可用的唯一索引集合（列在导入字段中都存在）
-            var uniqueIndexes = table.Indexes.Where(e => e.Unique && e.Columns.All(c => fieldNames.Contains(c))).ToList();
+            // 可用的唯一索引
+            var uidx = factory.Table.DataTable.Indexes.FirstOrDefault(e => e.Unique);
+            var idxFields = uidx?.Columns.Select(e => factory.Table.FindByName(e)!).ToArray();
 
             // 估算总行数（尽量避免误判）
-            var totalRows = factory.Session.Count;
-            if (totalRows < 10000) totalRows = (Int32)factory.FindCount();
+            var totalRows = 0;
+            if (targets == null)
+            {
+                totalRows = factory.Session.Count;
+                if (totalRows < 10000) totalRows = (Int32)factory.FindCount();
+            }
 
             // 小表：整表加载，内存匹配
-            if (totalRows < 10000)
+            if (totalRows < 10000 || targets != null)
             {
-                var olds = factory.FindAll();
+                targets ??= factory.FindAll();
 
                 // 主键字典
-                var pkDict = uk == null ? null : olds.ToDictionary(e => e[uk.Name]);
+                var pkDict = uk == null ? null : targets.ToDictionary(e => e[uk.Name]);
 
-                // 唯一索引字典集合
-                var idxDicts = new List<(String[] cols, Dictionary<String, IEntity> map)>();
-                foreach (var idx in uniqueIndexes)
+                // 唯一索引
+                var map = new Dictionary<String, IEntity>();
+                if (idxFields != null)
                 {
-                    var map = new Dictionary<String, IEntity>(StringComparer.Ordinal);
-                    foreach (var o in olds)
+                    foreach (var entity in targets)
                     {
-                        var k = idx.Columns.Join("|", e => o[e]);
-                        if (k != null && !map.ContainsKey(k)) map[k] = o;
+                        var k = idxFields.Join("|", e => entity[e.Name]);
+                        if (k != null) map[k] = entity;
                     }
-                    idxDicts.Add((idx.Columns, map));
                 }
 
                 foreach (var model in source)
                 {
                     IEntity? old = null;
 
+                    // 优先使用主键匹配，如果想指定使用唯一索引匹配，调用前清空主键值
                     if (uk != null && !Helper.IsNullKey(model[uk.Name], uk.Type))
                     {
-                        // 只按主键匹配，找不到则直接插入，不再尝试唯一索引
                         pkDict?.TryGetValue(model[uk.Name], out old);
-                        if (old == null)
-                        {
-                            var entity = ToEntity(model, factory, fields);
-                            inserts.Add(entity);
-                            continue;
-                        }
                     }
-                    else
+                    else if (idxFields != null)
                     {
-                        // 仅当未指定主键时，才尝试唯一索引匹配
-                        foreach (var (cols, map) in idxDicts)
-                        {
-                            var k = cols.Join("|", e => model[e]);
-                            if (k != null && map.TryGetValue(k, out old)) break;
-                        }
+                        var k = idxFields.Join("|", e => model[e.Name]);
+                        if (k != null) map.TryGetValue(k, out old);
                     }
 
+                    var entity = Merge(old, model, fields);
                     if (old != null)
-                    {
-                        // 拷贝字段并加入更新队列
-                        foreach (var fi in fields)
-                        {
-                            old.SetItem(fi.Name, model[fi.Name]);
-                        }
-                        updates.Add(old);
-                    }
+                        updates.Add(entity);
                     else
-                    {
-                        var entity = ToEntity(model, factory, fields);
                         inserts.Add(entity);
-                    }
                 }
             }
             else
@@ -296,50 +301,27 @@ public partial class Entity<TEntity>
                 {
                     IEntity? old = null;
 
+                    // 优先使用主键匹配，如果想指定使用唯一索引匹配，调用前清空主键值
                     if (uk != null && !Helper.IsNullKey(model[uk.Name], uk.Type))
                     {
-                        var key = model[uk.Name];
-                        old = factory.FindByKey(key!);
-                        if (old == null)
-                        {
-                            // 主键已指定，但未找到旧数据，直接插入，不再尝试唯一索引
-                            var entity = ToEntity(model, factory, fields);
-                            inserts.Add(entity);
-                            continue;
-                        }
+                        old = factory.FindByKey(model[uk.Name]!);
                     }
-                    else
+                    else if (idxFields != null)
                     {
-                        // 未指定主键时，尝试唯一索引匹配
-                        foreach (var idx in uniqueIndexes)
+                        var exp = new WhereExpression();
+                        foreach (var field in idxFields)
                         {
-                            // 所有列必须有值
-                            var exp = new WhereExpression();
-                            foreach (var col in idx.Columns)
-                            {
-                                var fi = factory.Fields.FirstOrDefault(e => e.Name == col);
-                                exp &= fi.Equal(model[col]);
-                            }
-
-                            old = factory.Find(exp);
-                            if (old != null) break;
+                            exp &= field.Equal(model[field.Name]);
                         }
+
+                        old = factory.Find(exp);
                     }
 
+                    var entity = Merge(old, model, fields);
                     if (old != null)
-                    {
-                        // 拷贝字段并加入更新队列
-                        foreach (var fi in fields)
-                        {
-                            old.SetItem(fi.Name, model[fi.Name]);
-                        }
-                        updates.Add(old);
-                    }
+                        updates.Add(entity);
                     else
-                    {
-                        var entity = ToEntity(model, factory, fields);
                         inserts.Add(entity);
-                    }
                 }
             }
 
@@ -349,18 +331,25 @@ public partial class Entity<TEntity>
             if (updates.Count > 0) rs += updates.Update();
 
             return rs;
+        }
 
-            IEntity ToEntity(IModel model, IEntityFactory factory, FieldItem[] fields)
+        /// <summary>合并模型数据到实体对象，如果不存在则创建</summary>
+        /// <remarks>
+        /// 该设计类似IEntity.CopyFrom，但更简单，仅用于合并数据
+        /// </remarks>
+        /// <param name="entity"></param>
+        /// <param name="source"></param>
+        /// <param name="fields"></param>
+        /// <returns></returns>
+        public IEntity Merge(IEntity? entity, IModel source, FieldItem[]? fields = null)
+        {
+            entity ??= Create();
+            fields ??= Fields;
+            foreach (var fi in fields)
             {
-                if (model is IEntity entity) return entity;
-
-                entity = factory.Create();
-                foreach (var fi in fields)
-                {
-                    entity.SetItem(fi.Name, model[fi.Name]);
-                }
-                return entity;
+                entity.SetItem(fi.Name, source[fi.Name]);
             }
+            return entity;
         }
         #endregion
 

@@ -197,11 +197,34 @@ public interface IEntityFactory
     IEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, IEntity?> find, Func<TKey, IEntity> create);
 
     /// <summary>合并数据。查出表中已有数据匹配，能匹配的更新，无法匹配的批量插入</summary>
-    /// <remarks>一般用于数据导入等要求比较高的场合</remarks>
+    /// <remarks>
+    /// 一般用于数据导入等要求比较高的场合。
+    /// 主要场景：
+    /// 1，备份数据，原地恢复。按主键匹配，存在则更新，不存在则插入。
+    /// 2，导出数据，异地导入。抛弃主键，按业务唯一键匹配，存在则更新，不存在则插入。
+    /// 3，直接导入，如Excel导入。按业务唯一键匹配，存在则更新，不存在则插入。
+    /// 显然，主键匹配和业务唯一键匹配只需要二选一，调用前清空主键值即可使用业务唯一键匹配。
+    /// </remarks>
     /// <param name="source">数据源。实体列表或模型对象列表</param>
     /// <param name="fields">需要合并的字段，默认null合并所有字段</param>
     /// <returns></returns>
+    [Obsolete("=>Merge(source, olds, fields)")]
     Int32 Merge(IEnumerable<IModel> source, FieldItem[]? fields = null);
+
+    /// <summary>合并数据。查出表中已有数据匹配，能匹配的更新，无法匹配的批量插入</summary>
+    /// <remarks>
+    /// 一般用于数据导入等要求比较高的场合。
+    /// 主要场景：
+    /// 1，备份数据，原地恢复。按主键匹配，存在则更新，不存在则插入。
+    /// 2，导出数据，异地导入。抛弃主键，按业务唯一键匹配，存在则更新，不存在则插入。
+    /// 3，直接导入，如Excel导入。按业务唯一键匹配，存在则更新，不存在则插入。
+    /// 显然，主键匹配和业务唯一键匹配只需要二选一，调用前清空主键值即可使用业务唯一键匹配。
+    /// </remarks>
+    /// <param name="source">数据源。实体列表或模型对象列表</param>
+    /// <param name="targets"></param>
+    /// <param name="fields">需要合并的字段，默认null合并所有字段</param>
+    /// <returns></returns>
+    Int32 Merge(IEnumerable<IModel> source, IList<IEntity>? targets = null, FieldItem[]? fields = null);
     #endregion
 
     #region 一些设置

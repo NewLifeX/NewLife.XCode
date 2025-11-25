@@ -651,7 +651,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         }
 
         // 判断唯一索引，唯一索引也不需要分页
-        var di = Meta.Table.DataTable.GetIndex(names);
+        var di = Meta.Table.DataTable.GetIndex(true, names);
         if (di != null && di.Unique) return FindUnique(exp, selects);
 
         return Find(exp, selects);

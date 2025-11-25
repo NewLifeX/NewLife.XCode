@@ -342,7 +342,7 @@ public class ModelResolver : IModelResolver
         {
             if (dc.Identity && !dc.PrimaryKey)
             {
-                var di = table.GetIndex(dc.ColumnName);
+                var di = table.GetIndex(true, dc.ColumnName) ?? table.GetIndex(unique: null, dc.ColumnName);
                 if (di == null)
                 {
                     di = table.CreateIndex();
@@ -376,7 +376,7 @@ public class ModelResolver : IModelResolver
             if (dcs.Length == 1 && dcs[0].Identity) continue;
 
             // 干掉重复索引
-            var key = di.Columns.Join().ToLower();
+            var key = di.Columns.Join("|").ToLower() + "|" + di.Unique;
             if (columnKeys.Contains(key)) continue;
             columnKeys.Add(key);
 

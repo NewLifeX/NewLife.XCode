@@ -98,7 +98,14 @@ public static class ModelHelper
     /// <param name="table"></param>
     /// <param name="columnNames"></param>
     /// <returns></returns>
-    public static IDataIndex? GetIndex(this IDataTable table, params String[] columnNames)
+    public static IDataIndex? GetIndex(this IDataTable table, params String[] columnNames) => GetIndex(table, null, columnNames);
+
+    /// <summary>根据字段名找索引</summary>
+    /// <param name="table"></param>
+    /// <param name="unique"></param>
+    /// <param name="columnNames"></param>
+    /// <returns></returns>
+    public static IDataIndex? GetIndex(this IDataTable table, Boolean? unique = null, params String[] columnNames)
     {
         var dis = table.Indexes;
         if (dis == null || dis.Count <= 0 || columnNames == null || columnNames.Length <= 0) return null;
@@ -120,6 +127,7 @@ public static class ModelHelper
         foreach (var di in dis)
         {
             if (di.Columns == null || di.Columns.Length != columnNames.Length) continue;
+            if (unique != null && di.Unique != unique.Value) continue;
 
             // 把索引计算为标准字段，再逐一对比
             var dcs = table.GetColumns(di.Columns);

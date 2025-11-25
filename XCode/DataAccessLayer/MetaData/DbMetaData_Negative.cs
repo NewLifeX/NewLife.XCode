@@ -385,7 +385,7 @@ internal partial class DbMetaData
                 // 实体类中索引列名可能是属性名而不是字段名，需要转换
                 var dcs = MatchColumns(entitytable, item.Columns);
 
-                var di = ModelHelper.GetIndex(dbtable, dcs.Select(e => e.ColumnName).ToArray());
+                var di = ModelHelper.GetIndex(dbtable, item.Unique, dcs.Select(e => e.ColumnName).ToArray());
                 //// 计算出来的索引，也表示没有，需要创建
                 //if (di != null && di.Unique == item.Unique) continue;
                 // 如果索引全部就是主键，无需创建索引
@@ -399,7 +399,7 @@ internal partial class DbMetaData
                 {
                     ids.Add(key);
 
-                    if (di == null)
+                    if (di == null || di.Unique != item.Unique)
                         PerformSchema(sb, @readonly, DDLSchema.CreateIndex, item);
                 }
 
@@ -411,7 +411,7 @@ internal partial class DbMetaData
         }
         #endregion
 
-        if (!@readonly) return null;
+        if (!onlyCreate) return null;
 
         return sb.ToString();
     }
@@ -423,7 +423,7 @@ internal partial class DbMetaData
     /// <returns>返回未执行语句</returns>
     protected virtual String? CheckDeleteIndex(IDataTable entitytable, IDataTable dbtable, Migration mode)
     {
-        var @readonly = mode <= Migration.ReadOnly;
+        //var @readonly = mode <= Migration.ReadOnly;
         var onlyCreate = mode < Migration.Full;
 
         var sb = new StringBuilder();
@@ -440,17 +440,18 @@ internal partial class DbMetaData
                 // 实体类中索引列名可能是属性名而不是字段名，需要转换
                 var dcs = MatchColumns(entitytable, item.Columns);
 
-                var di = ModelHelper.GetIndex(entitytable, dcs.Select(e => e.ColumnName).ToArray());
-                if (di == null)
+                // 唯一性不相同，也认为是不同索引
+                var di = ModelHelper.GetIndex(entitytable, item.Unique, dcs.Select(e => e.ColumnName).ToArray());
+                if (di == null || di.Unique != item.Unique)
                 {
                     PerformSchema(sb, onlyCreate, DDLSchema.DropIndex, item);
-                    dbdis.Remove(item);
+                    if (!onlyCreate) dbdis.Remove(item);
                 }
             }
         }
         #endregion
 
-        if (!@readonly) return null;
+        if (!onlyCreate) return null;
 
         return sb.ToString();
     }

@@ -146,7 +146,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
             throw new XException(msg);
         }
 
-        if (entity.IsSystem)
+        if (entity!.IsSystem)
         {
             var msg = $"系统角色[{name}]禁止删除！";
             WriteLog("删除", true, msg);
@@ -224,6 +224,33 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
         return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
     }
 
+    /// <summary>根据租户、名称查找</summary>
+    /// <param name="tenantId">租户</param>
+    /// <param name="name">名称</param>
+    /// <returns>实体对象</returns>
+    public static Role? FindByTenantIdAndName(Int32 tenantId, String name)
+    {
+        if (tenantId < 0) return null;
+        if (name.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.Name.EqualIgnoreCase(name));
+
+        return Find(_.TenantId == tenantId & _.Name == name);
+    }
+
+    /// <summary>根据租户查找</summary>
+    /// <param name="tenantId">租户</param>
+    /// <returns>实体列表</returns>
+    public static IList<Role> FindAllByTenantId(Int32 tenantId)
+    {
+        if (tenantId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
+
+        return FindAll(_.TenantId == tenantId);
+    }
     #endregion 扩展查询
 
     #region 扩展权限

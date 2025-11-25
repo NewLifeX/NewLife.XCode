@@ -213,7 +213,7 @@ public partial class Entity<TEntity>
         /// <param name="fields">需要合并的字段，默认null合并所有字段</param>
         /// <returns></returns>
         [Obsolete("=>Merge(source, olds, fields)")]
-        public Int32 Merge(IEnumerable<IModel> source, FieldItem[]? fields = null) => Merge(source, null, fields);
+        public Int32 Merge(IEnumerable<IModel> source, FieldItem[]? fields = null) => Merge(source, null, fields, null);
 
         /// <summary>合并数据。查出表中已有数据匹配，能匹配的更新，无法匹配的批量插入</summary>
         /// <remarks>
@@ -225,10 +225,11 @@ public partial class Entity<TEntity>
         /// 显然，主键匹配和业务唯一键匹配只需要二选一，调用前清空主键值即可使用业务唯一键匹配。
         /// </remarks>
         /// <param name="source">数据源。实体列表或模型对象列表</param>
-        /// <param name="targets">目标实体集合。待合并的目标，如果未指定则在全表数据小于10000时做全表查询</param>
+        /// <param name="targets">目标实体集合。待合并的目标，如果未指定则在全表数据小于10000时做全表查询。分区大表导入某个分区时，可在外部查询该分区后传入</param>
         /// <param name="fields">需要合并的字段，默认null合并所有字段</param>
+        /// <param name="match">自定义新旧对象匹配委托，替代主键匹配和业务唯一键匹配。仅用于小表内存匹配</param>
         /// <returns></returns>
-        public Int32 Merge(IEnumerable<IModel> source, IList<IEntity>? targets = null, FieldItem[]? fields = null)
+        public Int32 Merge(IEnumerable<IModel> source, IList<IEntity>? targets = null, FieldItem[]? fields = null, Func<IEntity, IModel, Boolean>? match = null)
         {
             if (source == null) return 0;
 
@@ -263,7 +264,7 @@ public partial class Entity<TEntity>
 
                 // 唯一索引
                 var map = new Dictionary<String, IEntity>();
-                if (idxFields != null)
+                if (idxFields != null && match == null)
                 {
                     foreach (var entity in targets)
                     {
@@ -276,8 +277,13 @@ public partial class Entity<TEntity>
                 {
                     IEntity? old = null;
 
-                    // 优先使用主键匹配，如果想指定使用唯一索引匹配，调用前清空主键值
-                    if (uk != null && !Helper.IsNullKey(model[uk.Name], uk.Type))
+                    // 优先自定义匹配
+                    if (match != null)
+                    {
+                        old = targets.FirstOrDefault(e => match(e, model));
+                    }
+                    // 使用主键匹配，如果想指定使用唯一索引匹配，调用前清空主键值
+                    else if (uk != null && !Helper.IsNullKey(model[uk.Name], uk.Type))
                     {
                         pkDict?.TryGetValue(model[uk.Name], out old);
                     }

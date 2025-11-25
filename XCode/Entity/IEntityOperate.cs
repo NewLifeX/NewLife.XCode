@@ -221,10 +221,11 @@ public interface IEntityFactory
     /// 显然，主键匹配和业务唯一键匹配只需要二选一，调用前清空主键值即可使用业务唯一键匹配。
     /// </remarks>
     /// <param name="source">数据源。实体列表或模型对象列表</param>
-    /// <param name="targets"></param>
+    /// <param name="targets">目标实体集合。待合并的目标，如果未指定则在全表数据小于10000时做全表查询。分区大表导入某个分区时，可在外部查询该分区后传入</param>
     /// <param name="fields">需要合并的字段，默认null合并所有字段</param>
+    /// <param name="match">自定义新旧对象匹配委托，替代主键匹配和业务唯一键匹配。仅用于小表内存匹配</param>
     /// <returns></returns>
-    Int32 Merge(IEnumerable<IModel> source, IList<IEntity>? targets = null, FieldItem[]? fields = null);
+    Int32 Merge(IEnumerable<IModel> source, IList<IEntity>? targets = null, FieldItem[]? fields = null, Func<IEntity, IModel, Boolean>? match = null);
     #endregion
 
     #region 一些设置

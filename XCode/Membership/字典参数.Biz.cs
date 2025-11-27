@@ -242,7 +242,7 @@ public partial class Parameter : Entity<Parameter>
         var str = Value?.Trim();
         if (str.IsNullOrEmpty()) str = LongValue?.Trim();
 
-        var arr = Value.Split(",", ";", "，");
+        var arr = str.Split(",", ";", "，");
         return arr.Select(e => e.ChangeType<T>()!).ToArray();
     }
 
@@ -255,7 +255,7 @@ public partial class Parameter : Entity<Parameter>
         var str = Value?.Trim();
         if (str.IsNullOrEmpty()) str = LongValue?.Trim();
 
-        var dic = Value.SplitAsDictionary("=", ",");
+        var dic = str.SplitAsDictionary("=", ",");
         return dic.ToDictionary(e => e.Key.ChangeType<TKey>()!, e => e.Value.ChangeType<TValue>()!);
     }
 

@@ -134,6 +134,15 @@ public class ModelBuilder : ClassBuilder
             if (!ValidColumn(column)) continue;
 
             if (i > 0) WriteLine();
+            if (column.Properties.TryGetValue("Attribute", out var att))
+            {
+                // 兼容支持新旧两种格式
+                var str = att.Replace("{name}", column.Name);
+                if (str[0] != '[')
+                    WriteLine("[{0}]", str);
+                else
+                    WriteLine("{0}", str);//lps 2023-07-22 去掉两边的方括号，以便支持多个验证。例如：<Column Name="TestQuantity" DataType="Int32" Description="测试数量" Attribute="[Required(ErrorMessage = &quot;{0}必须填写&quot;)][Range(1, 100,ErrorMessage =&quot;超出范围&quot;)]" />
+            }
             BuildItem(column);
         }
         WriteLine("#endregion");

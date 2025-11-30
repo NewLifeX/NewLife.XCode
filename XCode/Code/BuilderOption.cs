@@ -23,7 +23,9 @@ public class BuilderOption
     /// <summary>命名空间</summary>
     [Description("命名空间")]
     public String? Namespace { get; set; }
-
+    /// <summary>引用命名空间,逗号分隔,区分大小写</summary>
+    [Description("引用命名空间")]
+    public String? ExtendNameSpace { get; set; }
     /// <summary>输出目录</summary>
     [Description("输出目录")]
     public String? Output { get; set; } = @".\";

@@ -9,6 +9,8 @@
     <BaseClass>Entity</BaseClass>
     <!--命名空间-->
     <Namespace>XCode.Membership</Namespace>
+    <!--扩展命名空间,支持Map,Attribute-->
+    <ExtendNameSpace></ExtendNameSpace>
     <!--输出目录-->
     <Output>.\</Output>
     <!--是否使用中文文件名。默认false-->
@@ -37,6 +39,7 @@
     <DisplayName />
     <!--魔方控制器输出目录-->
     <CubeOutput />
+
   </Option>
   <Tables>
     <Table Name="User" Description="用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户">

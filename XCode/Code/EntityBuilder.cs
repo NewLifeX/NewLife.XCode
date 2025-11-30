@@ -323,7 +323,8 @@ public class EntityBuilder : ClassBuilder
 
         // 增加常用命名空间
         AddNameSpace();
-
+        //增加引用命名空间
+        AddExtendNameSpace();
         base.Prepare();
 
         if (!Business)
@@ -394,6 +395,16 @@ public class EntityBuilder : ClassBuilder
             us.Add("XCode.Membership");
             us.Add("XCode.Shards");
         }
+    }
+
+    /// <summary>
+    /// 增加扩展命名空间
+    /// </summary>
+    protected virtual void AddExtendNameSpace()
+    {
+        var us = Option.Usings;
+        if(!Option.ExtendNameSpace.IsNullOrEmpty())
+            Option.ExtendNameSpace.Trim().Split(',').ToList().ForEach(space => us.Add(space));
     }
 
     /// <summary>清空上下文。便于重新生成</summary>

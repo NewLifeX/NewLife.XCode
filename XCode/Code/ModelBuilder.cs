@@ -81,7 +81,9 @@ public class ModelBuilder : ClassBuilder
             us.Add("NewLife.Data");
             us.Add("NewLife.Reflection");
         }
-
+        //添加扩展命名空间
+        if (!Option.ExtendNameSpace.IsNullOrEmpty())
+            Option.ExtendNameSpace.Trim().Split(',').ToList().ForEach(space => us.Add(space));
         base.Prepare();
     }
 
@@ -134,15 +136,6 @@ public class ModelBuilder : ClassBuilder
             if (!ValidColumn(column)) continue;
 
             if (i > 0) WriteLine();
-            if (column.Properties.TryGetValue("Attribute", out var att))
-            {
-                // 兼容支持新旧两种格式
-                var str = att.Replace("{name}", column.Name);
-                if (str[0] != '[')
-                    WriteLine("[{0}]", str);
-                else
-                    WriteLine("{0}", str);//lps 2023-07-22 去掉两边的方括号，以便支持多个验证。例如：<Column Name="TestQuantity" DataType="Int32" Description="测试数量" Attribute="[Required(ErrorMessage = &quot;{0}必须填写&quot;)][Range(1, 100,ErrorMessage =&quot;超出范围&quot;)]" />
-            }
             BuildItem(column);
         }
         WriteLine("#endregion");
@@ -180,7 +173,16 @@ public class ModelBuilder : ClassBuilder
             var dis = dc.DisplayName;
             if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
         }
-
+        //增加属性支持
+        if (dc.Properties.TryGetValue("Attribute", out var att))
+        {
+            // 兼容支持新旧两种格式
+            var str = att.Replace("{name}", dc.Name);
+            if (str[0] != '[')
+                WriteLine("[{0}]", str);
+            else
+                WriteLine("{0}", str);//lps 2023-07-22 去掉两边的方括号，以便支持多个验证。例如：<Column Name="TestQuantity" DataType="Int32" Description="测试数量" Attribute="[Required(ErrorMessage = &quot;{0}必须填写&quot;)][Range(1, 100,ErrorMessage =&quot;超出范围&quot;)]" />
+        }
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;
         if (type == "String")

@@ -105,6 +105,7 @@ public partial class ExtendUser : Object, IxxUser, IModel
     public String Ex5 { get; set; }
 
     /// <summary>扩展6</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public String Ex6 { get; set; }
 
     /// <summary>备注</summary>

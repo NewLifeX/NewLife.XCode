@@ -96,6 +96,7 @@ public partial class UserModel : IUser
     public String? Ex5 { get; set; }
 
     /// <summary>扩展6</summary>
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
     public String? Ex6 { get; set; }
 
     /// <summary>备注</summary>

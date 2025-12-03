@@ -167,6 +167,7 @@ public partial class UserTT
     /// <summary>扩展6</summary>
     [Description("扩展6")]
     [DisplayName("扩展6")]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public String Ex6 { get; set; }
 
     /// <summary>备注</summary>

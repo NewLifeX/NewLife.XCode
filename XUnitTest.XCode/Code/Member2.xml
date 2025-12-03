@@ -9,6 +9,8 @@
     <BaseClass>Entity</BaseClass>
     <!--命名空间-->
     <Namespace>XCode.Membership666</Namespace>
+    <!--引用命名空间-->
+    <ExtendNameSpace />
     <!--输出目录-->
     <Output>..\..\XUnitTest.XCode\Code</Output>
     <!--是否使用中文文件名。默认false-->

@@ -26,6 +26,9 @@ public partial class ParameterModel : IParameter
     /// <summary>数值</summary>
     public String? Value { get; set; }
 
+    /// <summary>只读标记。用于验证关键字处理</summary>
+    public Boolean Readonly { get; set; }
+
     /// <summary>长数值</summary>
     public String? LongValue { get; set; }
 
@@ -91,6 +94,7 @@ public partial class ParameterModel : IParameter
         Category = model.Category;
         Name = model.Name;
         Value = model.Value;
+        Readonly = model.Readonly;
         LongValue = model.LongValue;
         Kind = model.Kind;
         Enable = model.Enable;

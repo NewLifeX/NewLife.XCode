@@ -403,7 +403,7 @@ public class EntityBuilder : ClassBuilder
     protected virtual void AddExtendNameSpace()
     {
         var us = Option.Usings;
-        if(!Option.ExtendNameSpace.IsNullOrEmpty())
+        if (!Option.ExtendNameSpace.IsNullOrEmpty())
             Option.ExtendNameSpace.Trim().Split(',').ToList().ForEach(space => us.Add(space));
     }
 
@@ -1685,6 +1685,7 @@ public class EntityBuilder : ClassBuilder
 
         var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
         var ps = builder.GetParameters(columns);
+        var pdic = ps.ToDictionary(e => e.Name);
 
         // 如果方法名已存在，则不生成
         var key = $"{methodName}({ps.Join(",", e => e.TypeName.TrimEnd('?'))})";
@@ -1693,14 +1694,14 @@ public class EntityBuilder : ClassBuilder
 
         if (index > 0) WriteLine();
         WriteLine("/// <summary>根据{0}查找</summary>", columns.Select(e => e.DisplayName).Join("、"));
-        foreach (var dc in columns)
+        foreach (var pi in ps)
         {
-            WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.DisplayName);
+            WriteLine("/// <param name=\"{0}\">{1}</param>", pi.ParameterName, pi.DisplayName);
         }
 
         var nullable = EntityOption.Nullable;
 
-        var args = ps.Join(", ", e => $"{e.TypeFullName} {e.Name}");
+        var args = ps.Join(", ", e => $"{e.TypeFullName} {e.ParameterName}");
         WriteLine("/// <returns>实体对象</returns>");
         WriteLine("public static {2} {0}({1})", methodName, args, ClassName + (nullable ? "?" : ""));
         WriteLine("{");
@@ -1708,17 +1709,19 @@ public class EntityBuilder : ClassBuilder
             var header = false;
             foreach (var dc in columns)
             {
+                if (!pdic.TryGetValue(dc.Name, out var pi)) continue;
+
                 if (dc.DataType != null && dc.DataType.IsInt())
-                    WriteLine("if ({0} < 0) return null;", dc.CamelName());
+                    WriteLine("if ({0} < 0) return null;", pi.ParameterName);
                 else if (dc.DataType == typeof(String))
                 {
                     if (nullable && dc.Nullable)
-                        WriteLine("if ({0} == null) return null;", dc.CamelName());
+                        WriteLine("if ({0} == null) return null;", pi.ParameterName);
                     else
-                        WriteLine("if ({0}.IsNullOrEmpty()) return null;", dc.CamelName());
+                        WriteLine("if ({0}.IsNullOrEmpty()) return null;", pi.ParameterName);
                 }
                 else if (dc.DataType == typeof(DateTime) && IsDataTime(dc))
-                    WriteLine("if ({0}.Year < 1000) return null;", dc.CamelName());
+                    WriteLine("if ({0}.Year < 1000) return null;", pi.ParameterName);
 
                 header |= CanSearch(dc);
             }
@@ -1727,14 +1730,16 @@ public class EntityBuilder : ClassBuilder
             var wh = new StringBuilder();
             foreach (var dc in columns)
             {
+                if (!pdic.TryGetValue(dc.Name, out var pi)) continue;
+
                 if (exp.Length > 0) exp.Append(" & ");
-                exp.AppendFormat("_.{0} == {1}", dc.Name, dc.CamelName());
+                exp.AppendFormat("_.{0} == {1}", dc.Name, pi.ParameterName);
 
                 if (wh.Length > 0) wh.Append(" && ");
                 if (dc.DataType == typeof(String))
-                    wh.AppendFormat("e.{0}.EqualIgnoreCase({1})", dc.Name, dc.CamelName());
+                    wh.AppendFormat("e.{0}.EqualIgnoreCase({1})", dc.Name, pi.ParameterName);
                 else
-                    wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
+                    wh.AppendFormat("e.{0} == {1}", dc.Name, pi.ParameterName);
             }
 
             var singleCache = false;
@@ -1748,11 +1753,12 @@ public class EntityBuilder : ClassBuilder
                 if (columns.Length == 1)
                 {
                     var pk = columns[0];
+                    var pi = pdic[pk.Name];
                     if (pk.PrimaryKey)
                     {
                         WriteLine();
                         WriteLine("// 单对象缓存");
-                        WriteLine("return Meta.SingleCache[{0}];", pk.CamelName());
+                        WriteLine("return Meta.SingleCache[{0}];", pi.ParameterName);
 
                         singleCache = true;
                     }
@@ -1760,7 +1766,7 @@ public class EntityBuilder : ClassBuilder
                     {
                         WriteLine();
                         WriteLine("// 单对象缓存");
-                        WriteLine("return Meta.SingleCache.GetItemWithSlaveKey({0}) as {1};", pk.CamelName(), ClassName);
+                        WriteLine("return Meta.SingleCache.GetItemWithSlaveKey({0}) as {1};", pi.ParameterName, ClassName);
 
                         singleCache = true;
                     }
@@ -1789,6 +1795,7 @@ public class EntityBuilder : ClassBuilder
 
         var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
         var ps = builder.GetParameters(columns);
+        var pdic = ps.ToDictionary(e => e.Name);
 
         // 如果方法名已存在，则不生成
         var key = $"{methodName}({ps.Join(",", e => e.TypeName.TrimEnd('?'))})";
@@ -1797,12 +1804,12 @@ public class EntityBuilder : ClassBuilder
 
         if (index > 0) WriteLine();
         WriteLine("/// <summary>根据{0}查找</summary>", columns.Select(e => e.DisplayName).Join("、"));
-        foreach (var dc in columns)
+        foreach (var pi in ps)
         {
-            WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.DisplayName);
+            WriteLine("/// <param name=\"{0}\">{1}</param>", pi.ParameterName, pi.DisplayName);
         }
 
-        var args = ps.Join(", ", e => $"{e.TypeFullName} {e.Name}");
+        var args = ps.Join(", ", e => $"{e.TypeFullName} {e.ParameterName}");
         WriteLine("/// <returns>实体列表</returns>");
         WriteLine("public static IList<{2}> {0}({1})", methodName, args, ClassName);
         WriteLine("{");
@@ -1810,17 +1817,19 @@ public class EntityBuilder : ClassBuilder
             var header = false;
             foreach (var dc in columns)
             {
+                if (!pdic.TryGetValue(dc.Name, out var pi)) continue;
+
                 if (dc.DataType != null && dc.DataType.IsInt())
-                    WriteLine("if ({0} < 0) return [];", dc.CamelName(), ClassName);
+                    WriteLine("if ({0} < 0) return [];", pi.ParameterName, ClassName);
                 else if (dc.DataType == typeof(String))
                 {
                     if (Option.Nullable && dc.Nullable)
-                        WriteLine("if ({0} == null) return [];", dc.CamelName());
+                        WriteLine("if ({0} == null) return [];", pi.ParameterName);
                     else
-                        WriteLine("if ({0}.IsNullOrEmpty()) return [];", dc.CamelName(), ClassName);
+                        WriteLine("if ({0}.IsNullOrEmpty()) return [];", pi.ParameterName, ClassName);
                 }
                 else if (dc.DataType == typeof(DateTime) && IsDataTime(dc))
-                    WriteLine("if ({0}.Year < 1000) return [];", dc.CamelName());
+                    WriteLine("if ({0}.Year < 1000) return [];", pi.ParameterName);
 
                 header |= CanSearch(dc);
             }
@@ -1829,14 +1838,16 @@ public class EntityBuilder : ClassBuilder
             var wh = new StringBuilder();
             foreach (var dc in columns)
             {
+                if (!pdic.TryGetValue(dc.Name, out var pi)) continue;
+
                 if (exp.Length > 0) exp.Append(" & ");
-                exp.AppendFormat("_.{0} == {1}", dc.Name, dc.CamelName());
+                exp.AppendFormat("_.{0} == {1}", dc.Name, pi.ParameterName);
 
                 if (wh.Length > 0) wh.Append(" && ");
                 if (dc.DataType == typeof(String))
-                    wh.AppendFormat("e.{0}.EqualIgnoreCase({1})", dc.Name, dc.CamelName());
+                    wh.AppendFormat("e.{0}.EqualIgnoreCase({1})", dc.Name, pi.ParameterName);
                 else
-                    wh.AppendFormat("e.{0} == {1}", dc.Name, dc.CamelName());
+                    wh.AppendFormat("e.{0} == {1}", dc.Name, pi.ParameterName);
             }
 
             if (UsingCache)
@@ -1966,6 +1977,7 @@ public class EntityBuilder : ClassBuilder
         var returnName = ClassName;
 
         var ps = builder.GetParameters(cs, true);
+        var pdic = ps.ToDictionary(e => e.Name);
 
         // 如果方法名已存在，则不生成
         var key = $"Search({ps.Join(",", e => e.TypeName.TrimEnd('?'))})";
@@ -1974,9 +1986,10 @@ public class EntityBuilder : ClassBuilder
 
         // 注释部分
         WriteLine("/// <summary>高级查询</summary>");
-        foreach (var dc in cs)
+        foreach (var pi in ps)
         {
-            WriteLine("/// <param name=\"{0}\">{1}</param>", dc.CamelName(), dc.Description);
+            if (!pi.Extend)
+                WriteLine("/// <param name=\"{0}\">{1}</param>", pi.ParameterName, pi.Description);
         }
 
         var dcTime = builder.DataTime;
@@ -1990,7 +2003,7 @@ public class EntityBuilder : ClassBuilder
         WriteLine("/// <returns>实体列表</returns>");
 
         // 参数部分
-        var pis = ps.Join(", ", e => $"{e.TypeFullName} {e.Name}");
+        var pis = ps.Join(", ", e => $"{e.TypeFullName} {e.ParameterName}");
         WriteLine("public static IList<{0}> Search({1})", returnName, pis);
         WriteLine("{");
         {
@@ -2000,14 +2013,16 @@ public class EntityBuilder : ClassBuilder
             WriteLine();
             foreach (var dc in cs)
             {
+                if (!pdic.TryGetValue(dc.Name, out var pi)) continue;
+
                 if (dc.DataType.IsInt() && (dc.DataType.IsEnum || !dc.Properties["Type"].IsNullOrEmpty()))
-                    WriteLine("if ({0} >= 0) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
+                    WriteLine("if ({0} >= 0) exp &= _.{1} == {0};", pi.ParameterName, dc.Name);
                 else if (dc.DataType.IsInt())
-                    WriteLine("if ({0} >= 0) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
+                    WriteLine("if ({0} >= 0) exp &= _.{1} == {0};", pi.ParameterName, dc.Name);
                 else if (dc.DataType == typeof(Boolean))
-                    WriteLine("if ({0} != null) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
+                    WriteLine("if ({0} != null) exp &= _.{1} == {0};", pi.ParameterName, dc.Name);
                 else if (dc.DataType == typeof(String))
-                    WriteLine("if (!{0}.IsNullOrEmpty()) exp &= _.{1} == {0};", dc.CamelName(), dc.Name);
+                    WriteLine("if (!{0}.IsNullOrEmpty()) exp &= _.{1} == {0};", pi.ParameterName, dc.Name);
             }
 
             if (dcTime != null)

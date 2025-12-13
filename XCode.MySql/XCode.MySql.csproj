@@ -36,11 +36,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\XCode\XCode.csproj" />
+    <PackageReference Include="MySql.Data" Version="9.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <!-- 按需求禁用 MySqlConnector：原先会导致同时下载并优先尝试使用 MySqlConnector 工厂
-    <PackageReference Include="MySqlConnector" Version="2.4.0" />
-    -->
+    <ProjectReference Include="..\XCode\XCode.csproj" />
   </ItemGroup>
 </Project>

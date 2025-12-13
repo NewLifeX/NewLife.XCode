@@ -158,6 +158,25 @@ public class SearchBuilder(IDataTable table)
     //    return ps;
     //}
 
+    private static readonly HashSet<String> _reservedNames = new(StringComparer.Ordinal)
+    {
+        // 关键字
+        "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked",
+        "class", "const", "continue", "decimal", "default", "delegate", "do", "double", "else",
+        "enum", "event", "explicit", "extern", "false", "finally", "fixed", "float", "for",
+        "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock",
+        "long", "namespace", "new", "null", "object", "operator", "out", "override", "params",
+        "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed", "short",
+        "sizeof", "stackalloc", "static", "string", "struct", "switch", "this", "throw", "true",
+        "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual",
+        "void", "volatile", "while",
+        // 上下文关键字
+        "add", "alias", "and", "ascending", "async", "await", "by", "descending", "dynamic",
+        "equals", "file", "from", "get", "global", "group", "init", "into", "join", "let",
+        "nameof", "nint", "not", "notnull", "nuint", "on", "or", "orderby", "partial", "record",
+        "remove", "required", "scoped", "select", "set", "unmanaged", "value", "var", "when",
+        "where", "with", "yield"
+    };
     /// <summary>获取参数列表。名称+类型(全名+简名)</summary>
     /// <param name="columns"></param>
     /// <param name="extend"></param>
@@ -175,7 +194,18 @@ public class SearchBuilder(IDataTable table)
             else if (dc.DataType == typeof(String) && Nullable && dc.Nullable)
                 type += "?";
 
-            var model = new ParameterModel { Name = dc.CamelName(), TypeName = type, TypeFullName = type };
+            var model = new ParameterModel
+            {
+                Name = dc.Name,
+                ParameterName = dc.CamelName(),
+                TypeName = type,
+                TypeFullName = type,
+                DisplayName = dc.DisplayName,
+                Description = dc.Description,
+            };
+
+            // 处理保留字
+            if (_reservedNames.Contains(model.ParameterName)) model.ParameterName = "@" + model.ParameterName;
 
             var p = type.LastIndexOf('.');
             if (p > 0) model.TypeName = type[(p + 1)..];
@@ -187,11 +217,11 @@ public class SearchBuilder(IDataTable table)
         {
             if (DataTime != null)
             {
-                ps.Add(new ParameterModel { Name = "start", TypeName = "DateTime", TypeFullName = "DateTime" });
-                ps.Add(new ParameterModel { Name = "end", TypeName = "DateTime", TypeFullName = "DateTime" });
+                ps.Add(new ParameterModel { Name = "start", ParameterName = "start", TypeName = "DateTime", TypeFullName = "DateTime", Extend = true });
+                ps.Add(new ParameterModel { Name = "end", ParameterName = "end", TypeName = "DateTime", TypeFullName = "DateTime", Extend = true });
             }
-            ps.Add(new ParameterModel { Name = "key", TypeName = "String", TypeFullName = "String" });
-            ps.Add(new ParameterModel { Name = "page", TypeName = "PageParameter", TypeFullName = "PageParameter" });
+            ps.Add(new ParameterModel { Name = "key", ParameterName = "key", TypeName = "String", TypeFullName = "String", Extend = true });
+            ps.Add(new ParameterModel { Name = "page", ParameterName = "page", TypeName = "PageParameter", TypeFullName = "PageParameter", Extend = true });
         }
 
         return ps;

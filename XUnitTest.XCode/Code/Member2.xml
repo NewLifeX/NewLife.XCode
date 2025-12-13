@@ -190,6 +190,7 @@
         <Column Name="Category" DataType="String" Description="类别" />
         <Column Name="Name" DataType="String" Master="True" Description="名称" />
         <Column Name="Value" DataType="String" Length="200" Description="数值" />
+        <Column Name="Readonly" DataType="Boolean" Description="只读标记。用于验证关键字处理" />
         <Column Name="LongValue" ColumnName="long_value" DataType="String" Length="2000" Description="长数值" />
         <Column Name="Kind" DataType="Int32" Description="种类。0普通，21列表，22名值" Type="XCode.Membership.ParameterKinds" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
@@ -212,6 +213,7 @@
       <Indexes>
         <Index Columns="UserID,Category,Name" Unique="True" />
         <Index Columns="Category,Name" />
+        <Index Columns="Readonly" />
         <Index Columns="UpdateTime" />
       </Indexes>
     </Table>

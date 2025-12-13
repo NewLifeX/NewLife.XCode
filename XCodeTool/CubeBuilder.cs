@@ -339,12 +339,17 @@ public class CubeBuilder : ClassBuilder
         var cs = builder.GetColumns();
         if (cs.Count <= 0) return null;
 
+        var ps = builder.GetParameters(cs);
+        var pdic = ps.ToDictionary(e => e.Name);
+
         var sb = Pool.StringBuilder.Get();
 
         var pis = new List<String>();
         foreach (var dc in cs)
         {
-            var name = dc.CamelName();
+            //var name = dc.CamelName();
+            if (!pdic.TryGetValue(dc.Name, out var pi)) continue;
+            var name = pi.ParameterName;
 
             if (dc.DataType.IsInt())
             {

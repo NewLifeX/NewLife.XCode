@@ -19,6 +19,7 @@ namespace XCode.Membership666;
 [Description("字典参数")]
 [BindIndex("IU_Parameter_UserID_Category_Name", true, "UserID,Category,Name")]
 [BindIndex("IX_Parameter_Category_Name", false, "Category,Name")]
+[BindIndex("IX_Parameter_Readonly", false, "Readonly")]
 [BindIndex("IX_Parameter_UpdateTime", false, "UpdateTime")]
 [BindTable("Parameter", Description = "字典参数", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class Parameter : IParameter, IEntity<IParameter>
@@ -63,6 +64,14 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     [DataObjectField(false, false, true, 200)]
     [BindColumn("Value", "数值", "")]
     public String? Value { get => _Value; set { if (OnPropertyChanging("Value", value)) { _Value = value; OnPropertyChanged("Value"); } } }
+
+    private Boolean _Readonly;
+    /// <summary>只读标记。用于验证关键字处理</summary>
+    [DisplayName("只读标记")]
+    [Description("只读标记。用于验证关键字处理")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Readonly", "只读标记。用于验证关键字处理", "")]
+    public Boolean Readonly { get => _Readonly; set { if (OnPropertyChanging("Readonly", value)) { _Readonly = value; OnPropertyChanged("Readonly"); } } }
 
     private String? _LongValue;
     /// <summary>长数值</summary>
@@ -234,6 +243,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         Category = model.Category;
         Name = model.Name;
         Value = model.Value;
+        Readonly = model.Readonly;
         LongValue = model.LongValue;
         Kind = model.Kind;
         Enable = model.Enable;
@@ -268,6 +278,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
             "Category" => _Category,
             "Name" => _Name,
             "Value" => _Value,
+            "Readonly" => _Readonly,
             "LongValue" => _LongValue,
             "Kind" => _Kind,
             "Enable" => _Enable,
@@ -297,6 +308,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Value": _Value = Convert.ToString(value); break;
+                case "Readonly": _Readonly = value.ToBoolean(); break;
                 case "LongValue": _LongValue = Convert.ToString(value); break;
                 case "Kind": _Kind = (XCode.Membership.ParameterKinds)value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
@@ -414,6 +426,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <summary>高级查询</summary>
     /// <param name="userId">用户。按用户区分参数，用户0表示系统级</param>
     /// <param name="category">类别</param>
+    /// <param name="@readonly">只读标记。用于验证关键字处理</param>
     /// <param name="kind">种类。0普通，21列表，22名值</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
@@ -421,12 +434,13 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Parameter> Search(Int32 userId, String? category, XCode.Membership.ParameterKinds kind, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Parameter> Search(Int32 userId, String? category, Boolean? @readonly, XCode.Membership.ParameterKinds kind, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (userId >= 0) exp &= _.UserID == userId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
+        if (@readonly != null) exp &= _.Readonly == @readonly;
         if (kind >= 0) exp &= _.Kind == kind;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
@@ -454,6 +468,9 @@ public partial class Parameter : IParameter, IEntity<IParameter>
 
         /// <summary>数值</summary>
         public static readonly Field Value = FindByName("Value");
+
+        /// <summary>只读标记。用于验证关键字处理</summary>
+        public static readonly Field Readonly = FindByName("Readonly");
 
         /// <summary>长数值</summary>
         public static readonly Field LongValue = FindByName("LongValue");
@@ -529,6 +546,9 @@ public partial class Parameter : IParameter, IEntity<IParameter>
 
         /// <summary>数值</summary>
         public const String Value = "Value";
+
+        /// <summary>只读标记。用于验证关键字处理</summary>
+        public const String Readonly = "Readonly";
 
         /// <summary>长数值</summary>
         public const String LongValue = "LongValue";

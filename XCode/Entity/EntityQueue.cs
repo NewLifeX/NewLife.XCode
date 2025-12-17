@@ -8,7 +8,7 @@ using XCode.DataAccessLayer;
 namespace XCode;
 
 /// <summary>实体队列。支持凑批更新数据，包括Insert/Update/Delete/Upsert</summary>
-public class EntityQueue : DisposeBase
+public class EntityQueue(IEntitySession session) : DisposeBase
 {
     #region 属性
     /// <summary>需要近实时保存的实体队列</summary>
@@ -21,7 +21,7 @@ public class EntityQueue : DisposeBase
     public Boolean Debug { get; set; }
 
     /// <summary>数据会话，分表分库时使用</summary>
-    public IEntitySession Session { get; }
+    public IEntitySession Session { get; } = session;
 
     /// <summary>是否仅插入。默认false</summary>
     public Boolean InsertOnly { get; set; }
@@ -48,12 +48,9 @@ public class EntityQueue : DisposeBase
 
     private TimerX? _Timer;
     private String? _lastTraceId;
+
     #endregion
-
     #region 构造
-    /// <summary>实例化实体队列</summary>
-    public EntityQueue(IEntitySession session) => Session = session;
-
     /// <summary>销毁时，持久化队列</summary>
     /// <param name="disposing"></param>
     protected override void Dispose(Boolean disposing)

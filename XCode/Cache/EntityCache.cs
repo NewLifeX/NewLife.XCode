@@ -159,7 +159,7 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
 
         reason = $"异步更新缓存，{reason}";
         WriteLog(reason);
-        Task.Run(() => UpdateCache(reason, true));
+        Consumer.Run(() => UpdateCache(reason, true));
     }
 
     void UpdateCache(String reason, Boolean isAsync = false)

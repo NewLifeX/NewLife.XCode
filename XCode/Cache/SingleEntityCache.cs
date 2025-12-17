@@ -296,7 +296,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         {
             // 频繁更新下，采用异步更新缓存，以提升吞吐。非频繁访问时（2倍超时），同步更新
             if (sec < Expire)
-                Task.Run(() => UpdateData(ci, key));
+                Consumer.Run(() => UpdateData(ci, key));
             else
                 UpdateData(ci, key);
         }

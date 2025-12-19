@@ -74,7 +74,7 @@ public class SQLiteTests
 
         using var conn = db.OpenConnection();
         connstr = conn.ConnectionString;
-        Assert.EndsWith("\\Data\\Membership.db;Cache Size=-524288;Synchronous=Off;Journal Mode=WAL", connstr);
+        Assert.EndsWith("\\Data\\Membership.db;Cache Size=-524288;Synchronous=Normal;Journal Mode=WAL", connstr);
 
         var ver = dal.Db.ServerVersion;
         Assert.NotEmpty(ver);

@@ -30,7 +30,7 @@ public partial class User : Entity<User>
 {
     #region 对象操作
     // 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走实体缓存
-    private Int32 MaxCacheCount = 1000;
+    private static Int32 MaxCacheCount = 1000;
 
     static User()
     {

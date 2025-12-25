@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -239,7 +239,7 @@ public partial class CorePerson
         if (creditNo.IsNullOrEmpty()) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Pname.EqualIgnoreCase(pname) && e.CreditNo.EqualIgnoreCase(creditNo));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Pname.EqualIgnoreCase(pname) && e.CreditNo.EqualIgnoreCase(creditNo));
 
         return Find(_.Pname == pname & _.CreditNo == creditNo);
     }
@@ -252,7 +252,7 @@ public partial class CorePerson
         if (pname.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Pname.EqualIgnoreCase(pname));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Pname.EqualIgnoreCase(pname));
 
         return FindAll(_.Pname == pname);
     }
@@ -265,7 +265,7 @@ public partial class CorePerson
         if (buildId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.BuildID == buildId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.BuildID == buildId);
 
         return FindAll(_.BuildID == buildId);
     }

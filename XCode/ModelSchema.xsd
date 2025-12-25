@@ -275,10 +275,10 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name="UsingCache" type="BooleanType">
+    <xs:attribute name="MaxCacheCount" type="xs:int">
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">
-          使用缓存。生成Find/FindAll等方法时是否使用缓存
+          最大缓存数量。Find/FindAll查询方法在表行数小于该值时走实体缓存，默认1000
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

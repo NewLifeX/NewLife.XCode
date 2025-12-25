@@ -16,8 +16,8 @@ public class EntityBuilder : ClassBuilder
     /// <summary>合并业务类，当业务类已存在时。默认true</summary>
     public Boolean MergeBusiness { get; set; } = true;
 
-    /// <summary>使用缓存。默认true，标记为大数据的表不使用缓存</summary>
-    public Boolean UsingCache { get; set; } = true;
+    ///// <summary>使用缓存。默认true，标记为大数据的表不使用缓存</summary>
+    //public Boolean UsingCache { get; set; } = true;
 
     /// <summary>数据规模字段。标识是否大数据表</summary>
     public IDataColumn? ScaleColumn { get; set; }
@@ -30,6 +30,9 @@ public class EntityBuilder : ClassBuilder
 
     /// <summary>成员集合。主要用于避免重复生成相同签名的成员，方法的签名包括参数列表</summary>
     public IList<String> Members { get; set; } = [];
+
+    /// <summary>最大缓存数量。Find/FindAll查询方法在表行数小于该值时走实体缓存，默认1000</summary>
+    public Int32 MaxCacheCount { get; set; } = 1000;
 
     private Boolean _hasMaxCacheCount;
     #endregion 属性
@@ -151,9 +154,9 @@ public class EntityBuilder : ClassBuilder
         {
             var cache = table.Properties["UsingCache"];
             if (!cache.IsNullOrEmpty() && !cache.ToBoolean(true))
-                table.Properties["UsingCache"] = false.ToString();
-            else
-                table.Properties.Remove("UsingCache");
+                table.Properties["MaxCacheCount"] = "0";
+
+            table.Properties.Remove("UsingCache");
         }
 
         // 更新xsd
@@ -287,17 +290,24 @@ public class EntityBuilder : ClassBuilder
             option.ModelNameForCopy = modelClass;
 
         // 使用缓存
-        if (UsingCache)
+        var maxCache = table.Properties["MaxCacheCount"].ToInt(-1);
+        if (maxCache >= 0)
         {
-            var cache = table.Properties["UsingCache"];
-            if (!cache.IsNullOrEmpty() && !cache.ToBoolean(true)) UsingCache = false;
+            MaxCacheCount = maxCache;
+            //UsingCache = maxCache > 0;
         }
 
-        if (UsingCache)
+        //if (UsingCache)
+        //{
+        //    var cache = table.Properties["UsingCache"];
+        //    if (!cache.IsNullOrEmpty() && !cache.ToBoolean(true)) UsingCache = false;
+        //}
+
+        if (maxCache > 0)
         {
             // 标记为大数据的表不使用缓存
             var fi = table.Columns.FirstOrDefault(e => e.DataScale.EqualIgnoreCase("time") || e.DataScale.StartsWithIgnoreCase("time:", "timeShard:"));
-            if (fi != null) UsingCache = false;
+            if (fi != null) MaxCacheCount = 0;
         }
     }
 
@@ -311,7 +321,8 @@ public class EntityBuilder : ClassBuilder
         var column = Table.Columns.FirstOrDefault(e => e.DataScale.EqualIgnoreCase("time") || e.DataScale.StartsWithIgnoreCase("time:", "timeShard:"));
         if (column != null)
         {
-            UsingCache = false;
+            //UsingCache = false;
+            MaxCacheCount = 0;
             ScaleColumn = column;
 
             if (column.DataScale.StartsWithIgnoreCase("timeShard:"))
@@ -1144,10 +1155,10 @@ public class EntityBuilder : ClassBuilder
     /// <summary>生成静态构造函数</summary>
     protected virtual void BuildCctor()
     {
-        if (!_hasMaxCacheCount && UsingCache)
+        if (!_hasMaxCacheCount && MaxCacheCount > 0)
         {
             WriteLine("// 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走实体缓存");
-            WriteLine("private Int32 MaxCacheCount = 1000;");
+            WriteLine("private static Int32 MaxCacheCount = {0};", MaxCacheCount);
             WriteLine();
 
             _hasMaxCacheCount = true;
@@ -1756,10 +1767,12 @@ public class EntityBuilder : ClassBuilder
                     wh.AppendFormat("e.{0} == {1}", dc.Name, pi.ParameterName);
             }
 
+            var maxCache = MaxCacheCount;
             var singleCache = false;
-            if (UsingCache)
+            if (maxCache > 0)
             {
                 if (header) WriteLine();
+
                 if (_hasMaxCacheCount)
                 {
                     WriteLine("// 实体缓存");
@@ -1768,7 +1781,7 @@ public class EntityBuilder : ClassBuilder
                 else
                 {
                     WriteLine("// 实体缓存");
-                    WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => {0});", wh);
+                    WriteLine("if (Meta.Session.Count < {1}) return Meta.Cache.Find(e => {0});", wh, maxCache);
                 }
 
                 // 单对象缓存
@@ -1872,9 +1885,11 @@ public class EntityBuilder : ClassBuilder
                     wh.AppendFormat("e.{0} == {1}", dc.Name, pi.ParameterName);
             }
 
-            if (UsingCache)
+            var maxCache = MaxCacheCount;
+            if (maxCache > 0)
             {
                 if (header) WriteLine();
+
                 if (_hasMaxCacheCount)
                 {
                     WriteLine("// 实体缓存");
@@ -1883,7 +1898,7 @@ public class EntityBuilder : ClassBuilder
                 else
                 {
                     WriteLine("// 实体缓存");
-                    WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => {0});", wh);
+                    WriteLine("if (Meta.Session.Count < {1}) return Meta.Cache.FindAll(e => {0});", wh, maxCache);
                 }
             }
 

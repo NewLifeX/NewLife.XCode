@@ -13,12 +13,13 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Membership666;
 
-/// <summary>角色</summary>
+/// <summary>角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限</summary>
 [Serializable]
 [DataObject]
-[Description("角色")]
-[BindIndex("IU_Role_Name", true, "Name")]
-[BindTable("Role", Description = "角色", ConnName = "Membership666", DbType = DatabaseType.None)]
+[Description("角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限")]
+[BindIndex("IX_Role_Name", false, "Name")]
+[BindIndex("IX_Role_TenantId_Name", false, "TenantId,Name")]
+[BindTable("Role", Description = "角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class Role : IRole, IEntity<IRole>
 {
     #region 属性
@@ -54,11 +55,19 @@ public partial class Role : IRole, IEntity<IRole>
     [BindColumn("IsSystem", "系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除", "")]
     public Boolean IsSystem { get => _IsSystem; set { if (OnPropertyChanging("IsSystem", value)) { _IsSystem = value; OnPropertyChanged("IsSystem"); } } }
 
+    private Int32 _TenantId;
+    /// <summary>租户。角色所属组合，0表示全局角色</summary>
+    [DisplayName("租户")]
+    [Description("租户。角色所属组合，0表示全局角色")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("TenantId", "租户。角色所属组合，0表示全局角色", "")]
+    public Int32 TenantId { get => _TenantId; set { if (OnPropertyChanging("TenantId", value)) { _TenantId = value; OnPropertyChanged("TenantId"); } } }
+
     private String? _Permission;
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
     [DisplayName("权限")]
     [Description("权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔")]
-    [DataObjectField(false, false, true, 0)]
+    [DataObjectField(false, false, true, -1)]
     [BindColumn("Permission", "权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔", "")]
     public String? Permission { get => _Permission; set { if (OnPropertyChanging("Permission", value)) { _Permission = value; OnPropertyChanged("Permission"); } } }
 
@@ -215,6 +224,7 @@ public partial class Role : IRole, IEntity<IRole>
         Name = model.Name;
         Enable = model.Enable;
         IsSystem = model.IsSystem;
+        TenantId = model.TenantId;
         Permission = model.Permission;
         Sort = model.Sort;
         Ex1 = model.Ex1;
@@ -247,6 +257,7 @@ public partial class Role : IRole, IEntity<IRole>
             "Name" => _Name,
             "Enable" => _Enable,
             "IsSystem" => _IsSystem,
+            "TenantId" => _TenantId,
             "Permission" => _Permission,
             "Sort" => _Sort,
             "Ex1" => _Ex1,
@@ -274,6 +285,7 @@ public partial class Role : IRole, IEntity<IRole>
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "IsSystem": _IsSystem = value.ToBoolean(); break;
+                case "TenantId": _TenantId = value.ToInt(); break;
                 case "Permission": _Permission = Convert.ToString(value); break;
                 case "Sort": _Sort = value.ToInt(); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
@@ -298,6 +310,14 @@ public partial class Role : IRole, IEntity<IRole>
     #endregion
 
     #region 关联映射
+    /// <summary>租户</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Tenant? Tenant => Extends.Get(nameof(Tenant), k => Tenant.FindById(TenantId));
+
+    /// <summary>租户</summary>
+    [Map(nameof(TenantId), typeof(Tenant), "Id")]
+    public String? TenantName => Tenant?.ToString();
+
     #endregion
 
     #region 扩展查询
@@ -319,23 +339,36 @@ public partial class Role : IRole, IEntity<IRole>
 
     /// <summary>根据名称查找</summary>
     /// <param name="name">名称</param>
-    /// <returns>实体对象</returns>
-    public static Role? FindByName(String name)
+    /// <returns>实体列表</returns>
+    public static IList<Role> FindAllByName(String name)
     {
-        if (name.IsNullOrEmpty()) return null;
+        if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
 
-        // 单对象缓存
-        return Meta.SingleCache.GetItemWithSlaveKey(name) as Role;
+        return FindAll(_.Name == name);
+    }
 
-        //return Find(_.Name == name);
+    /// <summary>根据租户、名称查找</summary>
+    /// <param name="tenantId">租户</param>
+    /// <param name="name">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<Role> FindAllByTenantIdAndName(Int32 tenantId, String name)
+    {
+        if (tenantId < 0) return [];
+        if (name.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.Name.EqualIgnoreCase(name));
+
+        return FindAll(_.TenantId == tenantId & _.Name == name);
     }
     #endregion
 
     #region 高级查询
     /// <summary>高级查询</summary>
+    /// <param name="tenantId">租户。角色所属组合，0表示全局角色</param>
     /// <param name="isSystem">系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
@@ -343,10 +376,11 @@ public partial class Role : IRole, IEntity<IRole>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Role> Search(Boolean? isSystem, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Role> Search(Int32 tenantId, Boolean? isSystem, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
+        if (tenantId >= 0) exp &= _.TenantId == tenantId;
         if (isSystem != null) exp &= _.IsSystem == isSystem;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
@@ -371,6 +405,9 @@ public partial class Role : IRole, IEntity<IRole>
 
         /// <summary>系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</summary>
         public static readonly Field IsSystem = FindByName("IsSystem");
+
+        /// <summary>租户。角色所属组合，0表示全局角色</summary>
+        public static readonly Field TenantId = FindByName("TenantId");
 
         /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
         public static readonly Field Permission = FindByName("Permission");
@@ -440,6 +477,9 @@ public partial class Role : IRole, IEntity<IRole>
 
         /// <summary>系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</summary>
         public const String IsSystem = "IsSystem";
+
+        /// <summary>租户。角色所属组合，0表示全局角色</summary>
+        public const String TenantId = "TenantId";
 
         /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
         public const String Permission = "Permission";

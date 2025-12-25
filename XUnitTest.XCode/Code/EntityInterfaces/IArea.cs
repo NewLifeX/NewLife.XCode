@@ -15,7 +15,7 @@ public partial interface IArea
     Int32 ID { get; set; }
 
     /// <summary>名称</summary>
-    String? Name { get; set; }
+    String Name { get; set; }
 
     /// <summary>全名</summary>
     String? FullName { get; set; }

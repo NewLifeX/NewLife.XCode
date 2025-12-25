@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Data;
-using NewLife.Log;
 using XCode;
 using XCode.Cache;
 using XCode.Configuration;
@@ -15,23 +13,23 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Membership666;
 
-/// <summary>日志</summary>
+/// <summary>日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除</summary>
 [Serializable]
 [DataObject]
-[Description("日志")]
+[Description("日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除")]
 [BindIndex("IX_Log_Action_Category_ID", false, "Action,Category,ID")]
 [BindIndex("IX_Log_Category_LinkID_ID", false, "Category,LinkID,ID")]
 [BindIndex("IX_Log_CreateUserID_ID", false, "CreateUserID,ID")]
-[BindTable("Log", Description = "日志", ConnName = "Log", DbType = DatabaseType.None)]
+[BindTable("Log", Description = "日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除", ConnName = "Log", DbType = DatabaseType.None)]
 public partial class Log : ILog, IEntity<ILog>
 {
     #region 属性
     private Int64 _ID;
-    /// <summary>编号。按小时分表，按月分库</summary>
+    /// <summary>编号</summary>
     [DisplayName("编号")]
-    [Description("编号。按小时分表，按月分库")]
+    [Description("编号")]
     [DataObjectField(true, false, false, 0)]
-    [BindColumn("ID", "编号。按小时分表，按月分库", "", DataScale = "timeShard:yyMMddHH:yyyyMM")]
+    [BindColumn("ID", "编号", "", DataScale = "time")]
     public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
     private String? _Category;
@@ -42,21 +40,21 @@ public partial class Log : ILog, IEntity<ILog>
     [BindColumn("Category", "类别", "")]
     public String? Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
-    private String? _Action;
+    private String _Action = null!;
     /// <summary>操作</summary>
     [DisplayName("操作")]
     [Description("操作")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, false, 50)]
     [BindColumn("Action", "操作", "")]
-    public String? Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
+    public String Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
 
-    private Int32 _LinkID;
+    private Int64 _LinkID;
     /// <summary>链接</summary>
     [DisplayName("链接")]
     [Description("链接")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("LinkID", "链接", "")]
-    public Int32 LinkID { get => _LinkID; set { if (OnPropertyChanging("LinkID", value)) { _LinkID = value; OnPropertyChanged("LinkID"); } } }
+    public Int64 LinkID { get => _LinkID; set { if (OnPropertyChanging("LinkID", value)) { _LinkID = value; OnPropertyChanged("LinkID"); } } }
 
     private Boolean _Success;
     /// <summary>成功</summary>
@@ -151,7 +149,7 @@ public partial class Log : ILog, IEntity<ILog>
     [DisplayName("创建用户")]
     [Description("创建用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建用户", "")]
+    [BindColumn("CreateUserID", "创建用户", "", ShowIn = "Auto,-Search")]
     public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
 
     private String? _CreateIP;
@@ -241,7 +239,7 @@ public partial class Log : ILog, IEntity<ILog>
                 case "ID": _ID = value.ToLong(); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Action": _Action = Convert.ToString(value); break;
-                case "LinkID": _LinkID = value.ToInt(); break;
+                case "LinkID": _LinkID = value.ToLong(); break;
                 case "Success": _Success = value.ToBoolean(); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
@@ -289,9 +287,9 @@ public partial class Log : ILog, IEntity<ILog>
     /// <param name="action">操作</param>
     /// <param name="category">类别</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByActionAndCategory(String? action, String? category)
+    public static IList<Log> FindAllByActionAndCategory(String action, String? category)
     {
-        if (action == null) return [];
+        if (action.IsNullOrEmpty()) return [];
         if (category == null) return [];
 
         return FindAll(_.Action == action & _.Category == category);
@@ -301,7 +299,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <param name="category">类别</param>
     /// <param name="linkId">链接</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCategoryAndLinkID(String? category, Int32 linkId)
+    public static IList<Log> FindAllByCategoryAndLinkID(String? category, Int64 linkId)
     {
         if (category == null) return [];
         if (linkId < 0) return [];
@@ -325,21 +323,19 @@ public partial class Log : ILog, IEntity<ILog>
     /// <param name="category">类别</param>
     /// <param name="action">操作</param>
     /// <param name="linkId">链接</param>
-    /// <param name="createUserId">创建用户</param>
     /// <param name="success">成功</param>
     /// <param name="start">编号开始</param>
     /// <param name="end">编号结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> Search(String? category, String? action, Int32 linkId, Int32 createUserId, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Log> Search(String? category, String action, Int64 linkId, Boolean? success, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (!action.IsNullOrEmpty()) exp &= _.Action == action;
         if (linkId >= 0) exp &= _.LinkID == linkId;
-        if (createUserId >= 0) exp &= _.CreateUserID == createUserId;
         if (success != null) exp &= _.Success == success;
         exp &= _.ID.Between(start, end, Meta.Factory.Snow);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
@@ -358,34 +354,13 @@ public partial class Log : ILog, IEntity<ILog>
     {
         return Delete(_.ID.Between(start, end, Meta.Factory.Snow), maximumRows);
     }
-
-    /// <summary>删除指定时间段内的数据表</summary>
-    /// <param name="start">开始时间</param>
-    /// <param name="end">结束时间</param>
-    /// <returns>清理行数</returns>
-    public static Int32 DropWith(DateTime start, DateTime end)
-    {
-        return Meta.AutoShard(start, end, session =>
-        {
-            try
-            {
-                return session.Execute($"Drop Table {session.FormatedTableName}");
-            }
-            catch (Exception ex)
-            {
-                XTrace.WriteException(ex);
-                return 0;
-            }
-        }
-        ).Sum();
-    }
     #endregion
 
     #region 字段名
     /// <summary>取得日志字段信息的快捷方式</summary>
     public partial class _
     {
-        /// <summary>编号。按小时分表，按月分库</summary>
+        /// <summary>编号</summary>
         public static readonly Field ID = FindByName("ID");
 
         /// <summary>类别</summary>
@@ -445,7 +420,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <summary>取得日志字段名称的快捷方式</summary>
     public partial class __
     {
-        /// <summary>编号。按小时分表，按月分库</summary>
+        /// <summary>编号</summary>
         public const String ID = "ID";
 
         /// <summary>类别</summary>

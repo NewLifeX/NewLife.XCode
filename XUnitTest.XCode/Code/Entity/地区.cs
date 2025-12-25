@@ -35,13 +35,13 @@ public partial class Area : IArea, IEntity<IArea>
     [BindColumn("ID", "编码。行政区划编码", "")]
     public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
 
-    private String? _Name;
+    private String _Name = null!;
     /// <summary>名称</summary>
     [DisplayName("名称")]
     [Description("名称")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, false, 50)]
     [BindColumn("Name", "名称", "", Master = true)]
-    public String? Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+    public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
     private String? _FullName;
     /// <summary>全名</summary>
@@ -269,7 +269,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+        if (Meta.Session.Count < 10000) return Meta.Cache.Find(e => e.ID == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
@@ -285,7 +285,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (parentId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId);
+        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.ParentID == parentId);
 
         return FindAll(_.ParentID == parentId);
     }
@@ -293,12 +293,12 @@ public partial class Area : IArea, IEntity<IArea>
     /// <summary>根据名称查找</summary>
     /// <param name="name">名称</param>
     /// <returns>实体列表</returns>
-    public static IList<Area> FindAllByName(String? name)
+    public static IList<Area> FindAllByName(String name)
     {
-        if (name == null) return [];
+        if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.Name == name);
     }
@@ -311,7 +311,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (pinYin == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.PinYin.EqualIgnoreCase(pinYin));
+        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.PinYin.EqualIgnoreCase(pinYin));
 
         return FindAll(_.PinYin == pinYin);
     }
@@ -324,7 +324,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (jianPin == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.JianPin.EqualIgnoreCase(jianPin));
+        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.JianPin.EqualIgnoreCase(jianPin));
 
         return FindAll(_.JianPin == jianPin);
     }
@@ -337,7 +337,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (geoHash == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.GeoHash.EqualIgnoreCase(geoHash));
+        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.GeoHash.EqualIgnoreCase(geoHash));
 
         return FindAll(_.GeoHash == geoHash);
     }

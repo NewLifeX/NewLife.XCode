@@ -103,7 +103,9 @@ public partial class User : Entity<User>
     //    entity.DisplayName = "abc";
     //    entity.Sex = 0;
     //    entity.Mail = "abc";
+    //    entity.MailVerified = true;
     //    entity.Mobile = "abc";
+    //    entity.MobileVerified = true;
     //    entity.Code = "abc";
     //    entity.AreaId = 0;
     //    entity.Avatar = "abc";
@@ -147,14 +149,6 @@ public partial class User : Entity<User>
     #endregion
 
     #region 扩展属性
-    /// <summary>部门</summary>
-    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Department? Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
-
-    /// <summary>部门</summary>
-    [Map(nameof(DepartmentID), typeof(Department), "ID")]
-    [Category("登录信息")]
-    public String? DepartmentName => Department?.Name;
     #endregion
 
     #region 高级查询

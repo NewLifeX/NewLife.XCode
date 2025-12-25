@@ -18,7 +18,7 @@ public partial class TenantModel : ITenant
     public String? Code { get; set; }
 
     /// <summary>名称。显示名称</summary>
-    public String? Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>启用</summary>
     public Boolean Enable { get; set; }

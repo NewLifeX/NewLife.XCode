@@ -37,14 +37,6 @@ public partial class Log : Entity<Log>
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(LinkID));
 
-        // 按小时分表
-        Meta.ShardPolicy = new TimeShardPolicy(nameof(ID), Meta.Factory)
-        {
-                ConnPolicy = "{0}_{1:yyyyMM}",
-                TablePolicy = "{0}_{1:yyMMddHH}",
-                Step = TimeSpan.FromHours(1),
-        };
-
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Modules.Add(new UserModule { AllowEmpty = false });
         Meta.Modules.Add<TimeModule>();
@@ -59,6 +51,9 @@ public partial class Log : Entity<Log>
         //if (method == DataMethod.Delete) return true;
         // 如果没有脏数据，则不需要进行任何处理
         if (!HasDirty) return true;
+
+        // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
+        if (Action.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Action), "操作不能为空！");
 
         // 建议先调用基类方法，基类方法会做一些统一处理
         if (!base.Valid(method)) return false;

@@ -37,21 +37,23 @@
     <NameFormat>Underline</NameFormat>
   </Option>
   <Tables>
-    <Table Name="User" Description="用户。用户帐号信息" ModelInterface="I{name}">
+    <Table Name="User" Description="用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户" ModelInterface="I{name}">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。登录用户名" />
         <Column Name="Password" DataType="String" Length="200" Description="密码" />
         <Column Name="DisplayName" ColumnName="display_name" DataType="String" Description="昵称" />
         <Column Name="Sex" DataType="Int32" Description="性别。未知、男、女" Type="XCode.Membership.SexKinds" />
-        <Column Name="Mail" DataType="String" ItemType="mail" Description="邮件" />
-        <Column Name="Mobile" DataType="String" ItemType="mobile" Description="手机" />
-        <Column Name="Code" DataType="String" Description="代码。身份证、员工编号等" />
-        <Column Name="AreaId" ColumnName="area_id" DataType="Int32" Map="XCode.Membership.Area@Id@Path@AreaPath" Description="地区。省市区" />
+        <Column Name="Mail" DataType="String" ItemType="mail" ShowIn="Auto,-Search" Description="邮件。支持登录" />
+        <Column Name="MailVerified" ColumnName="mail_verified" DataType="Boolean" Description="邮箱验证。邮箱是否已通过验证" />
+        <Column Name="Mobile" DataType="String" ItemType="mobile" ShowIn="Y|Y|A|A|N" Description="手机。支持登录" />
+        <Column Name="MobileVerified" ColumnName="mobile_verified" DataType="Boolean" Description="手机验证。手机是否已通过验证" />
+        <Column Name="Code" DataType="String" ShowIn="11110" Description="代码。身份证、员工编码等，支持登录" />
+        <Column Name="AreaId" ColumnName="area_id" DataType="Int32" Map="XCode.Membership.Area@Id@$@AreaPath" Description="地区。省市区" />
         <Column Name="Avatar" DataType="String" ItemType="image" Length="200" Description="头像" />
         <Column Name="RoleID" ColumnName="role_id" DataType="Int32" Map="Role@Id@Name" DefaultValue="3" Description="角色。主要角色" Category="登录信息" />
         <Column Name="RoleIds" ColumnName="role_ids" DataType="String" Length="200" Description="角色组。次要角色集合" Category="登录信息" />
-        <Column Name="DepartmentID" ColumnName="department_id" DataType="Int32" Description="部门。组织机构" Category="登录信息" />
+        <Column Name="DepartmentID" ColumnName="department_id" DataType="Int32" Map="Department@Id@Name" Description="部门。组织机构" Category="登录信息" />
         <Column Name="Online" DataType="Boolean" Description="在线" Category="登录信息" />
         <Column Name="Enable" DataType="Boolean" Description="启用" Category="登录信息" />
         <Column Name="Age" DataType="Int32" Description="年龄。周岁" />
@@ -61,14 +63,14 @@
         <Column Name="LastLoginIP" ColumnName="last_login_ip" DataType="String" Description="最后登录IP" Category="登录信息" />
         <Column Name="RegisterTime" ColumnName="register_time" DataType="DateTime" Description="注册时间" Category="登录信息" />
         <Column Name="RegisterIP" ColumnName="register_ip" DataType="String" Description="注册IP" Category="登录信息" />
-        <Column Name="OnlineTime" ColumnName="online_time" DataType="Int32" ItemType="TimeSpan" Description="在线时间。累计在线总时间，秒" Category="登录信息" />
+        <Column Name="OnlineTime" ColumnName="online_time" DataType="Int32" ItemType="TimeSpan" Description="在线时间。累计在线总时间，单位秒" Category="登录信息" />
         <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
         <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />
         <Column Name="Ex3" DataType="Double" Description="扩展3" Category="扩展" />
         <Column Name="Ex4" DataType="String" Description="扩展4" Category="扩展" />
         <Column Name="Ex5" DataType="String" Description="扩展5" Category="扩展" />
-        <Column Name="Ex6" DataType="String" Description="扩展6" Attribute="XmlIgnore, ScriptIgnore, IgnoreDataMember" Category="扩展" />
-        <Column Name="UpdateUser" ColumnName="update_user" DataType="String" Description="更新者" Model="False" Category="扩展" />
+        <Column Name="Ex6" DataType="String" Description="扩展6" Attribute="XmlIgnore, IgnoreDataMember, ScriptIgnore" Category="扩展" />
+        <Column Name="UpdateUser" ColumnName="update_user" DataType="String" Nullable="False" DefaultValue="''" Description="更新者" Model="False" Category="扩展" />
         <Column Name="UpdateUserID" ColumnName="update_user_id" DataType="Int32" Description="更新用户" Model="False" Category="扩展" />
         <Column Name="UpdateIP" ColumnName="update_ip" DataType="String" Description="更新地址" Model="False" Category="扩展" />
         <Column Name="UpdateTime" ColumnName="update_time" DataType="DateTime" Nullable="False" Description="更新时间" Model="False" Category="扩展" />
@@ -80,14 +82,15 @@
         <Index Columns="Mobile" />
         <Index Columns="Code" />
         <Index Columns="RoleID" />
+        <Index Columns="DepartmentID" />
         <Index Columns="UpdateTime" />
       </Indexes>
     </Table>
-    <Table Name="Department" Description="部门。组织机构，多级树状结构">
+    <Table Name="Department" Description="部门。组织机构，多级树状结构，支持多租户" MaxCacheCount="10000">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="TenantId" ColumnName="tenant_id" DataType="Int32" Map="Tenant@Id@$" Description="租户" />
-        <Column Name="Code" DataType="String" Description="代码" />
+        <Column Name="Code" DataType="String" ShowIn="11110" Description="代码" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="FullName" ColumnName="full_name" DataType="String" Length="200" Description="全名" />
         <Column Name="ParentID" ColumnName="parent_id" DataType="Int32" Description="父级" />
@@ -113,20 +116,21 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
+        <Index Columns="TenantId,ParentID,Name" />
         <Index Columns="Name" />
         <Index Columns="ParentID,Name" />
         <Index Columns="Code" />
         <Index Columns="UpdateTime" />
-        <Index Columns="TenantId" />
       </Indexes>
     </Table>
-    <Table Name="Role" Description="角色">
+    <Table Name="Role" Description="角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="IsSystem" ColumnName="is_system" DataType="Boolean" Description="系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除" />
-        <Column Name="Permission" DataType="String" Length="0" Description="权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔" />
+        <Column Name="TenantId" ColumnName="tenant_id" DataType="Int32" Map="Tenant@Id@$" Description="租户。角色所属组合，0表示全局角色" />
+        <Column Name="Permission" DataType="String" Length="-1" Description="权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔" />
         <Column Name="Sort" DataType="Int32" Description="排序" />
         <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
         <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />
@@ -145,10 +149,11 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="Name" Unique="True" />
+        <Index Columns="Name" />
+        <Index Columns="TenantId,Name" />
       </Indexes>
     </Table>
-    <Table Name="Menu" Description="菜单" BaseType="EntityTree">
+    <Table Name="Menu" Description="菜单。功能权限，大多数时候也是可见页面" BaseType="EntityTree">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
@@ -161,7 +166,7 @@
         <Column Name="Visible" DataType="Boolean" Description="可见" />
         <Column Name="Necessary" DataType="Boolean" Description="必要。必要的菜单，必须至少有角色拥有这些权限，如果没有则自动授权给系统角色" />
         <Column Name="NewWindow" ColumnName="new_window" DataType="Boolean" Description="新窗口。新窗口打开链接" />
-        <Column Name="Permission" DataType="String" Length="200" Description="权限子项。逗号分隔，每个权限子项名值竖线分隔" />
+        <Column Name="Permission" DataType="String" Length="2000" Description="权限子项。逗号分隔，每个权限子项名值竖线分隔" />
         <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
         <Column Name="Ex2" DataType="Int32" Description="扩展2" Category="扩展" />
         <Column Name="Ex3" DataType="Double" Description="扩展3" Category="扩展" />
@@ -179,19 +184,19 @@
         <Column Name="Remark" DataType="String" Length="500" Description="备注" Category="扩展" />
       </Columns>
       <Indexes>
-        <Index Columns="Name" />
         <Index Columns="ParentID,Name" Unique="True" />
+        <Index Columns="Name" />
       </Indexes>
     </Table>
-    <Table Name="Parameter" Description="字典参数">
+    <Table Name="Parameter" Description="字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合">
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="UserID" ColumnName="user_id" DataType="Int32" Map="User@Id@$" Description="用户。按用户区分参数，用户0表示系统级" />
         <Column Name="Category" DataType="String" Description="类别" />
-        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="Value" DataType="String" Length="200" Description="数值" />
         <Column Name="Readonly" DataType="Boolean" Description="只读标记。用于验证关键字处理" />
-        <Column Name="LongValue" ColumnName="long_value" DataType="String" Length="2000" Description="长数值" />
+        <Column Name="LongValue" ColumnName="long_value" DataType="String" Length="-1" Description="长数值" />
         <Column Name="Kind" DataType="Int32" Description="种类。0普通，21列表，22名值" Type="XCode.Membership.ParameterKinds" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
@@ -213,14 +218,13 @@
       <Indexes>
         <Index Columns="UserID,Category,Name" Unique="True" />
         <Index Columns="Category,Name" />
-        <Index Columns="Readonly" />
         <Index Columns="UpdateTime" />
       </Indexes>
     </Table>
-    <Table Name="Area" Description="地区。行政区划数据，最高支持四级地址，9位数字">
+    <Table Name="Area" Description="地区。行政区划数据，最高支持四级地址，9位数字" MaxCacheCount="10000">
       <Columns>
         <Column Name="ID" DataType="Int32" PrimaryKey="True" Description="编码。行政区划编码" />
-        <Column Name="Name" DataType="String" Master="True" Description="名称" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="FullName" ColumnName="full_name" DataType="String" Master="True" Description="全名" />
         <Column Name="ParentID" ColumnName="parent_id" DataType="Int32" Description="父级" />
         <Column Name="Level" DataType="Int32" Description="层级" />
@@ -247,12 +251,12 @@
         <Index Columns="UpdateTime,ID" />
       </Indexes>
     </Table>
-    <Table Name="Log" Description="日志" ConnName="Log" InsertOnly="True">
+    <Table Name="Log" Description="日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除" ConnName="Log" InsertOnly="True" MaxCacheCount="0">
       <Columns>
-        <Column Name="ID" DataType="Int64" PrimaryKey="True" DataScale="timeShard:yyMMddHH:yyyyMM" Description="编号。按小时分表，按月分库" />
+        <Column Name="ID" DataType="Int64" PrimaryKey="True" DataScale="time" Description="编号" />
         <Column Name="Category" DataType="String" Description="类别" />
-        <Column Name="Action" DataType="String" Description="操作" />
-        <Column Name="LinkID" ColumnName="link_id" DataType="Int32" Description="链接" />
+        <Column Name="Action" DataType="String" Nullable="False" Description="操作" />
+        <Column Name="LinkID" ColumnName="link_id" DataType="Int64" Description="链接" />
         <Column Name="Success" DataType="Boolean" Description="成功" />
         <Column Name="UserName" ColumnName="user_name" DataType="String" Description="用户名" />
         <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />
@@ -263,7 +267,7 @@
         <Column Name="Ex6" DataType="String" Description="扩展6" Category="扩展" />
         <Column Name="TraceId" ColumnName="trace_id" DataType="String" Description="性能追踪。用于APM性能追踪定位，还原该事件的调用链" />
         <Column Name="CreateUser" ColumnName="create_user" DataType="String" Description="创建者" Category="扩展" />
-        <Column Name="CreateUserID" ColumnName="create_user_id" DataType="Int32" Map="User@Id@$" Description="创建用户" Category="扩展" />
+        <Column Name="CreateUserID" ColumnName="create_user_id" DataType="Int32" ShowIn="Auto,-Search" Map="User@Id@$" Description="创建用户" Category="扩展" />
         <Column Name="CreateIP" ColumnName="create_ip" DataType="String" Description="创建地址" Category="扩展" />
         <Column Name="CreateTime" ColumnName="create_time" DataType="DateTime" Nullable="False" Description="时间" />
         <Column Name="Remark" DataType="String" Length="2000" Description="详细信息" />
@@ -278,7 +282,7 @@
       <Columns>
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Code" DataType="String" Description="编码。唯一编码" />
-        <Column Name="Name" DataType="String" Master="True" Description="名称。显示名称" />
+        <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。显示名称" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="ManagerId" ColumnName="manager_id" DataType="Int32" Map="User@Id@$" Description="管理者" />
         <Column Name="RoleIds" ColumnName="role_ids" DataType="String" Length="200" Description="角色组。租户可选的角色集合，不同级别的租户所拥有的角色不一样，高级功能也会不同" />

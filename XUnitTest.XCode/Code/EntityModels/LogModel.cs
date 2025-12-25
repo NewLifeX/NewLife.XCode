@@ -7,21 +7,21 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership666;
 
-/// <summary>日志</summary>
+/// <summary>日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除</summary>
 public partial class LogModel : ILog
 {
     #region 属性
-    /// <summary>编号。按小时分表，按月分库</summary>
+    /// <summary>编号</summary>
     public Int64 ID { get; set; }
 
     /// <summary>类别</summary>
     public String? Category { get; set; }
 
     /// <summary>操作</summary>
-    public String? Action { get; set; }
+    public String Action { get; set; } = null!;
 
     /// <summary>链接</summary>
-    public Int32 LinkID { get; set; }
+    public Int64 LinkID { get; set; }
 
     /// <summary>成功</summary>
     public Boolean Success { get; set; }

@@ -36,22 +36,17 @@ public partial class Role : Entity<Role>
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
         //var df = Meta.Factory.AdditionalFields;
-        //df.Add(nameof(Sort));
+        //df.Add(nameof(TenantId));
 
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Modules.Add(new UserModule { AllowEmpty = false });
         Meta.Modules.Add<TimeModule>();
         Meta.Modules.Add(new IPModule { AllowEmpty = false });
+        Meta.Modules.Add<TenantModule>();
 
         // 实体缓存
         // var ec = Meta.Cache;
         // ec.Expire = 60;
-
-        // 单对象缓存
-        var sc = Meta.SingleCache;
-        // sc.Expire = 60;
-        sc.FindSlaveKeyMethod = k => Find(_.Name == k);
-        sc.GetSlaveKeyMethod = e => e.Name;
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
@@ -85,9 +80,6 @@ public partial class Role : Entity<Role>
         //if (method == DataMethod.Insert && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
         //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
 
-        // 检查唯一索引
-        // CheckExist(method == DataMethod.Insert, nameof(Name));
-
         return true;
     }
 
@@ -104,6 +96,7 @@ public partial class Role : Entity<Role>
     //    entity.Name = "abc";
     //    entity.Enable = true;
     //    entity.IsSystem = true;
+    //    entity.TenantId = 0;
     //    entity.Permission = "abc";
     //    entity.Sort = 0;
     //    entity.Ex1 = 0;

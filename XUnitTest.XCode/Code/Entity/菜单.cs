@@ -13,13 +13,13 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Membership666;
 
-/// <summary>菜单</summary>
+/// <summary>菜单。功能权限，大多数时候也是可见页面</summary>
 [Serializable]
 [DataObject]
-[Description("菜单")]
-[BindIndex("IX_Menu_Name", false, "Name")]
+[Description("菜单。功能权限，大多数时候也是可见页面")]
 [BindIndex("IU_Menu_ParentID_Name", true, "ParentID,Name")]
-[BindTable("Menu", Description = "菜单", ConnName = "Membership666", DbType = DatabaseType.None)]
+[BindIndex("IX_Menu_Name", false, "Name")]
+[BindTable("Menu", Description = "菜单。功能权限，大多数时候也是可见页面", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class Menu : IMenu, IEntity<IMenu>
 {
     #region 属性
@@ -115,7 +115,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
     /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
     [DisplayName("权限子项")]
     [Description("权限子项。逗号分隔，每个权限子项名值竖线分隔")]
-    [DataObjectField(false, false, true, 200)]
+    [DataObjectField(false, false, true, 2000)]
     [BindColumn("Permission", "权限子项。逗号分隔，每个权限子项名值竖线分隔", "")]
     public String? Permission { get => _Permission; set { if (OnPropertyChanging("Permission", value)) { _Permission = value; OnPropertyChanged("Permission"); } } }
 
@@ -384,19 +384,6 @@ public partial class Menu : IMenu, IEntity<IMenu>
         //return Find(_.ID == id);
     }
 
-    /// <summary>根据名称查找</summary>
-    /// <param name="name">名称</param>
-    /// <returns>实体列表</returns>
-    public static IList<Menu> FindAllByName(String name)
-    {
-        if (name.IsNullOrEmpty()) return [];
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
-
-        return FindAll(_.Name == name);
-    }
-
     /// <summary>根据父编号、名称查找</summary>
     /// <param name="parentId">父编号</param>
     /// <param name="name">名称</param>
@@ -423,6 +410,19 @@ public partial class Menu : IMenu, IEntity<IMenu>
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId);
 
         return FindAll(_.ParentID == parentId);
+    }
+
+    /// <summary>根据名称查找</summary>
+    /// <param name="name">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<Menu> FindAllByName(String name)
+    {
+        if (name.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+
+        return FindAll(_.Name == name);
     }
     #endregion
 

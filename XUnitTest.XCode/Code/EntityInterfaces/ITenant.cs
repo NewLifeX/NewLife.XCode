@@ -18,7 +18,7 @@ public partial interface ITenant
     String? Code { get; set; }
 
     /// <summary>名称。显示名称</summary>
-    String? Name { get; set; }
+    String Name { get; set; }
 
     /// <summary>启用</summary>
     Boolean Enable { get; set; }

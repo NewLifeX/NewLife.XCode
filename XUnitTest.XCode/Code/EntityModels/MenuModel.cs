@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership666;
 
-/// <summary>菜单</summary>
+/// <summary>菜单。功能权限，大多数时候也是可见页面</summary>
 public partial class MenuModel : IMenu
 {
     #region 属性

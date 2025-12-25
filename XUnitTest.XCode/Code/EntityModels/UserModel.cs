@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership666;
 
-/// <summary>用户。用户帐号信息</summary>
+/// <summary>用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户</summary>
 public partial class UserModel : IUser
 {
     #region 属性
@@ -26,13 +26,19 @@ public partial class UserModel : IUser
     /// <summary>性别。未知、男、女</summary>
     public XCode.Membership.SexKinds Sex { get; set; }
 
-    /// <summary>邮件</summary>
+    /// <summary>邮件。支持登录</summary>
     public String? Mail { get; set; }
 
-    /// <summary>手机</summary>
+    /// <summary>邮箱验证。邮箱是否已通过验证</summary>
+    public Boolean MailVerified { get; set; }
+
+    /// <summary>手机。支持登录</summary>
     public String? Mobile { get; set; }
 
-    /// <summary>代码。身份证、员工编号等</summary>
+    /// <summary>手机验证。手机是否已通过验证</summary>
+    public Boolean MobileVerified { get; set; }
+
+    /// <summary>代码。身份证、员工编码等，支持登录</summary>
     public String? Code { get; set; }
 
     /// <summary>地区。省市区</summary>
@@ -77,7 +83,7 @@ public partial class UserModel : IUser
     /// <summary>注册IP</summary>
     public String? RegisterIP { get; set; }
 
-    /// <summary>在线时间。累计在线总时间，秒</summary>
+    /// <summary>在线时间。累计在线总时间，单位秒</summary>
     public Int32 OnlineTime { get; set; }
 
     /// <summary>扩展1</summary>
@@ -96,7 +102,7 @@ public partial class UserModel : IUser
     public String? Ex5 { get; set; }
 
     /// <summary>扩展6</summary>
-    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public String? Ex6 { get; set; }
 
     /// <summary>备注</summary>
@@ -114,7 +120,9 @@ public partial class UserModel : IUser
         DisplayName = model.DisplayName;
         Sex = model.Sex;
         Mail = model.Mail;
+        MailVerified = model.MailVerified;
         Mobile = model.Mobile;
+        MobileVerified = model.MobileVerified;
         Code = model.Code;
         AreaId = model.AreaId;
         Avatar = model.Avatar;

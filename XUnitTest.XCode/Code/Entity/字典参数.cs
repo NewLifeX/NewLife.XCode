@@ -13,15 +13,14 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Membership666;
 
-/// <summary>字典参数</summary>
+/// <summary>字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合</summary>
 [Serializable]
 [DataObject]
-[Description("字典参数")]
+[Description("字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合")]
 [BindIndex("IU_Parameter_UserID_Category_Name", true, "UserID,Category,Name")]
 [BindIndex("IX_Parameter_Category_Name", false, "Category,Name")]
-[BindIndex("IX_Parameter_Readonly", false, "Readonly")]
 [BindIndex("IX_Parameter_UpdateTime", false, "UpdateTime")]
-[BindTable("Parameter", Description = "字典参数", ConnName = "Membership666", DbType = DatabaseType.None)]
+[BindTable("Parameter", Description = "字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合", ConnName = "Membership666", DbType = DatabaseType.None)]
 public partial class Parameter : IParameter, IEntity<IParameter>
 {
     #region 属性
@@ -49,13 +48,13 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     [BindColumn("Category", "类别", "")]
     public String? Category { get => _Category; set { if (OnPropertyChanging("Category", value)) { _Category = value; OnPropertyChanged("Category"); } } }
 
-    private String? _Name;
+    private String _Name = null!;
     /// <summary>名称</summary>
     [DisplayName("名称")]
     [Description("名称")]
-    [DataObjectField(false, false, true, 50)]
+    [DataObjectField(false, false, false, 50)]
     [BindColumn("Name", "名称", "", Master = true)]
-    public String? Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+    public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
     private String? _Value;
     /// <summary>数值</summary>
@@ -77,7 +76,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <summary>长数值</summary>
     [DisplayName("长数值")]
     [Description("长数值")]
-    [DataObjectField(false, false, true, 2000)]
+    [DataObjectField(false, false, true, -1)]
     [BindColumn("LongValue", "长数值", "")]
     public String? LongValue { get => _LongValue; set { if (OnPropertyChanging("LongValue", value)) { _LongValue = value; OnPropertyChanged("LongValue"); } } }
 
@@ -366,11 +365,11 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <param name="category">类别</param>
     /// <param name="name">名称</param>
     /// <returns>实体对象</returns>
-    public static Parameter? FindByUserIDAndCategoryAndName(Int32 userId, String? category, String? name)
+    public static Parameter? FindByUserIDAndCategoryAndName(Int32 userId, String? category, String name)
     {
         if (userId < 0) return null;
         if (category == null) return null;
-        if (name == null) return null;
+        if (name.IsNullOrEmpty()) return null;
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserID == userId && e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));
@@ -410,10 +409,10 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <param name="category">类别</param>
     /// <param name="name">名称</param>
     /// <returns>实体列表</returns>
-    public static IList<Parameter> FindAllByCategoryAndName(String? category, String? name)
+    public static IList<Parameter> FindAllByCategoryAndName(String? category, String name)
     {
         if (category == null) return [];
-        if (name == null) return [];
+        if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));

@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace XCode.Membership666;
 
-/// <summary>字典参数</summary>
+/// <summary>字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合</summary>
 public partial class ParameterModel : IParameter
 {
     #region 属性
@@ -21,7 +21,7 @@ public partial class ParameterModel : IParameter
     public String? Category { get; set; }
 
     /// <summary>名称</summary>
-    public String? Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>数值</summary>
     public String? Value { get; set; }

@@ -30,6 +30,9 @@ namespace Company.MyName;
 public partial class User : Entity<User>
 {
     #region 对象操作
+    // 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走实体缓存
+    private Int32 MaxCacheCount = 1000;
+
     static User()
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx

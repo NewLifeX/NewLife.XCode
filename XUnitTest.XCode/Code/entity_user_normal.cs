@@ -471,7 +471,7 @@ public partial class User
         if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.ID == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
@@ -487,7 +487,7 @@ public partial class User
         if (name.IsNullOrEmpty()) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
 
         // 单对象缓存
         return Meta.SingleCache.GetItemWithSlaveKey(name) as User;
@@ -503,7 +503,7 @@ public partial class User
         if (mail == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mail.EqualIgnoreCase(mail));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Mail.EqualIgnoreCase(mail));
 
         return FindAll(_.Mail == mail);
     }
@@ -516,7 +516,7 @@ public partial class User
         if (mobile == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Mobile.EqualIgnoreCase(mobile));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Mobile.EqualIgnoreCase(mobile));
 
         return FindAll(_.Mobile == mobile);
     }
@@ -529,7 +529,7 @@ public partial class User
         if (code == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
 
         return FindAll(_.Code == code);
     }
@@ -542,7 +542,7 @@ public partial class User
         if (roleId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleID == roleId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.RoleID == roleId);
 
         return FindAll(_.RoleID == roleId);
     }
@@ -555,7 +555,7 @@ public partial class User
         if (departmentId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DepartmentID == departmentId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.DepartmentID == departmentId);
 
         return FindAll(_.DepartmentID == departmentId);
     }

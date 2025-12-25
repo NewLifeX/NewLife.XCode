@@ -29,6 +29,9 @@ namespace XCode.Membership666;
 public partial class Parameter : Entity<Parameter>
 {
     #region 对象操作
+    // 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走实体缓存
+    private Int32 MaxCacheCount = 1000;
+
     static Parameter()
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx

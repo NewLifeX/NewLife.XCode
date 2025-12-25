@@ -30,6 +30,8 @@ public class EntityBuilder : ClassBuilder
 
     /// <summary>成员集合。主要用于避免重复生成相同签名的成员，方法的签名包括参数列表</summary>
     public IList<String> Members { get; set; } = [];
+
+    private Boolean _hasMaxCacheCount;
     #endregion 属性
 
     #region 静态快速
@@ -354,6 +356,8 @@ public class EntityBuilder : ClassBuilder
                 {
                     Members.Add(sec.FullName);
                 }
+
+                _hasMaxCacheCount = txt.Contains("Int32 MaxCacheCount");
             }
         }
     }
@@ -410,6 +414,7 @@ public class EntityBuilder : ClassBuilder
     /// <summary>清空上下文。便于重新生成</summary>
     public override void Clear()
     {
+        _hasMaxCacheCount = false;
         base.Clear();
 
         Members.Clear();
@@ -1139,6 +1144,15 @@ public class EntityBuilder : ClassBuilder
     /// <summary>生成静态构造函数</summary>
     protected virtual void BuildCctor()
     {
+        if (!_hasMaxCacheCount && UsingCache)
+        {
+            WriteLine("// 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走实体缓存");
+            WriteLine("private Int32 MaxCacheCount = 1000;");
+            WriteLine();
+
+            _hasMaxCacheCount = true;
+        }
+
         WriteLine("static {0}()", ClassName);
         WriteLine("{");
         {
@@ -1746,8 +1760,16 @@ public class EntityBuilder : ClassBuilder
             if (UsingCache)
             {
                 if (header) WriteLine();
-                WriteLine("// 实体缓存");
-                WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => {0});", wh);
+                if (_hasMaxCacheCount)
+                {
+                    WriteLine("// 实体缓存");
+                    WriteLine("if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => {0});", wh);
+                }
+                else
+                {
+                    WriteLine("// 实体缓存");
+                    WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => {0});", wh);
+                }
 
                 // 单对象缓存
                 if (columns.Length == 1)
@@ -1853,8 +1875,16 @@ public class EntityBuilder : ClassBuilder
             if (UsingCache)
             {
                 if (header) WriteLine();
-                WriteLine("// 实体缓存");
-                WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => {0});", wh);
+                if (_hasMaxCacheCount)
+                {
+                    WriteLine("// 实体缓存");
+                    WriteLine("if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => {0});", wh);
+                }
+                else
+                {
+                    WriteLine("// 实体缓存");
+                    WriteLine("if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => {0});", wh);
+                }
             }
 
             if (header) WriteLine();

@@ -3,7 +3,6 @@ using System.Data.Common;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Web;
 
 namespace XCode.DataAccessLayer;
 
@@ -59,7 +58,7 @@ internal class HighGo : RemoteDb
     {
         if (!Provider.IsNullOrEmpty() && Provider.Contains("HighGo"))
         {
-            var type = PluginHelper.LoadPlugin("Nhgdb.NhgdbFactory", null, "Nhgdb.dll", null);
+            var type = DriverLoader.Load("Nhgdb.NhgdbFactory", null, "Nhgdb.dll", null);
             var factory = GetProviderFactory(type);
             if (factory != null) return factory;
         }

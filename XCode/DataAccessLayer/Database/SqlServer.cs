@@ -8,7 +8,6 @@ using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
-using NewLife.Web;
 
 namespace XCode.DataAccessLayer;
 
@@ -28,7 +27,7 @@ internal class SqlServer : RemoteDb
         // 根据提供者加载已有驱动
         if (!Provider.IsNullOrEmpty() && Provider.Contains("Microsoft"))
         {
-            var type = PluginHelper.LoadPlugin("Microsoft.Data.SqlClient.SqlClientFactory", null, "Microsoft.Data.SqlClient.dll", null);
+            var type = DriverLoader.Load("Microsoft.Data.SqlClient.SqlClientFactory", null, "Microsoft.Data.SqlClient.dll", null);
             var factory = GetProviderFactory(type);
             if (factory != null) return factory;
         }

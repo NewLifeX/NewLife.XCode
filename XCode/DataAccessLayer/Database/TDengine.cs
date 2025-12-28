@@ -2,11 +2,9 @@
 using System.Data.Common;
 using System.Net;
 using System.Text;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Web;
 using XCode.TDengine;
 
 namespace XCode.DataAccessLayer;
@@ -22,7 +20,7 @@ class TDengine : RemoteDb
     protected override DbProviderFactory CreateFactory()
     {
         var links = GetLinkNames("NewLife.TDengine.dll", true);
-        _ = PluginHelper.LoadPlugin("NewLife.TDengine.TDengineFactory", null, "taos.dll", links.Join(","));
+        _ = DriverLoader.Load("NewLife.TDengine.TDengineFactory", null, "taos.dll", links.Join(","));
 
         return TDengineFactory.Instance;
     }

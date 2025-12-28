@@ -1,0 +1,120 @@
+﻿using System.Reflection;
+using NewLife.Log;
+using NewLife.Web;
+
+namespace XCode.DataAccessLayer;
+
+/// <summary>驱动加载器</summary>
+public static class DriverLoader
+{
+    /// <summary>创建客户端。便于外部自定义</summary>
+    public static Func<String, WebClientX> CreateClient { get; set; } = linkName => new WebClientX { AuthKey = "NewLife", Log = XTrace.Log };
+
+    /// <summary>加载插件</summary>
+    /// <param name="typeName">插件类型</param>
+    /// <param name="disname">显示名</param>
+    /// <param name="dll">DLL文件</param>
+    /// <param name="linkName">链接名。要在下载页面中搜索的链接名</param>
+    /// <param name="urls">提供下载地址的多个目标页面</param>
+    /// <param name="minVersion">最低版本。不匹配低于该版本的链接</param>
+    /// <returns></returns>
+    public static Type? Load(String typeName, String? disname, String? dll, String? linkName, String? urls = null, Version? minVersion = null)
+    {
+        if (typeName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(typeName));
+
+        //var type = typeName.GetTypeEx(true);
+        var type = Type.GetType(typeName);
+        if (type != null) return type;
+
+        if (dll.IsNullOrEmpty()) return null;
+
+        var set = NewLife.Setting.Current;
+
+        var file = "";
+        if (!dll.IsNullOrEmpty())
+        {
+            // 先检查程序集所在目录，再检查当前目录、基准目录和插件目录。在应用发布时，插件很可能跟常规应用程序集放在同一目录下
+            var exe = Assembly.GetEntryAssembly()?.Location;
+            if (exe.IsNullOrEmpty()) exe = Assembly.GetCallingAssembly()?.Location;
+            if (exe.IsNullOrEmpty()) exe = Assembly.GetExecutingAssembly()?.Location;
+            if (!exe.IsNullOrEmpty()) file = Path.GetDirectoryName(exe).CombinePath(dll).GetFullPath();
+            if (!File.Exists(file)) file = dll.GetCurrentPath();
+            if (!File.Exists(file)) file = dll.GetFullPath();
+            if (!File.Exists(file)) file = dll.GetBasePath();
+            if (!File.Exists(file)) file = set.PluginPath.CombinePath(dll).GetFullPath();
+            if (!File.Exists(file)) file = set.PluginPath.CombinePath(dll).GetBasePath();
+        }
+
+        // 尝试直接加载DLL
+        if (File.Exists(file))
+            try
+            {
+                var asm = Assembly.LoadFrom(file);
+                type = asm.GetType(typeName);
+                if (type != null) return type;
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteException(ex);
+            }
+
+        if (linkName.IsNullOrEmpty()) return null;
+
+        // 按类型名锁定，超时取不到锁，则放弃
+        if (!Monitor.TryEnter(typeName, 15_000)) return null;
+
+        try
+        {
+            type = Type.GetType(typeName);
+            if (type != null) return type;
+
+            if (urls.IsNullOrEmpty()) urls = set.PluginServer;
+
+            // 如果本地没有数据库，则从网络下载
+            if (!File.Exists(file))
+            {
+                XTrace.WriteLine("{0}不存在或平台版本不正确，准备联网获取 {1}", !disname.IsNullOrEmpty() ? disname : dll, urls);
+                if (minVersion != null) XTrace.WriteLine("要求最低版本：{0}", minVersion);
+
+                //var client = new WebClientX()
+                //{
+                //    Log = XTrace.Log
+                //};
+                using var client = CreateClient(linkName);
+                client.MinVersion = minVersion;
+                var dir = Path.GetDirectoryName(file);
+                var file2 = client.DownloadLinkAndExtract(urls, linkName, dir!, true);
+                //client.TryDispose();
+            }
+            if (!File.Exists(file))
+            {
+                XTrace.WriteLine("未找到 {0} {1}", disname, dll);
+                return null;
+            }
+
+            //return Assembly.LoadFrom(file).GetType(typeName);
+
+            type = Type.GetType(typeName);
+            if (type != null) return type;
+
+            // 尝试直接加载DLL
+            if (File.Exists(file))
+                try
+                {
+                    var asm = Assembly.LoadFrom(file);
+                    type = asm.GetType(typeName);
+                    if (type != null) return type;
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
+
+            return null;
+        }
+        finally
+        {
+            Monitor.Exit(typeName);
+        }
+    }
+}

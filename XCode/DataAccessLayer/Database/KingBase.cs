@@ -3,7 +3,6 @@ using System.Data.Common;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Web;
 
 namespace XCode.DataAccessLayer;
 
@@ -64,7 +63,7 @@ internal class KingBase : RemoteDb
     {
         if (!Provider.IsNullOrEmpty() && Provider.Contains("KingBase"))
         {
-            var type = PluginHelper.LoadPlugin("Kdbndp.KdbndpFactory", null, "Kdbndp.dll", null);
+            var type = DriverLoader.Load("Kdbndp.KdbndpFactory", null, "Kdbndp.dll", null);
             var factory = GetProviderFactory(type);
             if (factory != null) return factory;
         }

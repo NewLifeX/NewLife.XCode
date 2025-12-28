@@ -6,7 +6,6 @@ using System.Text.RegularExpressions;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Reflection;
-using NewLife.Web;
 
 namespace XCode.DataAccessLayer;
 
@@ -453,13 +452,14 @@ abstract class DbBase : DisposeBase, IDatabase
     }
 
     /// <summary>获取提供者工厂</summary>
-    /// <param name="name"></param>
-    /// <param name="assemblyFile"></param>
-    /// <param name="className"></param>
-    /// <param name="strict"></param>
-    /// <param name="ignoreError"></param>
+    /// <param name="name">驱动名</param>
+    /// <param name="assemblyFile">程序集名称。一般就是dll文件名</param>
+    /// <param name="className">数据工厂类名。包含命名空间</param>
+    /// <param name="strict">严格模式。非严格模式时，同时搜索通用名</param>
+    /// <param name="ignoreError">是否忽略错误，只返回空而不是抛出异常</param>
+    /// <param name="minVersion">最低版本。不匹配低于该版本的链接</param>
     /// <returns></returns>
-    public static DbProviderFactory? GetProviderFactory(String? name, String assemblyFile, String className, Boolean strict = false, Boolean ignoreError = false)
+    public static DbProviderFactory? GetProviderFactory(String? name, String assemblyFile, String className, Boolean strict = false, Boolean ignoreError = false, Version? minVersion = null)
     {
         // 支持adonet新的下载路径
         var set = NewLife.Setting.Current;
@@ -476,7 +476,7 @@ abstract class DbBase : DisposeBase, IDatabase
         {
             if (name.IsNullOrEmpty()) name = Path.GetFileNameWithoutExtension(assemblyFile);
             var links = GetLinkNames(name, strict);
-            var type = PluginHelper.LoadPlugin(className, null, assemblyFile, links.Join(","), urls2.Join(";"));
+            var type = DriverLoader.Load(className, null, assemblyFile, links.Join(","), urls2.Join(";"), minVersion);
 
             var factory = GetProviderFactory(type);
             if (factory != null) return factory;
@@ -507,7 +507,7 @@ abstract class DbBase : DisposeBase, IDatabase
                     XTrace.WriteException(ex);
                 }
 
-                type = PluginHelper.LoadPlugin(className, null!, assemblyFile, links.Join(","));
+                type = DriverLoader.Load(className, null!, assemblyFile, links.Join(","), null, minVersion);
 
                 // 如果还没有，就写异常
                 if (!File.Exists(file)) throw new FileNotFoundException("缺少文件" + file + "！", file);

@@ -19,9 +19,10 @@ internal class Oracle : RemoteDb
     /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
     public override DatabaseType Type => DatabaseType.Oracle;
 
+    private Version _minVersion = new("23.26");
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory? CreateFactory() => GetProviderFactory(null, "Oracle.ManagedDataAccess.dll", "Oracle.ManagedDataAccess.Client.OracleClientFactory");
+    protected override DbProviderFactory? CreateFactory() => GetProviderFactory(null, "Oracle.ManagedDataAccess.dll", "Oracle.ManagedDataAccess.Client.OracleClientFactory", false, false, _minVersion);
 
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {

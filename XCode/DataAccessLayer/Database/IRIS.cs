@@ -1,10 +1,8 @@
 ﻿using System.Data;
 using System.Data.Common;
-using System.Net;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Web;
 
 namespace XCode.DataAccessLayer;
 
@@ -27,7 +25,7 @@ internal class IRIS : RemoteDb
     {
         if (!Provider.IsNullOrEmpty() && Provider.Contains("IRIS"))
         {
-            var type = PluginHelper.LoadPlugin("InterSystems.Data.IRISClient.IRISFactory", null, "InterSystems.Data.IRISClient.dll", null);
+            var type = DriverLoader.Load("InterSystems.Data.IRISClient.IRISFactory", null, "InterSystems.Data.IRISClient.dll", null);
             var factory = GetProviderFactory(type);
             if (factory != null) return factory;
         }

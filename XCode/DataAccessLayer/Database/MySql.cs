@@ -4,7 +4,6 @@ using System.Net;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
-using NewLife.Web;
 
 namespace XCode.DataAccessLayer;
 
@@ -19,7 +18,7 @@ internal class MySql : RemoteDb
     /// <returns></returns>
     protected override DbProviderFactory? CreateFactory()
     {
-        var type = PluginHelper.LoadPlugin("NewLife.MySql.MySqlClientFactory", null, "NewLife.MySql.dll", null);
+        var type = DriverLoader.Load("NewLife.MySql.MySqlClientFactory", null, "NewLife.MySql.dll", null);
         var factory = GetProviderFactory(type);
         if (factory != null) return factory;
 
@@ -30,7 +29,7 @@ internal class MySql : RemoteDb
         //if (factory != null) return factory;
         //#endif
 
-        type = PluginHelper.LoadPlugin("MySql.Data.MySqlClient.MySqlClientFactory", null, "MySql.Data.dll", null);
+        type = DriverLoader.Load("MySql.Data.MySqlClient.MySqlClientFactory", null, "MySql.Data.dll", null);
         factory = GetProviderFactory(type);
         if (factory != null) return factory;
 

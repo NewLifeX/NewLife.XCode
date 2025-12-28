@@ -85,10 +85,13 @@ internal class SQLite : FileDbBase
             builder.TryAdd("Cache Size", (512 * 1024 * 1024 / -1024) + "");
             // 加大Page Size会导致磁盘IO大大加大，性能反而有所下降
             //if (!builder.ContainsKey("Page Size")) builder["Page Size"] = "32768";
+
             // 这两个设置可以让SQLite拥有数十倍的极限性能，但同时又加大了风险，如果系统遭遇突然断电，数据库会出错，而导致系统无法自动恢复
-            //if (!Readonly) builder.TryAdd("Synchronous", "Off");
-            // 在WAL模式下性能更好，只在关键时刻同步，现代文件系统下通常足够安全，但有极小概率数据丢失。
-            if (!Readonly) builder.TryAdd("Synchronous", "Normal");
+            if (!Readonly) builder.TryAdd("Synchronous", "Off");
+            //// 在WAL模式下性能更好，只在关键时刻同步，现代文件系统下通常足够安全，但有极小概率数据丢失。
+            //if (!Readonly) builder.TryAdd("Synchronous", "Normal");
+            //!!! Synchronous 必须使用 Off，确保高频写入数据时快速返回，最大程度减少 database is locked 错误。
+
             // Journal Mode的内存设置太激进了，容易出事，关闭
             //if (!builder.ContainsKey("Journal Mode")) builder["Journal Mode"] = "Memory";
             // 数据库中一种高效的日志算法，对于非内存数据库而言，磁盘I/O操作是数据库效率的一大瓶颈。

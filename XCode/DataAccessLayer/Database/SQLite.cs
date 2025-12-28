@@ -59,6 +59,8 @@ internal class SQLite : FileDbBase
     /// </remarks>
     public Boolean AutoVacuum { get; set; }
 
+    private Boolean _recovered = false;
+
     private static readonly String MemoryDatabase = ":memory:";
 
     protected override String OnResolveFile(String file)
@@ -149,6 +151,50 @@ internal class SQLite : FileDbBase
     #endregion
 
     #region 方法
+    /// <summary>打开连接。精准触发自动恢复</summary>
+    /// <returns></returns>
+    public override DbConnection OpenConnection()
+    {
+        if (!_recovered)
+        {
+            _recovered = true;
+
+            var db = DatabaseName;
+            var wal = db + "-wal";
+            if (!db.IsNullOrEmpty() && File.Exists(db) && File.Exists(wal))
+            {
+                var name = Path.GetFileName(db);
+                DAL.WriteLog($"开始恢复 SQLite 数据库[{name}]");
+
+                try
+                {
+                    // 关键：临时用 Synchronous=Full 确保恢复完整性
+                    var safeConnStr = $"Data Source={db};Journal Mode=WAL;Synchronous=Full;BusyTimeout=30000";
+
+                    using var conn = Factory.CreateConnection();
+                    conn.ConnectionString = safeConnStr;
+
+                    conn.Open(); // 此操作自动触发 WAL 恢复机制！
+
+                    // 再显式执行 TRUNCATE checkpoint（确保 WAL 归零）
+                    using var cmd = Factory.CreateCommand();
+                    cmd.Connection = conn;
+                    cmd.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
+                    cmd.ExecuteNonQuery();
+
+                    // 后续操作仍用 Synchronous=Off
+                    DAL.WriteLog($"恢复 SQLite 数据库[{name}]成功！");
+                }
+                catch (Exception ex)
+                {
+                    DAL.WriteLog($"恢复 SQLite 数据库[{name}]时出错！{ex.Message}");
+                }
+            }
+        }
+
+        return base.OpenConnection();
+    }
+
     /// <summary>创建数据库会话</summary>
     /// <returns></returns>
     protected override IDbSession OnCreateSession() => new SQLiteSession(this);
@@ -193,7 +239,7 @@ internal class SQLite : FileDbBase
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">主键列。用于not in分页</param>
     /// <returns></returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn) => MySql.PageSplitByLimit(sql, startRowIndex, maximumRows);
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn) => MySql.PageSplitByLimit(sql, startRowIndex, maximumRows);
 
     /// <summary>构造分页SQL</summary>
     /// <param name="builder">查询生成器</param>
@@ -252,14 +298,14 @@ internal class SQLiteSession : FileDbSession
     protected override void CreateDatabase()
     {
         // 内存数据库不需要创建
-        if ((Database as SQLite).IsMemoryDatabase) return;
+        if ((Database as SQLite)!.IsMemoryDatabase) return;
 
         base.CreateDatabase();
 
         // 打开自动清理数据库模式，此条命令必须放在创建表之前使用
         // 当从SQLite中删除数据时，数据文件大小不会减小，当重新插入数据时，
         // 将使用那块“空白”空间，打开自动清理后，删除数据后，会自动清理“空白”空间
-        if ((Database as SQLite).AutoVacuum) Execute("PRAGMA auto_vacuum = 1");
+        if ((Database as SQLite)!.AutoVacuum) Execute("PRAGMA auto_vacuum = 1");
     }
     #endregion
 
@@ -292,13 +338,13 @@ internal class SQLiteSession : FileDbSession
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql += ";Select last_insert_rowid() newid";
         return base.InsertAndGetIdentity(sql, type, ps);
     }
 
-    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql += ";Select last_insert_rowid() newid";
         return base.InsertAndGetIdentityAsync(sql, type, ps);

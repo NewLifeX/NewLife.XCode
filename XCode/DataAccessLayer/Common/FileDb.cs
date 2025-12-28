@@ -1,157 +1,152 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿namespace XCode.DataAccessLayer;
 
-namespace XCode.DataAccessLayer
+/// <summary>文件型数据库</summary>
+abstract class FileDbBase : DbBase
 {
-    /// <summary>文件型数据库</summary>
-    abstract class FileDbBase : DbBase
+    #region 属性
+    protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
-        #region 属性
-        protected override void OnSetConnectionString(ConnectionStringBuilder builder)
-        {
-            base.OnSetConnectionString(builder);
+        base.OnSetConnectionString(builder);
 
-            //if (!builder.TryGetValue(_.DataSource, out file)) return;
-            // 允许空，当作内存数据库处理
-            //builder.TryGetValue(_.DataSource, out var file);
-            var file = builder["Data Source"];
-            file = OnResolveFile(file);
-            builder["Data Source"] = file;
-            DatabaseName = file;
-        }
-
-        protected virtual String OnResolveFile(String file) => ResolveFile(file);
-        #endregion
+        //if (!builder.TryGetValue(_.DataSource, out file)) return;
+        // 允许空，当作内存数据库处理
+        //builder.TryGetValue(_.DataSource, out var file);
+        var file = builder["Data Source"];
+        file = OnResolveFile(file);
+        builder["Data Source"] = file;
+        DatabaseName = file;
     }
 
-    /// <summary>文件型数据库会话</summary>
-    abstract class FileDbSession : DbSession
-    {
-        #region 属性
-        /// <summary>文件</summary>
-        public String FileName => (Database as FileDbBase)?.DatabaseName;
-        #endregion
+    protected virtual String OnResolveFile(String file) => ResolveFile(file);
+    #endregion
+}
 
-        #region 构造函数
-        protected FileDbSession(IDatabase db) : base(db)
+/// <summary>文件型数据库会话</summary>
+abstract class FileDbSession : DbSession
+{
+    #region 属性
+    /// <summary>文件</summary>
+    public String? FileName => (Database as FileDbBase)?.DatabaseName;
+    #endregion
+
+    #region 构造函数
+    protected FileDbSession(IDatabase db) : base(db)
+    {
+        if (!FileName.IsNullOrEmpty())
         {
-            if (!String.IsNullOrEmpty(FileName))
+            if (!hasChecked.Contains(FileName))
             {
-                if (!hasChecked.Contains(FileName))
-                {
-                    hasChecked.Add(FileName);
+                hasChecked.Add(FileName);
+                CreateDatabase();
+            }
+        }
+    }
+    #endregion
+
+    #region 方法
+    private static readonly List<String> hasChecked = [];
+
+    ///// <summary>已重载。打开数据库连接前创建数据库</summary>
+    //public override void Open()
+    //{
+    //    if (!String.IsNullOrEmpty(FileName))
+    //    {
+    //        if (!hasChecked.Contains(FileName))
+    //        {
+    //            hasChecked.Add(FileName);
+    //            CreateDatabase();
+    //        }
+    //    }
+
+    //    base.Open();
+    //}
+
+    protected virtual void CreateDatabase()
+    {
+        if (!File.Exists(FileName)) Database.CreateMetaData().SetSchema(DDLSchema.CreateDatabase);
+    }
+    #endregion
+
+    #region 高级
+    /// <summary>清空数据表，标识归零</summary>
+    /// <param name="tableName"></param>
+    /// <returns></returns>
+    public override Int32 Truncate(String tableName)
+    {
+        var sql = $"Delete From {Database.FormatName(tableName)}";
+        return Execute(sql);
+    }
+    #endregion
+}
+
+/// <summary>文件型数据库元数据</summary>
+abstract class FileDbMetaData : DbMetaData
+{
+    #region 属性
+    /// <summary>文件</summary>
+    public String? FileName => (Database as FileDbBase)?.DatabaseName;
+    #endregion
+
+    #region 数据定义
+    /// <summary>设置数据定义模式</summary>
+    /// <param name="schema"></param>
+    /// <param name="values"></param>
+    /// <returns></returns>
+    public override Object? SetSchema(DDLSchema schema, Object?[] values)
+    {
+        if (Database is DbBase db)
+        {
+            var tracer = db.Tracer;
+            if (schema is not DDLSchema.DatabaseExist and not DDLSchema.CreateDatabase and not DDLSchema.DropDatabase) tracer = null;
+            using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
+
+            //Object obj = null;
+            switch (schema)
+            {
+                case DDLSchema.CreateDatabase:
                     CreateDatabase();
-                }
+                    return null;
+                case DDLSchema.DropDatabase:
+                    DropDatabase();
+                    return null;
+                case DDLSchema.DatabaseExist:
+                    return File.Exists(FileName);
+                default:
+                    break;
             }
         }
-        #endregion
-
-        #region 方法
-        private static readonly List<String> hasChecked = new();
-
-        ///// <summary>已重载。打开数据库连接前创建数据库</summary>
-        //public override void Open()
-        //{
-        //    if (!String.IsNullOrEmpty(FileName))
-        //    {
-        //        if (!hasChecked.Contains(FileName))
-        //        {
-        //            hasChecked.Add(FileName);
-        //            CreateDatabase();
-        //        }
-        //    }
-
-        //    base.Open();
-        //}
-
-        protected virtual void CreateDatabase()
-        {
-            if (!File.Exists(FileName)) Database.CreateMetaData().SetSchema(DDLSchema.CreateDatabase);
-        }
-        #endregion
-
-        #region 高级
-        /// <summary>清空数据表，标识归零</summary>
-        /// <param name="tableName"></param>
-        /// <returns></returns>
-        public override Int32 Truncate(String tableName)
-        {
-            var sql = $"Delete From {Database.FormatName(tableName)}";
-            return Execute(sql);
-        }
-        #endregion
+        return base.SetSchema(schema, values);
     }
 
-    /// <summary>文件型数据库元数据</summary>
-    abstract class FileDbMetaData : DbMetaData
+    /// <summary>创建数据库</summary>
+    protected virtual void CreateDatabase()
     {
-        #region 属性
-        /// <summary>文件</summary>
-        public String FileName => (Database as FileDbBase).DatabaseName;
-        #endregion
+        if (String.IsNullOrEmpty(FileName)) return;
 
-        #region 数据定义
-        /// <summary>设置数据定义模式</summary>
-        /// <param name="schema"></param>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        public override Object? SetSchema(DDLSchema schema, Object?[] values)
+        // 提前创建目录
+        var dir = Path.GetDirectoryName(FileName);
+        if (!String.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+        if (!File.Exists(FileName))
         {
-            if (Database is DbBase db)
-            {
-                var tracer = db.Tracer;
-                if (schema is not DDLSchema.DatabaseExist and not DDLSchema.CreateDatabase and not DDLSchema.DropDatabase) tracer = null;
-                using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
+            DAL.WriteLog("创建数据库：{0}", FileName);
 
-                //Object obj = null;
-                switch (schema)
-                {
-                    case DDLSchema.CreateDatabase:
-                        CreateDatabase();
-                        return null;
-                    case DDLSchema.DropDatabase:
-                        DropDatabase();
-                        return null;
-                    case DDLSchema.DatabaseExist:
-                        return File.Exists(FileName);
-                    default:
-                        break;
-                }
-            }
-            return base.SetSchema(schema, values);
+            File.Create(FileName).Dispose();
         }
-
-        /// <summary>创建数据库</summary>
-        protected virtual void CreateDatabase()
-        {
-            if (String.IsNullOrEmpty(FileName)) return;
-
-            // 提前创建目录
-            var dir = Path.GetDirectoryName(FileName);
-            if (!String.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
-
-            if (!File.Exists(FileName))
-            {
-                DAL.WriteLog("创建数据库：{0}", FileName);
-
-                File.Create(FileName).Dispose();
-            }
-        }
-
-        protected virtual void DropDatabase()
-        {
-            //首先关闭数据库
-            if (Database is DbBase db)
-                db.ReleaseSession();
-            else
-                Database.CreateSession().Dispose();
-
-            //OleDbConnection.ReleaseObjectPool();
-            GC.Collect();
-
-            if (File.Exists(FileName)) File.Delete(FileName);
-        }
-        #endregion
     }
+
+    protected virtual void DropDatabase()
+    {
+        //首先关闭数据库
+        if (Database is DbBase db)
+            db.ReleaseSession();
+        else
+            Database.CreateSession().Dispose();
+
+        //OleDbConnection.ReleaseObjectPool();
+        GC.Collect();
+
+        if (File.Exists(FileName)) File.Delete(FileName);
+    }
+    #endregion
 }

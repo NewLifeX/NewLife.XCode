@@ -196,7 +196,7 @@
         <Column Name="UserID" DataType="Int32" Map="User@Id@$" Description="用户。按用户区分参数，用户0表示系统级" />
         <Column Name="Category" DataType="String" Description="类别" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
-        <Column Name="Value" DataType="String" Length="500" Description="数值" />
+        <Column Name="Value" DataType="String" Length="200" Description="数值" />
         <Column Name="LongValue" DataType="String" Length="-1" Description="长数值" />
         <Column Name="Kind" DataType="Int32" Description="种类。0普通，21列表，22名值" Type="XCode.Membership.ParameterKinds" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />

@@ -4,7 +4,7 @@
     <AssemblyTitle>数据中间件SqlServer包</AssemblyTitle>
     <Description>引入SqlServer数据库驱动包</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2025 NewLife</Copyright>
+    <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>11.15</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>

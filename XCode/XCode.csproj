@@ -6,8 +6,8 @@
     <AssemblyTitle>NewLife数据中间件</AssemblyTitle>
     <Description>数据中间件，支持MySQL、SQLite、SqlServer、Oracle、Postgresql、TDengine、达梦，重点在缓存、性能、分表、自动建表。</Description>
     <Company>新生命开发团队</Company>
-    <Copyright>©2002-2025 NewLife</Copyright>
-    <VersionPrefix>11.22</VersionPrefix>
+    <Copyright>©2002-2026 NewLife</Copyright>
+    <VersionPrefix>11.23</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -31,7 +31,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>优化实体的CopyFrom和Merge</PackageReleaseNotes>
+    <PackageReleaseNotes>修正延迟队列更新的BUG；优化大量对象缓存的并发查询；梳理重构Merge逻辑</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -46,7 +46,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.9.2025.1228-beta0228" />
+    <PackageReference Include="NewLife.Core" Version="11.10.2026.101" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="NewLife" />

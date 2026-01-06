@@ -98,7 +98,10 @@ public class DbConfigProvider : ConfigProvider
         {
             if (!item.Enable || item.Name.IsNullOrEmpty()) continue;
 
-            dic[item.Name] = item.Value;
+            // 优先读取 Value，如为空则读取 LongValue（支持长文本）
+            var value = item.Value?.Trim();
+            if (value.IsNullOrEmpty()) value = item.LongValue?.Trim();
+            dic[item.Name] = value;
 
             if (!item.Remark.IsNullOrEmpty())
                 dic["#" + item.Name] = item.Remark;
@@ -244,7 +247,19 @@ public class DbConfigProvider : ConfigProvider
                     list.Add(pi);
                 }
 
-                pi.Value = section.Value;
+                // 根据长度自动选择 Value（<200字符）或 LongValue（≥200字符）
+                var value = section.Value;
+                if (value != null && value.Length < 200)
+                {
+                    pi.Value = value;
+                    pi.LongValue = null;
+                }
+                else
+                {
+                    pi.Value = null;
+                    pi.LongValue = value;
+                }
+
                 pi.Enable = true;
 
                 if (!section.Comment.IsNullOrEmpty())

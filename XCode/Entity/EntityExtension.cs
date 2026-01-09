@@ -119,7 +119,7 @@ public static class EntityExtension
     public static Int32 Insert<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
-        var list2 = list.AsList();
+        var list2 = list.AsArray();
         var entity = list2.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
@@ -127,27 +127,23 @@ public static class EntityExtension
         var session2 = session ?? fact.Session;
 
         // Oracle/MySql批量插入
-        if (session2.Dal.SupportBatch && list2.Count > 1)
-        {
-            //DefaultSpan.Current?.AppendTag("SupportBatch");
+        if (!session2.Dal.SupportBatch) return DoAction(list2, useTransition, e => e.Insert(), session2);
 
-            //if (list is not IList<T> es) es = list.ToList();
-            for (var i = list2.Count - 1; i >= 0; i--)
+        // 必须顺序处理，因为Valid内可能生成雪花Id，需要确保数据插入的顺序一致
+        var list3 = new List<T>(list2.Length);
+        foreach (var item in list2)
             {
-                if (list2[i] is EntityBase entity2)
-                {
-                    if (!entity2.Valid(DataMethod.Insert)) list2.RemoveAt(i);
+            if (item is EntityBase entity2 && entity2.Valid(DataMethod.Insert))
+                list3.Add(item);
                 }
-                //if (!fact.Modules.Valid(item, item.IsNullKey)) es.Remove((T)item);
-            }
 
             // 如果未指定会话，需要支持自动分表，并且需要考虑实体列表可能落入不同库表
-            if (session == null && fact.ShardPolicy != null)
-            {
-                DefaultSpan.Current?.AppendTag($"ShardPolicy: {fact.ShardPolicy.Field}");
+        if (session != null || fact.ShardPolicy == null) return BatchInsert(list3, option: null, session2);
+
+        //DefaultSpan.Current?.AppendTag($"ShardPolicy: {fact.ShardPolicy.Field}");
 
                 // 提前计算分表，按库表名分组
-                var dic = list2.GroupBy(e =>
+        var dic = list3.GroupBy(e =>
                 {
                     var shard = fact.ShardPolicy.Shard(e);
                     return fact.GetSession(shard?.ConnName ?? session2.ConnName, shard?.TableName ?? session2.TableName);
@@ -156,16 +152,10 @@ public static class EntityExtension
                 var rs = 0;
                 foreach (var item in dic)
                 {
-                    rs += BatchInsert(item.ToList(), option: null, item.Key);
+            rs += BatchInsert(item.ToArray(), option: null, item.Key);
                 }
                 return rs;
             }
-
-            return BatchInsert(list2, option: null, session2);
-        }
-
-        return DoAction(list2, useTransition, e => e.Insert(), session2);
-    }
 
     /// <summary>把整个集合更新到数据库</summary>
     /// <param name="list">实体列表</param>
@@ -1560,6 +1550,17 @@ public static class EntityExtension
         if (list is IList<T> list2) return list2;
 
         return list.ToList();
+    }
+
+    /// <summary>转为数组。避免原始迭代被多次遍历</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="list">实体列表</param>
+    internal static T[] AsArray<T>(this IEnumerable<T> list)
+    {
+        if (list is T[] array) return array;
+        if (list is ICollection<T> collection) return collection.ToArray();
+
+        return list.ToArray();
     }
     #endregion
 }

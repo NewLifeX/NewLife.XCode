@@ -480,6 +480,7 @@ abstract class DbBase : DisposeBase, IDatabase
 
             var factory = GetProviderFactory(type);
             if (factory != null) return factory;
+            type = null;
 
             // 反射实现获取数据库工厂
             var file = assemblyFile;
@@ -501,21 +502,28 @@ abstract class DbBase : DisposeBase, IDatabase
                 {
                     File.Delete(file);
                 }
-                catch (UnauthorizedAccessException) { }
+                catch (UnauthorizedAccessException)
+                {
+                    var target = file + ".tmp";
+                    if (File.Exists(target)) File.Delete(target);
+                    File.Move(file, target);
+                }
                 catch (Exception ex)
                 {
                     XTrace.WriteException(ex);
                 }
 
-                type = DriverLoader.Load(className, null!, assemblyFile, links.Join(","), null, minVersion);
+                type = DriverLoader.Load(className, null!, assemblyFile, links.Join(","), urls2.Join(";"), minVersion);
 
                 // 如果还没有，就写异常
                 if (!File.Exists(file)) throw new FileNotFoundException("缺少文件" + file + "！", file);
             }
 
-            if (type == null) throw new XCodeException("无法加载驱动[{0}]，请从nuget正确引入数据库驱动！", assemblyFile);
+            factory = GetProviderFactory(type);
 
-            return GetProviderFactory(type);
+            if (factory == null) throw new XCodeException("无法加载驱动[{0}]，请从nuget正确引入数据库驱动！", assemblyFile);
+
+            return factory;
         }
         catch
         {
@@ -537,10 +545,24 @@ abstract class DbBase : DisposeBase, IDatabase
         var asm = type.Assembly;
         if (DAL.Debug) DAL.WriteLog("[{2}]驱动 {0} 版本v{1}", asm.Location, asm.GetName().Version, type.FullName.TrimEnd("Client", "Factory"));
 
-        var field = type.GetFieldEx("Instance");
-        if (field == null) return Activator.CreateInstance(type) as DbProviderFactory;
+        DbProviderFactory? factory = null;
+        try
+        {
+            var field = type.GetFieldEx("Instance");
+            if (field == null)
+                factory = Activator.CreateInstance(type) as DbProviderFactory;
+            else
+                factory = Reflect.GetValue(null, field) as DbProviderFactory;
 
-        return Reflect.GetValue(null, field) as DbProviderFactory;
+            // 尝试创建连接，有些驱动在创建连接时报错（如Oracle）
+            factory?.CreateConnection();
+
+            return factory;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]

@@ -47,6 +47,7 @@ public static class DriverLoader
 
         // 尝试直接加载DLL
         if (File.Exists(file))
+        {
             try
             {
                 var asm = Assembly.LoadFrom(file);
@@ -57,6 +58,7 @@ public static class DriverLoader
             {
                 XTrace.WriteException(ex);
             }
+        }
 
         if (linkName.IsNullOrEmpty()) return null;
 
@@ -76,10 +78,6 @@ public static class DriverLoader
                 XTrace.WriteLine("{0}不存在或平台版本不正确，准备联网获取 {1}", !disname.IsNullOrEmpty() ? disname : dll, urls);
                 if (minVersion != null) XTrace.WriteLine("要求最低版本：{0}", minVersion);
 
-                //var client = new WebClientX()
-                //{
-                //    Log = XTrace.Log
-                //};
                 using var client = CreateClient(linkName);
                 client.MinVersion = minVersion;
                 var dir = Path.GetDirectoryName(file);
@@ -99,6 +97,7 @@ public static class DriverLoader
 
             // 尝试直接加载DLL
             if (File.Exists(file))
+            {
                 try
                 {
                     var asm = Assembly.LoadFrom(file);
@@ -109,6 +108,7 @@ public static class DriverLoader
                 {
                     XTrace.WriteException(ex);
                 }
+            }
 
             return null;
         }

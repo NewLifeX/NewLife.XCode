@@ -119,43 +119,43 @@ public static class EntityExtension
     public static Int32 Insert<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
-        var list2 = list.AsArray();
-        var entity = list2.FirstOrDefault(e => e != null);
+        var array = list.AsArray();
+        var entity = array.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         var fact = entity.GetType().AsFactory();
         var session2 = session ?? fact.Session;
 
         // Oracle/MySql批量插入
-        if (!session2.Dal.SupportBatch) return DoAction(list2, useTransition, e => e.Insert(), session2);
+        if (!session2.Dal.SupportBatch) return DoAction(array, useTransition, e => e.Insert(), session2);
 
         // 必须顺序处理，因为Valid内可能生成雪花Id，需要确保数据插入的顺序一致
-        var list3 = new List<T>(list2.Length);
-        foreach (var item in list2)
-            {
+        var list3 = new List<T>(array.Length);
+        foreach (var item in array)
+        {
             if (item is EntityBase entity2 && entity2.Valid(DataMethod.Insert))
                 list3.Add(item);
-                }
+        }
 
-            // 如果未指定会话，需要支持自动分表，并且需要考虑实体列表可能落入不同库表
+        // 如果未指定会话，需要支持自动分表，并且需要考虑实体列表可能落入不同库表
         if (session != null || fact.ShardPolicy == null) return BatchInsert(list3, option: null, session2);
 
         //DefaultSpan.Current?.AppendTag($"ShardPolicy: {fact.ShardPolicy.Field}");
 
-                // 提前计算分表，按库表名分组
+        // 提前计算分表，按库表名分组
         var dic = list3.GroupBy(e =>
-                {
-                    var shard = fact.ShardPolicy.Shard(e);
-                    return fact.GetSession(shard?.ConnName ?? session2.ConnName, shard?.TableName ?? session2.TableName);
-                });
-                // 按库表分组执行批量插入
-                var rs = 0;
-                foreach (var item in dic)
-                {
-            rs += BatchInsert(item.ToArray(), option: null, item.Key);
-                }
-                return rs;
-            }
+        {
+            var shard = fact.ShardPolicy.Shard(e);
+            return fact.GetSession(shard?.ConnName ?? session2.ConnName, shard?.TableName ?? session2.TableName);
+        });
+        // 按库表分组执行批量插入
+        var rs = 0;
+        foreach (var item in dic)
+        {
+            rs += BatchInsert(item, option: null, item.Key);
+        }
+        return rs;
+    }
 
     /// <summary>把整个集合更新到数据库</summary>
     /// <param name="list">实体列表</param>
@@ -165,17 +165,17 @@ public static class EntityExtension
     public static Int32 Update<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
-        var list2 = list.AsList();
-        var entity = list2.FirstOrDefault(e => e != null);
+        var array = list.AsArray();
+        var entity = array.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         var fact = entity.GetType().AsFactory();
         session ??= fact.Session;
 
         // Oracle批量更新
-        return session.Dal.DbType == DatabaseType.Oracle && list2.Count() > 1
-            ? BatchUpdate(list2.Valid(false), null, session)
-            : DoAction(list2, useTransition, e => e.Update(), session);
+        return session.Dal.DbType == DatabaseType.Oracle && array.Length > 1
+            ? BatchUpdate(array.Valid(false), null, session)
+            : DoAction(array, useTransition, e => e.Update(), session);
     }
 
     /// <summary>把整个保存更新到数据库</summary>
@@ -193,8 +193,8 @@ public static class EntityExtension
        */
 
         // 避免列表内实体对象为空
-        var list2 = list.AsList();
-        var entity = list2.FirstOrDefault(e => e != null);
+        var array = list.AsArray();
+        var entity = array.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         var rs = 0;
@@ -202,15 +202,15 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
-        if (session.Dal.SupportBatch && list2.Count() > 1)
+        if (session.Dal.SupportBatch && array.Length > 1)
         {
             // 根据是否来自数据库，拆分为两组
-            var (updates, others) = Split(list2);
-            list2 = updates;
+            var (updates, others) = Split(array);
+            array = updates.ToArray();
             rs += BatchSave(session, others.Valid(true), null);
         }
 
-        return rs + DoAction(list2, useTransition, e => e.Save(), session);
+        return rs + DoAction(array, useTransition, e => e.Save(), session);
     }
 
     /// <summary>把整个保存更新到数据库，保存时不需要验证</summary>
@@ -221,8 +221,8 @@ public static class EntityExtension
     public static Int32 SaveWithoutValid<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
-        var list2 = list.AsList();
-        var entity = list2.FirstOrDefault(e => e != null);
+        var array = list.AsArray();
+        var entity = array.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         var rs = 0;
@@ -230,15 +230,15 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
-        if (session.Dal.SupportBatch && list2.Count() > 1)
+        if (session.Dal.SupportBatch && array.Length > 1)
         {
             // 根据是否来自数据库，拆分为两组
-            var (updates, others) = Split(list2);
-            list2 = updates;
+            var (updates, others) = Split(array);
+            array = updates.ToArray();
             rs += BatchSave(session, others, null);
         }
 
-        return rs + DoAction(list2, useTransition, e => e.SaveWithoutValid(), session);
+        return rs + DoAction(array, useTransition, e => e.SaveWithoutValid(), session);
     }
 
     /// <summary>拆分为来自数据库的更新和其它的Upsert</summary>
@@ -307,8 +307,8 @@ public static class EntityExtension
     public static Int32 Delete<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
         // 避免列表内实体对象为空
-        var list2 = list.AsList();
-        var entity = list2.FirstOrDefault(e => e != null);
+        var array = list.AsArray();
+        var entity = array.FirstOrDefault(e => e != null);
         if (entity == null) return 0;
 
         var fact = entity.GetType().AsFactory();
@@ -316,14 +316,14 @@ public static class EntityExtension
 
         // 单一主键，采用批量操作
         var pks = fact.Table.PrimaryKeys;
-        if (pks != null && pks.Length == 1 && list2.Count() > 1)
+        if (pks != null && pks.Length == 1 && array.Length > 1)
         {
             var pk = pks[0];
             var count = 0;
             var rs = 0;
             var ks = new List<Object>();
             var sql = $"Delete From {session.FormatedTableName} Where ";
-            foreach (var item in list2)
+            foreach (var item in array)
             {
                 var val = item[pk.Name];
                 if (val == null) continue;
@@ -348,16 +348,16 @@ public static class EntityExtension
             return rs;
         }
 
-        return DoAction(list2, useTransition, e => e.Delete(), session);
+        return DoAction(array, useTransition, e => e.Delete(), session);
     }
 
     private static Int32 DoAction<T>(this IEnumerable<T> list, Boolean? useTransition, Func<T, Int32> func, IEntitySession session) where T : IEntity
     {
-        var list2 = list.AsList();
-        if (!list2.Any()) return 0;
+        var array = list.AsArray();
+        if (array.Length == 0) return 0;
 
         // 避免列表内实体对象为空
-        var entity = list2.First(e => e != null);
+        var entity = array.First(e => e != null);
         if (entity == null) return 0;
 
         //var fact = entity.GetType().AsFactory();
@@ -376,30 +376,28 @@ public static class EntityExtension
             if (session == null) throw new ArgumentNullException(nameof(session));
 
             using var trans = session.CreateTrans();
-            count = DoAction(list2, func, count);
+            count = DoAction(array, func, count);
 
             trans.Commit();
         }
         else
         {
-            count = DoAction(list2, func, count);
+            count = DoAction(array, func, count);
         }
 
         // 统一清空缓存，避免因事务回滚等原因导致缓存数据不一致
         session?.ClearCache(func + "", true);
 
         return count;
-    }
 
-    private static Int32 DoAction<T>(this IEnumerable<T> list, Func<T, Int32> func, Int32 count) where T : IEntity
-    {
-        // 加锁拷贝，避免遍历时出现多线程冲突
-        var arr = list is ICollection<T> cs ? cs.ToArray() : list.ToArray();
-        foreach (var item in arr)
+        static Int32 DoAction<T>(T[] array, Func<T, Int32> func, Int32 count) where T : IEntity
         {
-            if (item != null) count += func(item);
+            foreach (var item in array)
+            {
+                if (item != null) count += func(item);
+            }
+            return count;
         }
-        return count;
     }
 
     /// <summary>批量验证对象</summary>
@@ -411,15 +409,15 @@ public static class EntityExtension
     {
         var rs = new List<T>();
 
-        var list2 = list.AsList();
-        var entity = list2.FirstOrDefault(e => e != null);
+        var array = list.AsArray();
+        var entity = array.FirstOrDefault(e => e != null);
         if (entity == null) return rs;
 
         var fact = entity.GetType().AsFactory();
         var modules = fact.Modules;
 
         // 验证对象
-        foreach (IEntity item in list2)
+        foreach (IEntity item in array)
         {
             if (item is EntityBase entity2)
             {
@@ -461,11 +459,11 @@ public static class EntityExtension
     public static Int32 BatchInsert<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
         var list2 = list.AsList();
-        if (list2 == null || !list2.Any()) return 0;
+        if (list2 == null || list2.Count == 0) return 0;
 
         option ??= new BatchOption();
 
-        var entity = list2.First();
+        var entity = list2[0];
         var fact = entity.GetType().AsFactory();
         session ??= fact.Session;
         session.InitData();
@@ -500,7 +498,7 @@ public static class EntityExtension
             option.Columns = columns;
         }
 
-        var total = list2.Count();
+        var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchInsert:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
@@ -526,7 +524,7 @@ public static class EntityExtension
         }
         catch (Exception ex)
         {
-            span?.SetError(ex, list2);
+            span?.SetError(ex, list2[0]);
             throw;
         }
     }
@@ -558,11 +556,11 @@ public static class EntityExtension
     public static Int32 BatchInsertIgnore<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
         var list2 = list.AsList();
-        if (list2 == null || !list2.Any()) return 0;
+        if (list2 == null || list2.Count == 0) return 0;
 
         option ??= new BatchOption();
 
-        var entity = list2.First();
+        var entity = list2[0];
         var fact = entity.GetType().AsFactory();
         session ??= fact.Session;
         session.InitData();
@@ -592,7 +590,7 @@ public static class EntityExtension
             option.Columns = columns;
         }
 
-        var total = list2.Count();
+        var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:InsertIgnore:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
@@ -618,7 +616,7 @@ public static class EntityExtension
         }
         catch (Exception ex)
         {
-            span?.SetError(ex, list2);
+            span?.SetError(ex, list2[0]);
             throw;
         }
     }
@@ -650,11 +648,11 @@ public static class EntityExtension
     public static Int32 BatchReplace<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
         var list2 = list.AsList();
-        if (list2 == null || !list2.Any()) return 0;
+        if (list2 == null || list2.Count == 0) return 0;
 
         option ??= new BatchOption();
 
-        var entity = list2.First();
+        var entity = list2[0];
         var fact = entity.GetType().AsFactory();
         session ??= fact.Session;
         session.InitData();
@@ -684,7 +682,7 @@ public static class EntityExtension
             option.Columns = columns;
         }
 
-        var total = list2.Count();
+        var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchReplace:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
@@ -710,7 +708,7 @@ public static class EntityExtension
         }
         catch (Exception ex)
         {
-            span?.SetError(ex, list2);
+            span?.SetError(ex, list2[0]);
             throw;
         }
     }
@@ -748,11 +746,11 @@ public static class EntityExtension
     public static Int32 BatchUpdate<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
         var list2 = list.AsList();
-        if (list2 == null || !list2.Any()) return 0;
+        if (list2 == null || list2.Count == 0) return 0;
 
         option ??= new BatchOption();
 
-        var entity = list2.First();
+        var entity = list2[0];
         var fact = entity.GetType().AsFactory();
         session ??= fact.Session;
         session.InitData();
@@ -777,7 +775,7 @@ public static class EntityExtension
 
         if ((updateColumns == null || updateColumns.Count <= 0) && (addColumns == null || addColumns.Count <= 0)) return 0;
 
-        var total = list2.Count();
+        var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
@@ -805,7 +803,7 @@ public static class EntityExtension
         }
         catch (Exception ex)
         {
-            span?.SetError(ex, list2);
+            span?.SetError(ex, list2[0]);
             throw;
         }
     }
@@ -845,11 +843,11 @@ public static class EntityExtension
     public static Int32 BatchUpsert<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
     {
         var list2 = list.AsList();
-        if (list2 == null || !list2.Any()) return 0;
+        if (list2 == null || list2.Count == 0) return 0;
 
         option ??= new BatchOption();
 
-        var entity = list2.First();
+        var entity = list2[0];
         var fact = entity.GetType().AsFactory();
         session ??= fact.Session;
         session.InitData();
@@ -925,7 +923,7 @@ public static class EntityExtension
         // 没有任何数据变更则直接返回0
         if ((updateColumns == null || updateColumns.Count <= 0) && (addColumns == null || addColumns.Count <= 0)) return 0;
 
-        var total = list2.Count();
+        var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
@@ -951,7 +949,7 @@ public static class EntityExtension
         }
         catch (Exception ex)
         {
-            span?.SetError(ex, list2);
+            span?.SetError(ex, list2[0]);
             throw;
         }
     }
@@ -1022,7 +1020,7 @@ public static class EntityExtension
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:Upsert:{fact.Table.TableName}");
         try
         {
-            if (span != null) span.Tag = $"{session.TableName}[{entity}]";
+            span?.AppendTag($"{session.TableName}[{entity}]");
 
             var rs = dal.Session.Upsert(session.DataTable, option.Columns, option.UpdateColumns, option.AddColumns, [entity]);
 
@@ -1545,12 +1543,7 @@ public static class EntityExtension
     /// <summary>转为列表。避免原始迭代被多次遍历</summary>
     /// <typeparam name="T">实体类型</typeparam>
     /// <param name="list">实体列表</param>
-    internal static IList<T> AsList<T>(this IEnumerable<T> list)
-    {
-        if (list is IList<T> list2) return list2;
-
-        return list.ToList();
-    }
+    internal static IList<T> AsList<T>(this IEnumerable<T> list) => list is IList<T> list2 ? list2 : list.ToList();
 
     /// <summary>转为数组。避免原始迭代被多次遍历</summary>
     /// <typeparam name="T">实体类型</typeparam>

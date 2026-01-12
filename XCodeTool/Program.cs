@@ -152,7 +152,7 @@ class Program
         XTrace.WriteLine("共有模型：{0}", tables.Count);
 
         // 是否使用中文名
-        option.ChineseFileName = true;
+        //option.ChineseFileName = true;
 
         // 简易模型类名称，如{name}Model。指定后将生成简易模型类和接口，可用于数据传输
         //var modelClass = atts["ModelClass"];

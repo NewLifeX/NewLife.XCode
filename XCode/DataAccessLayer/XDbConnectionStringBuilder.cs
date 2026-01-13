@@ -49,6 +49,11 @@ public class ConnectionStringBuilder(String connStr)
 
         return true;
     }
+
+    /// <summary>删除连接字符串中的项</summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public Boolean Remove(String key) => _dic.Remove(key);
     #endregion
 
     #region 辅助

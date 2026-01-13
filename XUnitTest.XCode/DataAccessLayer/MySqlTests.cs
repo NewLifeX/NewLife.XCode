@@ -77,7 +77,7 @@ public class MySqlTests
         Assert.Equal("sys", db.DatabaseName);
         //Assert.EndsWith("CharSet=utf8mb4;Sslmode=none;AllowPublicKeyRetrieval=true", connstr);
         //Assert.EndsWith("CharSet=utf8mb4;Sslmode=none", connstr);
-        Assert.Contains("Sslmode=Preferred", connstr, StringComparison.OrdinalIgnoreCase);
+        //Assert.Contains("Sslmode=Preferred", connstr, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("CharSet=utf8mb4", connstr, StringComparison.OrdinalIgnoreCase);
 
         using var conn = db.OpenConnection();
@@ -526,5 +526,49 @@ public class MySqlTests
         dal.SetTables(table);
 
         Assert.Contains(dal.Tables, t => t.TableName == table.TableName);
+    }
+
+    [Fact]
+    public void SslModeNoneCompatibility()
+    {
+        var db = DbFactory.Create(DatabaseType.MySql);
+        db.ConnName = "sslmode_none_compat";
+
+        var factory = db.Factory;
+        Assert.NotNull(factory);
+
+        var sslModeType = factory.GetType().Assembly.GetType("MySql.Data.MySqlClient.MySqlSslMode");
+        Assert.NotNull(sslModeType);
+
+        var names = Enum.GetNames(sslModeType);
+
+        db.ConnectionString = "Server=.;Pooling=true;Database=sys;Uid=test;Pwd=123;Sslmode=None";
+        var connStr = db.ConnectionString;
+
+        if (names.Any(e => e.Equals("None", StringComparison.OrdinalIgnoreCase)))
+            Assert.Contains("Sslmode=None", connStr, StringComparison.OrdinalIgnoreCase);
+        else if (names.Any(e => e.Equals("Disabled", StringComparison.OrdinalIgnoreCase)))
+            Assert.Contains("Sslmode=Disabled", connStr, StringComparison.OrdinalIgnoreCase);
+        else
+            Assert.DoesNotContain("Sslmode=", connStr, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void SslModeInvalidValueIsRemoved()
+    {
+        var db = DbFactory.Create(DatabaseType.MySql);
+        db.ConnName = "sslmode_invalid_compat";
+
+        var factory = db.Factory;
+        Assert.NotNull(factory);
+
+        var sslModeType = factory.GetType().Assembly.GetType("MySql.Data.MySqlClient.MySqlSslMode");
+        Assert.NotNull(sslModeType);
+
+        db.ConnectionString = "Server=.;Pooling=true;Database=sys;Uid=test;Pwd=123;Sslmode=InvalidValue";
+        var connStr = db.ConnectionString;
+
+        Assert.DoesNotContain("Sslmode=InvalidValue", connStr, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Sslmode=", connStr, StringComparison.OrdinalIgnoreCase);
     }
 }

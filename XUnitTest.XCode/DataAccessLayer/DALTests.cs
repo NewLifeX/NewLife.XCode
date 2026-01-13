@@ -71,7 +71,7 @@ public class DALTests
         Assert.Equal("KeyOfProtected", dal.ProtectedKey.Secret.ToStr());
 
         Assert.Equal("Server=.;Membership=mysql;Uid=root;Pwd=$AES$xpZ49nBk5UscLCFyCx_BUg;provider=mysql", dal.ConnStr);
-        Assert.Equal("Server=127.0.0.1;Membership=mysql;Uid=root;Pwd=Pass@word;CharSet=utf8mb4;Sslmode=Preferred", dal.Db.ConnectionString);
+        Assert.Equal("Server=127.0.0.1;Membership=mysql;Uid=root;Pwd=Pass@word;CharSet=utf8mb4", dal.Db.ConnectionString);
     }
 
     [Fact]

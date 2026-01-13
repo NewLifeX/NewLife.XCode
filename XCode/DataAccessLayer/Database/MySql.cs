@@ -68,7 +68,25 @@ internal class MySql : RemoteDb
         if (builder["Pooling"].ToBoolean()) builder.TryAdd(MaxPoolSize, "1000");
 
         // 如未设置Sslmode,默认为Preferred(兼容新旧版本MySQL驱动)
-        if (builder[Sslmode] == null) builder.TryAdd(Sslmode, "Preferred");
+        //if (builder[Sslmode] == null) builder.TryAdd(Sslmode, "Preferred");
+        // 替换旧版本的 SslMode=None，新版本改为 SslMode=Disabled
+        var sslMode = builder[Sslmode];
+        if (!sslMode.IsNullOrEmpty())
+        {
+            // 需要反射MySql.Data.MySqlClient.MySqlSslMode，确认这个枚举值，有Disabled而不是None
+            var type = Factory?.GetType().Assembly.GetType("MySql.Data.MySqlClient.MySqlSslMode");
+            if (type != null && type.IsEnum)
+            {
+                var names = Enum.GetNames(type);
+                if (!sslMode.EqualIgnoreCase(names))
+                {
+                    if (sslMode.EqualIgnoreCase("None") && "Disabled".EqualIgnoreCase(names))
+                        builder[Sslmode] = "Disabled";
+                    else
+                        builder.Remove(Sslmode);
+                }
+            }
+        }
     }
 
     protected override void OnGetConnectionString(ConnectionStringBuilder builder)

@@ -69,16 +69,26 @@ public class TenantModule : EntityModule
     {
         if (entity is not ITenantSource tenant) return true;
 
-        if (method == DataMethod.Delete) return true;
-        if (method == DataMethod.Update && !entity.HasDirty) return true;
-
         var ctx = TenantContext.Current;
         if (ctx == null) return true;
 
-        if (tenant.TenantId == 0 && !entity.IsDirty("TenantId"))
+        // 只能操作本租户数据
+        if (tenant.TenantId != ctx.TenantId)
+        {
+            // 插入时，如果没有指定租户标识，则补上当前租户标识
+            if (method != DataMethod.Insert || tenant.TenantId != 0 || entity.IsDirty("TenantId"))
+                return false;
+
             tenant.TenantId = ctx.TenantId;
-        //else if (tenant.TenantId != ctx.TenantId)
-        //    return false;
+        }
+        //if (method == DataMethod.Delete) return tenant.TenantId == ctx.TenantId;
+
+        //if (method == DataMethod.Update && !entity.HasDirty) return true;
+
+        //if (tenant.TenantId == 0 && !entity.IsDirty("TenantId"))
+        //    tenant.TenantId = ctx.TenantId;
+        ////else if (tenant.TenantId != ctx.TenantId)
+        ////    return false;
 
         return true;
     }

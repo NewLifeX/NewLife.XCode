@@ -20,6 +20,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
         Meta.Modules.Add<UserModule>();
         Meta.Modules.Add<TimeModule>();
         Meta.Modules.Add<IPModule>();
+        Meta.Modules.Add<TenantModule>();
     }
 
     /// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>

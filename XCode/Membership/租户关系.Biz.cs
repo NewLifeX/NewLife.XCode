@@ -7,7 +7,7 @@ using NewLife.Data;
 namespace XCode.Membership;
 
 [ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
-public partial class TenantUser : Entity<TenantUser>
+public partial class TenantUser : Entity<TenantUser>, ITenantSource
 {
     #region 对象操作
 

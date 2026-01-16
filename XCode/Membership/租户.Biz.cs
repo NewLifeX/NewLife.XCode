@@ -56,7 +56,7 @@ public partial class Tenant : Entity<Tenant>, ITenantSource
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static Tenant FindById(Int32 id)
+    public static Tenant? FindById(Int32 id)
     {
         if (id <= 0) return null;
 

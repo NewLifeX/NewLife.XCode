@@ -17,8 +17,8 @@ public interface IManageProvider : IServiceProvider
     /// <summary>当前登录用户，设为空则注销登录</summary>
     IManageUser Current { get; set; }
 
-    /// <summary>当前租户。正在使用的租户</summary>
-    ITenant Tenant { get; set; }
+    ///// <summary>当前租户。正在使用的租户</summary>
+    //ITenant Tenant { get; set; }
 
     /// <summary>密码提供者</summary>
     IPasswordProvider PasswordProvider { get; set; }
@@ -130,15 +130,15 @@ public abstract class ManageProvider : IManageProvider
     /// <summary>当前用户</summary>
     public virtual IManageUser Current { get => GetCurrent(); set => SetCurrent(value); }
 
-    /// <summary>当前租户。正在使用的租户</summary>
-    public ITenant Tenant { get; set; }
+    ///// <summary>当前租户。正在使用的租户</summary>
+    //public ITenant Tenant { get; set; }
 
     /// <summary>当前用户的所有租户</summary>
     /// <returns></returns>
     public virtual IList<ITenantUser> GetTenants()
     {
         var user = Current;
-        if (user == null || user.ID == 0) return null;
+        if (user == null || user.ID == 0) return [];
 
         var list = TenantUser.FindAllByUserId(user.ID);
 
@@ -322,10 +322,10 @@ public abstract class ManageProvider : IManageProvider
     public virtual Boolean Has(IMenu menu, params PermissionFlags[] flags)
     {
         // 优先判断租户
-        var tenant = Tenant;
-        if (tenant != null)
+        var tenantId = TenantContext.CurrentId;
+        if (tenantId > 0)
         {
-            var tu = GetTenants().FirstOrDefault(e => e.TenantId == tenant.Id);
+            var tu = GetTenants().FirstOrDefault(e => e.TenantId == tenantId);
             if (tu != null) return tu.Has(menu, flags);
         }
 
@@ -344,7 +344,7 @@ public abstract class ManageProvider : IManageProvider
     #endregion
 
     #region 实体类扩展
-    private static IDictionary<Type, IEntityFactory> _factories;
+    private static IDictionary<Type, IEntityFactory>? _factories;
     private static void InitFactories()
     {
         if (_factories == null)

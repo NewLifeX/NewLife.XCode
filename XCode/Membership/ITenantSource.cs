@@ -16,9 +16,12 @@ public interface ITenantSource
 public class TenantContext
 {
     #region 属性
-    /// <summary>租户标识</summary>
+    /// <summary>租户标识。0表示进入管理后台，没有进入任意租户</summary>
     public Int32 TenantId { get; set; }
 
+    private ITenant? _tenant;
+    /// <summary>租户对象</summary>
+    public ITenant? Tenant { get => _tenant ??= Membership.Tenant.FindById(TenantId) ?? null; set => _tenant = value; }
     #endregion
 
 #if NET45
@@ -70,25 +73,32 @@ public class TenantModule : EntityModule
         if (entity is not ITenantSource tenant) return true;
 
         var ctx = TenantContext.Current;
-        if (ctx == null) return true;
+        if (ctx == null || ctx.TenantId == 0) return true;
 
         // 只能操作本租户数据
-        if (tenant.TenantId != ctx.TenantId)
+        switch (method)
         {
-            // 插入时，如果没有指定租户标识，则补上当前租户标识
-            if (method != DataMethod.Insert || tenant.TenantId != 0 || entity.IsDirty("TenantId"))
-                return false;
+            case DataMethod.Insert:
+                // 新增：强制设置租户
+                if (tenant.TenantId == 0)
+                    tenant.TenantId = ctx.TenantId;
+                else if (tenant.TenantId != ctx.TenantId)
+                    throw new InvalidOperationException($"不能为其他租户[{tenant.TenantId}]创建数据");
+                break;
 
-            tenant.TenantId = ctx.TenantId;
+            case DataMethod.Update:
+                // 更新：校验租户归属
+                if (!entity.HasDirty) return true;
+                if (tenant.TenantId != ctx.TenantId)
+                    throw new InvalidOperationException($"不能修改其他租户[{tenant.TenantId}]的数据");
+                break;
+
+            case DataMethod.Delete:
+                // 删除：校验租户归属
+                if (tenant.TenantId != ctx.TenantId)
+                    throw new InvalidOperationException($"不能删除其他租户[{tenant.TenantId}]的数据");
+                break;
         }
-        //if (method == DataMethod.Delete) return tenant.TenantId == ctx.TenantId;
-
-        //if (method == DataMethod.Update && !entity.HasDirty) return true;
-
-        //if (tenant.TenantId == 0 && !entity.IsDirty("TenantId"))
-        //    tenant.TenantId = ctx.TenantId;
-        ////else if (tenant.TenantId != ctx.TenantId)
-        ////    return false;
 
         return true;
     }

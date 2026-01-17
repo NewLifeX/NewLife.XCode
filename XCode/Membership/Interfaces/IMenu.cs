@@ -20,6 +20,9 @@ public partial interface IMenu
     /// <summary>显示名</summary>
     String? DisplayName { get; set; }
 
+    /// <summary>类型。1目录/2菜单/3功能</summary>
+    XCode.Membership.MenuTypes Type { get; set; }
+
     /// <summary>全名</summary>
     String? FullName { get; set; }
 

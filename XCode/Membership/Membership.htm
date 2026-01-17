@@ -485,6 +485,17 @@
         </tr>
 
         <tr>
+            <td>Type</td>
+            <td>类型</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>1公司/2部门/3小组/4虚拟</td>
+        </tr>
+
+        <tr>
             <td>Code</td>
             <td>代码</td>
             <td>String</td>
@@ -788,6 +799,17 @@
         </tr>
 
         <tr>
+            <td>Type</td>
+            <td>类型</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>1系统/2普通/3租户</td>
+        </tr>
+
+        <tr>
             <td>Enable</td>
             <td>启用</td>
             <td>Boolean</td>
@@ -818,6 +840,28 @@
             <td></td>
             <td>N</td>
             <td>角色所属组合，0表示全局角色</td>
+        </tr>
+
+        <tr>
+            <td>DataScope</td>
+            <td>数据范围</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>控制用户可访问的数据范围，0全部/1本部门及下级/2本部门/3仅本人/4自定义</td>
+        </tr>
+
+        <tr>
+            <td>DataDepartmentIds</td>
+            <td>数据部门</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>数据范围为自定义时，选择的部门编号列表</td>
         </tr>
 
         <tr>
@@ -1055,6 +1099,17 @@
             <td></td>
             <td></td>
             <td></td>
+        </tr>
+
+        <tr>
+            <td>Type</td>
+            <td>类型</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>1目录/2菜单/3功能</td>
         </tr>
 
         <tr>
@@ -2072,6 +2127,17 @@
         </tr>
 
         <tr>
+            <td>Type</td>
+            <td>类型</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>1免费/2个人/3企业/4旗舰</td>
+        </tr>
+
+        <tr>
             <td>Enable</td>
             <td>启用</td>
             <td>Boolean</td>
@@ -2080,6 +2146,17 @@
             <td></td>
             <td>N</td>
             <td></td>
+        </tr>
+
+        <tr>
+            <td>Level</td>
+            <td>等级</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>租户级别或套餐版本，数字越大功能越多</td>
         </tr>
 
         <tr>
@@ -2113,6 +2190,39 @@
             <td></td>
             <td></td>
             <td>附件路径</td>
+        </tr>
+
+        <tr>
+            <td>Domain</td>
+            <td>域名</td>
+            <td>String</td>
+            <td>200</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>绑定的独立域名</td>
+        </tr>
+
+        <tr>
+            <td>MaxUsers</td>
+            <td>用户数上限</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>该租户最大允许用户数，0表示不限制</td>
+        </tr>
+
+        <tr>
+            <td>MaxStorage</td>
+            <td>存储上限</td>
+            <td>Int64</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>该租户最大允许存储字节数，0表示不限制</td>
         </tr>
 
         <tr>
@@ -2284,6 +2394,17 @@
             <td></td>
             <td>N</td>
             <td></td>
+        </tr>
+
+        <tr>
+            <td>DepartmentId</td>
+            <td>部门</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>用户在该租户所属的部门</td>
         </tr>
 
         <tr>

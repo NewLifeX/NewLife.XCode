@@ -17,6 +17,9 @@ public partial interface IRole
     /// <summary>名称</summary>
     String Name { get; set; }
 
+    /// <summary>类型。1系统/2普通/3租户</summary>
+    XCode.Membership.RoleTypes Type { get; set; }
+
     /// <summary>启用</summary>
     Boolean Enable { get; set; }
 
@@ -25,6 +28,12 @@ public partial interface IRole
 
     /// <summary>租户。角色所属组合，0表示全局角色</summary>
     Int32 TenantId { get; set; }
+
+    /// <summary>数据范围。控制用户可访问的数据范围，0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
+    XCode.Membership.DataScopes DataScope { get; set; }
+
+    /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
+    String? DataDepartmentIds { get; set; }
 
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
     String? Permission { get; set; }

@@ -1,6 +1,7 @@
-﻿using NewLife;
+﻿using System.ComponentModel;
 using NewLife.Common;
 using NewLife.Data;
+using NewLife.Log;
 
 namespace XCode.Membership;
 
@@ -32,11 +33,31 @@ public partial class Tenant : Entity<Tenant>, ITenantSource
         if (!HasDirty) return true;
 
         if (Code.IsNullOrEmpty()) Code = PinYin.GetFirst(Name);
+        if (Code.IsNullOrEmpty()) throw new ArgumentNullException(__.Code, _.Code.DisplayName + "不能为空！");
 
         // 管理者
         if (method == DataMethod.Insert && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
 
         return base.Valid(method);
+    }
+
+    /// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal protected override void InitData()
+    {
+        if (Meta.Count > 0) return;
+
+        if (XTrace.Debug) XTrace.WriteLine("开始初始化{0}数据……", typeof(Tenant).Name);
+
+        var entity = new Tenant
+        {
+            Name = "默认租户",
+            Type = TenantTypes.企业,
+            Enable = true
+        };
+        entity.Insert();
+
+        if (XTrace.Debug) XTrace.WriteLine("完成初始化{0}数据！", typeof(Tenant).Name);
     }
 
     #endregion 对象操作

@@ -20,8 +20,14 @@ public partial interface ITenant
     /// <summary>名称。显示名称</summary>
     String Name { get; set; }
 
+    /// <summary>类型。1免费/2个人/3企业/4旗舰</summary>
+    XCode.Membership.TenantTypes Type { get; set; }
+
     /// <summary>启用</summary>
     Boolean Enable { get; set; }
+
+    /// <summary>等级。租户级别或套餐版本，数字越大功能越多</summary>
+    Int32 Level { get; set; }
 
     /// <summary>管理者</summary>
     Int32 ManagerId { get; set; }
@@ -31,6 +37,15 @@ public partial interface ITenant
 
     /// <summary>图标。附件路径</summary>
     String? Logo { get; set; }
+
+    /// <summary>域名。绑定的独立域名</summary>
+    String? Domain { get; set; }
+
+    /// <summary>用户数上限。该租户最大允许用户数，0表示不限制</summary>
+    Int32 MaxUsers { get; set; }
+
+    /// <summary>存储上限。该租户最大允许存储字节数，0表示不限制</summary>
+    Int64 MaxStorage { get; set; }
 
     /// <summary>数据库。分库用的数据库名</summary>
     String? DatabaseName { get; set; }

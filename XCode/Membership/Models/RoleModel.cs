@@ -20,6 +20,9 @@ public partial class RoleModel : IModel
     /// <summary>名称</summary>
     public String Name { get; set; } = null!;
 
+    /// <summary>类型。1系统/2普通/3租户</summary>
+    public XCode.Membership.RoleTypes Type { get; set; }
+
     /// <summary>启用</summary>
     public Boolean Enable { get; set; }
 
@@ -28,6 +31,12 @@ public partial class RoleModel : IModel
 
     /// <summary>租户。角色所属组合，0表示全局角色</summary>
     public Int32 TenantId { get; set; }
+
+    /// <summary>数据范围。控制用户可访问的数据范围，0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
+    public XCode.Membership.DataScopes DataScope { get; set; }
+
+    /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
+    public String? DataDepartmentIds { get; set; }
 
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
     public String? Permission { get; set; }
@@ -93,9 +102,12 @@ public partial class RoleModel : IModel
             {
                 "ID" => ID,
                 "Name" => Name,
+                "Type" => Type,
                 "Enable" => Enable,
                 "IsSystem" => IsSystem,
                 "TenantId" => TenantId,
+                "DataScope" => DataScope,
+                "DataDepartmentIds" => DataDepartmentIds,
                 "Permission" => Permission,
                 "Sort" => Sort,
                 "Ex1" => Ex1,
@@ -122,9 +134,12 @@ public partial class RoleModel : IModel
             {
                 case "ID": ID = value.ToInt(); break;
                 case "Name": Name = Convert.ToString(value); break;
+                case "Type": Type = (XCode.Membership.RoleTypes)value; break;
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "IsSystem": IsSystem = value.ToBoolean(); break;
                 case "TenantId": TenantId = value.ToInt(); break;
+                case "DataScope": DataScope = (XCode.Membership.DataScopes)value; break;
+                case "DataDepartmentIds": DataDepartmentIds = Convert.ToString(value); break;
                 case "Permission": Permission = Convert.ToString(value); break;
                 case "Sort": Sort = value.ToInt(); break;
                 case "Ex1": Ex1 = value.ToInt(); break;
@@ -155,9 +170,12 @@ public partial class RoleModel : IModel
     {
         ID = model.ID;
         Name = model.Name;
+        Type = model.Type;
         Enable = model.Enable;
         IsSystem = model.IsSystem;
         TenantId = model.TenantId;
+        DataScope = model.DataScope;
+        DataDepartmentIds = model.DataDepartmentIds;
         Permission = model.Permission;
         Sort = model.Sort;
         Ex1 = model.Ex1;

@@ -55,12 +55,13 @@ public class Tenant : EntityController<Tenant>
     protected override IEnumerable<Tenant> Search(Pager p)
     {
         var code = p["code"];
+        var type = (XCode.Membership.TenantTypes)p["type"].ToInt(-1);
         var managerId = p["managerId"].ToInt(-1);
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Tenant.Search(code, managerId, enable, start, end, p["Q"], p);
+        return Tenant.Search(code, type, managerId, enable, start, end, p["Q"], p);
     }
 }

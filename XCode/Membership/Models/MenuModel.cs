@@ -23,6 +23,9 @@ public partial class MenuModel : IModel
     /// <summary>显示名</summary>
     public String? DisplayName { get; set; }
 
+    /// <summary>类型。1目录/2菜单/3功能</summary>
+    public XCode.Membership.MenuTypes Type { get; set; }
+
     /// <summary>全名</summary>
     public String? FullName { get; set; }
 
@@ -109,6 +112,7 @@ public partial class MenuModel : IModel
                 "ID" => ID,
                 "Name" => Name,
                 "DisplayName" => DisplayName,
+                "Type" => Type,
                 "FullName" => FullName,
                 "ParentID" => ParentID,
                 "Url" => Url,
@@ -143,6 +147,7 @@ public partial class MenuModel : IModel
                 case "ID": ID = value.ToInt(); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "DisplayName": DisplayName = Convert.ToString(value); break;
+                case "Type": Type = (XCode.Membership.MenuTypes)value; break;
                 case "FullName": FullName = Convert.ToString(value); break;
                 case "ParentID": ParentID = value.ToInt(); break;
                 case "Url": Url = Convert.ToString(value); break;
@@ -181,6 +186,7 @@ public partial class MenuModel : IModel
         ID = model.ID;
         Name = model.Name;
         DisplayName = model.DisplayName;
+        Type = model.Type;
         FullName = model.FullName;
         ParentID = model.ParentID;
         Url = model.Url;

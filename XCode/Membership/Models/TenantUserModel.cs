@@ -26,6 +26,9 @@ public partial class TenantUserModel : IModel
     /// <summary>启用</summary>
     public Boolean Enable { get; set; }
 
+    /// <summary>部门。用户在该租户所属的部门</summary>
+    public Int32 DepartmentId { get; set; }
+
     /// <summary>角色。用户在该租户所对应的主要角色，替换用户自身的角色组</summary>
     public Int32 RoleId { get; set; }
 
@@ -50,6 +53,7 @@ public partial class TenantUserModel : IModel
                 "TenantId" => TenantId,
                 "UserId" => UserId,
                 "Enable" => Enable,
+                "DepartmentId" => DepartmentId,
                 "RoleId" => RoleId,
                 "RoleIds" => RoleIds,
                 "Remark" => Remark,
@@ -64,6 +68,7 @@ public partial class TenantUserModel : IModel
                 case "TenantId": TenantId = value.ToInt(); break;
                 case "UserId": UserId = value.ToInt(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
+                case "DepartmentId": DepartmentId = value.ToInt(); break;
                 case "RoleId": RoleId = value.ToInt(); break;
                 case "RoleIds": RoleIds = Convert.ToString(value); break;
                 case "Remark": Remark = Convert.ToString(value); break;
@@ -82,6 +87,7 @@ public partial class TenantUserModel : IModel
         TenantId = model.TenantId;
         UserId = model.UserId;
         Enable = model.Enable;
+        DepartmentId = model.DepartmentId;
         RoleId = model.RoleId;
         RoleIds = model.RoleIds;
         Remark = model.Remark;

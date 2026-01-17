@@ -23,6 +23,9 @@ public partial interface ITenantUser
     /// <summary>启用</summary>
     Boolean Enable { get; set; }
 
+    /// <summary>部门。用户在该租户所属的部门</summary>
+    Int32 DepartmentId { get; set; }
+
     /// <summary>角色。用户在该租户所对应的主要角色，替换用户自身的角色组</summary>
     Int32 RoleId { get; set; }
 

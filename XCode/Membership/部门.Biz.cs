@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
+using System.Xml.Linq;
 using System.Xml.Serialization;
-using NewLife;
 using NewLife.Common;
 using NewLife.Data;
 using NewLife.Log;
@@ -13,6 +13,8 @@ namespace XCode.Membership;
 public partial class Department : Entity<Department>, ITenantSource
 {
     #region 对象操作
+    private static Int32 MaxCacheCount = 10000;
+
     static Department()
     {
         //// 用于引发基类的静态构造函数，所有层次的泛型实体类都应该有一个
@@ -43,12 +45,24 @@ public partial class Department : Entity<Department>, ITenantSource
 
         if (Code.IsNullOrEmpty()) Code = PinYin.GetFirst(Name);
 
+        if (Type == 0 && !IsDirty("Type") && !Name.IsNullOrEmpty())
+        {
+            if (Name.Contains("公司"))
+                Type = DepartmentTypes.公司;
+            else if (Name.Contains('部'))
+                Type = DepartmentTypes.部门;
+            else if (Name.Contains('组'))
+                Type = DepartmentTypes.小组;
+            else if (Name.Contains("项目"))
+                Type = DepartmentTypes.虚拟;
+        }
+
         // 管理者
         if (method == DataMethod.Insert && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
 
         if (!base.Valid(method)) return false;
 
-        return base.Valid(method);
+        return true;
     }
 
     /// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
@@ -139,42 +153,9 @@ public partial class Department : Entity<Department>, ITenantSource
     /// <summary>下级部门</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IEnumerable<Department>? Childs => Extends.Get(nameof(Childs), k => FindAllByTenantIdAndParentId(TenantId, ID).OrderBy(e => e.ID));
-
-    ///// <summary>
-    /////是否存在子集
-    ///// </summary>
-    //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    //public Boolean subset { get; set; }
     #endregion
 
     #region 扩展查询
-    /// <summary>根据编号查找</summary>
-    /// <param name="id">编号</param>
-    /// <returns>实体对象</returns>
-    public static Department FindByID(Int32 id)
-    {
-        if (id <= 0) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
-
-        // 单对象缓存
-        return Meta.SingleCache[id];
-
-        //return Find(_.ID == id);
-    }
-
-    /// <summary>根据名称查找</summary>
-    /// <param name="name">名称</param>
-    /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByName(String name)
-    {
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name == name);
-
-        return FindAll(_.Name == name);
-    }
-
     /// <summary>根据名称、父级查找</summary>
     /// <param name="name">名称</param>
     /// <param name="parentid">父级</param>
@@ -185,56 +166,6 @@ public partial class Department : Entity<Department>, ITenantSource
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name == name && e.ParentID == parentid);
 
         return Find(_.Name == name & _.ParentID == parentid);
-    }
-
-    /// <summary>根据代码查找</summary>
-    /// <param name="code">代码</param>
-    /// <returns>实体对象</returns>
-    public static Department FindByCode(String code)
-    {
-        if (code.IsNullOrEmpty()) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Code == code);
-
-        return Find(_.Code == code);
-    }
-
-    /// <summary>根据父级、名称查找</summary>
-    /// <param name="parentId">父级</param>
-    /// <param name="name">名称</param>
-    /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByParentIDAndName(Int32 parentId, String name)
-    {
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
-
-        return FindAll(_.ParentID == parentId & _.Name == name);
-    }
-
-    /// <summary>根据租户查找</summary>
-    /// <param name="tenantId">租户</param>
-    /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByTenantId(Int32 tenantId)
-    {
-        if (tenantId <= 0) return new List<Department>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
-
-        return FindAll(_.TenantId == tenantId);
-    }
-
-    /// <summary>根据所属父级Id查找</summary>
-    /// <param name="parentID">所属父级Id</param>
-    /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByParentId(Int32 parentID)
-    {
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentID);
-
-        return FindAll(_.ParentID == parentID);
     }
 
     /// <summary>根据租户、父级、名称查找</summary>
@@ -282,6 +213,30 @@ public partial class Department : Entity<Department>, ITenantSource
     {
         var exp = new WhereExpression();
         if (parentId >= 0) exp &= _.ParentID == parentId;
+        if (enable != null) exp &= _.Enable == enable.Value;
+        if (visible != null) exp &= _.Visible == visible.Value;
+        if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.FullName.Contains(key);
+
+        return FindAll(exp, page);
+    }
+
+    /// <summary>高级搜索</summary>
+    /// <param name="tenantId"></param>
+    /// <param name="type"></param>
+    /// <param name="parentId"></param>
+    /// <param name="managerId"></param>
+    /// <param name="enable"></param>
+    /// <param name="visible"></param>
+    /// <param name="key"></param>
+    /// <param name="page"></param>
+    /// <returns></returns>
+    public static IList<Department> Search(Int32 tenantId, DepartmentTypes type, Int32 parentId, Int32 managerId, Boolean? enable, Boolean? visible, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+        if (tenantId >= 0) exp &= _.TenantId == tenantId;
+        if (type >= 0) exp &= _.Type == type;
+        if (parentId >= 0) exp &= _.ParentID == parentId;
+        if (managerId >= 0) exp &= _.ManagerId == managerId;
         if (enable != null) exp &= _.Enable == enable.Value;
         if (visible != null) exp &= _.Visible == visible.Value;
         if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.FullName.Contains(key);

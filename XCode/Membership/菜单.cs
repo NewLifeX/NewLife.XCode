@@ -47,6 +47,14 @@ public partial class Menu : IMenu, IEntity<IMenu>
     [BindColumn("DisplayName", "显示名", "")]
     public String? DisplayName { get => _DisplayName; set { if (OnPropertyChanging("DisplayName", value)) { _DisplayName = value; OnPropertyChanged("DisplayName"); } } }
 
+    private XCode.Membership.MenuTypes _Type;
+    /// <summary>类型。1目录/2菜单/3功能</summary>
+    [DisplayName("类型")]
+    [Description("类型。1目录/2菜单/3功能")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Type", "类型。1目录/2菜单/3功能", "")]
+    public XCode.Membership.MenuTypes Type { get => _Type; set { if (OnPropertyChanging("Type", value)) { _Type = value; OnPropertyChanged("Type"); } } }
+
     private String? _FullName;
     /// <summary>全名</summary>
     [DisplayName("全名")]
@@ -263,6 +271,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
         ID = model.ID;
         Name = model.Name;
         DisplayName = model.DisplayName;
+        Type = model.Type;
         FullName = model.FullName;
         ParentID = model.ParentID;
         Url = model.Url;
@@ -301,6 +310,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
             "ID" => _ID,
             "Name" => _Name,
             "DisplayName" => _DisplayName,
+            "Type" => _Type,
             "FullName" => _FullName,
             "ParentID" => _ParentID,
             "Url" => _Url,
@@ -334,6 +344,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
                 case "ID": _ID = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "DisplayName": _DisplayName = Convert.ToString(value); break;
+                case "Type": _Type = (XCode.Membership.MenuTypes)value.ToInt(); break;
                 case "FullName": _FullName = Convert.ToString(value); break;
                 case "ParentID": _ParentID = value.ToInt(); break;
                 case "Url": _Url = Convert.ToString(value); break;
@@ -373,6 +384,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="parentId">父编号</param>
+    /// <param name="type">类型。1目录/2菜单/3功能</param>
     /// <param name="visible">可见</param>
     /// <param name="necessary">必要。必要的菜单，必须至少有角色拥有这些权限，如果没有则自动授权给系统角色</param>
     /// <param name="newWindow">新窗口。新窗口打开链接</param>
@@ -381,11 +393,12 @@ public partial class Menu : IMenu, IEntity<IMenu>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Menu> Search(Int32 parentId, Boolean? visible, Boolean? necessary, Boolean? newWindow, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Menu> Search(Int32 parentId, XCode.Membership.MenuTypes type, Boolean? visible, Boolean? necessary, Boolean? newWindow, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (parentId >= 0) exp &= _.ParentID == parentId;
+        if (type >= 0) exp &= _.Type == type;
         if (visible != null) exp &= _.Visible == visible;
         if (necessary != null) exp &= _.Necessary == necessary;
         if (newWindow != null) exp &= _.NewWindow == newWindow;
@@ -408,6 +421,9 @@ public partial class Menu : IMenu, IEntity<IMenu>
 
         /// <summary>显示名</summary>
         public static readonly Field DisplayName = FindByName("DisplayName");
+
+        /// <summary>类型。1目录/2菜单/3功能</summary>
+        public static readonly Field Type = FindByName("Type");
 
         /// <summary>全名</summary>
         public static readonly Field FullName = FindByName("FullName");
@@ -495,6 +511,9 @@ public partial class Menu : IMenu, IEntity<IMenu>
 
         /// <summary>显示名</summary>
         public const String DisplayName = "DisplayName";
+
+        /// <summary>类型。1目录/2菜单/3功能</summary>
+        public const String Type = "Type";
 
         /// <summary>全名</summary>
         public const String FullName = "FullName";

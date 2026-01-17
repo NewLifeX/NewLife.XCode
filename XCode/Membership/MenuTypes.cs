@@ -4,11 +4,11 @@
 public enum MenuTypes
 {
     /// <summary>目录</summary>
-    目录 = 0,
+    目录 = 1,
 
     /// <summary>菜单</summary>
-    菜单 = 1,
+    菜单 = 2,
 
     /// <summary>功能</summary>
-    功能 = 2
+    功能 = 3
 }

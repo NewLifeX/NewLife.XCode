@@ -2,7 +2,6 @@
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
 
@@ -38,6 +37,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
                 // 如果没有，让第一个角色作为系统角色
                 var role = list[0];
                 role.IsSystem = true;
+                role.Type = RoleTypes.系统;
 
                 XTrace.WriteLine("必须有至少一个可用的系统角色，修改{0}为系统角色！", role.Name);
 
@@ -48,11 +48,11 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
         {
             if (XTrace.Debug) XTrace.WriteLine("开始初始化{0}角色数据……", typeof(Role).Name);
 
-            Add("管理员", true, "默认拥有全部最高权限，由系统工程师使用，安装配置整个系统");
+            Add("管理员", true, RoleTypes.系统, DataScopes.全部, "默认拥有全部最高权限，由系统工程师使用，安装配置整个系统");
             //Add("租户管理员", false, "SAAS平台租户管理员");
-            Add("高级用户", false, "业务管理人员，可以管理业务模块，可以分配授权用户等级");
-            Add("普通用户", false, "普通业务人员，可以使用系统常规业务模块功能");
-            Add("游客", false, "新注册默认属于游客");
+            Add("高级用户", false, RoleTypes.普通, DataScopes.本部门及下级, "业务管理人员，可以管理业务模块，可以分配授权用户等级");
+            Add("普通用户", false, RoleTypes.普通, DataScopes.本部门, "普通业务人员，可以使用系统常规业务模块功能");
+            Add("游客", false, RoleTypes.普通, DataScopes.仅本人, "新注册默认属于游客");
 
             if (XTrace.Debug) XTrace.WriteLine("完成初始化{0}角色数据！", typeof(Role).Name);
         }
@@ -121,6 +121,25 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
         if (method == DataMethod.Delete) return true;
 
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, _.Name.DisplayName + "不能为空！");
+
+        if (Type == 0)
+        {
+            if (TenantId > 0)
+                Type = RoleTypes.租户;
+            else
+                Type = IsSystem ? RoleTypes.系统 : RoleTypes.普通;
+        }
+
+        if (DataScope == 0)
+        {
+            DataScope = Type switch
+            {
+                RoleTypes.系统 => DataScopes.全部,
+                RoleTypes.普通 => Name.Contains("高级") ? DataScopes.本部门及下级 : DataScopes.本部门,
+                RoleTypes.租户 => DataScopes.本部门及下级,
+                _ => DataScopes.仅本人,
+            };
+        }
 
         SavePermission();
 
@@ -203,7 +222,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
     /// <summary>根据编号查找角色</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    public static Role FindByID(Int32 id)
+    public static Role? FindByID(Int32 id)
     {
         if (id <= 0 || Meta.Cache.Entities == null || Meta.Cache.Entities.Count <= 0) return null;
 
@@ -213,12 +232,12 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
     /// <summary>根据编号查找角色</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    IRole IRole.FindByID(Int32 id) => FindByID(id);
+    IRole? IRole.FindByID(Int32 id) => FindByID(id);
 
     /// <summary>根据名称查找角色</summary>
     /// <param name="name">名称</param>
     /// <returns></returns>
-    public static Role FindByName(String name)
+    public static Role? FindByName(String name)
     {
         if (String.IsNullOrEmpty(name) || Meta.Cache.Entities == null || Meta.Cache.Entities.Count <= 0) return null;
 
@@ -256,71 +275,71 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
 
     #region 扩展权限
 
-    private IDictionary<Int32, PermissionFlags> _Permissions;
+    private IDictionary<Int32, PermissionFlags>? _Permissions;
 
     /// <summary>本角色权限集合</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public IDictionary<Int32, PermissionFlags> Permissions => _Permissions ??= new Dictionary<Int32, PermissionFlags>();
 
     /// <summary>是否拥有指定资源的指定权限</summary>
-    /// <param name="resid"></param>
+    /// <param name="resourceId"></param>
     /// <param name="flag"></param>
     /// <returns></returns>
-    public Boolean Has(Int32 resid, PermissionFlags flag = PermissionFlags.None)
+    public Boolean Has(Int32 resourceId, PermissionFlags flag = PermissionFlags.None)
     {
         var pf = PermissionFlags.None;
-        if (!Permissions.TryGetValue(resid, out pf)) return false;
+        if (!Permissions.TryGetValue(resourceId, out pf)) return false;
         if (flag == PermissionFlags.None) return true;
 
         return pf.Has(flag);
     }
 
-    private void Remove(Int32 resid)
+    private void Remove(Int32 resourceId)
     {
-        if (Permissions.ContainsKey(resid)) Permissions.Remove(resid);
+        if (Permissions.ContainsKey(resourceId)) Permissions.Remove(resourceId);
     }
 
     /// <summary>获取权限</summary>
-    /// <param name="resid"></param>
+    /// <param name="resourceId"></param>
     /// <returns></returns>
-    public PermissionFlags Get(Int32 resid)
+    public PermissionFlags Get(Int32 resourceId)
     {
-        if (!Permissions.TryGetValue(resid, out var pf)) return PermissionFlags.None;
+        if (!Permissions.TryGetValue(resourceId, out var pf)) return PermissionFlags.None;
 
         return pf;
     }
 
     /// <summary>设置该角色拥有指定资源的指定权限</summary>
-    /// <param name="resid"></param>
+    /// <param name="resourceId"></param>
     /// <param name="flag"></param>
-    public void Set(Int32 resid, PermissionFlags flag = PermissionFlags.All)
+    public void Set(Int32 resourceId, PermissionFlags flag = PermissionFlags.All)
     {
-        if (Permissions.TryGetValue(resid, out var pf))
+        if (Permissions.TryGetValue(resourceId, out var pf))
         {
-            Permissions[resid] = pf | flag;
+            Permissions[resourceId] = pf | flag;
         }
         else
         {
-            if (flag != PermissionFlags.None) Permissions.Add(resid, flag);
+            if (flag != PermissionFlags.None) Permissions.Add(resourceId, flag);
         }
     }
 
     /// <summary>重置该角色指定的权限</summary>
-    /// <param name="resid"></param>
+    /// <param name="resourceId"></param>
     /// <param name="flag"></param>
-    public void Reset(Int32 resid, PermissionFlags flag)
+    public void Reset(Int32 resourceId, PermissionFlags flag)
     {
-        if (Permissions.TryGetValue(resid, out var pf))
+        if (Permissions.TryGetValue(resourceId, out var pf))
         {
-            Permissions[resid] = pf & ~flag;
+            Permissions[resourceId] = pf & ~flag;
         }
     }
 
     /// <summary>检查是否有无效权限项，有则删除</summary>
-    /// <param name="resids"></param>
-    internal Boolean CheckValid(Int32[] resids)
+    /// <param name="resourceIds"></param>
+    internal Boolean CheckValid(Int32[] resourceIds)
     {
-        if (resids == null || resids.Length == 0) return true;
+        if (resourceIds == null || resourceIds.Length == 0) return true;
 
         var ps = Permissions;
         var count = ps.Count;
@@ -328,7 +347,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
         var list = new List<Int32>();
         foreach (var item in ps)
         {
-            if (!resids.Contains(item.Key)) list.Add(item.Key);
+            if (!resourceIds.Contains(item.Key)) list.Add(item.Key);
         }
         // 删除无效项
         foreach (var item in list)
@@ -347,8 +366,8 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
         var dic = Permission.SplitAsDictionary("#", ",");
         foreach (var item in dic)
         {
-            var resid = item.Key.ToInt();
-            Permissions[resid] = (PermissionFlags)item.Value.ToInt();
+            var resourceId = item.Key.ToInt();
+            Permissions[resourceId] = (PermissionFlags)item.Value.ToInt();
         }
     }
 
@@ -393,7 +412,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
     /// <returns></returns>
     public static IRole GetOrAdd(String name)
     {
-        if (name.IsNullOrEmpty()) return null;
+        if (name.IsNullOrEmpty()) return null!;
 
         return Add(name, false);
     }
@@ -403,17 +422,17 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
     /// <returns></returns>
     IRole IRole.GetOrAdd(String name)
     {
-        if (name.IsNullOrEmpty()) return null;
+        if (name.IsNullOrEmpty()) return null!;
 
         return Add(name, false);
     }
 
     /// <summary>添加角色，如果存在，则直接返回，否则创建</summary>
-    /// <param name="name"></param>
-    /// <param name="issys"></param>
-    /// <param name="remark"></param>
+    /// <param name="name">角色名称</param>
+    /// <param name="issys">是否系统角色</param>
+    /// <param name="remark">备注</param>
     /// <returns></returns>
-    public static Role Add(String name, Boolean issys, String remark = null)
+    public static Role Add(String name, Boolean issys, String? remark = null)
     {
         //var entity = FindByName(name);
         var entity = Find(__.Name, name);
@@ -422,6 +441,34 @@ public partial class Role : LogEntity<Role>, IRole, ITenantSource
         entity = new Role
         {
             Name = name,
+            Type = issys ? RoleTypes.系统 : RoleTypes.普通,
+            IsSystem = issys,
+            Enable = true,
+            Remark = remark
+        };
+        entity.Save();
+
+        return entity;
+    }
+
+    /// <summary>添加角色，如果存在，则直接返回，否则创建</summary>
+    /// <param name="name">角色名称</param>
+    /// <param name="issys">是否系统角色</param>
+    /// <param name="type">角色类型</param>
+    /// <param name="scope"></param>
+    /// <param name="remark">备注</param>
+    /// <returns></returns>
+    public static Role Add(String name, Boolean issys, RoleTypes type, DataScopes scope, String? remark = null)
+    {
+        //var entity = FindByName(name);
+        var entity = Find(__.Name, name);
+        if (entity != null) return entity;
+
+        entity = new Role
+        {
+            Name = name,
+            Type = type,
+            DataScope = scope,
             IsSystem = issys,
             Enable = true,
             Remark = remark
@@ -441,25 +488,25 @@ public partial interface IRole
     IDictionary<Int32, PermissionFlags> Permissions { get; }
 
     /// <summary>是否拥有指定资源的指定权限</summary>
-    /// <param name="resid"></param>
+    /// <param name="resourceId"></param>
     /// <param name="flag"></param>
     /// <returns></returns>
-    Boolean Has(Int32 resid, PermissionFlags flag = PermissionFlags.None);
+    Boolean Has(Int32 resourceId, PermissionFlags flag = PermissionFlags.None);
 
     /// <summary>获取权限</summary>
-    /// <param name="resid"></param>
+    /// <param name="resourceId"></param>
     /// <returns></returns>
-    PermissionFlags Get(Int32 resid);
+    PermissionFlags Get(Int32 resourceId);
 
     /// <summary>设置该角色拥有指定资源的指定权限</summary>
-    /// <param name="resid"></param>
+    /// <param name="resourceId"></param>
     /// <param name="flag"></param>
-    void Set(Int32 resid, PermissionFlags flag = PermissionFlags.Detail);
+    void Set(Int32 resourceId, PermissionFlags flag = PermissionFlags.Detail);
 
     /// <summary>重置该角色指定的权限</summary>
-    /// <param name="resid"></param>
+    /// <param name="resourceId"></param>
     /// <param name="flag"></param>
-    void Reset(Int32 resid, PermissionFlags flag);
+    void Reset(Int32 resourceId, PermissionFlags flag);
 
     /// <summary>当前角色拥有的资源</summary>
     Int32[] Resources { get; }
@@ -467,7 +514,7 @@ public partial interface IRole
     /// <summary>根据编号查找角色</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    IRole FindByID(Int32 id);
+    IRole? FindByID(Int32 id);
 
     /// <summary>根据名称查找角色，若不存在则创建</summary>
     /// <param name="name"></param>
@@ -485,10 +532,10 @@ public partial interface IRole
 
 //    Int32[] IRole.Resources => throw new NotImplementedException();
 
-//    Boolean IRole.Has(Int32 resid, PermissionFlags flag) => throw new NotImplementedException();
-//    PermissionFlags IRole.Get(Int32 resid) => throw new NotImplementedException();
-//    void IRole.Set(Int32 resid, PermissionFlags flag) => throw new NotImplementedException();
-//    void IRole.Reset(Int32 resid, PermissionFlags flag) => throw new NotImplementedException();
+//    Boolean IRole.Has(Int32 resourceId, PermissionFlags flag) => throw new NotImplementedException();
+//    PermissionFlags IRole.Get(Int32 resourceId) => throw new NotImplementedException();
+//    void IRole.Set(Int32 resourceId, PermissionFlags flag) => throw new NotImplementedException();
+//    void IRole.Reset(Int32 resourceId, PermissionFlags flag) => throw new NotImplementedException();
 //    IRole IRole.FindByID(Int32 id) => throw new NotImplementedException();
 //    IRole IRole.GetOrAdd(String name) => throw new NotImplementedException();
 //    Int32 IRole.Save() => throw new NotImplementedException();

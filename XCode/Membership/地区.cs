@@ -269,7 +269,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (pinYin == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.PinYin.EqualIgnoreCase(pinYin));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.PinYin.EqualIgnoreCase(pinYin));
 
         return FindAll(_.PinYin == pinYin);
     }
@@ -282,7 +282,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (jianPin == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.JianPin.EqualIgnoreCase(jianPin));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.JianPin.EqualIgnoreCase(jianPin));
 
         return FindAll(_.JianPin == jianPin);
     }
@@ -295,7 +295,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (geoHash == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.GeoHash.EqualIgnoreCase(geoHash));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.GeoHash.EqualIgnoreCase(geoHash));
 
         return FindAll(_.GeoHash == geoHash);
     }

@@ -55,6 +55,14 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
 
+    private Int32 _DepartmentId;
+    /// <summary>部门。用户在该租户所属的部门</summary>
+    [DisplayName("部门")]
+    [Description("部门。用户在该租户所属的部门")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DepartmentId", "部门。用户在该租户所属的部门", "")]
+    public Int32 DepartmentId { get => _DepartmentId; set { if (OnPropertyChanging("DepartmentId", value)) { _DepartmentId = value; OnPropertyChanged("DepartmentId"); } } }
+
     private Int32 _RoleId;
     /// <summary>角色。用户在该租户所对应的主要角色，替换用户自身的角色组</summary>
     [DisplayName("角色")]
@@ -144,6 +152,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
         TenantId = model.TenantId;
         UserId = model.UserId;
         Enable = model.Enable;
+        DepartmentId = model.DepartmentId;
         RoleId = model.RoleId;
         RoleIds = model.RoleIds;
         Remark = model.Remark;
@@ -162,6 +171,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
             "TenantId" => _TenantId,
             "UserId" => _UserId,
             "Enable" => _Enable,
+            "DepartmentId" => _DepartmentId,
             "RoleId" => _RoleId,
             "RoleIds" => _RoleIds,
             "CreateUserId" => _CreateUserId,
@@ -181,6 +191,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
                 case "TenantId": _TenantId = value.ToInt(); break;
                 case "UserId": _UserId = value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
+                case "DepartmentId": _DepartmentId = value.ToInt(); break;
                 case "RoleId": _RoleId = value.ToInt(); break;
                 case "RoleIds": _RoleIds = Convert.ToString(value); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
@@ -213,6 +224,14 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
     [Map(nameof(UserId), typeof(User), "ID")]
     public String? UserName => User?.ToString();
 
+    /// <summary>部门</summary>
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+    public Department? Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentId));
+
+    /// <summary>部门</summary>
+    [Map(nameof(DepartmentId), typeof(Department), "ID")]
+    public String? DepartmentName => Department?.Name;
+
     /// <summary>角色</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public Role? Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleId));
@@ -224,6 +243,34 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
     #endregion
 
     #region 扩展查询
+    #endregion
+
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="tenantId">租户</param>
+    /// <param name="userId">用户</param>
+    /// <param name="departmentId">部门。用户在该租户所属的部门</param>
+    /// <param name="roleId">角色。用户在该租户所对应的主要角色，替换用户自身的角色组</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<TenantUser> Search(Int32 tenantId, Int32 userId, Int32 departmentId, Int32 roleId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (tenantId >= 0) exp &= _.TenantId == tenantId;
+        if (userId >= 0) exp &= _.UserId == userId;
+        if (departmentId >= 0) exp &= _.DepartmentId == departmentId;
+        if (roleId >= 0) exp &= _.RoleId == roleId;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
     #endregion
 
     #region 字段名
@@ -241,6 +288,9 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
 
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
+
+        /// <summary>部门。用户在该租户所属的部门</summary>
+        public static readonly Field DepartmentId = FindByName("DepartmentId");
 
         /// <summary>角色。用户在该租户所对应的主要角色，替换用户自身的角色组</summary>
         public static readonly Field RoleId = FindByName("RoleId");
@@ -286,6 +336,9 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
 
         /// <summary>启用</summary>
         public const String Enable = "Enable";
+
+        /// <summary>部门。用户在该租户所属的部门</summary>
+        public const String DepartmentId = "DepartmentId";
 
         /// <summary>角色。用户在该租户所对应的主要角色，替换用户自身的角色组</summary>
         public const String RoleId = "RoleId";

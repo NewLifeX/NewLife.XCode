@@ -39,6 +39,14 @@ public partial class Role : IRole, IEntity<IRole>
     [BindColumn("Name", "名称", "", Master = true)]
     public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
+    private XCode.Membership.RoleTypes _Type;
+    /// <summary>类型。1系统/2普通/3租户</summary>
+    [DisplayName("类型")]
+    [Description("类型。1系统/2普通/3租户")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Type", "类型。1系统/2普通/3租户", "")]
+    public XCode.Membership.RoleTypes Type { get => _Type; set { if (OnPropertyChanging("Type", value)) { _Type = value; OnPropertyChanged("Type"); } } }
+
     private Boolean _Enable;
     /// <summary>启用</summary>
     [DisplayName("启用")]
@@ -62,6 +70,22 @@ public partial class Role : IRole, IEntity<IRole>
     [DataObjectField(false, false, false, 0)]
     [BindColumn("TenantId", "租户。角色所属组合，0表示全局角色", "")]
     public Int32 TenantId { get => _TenantId; set { if (OnPropertyChanging("TenantId", value)) { _TenantId = value; OnPropertyChanged("TenantId"); } } }
+
+    private XCode.Membership.DataScopes _DataScope;
+    /// <summary>数据范围。控制用户可访问的数据范围，0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
+    [DisplayName("数据范围")]
+    [Description("数据范围。控制用户可访问的数据范围，0全部/1本部门及下级/2本部门/3仅本人/4自定义")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DataScope", "数据范围。控制用户可访问的数据范围，0全部/1本部门及下级/2本部门/3仅本人/4自定义", "")]
+    public XCode.Membership.DataScopes DataScope { get => _DataScope; set { if (OnPropertyChanging("DataScope", value)) { _DataScope = value; OnPropertyChanged("DataScope"); } } }
+
+    private String? _DataDepartmentIds;
+    /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
+    [DisplayName("数据部门")]
+    [Description("数据部门。数据范围为自定义时，选择的部门编号列表")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("DataDepartmentIds", "数据部门。数据范围为自定义时，选择的部门编号列表", "")]
+    public String? DataDepartmentIds { get => _DataDepartmentIds; set { if (OnPropertyChanging("DataDepartmentIds", value)) { _DataDepartmentIds = value; OnPropertyChanged("DataDepartmentIds"); } } }
 
     private String? _Permission;
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
@@ -222,9 +246,12 @@ public partial class Role : IRole, IEntity<IRole>
     {
         ID = model.ID;
         Name = model.Name;
+        Type = model.Type;
         Enable = model.Enable;
         IsSystem = model.IsSystem;
         TenantId = model.TenantId;
+        DataScope = model.DataScope;
+        DataDepartmentIds = model.DataDepartmentIds;
         Permission = model.Permission;
         Sort = model.Sort;
         Ex1 = model.Ex1;
@@ -255,9 +282,12 @@ public partial class Role : IRole, IEntity<IRole>
         {
             "ID" => _ID,
             "Name" => _Name,
+            "Type" => _Type,
             "Enable" => _Enable,
             "IsSystem" => _IsSystem,
             "TenantId" => _TenantId,
+            "DataScope" => _DataScope,
+            "DataDepartmentIds" => _DataDepartmentIds,
             "Permission" => _Permission,
             "Sort" => _Sort,
             "Ex1" => _Ex1,
@@ -283,9 +313,12 @@ public partial class Role : IRole, IEntity<IRole>
             {
                 case "ID": _ID = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
+                case "Type": _Type = (XCode.Membership.RoleTypes)value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "IsSystem": _IsSystem = value.ToBoolean(); break;
                 case "TenantId": _TenantId = value.ToInt(); break;
+                case "DataScope": _DataScope = (XCode.Membership.DataScopes)value.ToInt(); break;
+                case "DataDepartmentIds": _DataDepartmentIds = Convert.ToString(value); break;
                 case "Permission": _Permission = Convert.ToString(value); break;
                 case "Sort": _Sort = value.ToInt(); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
@@ -353,19 +386,23 @@ public partial class Role : IRole, IEntity<IRole>
     #region 高级查询
     /// <summary>高级查询</summary>
     /// <param name="tenantId">租户。角色所属组合，0表示全局角色</param>
+    /// <param name="type">类型。1系统/2普通/3租户</param>
     /// <param name="isSystem">系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</param>
+    /// <param name="dataScope">数据范围。控制用户可访问的数据范围，0全部/1本部门及下级/2本部门/3仅本人/4自定义</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Role> Search(Int32 tenantId, Boolean? isSystem, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Role> Search(Int32 tenantId, XCode.Membership.RoleTypes type, Boolean? isSystem, XCode.Membership.DataScopes dataScope, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (tenantId >= 0) exp &= _.TenantId == tenantId;
+        if (type >= 0) exp &= _.Type == type;
         if (isSystem != null) exp &= _.IsSystem == isSystem;
+        if (dataScope >= 0) exp &= _.DataScope == dataScope;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
@@ -384,6 +421,9 @@ public partial class Role : IRole, IEntity<IRole>
         /// <summary>名称</summary>
         public static readonly Field Name = FindByName("Name");
 
+        /// <summary>类型。1系统/2普通/3租户</summary>
+        public static readonly Field Type = FindByName("Type");
+
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
 
@@ -392,6 +432,12 @@ public partial class Role : IRole, IEntity<IRole>
 
         /// <summary>租户。角色所属组合，0表示全局角色</summary>
         public static readonly Field TenantId = FindByName("TenantId");
+
+        /// <summary>数据范围。控制用户可访问的数据范围，0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
+        public static readonly Field DataScope = FindByName("DataScope");
+
+        /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
+        public static readonly Field DataDepartmentIds = FindByName("DataDepartmentIds");
 
         /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
         public static readonly Field Permission = FindByName("Permission");
@@ -456,6 +502,9 @@ public partial class Role : IRole, IEntity<IRole>
         /// <summary>名称</summary>
         public const String Name = "Name";
 
+        /// <summary>类型。1系统/2普通/3租户</summary>
+        public const String Type = "Type";
+
         /// <summary>启用</summary>
         public const String Enable = "Enable";
 
@@ -464,6 +513,12 @@ public partial class Role : IRole, IEntity<IRole>
 
         /// <summary>租户。角色所属组合，0表示全局角色</summary>
         public const String TenantId = "TenantId";
+
+        /// <summary>数据范围。控制用户可访问的数据范围，0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
+        public const String DataScope = "DataScope";
+
+        /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
+        public const String DataDepartmentIds = "DataDepartmentIds";
 
         /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
         public const String Permission = "Permission";

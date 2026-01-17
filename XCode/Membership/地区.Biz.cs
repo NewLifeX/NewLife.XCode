@@ -27,6 +27,8 @@ namespace XCode.Membership;
 public partial class Area : Entity<Area>
 {
     #region 对象操作
+    private static Int32 MaxCacheCount = 10000;
+
     static Area()
     {
         // 过滤器 UserModule、TimeModule、IPModule

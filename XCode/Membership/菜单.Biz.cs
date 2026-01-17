@@ -1,7 +1,6 @@
 ﻿using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
-using NewLife;
 using NewLife.Collections;
 
 namespace XCode.Membership;
@@ -130,10 +129,10 @@ public partial class Menu : EntityTree<Menu>, IMenu
 
     #region 扩展属性
     /// <summary></summary>
-    public String Url2 => Url?.Replace("~", "");
+    public String? Url2 => Url?.Replace("~", "");
 
     /// <summary>父菜单名</summary>
-    public virtual String ParentMenuName { get => Parent?.Name; set { } }
+    public virtual String? ParentMenuName { get => Parent?.Name; set { } }
 
     /// <summary>必要的菜单。必须至少有角色拥有这些权限，如果没有则自动授权给系统角色</summary>
     internal static Int32[] Necessaries
@@ -157,7 +156,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <summary>根据编号查找</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    public static Menu FindByID(Int32 id)
+    public static Menu? FindByID(Int32 id)
     {
         if (id <= 0) return null;
 
@@ -182,7 +181,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <summary>根据名字查找，支持路径查找</summary>
     /// <param name="name">名称</param>
     /// <returns></returns>
-    public static Menu FindForName(String name)
+    public static Menu? FindForName(String name)
     {
         var entity = FindByName(name);
         if (entity != null) return entity;
@@ -202,10 +201,10 @@ public partial class Menu : EntityTree<Menu>, IMenu
     public IList<IMenu> GetSubMenus(Int32[] filters, Boolean inclInvisible = false)
     {
         var list = Childs;
-        if (list == null || list.Count <= 0) return new List<IMenu>();
+        if (list == null || list.Count <= 0) return [];
 
         if (!inclInvisible) list = list.Where(e => e.Visible).ToList();
-        if (list == null || list.Count <= 0) return new List<IMenu>();
+        if (list == null || list.Count <= 0) return [];
 
         return list.Where(e => filters.Contains(e.ID)).Cast<IMenu>().ToList();
     }
@@ -215,7 +214,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <returns>实体列表</returns>
     public static IList<Menu> FindAllByName(String name)
     {
-        if (name.IsNullOrEmpty()) return new List<Menu>();
+        if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
@@ -261,12 +260,37 @@ public partial class Menu : EntityTree<Menu>, IMenu
 
         return entity;
     }
+    /// <summary>添加子菜单</summary>
+    /// <param name="name"></param>
+    /// <param name="displayName"></param>
+    /// <param name="fullName"></param>
+    /// <param name="url"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    public IMenu Add(String name, String displayName, String fullName, String url, MenuTypes type)
+    {
+        var entity = new Menu
+        {
+            Name = name,
+            DisplayName = displayName,
+            FullName = fullName,
+            Url = url,
+            ParentID = ID,
+
+            Type = type,
+            Visible = ID == 0 || displayName != null,
+        };
+
+        entity.Save();
+
+        return entity;
+    }
     #endregion
 
     #region 扩展权限
     /// <summary>可选权限子项</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Dictionary<Int32, String> Permissions { get; set; } = new Dictionary<Int32, String>();
+    public Dictionary<Int32, String> Permissions { get; set; } = [];
 
     private void LoadPermission()
     {
@@ -388,7 +412,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
             // 当前用户
             //var user = ManageProvider.Provider.Current as IUser;
             var rs = user?.Roles;
-            if (rs == null || rs.Length == 0) return new List<IMenu>();
+            if (rs == null || rs.Length == 0) return [];
 
             IMenu menu = null;
 
@@ -398,7 +422,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
             if (menu == null)
             {
                 menu = root;
-                if (menu == null || menu.Childs == null || menu.Childs.Count <= 0) return new List<IMenu>();
+                if (menu == null || menu.Childs == null || menu.Childs.Count <= 0) return [];
             }
 
             return menu.GetSubMenus(rs.SelectMany(e => e.Resources).ToArray(), inclInvisible);

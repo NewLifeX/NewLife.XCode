@@ -55,6 +55,7 @@ public class Menu : EntityController<Menu>
     protected override IEnumerable<Menu> Search(Pager p)
     {
         var parentId = p["parentId"].ToInt(-1);
+        var type = (XCode.Membership.MenuTypes)p["type"].ToInt(-1);
         var visible = p["visible"]?.ToBoolean();
         var necessary = p["necessary"]?.ToBoolean();
         var newWindow = p["newWindow"]?.ToBoolean();
@@ -62,6 +63,6 @@ public class Menu : EntityController<Menu>
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Menu.Search(parentId, visible, necessary, newWindow, start, end, p["Q"], p);
+        return Menu.Search(parentId, type, visible, necessary, newWindow, start, end, p["Q"], p);
     }
 }

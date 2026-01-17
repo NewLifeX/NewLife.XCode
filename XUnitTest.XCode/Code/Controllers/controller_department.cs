@@ -56,13 +56,14 @@ public class Department : EntityController<Department>
     {
         var tenantId = p["tenantId"].ToInt(-1);
         var parentId = p["parentId"].ToInt(-1);
-        var visible = p["visible"]?.ToBoolean();
         var managerId = p["managerId"].ToInt(-1);
+        var type = (XCode.Membership.DepartmentTypes)p["type"].ToInt(-1);
+        var visible = p["visible"]?.ToBoolean();
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Department.Search(tenantId, parentId, visible, managerId, enable, start, end, p["Q"], p);
+        return Department.Search(tenantId, parentId, managerId, type, visible, enable, start, end, p["Q"], p);
     }
 }

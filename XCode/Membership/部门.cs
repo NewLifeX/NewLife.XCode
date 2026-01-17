@@ -21,6 +21,7 @@ namespace XCode.Membership;
 [BindIndex("IX_Department_Name", false, "Name")]
 [BindIndex("IX_Department_ParentID_Name", false, "ParentID,Name")]
 [BindIndex("IX_Department_Code", false, "Code")]
+[BindIndex("IX_Department_ManagerId", false, "ManagerId")]
 [BindIndex("IX_Department_UpdateTime", false, "UpdateTime")]
 [BindTable("Department", Description = "部门。组织机构，多级树状结构，支持多租户", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class Department : IDepartment, IEntity<IDepartment>
@@ -41,6 +42,14 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     [DataObjectField(false, false, false, 0)]
     [BindColumn("TenantId", "租户", "")]
     public Int32 TenantId { get => _TenantId; set { if (OnPropertyChanging("TenantId", value)) { _TenantId = value; OnPropertyChanged("TenantId"); } } }
+
+    private XCode.Membership.DepartmentTypes _Type;
+    /// <summary>类型。1公司/2部门/3小组/4虚拟</summary>
+    [DisplayName("类型")]
+    [Description("类型。1公司/2部门/3小组/4虚拟")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Type", "类型。1公司/2部门/3小组/4虚拟", "")]
+    public XCode.Membership.DepartmentTypes Type { get => _Type; set { if (OnPropertyChanging("Type", value)) { _Type = value; OnPropertyChanged("Type"); } } }
 
     private String? _Code;
     /// <summary>代码</summary>
@@ -257,6 +266,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     {
         ID = model.ID;
         TenantId = model.TenantId;
+        Type = model.Type;
         Code = model.Code;
         Name = model.Name;
         FullName = model.FullName;
@@ -294,6 +304,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         {
             "ID" => _ID,
             "TenantId" => _TenantId,
+            "Type" => _Type,
             "Code" => _Code,
             "Name" => _Name,
             "FullName" => _FullName,
@@ -326,6 +337,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
             {
                 case "ID": _ID = value.ToInt(); break;
                 case "TenantId": _TenantId = value.ToInt(); break;
+                case "Type": _Type = (XCode.Membership.DepartmentTypes)value.ToInt(); break;
                 case "Code": _Code = Convert.ToString(value); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "FullName": _FullName = Convert.ToString(value); break;
@@ -376,6 +388,22 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     #endregion
 
     #region 扩展查询
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static Department? FindByID(Int32 id)
+    {
+        if (id < 0) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.ID == id);
+
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.ID == id);
+    }
+
     /// <summary>根据租户、父级、名称查找</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="parentId">父级</param>
@@ -388,9 +416,37 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
+    }
+
+    /// <summary>根据名称查找</summary>
+    /// <param name="name">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByName(String name)
+    {
+        if (name.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+
+        return FindAll(_.Name == name);
+    }
+
+    /// <summary>根据父级、名称查找</summary>
+    /// <param name="parentId">父级</param>
+    /// <param name="name">名称</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByParentIDAndName(Int32 parentId, String name)
+    {
+        if (parentId < 0) return [];
+        if (name.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+
+        return FindAll(_.ParentID == parentId & _.Name == name);
     }
 
     /// <summary>根据代码查找</summary>
@@ -401,9 +457,22 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (code == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
 
         return FindAll(_.Code == code);
+    }
+
+    /// <summary>根据管理者查找</summary>
+    /// <param name="managerId">管理者</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByManagerId(Int32 managerId)
+    {
+        if (managerId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ManagerId == managerId);
+
+        return FindAll(_.ManagerId == managerId);
     }
     #endregion
 
@@ -411,22 +480,24 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <summary>高级查询</summary>
     /// <param name="tenantId">租户</param>
     /// <param name="parentId">父级</param>
-    /// <param name="visible">可见</param>
     /// <param name="managerId">管理者</param>
+    /// <param name="type">类型。1公司/2部门/3小组/4虚拟</param>
+    /// <param name="visible">可见</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> Search(Int32 tenantId, Int32 parentId, Boolean? visible, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Department> Search(Int32 tenantId, Int32 parentId, Int32 managerId, XCode.Membership.DepartmentTypes type, Boolean? visible, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
         if (tenantId >= 0) exp &= _.TenantId == tenantId;
         if (parentId >= 0) exp &= _.ParentID == parentId;
-        if (visible != null) exp &= _.Visible == visible;
         if (managerId >= 0) exp &= _.ManagerId == managerId;
+        if (type >= 0) exp &= _.Type == type;
+        if (visible != null) exp &= _.Visible == visible;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
@@ -444,6 +515,9 @@ public partial class Department : IDepartment, IEntity<IDepartment>
 
         /// <summary>租户</summary>
         public static readonly Field TenantId = FindByName("TenantId");
+
+        /// <summary>类型。1公司/2部门/3小组/4虚拟</summary>
+        public static readonly Field Type = FindByName("Type");
 
         /// <summary>代码</summary>
         public static readonly Field Code = FindByName("Code");
@@ -528,6 +602,9 @@ public partial class Department : IDepartment, IEntity<IDepartment>
 
         /// <summary>租户</summary>
         public const String TenantId = "TenantId";
+
+        /// <summary>类型。1公司/2部门/3小组/4虚拟</summary>
+        public const String Type = "Type";
 
         /// <summary>代码</summary>
         public const String Code = "Code";

@@ -46,6 +46,14 @@ public partial class Tenant : ITenant, IEntity<ITenant>
     [BindColumn("Name", "名称。显示名称", "", Master = true)]
     public String Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
 
+    private XCode.Membership.TenantTypes _Type;
+    /// <summary>类型。1免费/2个人/3企业/4旗舰</summary>
+    [DisplayName("类型")]
+    [Description("类型。1免费/2个人/3企业/4旗舰")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Type", "类型。1免费/2个人/3企业/4旗舰", "")]
+    public XCode.Membership.TenantTypes Type { get => _Type; set { if (OnPropertyChanging("Type", value)) { _Type = value; OnPropertyChanged("Type"); } } }
+
     private Boolean _Enable;
     /// <summary>启用</summary>
     [DisplayName("启用")]
@@ -53,6 +61,14 @@ public partial class Tenant : ITenant, IEntity<ITenant>
     [DataObjectField(false, false, false, 0)]
     [BindColumn("Enable", "启用", "")]
     public Boolean Enable { get => _Enable; set { if (OnPropertyChanging("Enable", value)) { _Enable = value; OnPropertyChanged("Enable"); } } }
+
+    private Int32 _Level;
+    /// <summary>等级。租户级别或套餐版本，数字越大功能越多</summary>
+    [DisplayName("等级")]
+    [Description("等级。租户级别或套餐版本，数字越大功能越多")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("Level", "等级。租户级别或套餐版本，数字越大功能越多", "")]
+    public Int32 Level { get => _Level; set { if (OnPropertyChanging("Level", value)) { _Level = value; OnPropertyChanged("Level"); } } }
 
     private Int32 _ManagerId;
     /// <summary>管理者</summary>
@@ -77,6 +93,30 @@ public partial class Tenant : ITenant, IEntity<ITenant>
     [DataObjectField(false, false, true, 50)]
     [BindColumn("Logo", "图标。附件路径", "", ItemType = "image")]
     public String? Logo { get => _Logo; set { if (OnPropertyChanging("Logo", value)) { _Logo = value; OnPropertyChanged("Logo"); } } }
+
+    private String? _Domain;
+    /// <summary>域名。绑定的独立域名</summary>
+    [DisplayName("域名")]
+    [Description("域名。绑定的独立域名")]
+    [DataObjectField(false, false, true, 200)]
+    [BindColumn("Domain", "域名。绑定的独立域名", "")]
+    public String? Domain { get => _Domain; set { if (OnPropertyChanging("Domain", value)) { _Domain = value; OnPropertyChanged("Domain"); } } }
+
+    private Int32 _MaxUsers;
+    /// <summary>用户数上限。该租户最大允许用户数，0表示不限制</summary>
+    [DisplayName("用户数上限")]
+    [Description("用户数上限。该租户最大允许用户数，0表示不限制")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MaxUsers", "用户数上限。该租户最大允许用户数，0表示不限制", "")]
+    public Int32 MaxUsers { get => _MaxUsers; set { if (OnPropertyChanging("MaxUsers", value)) { _MaxUsers = value; OnPropertyChanged("MaxUsers"); } } }
+
+    private Int64 _MaxStorage;
+    /// <summary>存储上限。该租户最大允许存储字节数，0表示不限制</summary>
+    [DisplayName("存储上限")]
+    [Description("存储上限。该租户最大允许存储字节数，0表示不限制")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("MaxStorage", "存储上限。该租户最大允许存储字节数，0表示不限制", "")]
+    public Int64 MaxStorage { get => _MaxStorage; set { if (OnPropertyChanging("MaxStorage", value)) { _MaxStorage = value; OnPropertyChanged("MaxStorage"); } } }
 
     private String? _DatabaseName;
     /// <summary>数据库。分库用的数据库名</summary>
@@ -174,10 +214,15 @@ public partial class Tenant : ITenant, IEntity<ITenant>
         Id = model.Id;
         Code = model.Code;
         Name = model.Name;
+        Type = model.Type;
         Enable = model.Enable;
+        Level = model.Level;
         ManagerId = model.ManagerId;
         RoleIds = model.RoleIds;
         Logo = model.Logo;
+        Domain = model.Domain;
+        MaxUsers = model.MaxUsers;
+        MaxStorage = model.MaxStorage;
         DatabaseName = model.DatabaseName;
         TableName = model.TableName;
         Expired = model.Expired;
@@ -196,10 +241,15 @@ public partial class Tenant : ITenant, IEntity<ITenant>
             "Id" => _Id,
             "Code" => _Code,
             "Name" => _Name,
+            "Type" => _Type,
             "Enable" => _Enable,
+            "Level" => _Level,
             "ManagerId" => _ManagerId,
             "RoleIds" => _RoleIds,
             "Logo" => _Logo,
+            "Domain" => _Domain,
+            "MaxUsers" => _MaxUsers,
+            "MaxStorage" => _MaxStorage,
             "DatabaseName" => _DatabaseName,
             "TableName" => _TableName,
             "Expired" => _Expired,
@@ -219,10 +269,15 @@ public partial class Tenant : ITenant, IEntity<ITenant>
                 case "Id": _Id = value.ToInt(); break;
                 case "Code": _Code = Convert.ToString(value); break;
                 case "Name": _Name = Convert.ToString(value); break;
+                case "Type": _Type = (XCode.Membership.TenantTypes)value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
+                case "Level": _Level = value.ToInt(); break;
                 case "ManagerId": _ManagerId = value.ToInt(); break;
                 case "RoleIds": _RoleIds = Convert.ToString(value); break;
                 case "Logo": _Logo = Convert.ToString(value); break;
+                case "Domain": _Domain = Convert.ToString(value); break;
+                case "MaxUsers": _MaxUsers = value.ToInt(); break;
+                case "MaxStorage": _MaxStorage = value.ToLong(); break;
                 case "DatabaseName": _DatabaseName = Convert.ToString(value); break;
                 case "TableName": _TableName = Convert.ToString(value); break;
                 case "Expired": _Expired = value.ToDateTime(); break;
@@ -265,6 +320,32 @@ public partial class Tenant : ITenant, IEntity<ITenant>
     }
     #endregion
 
+    #region 高级查询
+    /// <summary>高级查询</summary>
+    /// <param name="code">编码。唯一编码</param>
+    /// <param name="type">类型。1免费/2个人/3企业/4旗舰</param>
+    /// <param name="managerId">管理者</param>
+    /// <param name="enable">启用</param>
+    /// <param name="start">更新时间开始</param>
+    /// <param name="end">更新时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<Tenant> Search(String? code, XCode.Membership.TenantTypes type, Int32 managerId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+
+        if (!code.IsNullOrEmpty()) exp &= _.Code == code;
+        if (type >= 0) exp &= _.Type == type;
+        if (managerId >= 0) exp &= _.ManagerId == managerId;
+        if (enable != null) exp &= _.Enable == enable;
+        exp &= _.UpdateTime.Between(start, end);
+        if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
+
+        return FindAll(exp, page);
+    }
+    #endregion
+
     #region 字段名
     /// <summary>取得租户字段信息的快捷方式</summary>
     public partial class _
@@ -278,8 +359,14 @@ public partial class Tenant : ITenant, IEntity<ITenant>
         /// <summary>名称。显示名称</summary>
         public static readonly Field Name = FindByName("Name");
 
+        /// <summary>类型。1免费/2个人/3企业/4旗舰</summary>
+        public static readonly Field Type = FindByName("Type");
+
         /// <summary>启用</summary>
         public static readonly Field Enable = FindByName("Enable");
+
+        /// <summary>等级。租户级别或套餐版本，数字越大功能越多</summary>
+        public static readonly Field Level = FindByName("Level");
 
         /// <summary>管理者</summary>
         public static readonly Field ManagerId = FindByName("ManagerId");
@@ -289,6 +376,15 @@ public partial class Tenant : ITenant, IEntity<ITenant>
 
         /// <summary>图标。附件路径</summary>
         public static readonly Field Logo = FindByName("Logo");
+
+        /// <summary>域名。绑定的独立域名</summary>
+        public static readonly Field Domain = FindByName("Domain");
+
+        /// <summary>用户数上限。该租户最大允许用户数，0表示不限制</summary>
+        public static readonly Field MaxUsers = FindByName("MaxUsers");
+
+        /// <summary>存储上限。该租户最大允许存储字节数，0表示不限制</summary>
+        public static readonly Field MaxStorage = FindByName("MaxStorage");
 
         /// <summary>数据库。分库用的数据库名</summary>
         public static readonly Field DatabaseName = FindByName("DatabaseName");
@@ -335,8 +431,14 @@ public partial class Tenant : ITenant, IEntity<ITenant>
         /// <summary>名称。显示名称</summary>
         public const String Name = "Name";
 
+        /// <summary>类型。1免费/2个人/3企业/4旗舰</summary>
+        public const String Type = "Type";
+
         /// <summary>启用</summary>
         public const String Enable = "Enable";
+
+        /// <summary>等级。租户级别或套餐版本，数字越大功能越多</summary>
+        public const String Level = "Level";
 
         /// <summary>管理者</summary>
         public const String ManagerId = "ManagerId";
@@ -346,6 +448,15 @@ public partial class Tenant : ITenant, IEntity<ITenant>
 
         /// <summary>图标。附件路径</summary>
         public const String Logo = "Logo";
+
+        /// <summary>域名。绑定的独立域名</summary>
+        public const String Domain = "Domain";
+
+        /// <summary>用户数上限。该租户最大允许用户数，0表示不限制</summary>
+        public const String MaxUsers = "MaxUsers";
+
+        /// <summary>存储上限。该租户最大允许存储字节数，0表示不限制</summary>
+        public const String MaxStorage = "MaxStorage";
 
         /// <summary>数据库。分库用的数据库名</summary>
         public const String DatabaseName = "DatabaseName";

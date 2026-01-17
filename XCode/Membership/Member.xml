@@ -9,6 +9,8 @@
     <BaseClass>Entity</BaseClass>
     <!--命名空间-->
     <Namespace>XCode.Membership</Namespace>
+    <!--引用命名空间-->
+    <ExtendNameSpace />
     <!--输出目录-->
     <Output>.\</Output>
     <!--是否使用中文文件名。默认false-->
@@ -92,7 +94,7 @@
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="TenantId" DataType="Int32" Map="Tenant@Id@$" Description="租户" />
-        <Column Name="Type" DataType="Int32" Description="类型。0公司/1部门/2小组/3虚拟" Type="XCode.Membership.DepartmentTypes" />
+        <Column Name="Type" DataType="Int32" Description="类型。1公司/2部门/3小组/4虚拟" Type="XCode.Membership.DepartmentTypes" />
         <Column Name="Code" DataType="String" ShowIn="11110" Description="代码" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="FullName" DataType="String" Length="200" Description="全名" />
@@ -123,6 +125,7 @@
         <Index Columns="Name" />
         <Index Columns="ParentID,Name" />
         <Index Columns="Code" />
+        <Index Columns="ManagerId" />
         <Index Columns="UpdateTime" />
       </Indexes>
     </Table>
@@ -130,7 +133,7 @@
       <Columns>
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
-        <Column Name="Type" DataType="Int32" Description="类型。0系统/1普通/2租户" Type="XCode.Membership.RoleTypes" />
+        <Column Name="Type" DataType="Int32" Description="类型。1系统/2普通/3租户" Type="XCode.Membership.RoleTypes" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="IsSystem" DataType="Boolean" Description="系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除" />
         <Column Name="TenantId" DataType="Int32" Map="Tenant@Id@$" Description="租户。角色所属组合，0表示全局角色" />
@@ -164,7 +167,7 @@
         <Column Name="ID" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称" />
         <Column Name="DisplayName" DataType="String" Description="显示名" />
-        <Column Name="Type" DataType="Int32" Description="类型。0目录/1菜单/2功能" Type="XCode.Membership.MenuTypes" />
+        <Column Name="Type" DataType="Int32" Description="类型。1目录/2菜单/3功能" Type="XCode.Membership.MenuTypes" />
         <Column Name="FullName" DataType="String" Length="200" Description="全名" />
         <Column Name="ParentID" DataType="Int32" Description="父编号" />
         <Column Name="Url" DataType="String" Length="200" Description="链接" />
@@ -289,7 +292,7 @@
         <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="编号" />
         <Column Name="Code" DataType="String" Description="编码。唯一编码" />
         <Column Name="Name" DataType="String" Master="True" Nullable="False" Description="名称。显示名称" />
-        <Column Name="Type" DataType="Int32" Description="类型。0免费/1个人/2企业/3旗舰" Type="XCode.Membership.TenantTypes" />
+        <Column Name="Type" DataType="Int32" Description="类型。1免费/2个人/3企业/4旗舰" Type="XCode.Membership.TenantTypes" />
         <Column Name="Enable" DataType="Boolean" Description="启用" />
         <Column Name="Level" DataType="Int32" Description="等级。租户级别或套餐版本，数字越大功能越多" />
         <Column Name="ManagerId" DataType="Int32" Map="User@Id@$" Description="管理者" />

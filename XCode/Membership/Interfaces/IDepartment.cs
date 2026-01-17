@@ -17,6 +17,9 @@ public partial interface IDepartment
     /// <summary>租户</summary>
     Int32 TenantId { get; set; }
 
+    /// <summary>类型。1公司/2部门/3小组/4虚拟</summary>
+    XCode.Membership.DepartmentTypes Type { get; set; }
+
     /// <summary>代码</summary>
     String? Code { get; set; }
 

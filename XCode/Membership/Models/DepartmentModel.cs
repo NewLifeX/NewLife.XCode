@@ -20,6 +20,9 @@ public partial class DepartmentModel : IModel
     /// <summary>租户</summary>
     public Int32 TenantId { get; set; }
 
+    /// <summary>类型。1公司/2部门/3小组/4虚拟</summary>
+    public XCode.Membership.DepartmentTypes Type { get; set; }
+
     /// <summary>代码</summary>
     public String? Code { get; set; }
 
@@ -105,6 +108,7 @@ public partial class DepartmentModel : IModel
             {
                 "ID" => ID,
                 "TenantId" => TenantId,
+                "Type" => Type,
                 "Code" => Code,
                 "Name" => Name,
                 "FullName" => FullName,
@@ -138,6 +142,7 @@ public partial class DepartmentModel : IModel
             {
                 case "ID": ID = value.ToInt(); break;
                 case "TenantId": TenantId = value.ToInt(); break;
+                case "Type": Type = (XCode.Membership.DepartmentTypes)value; break;
                 case "Code": Code = Convert.ToString(value); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "FullName": FullName = Convert.ToString(value); break;
@@ -175,6 +180,7 @@ public partial class DepartmentModel : IModel
     {
         ID = model.ID;
         TenantId = model.TenantId;
+        Type = model.Type;
         Code = model.Code;
         Name = model.Name;
         FullName = model.FullName;

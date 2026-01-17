@@ -1,24 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Security.Authentication;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using NewLife;
-using NewLife.Caching;
 using NewLife.Configuration;
-using NewLife.Data;
-using NewLife.Http;
 using NewLife.Log;
-using NewLife.Net;
-using NewLife.Remoting;
-using NewLife.Security;
 using NewLife.Serialization;
 using Stardust;
 using XCode;
@@ -130,20 +117,13 @@ public class Program
     [StackTraceHidden]
     private static void Test3()
     {
-        //var list = User.FindAll();
-        //XTrace.WriteLine(list.ToJson());
-
-        //list = User.FindAll(null, null, null, 3, 7);
-
-        //var p = new Parameter
-        //{
-        //    Name = "test",
-        //    Value = "NewLife",
-        //};
-        //p.Insert();
+        //var dps = Department.FindAll();
+        //XTrace.WriteLine("Departments: {0}", dps.ToJson(true));
 
         var list = Role.FindAll();
         XTrace.WriteLine("Roles: {0}", list.Count);
+        list.Save();
+        XTrace.WriteLine("Roles: {0}", list.ToJson(new JsonOptions { WriteIndented = true, EnumString = true }));
 
         //var dal = Role.Meta.Session.Dal;
         var f = "data/mb2.db".GetFullPath();

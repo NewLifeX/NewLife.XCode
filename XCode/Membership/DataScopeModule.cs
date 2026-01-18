@@ -84,6 +84,24 @@ public class DataScopeModule : EntityModule
         // 全部权限可插入任意数据
         if (ctx.DataScope == DataScopes.全部) return true;
 
+        // 校验用户归属
+        if (entity is IUserScope userScope)
+        {
+            // 新增时如果没有设置用户，自动设置为当前用户
+            if (userScope.UserId <= 0)
+            {
+                userScope.UserId = ctx.UserId;
+            }
+            else
+            {
+                // 检查是否有权为该用户创建数据
+                if (!DataScopeHelper.CanAccess(userScope, ctx))
+                {
+                    throw new InvalidOperationException($"无权为用户[{userScope.UserId}]创建数据");
+                }
+            }
+        }
+
         // 校验部门归属
         if (entity is IDepartmentScope deptScope)
         {

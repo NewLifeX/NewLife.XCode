@@ -170,7 +170,7 @@ public class WhereBuilder
         if (exp.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Expression));
 
         // 支持租户模式检查
-        if (entity is ITenantSource source)
+        if (entity is ITenantScope source)
         {
             var ctx = TenantContext.Current;
             if (ctx == null || ctx.TenantId != source.TenantId) return false;

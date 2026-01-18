@@ -6,7 +6,7 @@ using NewLife.Log;
 namespace XCode.Membership;
 
 [ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
-public partial class Tenant : Entity<Tenant>, ITenantSource
+public partial class Tenant : Entity<Tenant>, ITenantScope
 {
     #region 对象操作
 
@@ -68,7 +68,7 @@ public partial class Tenant : Entity<Tenant>, ITenantSource
     [Map(__.RoleIds)]
     public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
 
-    Int32 ITenantSource.TenantId { get => Id; set => Id = value; }
+    Int32 ITenantScope.TenantId { get => Id; set => Id = value; }
 
     #endregion 扩展属性
 

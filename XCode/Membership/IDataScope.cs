@@ -35,7 +35,7 @@ public interface IDataScope : IUserScope, IDepartmentScope { }
 
 /// <summary>可自定义数据权限字段的接口</summary>
 /// <remarks>
-/// 当实体的用户字段名不是 UserId 或部门字段名不是 DepartmentId 时，
+/// 当实体的用户字段名不是 UserId、部门字段名不是 DepartmentId、租户字段名不是 TenantId 时，
 /// 实体类可以额外实现此接口来指定实际的字段
 /// </remarks>
 public interface IDataScopeFieldProvider
@@ -45,6 +45,9 @@ public interface IDataScopeFieldProvider
 
     /// <summary>获取部门字段。返回 null 表示使用默认的 DepartmentId</summary>
     FieldItem? GetDepartmentField();
+
+    /// <summary>获取租户字段。返回 null 表示使用默认的 TenantId</summary>
+    FieldItem? GetTenantField();
 }
 
 /// <summary>字段级权限接口。标识实体包含需要字段级权限控制的敏感字段</summary>

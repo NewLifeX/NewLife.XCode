@@ -9,7 +9,7 @@ using NewLife.Log;
 namespace XCode.Membership;
 
 /// <summary>部门。组织机构，多级树状结构</summary>
-public partial class Department : Entity<Department>, ITenantSource
+public partial class Department : Entity<Department>, ITenantScope
 {
     #region 对象操作
     private static Int32 MaxCacheCount = 10000;

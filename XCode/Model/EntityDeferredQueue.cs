@@ -31,7 +31,7 @@ namespace XCode.Model
         public EntityActions Action { get; set; } = EntityActions.Save;
 
         /// <summary>数据会话，分表分库时使用</summary>
-        public IEntitySession Session { get; set; }
+        public IEntitySession? Session { get; set; }
 
         /// <summary>最大单行保存大小。大于该值时才采用批量保存，默认2</summary>
         public Int32 MaxSingle { get; set; } = 2;

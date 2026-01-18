@@ -54,7 +54,7 @@ public class ConcatExpression : Expression
     /// <param name="builder">字符串构建器</param>
     /// <param name="ps">参数字典</param>
     /// <returns></returns>
-    public override void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object>? ps)
+    public override void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object?>? ps)
     {
         var exps = Expressions;
         if (exps == null || exps.Count == 0) return;

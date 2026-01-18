@@ -82,7 +82,7 @@ public static class ExtractSettingHelper
     /// <param name="set"></param>
     public static IExtractSetting Copy(this IExtractSetting src, IExtractSetting set)
     {
-        if (src == null || set == null) return src;
+        if (src == null || set == null) return src!;
 
         src.Start = set.Start;
         src.End = set.End;

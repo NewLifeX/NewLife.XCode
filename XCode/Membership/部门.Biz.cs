@@ -161,7 +161,7 @@ public partial class Department : Entity<Department>, ITenantScope
     /// <param name="name">名称</param>
     /// <param name="parentid">父级</param>
     /// <returns>实体对象</returns>
-    public static Department FindByNameAndParentID(String name, Int32 parentid)
+    public static Department? FindByNameAndParentID(String name, Int32 parentid)
     {
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name == name && e.ParentID == parentid);

@@ -31,22 +31,22 @@ public abstract class ExtracterBase
     public String Name { get; set; }
 
     /// <summary>实体工厂</summary>
-    public IEntityFactory Factory { get; set; }
+    public IEntityFactory? Factory { get; set; }
 
     /// <summary>获取 或 设置 时间字段</summary>
-    public String FieldName { get; set; }
+    public String? FieldName { get; set; }
 
     /// <summary>附加条件</summary>
-    public String Where { get; set; }
+    public String? Where { get; set; }
 
     /// <summary>时间字段</summary>
-    public FieldItem Field { get; set; }
+    public FieldItem? Field { get; set; }
 
     /// <summary>排序</summary>
-    public String OrderBy { get; set; }
+    public String? OrderBy { get; set; }
 
     /// <summary>选择列</summary>
-    public String Selects { get; set; }
+    public String? Selects { get; set; }
     #endregion
 
     #region 构造

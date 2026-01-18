@@ -11,13 +11,13 @@ public class IdExtracter : IExtracter<DbTable>
 {
     #region 属性
     /// <summary>数据层</summary>
-    public DAL Dal { get; set; }
+    public DAL Dal { get; set; } = null!;
 
     /// <summary>查询表达式</summary>
-    public SelectBuilder Builder { get; set; }
+    public SelectBuilder Builder { get; set; } = null!;
 
     /// <summary>Id字段</summary>
-    public IDataColumn Field { get; set; }
+    public IDataColumn Field { get; set; } = null!;
 
     /// <summary>开始行。默认0</summary>
     public Int64 Row { get; set; }

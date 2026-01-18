@@ -918,7 +918,10 @@ public class EntityBuilder : ClassBuilder
             WriteLine("public static readonly Field {0} = FindByName(\"{0}\");", column.Name);
             WriteLine();
         }
-        WriteLine("static Field FindByName(String name) => Meta.Table.FindByName(name);");
+        if (Option.Nullable)
+            WriteLine("static Field FindByName(String name) => Meta.Table.FindByName(name)!;");
+        else
+            WriteLine("static Field FindByName(String name) => Meta.Table.FindByName(name);");
         WriteLine("}");
 
         WriteLine();

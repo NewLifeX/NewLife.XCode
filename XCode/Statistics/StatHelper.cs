@@ -5,7 +5,7 @@ namespace XCode.Statistics;
 /// <summary>统计助手类</summary>
 public static class StatHelper
 {
-    private static String _Last;
+    private static String? _Last;
     /// <summary>获取 或 新增 统计对象</summary>
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TModel"></typeparam>
@@ -13,7 +13,7 @@ public static class StatHelper
     /// <param name="find"></param>
     /// <param name="onCreate"></param>
     /// <returns></returns>
-    public static TEntity GetOrAdd<TEntity, TModel>(TModel model, Func<TModel, Boolean, TEntity> find, Action<TEntity> onCreate = null)
+    public static TEntity? GetOrAdd<TEntity, TModel>(TModel model, Func<TModel, Boolean, TEntity> find, Action<TEntity>? onCreate = null)
         where TModel : StatModel
         where TEntity : Entity<TEntity>, IStat, new()
     {
@@ -64,7 +64,7 @@ public static class StatHelper
             }
         }
 
-        if (st != null) st.UpdateTime = DateTime.Now;
+        st?.UpdateTime = DateTime.Now;
 
         return st;
     }

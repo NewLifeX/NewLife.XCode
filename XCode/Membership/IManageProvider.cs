@@ -49,12 +49,12 @@ public interface IManageProvider : IServiceProvider
     /// <summary>根据用户编号查找</summary>
     /// <param name="userid"></param>
     /// <returns></returns>
-    IManageUser FindByID(Object userid);
+    IManageUser? FindByID(Object userid);
 
     /// <summary>根据用户帐号查找</summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    IManageUser FindByName(String name);
+    IManageUser? FindByName(String name);
 
     /// <summary>登录</summary>
     /// <param name="username"></param>
@@ -151,12 +151,12 @@ public abstract class ManageProvider : IManageProvider
     /// <summary>获取当前用户</summary>
     /// <param name="context"></param>
     /// <returns></returns>
-    public abstract IManageUser GetCurrent(IServiceProvider context = null);
+    public abstract IManageUser GetCurrent(IServiceProvider? context = null);
 
     /// <summary>设置当前用户</summary>
     /// <param name="user"></param>
     /// <param name="context"></param>
-    public abstract void SetCurrent(IManageUser user, IServiceProvider context = null);
+    public abstract void SetCurrent(IManageUser user, IServiceProvider? context = null);
 
     ///// <summary>获取当前用户租户</summary>
     ///// <returns></returns>
@@ -170,12 +170,12 @@ public abstract class ManageProvider : IManageProvider
     /// <summary>根据用户编号查找</summary>
     /// <param name="userid"></param>
     /// <returns></returns>
-    public virtual IManageUser FindByID(Object userid) => Membership.User.FindByID((userid + "").ToInt(-1));
+    public virtual IManageUser? FindByID(Object userid) => Membership.User.FindByID((userid + "").ToInt(-1));
 
     /// <summary>根据用户帐号查找</summary>
     /// <param name="name"></param>
     /// <returns></returns>
-    public virtual IManageUser FindByName(String name) => Membership.User.FindForLogin(name);
+    public virtual IManageUser? FindByName(String name) => Membership.User.FindForLogin(name);
 
     /// <summary>登录</summary>
     /// <param name="username"></param>

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
 using XCode.DataAccessLayer;
@@ -21,7 +20,7 @@ public abstract class CacheBase<TEntity> : CacheBase where TEntity : Entity<TEnt
     #endregion
 
     /// <summary>调用委托方法前设置连接名和表名，调用后还原</summary>
-    internal TResult? Invoke<T, TResult>(Func<T, TResult> callback, T arg)
+    internal TResult? Invoke<T, TResult>(Func<T, TResult?> callback, T arg)
     {
         var cn = Entity<TEntity>.Meta.ConnName;
         var tn = Entity<TEntity>.Meta.TableName;

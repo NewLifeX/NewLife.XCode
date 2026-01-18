@@ -82,13 +82,13 @@ public interface ISingleEntityCache<TKey, TEntity> : ISingleEntityCache where TE
     Func<TEntity, TKey> GetKeyMethod { get; set; }
 
     /// <summary>查找数据的方法</summary>
-    Func<TKey, TEntity> FindKeyMethod { get; set; }
+    Func<TKey, TEntity?> FindKeyMethod { get; set; }
 
     /// <summary>从键是否区分大小写</summary>
     Boolean SlaveKeyIgnoreCase { get; set; }
 
     /// <summary>根据从键查找数据的方法</summary>
-    Func<String, TEntity>? FindSlaveKeyMethod { get; set; }
+    Func<String, TEntity?>? FindSlaveKeyMethod { get; set; }
 
     /// <summary>获取缓存从键的方法，默认为空</summary>
     Func<TEntity, String>? GetSlaveKeyMethod { get; set; }

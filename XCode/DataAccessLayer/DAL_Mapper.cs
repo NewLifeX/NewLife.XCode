@@ -51,7 +51,7 @@ public partial class DAL
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns></returns>
-    public IEnumerable<T> Query<T>(String sql, Object param, Int64 startRowIndex, Int64 maximumRows)
+    public IEnumerable<T> Query<T>(String sql, Object? param, Int64 startRowIndex, Int64 maximumRows)
     {
         if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
@@ -70,7 +70,7 @@ public partial class DAL
     /// <param name="param">参数对象</param>
     /// <param name="page">分页参数</param>
     /// <returns></returns>
-    public IEnumerable<T> Query<T>(String sql, Object param, PageParameter page)
+    public IEnumerable<T> Query<T>(String sql, Object? param, PageParameter page)
     {
         if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 

@@ -97,7 +97,7 @@ public partial class Parameter : Entity<Parameter>
     /// <param name="name"></param>
     /// <param name="defaultValue"></param>
     /// <returns></returns>
-    public static Parameter GetOrAdd(Int32 userId, String category, String name, String defaultValue = null)
+    public static Parameter GetOrAdd(Int32 userId, String category, String name, String? defaultValue = null)
     {
         var list = FindAllByUserID(userId);
         var p = list.FirstOrDefault(e => e.Category == category && e.Name == name);

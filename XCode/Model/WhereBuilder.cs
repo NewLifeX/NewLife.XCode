@@ -18,10 +18,10 @@ public class WhereBuilder
 {
     #region 属性
     /// <summary>实体工厂</summary>
-    public IEntityFactory Factory { get; set; }
+    public IEntityFactory? Factory { get; set; }
 
     /// <summary>表达式语句</summary>
-    public String Expression { get; set; }
+    public String? Expression { get; set; }
 
     /// <summary>数据源。{$name}访问</summary>
     public IDictionary<String, Object> Data { get; set; }

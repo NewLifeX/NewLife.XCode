@@ -145,7 +145,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>根据编号查找</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    public static User FindByID(Int32 id)
+    public static User? FindByID(Int32 id)
     {
         if (id <= 0) return null;
 
@@ -158,7 +158,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>根据名称查找</summary>
     /// <param name="name">名称</param>
     /// <returns></returns>
-    public static User FindByName(String name)
+    public static User? FindByName(String name)
     {
         if (name.IsNullOrEmpty()) return null;
 
@@ -171,7 +171,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>根据邮箱地址查找</summary>
     /// <param name="mail"></param>
     /// <returns></returns>
-    public static User FindByMail(String mail)
+    public static User? FindByMail(String mail)
     {
         if (mail.IsNullOrEmpty()) return null;
 
@@ -183,7 +183,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>根据手机号码查找</summary>
     /// <param name="mobile"></param>
     /// <returns></returns>
-    public static User FindByMobile(String mobile)
+    public static User? FindByMobile(String mobile)
     {
         if (mobile.IsNullOrEmpty()) return null;
 
@@ -195,7 +195,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>根据唯一代码查找</summary>
     /// <param name="code"></param>
     /// <returns></returns>
-    public static User FindByCode(String code)
+    public static User? FindByCode(String code)
     {
         if (code.IsNullOrEmpty()) return null;
 
@@ -207,7 +207,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>为登录而查找账号，搜索名称、邮箱、手机、代码</summary>
     /// <param name="account"></param>
     /// <returns></returns>
-    public static User FindForLogin(String account)
+    public static User? FindForLogin(String account)
     {
         if (account.IsNullOrEmpty()) return null;
 
@@ -310,7 +310,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <param name="key">关键字，搜索代码、名称、昵称、手机、邮箱</param>
     /// <param name="page"></param>
     /// <returns></returns>
-    public static IList<User> Search(Int32[] roleIds, Int32[] departmentIds, Int32[] areaIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<User> Search(Int32[]? roleIds, Int32[]? departmentIds, Int32[]? areaIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
         if (roleIds != null && roleIds.Length > 0)
@@ -376,7 +376,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <param name="roleid"></param>
     /// <param name="display"></param>
     /// <returns></returns>
-    public static User Add(String name, String pass, Int32 roleid = 1, String display = null)
+    public static User Add(String name, String? pass, Int32 roleid = 1, String? display = null)
     {
         //var entity = Find(_.Name == name);
         //if (entity != null) return entity;
@@ -404,7 +404,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>
     /// 修正地区
     /// </summary>
-    public void FixArea(String ip)
+    public void FixArea(String? ip)
     {
         if (ip.IsNullOrEmpty()) return;
 
@@ -604,11 +604,11 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>角色</summary>
     /// <remarks>扩展属性不缓存空对象，一般来说，每个管理员都有对应的角色，如果没有，可能是在初始化</remarks>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    IRole IUser.Role => Role;
+    IRole? IUser.Role => Role;
 
     /// <summary>角色集合</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).ToArray());
+    public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Cast<IRole>().ToArray()) ?? [];
 
     /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>
     /// <returns></returns>
@@ -637,7 +637,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
 
     /// <summary>角色组名</summary>
     [Map(__.RoleIds)]
-    public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
+    public virtual String? RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Cast<IRole>().Select(e => e.Name).Join());
 
     /// <summary>用户是否拥有当前菜单的指定权限</summary>
     /// <param name="menu">指定菜单</param>
@@ -675,7 +675,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
 
     #region IManageUser 成员
     /// <summary>昵称</summary>
-    String IManageUser.NickName { get => DisplayName; set => DisplayName = value; }
+    String? IManageUser.NickName { get => DisplayName; set => DisplayName = value; }
 
     String IIdentity.Name => Name;
 
@@ -705,7 +705,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
 public partial interface IUser
 {
     /// <summary>角色</summary>
-    IRole Role { get; }
+    IRole? Role { get; }
 
     /// <summary>角色集合</summary>
     IRole[] Roles { get; }

@@ -68,7 +68,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
 
     /// <summary>角色</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    IRole ITenantUser.Role => Role;
+    IRole? ITenantUser.Role => Role;
 
     ///// <summary>角色</summary>
     //[Map(nameof(RoleId), typeof(Role), "ID")]
@@ -76,7 +76,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
 
     /// <summary>角色集合</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).ToArray());
+    public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Cast<IRole>().ToArray()) ?? [];
 
     /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>
     /// <returns></returns>
@@ -90,7 +90,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
 
     /// <summary>角色组名</summary>
     [Map(__.RoleIds)]
-    public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
+    public virtual String? RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Cast<IRole>().Select(e => e.Name).Join());
 
     //public virtual String RoleName => Extends.Get(nameof(RoleName), k => ManageProvider.Get<IRole>()?.FindByID(k).Name);
 
@@ -101,7 +101,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static TenantUser FindById(Int32 id)
+    public static TenantUser? FindById(Int32 id)
     {
         if (id <= 0) return null;
 
@@ -118,7 +118,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
     /// <param name="tenantId">租户</param>
     /// <param name="userId">用户</param>
     /// <returns>实体对象</returns>
-    public static TenantUser FindByTenantIdAndUserId(Int32 tenantId, Int32 userId)
+    public static TenantUser? FindByTenantIdAndUserId(Int32 tenantId, Int32 userId)
     {
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.UserId == userId);
@@ -261,7 +261,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
 public partial interface ITenantUser
 {
     /// <summary>角色</summary>
-    IRole Role { get; }
+    IRole? Role { get; }
 
     /// <summary>角色集合</summary>
     IRole[] Roles { get; }

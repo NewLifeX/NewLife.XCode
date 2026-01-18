@@ -226,7 +226,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <param name="parentId">父编号</param>
     /// <param name="name">名称</param>
     /// <returns>实体对象</returns>
-    public static Menu FindByParentIDAndName(Int32 parentId, String name)
+    public static Menu? FindByParentIDAndName(Int32 parentId, String name)
     {
 
         // 实体缓存
@@ -352,9 +352,9 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <param name="separator">分隔符</param>
     /// <param name="func">回调</param>
     /// <returns></returns>
-    String IMenu.GetFullPath(Boolean includeSelf, String separator, Func<IMenu, String> func)
+    String? IMenu.GetFullPath(Boolean includeSelf, String separator, Func<IMenu, String> func)
     {
-        Func<Menu, String> d = null;
+        Func<Menu, String>? d = null;
         if (func != null) d = item => func(item);
 
         return GetFullPath(includeSelf, separator, d);
@@ -363,7 +363,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
     //IMenu IMenu.Add(String name, String displayName, String fullName, String url) => Add(name, displayName, fullName, url);
 
     /// <summary>父菜单</summary>
-    IMenu IMenu.Parent => Parent;
+    IMenu? IMenu.Parent => Parent;
 
     /// <summary>子菜单</summary>
     IList<IMenu> IMenu.Childs => Childs.OfType<IMenu>().ToList();
@@ -374,7 +374,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <summary>根据层次路径查找</summary>
     /// <param name="path">层次路径</param>
     /// <returns></returns>
-    IMenu IMenu.FindByPath(String path) => FindByPath(path, _.Name, _.DisplayName);
+    IMenu? IMenu.FindByPath(String path) => FindByPath(path, _.Name, _.DisplayName);
     #endregion
 
     #region 菜单工厂
@@ -387,7 +387,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
         /// <summary>根据编号找到菜单</summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        IMenu IMenuFactory.FindByID(Int32 id) => FindByID(id);
+        IMenu? IMenuFactory.FindByID(Int32 id) => FindByID(id);
 
         /// <summary>根据Url找到菜单</summary>
         /// <param name="url"></param>
@@ -414,7 +414,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
             var rs = user?.Roles;
             if (rs == null || rs.Length == 0) return [];
 
-            IMenu menu = null;
+            IMenu? menu = null;
 
             // 找到菜单
             if (menuid > 0) menu = FindByID(menuid);
@@ -440,7 +440,7 @@ public partial interface IMenu
     /// <param name="separator">分隔符</param>
     /// <param name="func">回调</param>
     /// <returns></returns>
-    String GetFullPath(Boolean includeSelf, String separator, Func<IMenu, String> func);
+    String? GetFullPath(Boolean includeSelf, String separator, Func<IMenu, String> func);
 
     /// <summary>添加子菜单</summary>
     /// <param name="name"></param>
@@ -451,7 +451,7 @@ public partial interface IMenu
     IMenu Add(String name, String displayName, String fullName, String url);
 
     /// <summary>父菜单</summary>
-    IMenu Parent { get; }
+    IMenu? Parent { get; }
 
     /// <summary>子菜单</summary>
     IList<IMenu> Childs { get; }
@@ -462,7 +462,7 @@ public partial interface IMenu
     /// <summary>根据层次路径查找。因为需要指定在某个菜单子级查找路径，所以是成员方法而不是静态方法</summary>
     /// <param name="path">层次路径</param>
     /// <returns></returns>
-    IMenu FindByPath(String path);
+    IMenu? FindByPath(String path);
 
     /// <summary>排序上升</summary>
     void Up();

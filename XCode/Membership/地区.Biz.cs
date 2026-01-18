@@ -203,7 +203,7 @@ public partial class Area : Entity<Area>
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static Area FindByID(Int32 id)
+    public static Area? FindByID(Int32 id)
     {
         //if (id == 0) return Root;
         if (id <= 10_00_00 || id > 99_99_99_999) return null;
@@ -221,7 +221,7 @@ public partial class Area : Entity<Area>
     /// <summary>根据ID列表数组查询，一般先后查街道、区县、城市、省份</summary>
     /// <param name="ids"></param>
     /// <returns></returns>
-    public static Area FindByIDs(params Int32[] ids)
+    public static Area? FindByIDs(params Int32[] ids)
     {
         foreach (var item in ids)
         {
@@ -239,7 +239,7 @@ public partial class Area : Entity<Area>
     /// <param name="parentId">父级</param>
     /// <param name="name">名称</param>
     /// <returns>实体列表</returns>
-    public static Area FindByName(Int32 parentId, String name)
+    public static Area? FindByName(Int32 parentId, String name)
     {
         // 支持0级下查找省份
         var r = parentId == 0 ? Root : FindByID(parentId);
@@ -295,7 +295,7 @@ public partial class Area : Entity<Area>
     /// <summary>根据名称从高向低分级查找，广度搜索，仅搜索三级</summary>
     /// <param name="name">名称</param>
     /// <returns>实体列表</returns>
-    public static Area FindByFullName(String name)
+    public static Area? FindByFullName(String name)
     {
         // 从高向低，分级搜索
         var q = new Queue<Area>();
@@ -337,7 +337,7 @@ public partial class Area : Entity<Area>
         if (rs.Count > 0) return rs;
 
         var key = parentid + "";
-        if (_pcache.TryGetValue(key, out rs)) return rs;
+        if (_pcache.TryGetValue(key, out rs) && rs != null) return rs;
 
         rs = FindAll(_.ParentID == parentid, _.ID.Asc(), null, 0, 0);
 
@@ -464,12 +464,12 @@ public partial class Area : Entity<Area>
 
         // 一二级搜索，定位城市
         var dic = SearchLike(0, address, true, count);
-        if (dic.Count == 0) return new List<KeyValuePair<Area, Double>>();
+        if (dic.Count == 0) return [];
 
         // 三级搜索
         foreach (var item in dic)
         {
-            var addr3 = address.TrimStart(item.Key.FullName, item.Key.Name);
+            var addr3 = address.TrimStart(item.Key.FullName!, item.Key.Name);
             var dic3 = SearchLike(item.Key.ID, addr3, true, count);
             foreach (var elm in dic3)
             {
@@ -483,7 +483,7 @@ public partial class Area : Entity<Area>
                 else
                 {
                     // 四级搜索
-                    var addr4 = addr3.TrimStart(item.Key.FullName, item.Key.Name);
+                    var addr4 = addr3.TrimStart(item.Key.FullName!, item.Key.Name);
                     var dic4 = SearchLike(r3.ID, addr4, true, count);
                     foreach (var elm4 in dic4)
                     {
@@ -642,7 +642,7 @@ public partial class Area : Entity<Area>
     /// <param name="parentid"></param>
     /// <param name="remark"></param>
     /// <returns></returns>
-    public static Area Create(Int32 id, String name, Int32 parentid, String remark = null)
+    public static Area? Create(Int32 id, String name, Int32 parentid, String? remark = null)
     {
         if (id <= 0) return null;
 
@@ -1228,7 +1228,7 @@ public partial class Area : Entity<Area>
 
     /// <summary>所属大区</summary>
     /// <returns></returns>
-    public String GetBig()
+    public String? GetBig()
     {
         foreach (var item in _big)
         {

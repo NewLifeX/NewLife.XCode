@@ -325,7 +325,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         }
     }
 
-    private CacheItem CreateSlaveItem<TKey2>(TKey2 key)
+    private CacheItem? CreateSlaveItem<TKey2>(TKey2 key)
     {
         WriteLog(".CreateSlaveItem({0})", key);
         DAL.SetSpanTag($"Single.GetSlave({key})");
@@ -334,7 +334,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         try
         {
             // 开始更新数据，然后加入缓存
-            var entity = Invoke(FindSlaveKeyMethod, key + "");
+            var entity = Invoke(FindSlaveKeyMethod!, key + "");
             if (entity == null) return null;
 
             var mkey = GetKeyMethod(entity);

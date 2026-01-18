@@ -11,7 +11,7 @@ public interface IMenuFactory
     /// <summary>根据编号找到菜单</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    IMenu FindByID(Int32 id);
+    IMenu? FindByID(Int32 id);
 
     /// <summary>根据全名找到菜单</summary>
     /// <param name="fullName"></param>

@@ -66,7 +66,7 @@ public partial class Tenant : Entity<Tenant>, ITenantScope
 
     /// <summary>角色组名</summary>
     [Map(__.RoleIds)]
-    public virtual String RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Select(e => e.Name).Join());
+    public virtual String? RoleNames => Extends.Get(nameof(RoleNames), k => RoleIds.SplitAsInt().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Cast<IRole>().Select(e => e.Name).Join());
 
     Int32 ITenantScope.TenantId { get => Id; set => Id = value; }
 
@@ -104,7 +104,7 @@ public partial class Tenant : Entity<Tenant>, ITenantScope
     /// <summary>根据管理员编号查询</summary>
     /// <param name="managerId"></param>
     /// <returns></returns>
-    public static Tenant FindByManagerId(Int32 managerId)
+    public static Tenant? FindByManagerId(Int32 managerId)
     {
         if (managerId <= 0) return null;
 

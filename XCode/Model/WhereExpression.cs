@@ -23,10 +23,10 @@ public class WhereExpression : Expression, IEnumerable<Expression>
 {
     #region 属性
     /// <summary>左节点</summary>
-    public Expression Left { get; set; } = null!;
+    public Expression? Left { get; set; }
 
     /// <summary>右节点</summary>
-    public Expression Right { get; set; } = null!;
+    public Expression? Right { get; set; }
 
     /// <summary>是否And</summary>
     public Operator Operator { get; set; }
@@ -43,7 +43,7 @@ public class WhereExpression : Expression, IEnumerable<Expression>
     /// <param name="left"></param>
     /// <param name="op"></param>
     /// <param name="right"></param>
-    public WhereExpression(Expression left, Operator op, Expression right)
+    public WhereExpression(Expression? left, Operator op, Expression? right)
     {
         Left = Flatten(left);
         Operator = op;
@@ -57,7 +57,7 @@ public class WhereExpression : Expression, IEnumerable<Expression>
     /// <param name="builder"></param>
     /// <param name="ps">参数字典</param>
     /// <returns></returns>
-    public override void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object>? ps)
+    public override void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object?>? ps)
     {
         if (IsEmpty) return;
 
@@ -87,7 +87,7 @@ public class WhereExpression : Expression, IEnumerable<Expression>
         builder.Append(sb.Return(true));
     }
 
-    private void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object>? ps, Expression exp)
+    private void GetString(IDatabase? db, StringBuilder builder, IDictionary<String, Object?>? ps, Expression? exp)
     {
         var exp2 = Flatten(exp);
         if (exp2 == null || exp2.IsEmpty) return;
@@ -109,7 +109,7 @@ public class WhereExpression : Expression, IEnumerable<Expression>
     /// <summary>拉平表达式，避免空子项</summary>
     /// <param name="exp"></param>
     /// <returns></returns>
-    private Expression? Flatten(Expression exp)
+    private Expression? Flatten(Expression? exp)
     {
         if (exp == null) return null;
 

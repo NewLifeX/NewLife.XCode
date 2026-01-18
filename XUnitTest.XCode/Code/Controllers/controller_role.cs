@@ -58,11 +58,12 @@ public class Role : EntityController<Role>
         var type = (XCode.Membership.RoleTypes)p["type"].ToInt(-1);
         var isSystem = p["isSystem"]?.ToBoolean();
         var dataScope = (XCode.Membership.DataScopes)p["dataScope"].ToInt(-1);
+        var viewSensitive = p["viewSensitive"]?.ToBoolean();
         var enable = p["enable"]?.ToBoolean();
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Role.Search(tenantId, type, isSystem, dataScope, enable, start, end, p["Q"], p);
+        return Role.Search(tenantId, type, isSystem, dataScope, viewSensitive, enable, start, end, p["Q"], p);
     }
 }

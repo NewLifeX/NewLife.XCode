@@ -4,17 +4,17 @@ using XCode.Membership;
 
 namespace XCode;
 
-/// <summary>IP地址模型</summary>
-public class IPModule : EntityModule
+/// <summary>IP地址拦截器。自动填充创建IP和更新IP</summary>
+public class IPInterceptor : EntityInterceptor
 {
     #region 静态引用
     /// <summary>字段名</summary>
     public class __
     {
-        /// <summary>创建人</summary>
+        /// <summary>创建IP</summary>
         public static String CreateIP = nameof(CreateIP);
 
-        /// <summary>更新人</summary>
+        /// <summary>更新IP</summary>
         public static String UpdateIP = nameof(UpdateIP);
     }
     #endregion
@@ -98,3 +98,7 @@ public class IPModule : EntityModule
     /// <returns></returns>
     protected static FieldItem[] GetIPFieldNames(Type entityType) => _ipFieldNames.GetOrAdd(entityType, t => GetFields(t).Where(e => e.Name.EqualIgnoreCase(__.CreateIP, __.UpdateIP)).ToArray());
 }
+
+/// <summary>IP地址模型。旧版名称，建议使用 IPInterceptor</summary>
+[Obsolete("请使用 IPInterceptor")]
+public class IPModule : IPInterceptor { }

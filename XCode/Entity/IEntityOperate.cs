@@ -253,8 +253,12 @@ public interface IEntityFactory
     /// <summary>统计字段集合</summary>
     IList<StatField> StatFields { get; set; }
 
-    /// <summary>实体模块集合</summary>
-    EntityModules Modules { get; }
+    /// <summary>实体拦截器集合</summary>
+    EntityInterceptors Interceptors { get; }
+
+    /// <summary>实体模块集合。旧版名称，建议使用 Interceptors</summary>
+    [Obsolete("请使用 Interceptors")]
+    EntityInterceptors Modules { get; }
 
     /// <summary>是否完全插入所有字段。默认false表示不插入没有脏数据的字段</summary>
     Boolean FullInsert { get; set; }

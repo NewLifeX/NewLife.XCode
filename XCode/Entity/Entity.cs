@@ -670,6 +670,10 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var session = Meta.Session;
         var db = session.Dal.Db;
         var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+
+        // 调用模块的 Query 方法，附加数据过滤条件
+        where = Meta.Modules.Query(Meta.Factory, where, QueryAction.FindAll);
+
         var wh = where?.GetString(db, ps);
 
         var builder = new SelectBuilder
@@ -697,7 +701,10 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         {
             DAL.WriteLog("调用FindUnique(\"{0}\")不合理，只有返回唯一记录的查询条件才允许调用！", wh);
         }
-        return list[0];
+
+        var entity = list[0];
+        // 通过模块过滤判断是否有权访问
+        return Meta.Modules.Filter(entity) ? entity : null;
     }
 
     /// <summary>根据条件查找单个实体</summary>
@@ -876,7 +883,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var session = Meta.Session;
         var needOrderByID = startRowIndex > 0 || maximumRows > 0;
 
-        var builder = CreateBuilder(where, order, selects, needOrderByID);
+        var builder = CreateBuilder(where, order, selects, needOrderByID, QueryAction.FindAll);
         var list = LoadData(session.Query(builder, startRowIndex, maximumRows));
 
         // 如果正在使用单对象缓存，则批量进入
@@ -977,7 +984,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                     if (max <= 0) return [];
 
                     var start = (Int32)(count - (startRowIndex + maximumRows));
-                    var builder2 = CreateBuilder(where, order2, selects);
+                    var builder2 = CreateBuilder(where, order2, selects, QueryAction.FindAll);
                     var list = LoadData(session.Query(builder2, start, max));
                     if (list.Count <= 0) return list;
 
@@ -996,7 +1003,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0)
         {
-            var builder = CreateBuilder(where, order, selects);
+            var builder = CreateBuilder(where, order, selects, QueryAction.FindAll);
             var list2 = LoadData(session.Query(builder, startRowIndex, maximumRows));
 
             // 如果正在使用单对象缓存，则批量进入
@@ -1010,7 +1017,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             using var span = DAL.GlobalTracer?.NewSpan($"db:{ss.ConnName}:{ss.TableName}:AutoShard", "自动分页查询", shards.Length);
 
             // 先生成查询语句
-            var builder = CreateBuilder(where, order, selects);
+            var builder = CreateBuilder(where, order, selects, QueryAction.FindAll);
             if (order.IsNullOrEmpty()) order = builder.OrderBy;
 
             // 根据分页字段排序分页表
@@ -1178,6 +1185,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         var session = Meta.Session;
 
+
         var builder = CreateBuilder(where, order, selects);
         return session.Query(builder, startRowIndex, maximumRows);
     }
@@ -1185,8 +1193,37 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
     #region 缓存查询
     /// <summary>查找所有缓存。没有数据时返回空集合而不是null</summary>
+    /// <remarks>缓存层包含所有数据，此方法会通过模块过滤后返回当前上下文可见的数据</remarks>
     /// <returns></returns>
-    public static IList<TEntity> FindAllWithCache() => Meta.Session.Cache.Entities;
+    public static IList<TEntity> FindAllWithCache() => Meta.Modules.Filter(Meta.Session.Cache.Entities);
+
+    /// <summary>根据主键从单对象缓存查找。会经过模块过滤，返回当前上下文可见的数据</summary>
+    /// <param name="key">主键值</param>
+    /// <returns></returns>
+    public static TEntity? FindByKeyWithCache(Object key)
+    {
+        if (key == null) return null;
+
+        var entity = Meta.SingleCache[key];
+        if (entity == null) return null;
+
+        // 通过模块过滤判断是否有权访问
+        return Meta.Modules.Filter(entity) ? entity : null;
+    }
+
+    /// <summary>根据从键从单对象缓存查找。会经过模块过滤，返回当前上下文可见的数据</summary>
+    /// <param name="slaveKey">从键值</param>
+    /// <returns></returns>
+    public static TEntity? FindBySlaveWithCache(String slaveKey)
+    {
+        if (slaveKey.IsNullOrEmpty()) return null;
+
+        var entity = Meta.SingleCache.GetItemWithSlaveKey(slaveKey) as TEntity;
+        if (entity == null) return null;
+
+        // 通过模块过滤判断是否有权访问
+        return Meta.Modules.Filter(entity) ? entity : null;
+    }
     #endregion
 
     #region 异步查询
@@ -1300,7 +1337,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                     if (max <= 0) return [];
 
                     var start = (Int32)(count - (startRowIndex + maximumRows));
-                    var builder2 = CreateBuilder(where, order2, selects);
+                    var builder2 = CreateBuilder(where, order2, selects, QueryAction.FindAll);
                     var list = LoadData(await session.QueryAsync(builder2, start, max).ConfigureAwait(false));
                     if (list.Count <= 0) return list;
 
@@ -1319,7 +1356,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0)
         {
-            var builder = CreateBuilder(where, order, selects);
+            var builder = CreateBuilder(where, order, selects, QueryAction.FindAll);
             var list2 = LoadData(await session.QueryAsync(builder, startRowIndex, maximumRows).ConfigureAwait(false));
 
             // 如果正在使用单对象缓存，则批量进入
@@ -1349,7 +1386,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
                 // 分表查询
                 session = EntitySession<TEntity>.Create(connName, tableName);
 
-                var builder = CreateBuilder(where, order, selects);
+                var builder = CreateBuilder(where, order, selects, QueryAction.FindAll);
                 builder.Table = session.FormatedTableName;
                 var list2 = LoadData(await session.QueryAsync(builder, row, max).ConfigureAwait(false));
                 if (list2.Count > 0) rs.AddRange(list2);
@@ -1446,6 +1483,10 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var session = Meta.Session;
         var db = session.Dal.Db;
         var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+
+        // 调用模块的 Query 方法，附加数据过滤条件
+        where = Meta.Modules.Query(Meta.Factory, where, QueryAction.FindCount);
+
         var wh = where?.GetString(db, ps);
 
         //// 如果总记录数超过10万，为了提高性能，返回快速查找且带有缓存的总记录数
@@ -1504,9 +1545,22 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     public static Int32 FindCount(String? where, String? order = null, String? selects = null, Int64 startRowIndex = 0, Int64 maximumRows = 0)
     {
         var session = Meta.Session;
+        var db = session.Dal.Db;
 
         //// 如果总记录数超过10万，为了提高性能，返回快速查找且带有缓存的总记录数
         //if (String.IsNullOrEmpty(where) && session.LongCount > 100000) return session.Count;
+
+        // 调用模块的 Query 方法，附加数据过滤条件
+        var exp = Meta.Modules.Query(Meta.Factory, null, QueryAction.FindCount);
+        if (exp != null && !exp.IsEmpty)
+        {
+            var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+            var extraWhere = exp.GetString(db, ps);
+            if (!extraWhere.IsNullOrEmpty())
+            {
+                where = where.IsNullOrEmpty() ? extraWhere : $"({where}) And ({extraWhere})";
+            }
+        }
 
         var sb = new SelectBuilder
         {
@@ -1532,6 +1586,10 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var session = Meta.Session;
         var db = session.Dal.Db;
         var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+
+        // 调用模块的 Query 方法，附加数据过滤条件
+        where = Meta.Modules.Query(Meta.Factory, where, QueryAction.FindCount);
+
         var wh = where?.GetString(db, ps);
 
         //// 如果总记录数超过10万，为了提高性能，返回快速查找且带有缓存的总记录数
@@ -1586,7 +1644,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     public static SelectBuilder FindSQL(String? where, String? order, String? selects, Int32 startRowIndex = 0, Int32 maximumRows = 0)
     {
         var needOrderByID = startRowIndex > 0 || maximumRows > 0;
-        var builder = CreateBuilder(where, order, selects, needOrderByID);
+        var builder = CreateBuilder(where, order, selects, needOrderByID, QueryAction.FindSQL);
         return Meta.Session.Dal.PageSplit(builder, startRowIndex, maximumRows);
     }
 
@@ -1782,11 +1840,23 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="order">排序</param>
     /// <param name="selects">选择列</param>
     /// <returns></returns>
-    public static SelectBuilder CreateBuilder(Expression? where, String? order, String? selects)
+    public static SelectBuilder CreateBuilder(Expression? where, String? order, String? selects) => CreateBuilder(where, order, selects, QueryAction.Unknown);
+
+    /// <summary>构造SQL查询语句</summary>
+    /// <param name="where">条件</param>
+    /// <param name="order">排序</param>
+    /// <param name="selects">选择列</param>
+    /// <param name="action">查询操作来源</param>
+    /// <returns></returns>
+    public static SelectBuilder CreateBuilder(Expression? where, String? order, String? selects, QueryAction action)
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
         var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+
+        // 调用模块的 Query 方法，附加数据过滤条件
+        where = Meta.Modules.Query(Meta.Factory, where, action);
+
         var wh = where?.GetString(db, ps);
         var builder = CreateBuilder(wh, order, selects, true);
 
@@ -1795,11 +1865,25 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return builder;
     }
 
-    private static SelectBuilder CreateBuilder(String? where, String? order, String? selects, Boolean needOrderByID)
+    private static SelectBuilder CreateBuilder(String? where, String? order, String? selects, Boolean needOrderByID) => CreateBuilder(where, order, selects, needOrderByID, QueryAction.Unknown);
+
+    private static SelectBuilder CreateBuilder(String? where, String? order, String? selects, Boolean needOrderByID, QueryAction action)
     {
         var factory = Meta.Factory;
         var session = Meta.Session;
         var db = session.Dal.Db;
+
+        // 调用模块的 Query 方法，附加数据过滤条件（仅字符串where时需要额外调用）
+        var exp = Meta.Modules.Query(factory, null, action);
+        if (exp != null && !exp.IsEmpty)
+        {
+            var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+            var extraWhere = exp.GetString(db, ps);
+            if (!extraWhere.IsNullOrEmpty())
+            {
+                where = where.IsNullOrEmpty() ? extraWhere : $"({where}) And ({extraWhere})";
+            }
+        }
 
         var builder = new SelectBuilder
         {

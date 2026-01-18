@@ -1,18 +1,19 @@
 ﻿namespace XCode.Membership;
 
-/// <summary>数据权限过滤器。在增删改时校验数据权限</summary>
+/// <summary>数据权限拦截器。在增删改查时自动应用数据权限</summary>
 /// <remarks>
 /// 用法：在实体类的静态构造函数中注册：
 /// <code>
 /// static MyEntity()
 /// {
-///     Meta.Modules.Add&lt;DataScopeModule&gt;();
+///     Meta.Interceptors.Add&lt;DataScopeInterceptor&gt;();
 /// }
 /// </code>
 /// <para>实体类需实现 IDataScope、IUserScope 或 IDepartmentScope 接口</para>
 /// <para>运行时需设置 DataScopeContext.Current 或确保 ManageProvider.User 有效</para>
+/// <para>查询时自动附加数据权限过滤条件，无需手动调用 ApplyDataScope</para>
 /// </remarks>
-public class DataScopeModule : EntityModule
+public class DataScopeInterceptor : EntityInterceptor
 {
     /// <summary>初始化。检查实体类是否实现了数据权限相关接口</summary>
     /// <param name="entityType">实体类型</param>
@@ -159,6 +160,72 @@ public class DataScopeModule : EntityModule
             }
             return true;
         }
+
+        return true;
+    }
+
+    /// <summary>查询时自动附加数据权限过滤条件</summary>
+    /// <param name="factory">实体工厂</param>
+    /// <param name="where">查询条件表达式</param>
+    /// <param name="action">查询操作来源</param>
+    /// <returns>修改后的查询条件</returns>
+    protected override Expression? OnQuery(IEntityFactory factory, Expression? where, QueryAction action)
+    {
+        var ctx = GetContext();
+        if (ctx == null || ctx.IsSystem) return where;
+
+        // 获取数据权限过滤表达式
+        var filter = DataScopeHelper.GetFilterForType(factory, ctx);
+        if (filter == null) return where;
+
+        // 合并条件
+        if (where == null || where.IsEmpty)
+            return filter;
+
+        return new WhereExpression(where, Operator.And, filter);
+    }
+
+    /// <summary>过滤实体列表</summary>
+    /// <param name="list">实体列表</param>
+    /// <returns>过滤后的实体列表</returns>
+    protected override IList<IEntity> OnFilter(IList<IEntity> list)
+    {
+        var ctx = GetContext();
+        if (ctx == null || ctx.IsSystem) return list;
+        if (list.Count == 0) return list;
+
+        // 根据实体类型选择过滤方式
+        var result = new List<IEntity>();
+        foreach (var entity in list)
+        {
+            if (CanAccess(entity, ctx)) result.Add(entity);
+        }
+
+        return result;
+    }
+
+    /// <summary>过滤单个实体</summary>
+    /// <param name="entity">实体对象</param>
+    /// <returns>是否允许访问该实体</returns>
+    protected override Boolean OnFilter(IEntity entity)
+    {
+        var ctx = GetContext();
+        if (ctx == null || ctx.IsSystem) return true;
+
+        return CanAccess(entity, ctx);
+    }
+
+    /// <summary>判断是否有权访问实体</summary>
+    private Boolean CanAccess(IEntity entity, DataScopeContext ctx)
+    {
+        if (entity is IDataScope dataScope)
+            return DataScopeHelper.CanAccess(dataScope, ctx);
+
+        if (entity is IUserScope userScope)
+            return DataScopeHelper.CanAccess(userScope, ctx);
+
+        if (entity is IDepartmentScope deptScope)
+            return DataScopeHelper.CanAccess(deptScope, ctx);
 
         return true;
     }

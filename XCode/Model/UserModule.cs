@@ -3,8 +3,8 @@ using XCode.Membership;
 
 namespace XCode;
 
-/// <summary>用户模型</summary>
-public class UserModule : EntityModule
+/// <summary>用户拦截器。自动填充创建人和更新人信息</summary>
+public class UserInterceptor : EntityInterceptor
 {
     #region 静态引用
     /// <summary>字段名</summary>
@@ -34,11 +34,11 @@ public class UserModule : EntityModule
 
     #region 构造函数
     /// <summary>实例化</summary>
-    public UserModule() { }
+    public UserInterceptor() { }
 
     /// <summary>实例化</summary>
     /// <param name="provider"></param>
-    public UserModule(IManageProvider provider) => Provider = provider;
+    public UserInterceptor(IManageProvider provider) => Provider = provider;
     #endregion
 
     /// <summary>初始化。检查是否匹配</summary>
@@ -118,4 +118,16 @@ public class UserModule : EntityModule
 
         return true;
     }
+}
+
+/// <summary>用户模型。旧版名称，建议使用 UserInterceptor</summary>
+[Obsolete("请使用 UserInterceptor")]
+public class UserModule : UserInterceptor
+{
+    /// <summary>实例化</summary>
+    public UserModule() { }
+
+    /// <summary>实例化</summary>
+    /// <param name="provider"></param>
+    public UserModule(IManageProvider provider) : base(provider) { }
 }

@@ -7,6 +7,7 @@ using NewLife;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Model;
+using XCode.Configuration;
 
 namespace XCode.Membership;
 
@@ -14,7 +15,7 @@ namespace XCode.Membership;
 /// <remarks>
 /// 基础实体类应该是只有一个泛型参数的，需要用到别的类型时，可以继承一个，也可以通过虚拟重载等手段让基类实现
 /// </remarks>
-public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
+public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataScope, IFieldScope, IDataScopeFieldProvider
 {
     #region 对象操作
     static User()
@@ -669,6 +670,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
 
         return false;
     }
+
     #endregion
 
     #region IManageUser 成员
@@ -680,6 +682,22 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity
     String IIdentity.AuthenticationType => "XCode";
 
     Boolean IIdentity.IsAuthenticated => true;
+    #endregion
+
+    #region IDataScope 成员
+    Int32 IUserScope.UserId { get => ID; set => ID = value; }
+    Int32 IDepartmentScope.DepartmentId { get => DepartmentID; set => DepartmentID = value; }
+    #endregion
+
+    #region IFieldScope 成员
+    String[] IFieldScope.GetSensitiveFields() => [__.Password];
+    Boolean IFieldScope.CanViewSensitiveFields(Int32 userId) => userId == ID;
+    #endregion
+
+    #region IDataScopeFieldProvider 成员
+    FieldItem? IDataScopeFieldProvider.GetUserField() => _.ID;
+    FieldItem? IDataScopeFieldProvider.GetDepartmentField() => _.DepartmentID;
+    FieldItem? IDataScopeFieldProvider.GetTenantField() => null;
     #endregion
 }
 

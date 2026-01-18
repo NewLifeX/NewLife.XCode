@@ -3,8 +3,8 @@ using NewLife.Threading;
 
 namespace XCode;
 
-/// <summary>时间模型</summary>
-public class TimeModule : EntityModule
+/// <summary>时间拦截器。自动填充创建时间和更新时间</summary>
+public class TimeInterceptor : EntityInterceptor
 {
     #region 静态引用
     /// <summary>字段名</summary>
@@ -70,3 +70,7 @@ public class TimeModule : EntityModule
         return true;
     }
 }
+
+/// <summary>时间模型。旧版名称，建议使用 TimeInterceptor</summary>
+[Obsolete("请使用 TimeInterceptor")]
+public class TimeModule : TimeInterceptor { }

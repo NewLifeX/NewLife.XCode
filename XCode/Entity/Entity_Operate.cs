@@ -515,8 +515,12 @@ public partial class Entity<TEntity>
             set => _StatFields = value;
         }
 
-        /// <summary>实体模块集合</summary>
-        public EntityModules Modules => Meta.Modules;
+        /// <summary>实体拦截器集合</summary>
+        public EntityInterceptors Interceptors => Meta.Interceptors;
+
+        /// <summary>实体模块集合。旧版名称，建议使用 Interceptors</summary>
+        [Obsolete("请使用 Interceptors")]
+        public EntityInterceptors Modules => Meta.Interceptors;
 
         /// <summary>是否完全插入所有字段。默认false表示不插入没有脏数据的字段</summary>
         public Boolean FullInsert { get; set; }

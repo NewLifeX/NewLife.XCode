@@ -38,10 +38,10 @@ public partial class Menu : Entity<Menu>
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(ParentID));
 
-        // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add(new UserModule { AllowEmpty = false });
-        Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add(new IPModule { AllowEmpty = false });
+        // 拦截器 UserInterceptor、TimeInterceptor、IPInterceptor
+        Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add(new IPInterceptor { AllowEmpty = false });
 
         // 实体缓存
         // var ec = Meta.Cache;
@@ -67,7 +67,7 @@ public partial class Menu : Entity<Menu>
         // 保留2位小数
         //Ex3 = Math.Round(Ex3, 2);
 
-        // 处理当前已登录用户信息，可以由UserModule过滤器代劳
+        // 处理当前已登录用户信息，可以由UserInterceptor拦截器代劳
         /*var user = ManageProvider.User;
         if (user != null)
         {

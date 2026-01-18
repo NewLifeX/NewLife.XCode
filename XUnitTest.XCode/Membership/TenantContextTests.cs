@@ -81,7 +81,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnInit_WithITenantScope_ReturnsTrue()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
 
         // Act
         var result = module.Init(typeof(TenantTestEntity));
@@ -95,7 +95,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnInit_WithoutITenantScope_ReturnsFalse()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
 
         // Act
         var result = module.Init(typeof(NonTenantTestEntity));
@@ -109,7 +109,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnCreate_WithContext_SetsTenantId()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 789 };
         var entity = new TenantTestEntity();
 
@@ -125,7 +125,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnCreate_WithoutContext_DoesNotSetTenantId()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = null!;
         var entity = new TenantTestEntity { TenantId = 0 };
 
@@ -141,7 +141,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnCreate_NonTenantEntity_DoesNotProcess()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 100 };
         var entity = new NonTenantTestEntity();
 
@@ -158,7 +158,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnValid_Insert_ZeroTenantId_AutoSets()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 100 };
         var entity = new TenantTestEntity { TenantId = 0 };
 
@@ -175,7 +175,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnValid_Insert_MatchingTenantId_Passes()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 100 };
         var entity = new TenantTestEntity { TenantId = 100 };
 
@@ -192,7 +192,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnValid_Insert_MismatchTenantId_ThrowsException()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 100 };
         var entity = new TenantTestEntity { TenantId = 200 };
 
@@ -208,7 +208,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnValid_Insert_NoContext_Passes()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = null!;
         var entity = new TenantTestEntity { TenantId = 200 };
 
@@ -225,7 +225,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnValid_Insert_ContextTenantIdZero_Passes()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 0 };
         var entity = new TenantTestEntity { TenantId = 200 };
 
@@ -244,7 +244,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnValid_Update_NoDirty_SkipsValidation()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 100 };
         var entity = new TenantTestEntity { TenantId = 200 };
         // 不修改任何属性，所以没有脏数据
@@ -261,7 +261,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnValid_Update_MatchingTenantId_Passes()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 100 };
         var entity = new TenantTestEntity { TenantId = 100 };
         entity.Name = "test"; // 制造脏数据
@@ -278,7 +278,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnValid_Update_MismatchTenantId_ThrowsException()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 100 };
         var entity = new TenantTestEntity { TenantId = 200 };
         entity.Name = "test"; // 制造脏数据
@@ -295,7 +295,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnValid_Delete_MatchingTenantId_Passes()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 100 };
         var entity = new TenantTestEntity { TenantId = 100 };
 
@@ -311,7 +311,7 @@ public class TenantContextTests : IDisposable
     public void TenantModule_OnValid_Delete_MismatchTenantId_ThrowsException()
     {
         // Arrange
-        var module = new TenantModule();
+        var module = new TenantInterceptor();
         TenantContext.Current = new TenantContext { TenantId = 100 };
         var entity = new TenantTestEntity { TenantId = 200 };
 

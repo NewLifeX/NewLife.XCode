@@ -34,9 +34,9 @@ namespace XUnitTest.XCode.TestEntity
             //df.Add(__.CreateUserID);
 
             // 过滤器 UserModule、TimeModule、IPModule
-            Meta.Modules.Add<UserModule>();
-            Meta.Modules.Add<TimeModule>();
-            Meta.Modules.Add<IPModule>();
+            Meta.Interceptors.Add<UserInterceptor>();
+            Meta.Interceptors.Add<TimeInterceptor>();
+            Meta.Interceptors.Add<IPInterceptor>();
         }
 
         /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>

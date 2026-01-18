@@ -229,6 +229,22 @@ public partial class CorePerson
     #endregion
 
     #region 扩展查询
+    /// <summary>根据编号查找</summary>
+    /// <param name="personId">编号</param>
+    /// <returns>实体对象</returns>
+    public static CorePerson? FindByPersonID(Int32 personId)
+    {
+        if (personId < 0) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.PersonID == personId);
+
+        // 单对象缓存
+        return Meta.SingleCache[personId];
+
+        //return Find(_.PersonID == personId);
+    }
+
     /// <summary>根据姓名、身份证号查找</summary>
     /// <param name="pname">姓名</param>
     /// <param name="creditNo">身份证号</param>
@@ -255,6 +271,19 @@ public partial class CorePerson
         if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Pname.EqualIgnoreCase(pname));
 
         return FindAll(_.Pname == pname);
+    }
+
+    /// <summary>根据平台楼号查找</summary>
+    /// <param name="build_ID">平台楼号</param>
+    /// <returns>实体列表</returns>
+    public static IList<CorePerson> FindAllByBuild_ID(Int32 build_ID)
+    {
+        if (build_ID < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Build_ID == build_ID);
+
+        return FindAll(_.Build_ID == build_ID);
     }
 
     /// <summary>根据楼宇ID查找</summary>

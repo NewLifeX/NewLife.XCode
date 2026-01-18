@@ -38,9 +38,9 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         sc.FindSlaveKeyMethod = k => Find(__.Name, k);
         sc.GetSlaveKeyMethod = e => e.Name;
 
-        Meta.Modules.Add<UserModule>();
-        Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add<IPModule>();
+        Meta.Interceptors.Add<UserInterceptor>();
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add<IPInterceptor>();
     }
 
     /// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
@@ -502,9 +502,9 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
             else
             {
                 var p = user.Password;
-                for (var i = 0; i > hashTimes; i--)
+                for (var i = 0; i > hashTimes && p != null; i--)
                 {
-                    p = p.MD5();
+                    p = p?.MD5();
                 }
                 if (!p.EqualIgnoreCase(password)) throw new EntityException("密码不正确！");
             }

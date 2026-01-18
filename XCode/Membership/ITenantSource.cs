@@ -120,8 +120,12 @@ public static class TenantSourceHelper
     }
 }
 
-/// <summary>租户过滤器。添加修改时自动设置租户标识</summary>
-public class TenantModule : EntityModule
+/// <summary>租户拦截器</summary>
+[Obsolete("请使用 TenantInterceptor")]
+public class TenantModule : TenantInterceptor { }
+
+/// <summary>租户拦截器。添加修改时自动设置租户标识</summary>
+public class TenantInterceptor : EntityInterceptor
 {
     /// <summary>初始化。检查是否匹配</summary>
     /// <param name="entityType">实体类型</param>

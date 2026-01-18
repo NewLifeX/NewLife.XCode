@@ -19,9 +19,9 @@ public partial class Menu : EntityTree<Menu>, IMenu
 
         //ObjectContainer.Current.AutoRegister<IMenuFactory, MenuFactory>();
 
-        Meta.Modules.Add<UserModule>();
-        Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add<IPModule>();
+        Meta.Interceptors.Add<UserInterceptor>();
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add<IPInterceptor>();
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>

@@ -1190,17 +1190,17 @@ public class EntityBuilder : ClassBuilder
 
             var ns = new HashSet<String>(Table.Columns.Select(e => e.Name), StringComparer.OrdinalIgnoreCase);
             WriteLine();
-            WriteLine("// 过滤器 UserModule、TimeModule、IPModule");
+            WriteLine("// 拦截器 UserInterceptor、TimeInterceptor、IPInterceptor");
             if (ns.Contains("CreateUserID") || ns.Contains("CreateUser") || ns.Contains("UpdateUserID") || ns.Contains("UpdateUser"))
-                WriteLine("Meta.Modules.Add(new UserModule { AllowEmpty = false });");
+                WriteLine("Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });");
             if (ns.Contains("CreateTime") || ns.Contains("UpdateTime"))
-                WriteLine("Meta.Modules.Add<TimeModule>();");
+                WriteLine("Meta.Interceptors.Add<TimeInterceptor>();");
             if (ns.Contains("CreateIP") || ns.Contains("UpdateIP"))
-                WriteLine("Meta.Modules.Add(new IPModule { AllowEmpty = false });");
+                WriteLine("Meta.Interceptors.Add(new IPInterceptor { AllowEmpty = false });");
             if (ns.Contains("TraceId"))
-                WriteLine("Meta.Modules.Add<TraceModule>();");
+                WriteLine("Meta.Interceptors.Add<TraceInterceptor>();");
             if (ns.Contains("TenantId"))
-                WriteLine("Meta.Modules.Add<TenantModule>();");
+                WriteLine("Meta.Interceptors.Add<TenantInterceptor>();");
 
             if (!Table.InsertOnly && !Table.Name.EndsWith("Log") && !Table.Name.EndsWith("History") && !Table.Name.EndsWith("Record"))
             {
@@ -1347,7 +1347,7 @@ public class EntityBuilder : ClassBuilder
             if (cs.Length > 0)
             {
                 WriteLine();
-                WriteLine("// 处理当前已登录用户信息，可以由UserModule过滤器代劳");
+                WriteLine("// 处理当前已登录用户信息，可以由UserInterceptor拦截器代劳");
                 WriteLine("/*var user = ManageProvider.User;");
                 WriteLine("if (user != null)");
                 WriteLine("{");

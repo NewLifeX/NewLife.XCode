@@ -13,10 +13,10 @@ public partial class Log : Entity<Log>
         Meta.Table.DataTable.InsertOnly = true;
         //Meta.Factory.FullInsert = false;
 
-        Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add<UserModule>();
-        Meta.Modules.Add<IPModule>();
-        Meta.Modules.Add<TraceModule>();
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add<UserInterceptor>();
+        Meta.Interceptors.Add<IPInterceptor>();
+        Meta.Interceptors.Add<TraceInterceptor>();
 
 #if !DEBUG
         // 关闭SQL日志

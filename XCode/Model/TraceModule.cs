@@ -1,10 +1,13 @@
-﻿using NewLife;
-using NewLife.Log;
+﻿using NewLife.Log;
 
 namespace XCode;
 
+/// <summary>链路追踪过滤器</summary>
+[Obsolete("请使用 TraceInterceptor")]
+public class TraceModule : TraceInterceptor { }
+
 /// <summary>链路追踪过滤器。自动给TraceId赋值</summary>
-public class TraceModule : EntityModule
+public class TraceInterceptor : EntityInterceptor
 {
     #region 静态引用
     /// <summary>字段名</summary>

@@ -36,9 +36,9 @@ namespace XUnitTest.XCode.TestEntity
             //df.Add(nameof(CreateUserID));
 
             // 过滤器 UserModule、TimeModule、IPModule
-            Meta.Modules.Add<UserModule>();
-            Meta.Modules.Add<TimeModule>();
-            Meta.Modules.Add<IPModule>();
+            Meta.Interceptors.Add<UserInterceptor>();
+            Meta.Interceptors.Add<TimeInterceptor>();
+            Meta.Interceptors.Add<IPInterceptor>();
 
             // 单对象缓存
             var sc = Meta.SingleCache;

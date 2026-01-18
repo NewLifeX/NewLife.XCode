@@ -32,7 +32,7 @@ public partial class Area : Entity<Area>
     static Area()
     {
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add<TimeModule>();
+        Meta.Interceptors.Add<TimeInterceptor>();
 
         Meta.Factory.MasterTime = _.UpdateTime;
 

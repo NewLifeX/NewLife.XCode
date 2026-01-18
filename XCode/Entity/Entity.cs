@@ -51,7 +51,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         // Activator.CreateInstance()有缓存功能，而泛型的那个没有
         //return Activator.CreateInstance(typeof(TEntity)) as TEntity;
         //var entity = typeof(TEntity).CreateInstance() as TEntity;
-        Meta.Modules.Create(entity, forEdit);
+        Meta.Interceptors.Create(entity, forEdit);
 
         return entity;
     }
@@ -467,7 +467,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
         }
 
-        var rs = Meta.Modules.Valid(this, method);
+        var rs = Meta.Interceptors.Valid(this, method);
         if (!rs) return false;
 
         //!!! 自动填充雪花Id，用户可能直接调用Valid
@@ -672,7 +672,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
 
         // 调用模块的 Query 方法，附加数据过滤条件
-        where = Meta.Modules.Query(Meta.Factory, where, QueryAction.FindAll);
+        where = Meta.Interceptors.Query(Meta.Factory, where, QueryAction.FindAll);
 
         var wh = where?.GetString(db, ps);
 
@@ -704,7 +704,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         var entity = list[0];
         // 通过模块过滤判断是否有权访问
-        return Meta.Modules.Filter(entity) ? entity : null;
+        return Meta.Interceptors.Filter(entity) ? entity : null;
     }
 
     /// <summary>根据条件查找单个实体</summary>
@@ -1195,7 +1195,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <summary>查找所有缓存。没有数据时返回空集合而不是null</summary>
     /// <remarks>缓存层包含所有数据，此方法会通过模块过滤后返回当前上下文可见的数据</remarks>
     /// <returns></returns>
-    public static IList<TEntity> FindAllWithCache() => Meta.Modules.Filter(Meta.Session.Cache.Entities);
+    public static IList<TEntity> FindAllWithCache() => Meta.Interceptors.Filter(Meta.Session.Cache.Entities);
 
     /// <summary>根据主键从单对象缓存查找。会经过模块过滤，返回当前上下文可见的数据</summary>
     /// <param name="key">主键值</param>
@@ -1208,7 +1208,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (entity == null) return null;
 
         // 通过模块过滤判断是否有权访问
-        return Meta.Modules.Filter(entity) ? entity : null;
+        return Meta.Interceptors.Filter(entity) ? entity : null;
     }
 
     /// <summary>根据从键从单对象缓存查找。会经过模块过滤，返回当前上下文可见的数据</summary>
@@ -1222,7 +1222,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         if (entity == null) return null;
 
         // 通过模块过滤判断是否有权访问
-        return Meta.Modules.Filter(entity) ? entity : null;
+        return Meta.Interceptors.Filter(entity) ? entity : null;
     }
     #endregion
 
@@ -1485,7 +1485,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
 
         // 调用模块的 Query 方法，附加数据过滤条件
-        where = Meta.Modules.Query(Meta.Factory, where, QueryAction.FindCount);
+        where = Meta.Interceptors.Query(Meta.Factory, where, QueryAction.FindCount);
 
         var wh = where?.GetString(db, ps);
 
@@ -1551,7 +1551,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         //if (String.IsNullOrEmpty(where) && session.LongCount > 100000) return session.Count;
 
         // 调用模块的 Query 方法，附加数据过滤条件
-        var exp = Meta.Modules.Query(Meta.Factory, null, QueryAction.FindCount);
+        var exp = Meta.Interceptors.Query(Meta.Factory, null, QueryAction.FindCount);
         if (exp != null && !exp.IsEmpty)
         {
             var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
@@ -1588,7 +1588,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
 
         // 调用模块的 Query 方法，附加数据过滤条件
-        where = Meta.Modules.Query(Meta.Factory, where, QueryAction.FindCount);
+        where = Meta.Interceptors.Query(Meta.Factory, where, QueryAction.FindCount);
 
         var wh = where?.GetString(db, ps);
 
@@ -1855,7 +1855,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
 
         // 调用模块的 Query 方法，附加数据过滤条件
-        where = Meta.Modules.Query(Meta.Factory, where, action);
+        where = Meta.Interceptors.Query(Meta.Factory, where, action);
 
         var wh = where?.GetString(db, ps);
         var builder = CreateBuilder(wh, order, selects, true);
@@ -1874,7 +1874,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var db = session.Dal.Db;
 
         // 调用模块的 Query 方法，附加数据过滤条件（仅字符串where时需要额外调用）
-        var exp = Meta.Modules.Query(factory, null, action);
+        var exp = Meta.Interceptors.Query(factory, null, action);
         if (exp != null && !exp.IsEmpty)
         {
             var ps = db.UseParameter ? new Dictionary<String, Object>() : null;

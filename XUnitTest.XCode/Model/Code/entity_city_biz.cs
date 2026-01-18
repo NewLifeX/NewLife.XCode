@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -38,10 +38,10 @@ public partial class CorePerson : Entity<CorePerson>
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(Psex));
 
-        // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Modules.Add(new UserModule { AllowEmpty = false });
-        Meta.Modules.Add<TimeModule>();
-        Meta.Modules.Add(new IPModule { AllowEmpty = false });
+        // 拦截器 UserInterceptor、TimeInterceptor、IPInterceptor
+        Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add(new IPInterceptor { AllowEmpty = false });
 
         // 实体缓存
         // var ec = Meta.Cache;
@@ -65,7 +65,7 @@ public partial class CorePerson : Entity<CorePerson>
 
         // 在新插入数据或者修改了指定字段时进行修正
 
-        // 处理当前已登录用户信息，可以由UserModule过滤器代劳
+        // 处理当前已登录用户信息，可以由UserInterceptor拦截器代劳
         /*var user = ManageProvider.User;
         if (user != null)
         {
@@ -122,37 +122,6 @@ public partial class CorePerson : Entity<CorePerson>
     #endregion
 
     #region 扩展属性
-    #endregion
-
-    #region 扩展查询
-    /// <summary>根据编号查找</summary>
-    /// <param name="personId">编号</param>
-    /// <returns>实体对象</returns>
-    public static CorePerson FindByPersonID(Int32 personId)
-    {
-        if (personId < 0) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.PersonID == personId);
-
-        // 单对象缓存
-        return Meta.SingleCache[personId];
-
-        //return Find(_.PersonID == personId);
-    }
-
-    /// <summary>根据平台楼号查找</summary>
-    /// <param name="build_ID">平台楼号</param>
-    /// <returns>实体列表</returns>
-    public static IList<CorePerson> FindAllByBuild_ID(Int32 build_ID)
-    {
-        if (build_ID < 0) return new List<CorePerson>();
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Build_ID == build_ID);
-
-        return FindAll(_.Build_ID == build_ID);
-    }
     #endregion
 
     #region 高级查询

@@ -1,5 +1,4 @@
-﻿using NewLife;
-using NewLife.Threading;
+﻿using NewLife.Threading;
 
 namespace XCode;
 

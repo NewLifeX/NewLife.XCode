@@ -87,6 +87,14 @@ public partial class Role : IRole, IEntity<IRole>
     [BindColumn("DataDepartmentIds", "数据部门。数据范围为自定义时，选择的部门编号列表", "")]
     public String? DataDepartmentIds { get => _DataDepartmentIds; set { if (OnPropertyChanging("DataDepartmentIds", value)) { _DataDepartmentIds = value; OnPropertyChanged("DataDepartmentIds"); } } }
 
+    private Boolean _ViewSensitive;
+    /// <summary>敏感字段。是否可以查看其他人的敏感字段数据</summary>
+    [DisplayName("敏感字段")]
+    [Description("敏感字段。是否可以查看其他人的敏感字段数据")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("ViewSensitive", "敏感字段。是否可以查看其他人的敏感字段数据", "")]
+    public Boolean ViewSensitive { get => _ViewSensitive; set { if (OnPropertyChanging("ViewSensitive", value)) { _ViewSensitive = value; OnPropertyChanged("ViewSensitive"); } } }
+
     private String? _Permission;
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
     [DisplayName("权限")]
@@ -252,6 +260,7 @@ public partial class Role : IRole, IEntity<IRole>
         TenantId = model.TenantId;
         DataScope = model.DataScope;
         DataDepartmentIds = model.DataDepartmentIds;
+        ViewSensitive = model.ViewSensitive;
         Permission = model.Permission;
         Sort = model.Sort;
         Ex1 = model.Ex1;
@@ -288,6 +297,7 @@ public partial class Role : IRole, IEntity<IRole>
             "TenantId" => _TenantId,
             "DataScope" => _DataScope,
             "DataDepartmentIds" => _DataDepartmentIds,
+            "ViewSensitive" => _ViewSensitive,
             "Permission" => _Permission,
             "Sort" => _Sort,
             "Ex1" => _Ex1,
@@ -319,6 +329,7 @@ public partial class Role : IRole, IEntity<IRole>
                 case "TenantId": _TenantId = value.ToInt(); break;
                 case "DataScope": _DataScope = (XCode.Membership.DataScopes)value.ToInt(); break;
                 case "DataDepartmentIds": _DataDepartmentIds = Convert.ToString(value); break;
+                case "ViewSensitive": _ViewSensitive = value.ToBoolean(); break;
                 case "Permission": _Permission = Convert.ToString(value); break;
                 case "Sort": _Sort = value.ToInt(); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
@@ -389,13 +400,14 @@ public partial class Role : IRole, IEntity<IRole>
     /// <param name="type">类型。1系统/2普通/3租户</param>
     /// <param name="isSystem">系统。用于业务系统开发使用，不受数据权限约束，禁止修改名称或删除</param>
     /// <param name="dataScope">数据范围。控制用户可访问的数据范围，0全部/1本部门及下级/2本部门/3仅本人/4自定义</param>
+    /// <param name="viewSensitive">敏感字段。是否可以查看其他人的敏感字段数据</param>
     /// <param name="enable">启用</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Role> Search(Int32 tenantId, XCode.Membership.RoleTypes type, Boolean? isSystem, XCode.Membership.DataScopes dataScope, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Role> Search(Int32 tenantId, XCode.Membership.RoleTypes type, Boolean? isSystem, XCode.Membership.DataScopes dataScope, Boolean? viewSensitive, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -403,6 +415,7 @@ public partial class Role : IRole, IEntity<IRole>
         if (type >= 0) exp &= _.Type == type;
         if (isSystem != null) exp &= _.IsSystem == isSystem;
         if (dataScope >= 0) exp &= _.DataScope == dataScope;
+        if (viewSensitive != null) exp &= _.ViewSensitive == viewSensitive;
         if (enable != null) exp &= _.Enable == enable;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
@@ -438,6 +451,9 @@ public partial class Role : IRole, IEntity<IRole>
 
         /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
         public static readonly Field DataDepartmentIds = FindByName("DataDepartmentIds");
+
+        /// <summary>敏感字段。是否可以查看其他人的敏感字段数据</summary>
+        public static readonly Field ViewSensitive = FindByName("ViewSensitive");
 
         /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
         public static readonly Field Permission = FindByName("Permission");
@@ -519,6 +535,9 @@ public partial class Role : IRole, IEntity<IRole>
 
         /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
         public const String DataDepartmentIds = "DataDepartmentIds";
+
+        /// <summary>敏感字段。是否可以查看其他人的敏感字段数据</summary>
+        public const String ViewSensitive = "ViewSensitive";
 
         /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
         public const String Permission = "Permission";

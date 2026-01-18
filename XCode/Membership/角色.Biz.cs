@@ -540,3 +540,78 @@ public partial interface IRole
 //    IRole IRole.GetOrAdd(String name) => throw new NotImplementedException();
 //    Int32 IRole.Save() => throw new NotImplementedException();
 //}
+
+/// <summary>角色数据权限扩展</summary>
+public static class RoleDataScopeExtensions
+{
+    /// <summary>获取角色自定义的部门编号列表</summary>
+    /// <param name="role">角色</param>
+    /// <returns>部门编号数组</returns>
+    public static Int32[] GetDataDepartments(this IRole role)
+    {
+        if (role == null || role.DataDepartmentIds.IsNullOrWhiteSpace()) return [];
+
+        return role.DataDepartmentIds.SplitAsInt();
+    }
+
+    /// <summary>设置角色的自定义部门</summary>
+    /// <param name="role">角色</param>
+    /// <param name="departmentIds">部门编号列表</param>
+    public static void SetDataDepartments(this IRole role, Int32[] departmentIds)
+    {
+        if (role == null) return;
+
+        if (departmentIds == null || departmentIds.Length == 0)
+            role.DataDepartmentIds = null;
+        else
+            role.DataDepartmentIds = departmentIds.Distinct().OrderBy(e => e).Join();
+    }
+
+    /// <summary>获取多角色合并后的数据权限范围</summary>
+    /// <param name="roles">角色列表</param>
+    /// <returns>最大数据权限范围（数值越小权限越大）</returns>
+    public static DataScopes GetMergedDataScope(this IEnumerable<IRole> roles)
+    {
+        if (roles == null || !roles.Any()) return DataScopes.仅本人;
+
+        // 系统角色不受限制
+        if (roles.Any(e => e.IsSystem)) return DataScopes.全部;
+
+        // 取最大权限（数值越小权限越大）
+        return roles.Min(e => e.DataScope);
+    }
+
+    /// <summary>检查角色是否拥有指定部门的数据权限</summary>
+    /// <param name="role">角色</param>
+    /// <param name="userDeptId">用户所属部门</param>
+    /// <param name="targetDeptId">目标部门</param>
+    /// <returns>是否有权限</returns>
+    public static Boolean HasDepartmentAccess(this IRole role, Int32 userDeptId, Int32 targetDeptId)
+    {
+        if (role == null) return false;
+        if (role.IsSystem) return true;
+
+        switch (role.DataScope)
+        {
+            case DataScopes.全部:
+                return true;
+
+            case DataScopes.本部门及下级:
+                var deptIds = DataScopeHelper.GetDepartmentAndChildren(userDeptId);
+                return deptIds.Contains(targetDeptId);
+
+            case DataScopes.本部门:
+                return userDeptId == targetDeptId;
+
+            case DataScopes.仅本人:
+                return false; // 仅本人不基于部门判断
+
+            case DataScopes.自定义:
+                var customIds = role.GetDataDepartments();
+                return customIds.Contains(targetDeptId);
+
+            default:
+                return false;
+        }
+    }
+}

@@ -50,6 +50,12 @@ public partial class MenuModel : IModel
     /// <summary>新窗口。新窗口打开链接</summary>
     public Boolean NewWindow { get; set; }
 
+    /// <summary>数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
+    public Int32 DataScope { get; set; }
+
+    /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
+    public String? DataDepartmentIds { get; set; }
+
     /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
     public String? Permission { get; set; }
 
@@ -121,6 +127,8 @@ public partial class MenuModel : IModel
                 "Visible" => Visible,
                 "Necessary" => Necessary,
                 "NewWindow" => NewWindow,
+                "DataScope" => DataScope,
+                "DataDepartmentIds" => DataDepartmentIds,
                 "Permission" => Permission,
                 "Ex1" => Ex1,
                 "Ex2" => Ex2,
@@ -156,6 +164,8 @@ public partial class MenuModel : IModel
                 case "Visible": Visible = value.ToBoolean(); break;
                 case "Necessary": Necessary = value.ToBoolean(); break;
                 case "NewWindow": NewWindow = value.ToBoolean(); break;
+                case "DataScope": DataScope = value.ToInt(); break;
+                case "DataDepartmentIds": DataDepartmentIds = Convert.ToString(value); break;
                 case "Permission": Permission = Convert.ToString(value); break;
                 case "Ex1": Ex1 = value.ToInt(); break;
                 case "Ex2": Ex2 = value.ToInt(); break;
@@ -195,6 +205,8 @@ public partial class MenuModel : IModel
         Visible = model.Visible;
         Necessary = model.Necessary;
         NewWindow = model.NewWindow;
+        DataScope = model.DataScope;
+        DataDepartmentIds = model.DataDepartmentIds;
         Permission = model.Permission;
         Ex1 = model.Ex1;
         Ex2 = model.Ex2;

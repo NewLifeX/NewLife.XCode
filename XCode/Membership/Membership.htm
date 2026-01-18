@@ -865,6 +865,17 @@
         </tr>
 
         <tr>
+            <td>ViewSensitive</td>
+            <td>敏感字段</td>
+            <td>Boolean</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>是否可以查看其他人的敏感字段数据</td>
+        </tr>
+
+        <tr>
             <td>Permission</td>
             <td>权限</td>
             <td>String</td>
@@ -1198,6 +1209,28 @@
             <td></td>
             <td>N</td>
             <td>新窗口打开链接</td>
+        </tr>
+
+        <tr>
+            <td>DataScope</td>
+            <td>数据范围</td>
+            <td>Int32</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>N</td>
+            <td>该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义</td>
+        </tr>
+
+        <tr>
+            <td>DataDepartmentIds</td>
+            <td>数据部门</td>
+            <td>String</td>
+            <td>500</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>数据范围为自定义时，选择的部门编号列表</td>
         </tr>
 
         <tr>

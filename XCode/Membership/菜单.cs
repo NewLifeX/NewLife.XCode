@@ -119,6 +119,22 @@ public partial class Menu : IMenu, IEntity<IMenu>
     [BindColumn("NewWindow", "新窗口。新窗口打开链接", "")]
     public Boolean NewWindow { get => _NewWindow; set { if (OnPropertyChanging("NewWindow", value)) { _NewWindow = value; OnPropertyChanged("NewWindow"); } } }
 
+    private Int32 _DataScope;
+    /// <summary>数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
+    [DisplayName("数据范围")]
+    [Description("数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义")]
+    [DataObjectField(false, false, false, 0)]
+    [BindColumn("DataScope", "数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义", "", DefaultValue = "-1")]
+    public Int32 DataScope { get => _DataScope; set { if (OnPropertyChanging("DataScope", value)) { _DataScope = value; OnPropertyChanged("DataScope"); } } }
+
+    private String? _DataDepartmentIds;
+    /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
+    [DisplayName("数据部门")]
+    [Description("数据部门。数据范围为自定义时，选择的部门编号列表")]
+    [DataObjectField(false, false, true, 500)]
+    [BindColumn("DataDepartmentIds", "数据部门。数据范围为自定义时，选择的部门编号列表", "")]
+    public String? DataDepartmentIds { get => _DataDepartmentIds; set { if (OnPropertyChanging("DataDepartmentIds", value)) { _DataDepartmentIds = value; OnPropertyChanged("DataDepartmentIds"); } } }
+
     private String? _Permission;
     /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
     [DisplayName("权限子项")]
@@ -280,6 +296,8 @@ public partial class Menu : IMenu, IEntity<IMenu>
         Visible = model.Visible;
         Necessary = model.Necessary;
         NewWindow = model.NewWindow;
+        DataScope = model.DataScope;
+        DataDepartmentIds = model.DataDepartmentIds;
         Permission = model.Permission;
         Ex1 = model.Ex1;
         Ex2 = model.Ex2;
@@ -319,6 +337,8 @@ public partial class Menu : IMenu, IEntity<IMenu>
             "Visible" => _Visible,
             "Necessary" => _Necessary,
             "NewWindow" => _NewWindow,
+            "DataScope" => _DataScope,
+            "DataDepartmentIds" => _DataDepartmentIds,
             "Permission" => _Permission,
             "Ex1" => _Ex1,
             "Ex2" => _Ex2,
@@ -353,6 +373,8 @@ public partial class Menu : IMenu, IEntity<IMenu>
                 case "Visible": _Visible = value.ToBoolean(); break;
                 case "Necessary": _Necessary = value.ToBoolean(); break;
                 case "NewWindow": _NewWindow = value.ToBoolean(); break;
+                case "DataScope": _DataScope = value.ToInt(); break;
+                case "DataDepartmentIds": _DataDepartmentIds = Convert.ToString(value); break;
                 case "Permission": _Permission = Convert.ToString(value); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
                 case "Ex2": _Ex2 = value.ToInt(); break;
@@ -449,6 +471,12 @@ public partial class Menu : IMenu, IEntity<IMenu>
         /// <summary>新窗口。新窗口打开链接</summary>
         public static readonly Field NewWindow = FindByName("NewWindow");
 
+        /// <summary>数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
+        public static readonly Field DataScope = FindByName("DataScope");
+
+        /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
+        public static readonly Field DataDepartmentIds = FindByName("DataDepartmentIds");
+
         /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
         public static readonly Field Permission = FindByName("Permission");
 
@@ -538,6 +566,12 @@ public partial class Menu : IMenu, IEntity<IMenu>
 
         /// <summary>新窗口。新窗口打开链接</summary>
         public const String NewWindow = "NewWindow";
+
+        /// <summary>数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
+        public const String DataScope = "DataScope";
+
+        /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
+        public const String DataDepartmentIds = "DataDepartmentIds";
 
         /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
         public const String Permission = "Permission";

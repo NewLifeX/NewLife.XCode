@@ -38,6 +38,9 @@ public partial class RoleModel : IModel
     /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
     public String? DataDepartmentIds { get; set; }
 
+    /// <summary>敏感字段。是否可以查看其他人的敏感字段数据</summary>
+    public Boolean ViewSensitive { get; set; }
+
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
     public String? Permission { get; set; }
 
@@ -108,6 +111,7 @@ public partial class RoleModel : IModel
                 "TenantId" => TenantId,
                 "DataScope" => DataScope,
                 "DataDepartmentIds" => DataDepartmentIds,
+                "ViewSensitive" => ViewSensitive,
                 "Permission" => Permission,
                 "Sort" => Sort,
                 "Ex1" => Ex1,
@@ -140,6 +144,7 @@ public partial class RoleModel : IModel
                 case "TenantId": TenantId = value.ToInt(); break;
                 case "DataScope": DataScope = (XCode.Membership.DataScopes)value; break;
                 case "DataDepartmentIds": DataDepartmentIds = Convert.ToString(value); break;
+                case "ViewSensitive": ViewSensitive = value.ToBoolean(); break;
                 case "Permission": Permission = Convert.ToString(value); break;
                 case "Sort": Sort = value.ToInt(); break;
                 case "Ex1": Ex1 = value.ToInt(); break;
@@ -176,6 +181,7 @@ public partial class RoleModel : IModel
         TenantId = model.TenantId;
         DataScope = model.DataScope;
         DataDepartmentIds = model.DataDepartmentIds;
+        ViewSensitive = model.ViewSensitive;
         Permission = model.Permission;
         Sort = model.Sort;
         Ex1 = model.Ex1;

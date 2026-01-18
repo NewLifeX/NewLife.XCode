@@ -35,6 +35,9 @@ public partial interface IRole
     /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
     String? DataDepartmentIds { get; set; }
 
+    /// <summary>敏感字段。是否可以查看其他人的敏感字段数据</summary>
+    Boolean ViewSensitive { get; set; }
+
     /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
     String? Permission { get; set; }
 

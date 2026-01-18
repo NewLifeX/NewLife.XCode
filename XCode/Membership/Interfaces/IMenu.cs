@@ -47,6 +47,12 @@ public partial interface IMenu
     /// <summary>新窗口。新窗口打开链接</summary>
     Boolean NewWindow { get; set; }
 
+    /// <summary>数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
+    Int32 DataScope { get; set; }
+
+    /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
+    String? DataDepartmentIds { get; set; }
+
     /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
     String? Permission { get; set; }
 

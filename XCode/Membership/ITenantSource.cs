@@ -39,10 +39,55 @@ public class TenantContext
 /// <summary>多租户助手</summary>
 public static class TenantSourceHelper
 {
-    //public static Expression AppendTenant(this WhereExpression whereExpression, ITenantSource tenantSource)
-    //{
+    /// <summary>应用租户过滤（如果实体实现了 ITenantSource 接口）</summary>
+    /// <typeparam name="TEntity">实体类型</typeparam>
+    /// <param name="where">现有条件</param>
+    /// <returns>合并后的条件</returns>
+    /// <remarks>
+    /// 在 Search 方法中使用示例：
+    /// <code>
+    /// public static IList&lt;Order&gt; Search(Int32 status, PageParameter page)
+    /// {
+    ///     var exp = new WhereExpression();
+    ///     if (status &gt;= 0) exp &amp;= _.Status == status;
+    ///     
+    ///     // 应用租户过滤
+    ///     exp = exp.ApplyTenant&lt;Order&gt;();
+    ///     
+    ///     return FindAll(exp, page);
+    /// }
+    /// </code>
+    /// </remarks>
+    public static WhereExpression ApplyTenant<TEntity>(this WhereExpression where) where TEntity : Entity<TEntity>, new()
+    {
+        // 检查实体是否实现租户接口
+        if (!typeof(ITenantSource).IsAssignableFrom(typeof(TEntity))) return where;
 
-    //}
+        return ApplyTenant(where, Entity<TEntity>.Meta.Factory);
+    }
+
+    /// <summary>应用租户过滤（通过实体工厂）</summary>
+    /// <param name="where">现有条件</param>
+    /// <param name="factory">实体工厂</param>
+    /// <returns>合并后的条件</returns>
+    public static WhereExpression ApplyTenant(this WhereExpression where, IEntityFactory factory)
+    {
+        if (factory == null) return where;
+
+        // 检查实体是否实现租户接口
+        if (!typeof(ITenantSource).IsAssignableFrom(factory.EntityType)) return where;
+
+        var tenantId = TenantContext.CurrentId;
+        if (tenantId <= 0) return where;
+
+        // 获取租户字段
+        var tenantField = factory.Table.FindByName(nameof(ITenantSource.TenantId));
+        if (tenantField is null) return where;
+
+        where &= (WhereExpression)(tenantField == tenantId);
+
+        return where;
+    }
 }
 
 /// <summary>租户过滤器。添加修改时自动设置租户标识</summary>

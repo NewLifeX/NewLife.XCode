@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
-using System.Xml.Linq;
 using System.Xml.Serialization;
 using NewLife.Common;
 using NewLife.Data;
@@ -55,6 +54,8 @@ public partial class Department : Entity<Department>, ITenantSource
                 Type = DepartmentTypes.小组;
             else if (Name.Contains("项目"))
                 Type = DepartmentTypes.虚拟;
+            else
+                Type = DepartmentTypes.部门;
         }
 
         // 管理者

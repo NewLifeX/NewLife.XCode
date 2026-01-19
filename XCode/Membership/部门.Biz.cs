@@ -157,6 +157,19 @@ public partial class Department : Entity<Department>, ITenantScope
     #endregion
 
     #region 扩展查询
+    /// <summary>根据代码查找</summary>
+    /// <param name="code">代码</param>
+    /// <returns>实体对象</returns>
+    public static Department? FindByCode(String code)
+    {
+        if (code.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Code == code);
+
+        return Find(_.Code == code);
+    }
+
     /// <summary>根据名称、父级查找</summary>
     /// <param name="name">名称</param>
     /// <param name="parentid">父级</param>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.1.32228.430
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11408.102 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Others", "Others", "{32891F65-FBA1-42B2-918E-61F3A9623F2A}"
 	ProjectSection(SolutionItems) = preProject
@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Others", "Others", "{32891F
 		Readme.MD = Readme.MD
 		XCode\Readme.MD = XCode\Readme.MD
 		.github\workflows\test.yml = .github\workflows\test.yml
+		.github\instructions\xcode.instructions.md = .github\instructions\xcode.instructions.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Test\Test.csproj", "{6740B4CD-B2F6-49DF-BDA0-7DC17144C666}"

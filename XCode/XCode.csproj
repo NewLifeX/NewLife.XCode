@@ -114,4 +114,9 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
+  <!-- Copilot Instructions 打包配置 -->
+  <ItemGroup>
+    <None Include="build\NewLife.XCode.targets" Pack="true" PackagePath="build\" />
+    <None Include="contentFiles\any\any\.github\instructions\xcode.instructions.md" Pack="true" PackagePath="contentFiles\any\any\.github\instructions\" />
+  </ItemGroup>
 </Project>

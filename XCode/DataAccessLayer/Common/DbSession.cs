@@ -892,7 +892,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         var key = "" + collectionName;
         if (restrictionValues != null && restrictionValues.Length > 0) key += "_" + String.Join("_", restrictionValues);
 
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
         DataTable dt;
         //var dt = db._SchemaCache.Get<DataTable>(key);
         //if (dt == null)

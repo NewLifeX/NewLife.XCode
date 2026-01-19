@@ -85,13 +85,13 @@ internal class HighGoSession : RemoteDbSession
     #region 快速查询单表记录数量
     public override Int64 QueryCountFast(String tableName)
     {
-        var db = Database as HighGo;
+        var db = (Database as HighGo);
         var sql = $"SELECT \"n_live_tup\" FROM \"pg_stat_user_tables\" WHERE \"schemaname\"='{db.TableSchema}' AND \"relname\" = '{tableName.Replace("\"", String.Empty)}'";
         return ExecuteScalar<Int64>(sql);
     }
     public override Task<Int64> QueryCountFastAsync(String tableName)
     {
-        var db = Database as HighGo;
+        var db = (Database as HighGo);
         var sql = $"SELECT \"n_live_tup\" FROM \"pg_stat_user_tables\" WHERE \"schemaname\"='{db.TableSchema}' AND \"relname\" = '{tableName.Replace("\"", String.Empty)}'";
         return ExecuteScalarAsync<Int64>(sql);
     }
@@ -101,7 +101,7 @@ internal class HighGoSession : RemoteDbSession
     String GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         columns ??= table.Columns.ToArray();

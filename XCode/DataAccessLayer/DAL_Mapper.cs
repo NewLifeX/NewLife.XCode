@@ -432,7 +432,7 @@ public partial class DAL
     private String GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String> updateColumns, ICollection<String> addColumns, ICollection<String> ps)
     {
         var sb = Pool.StringBuilder.Get();
-        //var db = Database as DbBase;
+        //var db = (Database as DbBase)!;
 
         // 字段列表
         sb.AppendFormat("Update {0} Set ", Db.FormatName(table));

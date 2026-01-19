@@ -43,7 +43,7 @@ internal class SqlServer : RemoteDb
     /// <summary>是否SQL2012及以上</summary>
     public Boolean IsSQL2012 => Version.Major > 11;
 
-    private Version _Version;
+    private Version? _Version;
     /// <summary>数据库版本</summary>
     public Version Version
     {
@@ -72,7 +72,7 @@ internal class SqlServer : RemoteDb
     }
 
     /// <summary>数据目录</summary>
-    public String DataPath { get; set; }
+    public String? DataPath { get; set; }
 
     private const String Application_Name = "Application Name";
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
@@ -614,7 +614,7 @@ internal class SqlServerSession : RemoteDbSession
     private String GetInsertSql(IDataTable table, IDataColumn[] columns, ICollection<String> ps)
     {
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         sb.AppendFormat("Insert Into {0}(", db.FormatName(table));
@@ -677,7 +677,7 @@ internal class SqlServerSession : RemoteDbSession
     private String GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps)
     {
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         sb.AppendFormat("Update {0} Set ", db.FormatName(table));

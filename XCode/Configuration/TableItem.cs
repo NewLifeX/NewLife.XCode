@@ -56,24 +56,24 @@ public class TableItem
     /// <summary>数据字段</summary>
     [XmlArray]
     [Description("数据字段")]
-    public FieldItem[] Fields { get; private set; }
+    public FieldItem[] Fields { get; private set; } = null!;
 
     /// <summary>所有字段</summary>
     [XmlIgnore, IgnoreDataMember]
-    public FieldItem[] AllFields { get; private set; }
+    public FieldItem[] AllFields { get; private set; } = null!;
 
     /// <summary>标识列</summary>
     [XmlIgnore, IgnoreDataMember]
-    public FieldItem Identity { get; private set; }
+    public FieldItem? Identity { get; private set; }
 
     /// <summary>主键。不会返回null</summary>
     [XmlIgnore, IgnoreDataMember]
-    public FieldItem[] PrimaryKeys { get; private set; }
+    public FieldItem[] PrimaryKeys { get; private set; } = [];
 
     /// <summary>主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
-    public FieldItem Master { get; private set; }
+    public FieldItem? Master { get; private set; }
 
-    private ICollection<String> _FieldNames;
+    private ICollection<String>? _FieldNames;
     /// <summary>字段名集合，不区分大小写的哈希表存储，外部不要修改元素数据</summary>
     [XmlIgnore, IgnoreDataMember]
     public ICollection<String> FieldNames
@@ -101,7 +101,7 @@ public class TableItem
         }
     }
 
-    private ICollection<String> _ExtendFieldNames;
+    private ICollection<String>? _ExtendFieldNames;
     /// <summary>扩展属性集合，不区分大小写的哈希表存储，外部不要修改元素数据</summary>
     [XmlIgnore, IgnoreDataMember]
     public ICollection<String> ExtendFieldNames
@@ -123,7 +123,7 @@ public class TableItem
 
     /// <summary>数据表架构</summary>
     [XmlIgnore, IgnoreDataMember]
-    public IDataTable DataTable { get; private set; }
+    public IDataTable DataTable { get; private set; } = null!;
 
     /// <summary>模型检查模式</summary>
     public ModelCheckModes ModelCheckMode { get; } = ModelCheckModes.CheckAllTablesWhenInit;
@@ -421,7 +421,7 @@ public class TableItem
         PrimaryKeys = pkeys.ToArray();
     }
 
-    private IDictionary<String, Field?> _all;
+    private IDictionary<String, Field?>? _all;
 
     /// <summary>根据名称查找</summary>
     /// <param name="name">名称</param>

@@ -231,7 +231,7 @@ public abstract class ManageProvider : IManageProvider
         }
     }
 
-     /// <summary>注销</summary>
+    /// <summary>注销</summary>
     public virtual void Logout()
     {
         if (Current is IUser user) user.Logout();
@@ -296,7 +296,7 @@ public abstract class ManageProvider : IManageProvider
             var prv = PasswordProvider;
 
             // 数据库为空密码，任何密码均可登录
-            if (!oldPassword.IsNullOrEmpty())
+            if (!oldPassword.IsNullOrEmpty() && !user.Password.IsNullOrEmpty())
             {
                 if (!prv.Verify(oldPassword, user.Password)) throw new EntityException("用户名或密码不正确！");
             }

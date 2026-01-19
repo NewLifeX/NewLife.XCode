@@ -409,7 +409,7 @@ internal class OracleSession : RemoteDbSession
             return fs.ToArray();
         }
 
-        return null;
+        return [];
     }
 
     /// <summary>快速查询单表记录数，稍有偏差</summary>
@@ -423,8 +423,8 @@ internal class OracleSession : RemoteDbSession
         if (p >= 0 && p < tableName.Length - 1) tableName = tableName[(p + 1)..];
         tableName = tableName.ToUpper();
 
-        var owner = (Database as Oracle).Owner;
-        if (owner.IsNullOrEmpty()) owner = (Database as Oracle).User;
+        var owner = (Database as Oracle)!.Owner;
+        if (owner.IsNullOrEmpty()) owner = (Database as Oracle)!.User;
         //var owner = (Database as Oracle).Owner.ToUpper();
         owner = owner.ToUpper();
 
@@ -528,7 +528,8 @@ internal class OracleSession : RemoteDbSession
         // 如果参数Value都是数组，那么就是批量操作
         if (ps != null && ps.Length > 0 && ps.All(p => p.Value is IList))
         {
-            var arr = ps.First().Value as IList;
+            if (ps.First().Value is not IList arr) throw new InvalidDataException();
+
             cmd.SetValue("ArrayBindCount", arr.Count);
             cmd.SetValue("BindByName", true);
 
@@ -559,7 +560,7 @@ internal class OracleSession : RemoteDbSession
     private String GetInsertSql(IDataTable table, IDataColumn[] columns, ICollection<String> ps)
     {
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         sb.AppendFormat("Insert Into {0}(", db.FormatName(table));
@@ -655,13 +656,13 @@ internal class OracleSession : RemoteDbSession
         return Execute(sql, CommandType.Text, dps);
     }
 
-    private String GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps)
+    private String? GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps)
     {
         if ((updateColumns == null || updateColumns.Count == 0)
             && (addColumns == null || addColumns.Count == 0)) return null;
 
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         sb.AppendFormat("Update {0} Set ", db.FormatName(table));
@@ -704,6 +705,8 @@ internal class OracleSession : RemoteDbSession
     {
         var ps = new HashSet<String>();
         var sql = GetUpdateSql(table, columns, updateColumns, addColumns, ps);
+        if (sql.IsNullOrEmpty()) return 0;
+
         var dps = GetParameters(columns, ps, list);
         DefaultSpan.Current?.AppendTag(sql);
 
@@ -737,12 +740,10 @@ internal class OracleMeta : RemoteDbMetaData
     /// <returns></returns>
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
-        DataTable dt = null;
-
         // 不缺分大小写，并且不是保留字，才转大写
         if (names != null)
         {
-            var db = Database as Oracle;
+            var db = (Database as Oracle)!;
             /*if (db.IgnoreCase)*/
             names = names.Select(e => db.IsReservedWord(e) ? e : e.ToUpper()).ToArray();
         }
@@ -755,19 +756,20 @@ internal class OracleMeta : RemoteDbMetaData
         var owner = Owner;
         //if (owner.IsNullOrEmpty()) owner = UserID;
 
-        dt = GetSchema(_.Tables, [owner, tableName]);
-        if (!dt.Columns.Contains("TABLE_TYPE"))
+        var dt = GetSchema(_.Tables, [owner, tableName]);
+        if (dt?.Rows != null && !dt.Columns.Contains("TABLE_TYPE"))
         {
             dt.Columns.Add("TABLE_TYPE", typeof(String));
-            foreach (var dr in dt.Rows?.ToArray())
+            foreach (var dr in dt.Rows.ToArray())
             {
                 dr["TABLE_TYPE"] = "Table";
             }
         }
+
         var dtView = GetSchema(_.Views, [owner, tableName]);
-        if (dtView != null && dtView.Rows.Count != 0)
+        if (dtView?.Rows != null && dtView.Rows.Count != 0)
         {
-            foreach (var dr in dtView.Rows?.ToArray())
+            foreach (var dr in dtView.Rows.ToArray())
             {
                 var drNew = dt.NewRow();
                 drNew["OWNER"] = dr["OWNER"];
@@ -777,14 +779,14 @@ internal class OracleMeta : RemoteDbMetaData
             }
         }
 
-        var data = new NullableDictionary<String, DataTable>(StringComparer.OrdinalIgnoreCase);
+        var data = new NullableDictionary<String, DataTable?>(StringComparer.OrdinalIgnoreCase);
         //data["Columns"] = GetSchema(_.Columns, new String[] { owner, tableName, null });
         //data["Indexes"] = GetSchema(_.Indexes, new String[] { owner, null, owner, tableName });
         //data["IndexColumns"] = GetSchema(_.IndexColumns, new String[] { owner, null, owner, tableName, null });
 
         // 如果表太多，则只要目标表数据
         var mulTable = "";
-        if (dt.Rows.Count > 10 && names != null && names.Length > 0)
+        if (dt != null && dt.Rows.Count > 10 && names != null && names.Length > 0)
         {
             //var tablenames = dt.Rows.ToArray().Select(e => "'{0}'".F(e["TABLE_NAME"]));
             //mulTable = " And TABLE_NAME in ({0})".F(tablenames.Join(","));
@@ -833,7 +835,7 @@ internal class OracleMeta : RemoteDbMetaData
         return list;
     }
 
-    private DataTable Get(String name, String owner, String tableName, String? mulTable = null, String? ownerName = null)
+    private DataTable Get(String name, String owner, String? tableName, String? mulTable = null, String? ownerName = null)
     {
         if (ownerName.IsNullOrEmpty()) ownerName = "Owner";
         var sql = $"Select * From {name} Where {ownerName}='{owner}'";

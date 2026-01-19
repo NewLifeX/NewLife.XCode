@@ -216,7 +216,7 @@ abstract class RemoteDbMetaData : DbMetaData
                 //    return session.QueryCount(GetSchemaSQL(schema, values)) > 0;
 
                 case DDLSchema.DatabaseExist:
-                    return DatabaseExist(databaseName);
+                    return !databaseName.IsNullOrEmpty() && DatabaseExist(databaseName);
 
                 case DDLSchema.CreateDatabase:
                     values = [databaseName, values == null || values.Length < 2 ? null : values[1]];
@@ -248,13 +248,16 @@ abstract class RemoteDbMetaData : DbMetaData
                     break;
             }
         }
-        return base.SetSchema(schema, values);
+        return base.SetSchema(schema, values!);
     }
 
     protected virtual Boolean DatabaseExist(String databaseName)
     {
+        var sql = GetSchemaSQL(DDLSchema.DatabaseExist, [databaseName]);
+        if (sql.IsNullOrEmpty()) return false;
+
         var session = Database.CreateSession();
-        return session.QueryCount(GetSchemaSQL(DDLSchema.DatabaseExist, [databaseName])) > 0;
+        return session.QueryCount(sql) > 0;
     }
 
     //protected virtual Boolean DropDatabase(String databaseName)

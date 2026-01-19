@@ -192,7 +192,7 @@ public class HtmlBuilder : ClassBuilder
                 WriteLine("<td></td>");
 
             WriteLine("<td>{0}</td>", column.Nullable ? "" : "N");
-            WriteLine("<td>{0}</td>", column.Description?.TrimStart(column.DisplayName).TrimStart("。", "，"));
+            WriteLine("<td>{0}</td>", column.Description?.TrimStart(column.DisplayName!).TrimStart("。", "，"));
         }
         WriteLine("</tr>");
     }

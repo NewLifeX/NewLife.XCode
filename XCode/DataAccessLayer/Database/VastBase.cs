@@ -371,7 +371,7 @@ internal class VastBaseSession : RemoteDbSession
         const String action = "Insert Into";
 
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         columns ??= table.Columns.ToArray();
@@ -407,7 +407,7 @@ internal class VastBaseSession : RemoteDbSession
         const String action = "Insert Into";
 
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         columns ??= table.Columns.ToArray();

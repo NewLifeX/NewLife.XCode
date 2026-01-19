@@ -315,7 +315,7 @@ internal class IRISSession : RemoteDbSession
     private String GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         columns ??= table.Columns.ToArray();

@@ -110,7 +110,7 @@ public class ModelBuilder : ClassBuilder
         var des = Table.Description;
         if (!Option.DisplayNameTemplate.IsNullOrEmpty())
         {
-            des = Table.Description.TrimStart(Table.DisplayName, "。");
+            des = Table.Description?.TrimStart(Table.DisplayName!, "。");
             des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
         }
         WriteLine("/// <summary>{0}</summary>", des);

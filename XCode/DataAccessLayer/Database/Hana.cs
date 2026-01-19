@@ -265,7 +265,7 @@ internal class HanaSession : RemoteDbSession
     private String GetBatchSql(String action, IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         columns ??= table.Columns.ToArray();
@@ -375,7 +375,7 @@ internal class HanaMetaData : RemoteDbMetaData
         {
             var sql = $"SHOW TABLE STATUS FROM `{db}`";
             var dt = ss.Query(sql, null);
-            if (dt.Rows.Count == 0) return null;
+            if (dt.Rows.Count == 0) return [];
 
             var hs = new HashSet<String>(names ?? [], StringComparer.OrdinalIgnoreCase);
 
@@ -439,7 +439,7 @@ internal class HanaMetaData : RemoteDbMetaData
                     var cname = dr2.Get<String>("Column_name");
                     var cs = new List<String>();
                     if (di.Columns != null && di.Columns.Length > 0) cs.AddRange(di.Columns);
-                    cs.Add(cname);
+                    if (!cname.IsNullOrEmpty()) cs.Add(cname);
                     di.Columns = cs.ToArray();
 
                     table.Indexes.Add(di);
@@ -459,7 +459,7 @@ internal class HanaMetaData : RemoteDbMetaData
         }
 
         // 找到使用枚举作为布尔型的旧表
-        var es = (Database as Hana).EnumTables;
+        var es = (Database as Hana)!.EnumTables;
         foreach (var table in list)
         {
             if (!es.Contains(table.TableName))
@@ -526,9 +526,9 @@ internal class HanaMetaData : RemoteDbMetaData
         return sql;
     }
 
-    protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
-        String str = null;
+        String? str = null;
         if (!field.Nullable) str = " NOT NULL";
 
         // 默认值

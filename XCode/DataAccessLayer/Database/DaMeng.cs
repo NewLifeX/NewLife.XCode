@@ -306,7 +306,7 @@ internal class DaMengSession : RemoteDbSession
     private String GetInsertSql(IDataTable table, IDataColumn[] columns, ICollection<String> ps)
     {
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         sb.AppendFormat("Insert Into {0}(", db!.FormatName(table));
@@ -408,7 +408,7 @@ internal class DaMengSession : RemoteDbSession
             && (addColumns == null || addColumns.Count == 0)) return null;
 
         var sb = Pool.StringBuilder.Get();
-        var db = Database as DbBase;
+        var db = (Database as DbBase)!;
 
         // 字段列表
         sb.AppendFormat("Update {0} Set ", db!.FormatName(table));

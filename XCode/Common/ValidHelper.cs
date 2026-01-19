@@ -107,6 +107,10 @@ public static partial class ValidHelper
         return (T)value;
     }
 
+    /// <summary>转为目标对象</summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="value"></param>
+    /// <returns></returns>
     public static T? ToObject<T>(Object? value) where T : class
     {
         if (value is T t) return t;

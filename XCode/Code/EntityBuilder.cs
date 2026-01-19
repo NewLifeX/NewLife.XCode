@@ -215,7 +215,7 @@ public class EntityBuilder : ClassBuilder
             {
                 AllTables = tables,
                 Option = option.Clone(),
-                Log = log!
+                Log = log
             };
 
             // 不能对option赋值，否则所有table的ModelNameForToModel就相同了

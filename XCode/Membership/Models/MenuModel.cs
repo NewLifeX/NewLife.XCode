@@ -51,7 +51,7 @@ public partial class MenuModel : IModel
     public Boolean NewWindow { get; set; }
 
     /// <summary>数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
-    public Int32 DataScope { get; set; }
+    public XCode.Membership.DataScopes DataScope { get; set; }
 
     /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
     public String? DataDepartmentIds { get; set; }
@@ -164,7 +164,7 @@ public partial class MenuModel : IModel
                 case "Visible": Visible = value.ToBoolean(); break;
                 case "Necessary": Necessary = value.ToBoolean(); break;
                 case "NewWindow": NewWindow = value.ToBoolean(); break;
-                case "DataScope": DataScope = value.ToInt(); break;
+                case "DataScope": DataScope = (XCode.Membership.DataScopes)value; break;
                 case "DataDepartmentIds": DataDepartmentIds = Convert.ToString(value); break;
                 case "Permission": Permission = Convert.ToString(value); break;
                 case "Ex1": Ex1 = value.ToInt(); break;

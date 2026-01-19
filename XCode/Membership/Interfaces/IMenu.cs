@@ -48,7 +48,7 @@ public partial interface IMenu
     Boolean NewWindow { get; set; }
 
     /// <summary>数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
-    Int32 DataScope { get; set; }
+    XCode.Membership.DataScopes DataScope { get; set; }
 
     /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
     String? DataDepartmentIds { get; set; }

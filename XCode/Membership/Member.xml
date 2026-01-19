@@ -177,7 +177,7 @@
         <Column Name="Visible" DataType="Boolean" Description="可见" />
         <Column Name="Necessary" DataType="Boolean" Description="必要。必要的菜单，必须至少有角色拥有这些权限，如果没有则自动授权给系统角色" />
         <Column Name="NewWindow" DataType="Boolean" Description="新窗口。新窗口打开链接" />
-        <Column Name="DataScope" DataType="Int32" DefaultValue="-1" Description="数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义" />
+        <Column Name="DataScope" DataType="Int32" DefaultValue="-1" Description="数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义" Type="XCode.Membership.DataScopes" />
         <Column Name="DataDepartmentIds" DataType="String" Length="500" Description="数据部门。数据范围为自定义时，选择的部门编号列表" />
         <Column Name="Permission" DataType="String" Length="2000" Description="权限子项。逗号分隔，每个权限子项名值竖线分隔" />
         <Column Name="Ex1" DataType="Int32" Description="扩展1" Category="扩展" />

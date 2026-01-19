@@ -119,13 +119,13 @@ public partial class Menu : IMenu, IEntity<IMenu>
     [BindColumn("NewWindow", "新窗口。新窗口打开链接", "")]
     public Boolean NewWindow { get => _NewWindow; set { if (OnPropertyChanging("NewWindow", value)) { _NewWindow = value; OnPropertyChanged("NewWindow"); } } }
 
-    private Int32 _DataScope;
+    private XCode.Membership.DataScopes _DataScope;
     /// <summary>数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义</summary>
     [DisplayName("数据范围")]
     [Description("数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义")]
     [DataObjectField(false, false, false, 0)]
     [BindColumn("DataScope", "数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义", "", DefaultValue = "-1")]
-    public Int32 DataScope { get => _DataScope; set { if (OnPropertyChanging("DataScope", value)) { _DataScope = value; OnPropertyChanged("DataScope"); } } }
+    public XCode.Membership.DataScopes DataScope { get => _DataScope; set { if (OnPropertyChanging("DataScope", value)) { _DataScope = value; OnPropertyChanged("DataScope"); } } }
 
     private String? _DataDepartmentIds;
     /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
@@ -373,7 +373,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
                 case "Visible": _Visible = value.ToBoolean(); break;
                 case "Necessary": _Necessary = value.ToBoolean(); break;
                 case "NewWindow": _NewWindow = value.ToBoolean(); break;
-                case "DataScope": _DataScope = value.ToInt(); break;
+                case "DataScope": _DataScope = (XCode.Membership.DataScopes)value.ToInt(); break;
                 case "DataDepartmentIds": _DataDepartmentIds = Convert.ToString(value); break;
                 case "Permission": _Permission = Convert.ToString(value); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
@@ -410,12 +410,13 @@ public partial class Menu : IMenu, IEntity<IMenu>
     /// <param name="visible">可见</param>
     /// <param name="necessary">必要。必要的菜单，必须至少有角色拥有这些权限，如果没有则自动授权给系统角色</param>
     /// <param name="newWindow">新窗口。新窗口打开链接</param>
+    /// <param name="dataScope">数据范围。该菜单的数据权限，-1使用角色默认/0全部/1本部门及下级/2本部门/3仅本人/4自定义</param>
     /// <param name="start">更新时间开始</param>
     /// <param name="end">更新时间结束</param>
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息。可携带统计和数据权限扩展查询等信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Menu> Search(Int32 parentId, XCode.Membership.MenuTypes type, Boolean? visible, Boolean? necessary, Boolean? newWindow, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<Menu> Search(Int32 parentId, XCode.Membership.MenuTypes type, Boolean? visible, Boolean? necessary, Boolean? newWindow, XCode.Membership.DataScopes dataScope, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
 
@@ -424,6 +425,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
         if (visible != null) exp &= _.Visible == visible;
         if (necessary != null) exp &= _.Necessary == necessary;
         if (newWindow != null) exp &= _.NewWindow == newWindow;
+        if (dataScope >= 0) exp &= _.DataScope == dataScope;
         exp &= _.UpdateTime.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 

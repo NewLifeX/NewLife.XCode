@@ -241,6 +241,8 @@ public class DataScopeInterceptor : EntityInterceptor
         var user = ManageProvider.User;
         if (user == null) return null;
 
-        return DataScopeContext.Create(user);
+        var menu = ManageProvider.CurrentMenu;
+
+        return DataScopeContext.Create(user, menu);
     }
 }

@@ -52,9 +52,9 @@ public class DataScopeContext
     #region 构造
     /// <summary>从用户创建数据权限上下文</summary>
     /// <param name="user">用户对象</param>
-    /// <param name="menuId">当前菜单编号，用于菜单级数据权限</param>
+    /// <param name="menu">当前菜单，用于菜单级数据权限</param>
     /// <returns></returns>
-    public static DataScopeContext? Create(IUser? user, Int32 menuId = 0)
+    public static DataScopeContext? Create(IUser? user, IMenu? menu = null)
     {
         if (user == null) return null;
 
@@ -62,7 +62,7 @@ public class DataScopeContext
         {
             UserId = user.ID,
             DepartmentId = user.DepartmentID,
-            MenuId = menuId,
+            MenuId = menu?.ID ?? 0,
         };
 
         // 获取所有角色
@@ -90,18 +90,10 @@ public class DataScopeContext
             ctx.ViewSensitive = roles.Any(e => e.ViewSensitive);
 
             // 检查菜单级数据权限覆盖
-            if (menuId > 0)
-            {
-                var menu = ManageProvider.Menu?.FindByID(menuId) ?? Menu.FindByID(menuId);
-                if (menu != null && menu.DataScope > 0)
-                {
-                    // 菜单级数据权限优先，覆盖角色默认值
-                    ctx.DataScope = (DataScopes)menu.DataScope;
-                }
-            }
+            if (menu != null) ctx.SetMenu(menu);
 
             // 从缓存获取或计算可访问部门列表
-            ctx.AccessibleDepartmentIds = GetCachedDepartmentIds(user.ID, user.DepartmentID, roles, ctx.DataScope);
+            ctx.AccessibleDepartmentIds ??= GetCachedDepartmentIds(user.ID, user.DepartmentID, roles, ctx.DataScope);
         }
         else
         {
@@ -142,7 +134,7 @@ public class DataScopeContext
     /// <param name="menuId">菜单编号</param>
     public void SetMenu(Int32 menuId)
     {
-        if (menuId <= 0 || menuId == MenuId) return;
+        if (menuId <= 0) return;
 
         MenuId = menuId;
 
@@ -150,6 +142,22 @@ public class DataScopeContext
         var menu = ManageProvider.Menu?.FindByID(menuId) ?? Menu.FindByID(menuId);
         if (menu != null && menu.DataScope >= 0)
         {
+            SetMenu(menu);
+        }
+    }
+
+    /// <summary>设置当前菜单，用于菜单级数据权限</summary>
+    /// <param name="menu">菜单</param>
+    public void SetMenu(IMenu menu)
+    {
+        if (menu == null) return;
+
+        MenuId = menu.ID;
+
+        // 检查菜单级数据权限覆盖
+        if (menu.DataScope >= 0)
+        {
+            // 菜单级数据权限优先，覆盖角色默认值
             DataScope = (DataScopes)menu.DataScope;
 
             // 重新计算可访问部门
@@ -158,7 +166,7 @@ public class DataScopeContext
             {
                 var roles = user.Roles ?? (user.Role != null ? [user.Role] : null);
                 if (roles != null)
-                    AccessibleDepartmentIds = DataScopeHelper.GetAccessibleDepartmentIds(DepartmentId, roles, DataScope);
+                    AccessibleDepartmentIds = GetCachedDepartmentIds(user.ID, DepartmentId, roles, DataScope);
             }
         }
     }

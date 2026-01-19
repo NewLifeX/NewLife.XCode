@@ -124,6 +124,14 @@ public abstract class ManageProvider : IManageProvider
 #endif
     /// <summary>用户主机</summary>
     public static String UserHost { get => _UserHost.Value; set => _UserHost.Value = value; }
+
+#if NET45
+    private static readonly ThreadLocal<IMenu?> _CurrentMenu = new();
+#else
+    private static readonly AsyncLocal<IMenu?> _CurrentMenu = new();
+#endif
+    /// <summary>当前正在访问的菜单</summary>
+    public static IMenu? CurrentMenu { get => _CurrentMenu.Value; set => _CurrentMenu.Value = value; }
     #endregion
 
     #region IManageProvider 接口

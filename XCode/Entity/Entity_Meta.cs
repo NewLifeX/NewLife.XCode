@@ -295,13 +295,16 @@ public partial class Entity<TEntity>
         #endregion
 
         #region 拦截器
-        private static EntityInterceptors _Interceptors = new(typeof(TEntity));
+        //private static EntityInterceptors _Interceptors = new(typeof(TEntity));
+#pragma warning disable CS0618 // 类型或成员已过时
+        private static EntityModules _Interceptors = new(typeof(TEntity));
+#pragma warning restore CS0618 // 类型或成员已过时
         /// <summary>实体拦截器集合</summary>
         public static EntityInterceptors Interceptors => _Interceptors;
 
         /// <summary>实体模块集合。旧版名称，建议使用 Interceptors</summary>
         [Obsolete("请使用 Interceptors")]
-        public static EntityInterceptors Modules => _Interceptors;
+        public static EntityModules Modules => _Interceptors;
         #endregion
     }
 }

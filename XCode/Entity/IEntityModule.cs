@@ -281,8 +281,8 @@ public class EntityInterceptors(Type? entityType) : IEnumerable<IEntityIntercept
 [Obsolete("请使用 EntityInterceptors")]
 public class EntityModules(Type? entityType) : EntityInterceptors(entityType)
 {
-    /// <summary>全局模块集合，对所有实体生效</summary>
-    public new static EntityModules Global { get; } = new EntityModules(null);
+    ///// <summary>全局模块集合，对所有实体生效</summary>
+    //public new static EntityModules Global { get; } = new EntityModules(null);
 }
 
 /// <summary>实体拦截器基类</summary>

@@ -175,14 +175,14 @@ public class DataScopeInterceptor : EntityInterceptor
         if (ctx == null || ctx.IsSystem) return where;
 
         // 获取数据权限过滤表达式
-        var filter = DataScopeHelper.GetFilterForType(factory, ctx);
+        var filter = DataScopeHelper.GetFilter(factory, ctx);
         if (filter == null) return where;
 
         // 合并条件
         if (where == null || where.IsEmpty)
             return filter;
 
-        return new WhereExpression(where, Operator.And, filter);
+        return where & filter;
     }
 
     /// <summary>过滤实体列表</summary>
@@ -216,7 +216,7 @@ public class DataScopeInterceptor : EntityInterceptor
     }
 
     /// <summary>判断是否有权访问实体</summary>
-    private Boolean CanAccess(IEntity entity, DataScopeContext ctx)
+    private static Boolean CanAccess(IEntity entity, DataScopeContext ctx)
     {
         if (entity is IDataScope dataScope)
             return DataScopeHelper.CanAccess(dataScope, ctx);
@@ -231,7 +231,7 @@ public class DataScopeInterceptor : EntityInterceptor
     }
 
     /// <summary>获取数据权限上下文</summary>
-    private DataScopeContext? GetContext()
+    private static DataScopeContext? GetContext()
     {
         // 优先使用已设置的上下文
         var ctx = DataScopeContext.Current;

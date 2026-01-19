@@ -669,10 +669,10 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
-        var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+        var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
 
         // 调用模块的 Query 方法，附加数据过滤条件
-        where = Meta.Interceptors.Query(Meta.Factory, where, QueryAction.FindAll);
+        where = Meta.Interceptors.Query(Meta.Factory, where, QueryAction.Find);
 
         var wh = where?.GetString(db, ps);
 
@@ -1482,7 +1482,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
-        var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+        var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
 
         // 调用模块的 Query 方法，附加数据过滤条件
         where = Meta.Interceptors.Query(Meta.Factory, where, QueryAction.FindCount);
@@ -1554,7 +1554,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var exp = Meta.Interceptors.Query(Meta.Factory, null, QueryAction.FindCount);
         if (exp != null && !exp.IsEmpty)
         {
-            var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+            var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
             var extraWhere = exp.GetString(db, ps);
             if (!extraWhere.IsNullOrEmpty())
             {
@@ -1585,7 +1585,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
-        var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+        var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
 
         // 调用模块的 Query 方法，附加数据过滤条件
         where = Meta.Interceptors.Query(Meta.Factory, where, QueryAction.FindCount);
@@ -1840,7 +1840,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     /// <param name="order">排序</param>
     /// <param name="selects">选择列</param>
     /// <returns></returns>
-    public static SelectBuilder CreateBuilder(Expression? where, String? order, String? selects) => CreateBuilder(where, order, selects, QueryAction.Unknown);
+    public static SelectBuilder CreateBuilder(Expression? where, String? order, String? selects) => CreateBuilder(where, order, selects, 0);
 
     /// <summary>构造SQL查询语句</summary>
     /// <param name="where">条件</param>
@@ -1852,20 +1852,18 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
-        var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+        var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
 
         // 调用模块的 Query 方法，附加数据过滤条件
         where = Meta.Interceptors.Query(Meta.Factory, where, action);
 
         var wh = where?.GetString(db, ps);
-        var builder = CreateBuilder(wh, order, selects, true);
+        var builder = CreateBuilder(wh, order, selects, true, 0);
 
         builder = FixParam(builder, ps);
 
         return builder;
     }
-
-    private static SelectBuilder CreateBuilder(String? where, String? order, String? selects, Boolean needOrderByID) => CreateBuilder(where, order, selects, needOrderByID, QueryAction.Unknown);
 
     private static SelectBuilder CreateBuilder(String? where, String? order, String? selects, Boolean needOrderByID, QueryAction action)
     {
@@ -1874,15 +1872,12 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         var db = session.Dal.Db;
 
         // 调用模块的 Query 方法，附加数据过滤条件（仅字符串where时需要额外调用）
-        var exp = Meta.Interceptors.Query(factory, null, action);
-        if (exp != null && !exp.IsEmpty)
+        if (!where.IsNullOrEmpty() && action > 0)
         {
-            var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
-            var extraWhere = exp.GetString(db, ps);
-            if (!extraWhere.IsNullOrEmpty())
-            {
-                where = where.IsNullOrEmpty() ? extraWhere : $"({where}) And ({extraWhere})";
-            }
+            var exp = new Expression(where);
+            exp = Meta.Interceptors.Query(factory, exp, action);
+            if (exp != null && !exp.IsEmpty)
+                where = exp.GetString(db, null);
         }
 
         var builder = new SelectBuilder
@@ -1962,7 +1957,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         return builder;
     }
 
-    private static SelectBuilder FixParam(SelectBuilder builder, IDictionary<String, Object>? ps)
+    private static SelectBuilder FixParam(SelectBuilder builder, IDictionary<String, Object?>? ps)
     {
         // 提取参数
         if (ps != null)

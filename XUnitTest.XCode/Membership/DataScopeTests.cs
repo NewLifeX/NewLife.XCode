@@ -1006,7 +1006,7 @@ public class DataScopeTests : IDisposable
         var where = new WhereExpression();
 
         // Act
-        var result = where.ApplyDataScope<UserScopeTestEntity>();
+        var result = where.ApplyScope<UserScopeTestEntity>();
 
         // Assert
         var sql = result.ToString();
@@ -1023,7 +1023,7 @@ public class DataScopeTests : IDisposable
         var where = new WhereExpression();
 
         // Act
-        var result = where.ApplyDataScope<UserScopeTestEntity>();
+        var result = where.ApplyScope<UserScopeTestEntity>();
 
         // Assert
         Assert.True(result.IsEmpty);
@@ -1042,7 +1042,7 @@ public class DataScopeTests : IDisposable
         var where = new WhereExpression();
 
         // Act
-        var result = where.ApplyDataScope<UserScopeTestEntity>();
+        var result = where.ApplyScope<UserScopeTestEntity>();
 
         // Assert
         Assert.True(result.IsEmpty);
@@ -1063,7 +1063,7 @@ public class DataScopeTests : IDisposable
         var where = new WhereExpression();
 
         // Act
-        var result = where.ApplyDataScope<DepartmentScopeTestEntity>();
+        var result = where.ApplyScope<DepartmentScopeTestEntity>();
 
         // Assert
         var sql = result.ToString();
@@ -1079,7 +1079,7 @@ public class DataScopeTests : IDisposable
         var where = new WhereExpression();
 
         // Act
-        var result = where.ApplyDataScope(null!);
+        var result = where.ApplyScope(null!);
 
         // Assert
         Assert.Same(where, result);

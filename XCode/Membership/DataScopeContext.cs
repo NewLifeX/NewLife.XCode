@@ -176,14 +176,6 @@ public class DataScopeContext
 /// </remarks>
 public static class DataScopeHelper
 {
-    #region PageParameter 常量
-    /// <summary>PageParameter.State 中存储数据权限过滤表达式的键名</summary>
-    public const String DataScopeFilterKey = "DataScopeFilter";
-
-    /// <summary>PageParameter.State 中存储是否启用数据权限的键名</summary>
-    public const String DataScopeEnabledKey = "DataScopeEnabled";
-    #endregion
-
     #region 核心方法
     /// <summary>获取可访问的部门编号列表</summary>
     /// <param name="userDeptId">用户所属部门编号</param>
@@ -286,61 +278,50 @@ public static class DataScopeHelper
     #endregion
 
     #region 过滤表达式
+    /// <summary>根据实体工厂获取数据权限过滤表达式</summary>
+    /// <param name="factory">实体工厂</param>
+    /// <param name="context">数据权限上下文</param>
+    /// <returns>过滤表达式</returns>
+    public static Expression? GetFilter(IEntityFactory factory, DataScopeContext? context = null)
+    {
+        if (factory == null) return null;
+
+        context ??= DataScopeContext.Current;
+        if (context == null || context.IsSystem) return null;
+        if (context.DataScope == DataScopes.全部) return null;
+
+        var type = factory.EntityType;
+
+        // 根据实体实现的接口选择过滤方式
+        if (typeof(IDataScope).IsAssignableFrom(type))
+        {
+            var userField = GetUserField(factory);
+            var deptField = GetDepartmentField(factory);
+            return BuildFilter(context, userField, deptField);
+        }
+
+        if (typeof(IUserScope).IsAssignableFrom(type))
+        {
+            var userField = GetUserField(factory);
+            if (userField is not null)
+                return userField.Equal(context.UserId);
+        }
+
+        if (typeof(IDepartmentScope).IsAssignableFrom(type))
+        {
+            var deptField = GetDepartmentField(factory);
+            if (deptField is not null)
+                return BuildDepartmentFilter(context, deptField);
+        }
+
+        return null;
+    }
+
     /// <summary>获取数据权限过滤表达式（完整数据权限实体）</summary>
     /// <typeparam name="TEntity">实体类型，需实现 IDataScope 接口</typeparam>
     /// <param name="context">数据权限上下文，为 null 时尝试使用 DataScopeContext.Current</param>
     /// <returns>过滤表达式，null 表示不需要过滤</returns>
-    public static Expression? GetFilter<TEntity>(DataScopeContext? context = null) where TEntity : Entity<TEntity>, IDataScope, new()
-    {
-        context ??= DataScopeContext.Current;
-        if (context == null || context.IsSystem) return null;
-
-        var factory = Entity<TEntity>.Meta.Factory;
-        var userField = GetUserField(factory);
-        var deptField = GetDepartmentField(factory);
-
-        return BuildFilter(context, userField, deptField);
-    }
-
-    /// <summary>获取数据权限过滤表达式（仅用户标识实体）</summary>
-    /// <typeparam name="TEntity">实体类型，需实现 IUserScope 接口</typeparam>
-    /// <param name="context">数据权限上下文</param>
-    /// <returns>过滤表达式</returns>
-    public static Expression? GetUserScopeFilter<TEntity>(DataScopeContext? context = null) where TEntity : Entity<TEntity>, IUserScope, new()
-    {
-        context ??= DataScopeContext.Current;
-        if (context == null || context.IsSystem) return null;
-
-        // 如果数据范围是全部，不限制
-        if (context.DataScope == DataScopes.全部) return null;
-
-        // 仅用户标识的实体，只能按用户过滤
-        var factory = Entity<TEntity>.Meta.Factory;
-        var userField = GetUserField(factory);
-        if (userField is null) return null;
-
-        // 按创建用户过滤
-        return userField.Equal(context.UserId);
-    }
-
-    /// <summary>获取数据权限过滤表达式（仅部门标识实体）</summary>
-    /// <typeparam name="TEntity">实体类型，需实现 IDepartmentScope 接口</typeparam>
-    /// <param name="context">数据权限上下文</param>
-    /// <returns>过滤表达式</returns>
-    public static Expression? GetDepartmentScopeFilter<TEntity>(DataScopeContext? context = null) where TEntity : Entity<TEntity>, IDepartmentScope, new()
-    {
-        context ??= DataScopeContext.Current;
-        if (context == null || context.IsSystem) return null;
-
-        // 如果数据范围是全部，不限制
-        if (context.DataScope == DataScopes.全部) return null;
-
-        var factory = Entity<TEntity>.Meta.Factory;
-        var deptField = GetDepartmentField(factory);
-        if (deptField is null) return null;
-
-        return BuildDepartmentFilter(context, deptField);
-    }
+    public static Expression? GetFilter<TEntity>(DataScopeContext? context = null) where TEntity : Entity<TEntity>, new() => GetFilter(Entity<TEntity>.Meta.Factory, context);
 
     /// <summary>构建过滤表达式</summary>
     private static Expression? BuildFilter(DataScopeContext context, FieldItem? userField, FieldItem? deptField)
@@ -450,42 +431,6 @@ public static class DataScopeHelper
     #endregion
 
     #region WhereExpression 扩展
-    /// <summary>应用数据权限过滤（根据实体类型自动构建过滤条件）</summary>
-    /// <typeparam name="TEntity">实体类型</typeparam>
-    /// <param name="where">现有条件</param>
-    /// <param name="context">数据权限上下文，为 null 时使用 DataScopeContext.Current</param>
-    /// <returns>合并后的条件</returns>
-    /// <remarks>
-    /// 在 Search 方法中使用示例：
-    /// <code>
-    /// public static IList&lt;Order&gt; Search(Int32 status, PageParameter page)
-    /// {
-    ///     var exp = new WhereExpression();
-    ///     if (status &gt;= 0) exp &amp;= _.Status == status;
-    ///     
-    ///     // 应用数据权限过滤
-    ///     exp = exp.ApplyDataScope&lt;Order&gt;();
-    ///     
-    ///     return FindAll(exp, page);
-    /// }
-    /// </code>
-    /// </remarks>
-    public static WhereExpression ApplyDataScope<TEntity>(this WhereExpression where, DataScopeContext? context = null) where TEntity : Entity<TEntity>, new() => ApplyDataScope(where, Entity<TEntity>.Meta.Factory, context);
-
-    /// <summary>应用数据权限过滤（通过实体工厂）</summary>
-    /// <param name="where">现有条件</param>
-    /// <param name="factory">实体工厂</param>
-    /// <param name="context">数据权限上下文，为 null 时使用 DataScopeContext.Current</param>
-    /// <returns>合并后的条件</returns>
-    public static WhereExpression ApplyDataScope(this WhereExpression where, IEntityFactory factory, DataScopeContext? context = null)
-    {
-        var filter = GetFilterForType(factory, context);
-        if (filter != null)
-            where &= filter;
-
-        return where;
-    }
-
     /// <summary>同时应用租户和数据权限过滤</summary>
     /// <typeparam name="TEntity">实体类型</typeparam>
     /// <param name="where">现有条件</param>
@@ -519,52 +464,16 @@ public static class DataScopeHelper
         where = where.ApplyTenant(factory);
 
         // 再应用数据权限过滤
-        where = where.ApplyDataScope(factory, context);
+        //where = where.ApplyDataScope(factory, context);
+        var filter = GetFilter(factory, context);
+        if (filter != null)
+            where &= filter;
 
         return where;
     }
     #endregion
 
     #region 辅助
-    /// <summary>根据实体工厂获取数据权限过滤表达式</summary>
-    /// <param name="factory">实体工厂</param>
-    /// <param name="context">数据权限上下文</param>
-    /// <returns>过滤表达式</returns>
-    public static Expression? GetFilterForType(IEntityFactory factory, DataScopeContext? context = null)
-    {
-        if (factory == null) return null;
-
-        context ??= DataScopeContext.Current;
-        if (context == null || context.IsSystem) return null;
-        if (context.DataScope == DataScopes.全部) return null;
-
-        var type = factory.EntityType;
-
-        // 根据实体实现的接口选择过滤方式
-        if (typeof(IDataScope).IsAssignableFrom(type))
-        {
-            var userField = GetUserField(factory);
-            var deptField = GetDepartmentField(factory);
-            return BuildFilter(context, userField, deptField);
-        }
-
-        if (typeof(IUserScope).IsAssignableFrom(type))
-        {
-            var userField = GetUserField(factory);
-            if (userField is not null)
-                return userField.Equal(context.UserId);
-        }
-
-        if (typeof(IDepartmentScope).IsAssignableFrom(type))
-        {
-            var deptField = GetDepartmentField(factory);
-            if (deptField is not null)
-                return BuildDepartmentFilter(context, deptField);
-        }
-
-        return null;
-    }
-
     /// <summary>获取用户字段</summary>
     /// <param name="factory">实体工厂</param>
     /// <returns>用户字段</returns>
@@ -597,30 +506,6 @@ public static class DataScopeHelper
 
         // 使用默认字段名
         return factory.Table.FindByName(nameof(IDepartmentScope.DepartmentId));
-    }
-    #endregion
-
-    #region 审计日志
-    /// <summary>记录数据权限过滤日志</summary>
-    /// <param name="entityType">实体类型</param>
-    /// <param name="context">数据权限上下文</param>
-    /// <param name="filter">过滤表达式</param>
-    /// <param name="action">操作类型</param>
-    public static void WriteLog(Type entityType, DataScopeContext context, WhereExpression? filter, String action = "查询")
-    {
-        if (context == null) return;
-
-        // 仅在以下情况记录审计日志：
-        // 1. 启用了详细日志（调试模式）
-        // 2. 数据权限实际生效（非全部权限）
-        if (!XTrace.Debug) return;
-        if (context.IsSystem || context.DataScope == DataScopes.全部) return;
-
-        var msg = $"[数据权限]{action} {entityType.Name}，用户={context.UserId}，范围={context.DataScope}";
-        if (filter != null)
-            msg += $"，过滤={filter}";
-
-        XTrace.WriteLine(msg);
     }
     #endregion
 }

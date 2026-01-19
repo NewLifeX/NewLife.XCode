@@ -8,17 +8,20 @@ namespace XCode;
 /// <summary>查询操作来源</summary>
 public enum QueryAction
 {
-    /// <summary>未知</summary>
-    Unknown = 0,
+    ///// <summary>未知</summary>
+    //Unknown = 0,
+
+    /// <summary>Find查询</summary>
+    Find = 1,
 
     /// <summary>FindAll查询</summary>
-    FindAll = 1,
+    FindAll = 2,
 
     /// <summary>FindCount查询</summary>
-    FindCount = 2,
+    FindCount = 3,
 
     /// <summary>FindSQL查询</summary>
-    FindSQL = 3,
+    FindSQL = 4,
 }
 
 /// <summary>实体拦截器。在实体的创建、验证、查询、过滤等操作中进行拦截处理</summary>
@@ -183,9 +186,9 @@ public class EntityInterceptors(Type? entityType) : IEnumerable<IEntityIntercept
     /// 按顺序执行所有拦截器修改查询条件，每个拦截器的输出作为下一个的输入
     /// 会先执行实体类级别的拦截器，再执行全局拦截器
     /// </remarks>
-    public Expression? Query(IEntityFactory factory, Expression? where, QueryAction action)
+    public Expression Query(IEntityFactory factory, Expression? where, QueryAction action)
     {
-        if (IsEmpty && (this == Global || Global.IsEmpty)) return where;
+        if (IsEmpty && (this == Global || Global.IsEmpty)) return where!;
 
         foreach (var item in Interceptors)
         {
@@ -194,7 +197,7 @@ public class EntityInterceptors(Type? entityType) : IEnumerable<IEntityIntercept
 
         if (this != Global) where = Global.Query(factory, where, action);
 
-        return where;
+        return where!;
     }
 
     /// <summary>过滤实体列表</summary>

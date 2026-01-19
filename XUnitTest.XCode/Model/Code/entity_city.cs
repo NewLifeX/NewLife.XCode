@@ -358,7 +358,7 @@ public partial class CorePerson
         /// <summary>备注</summary>
         public static readonly Field Remark = FindByName("Remark");
 
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
     }
 
     /// <summary>取得居民信息字段名称的快捷方式</summary>

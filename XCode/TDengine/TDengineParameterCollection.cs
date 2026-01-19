@@ -10,7 +10,7 @@ namespace XCode.TDengine
     /// <summary>参数集合</summary>
     public class TDengineParameterCollection : DbParameterCollection
     {
-        private readonly List<TDengineParameter> _parameters = new();
+        private readonly List<TDengineParameter> _parameters = [];
 
         /// <summary>实例化</summary>
         protected internal TDengineParameterCollection() { }

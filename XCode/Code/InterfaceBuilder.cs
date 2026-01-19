@@ -145,7 +145,7 @@ public class InterfaceBuilder : ClassBuilder
     /// <param name="ext"></param>
     /// <param name="chineseFileName"></param>
     /// <returns></returns>
-    protected override String GetFileName(String ext = null, Boolean chineseFileName = true)
+    protected override String GetFileName(String? ext = null, Boolean chineseFileName = true)
     {
         var p = Option.Output;
         if (ext.IsNullOrEmpty())

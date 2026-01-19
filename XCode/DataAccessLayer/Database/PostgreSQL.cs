@@ -248,7 +248,7 @@ internal class PostgreSQL : RemoteDb
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">主键列。用于not in分页</param>
     /// <returns></returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn) => PageSplitByOffsetLimit(sql, startRowIndex, maximumRows);
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn) => PageSplitByOffsetLimit(sql, startRowIndex, maximumRows);
 
     /// <summary>构造分页SQL</summary>
     /// <param name="builder">查询生成器</param>
@@ -331,13 +331,13 @@ internal class PostgreSQLSession : RemoteDbSession
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql += $" RETURNING *";
         return base.InsertAndGetIdentity(sql, type, ps);
     }
 
-    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql += $" RETURNING *";
         return base.InsertAndGetIdentityAsync(sql, type, ps);

@@ -83,7 +83,7 @@ internal class KingBase : RemoteDb
 
     #region 分页
     public override SelectBuilder PageSplit(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows) => PostgreSQL.PageSplitByOffsetLimit(builder, startRowIndex, maximumRows);
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn) => PostgreSQL.PageSplitByOffsetLimit(sql, startRowIndex, maximumRows);
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn) => PostgreSQL.PageSplitByOffsetLimit(sql, startRowIndex, maximumRows);
     #endregion
 }
 

@@ -527,10 +527,14 @@ internal class SQLiteMetaData : FileDbMetaData
     #endregion
 
     #region 构架
-    protected override List<IDataTable> OnGetTables(String[] names)
+    protected override List<IDataTable> OnGetTables(String[]? names)
     {
         // 特殊处理内存数据库
-        if ((Database as SQLite).IsMemoryDatabase) return memoryTables.Where(t => names.Contains(t.TableName)).ToList();
+        if ((Database as SQLite)!.IsMemoryDatabase)
+        {
+            if (names == null || names.Length == 0) return memoryTables.ToList();
+            return memoryTables.Where(t => names.Contains(t.TableName)).ToList();
+        }
 
         //var dt = GetSchema(_.Tables, null);
         //if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
@@ -1015,7 +1019,7 @@ internal class SQLiteMetaData : FileDbMetaData
     #endregion
 
     #region 反向工程
-    private readonly List<IDataTable> memoryTables = new();
+    private readonly List<IDataTable> memoryTables = [];
     /// <summary>已重载。因为内存数据库无法检测到架构，不知道表是否已存在，所以需要自己维护</summary>
     /// <param name="entitytable"></param>
     /// <param name="dbtable"></param>

@@ -182,7 +182,7 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
 
         try
         {
-            _Entities = Invoke<Object, IList<TEntity>>(s => FillListMethod(), null).ToArray();
+            _Entities = Invoke<Object, IList<TEntity>>(s => FillListMethod(), null!)?.ToArray() ?? [];
         }
         catch (Exception ex)
         {
@@ -244,7 +244,7 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
     /// <summary>从缓存中删除对象</summary>
     /// <param name="entity"></param>
     /// <returns></returns>
-    public TEntity Remove(TEntity entity)
+    public TEntity? Remove(TEntity entity)
     {
         if (!Using) return null;
 
@@ -273,7 +273,7 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
         return e;
     }
 
-    internal TEntity Update(TEntity entity)
+    internal TEntity? Update(TEntity entity)
     {
         if (!Using) return null;
 

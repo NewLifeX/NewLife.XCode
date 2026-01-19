@@ -351,7 +351,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
         /// <summary>描述</summary>
         public static readonly Field Remark = FindByName("Remark");
 
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
     }
 
     /// <summary>取得租户关系字段名称的快捷方式</summary>

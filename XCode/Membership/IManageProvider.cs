@@ -15,7 +15,7 @@ namespace XCode.Membership;
 public interface IManageProvider : IServiceProvider
 {
     /// <summary>当前登录用户，设为空则注销登录</summary>
-    IManageUser Current { get; set; }
+    IManageUser? Current { get; set; }
 
     ///// <summary>当前租户。正在使用的租户</summary>
     //ITenant Tenant { get; set; }
@@ -26,12 +26,12 @@ public interface IManageProvider : IServiceProvider
     /// <summary>获取当前用户</summary>
     /// <param name="context"></param>
     /// <returns></returns>
-    IManageUser GetCurrent(IServiceProvider context);
+    IManageUser? GetCurrent(IServiceProvider context);
 
     /// <summary>设置当前用户</summary>
     /// <param name="user"></param>
     /// <param name="context"></param>
-    void SetCurrent(IManageUser user, IServiceProvider context);
+    void SetCurrent(IManageUser? user, IServiceProvider context);
 
     ///// <summary>获取租户信息</summary>
     ///// <returns></returns>
@@ -128,7 +128,7 @@ public abstract class ManageProvider : IManageProvider
 
     #region IManageProvider 接口
     /// <summary>当前用户</summary>
-    public virtual IManageUser Current { get => GetCurrent(); set => SetCurrent(value); }
+    public virtual IManageUser? Current { get => GetCurrent(); set => SetCurrent(value); }
 
     ///// <summary>当前租户。正在使用的租户</summary>
     //public ITenant Tenant { get; set; }
@@ -151,12 +151,12 @@ public abstract class ManageProvider : IManageProvider
     /// <summary>获取当前用户</summary>
     /// <param name="context"></param>
     /// <returns></returns>
-    public abstract IManageUser GetCurrent(IServiceProvider? context = null);
+    public abstract IManageUser? GetCurrent(IServiceProvider? context = null);
 
     /// <summary>设置当前用户</summary>
     /// <param name="user"></param>
     /// <param name="context"></param>
-    public abstract void SetCurrent(IManageUser user, IServiceProvider? context = null);
+    public abstract void SetCurrent(IManageUser? user, IServiceProvider? context = null);
 
     ///// <summary>获取当前用户租户</summary>
     ///// <returns></returns>
@@ -231,7 +231,7 @@ public abstract class ManageProvider : IManageProvider
         }
     }
 
-    /// <summary>注销</summary>
+     /// <summary>注销</summary>
     public virtual void Logout()
     {
         if (Current is IUser user) user.Logout();

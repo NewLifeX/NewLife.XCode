@@ -268,7 +268,7 @@ internal class VastBase : RemoteDb
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">主键列。用于not in分页</param>
     /// <returns></returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn) => PageSplitByOffsetLimit(sql, startRowIndex, maximumRows);
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn) => PageSplitByOffsetLimit(sql, startRowIndex, maximumRows);
 
     /// <summary>构造分页SQL</summary>
     /// <param name="builder">查询生成器</param>
@@ -351,13 +351,13 @@ internal class VastBaseSession : RemoteDbSession
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql += $" RETURNING *";
         return base.InsertAndGetIdentity(sql, type, ps);
     }
 
-    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql += $" RETURNING *";
         return base.InsertAndGetIdentityAsync(sql, type, ps);
@@ -707,7 +707,7 @@ internal class VastBaseMetaData : RemoteDbMetaData
         var dbRawType = NormalizeRawType(dbColumn.RawType, dbType);
 
         // 如果标准化后的 RawType 相同,则认为类型未改变
-        if (!String.IsNullOrEmpty(entityRawType) && !String.IsNullOrEmpty(dbRawType))
+        if (!entityRawType.IsNullOrEmpty() && !dbRawType.IsNullOrEmpty())
         {
             if (entityRawType.EqualIgnoreCase(dbRawType))
                 return false;
@@ -728,7 +728,7 @@ internal class VastBaseMetaData : RemoteDbMetaData
     /// <summary>标准化 RawType,将不支持的类型转换为 VastBase 支持的类型</summary>
     private String? NormalizeRawType(String? rawType, Type? dataType)
     {
-        if (String.IsNullOrEmpty(rawType)) return rawType;
+        if (rawType.IsNullOrEmpty()) return rawType;
 
         // 优化:避免重复 ToLower,使用 OrdinalIgnoreCase 比较
         if (rawType.StartsWith("tinyint", StringComparison.OrdinalIgnoreCase) ||
@@ -920,7 +920,7 @@ ORDER BY
             if (String.IsNullOrEmpty(tableName)) continue;
 
             if (!tableDict.ContainsKey(tableName!))
-                tableDict[tableName!] = new List<DataRow>();
+                tableDict[tableName!] = [];
 
             tableDict[tableName!].Add(row);
         }
@@ -1023,7 +1023,7 @@ ORDER BY
                     if (String.IsNullOrEmpty(indexName)) continue;
 
                     if (!idxDict.ContainsKey(indexName!))
-                        idxDict[indexName!] = new List<DataRow>();
+                        idxDict[indexName!] = [];
 
                     idxDict[indexName!].Add(row);
                 }

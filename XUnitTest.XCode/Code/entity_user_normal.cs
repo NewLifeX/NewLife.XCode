@@ -673,7 +673,7 @@ public partial class User
         /// <summary>备注</summary>
         public static readonly Field Remark = FindByName("Remark");
 
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
     }
 
     /// <summary>取得用户字段名称的快捷方式</summary>

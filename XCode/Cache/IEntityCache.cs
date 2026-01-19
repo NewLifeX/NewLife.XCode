@@ -37,12 +37,12 @@ public interface ISingleEntityCache : IEntityCacheBase
     /// <summary>获取数据</summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    IEntity this[Object key] { get; }
+    IEntity? this[Object key] { get; }
 
     /// <summary>根据从键获取实体数据</summary>
     /// <param name="slaveKey"></param>
     /// <returns></returns>
-    IEntity GetItemWithSlaveKey(String slaveKey);
+    IEntity? GetItemWithSlaveKey(String slaveKey);
 
     /// <summary>是否包含指定主键</summary>
     /// <param name="key"></param>

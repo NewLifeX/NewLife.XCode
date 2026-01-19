@@ -328,7 +328,7 @@ public partial class Area : Entity<Area>
     /// <returns>实体列表</returns>
     public static IList<Area> FindAllByParentID(Int32 parentid)
     {
-        if (parentid is < 0 or > 99_99_99) return new List<Area>();
+        if (parentid is < 0 or > 99_99_99) return [];
 
         // 实体缓存
         var rs = Meta.Cache.FindAll(e => e.ParentID == parentid);
@@ -408,7 +408,7 @@ public partial class Area : Entity<Area>
     {
         // 找到父节点所在位置，向后搜索子节点
         var r = parentid == 0 ? Root : FindByID(parentid);
-        if (parentid >= 0 && r == null) return new List<Area>();
+        if (parentid >= 0 && r == null) return [];
 
         if (r != null)
         {

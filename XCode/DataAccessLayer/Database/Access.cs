@@ -170,7 +170,7 @@ class AccessMetaData : FileDbMetaData
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
         var dt = GetSchema(_.Tables, null);
-        if (dt?.Rows == null || dt.Rows.Count <= 0) return new List<IDataTable>();
+        if (dt?.Rows == null || dt.Rows.Count <= 0) return [];
 
         // 默认列出所有字段
         var rows = dt.Select($"TABLE_TYPE='Table' Or TABLE_TYPE='View'");

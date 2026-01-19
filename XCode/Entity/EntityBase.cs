@@ -244,7 +244,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     private DirtyCollection? _Dirtys;
     /// <summary>脏属性。存储哪些属性的数据被修改过了。</summary>
     [XmlIgnore, ScriptIgnore, IgnoreDataMember]
-    protected DirtyCollection Dirtys => _Dirtys ??= new DirtyCollection();
+    protected DirtyCollection Dirtys => _Dirtys ??= [];
 
     /// <summary>脏属性。存储哪些属性的数据被修改过了。</summary>
     DirtyCollection IEntity.Dirtys => Dirtys;

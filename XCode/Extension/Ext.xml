@@ -1,15 +1,57 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Tables Version="9.7.6698.29648" NameSpace="XCode.Extension" ConnName="Ext" Output="" BaseClass="Entity">
-  <Table Name="MyDbCache" Description="数据缓存" ConnName="DbCache">
-    <Columns>
-      <Column Name="Name" DataType="String" PrimaryKey="True" Master="True" Nullable="False" Description="名称" />
-      <Column Name="Value" DataType="String" Length="2000" Description="键值" />
-      <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
-      <Column Name="ExpiredTime" DataType="DateTime" Description="过期时间" />
-    </Columns>
-    <Indexes>
-      <Index Name="IU_TableCache_Name" Columns="Name" Unique="True" PrimaryKey="True" />
-      <Index Columns="ExpiredTime" />
-    </Indexes>
-  </Table>
-</Tables>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<EntityModel xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:schemaLocation="https://newlifex.com https://newlifex.com/Model202509.xsd" Version="9.7.6698.29648" Document="https://newlifex.com/xcode/model" xmlns="https://newlifex.com/Model202509.xsd">
+  <Option>
+    <!--类名模板。其中{name}替换为Table.Name，如{name}Model/I{name}Dto等-->
+    <ClassNameTemplate />
+    <!--显示名模板。其中{displayName}替换为Table.DisplayName-->
+    <DisplayNameTemplate />
+    <!--基类。可能包含基类和接口，其中{name}替换为Table.Name-->
+    <BaseClass>Entity</BaseClass>
+    <!--命名空间-->
+    <Namespace>XCode.Extension</Namespace>
+    <!--引用命名空间-->
+    <ExtendNameSpace />
+    <!--输出目录-->
+    <Output>.\</Output>
+    <!--是否使用中文文件名。默认false-->
+    <ChineseFileName>False</ChineseFileName>
+    <!--用于生成Copy函数的参数类型。例如{name}或I{name}-->
+    <ModelNameForCopy />
+    <!--带有索引器。实现IModel接口-->
+    <HasIModel>False</HasIModel>
+    <!--可为null上下文。生成String?等-->
+    <Nullable>True</Nullable>
+    <!--数据库连接名-->
+    <ConnName>Ext</ConnName>
+    <!--模型类模版。设置后生成模型类，用于接口数据传输，例如{name}Model-->
+    <ModelClass />
+    <!--模型类输出目录。默认当前目录的Models子目录-->
+    <ModelsOutput>.\Models\</ModelsOutput>
+    <!--模型接口模版。设置后生成模型接口，用于约束模型类和实体类，例如I{name}-->
+    <ModelInterface />
+    <!--模型接口输出目录。默认当前目录的Interfaces子目录-->
+    <InterfacesOutput>.\Interfaces\</InterfacesOutput>
+    <!--用户实体转为模型类的模型类。例如{name}或{name}DTO-->
+    <ModelNameForToModel />
+    <!--命名格式。Default/Upper/Lower/Underline-->
+    <NameFormat>Default</NameFormat>
+    <!--魔方区域显示名-->
+    <DisplayName />
+    <!--魔方控制器输出目录-->
+    <CubeOutput />
+  </Option>
+  <Tables>
+    <Table Name="MyDbCache" Description="数据缓存" ConnName="DbCache">
+      <Columns>
+        <Column Name="Name" DataType="String" PrimaryKey="True" Master="True" Nullable="False" Description="名称" />
+        <Column Name="Value" DataType="String" Length="2000" Description="键值" />
+        <Column Name="CreateTime" DataType="DateTime" Description="创建时间" />
+        <Column Name="ExpiredTime" DataType="DateTime" Description="过期时间" />
+      </Columns>
+      <Indexes>
+        <Index Name="IU_TableCache_Name" Columns="Name" Unique="True" PrimaryKey="True" />
+        <Index Columns="ExpiredTime" />
+      </Indexes>
+    </Table>
+  </Tables>
+</EntityModel>

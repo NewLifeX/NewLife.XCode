@@ -119,7 +119,7 @@ class SqlCe : FileDbBase
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">唯一键。用于not in分页</param>
     /// <returns>分页SQL</returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn)
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
     {
         // 从第一行开始，不需要分页
         if (startRowIndex <= 0 && maximumRows < 1) return sql;
@@ -152,7 +152,7 @@ class SqlCeSession : FileDbSession
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         BeginTransaction(IsolationLevel.Serializable);
         try
@@ -174,11 +174,11 @@ class SqlCeSession : FileDbSession
     /// <param name="collectionName">指定要返回的架构的名称。</param>
     /// <param name="restrictionValues">为请求的架构指定一组限制值。</param>
     /// <returns></returns>
-    public override DataTable GetSchema(DbConnection conn, String collectionName, String[] restrictionValues)
+    public override DataTable GetSchema(DbConnection? conn, String collectionName, String?[]? restrictionValues)
     {
         //sqlce3.5 不支持GetSchema
         if (SqlCe.SqlCeProviderVersion < SQLCEVersion.SQLCE40 && collectionName.EqualIgnoreCase(DbMetaDataCollectionNames.MetaDataCollections))
-            return null;
+            return new DataTable();
 
         return base.GetSchema(conn, collectionName, restrictionValues);
     }
@@ -188,7 +188,7 @@ class SqlCeSession : FileDbSession
 class SqlCeMetaData : FileDbMetaData
 {
     #region 构架
-    protected override List<IDataTable> OnGetTables(String[] names)
+    protected override List<IDataTable> OnGetTables(String[]? names)
     {
         #region 查表、字段信息、索引信息、主键信息
         var session = Database.CreateSession();
@@ -196,7 +196,7 @@ class SqlCeMetaData : FileDbMetaData
         // 表信息
         var dt = session.Query(_AllTableNameSql).Tables[0];
 
-        var data = new NullableDictionary<String, DataTable>(StringComparer.OrdinalIgnoreCase)
+        var data = new NullableDictionary<String, DataTable?>(StringComparer.OrdinalIgnoreCase)
         {
             ["Columns"] = session.Query(_AllColumnSql).Tables[0],
             ["Indexes"] = session.Query(_AllIndexSql).Tables[0]
@@ -207,11 +207,11 @@ class SqlCeMetaData : FileDbMetaData
         //    DataTypes = CreateSqlCeDataType(session.Query(_DataTypeSql).Tables[0]);
         #endregion
 
-        if (dt == null || dt.Rows == null || dt.Rows.Count <= 0) return null;
+        if (dt == null || dt.Rows == null || dt.Rows.Count <= 0) return [];
 
         // 默认列出所有字段
         var rows = dt.Select("TABLE_TYPE='table'");
-        if (rows == null || rows.Length <= 0) return null;
+        if (rows == null || rows.Length <= 0) return [];
 
         return GetTables(rows, names, data);
     }
@@ -490,12 +490,12 @@ public static class SqlCeHelper
 class SqlCeEngine : IDisposable
 {
     /// <summary></summary>
-    public static Type EngineType { get; set; } = "System.Data.SqlServerCe.SqlCeEngine".GetTypeEx(true);
+    public static Type EngineType { get; set; } = Type.GetType("System.Data.SqlServerCe.SqlCeEngine");
 
     /// <summary>引擎</summary>
-    public Object Engine { get; set; }
+    public Object Engine { get; set; } = null!;
 
-    public static SqlCeEngine Create(String connstr)
+    public static SqlCeEngine? Create(String connstr)
     {
         if (EngineType == null) return null;
         if (String.IsNullOrEmpty(connstr)) return null;

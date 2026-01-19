@@ -358,7 +358,7 @@ public partial class Log
         /// <summary>详细信息</summary>
         public static readonly Field Remark = FindByName("Remark");
 
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
     }
 
     /// <summary>取得日志字段名称的快捷方式</summary>

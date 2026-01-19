@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using TDengineDriver;
@@ -17,7 +14,7 @@ namespace XCode.TDengine
         #region 属性
         private readonly TDengineCommand _command;
         private readonly CommandBehavior _behavior;
-        private readonly List<TDengineMeta> _metas = null;
+        private readonly List<TDengineMeta>? _metas = null;
         private IntPtr _handler;
         private IntPtr _data;
 

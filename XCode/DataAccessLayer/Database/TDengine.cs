@@ -127,7 +127,7 @@ class TDengine : RemoteDb
     /// <param name="value">值</param>
     /// <param name="type">类型</param>
     /// <returns></returns>
-    public override IDataParameter CreateParameter(String name, Object value, Type type = null)
+    public override IDataParameter CreateParameter(String name, Object? value, Type? type = null)
     {
         var dp = base.CreateParameter(name, value, type);
 
@@ -169,9 +169,9 @@ internal class TDengineSession : RemoteDbSession
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps) => throw new NotSupportedException();
+    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps) => throw new NotSupportedException();
 
-    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps) => throw new NotSupportedException();
+    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps) => throw new NotSupportedException();
     #endregion
 
     #region 批量操作
@@ -227,7 +227,7 @@ internal class TDengineSession : RemoteDbSession
     #endregion
 
     #region 架构
-    public override DataTable GetSchema(DbConnection conn, String collectionName, String[] restrictionValues) => null;
+    public override DataTable GetSchema(DbConnection? conn, String collectionName, String?[]? restrictionValues) => null;
     #endregion
 }
 
@@ -269,7 +269,7 @@ class TDengineMetaData : RemoteDbMetaData
     #endregion
 
     #region 架构
-    protected override List<IDataTable> OnGetTables(String[] names)
+    protected override List<IDataTable> OnGetTables(String[]? names)
     {
         var ss = Database.CreateSession();
         var list = new List<IDataTable>();

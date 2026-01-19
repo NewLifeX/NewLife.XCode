@@ -132,7 +132,7 @@ internal class Hana : RemoteDb
     /// <param name="value">值</param>
     /// <param name="type">类型</param>
     /// <returns></returns>
-    public override IDataParameter CreateParameter(String name, Object value, Type? type = null)
+    public override IDataParameter CreateParameter(String name, Object? value, Type? type = null)
     {
         var dp = base.CreateParameter(name, value, type);
 
@@ -235,13 +235,13 @@ internal class HanaSession : RemoteDbSession
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql += ";Select LAST_INSERT_ID()";
         return base.InsertAndGetIdentity(sql, type, ps);
     }
 
-    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql += ";Select LAST_INSERT_ID()";
         return base.InsertAndGetIdentityAsync(sql, type, ps);

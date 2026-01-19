@@ -41,7 +41,7 @@ public class SelectBuilder
     public String? Limit { get; set; }
 
     /// <summary>参数集合</summary>
-    public List<IDataParameter> Parameters { get; set; } = new();
+    public List<IDataParameter> Parameters { get; set; } = [];
     #endregion
 
     #region 构造
@@ -265,7 +265,7 @@ $";
     #endregion
 
     #region 辅助方法
-    internal SelectBuilder Top(Int64 top, String keyColumn = null)
+    internal SelectBuilder Top(Int64 top, String? keyColumn = null)
     {
         var builder = this;
         if (!String.IsNullOrEmpty(keyColumn)) builder.Column = keyColumn;

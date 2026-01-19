@@ -78,7 +78,7 @@ class XIndex : /*SerializableDataMember,*/ IDataIndex, ICloneable
     /// <returns></returns>
     public IDataIndex Clone(IDataTable table)
     {
-        var field = base.MemberwiseClone() as XIndex;
+        var field = (base.MemberwiseClone() as XIndex)!;
         field.Table = table;
 
         return field;

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NewLife;
-using NewLife.Collections;
+﻿using NewLife.Collections;
 
 namespace XCode.DataAccessLayer;
 
@@ -30,7 +26,7 @@ public interface IModelResolver
     /// <param name="name">名称</param>
     /// <param name="description"></param>
     /// <returns></returns>
-    String GetDisplayName(String name, String description);
+    String GetDisplayName(String name, String? description);
     #endregion
 
     #region 模型处理
@@ -195,9 +191,9 @@ public class ModelResolver : IModelResolver
     /// <param name="name">名称</param>
     /// <param name="description"></param>
     /// <returns></returns>
-    public virtual String GetDisplayName(String name, String description)
+    public virtual String GetDisplayName(String name, String? description)
     {
-        if (String.IsNullOrEmpty(description)) return name;
+        if (description.IsNullOrEmpty()) return name;
 
         name = description.Trim();
         var p = name.IndexOfAny(SeparateChars);

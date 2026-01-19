@@ -2,9 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Xml;
-using System.Xml.Schema;
 using System.Xml.Serialization;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Xml;
 
@@ -29,13 +27,13 @@ class XTable : IDataTable, ICloneable//, IXmlSerializable
     [XmlAttribute]
     [DisplayName("名称")]
     [Description("名称")]
-    public String Name { get; set; }
+    public String Name { get; set; } = null!;
 
     /// <summary>表名</summary>
     [XmlAttribute]
     [DisplayName("表名")]
     [Description("表名")]
-    public String TableName { get; set; }
+    public String TableName { get; set; } = null!;
 
     private String? _Description;
     /// <summary>描述</summary>
@@ -101,14 +99,14 @@ class XTable : IDataTable, ICloneable//, IXmlSerializable
     [Category("集合")]
     [DisplayName("字段集合")]
     [Description("字段集合")]
-    public List<IDataColumn> Columns { get; private set; }
+    public List<IDataColumn> Columns { get; private set; } = [];
 
     /// <summary>索引集合。可以是空集合，但不能为null。</summary>
     [XmlIgnore, IgnoreDataMember]
     [Category("集合")]
     [DisplayName("索引集合")]
     [Description("索引集合")]
-    public List<IDataIndex> Indexes { get; private set; }
+    public List<IDataIndex> Indexes { get; private set; } = [];
 
     /// <summary>主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
     [XmlIgnore, IgnoreDataMember]
@@ -160,11 +158,6 @@ class XTable : IDataTable, ICloneable//, IXmlSerializable
     /// <summary>初始化</summary>
     public XTable()
     {
-        IsView = false;
-
-        Columns = new List<IDataColumn>();
-        Indexes = new List<IDataIndex>();
-
         Properties = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
     }
 
@@ -204,7 +197,7 @@ class XTable : IDataTable, ICloneable//, IXmlSerializable
     /// <summary>导入</summary>
     /// <param name="xml"></param>
     /// <returns></returns>
-    public static XTable Import(String xml)
+    public static XTable? Import(String xml)
     {
         if (String.IsNullOrEmpty(xml)) return null;
 
@@ -221,14 +214,14 @@ class XTable : IDataTable, ICloneable//, IXmlSerializable
     /// <returns></returns>
     public XTable Clone()
     {
-        var table = base.MemberwiseClone() as XTable;
+        var table = (base.MemberwiseClone() as XTable)!;
         // 浅表克隆后，集合还是指向旧的，需要重新创建
-        table.Columns = new List<IDataColumn>();
+        table.Columns = [];
         foreach (var item in Columns)
         {
             table.Columns.Add(item.Clone(table));
         }
-        table.Indexes = new List<IDataIndex>();
+        table.Indexes = [];
         foreach (var item in Indexes)
         {
             table.Indexes.Add(item.Clone(table));

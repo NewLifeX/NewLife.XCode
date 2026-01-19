@@ -40,7 +40,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     public Func<TEntity, TKey> GetKeyMethod { get; set; } = null!;
 
     /// <summary>查找数据的方法</summary>
-    public Func<TKey, TEntity> FindKeyMethod { get; set; } = null!;
+    public Func<TKey, TEntity?> FindKeyMethod { get; set; } = null!;
     #endregion
 
     #region 从键
@@ -48,7 +48,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     public Boolean SlaveKeyIgnoreCase { get; set; }
 
     /// <summary>根据从键查找数据的方法</summary>
-    public Func<String, TEntity>? FindSlaveKeyMethod { get; set; }
+    public Func<String, TEntity?>? FindSlaveKeyMethod { get; set; }
 
     /// <summary>获取缓存从键的方法，默认为空</summary>
     public Func<TEntity, String>? GetSlaveKeyMethod { get; set; }
@@ -63,7 +63,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         Expire = exp;
 
         var fi = Entity<TEntity>.Meta.Unique;
-        if (fi != null) GetKeyMethod = entity => (TKey)entity[Entity<TEntity>.Meta.Unique.Name];
+        if (fi != null) GetKeyMethod = entity => (TKey)entity[fi.Name]!;
         FindKeyMethod = key => Entity<TEntity>.FindByKey(key);
 
         LogPrefix = $"SingleCache<{typeof(TEntity).Name}>";
@@ -130,7 +130,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
             else if (slist != null)
             {
                 if (!slist.TryGetValue(ci.VisitTime, out var ss))
-                    slist.Add(ci.VisitTime, ss = new List<CacheItem>());
+                    slist.Add(ci.VisitTime, ss = []);
 
                 ss.Add(ci);
             }
@@ -304,7 +304,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         return ci.Entity;
     }
 
-    private CacheItem CreateItem<TKey2>(TKey2 key)
+    private CacheItem? CreateItem<TKey2>(TKey2 key)
     {
         WriteLog(".CreateItem({0})", key);
         DAL.SetSpanTag($"Single.GetItem({key})");
@@ -313,7 +313,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         try
         {
             // 开始更新数据，然后加入缓存
-            var mkey = (TKey)(Object)key;
+            var mkey = (TKey)(Object)key!;
             var entity = Invoke(FindKeyMethod, mkey);
             if (entity == null) return null;
 
@@ -350,7 +350,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     /// <param name="key"></param>
     /// <param name="entity"></param>
     /// <returns></returns>
-    private CacheItem AddItem(TKey key, TEntity entity)
+    private CacheItem AddItem(TKey key, TEntity? entity)
     {
         //if (!Using)
         {
@@ -381,11 +381,11 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     /// <summary>根据从键获取实体数据</summary>
     /// <param name="slaveKey"></param>
     /// <returns></returns>
-    public TEntity GetItemWithSlaveKey(String slaveKey) => GetItem(SlaveEntities, slaveKey);
+    public TEntity? GetItemWithSlaveKey(String slaveKey) => GetItem(SlaveEntities, slaveKey);
 
     private void UpdateData(Object state, Object key)
     {
-        var item = state as CacheItem;
+        if (state is not CacheItem item) return;
 
         WriteLog(".UpdateData {0} Expire={1} Visit={2}", item.Key, item.ExpireTime, item.VisitTime);
         DAL.SetSpanTag($"Single.Update({item.Key}) Expire={item.ExpireTime} Visit={item.VisitTime}");
@@ -431,7 +431,7 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     /// <param name="key"></param>
     /// <param name="entity">数值</param>
     /// <returns></returns>
-    Boolean Add(TKey key, TEntity entity)
+    Boolean Add(TKey key, TEntity? entity)
     {
         AddItem(key, entity);
 
@@ -487,12 +487,12 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
     /// <summary>获取数据</summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    IEntity ISingleEntityCache.this[Object key] => this[(TKey)key];
+    IEntity? ISingleEntityCache.this[Object key] => this[(TKey)key];
 
     /// <summary>根据从键获取实体数据</summary>
     /// <param name="slaveKey"></param>
     /// <returns></returns>
-    IEntity ISingleEntityCache.GetItemWithSlaveKey(String slaveKey) => GetItemWithSlaveKey(slaveKey);
+    IEntity? ISingleEntityCache.GetItemWithSlaveKey(String slaveKey) => GetItemWithSlaveKey(slaveKey);
 
     /// <summary>是否包含指定主键</summary>
     /// <param name="key"></param>

@@ -123,7 +123,7 @@ internal class SqlServer : RemoteDb
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">唯一键。用于not in分页</param>
     /// <returns>分页SQL</returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn)
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
     {
         // 从第一行开始，不需要分页
         if (startRowIndex <= 0 && maximumRows < 1) return sql;
@@ -587,13 +587,13 @@ internal class SqlServerSession : RemoteDbSession
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql = "SET NOCOUNT ON;" + sql + ";Select SCOPE_IDENTITY()";
         return base.InsertAndGetIdentity(sql, type, ps);
     }
 
-    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         sql = "SET NOCOUNT ON;" + sql + ";Select SCOPE_IDENTITY()";
         return base.InsertAndGetIdentityAsync(sql, type, ps);
@@ -824,34 +824,34 @@ internal class SqlServerSession : RemoteDbSession
     /// </summary>
     private class SqlBatcher
     {
-        private DataAdapter mAdapter;
+        private DataAdapter? mAdapter;
         private readonly DbProviderFactory _factory;
 
         /// <summary>获得批处理是否正在批处理状态。</summary>
         public Boolean IsStarted { get; private set; }
 
-        static MethodInfo _init;
-        static MethodInfo _add;
-        static MethodInfo _exe;
-        static MethodInfo _clear;
-        Func<IDbCommand, Int32> _addToBatch;
-        Func<Int32> _executeBatch;
-        Action _clearBatch;
+        static MethodInfo? _init;
+        static MethodInfo? _add;
+        static MethodInfo? _exe;
+        static MethodInfo? _clear;
+        Func<IDbCommand, Int32>? _addToBatch;
+        Func<Int32>? _executeBatch;
+        Action? _clearBatch;
 
         public SqlBatcher(DbProviderFactory factory)
         {
             _factory = factory;
 
-            if (_init == null)
-            {
-                using var adapter = factory.CreateDataAdapter();
-                var type = adapter.GetType();
+            //if (_init == null)
+            //{
+            using var adapter = factory.CreateDataAdapter();
+            var type = adapter.GetType();
 
-                _add = type.GetMethodEx("AddToBatch");
-                _exe = type.GetMethodEx("ExecuteBatch");
-                _clear = type.GetMethodEx("ClearBatch");
-                _init = type.GetMethodEx("InitializeBatching");
-            }
+            _add = type.GetMethodEx("AddToBatch");
+            _exe = type.GetMethodEx("ExecuteBatch");
+            _clear = type.GetMethodEx("ClearBatch");
+            _init = type.GetMethodEx("InitializeBatching");
+            //}
         }
 
         /// <summary>开始批处理</summary>
@@ -859,6 +859,8 @@ internal class SqlServerSession : RemoteDbSession
         public void StartBatch(DbConnection connection)
         {
             if (IsStarted) return;
+            if (_init == null || _add == null || _exe == null || _clear == null)
+                throw new InvalidOperationException("当前数据库不支持批处理操作！");
 
             var cmd = _factory.CreateCommand();
             cmd.Connection = connection;
@@ -866,7 +868,7 @@ internal class SqlServerSession : RemoteDbSession
             var adapter = _factory.CreateDataAdapter();
             adapter.InsertCommand = cmd;
             //adapter.Invoke("InitializeBatching");
-            _init.As<Action>(adapter)();
+            _init.As<Action>(adapter)!();
 
             _addToBatch = _add.As<Func<IDbCommand, Int32>>(adapter);
             _executeBatch = _exe.As<Func<Int32>>(adapter);
@@ -884,6 +886,7 @@ internal class SqlServerSession : RemoteDbSession
         public void AddToBatch(IDbCommand command)
         {
             if (!IsStarted) throw new InvalidOperationException();
+            if (_addToBatch == null) throw new InvalidOperationException("当前数据库不支持AddToBatch操作！");
 
             //mAdapter.Invoke("AddToBatch", new Object[] { command });
             _addToBatch(command);
@@ -896,6 +899,7 @@ internal class SqlServerSession : RemoteDbSession
         public Int32 ExecuteBatch()
         {
             if (!IsStarted) throw new InvalidOperationException();
+            if (_executeBatch == null) throw new InvalidOperationException("当前数据库不支持ExecuteBatch操作！");
 
             //return (Int32)mAdapter.Invoke("ExecuteBatch");
             return _executeBatch();
@@ -909,8 +913,8 @@ internal class SqlServerSession : RemoteDbSession
             if (IsStarted)
             {
                 ClearBatch();
-                mAdapter.Dispose();
-                mAdapter = null;
+                mAdapter.TryDispose();
+                mAdapter = null!;
                 IsStarted = false;
             }
         }
@@ -921,6 +925,7 @@ internal class SqlServerSession : RemoteDbSession
         public void ClearBatch()
         {
             if (!IsStarted) throw new InvalidOperationException();
+            if (_clearBatch == null) throw new InvalidOperationException("当前数据库不支持ClearBatch操作！");
 
             //mAdapter.Invoke("ClearBatch");
             _clearBatch();
@@ -938,7 +943,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
     ///// <summary>是否SQL2005</summary>
     //public Boolean IsSQL2005 { get { return (Database as SqlServer).IsSQL2005; } }
 
-    public Version Version => (Database as SqlServer).Version;
+    public Version Version => (Database as SqlServer)!.Version;
 
     ///// <summary>0级类型</summary>
     //public String Level0type { get { return IsSQL2005 ? "SCHEMA" : "USER"; } }
@@ -947,7 +952,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
     #region 构架
     /// <summary>取得所有表构架</summary>
     /// <returns></returns>
-    protected override List<IDataTable> OnGetTables(String[] names)
+    protected override List<IDataTable> OnGetTables(String[]? names)
     {
         #region 查表说明、字段信息、索引信息
         var session = Database.CreateSession();
@@ -981,10 +986,10 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
         // 列出用户表
         var rows = dt.Select($"(TABLE_TYPE='BASE TABLE' Or TABLE_TYPE='VIEW') AND TABLE_NAME<>'Sysdiagrams'");
-        if (rows == null || rows.Length <= 0) return null;
+        if (rows == null || rows.Length <= 0) return [];
 
         var list = GetTables(rows, names);
-        if (list == null || list.Count <= 0) return list;
+        if (list == null || list.Count <= 0) return list ?? [];
 
         // 修正备注
         foreach (var item in list)
@@ -1280,7 +1285,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         return base.SetSchema(schema, values);
     }
 
-    public override String CreateDatabaseSQL(String dbname, String file)
+    public override String CreateDatabaseSQL(String dbname, String? file)
     {
         var dp = (Database as SqlServer)!.DataPath;
 

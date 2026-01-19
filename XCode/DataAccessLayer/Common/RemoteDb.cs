@@ -12,7 +12,7 @@ abstract class RemoteDb : DbBase
     /// <summary>系统数据库名</summary>
     public virtual String SystemDatabaseName => "master";
 
-    private String _User;
+    private String? _User;
     /// <summary>用户名UserID</summary>
     public String User
     {
@@ -22,7 +22,7 @@ abstract class RemoteDb : DbBase
 
             var connStr = ConnectionString;
 
-            if (String.IsNullOrEmpty(connStr)) return null;
+            if (String.IsNullOrEmpty(connStr)) return String.Empty;
 
             var ocsb = Factory.CreateConnectionStringBuilder();
             ocsb.ConnectionString = connStr;
@@ -48,7 +48,7 @@ abstract class RemoteDb : DbBase
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">主键列。用于not in分页</param>
     /// <returns></returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn) => PageSplitByLimit(sql, startRowIndex, maximumRows);
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn) => PageSplitByLimit(sql, startRowIndex, maximumRows);
 
     /// <summary>构造分页SQL</summary>
     /// <param name="builder">查询生成器</param>
@@ -102,7 +102,7 @@ abstract class RemoteDbSession : DbSession
 {
     #region 属性
     /// <summary>系统数据库名</summary>
-    public String SystemDatabaseName => (Database as RemoteDb)?.SystemDatabaseName;
+    public String? SystemDatabaseName => (Database as RemoteDb)?.SystemDatabaseName;
     #endregion
 
     #region 构造函数
@@ -110,7 +110,7 @@ abstract class RemoteDbSession : DbSession
     #endregion
 
     #region 架构
-    public override DataTable GetSchema(DbConnection conn, String collectionName, String[] restrictionValues)
+    public override DataTable GetSchema(DbConnection? conn, String collectionName, String?[]? restrictionValues)
     {
         try
         {
@@ -121,7 +121,7 @@ abstract class RemoteDbSession : DbSession
             DAL.WriteLog("[{2}]GetSchema({0})异常重试！{1}", collectionName, ex.Message, Database.ConnName);
 
             // 如果没有数据库，登录会失败，需要切换到系统数据库再试试
-            return ProcessWithSystem((s, c) => base.GetSchema(c, collectionName, restrictionValues)) as DataTable;
+            return (ProcessWithSystem((s, c) => base.GetSchema(c, collectionName, restrictionValues)) as DataTable)!;
         }
     }
     #endregion
@@ -133,7 +133,7 @@ abstract class RemoteDbSession : DbSession
         var sysdbname = SystemDatabaseName;
 
         // 如果指定了数据库名，并且不是master，则切换到master
-        if (!dbname.IsNullOrEmpty() && !dbname.EqualIgnoreCase(sysdbname))
+        if (!dbname.IsNullOrEmpty() && !dbname.EqualIgnoreCase(sysdbname) && !sysdbname.IsNullOrEmpty())
         {
             Log?.Info("切换到系统库[{0}]", sysdbname);
             using var conn = Database.Factory.CreateConnection();

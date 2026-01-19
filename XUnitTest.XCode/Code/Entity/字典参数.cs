@@ -525,7 +525,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         /// <summary>备注</summary>
         public static readonly Field Remark = FindByName("Remark");
 
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
     }
 
     /// <summary>取得字典参数字段名称的快捷方式</summary>

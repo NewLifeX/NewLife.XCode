@@ -24,7 +24,7 @@ namespace XCode.TDengine
 
         /// <summary>创建连接字符串生成器</summary>
         /// <returns></returns>
-        public override DbConnectionStringBuilder CreateConnectionStringBuilder() => new();
+        public override DbConnectionStringBuilder CreateConnectionStringBuilder() => [];
 
         /// <summary>创建参数</summary>
         /// <returns></returns>

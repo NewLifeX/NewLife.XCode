@@ -132,7 +132,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
     /// <returns>实体列表</returns>
     public static IList<TenantUser> FindAllByUserId(Int32 userId, Boolean isAll = false)
     {
-        if (userId <= 0) return new List<TenantUser>();
+        if (userId <= 0) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return isAll ? Meta.Cache.FindAll(e => e.UserId == userId) : Meta.Cache.FindAll(e => e.UserId == userId && e.Enable);
@@ -149,7 +149,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
     /// <returns>实体列表</returns>
     public static IList<TenantUser> FindAllByUserId(Int32 userId)
     {
-        if (userId <= 0) return new List<TenantUser>();
+        if (userId <= 0) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserId == userId);
@@ -162,7 +162,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
     /// <returns></returns>
     public static IList<TenantUser> FindAllByTenantId(Int32 tenantId)
     {
-        if (tenantId <= 0) return new List<TenantUser>();
+        if (tenantId <= 0) return [];
 
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
 

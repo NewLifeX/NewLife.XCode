@@ -30,7 +30,7 @@ class XField : /*SerializableDataMember,*/ IDataColumn, ICloneable
     [XmlAttribute]
     [DisplayName("数据类型")]
     [Description("数据类型")]
-    public Type DataType { get; set; }
+    public Type DataType { get; set; } = null!;
 
     /// <summary>原始数据类型</summary>
     [XmlAttribute]
@@ -199,7 +199,7 @@ class XField : /*SerializableDataMember,*/ IDataColumn, ICloneable
     /// <returns></returns>
     public IDataColumn Clone(IDataTable table)
     {
-        var field = base.MemberwiseClone() as XField;
+        var field = (base.MemberwiseClone() as XField)!;
         field.Table = table;
         //field.Fix();
 

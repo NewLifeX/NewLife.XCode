@@ -94,7 +94,7 @@ internal class Oracle : RemoteDb
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">主键列。用于not in分页</param>
     /// <returns></returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn)
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
     {
         // 从第一行开始
         if (startRowIndex <= 0)
@@ -317,7 +317,7 @@ internal class Oracle : RemoteDb
 
     #region 辅助
 
-    private readonly Dictionary<String, DateTime> cache = new();
+    private readonly Dictionary<String, DateTime> cache = [];
 
     public Boolean NeedAnalyzeStatistics(String tableName)
     {
@@ -454,7 +454,7 @@ internal class OracleSession : RemoteDbSession
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         BeginTransaction(IsolationLevel.Serializable);
         try
@@ -493,7 +493,7 @@ internal class OracleSession : RemoteDbSession
         });
     }
 
-    public override async Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    public override async Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         BeginTransaction(IsolationLevel.Serializable);
         try
@@ -520,10 +520,10 @@ internal class OracleSession : RemoteDbSession
     /// <param name="type"></param>
     /// <param name="ps"></param>
     /// <returns></returns>
-    protected override DbCommand OnCreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
+    protected override DbCommand OnCreateCommand(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         var cmd = base.OnCreateCommand(sql, type, ps);
-        if (cmd == null) return null;
+        if (cmd == null) return null!;
 
         // 如果参数Value都是数组，那么就是批量操作
         if (ps != null && ps.Length > 0 && ps.All(p => p.Value is IList))
@@ -724,18 +724,18 @@ internal class OracleMeta : RemoteDbMetaData
         get
         {
             var owner = Database.Owner;
-            if (owner.IsNullOrEmpty()) owner = (Database as Oracle).User;
+            if (owner.IsNullOrEmpty()) owner = (Database as Oracle)!.User;
 
             return owner.ToUpper();
         }
     }
 
     /// <summary>用户名</summary>
-    public String UserID => (Database as Oracle).User.ToUpper();
+    public String UserID => (Database as Oracle)!.User.ToUpper();
 
     /// <summary>取得所有表构架</summary>
     /// <returns></returns>
-    protected override List<IDataTable> OnGetTables(String[] names)
+    protected override List<IDataTable> OnGetTables(String[]? names)
     {
         DataTable dt = null;
 

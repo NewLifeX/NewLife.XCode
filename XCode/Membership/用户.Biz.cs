@@ -224,7 +224,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <returns>实体列表</returns>
     public static IList<User> FindAllByRoleID(Int32 roleId)
     {
-        if (roleId <= 0) return new List<User>();
+        if (roleId <= 0) return [];
 
         // 实体缓存
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleID == roleId);

@@ -460,7 +460,7 @@ public partial class Role : IRole, IEntity<IRole>
         /// <summary>备注</summary>
         public static readonly Field Remark = FindByName("Remark");
 
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
     }
 
     /// <summary>取得角色字段名称的快捷方式</summary>

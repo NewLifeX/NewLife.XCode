@@ -132,7 +132,7 @@ namespace TDengineDriver
         {
             const int fieldSize = 68;
 
-            List<TDengineMeta> metas = new List<TDengineMeta>();
+            List<TDengineMeta> metas = [];
             if (res == IntPtr.Zero)
             {
                 return metas;

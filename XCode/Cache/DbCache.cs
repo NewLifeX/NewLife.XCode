@@ -304,7 +304,7 @@ public interface IDbCache
     String Name { get; set; }
 
     /// <summary>键值</summary>
-    String Value { get; set; }
+    String? Value { get; set; }
 
     /// <summary>创建时间</summary>
     DateTime CreateTime { get; set; }

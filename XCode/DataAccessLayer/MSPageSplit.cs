@@ -271,7 +271,7 @@ namespace XCode.DataAccessLayer
             return builder2;
         }
 
-        static SelectBuilder Top(this SelectBuilder builder, Int64 top, String keyColumn = null)
+        static SelectBuilder Top(this SelectBuilder builder, Int64 top, String? keyColumn = null)
         {
             if (!String.IsNullOrEmpty(keyColumn)) builder.Column = keyColumn;
             if (String.IsNullOrEmpty(builder.Column)) builder.Column = "*";

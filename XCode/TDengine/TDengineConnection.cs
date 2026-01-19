@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Data.Common;
 using System.Runtime.InteropServices;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Net;
@@ -46,7 +44,7 @@ public partial class TDengineConnection : DbConnection
     protected override DbProviderFactory DbProviderFactory => TDengineFactory.Instance;
 
     /// <summary>事务</summary>
-    protected internal virtual TDengineTransaction Transaction { get; set; }
+    protected internal virtual TDengineTransaction? Transaction { get; set; }
 
     private String _Database;
     /// <summary>数据库</summary>

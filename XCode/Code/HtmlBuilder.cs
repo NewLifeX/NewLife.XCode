@@ -52,7 +52,7 @@ public class HtmlBuilder : ClassBuilder
     /// <param name="option">可选项</param>
     /// <param name="log"></param>
     /// <returns></returns>
-    public static Int32 BuildDataDictionary(IList<IDataTable> tables, BuilderOption option = null, ILog log = null)
+    public static Int32 BuildDataDictionary(IList<IDataTable> tables, BuilderOption? option = null, ILog? log = null)
     {
         if (option == null)
             option = new BuilderOption();
@@ -201,7 +201,7 @@ public class HtmlBuilder : ClassBuilder
     #region 辅助
     /// <summary>写入</summary>
     /// <param name="value"></param>
-    protected override void WriteLine(String value = null)
+    protected override void WriteLine(String? value = null)
     {
         if (!value.IsNullOrEmpty() && value.Length > 2 && value[0] == '<' && value[1] == '/') SetIndent(false);
 

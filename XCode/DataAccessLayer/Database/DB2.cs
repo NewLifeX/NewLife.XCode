@@ -77,7 +77,7 @@ class DB2 : RemoteDb
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">主键列。用于not in分页</param>
     /// <returns></returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn)
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
     {
         // 从第一行开始
         if (startRowIndex <= 0)

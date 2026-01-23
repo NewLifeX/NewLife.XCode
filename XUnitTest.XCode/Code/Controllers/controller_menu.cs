@@ -59,10 +59,11 @@ public class Menu : EntityController<Menu>
         var visible = p["visible"]?.ToBoolean();
         var necessary = p["necessary"]?.ToBoolean();
         var newWindow = p["newWindow"]?.ToBoolean();
+        var dataScope = (XCode.Membership.DataScopes)p["dataScope"].ToInt(-1);
 
         var start = p["dtStart"].ToDateTime();
         var end = p["dtEnd"].ToDateTime();
 
-        return Menu.Search(parentId, type, visible, necessary, newWindow, start, end, p["Q"], p);
+        return Menu.Search(parentId, type, visible, necessary, newWindow, dataScope, start, end, p["Q"], p);
     }
 }

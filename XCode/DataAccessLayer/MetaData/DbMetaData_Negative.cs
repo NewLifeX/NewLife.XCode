@@ -988,7 +988,14 @@ internal partial class DbMetaData
         else if (field.DataType == typeof(Double) || field.DataType == typeof(Single) || field.DataType == typeof(Decimal))
             return $" DEFAULT {field.DefaultValue.ToDouble()}";
         else if (field.DataType == typeof(DateTime))
-            return $" DEFAULT {field.DefaultValue ?? "'0001-01-01'"}";
+        {
+            // DateTime 默认值需要加引号，避免被解析为数学表达式
+            var dv = field.DefaultValue;
+            if (dv.IsNullOrEmpty()) return " DEFAULT '0001-01-01'";
+            // 如果已经有引号则直接使用，否则加上引号
+            if (dv[0] == '\'' && dv[^1] == '\'') return $" DEFAULT {dv}";
+            return $" DEFAULT '{dv}'";
+        }
         else if (field.DataType == typeof(String) && field.Length > 0)
             return $" DEFAULT {field.DefaultValue ?? "''"}";
 

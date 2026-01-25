@@ -18,15 +18,24 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class MySqlTests
 {
-    private static String _ConnStr = "Server=.;Port=3306;Database=sys;Uid=root;Pwd=root";
+    private static String _ConnStr = "Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=root";
 
     public MySqlTests()
     {
+        // 优先使用环境变量（CI环境）
+        var envConnStr = Environment.GetEnvironmentVariable("XCode_mysql");
+        if (!envConnStr.IsNullOrEmpty())
+        {
+            _ConnStr = envConnStr;
+            return;
+        }
+
+        // 本地开发使用配置文件
         var f = "Config\\mysql.config".GetFullPath();
         if (File.Exists(f))
             _ConnStr = File.ReadAllText(f);
         else
-            File.WriteAllText(f, _ConnStr);
+            File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
     }
 
     [Fact]
@@ -58,8 +67,7 @@ public class MySqlTests
         var factory = db.Factory;
 
         var conn = factory.CreateConnection();
-        //conn.ConnectionString = "Server=localhost;Port=3306;Database=Membership;Uid=root;Pwd=Pass@word";
-        conn.ConnectionString = _ConnStr.Replace("Server=.;", "Server=localhost;");
+        conn.ConnectionString = _ConnStr;
         conn.Open();
     }
 

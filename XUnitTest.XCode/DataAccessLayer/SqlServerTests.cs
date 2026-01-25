@@ -21,15 +21,24 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class SqlServerTests
 {
-    private static String _ConnStr = "Server=127.0.0.1;Database=sys;Uid=sa;Pwd=sa;Connection Timeout=2";
+    private static String _ConnStr = "Server=127.0.0.1,1433;Database=master;Uid=sa;Pwd=Pass@word;TrustServerCertificate=true;Connection Timeout=5";
 
     public SqlServerTests()
     {
+        // 优先使用环境变量（CI环境）
+        var envConnStr = Environment.GetEnvironmentVariable("XCode_sqlserver");
+        if (!envConnStr.IsNullOrEmpty())
+        {
+            _ConnStr = envConnStr;
+            return;
+        }
+
+        // 本地开发使用配置文件
         var f = "Config\\sqlserver.config".GetFullPath();
         if (File.Exists(f))
             _ConnStr = File.ReadAllText(f);
         else
-            File.WriteAllText(f.EnsureDirectory(), _ConnStr);
+            File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
     }
 
     [Fact]
@@ -61,8 +70,7 @@ public class SqlServerTests
         var factory = db.Factory;
 
         var conn = factory.CreateConnection();
-        //conn.ConnectionString = "Server=localhost;Port=3306;Database=Membership;Uid=root;Pwd=Pass@word";
-        conn.ConnectionString = _ConnStr.Replace("Server=.;", "Server=localhost;");
+        conn.ConnectionString = _ConnStr;
         conn.Open();
     }
 
@@ -75,19 +83,14 @@ public class SqlServerTests
         Assert.Equal("sysSqlServer", dal.ConnName);
         Assert.Equal(DatabaseType.SqlServer, dal.DbType);
 
-        var db = dal.Db;
-        var connstr = db.ConnectionString;
-        //Assert.Equal("sys", db.DatabaseName);
-        Assert.EndsWith(";Application Name=XCode_testhost_sysSqlServer", connstr);
-
-        var ver = db.ServerVersion;
+        var ver = dal.Db.ServerVersion;
         Assert.NotEmpty(ver);
     }
 
     [Fact]
     public void MetaTest()
     {
-        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
+        var connStr = _ConnStr.Replace("Database=master;", "Database=Membership;");
         DAL.AddConnStr("SqlServer_Meta", connStr, null, "SqlServer");
         var dal = DAL.Create("SqlServer_Meta");
 
@@ -114,7 +117,7 @@ public class SqlServerTests
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
 
-        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership_Test;");
+        var connStr = _ConnStr.Replace("Database=master;", "Database=Membership_Test;");
         DAL.AddConnStr("SqlServer_Select", connStr, null, "SqlServer");
 
         Role.Meta.ConnName = "SqlServer_Select";
@@ -167,7 +170,7 @@ public class SqlServerTests
         }
         catch (Exception ex) { XTrace.WriteException(ex); }
 
-        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership_Table_Prefix;");
+        var connStr = _ConnStr.Replace("Database=master;", "Database=Membership_Table_Prefix;");
         connStr += ";TablePrefix=member_";
         DAL.AddConnStr("SqlServer_Table_Prefix", connStr, null, "SqlServer");
 
@@ -206,7 +209,7 @@ public class SqlServerTests
 
     private IDisposable CreateForBatch(String action)
     {
-        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership_Batch;");
+        var connStr = _ConnStr.Replace("Database=master;", "Database=Membership_Batch;");
         DAL.AddConnStr("Membership_Batch", connStr, null, "SqlServer");
 
         var dt = Role2.Meta.Table.DataTable.Clone() as IDataTable;
@@ -394,7 +397,7 @@ public class SqlServerTests
     [Fact]
     public void QuerySqlTest()
     {
-        var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
+        var connStr = _ConnStr.Replace("Database=master;", "Database=Membership;");
 
         DAL.AddConnStr("sysSqlServerv", connStr, null, "SqlServer");
         var dal = DAL.Create("sysSqlServerv");

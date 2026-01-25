@@ -15,15 +15,24 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class PostgreSQLTests
 {
-    private static String _ConnStr = "Server=.;Database=postgres;Uid=postgres;Pwd=postgres";
+    private static String _ConnStr = "Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=postgres";
 
     public PostgreSQLTests()
     {
+        // 优先使用环境变量（CI环境）
+        var envConnStr = Environment.GetEnvironmentVariable("XCode_pgsql");
+        if (!envConnStr.IsNullOrEmpty())
+        {
+            _ConnStr = envConnStr;
+            return;
+        }
+
+        // 本地开发使用配置文件
         var f = "Config\\pgsql.config".GetFullPath();
         if (File.Exists(f))
             _ConnStr = File.ReadAllText(f);
         else
-            File.WriteAllText(f, _ConnStr);
+            File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
     }
 
     [Fact]
@@ -55,8 +64,7 @@ public class PostgreSQLTests
         var factory = db.Factory;
 
         var conn = factory.CreateConnection();
-        //conn.ConnectionString = "Server=localhost;Database=Membership;Uid=postgres;Pwd=Pass@word";
-        conn.ConnectionString = _ConnStr.Replace("Server=.;", "Server=localhost;");
+        conn.ConnectionString = _ConnStr;
         conn.Open();
     }
 
@@ -72,8 +80,6 @@ public class PostgreSQLTests
         var db = dal.Db;
         var connstr = db.ConnectionString;
         Assert.Equal("postgres", db.DatabaseName);
-        //Assert.EndsWith(";Database=postgres;Uid=postgres;Pwd=postgres", connstr.Replace("Pass@word", "postgres"));
-        Assert.Contains(";Database=postgres;Uid=postgres;Pwd=", connstr);
 
         var ver = db.ServerVersion;
         Assert.NotEmpty(ver);

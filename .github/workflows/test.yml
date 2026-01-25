@@ -11,6 +11,49 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sys
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: Pass@word
+          MSSQL_PID: Developer
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Pass@word' -C -Q 'SELECT 1' || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=30s
+
     steps:
     - uses: actions/checkout@v4
     - name: Setup dotNET
@@ -26,5 +69,10 @@ jobs:
       run: |
         dotnet build -c Release
     - name: Test
+      env:
+        # 数据库连接字符串环境变量
+        XCode_mysql: "Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=root"
+        XCode_pgsql: "Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=postgres"
+        XCode_sqlserver: "Server=127.0.0.1,1433;Database=master;Uid=sa;Pwd=Pass@word;TrustServerCertificate=true"
       run: |
-        dotnet test
+        dotnet test --no-build -c Release -- xunit.parallelizeAssembly=false xunit.parallelizeTestCollections=false

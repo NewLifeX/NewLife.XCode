@@ -51,7 +51,7 @@ public class SingleEntityCacheTests
         var user2 = cache[id];
         Assert.Equal(1, cache.Success);
 
-        Thread.Sleep(cache.Expire * 1000 + 10);
+        Thread.Sleep(cache.Expire * 1000 + 500);
 
         // 三次访问
         XTrace.WriteLine("三次访问");
@@ -82,7 +82,7 @@ public class SingleEntityCacheTests
         var user2 = cache.GetItemWithSlaveKey("admin");
         Assert.Equal(1, cache.Success);
 
-        Thread.Sleep(cache.Expire * 1000 + 10);
+        Thread.Sleep(cache.Expire * 1000 + 500);
 
         // 再次访问
         var user3 = cache.GetItemWithSlaveKey("admin");

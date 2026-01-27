@@ -21,6 +21,7 @@ bld/
 *.htm
 *.nuspec
 *.nupkg
+*.csproj.Backup.tmp
 /Config
 /Keys
 /Avatars

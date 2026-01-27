@@ -166,6 +166,7 @@ internal class SQLite : FileDbBase
                 var name = Path.GetFileName(db);
                 DAL.WriteLog($"开始恢复 SQLite 数据库[{name}]");
 
+                using var span = Tracer?.NewSpan($"db:{ConnName}:RecoverSQLite", new { db, wal });
                 try
                 {
                     // 关键：临时用 Synchronous=Full 确保恢复完整性
@@ -187,6 +188,7 @@ internal class SQLite : FileDbBase
                 }
                 catch (Exception ex)
                 {
+                    span?.SetError(ex);
                     DAL.WriteLog($"恢复 SQLite 数据库[{name}]时出错！{ex.Message}");
                 }
             }

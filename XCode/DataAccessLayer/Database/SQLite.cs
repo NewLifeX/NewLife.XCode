@@ -181,10 +181,10 @@ internal class SQLite : FileDbBase
                     using var cmd = Factory.CreateCommand();
                     cmd.Connection = conn;
                     cmd.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
-                    cmd.ExecuteNonQuery();
+                    var rs = cmd.ExecuteNonQuery();
 
                     // 后续操作仍用 Synchronous=Off
-                    DAL.WriteLog($"恢复 SQLite 数据库[{name}]成功！");
+                    DAL.WriteLog($"恢复 SQLite 数据库[{name}]成功！result={rs}");
                 }
                 catch (Exception ex)
                 {

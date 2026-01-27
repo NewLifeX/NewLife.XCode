@@ -733,6 +733,7 @@ public partial class DAL
             if (_hasCheck) return;
             _hasCheck = true;
 
+            using var span = Tracer?.NewSpan($"db:{ConnName}:CheckDatabase", ConnName);
             try
             {
                 switch (Db.Migration)
@@ -752,6 +753,7 @@ public partial class DAL
             }
             catch (Exception ex)
             {
+                span?.SetError(ex, null);
                 if (Debug) WriteLog(ex.GetMessage());
             }
         }

@@ -916,7 +916,8 @@ public partial class Area : Entity<Area>
         //if (url.IsNullOrEmpty()) url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
         //if (url.IsNullOrEmpty()) url = "https://www.mca.gov.cn/mzsj/xzqh/2022/202201xzqh.html";
         //if (url.IsNullOrEmpty()) url = "http://x.newlifex.com/202301xzqh.html";
-        if (url.IsNullOrEmpty()) url = "http://x.newlifex.com/data/202401xzqh.html";
+        //if (url.IsNullOrEmpty()) url = "http://x.newlifex.com/data/202401xzqh.html";
+        if (url.IsNullOrEmpty()) url = NewLife.Setting.Current.PluginServer.TrimEnd("/") + "/data/202401xzqh.html";
 
         var http = new HttpClient();
         var html = Task.Run(() => http.GetStringAsync(url)).Result;

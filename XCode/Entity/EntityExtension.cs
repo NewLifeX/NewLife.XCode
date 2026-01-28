@@ -414,7 +414,7 @@ public static class EntityExtension
         if (entity == null) return rs;
 
         var fact = entity.GetType().AsFactory();
-        var modules = fact.Modules;
+        var modules = fact.Interceptors;
 
         // 验证对象
         foreach (IEntity item in array)

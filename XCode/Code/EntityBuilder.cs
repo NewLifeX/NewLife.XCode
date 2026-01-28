@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Reflection;
@@ -489,18 +490,56 @@ public class EntityBuilder : ClassBuilder
             //overwrite = false;
         }
 
-        // Biz业务文件已存在时，部分覆盖
-        if (Business && !overwrite && MergeBusiness)
+        // Biz业务文件已存在时，先升级旧的类名，然后部分覆盖
+        if (Business)
         {
             var fileName = GetFileName(ext, chineseFileName);
             if (File.Exists(fileName))
             {
-                Merge(fileName);
-                return fileName;
+                UpgradeModuleNames(fileName);
+
+                if (!overwrite && MergeBusiness)
+                {
+                    Merge(fileName);
+                    return fileName;
+                }
             }
         }
 
         return base.Save(ext, overwrite, chineseFileName); ;
+    }
+
+    /// <summary>升级旧的模块类名为新的拦截器类名</summary>
+    /// <param name="fileName">文件路径</param>
+    /// <returns>是否进行了替换</returns>
+    protected virtual Boolean UpgradeModuleNames(String fileName)
+    {
+        if (!File.Exists(fileName)) return false;
+
+        var content = File.ReadAllText(fileName);
+        var oldContent = content;
+
+        // 使用正则表达式替换旧的模块类名为新的拦截器类名，\b 确保只匹配完整单词
+        content = Regex.Replace(content, @"\bTimeModule\b", "TimeInterceptor");
+        content = Regex.Replace(content, @"\bUserModule\b", "UserInterceptor");
+        content = Regex.Replace(content, @"\bIPModule\b", "IPInterceptor");
+        content = Regex.Replace(content, @"\bTraceModule\b", "TraceInterceptor");
+
+        // 替换 Meta.Modules 为 Meta.Interceptors
+        content = Regex.Replace(content, @"\bMeta\.Modules\b", "Meta.Interceptors");
+
+        // 替换类型名 EntityModules 为 EntityInterceptors
+        content = Regex.Replace(content, @"\bEntityModules\b", "EntityInterceptors");
+
+        // 如果内容有变化，保存文件
+        if (content != oldContent)
+        {
+            File.WriteAllText(fileName, content);
+            Log?.Info("升级模块类名：{0}", fileName);
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>合并当前生成内容到旧文件中</summary>

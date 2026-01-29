@@ -29,7 +29,7 @@ public static class EntityExtension
 
         // 构造主键类型和值类型
         var key = fact.Unique;
-        var ktype = key.Type;
+        var ktype = key!.Type;
 
         if (!valueField.IsNullOrEmpty())
         {
@@ -390,7 +390,7 @@ public static class EntityExtension
 
         return count;
 
-        static Int32 DoAction<T>(T[] array, Func<T, Int32> func, Int32 count) where T : IEntity
+        static Int32 DoAction(T[] array, Func<T, Int32> func, Int32 count)
         {
             foreach (var item in array)
             {

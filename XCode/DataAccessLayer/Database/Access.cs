@@ -87,14 +87,14 @@ class Access : FileDbBase
     /// <returns></returns>
     public override String FormatValue(IDataColumn field, Object? value)
     {
-        if (/*field != null &&*/ field.DataType == typeof(Boolean) || value != null && value.GetType() == typeof(Boolean))
+        if (field != null && field.DataType == typeof(Boolean) || value != null && value.GetType() == typeof(Boolean))
         {
-            if (value == null) return field.Nullable ? "null" : "";
+            if (value == null) return field != null && field.Nullable ? "null" : "";
 
             return value.ToString();
         }
 
-        return base.FormatValue(field, value);
+        return base.FormatValue(field!, value);
     }
     #endregion
 
@@ -116,7 +116,7 @@ class Access : FileDbBase
         // 从第一行开始，不需要分页
         if (startRowIndex <= 0 && maximumRows < 1) return sql;
 
-        return SqlServer.PageSplitByTopNotIn(sql, startRowIndex, maximumRows, keyColumn);
+        return SqlServer.PageSplitByTopNotIn(sql, startRowIndex, maximumRows, keyColumn)!;
     }
     #endregion
 
@@ -275,7 +275,7 @@ class AccessMetaData : FileDbMetaData
         return sql;
     }
 
-    public override String CreateIndexSQL(IDataIndex index)
+    public override String? CreateIndexSQL(IDataIndex index)
     {
         var sql = base.CreateIndexSQL(index);
         if (String.IsNullOrEmpty(sql) || !index.PrimaryKey) return sql;

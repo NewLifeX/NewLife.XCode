@@ -280,6 +280,6 @@ $";
     /// <summary>类型转换</summary>
     /// <param name="obj"></param>
     /// <returns></returns>
-    public static implicit operator String(SelectBuilder obj) => !obj.Equals(null) ? obj.ToString() : null;
+    public static implicit operator String?(SelectBuilder obj) => !obj.Equals(null) ? obj.ToString() : null;
     #endregion
 }

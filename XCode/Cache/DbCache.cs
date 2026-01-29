@@ -72,7 +72,7 @@ public class DbCache : NewLife.Caching.Cache
     public override Int32 Count => Factory.Session.Count;
 
     /// <summary>所有键。实际返回只读列表新实例，数据量较大时注意性能</summary>
-    public override ICollection<String> Keys => Factory.FindAll().Select(e => (e[Factory.Unique] as String)!).ToList();
+    public override ICollection<String> Keys => Factory.FindAll().Select(e => (e[KeyField] as String)!).ToList();
     #endregion
 
     #region 方法
@@ -145,6 +145,8 @@ public class DbCache : NewLife.Caching.Cache
         if (e == null) return default;
 
         var value = e.Value;
+        if (value.IsNullOrEmpty()) return default;
+
         //return JsonHelper.Convert<T>(value);
         //if (typeof(T) == typeof(Byte[])) return (T)(Object)(value + "").ToBase64();
         if (typeof(T) == typeof(String)) return (T)(Object)value;

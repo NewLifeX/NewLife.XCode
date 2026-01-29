@@ -655,7 +655,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     {
         InitData();
 
-        return Dal.SelectCount(sql, CommandType.Text, null);
+        return Dal.SelectCount(sql, CommandType.Text);
     }
 
     private void FixBuilder(SelectBuilder builder)
@@ -671,7 +671,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>影响的结果</returns>
-    public Int32 Execute(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
+    public Int32 Execute(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
     {
         InitData();
 
@@ -685,7 +685,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
+    public Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[] ps)
     {
         InitData();
 

@@ -26,20 +26,25 @@ internal class HighGo : RemoteDb
 
     public override String FormatName(String name)
     {
-        if (name.IsNullOrWhiteSpace()) { return name; }
-        if (name[0] == '"' && name[name.Length - 1] == '"') { return name; }
+        if (name.IsNullOrWhiteSpace()) return name;
+        if (name[0] == '"' && name[^1] == '"') return name;
+
         return $"\"{name}\"";
     }
-    public override String FormatValue(IDataColumn column, Object? value)
+
+    public override String FormatValue(IDataColumn field, Object? value)
     {
-        if (column.DataType == typeof(Boolean)) { return value.ToBoolean() ? "true" : "false"; }
-        return base.FormatValue(column, value);
+        if (field != null && field.DataType == typeof(Boolean)) return value.ToBoolean() ? "true" : "false";
+
+        return base.FormatValue(field!, value);
     }
+
     public override String FormatLike(IDataColumn column, String format)
     {
         format = format.Replace("'%{", "'%' || {").Replace("}%'", "} || '%'").Replace("'{", "{").Replace("}'", "}");
         return base.FormatLike(column, format);
     }
+
     public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
     {
         if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, 0);
@@ -85,13 +90,13 @@ internal class HighGoSession : RemoteDbSession
     #region 快速查询单表记录数量
     public override Int64 QueryCountFast(String tableName)
     {
-        var db = (Database as HighGo);
+        var db = (Database as HighGo)!;
         var sql = $"SELECT \"n_live_tup\" FROM \"pg_stat_user_tables\" WHERE \"schemaname\"='{db.TableSchema}' AND \"relname\" = '{tableName.Replace("\"", String.Empty)}'";
         return ExecuteScalar<Int64>(sql);
     }
     public override Task<Int64> QueryCountFastAsync(String tableName)
     {
-        var db = (Database as HighGo);
+        var db = (Database as HighGo)!;
         var sql = $"SELECT \"n_live_tup\" FROM \"pg_stat_user_tables\" WHERE \"schemaname\"='{db.TableSchema}' AND \"relname\" = '{tableName.Replace("\"", String.Empty)}'";
         return ExecuteScalarAsync<Int64>(sql);
     }
@@ -194,7 +199,7 @@ internal class HighGoSession : RemoteDbSession
 internal class HighGoMetaData : RemoteDbMetaData
 {
     #region 属性
-    HighGo _HighGo => Database as HighGo;
+    HighGo _HighGo => (Database as HighGo)!;
     String GetTablesSql
     {
         get
@@ -425,26 +430,38 @@ internal class HighGoMetaData : RemoteDbMetaData
         var dt = GetSchema(_.Databases, [databaseName]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
-    public override String AddTableDescriptionSQL(IDataTable table)
+
+    public override String? AddTableDescriptionSQL(IDataTable table)
     {
-        if (String.IsNullOrEmpty(table.Description)) { return null; }
-        return $"COMMENT ON TABLE {FormatName(table)} IS '{table.Description}'";
+        var description = table.Description;
+        if (description.IsNullOrEmpty()) return null;
+
+        return $"COMMENT ON TABLE {FormatName(table)} IS '{description}'";
     }
-    public override String DropTableDescriptionSQL(IDataTable table) => $"COMMENT ON TABLE {FormatName(table)} IS NULL";
-    public override String AddColumnDescriptionSQL(IDataColumn field)
+
+    public override String? DropTableDescriptionSQL(IDataTable table) => $"COMMENT ON TABLE {FormatName(table)} IS NULL";
+
+    public override String? AddColumnDescriptionSQL(IDataColumn field)
     {
-        if (String.IsNullOrEmpty(field.Description)) { return null; }
-        ;
-        return $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS '{field.Description}'";
+        var description = field.Description;
+        if (description.IsNullOrEmpty()) return null;
+
+        return $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS '{description}'";
     }
-    public override String DropColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS NULL";
-    public override String CreateIndexSQL(IDataIndex index)
+
+    public override String? DropColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS NULL";
+
+    public override String? CreateIndexSQL(IDataIndex index)
     {
         var sb = Pool.StringBuilder.Get();
-        if (index.Unique) { sb.Append("Create Unique Index "); }
-        else { sb.Append("Create Index "); }
+        if (index.Unique)
+            sb.Append("Create Unique Index ");
+        else
+            sb.Append("Create Index ");
+
         sb.Append("If Not Exists ");
         sb.Append(index.Name);
+
         var dcs = index.Table.GetColumns(index.Columns);
         sb.AppendFormat(" On {0} USING btree ({1})", FormatName(index.Table), dcs.Join(",", FormatName));
 

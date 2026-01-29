@@ -1047,7 +1047,7 @@ internal partial class DbMetaData
 
     public virtual String? DropColumnDescriptionSQL(IDataColumn field) => null;
 
-    public virtual String CreateIndexSQL(IDataIndex index)
+    public virtual String? CreateIndexSQL(IDataIndex index)
     {
         var sb = Pool.StringBuilder.Get();
         if (index.Unique)

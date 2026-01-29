@@ -86,14 +86,14 @@ public class EntityTransaction : DisposeBase
     protected ISpan? span;
 
     /// <summary>会话</summary>
-    public IDbSession Session { get; private set; }
+    public IDbSession? Session { get; private set; }
     #endregion
 
     #region 构造
     /// <summary>用数据库会话来实例化一个事务区域</summary>
     /// <param name="session"></param>
     /// <param name="level">事务隔离等级</param>
-    public EntityTransaction(IDbSession session, IsolationLevel level = IsolationLevel.ReadCommitted)
+    public EntityTransaction(IDbSession? session, IsolationLevel level = IsolationLevel.ReadCommitted)
     {
         Session = session;
         if (session != null)
@@ -138,7 +138,7 @@ public class EntityTransaction : DisposeBase
     /// <summary>提交事务</summary>
     public virtual void Commit()
     {
-        Session.Commit();
+        Session?.Commit();
 
         hasFinish = true;
         span?.Dispose();

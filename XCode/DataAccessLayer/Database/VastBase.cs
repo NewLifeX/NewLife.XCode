@@ -825,11 +825,11 @@ internal class VastBaseMetaData : RemoteDbMetaData
         return $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
     }
 
-    public override String AddColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is '{field.Description}'";
+    public override String? AddColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is '{field.Description}'";
 
-    public override String DropColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is ''";
+    public override String? DropColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is ''";
 
-    public override String CreateIndexSQL(IDataIndex index)
+    public override String? CreateIndexSQL(IDataIndex index)
     {
         // VastBase/PostgreSQL 中索引名不区分大小写
         // 检查数据库中是否已存在同名索引(忽略大小写)

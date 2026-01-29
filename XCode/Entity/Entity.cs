@@ -1813,7 +1813,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
         {
             // 非分表情况，直接调用现有的参数化Delete方法
             var db = session.Dal.Db;
-            var ps = db.UseParameter ? new Dictionary<String, Object>() : null;
+            var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
             var whereClause = where?.GetString(db, ps) ?? String.Empty;
 
             return Persistence.Delete(session, whereClause, maximumRows);
@@ -2238,7 +2238,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             else
             {
                 entity = new TEntity();
-                entity.SetItem(Meta.Factory.Unique.Name, key);
+                entity.SetItem(Meta.Factory.Unique!.Name, key);
             }
 
             // 插入失败时，再次查询
@@ -2287,7 +2287,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             else
             {
                 entity = new TEntity();
-                entity.SetItem(Meta.Factory.Unique.Name, key);
+                entity.SetItem(Meta.Factory.Unique!.Name, key);
             }
 
             // 插入失败时，再次查询

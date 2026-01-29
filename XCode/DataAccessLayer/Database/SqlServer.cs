@@ -243,7 +243,7 @@ internal class SqlServer : RemoteDb
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">唯一键。用于not in分页</param>
     /// <returns>分页SQL</returns>
-    public static String PageSplitByTopNotIn(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
+    public static String? PageSplitByTopNotIn(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
     {
         // 从第一行开始，不需要分页
         if (startRowIndex <= 0 && maximumRows < 1) return sql;
@@ -292,7 +292,7 @@ internal class SqlServer : RemoteDb
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">唯一键。用于not in分页</param>
     /// <returns>分页SQL</returns>
-    public static String PageSplitMaxMin(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn)
+    public static String? PageSplitMaxMin(String sql, Int64 startRowIndex, Int64 maximumRows, String keyColumn)
     {
         // 唯一键的顺序。默认为Empty，可以为asc或desc，如果有，则表明主键列是数字唯一列，可以使用max/min分页法
         var isAscOrder = keyColumn.ToLower().EndsWith(" asc");
@@ -440,7 +440,7 @@ internal class SqlServer : RemoteDb
     public override String FormatValue(IDataColumn field, Object? value)
     {
         var isNullable = true;
-        Type type = null;
+        Type? type = null;
         if (field != null)
         {
             type = field.DataType;
@@ -455,7 +455,7 @@ internal class SqlServer : RemoteDb
             if (value == null) return isNullable ? "null" : "''";
 
             // 为了兼容旧版本实体类
-            if (field.RawType.StartsWithIgnoreCase("n"))
+            if (field != null && field.RawType.StartsWithIgnoreCase("n"))
                 return "N'" + value.ToString().Replace("'", "''") + "'";
             else
                 return "'" + value.ToString().Replace("'", "''") + "'";
@@ -472,7 +472,7 @@ internal class SqlServer : RemoteDb
             return FormatDateTime(field!, dt);
         }
 
-        return base.FormatValue(field, value);
+        return base.FormatValue(field!, value);
     }
 
     private static readonly Char[] _likeKeys = ['[', ']', '%', '_'];
@@ -568,7 +568,7 @@ internal class SqlServerSession : RemoteDbSession
             return fs.ToArray();
         }
 
-        return null;
+        return [];
     }
 
     /// <summary>快速查询单表记录数，稍有偏差</summary>
@@ -958,7 +958,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         var session = Database.CreateSession();
 
         //一次性把所有的表说明查出来
-        DataTable DescriptionTable = null;
+        DataTable? DescriptionTable = null;
 
         try
         {
@@ -971,7 +971,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         }
 
         var dt = GetSchema(_.Tables, null);
-        if (dt == null || dt.Rows == null || dt.Rows.Count <= 0) return null;
+        if (dt == null || dt.Rows == null || dt.Rows.Count <= 0) return [];
 
         try
         {
@@ -1175,13 +1175,13 @@ internal class SqlServerMetaData : RemoteDbMetaData
     #endregion
 
     #region 取得字段信息的SQL模版
-    private String _SchemaSql = "";
+    private String? _SchemaSql = "";
     /// <summary>构架SQL</summary>
     public virtual String SchemaSql
     {
         get
         {
-            if (String.IsNullOrEmpty(_SchemaSql))
+            if (_SchemaSql.IsNullOrEmpty())
             {
                 var sb = new StringBuilder();
                 sb.Append("SELECT ");
@@ -1219,7 +1219,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         }
     }
 
-    private String _IndexSql;
+    private String? _IndexSql;
     public virtual String IndexSql
     {
         get
@@ -1242,7 +1242,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
     #endregion
 
     #region 数据定义
-    public override Object? SetSchema(DDLSchema schema, params Object?[]? values)
+    public override Object? SetSchema(DDLSchema schema, params Object?[] values)
     {
         if (Database is DbBase db)
         {
@@ -1268,7 +1268,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
                         if (values.Length > 1)
                             file = values[1] as String;
                     }
-                    return Backup(dbname, file, false);
+                    return Backup(dbname!, file, false);
                 case DDLSchema.RestoreDatabase:
                     if (values != null)
                     {
@@ -1277,7 +1277,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
                         if (values.Length > 1)
                             recoverDir = values[1] as String;
                     }
-                    return Restore(file, recoverDir, true);
+                    return Restore(file!, recoverDir!, true);
                 default:
                     break;
             }
@@ -1534,84 +1534,88 @@ internal class SqlServerMetaData : RemoteDbMetaData
         return String.Join("; " + Environment.NewLine, ss);
     }
 
-    public override String AddTableDescriptionSQL(IDataTable table) => $"EXEC dbo.sp_addextendedproperty @name=N'MS_Description', @value=N'{table.Description}' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'{table.TableName}'";
+    public override String? AddTableDescriptionSQL(IDataTable table) => $"EXEC dbo.sp_addextendedproperty @name=N'MS_Description', @value=N'{table.Description}' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'{table.TableName}'";
 
-    public override String DropTableDescriptionSQL(IDataTable table) => $"EXEC dbo.sp_dropextendedproperty @name=N'MS_Description', @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'{table.TableName}'";
+    public override String? DropTableDescriptionSQL(IDataTable table) => $"EXEC dbo.sp_dropextendedproperty @name=N'MS_Description', @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'{table.TableName}'";
 
-    public override String AddColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Add {FieldClause(field, true)}";
+    public override String? AddColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Add {FieldClause(field, true)}";
 
-    public override String AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
+    public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
     {
-        // 创建为自增，重建表
-        if (field.Identity && !oldfield.Identity)
+        if (oldfield != null)
         {
-            //return DropColumnSQL(oldfield) + ";" + Environment.NewLine + AddColumnSQL(field);
-            return RebuildTable(field.Table, oldfield.Table);
+            // 创建为自增，重建表
+            if (field.Identity && !oldfield.Identity)
+                return RebuildTable(field.Table, oldfield.Table);
+            
+            // 类型改变，必须重建表
+            if (IsColumnTypeChanged(field, oldfield))
+                return RebuildTable(field.Table, oldfield.Table);
         }
-        // 类型改变，必须重建表
-        if (IsColumnTypeChanged(field, oldfield)) return RebuildTable(field.Table, oldfield.Table);
 
-        var sql = $"Alter Table {FormatName(field.Table)} Alter Column {FieldClause(field, false)}";
-        var pk = DeletePrimaryKeySQL(field);
-        if (field.PrimaryKey)
+        var sb = Pool.StringBuilder.Get();
+        
+        if (oldfield != null)
         {
-            // 如果没有主键删除脚本，表明没有主键
-            //if (String.IsNullOrEmpty(pk))
-            if (!oldfield.PrimaryKey)
+            // 需要提前删除相关索引
+            foreach (var di in oldfield.Table.Indexes)
             {
-                // 增加主键约束
-                pk = $"Alter Table {FormatName(field.Table)} ADD CONSTRAINT PK_{FormatName(field.Table)} PRIMARY KEY {(field.Identity ? "CLUSTERED" : "")}({FormatName(field)}) ON [PRIMARY]";
-                sql += ";" + Environment.NewLine + pk;
-            }
-        }
-        else
-        {
-            // 字段声明没有主键，但是主键实际存在，则删除主键
-            //if (!String.IsNullOrEmpty(pk))
-            if (oldfield.PrimaryKey)
-            {
-                sql += ";" + Environment.NewLine + pk;
+                if (di.Columns.Contains(oldfield.ColumnName, StringComparer.OrdinalIgnoreCase))
+                {
+                    var dis = DropIndexSQL(di);
+                    if (!String.IsNullOrEmpty(dis))
+                    {
+                        sb.Append(dis);
+                        sb.AppendLine(";");
+                    }
+                }
             }
         }
 
-        //// 需要提前删除相关默认值
-        //if (oldfield.Default != null)
-        //{
-        //    var df = DropDefaultSQL(oldfield);
-        //    if (!String.IsNullOrEmpty(df))
-        //    {
-        //        sql = df + ";" + Environment.NewLine + sql;
+        sb.AppendFormat("Alter Table {0} Alter Column {1}", FormatName(field.Table), FieldClause(field, false));
+        sb.AppendLine(";");
 
-        //        // 如果还有默认值，加上
-        //        if (field.Default != null)
-        //        {
-        //            df = AddDefaultSQLWithNoCheck(field);
-        //            if (!String.IsNullOrEmpty(df)) sql += ";" + Environment.NewLine + df;
-        //        }
-        //    }
-        //}
-        // 需要提前删除相关索引
-        foreach (var di in oldfield.Table.Indexes)
+        if (oldfield != null)
         {
-            // 如果包含该字段
-            if (di.Columns.Contains(oldfield.ColumnName, StringComparer.OrdinalIgnoreCase))
+            var pk = DeletePrimaryKeySQL(field);
+            if (field.PrimaryKey)
             {
-                var dis = DropIndexSQL(di);
-                if (!String.IsNullOrEmpty(dis)) sql = dis + ";" + Environment.NewLine + sql;
+                if (!oldfield.PrimaryKey)
+                {
+                    // 增加主键约束
+                    sb.AppendFormat("Alter Table {0} ADD CONSTRAINT PK_{0} PRIMARY KEY {1}({2}) ON [PRIMARY]",
+                        FormatName(field.Table), 
+                        field.Identity ? "CLUSTERED" : "", 
+                        FormatName(field));
+                    sb.AppendLine(";");
+                }
+            }
+            else
+            {
+                if (oldfield.PrimaryKey)
+                {
+                    // 字段声明没有主键，但是主键实际存在，则删除主键
+                    sb.Append(pk);
+                    sb.AppendLine(";");
+                }
             }
         }
+
         // 如果还有索引，则加上
         foreach (var di in field.Table.Indexes)
         {
-            // 如果包含该字段
             if (di.Columns.Contains(field.ColumnName, StringComparer.OrdinalIgnoreCase))
             {
                 var cis = CreateIndexSQL(di);
-                if (!String.IsNullOrEmpty(cis)) sql += ";" + Environment.NewLine + cis;
+                if (!String.IsNullOrEmpty(cis))
+                {
+                    sb.Append(cis);
+                    sb.AppendLine(";");
+                }
             }
         }
 
-        return sql;
+        return sb.Return(true).TrimEnd(';', '\r', '\n', ' ');
     }
 
     public override String DropIndexSQL(IDataIndex index) => $"Drop Index {FormatName(index.Table)}.{index.Name}";

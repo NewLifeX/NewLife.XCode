@@ -124,7 +124,7 @@ class SqlCe : FileDbBase
         // 从第一行开始，不需要分页
         if (startRowIndex <= 0 && maximumRows < 1) return sql;
 
-        return SqlServer.PageSplitByTopNotIn(sql, startRowIndex, maximumRows, keyColumn);
+        return SqlServer.PageSplitByTopNotIn(sql, startRowIndex, maximumRows, keyColumn)!;
     }
     #endregion
 }

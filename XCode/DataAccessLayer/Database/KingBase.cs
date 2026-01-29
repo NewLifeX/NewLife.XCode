@@ -14,7 +14,7 @@ internal class KingBase : RemoteDb
     public override DatabaseType Type => DatabaseType.KingBase;
 
     /// <summary>数据库版本</summary>
-    public Version Version { get; set; }
+    public Version? Version { get; set; }
 
     /// <summary>模式</summary>
     public String? TableSchema { get; set; }
@@ -97,13 +97,13 @@ internal class KingBaseSession : RemoteDbSession
     #region 快速查询单表记录数量
     public override Int64 QueryCountFast(String tableName)
     {
-        var db = Database as KingBase;
+        var db = (Database as KingBase)!;
         var sql = $"SELECT \"n_live_tup\" FROM \"sys_stat_user_tables\" WHERE \"schemaname\"='{db.TableSchema}' AND \"relname\" = '{tableName.Replace("\"", String.Empty)}'";
         return ExecuteScalar<Int64>(sql);
     }
     public override Task<Int64> QueryCountFastAsync(String tableName)
     {
-        var db = Database as KingBase;
+        var db = (Database as KingBase)!;
         var sql = $"SELECT \"n_live_tup\" FROM \"sys_stat_user_tables\" WHERE \"schemaname\"='{db.TableSchema}' AND \"relname\" = '{tableName.Replace("\"", String.Empty)}'";
         return ExecuteScalarAsync<Int64>(sql);
     }
@@ -167,7 +167,7 @@ internal class KingBaseSession : RemoteDbSession
 internal class KingBaseMetaData : RemoteDbMetaData
 {
     #region 属性
-    KingBase _KingBase => Database as KingBase;
+    KingBase _KingBase => (Database as KingBase)!;
     String GetTablesSql
     {
         get

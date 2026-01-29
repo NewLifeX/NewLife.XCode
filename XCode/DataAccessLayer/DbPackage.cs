@@ -681,20 +681,16 @@ public class DbPackage
     /// </summary>
     public class WriteFileActor : Actor
     {
-        /// <summary>
-        /// 数据流
-        /// </summary>
+        /// <summary>数据流</summary>
         public Stream Stream { get; set; } = null!;
 
-        /// <summary>
-        /// 总数
-        /// </summary>
+        /// <summary>总数</summary>
         public Int32 Total { get; set; }
 
-        /// <summary>
-        /// 日志
-        /// </summary>
-        public ILog? Log { get; set; }
+        ///// <summary>
+        ///// 日志
+        ///// </summary>
+        //public ILog? Log { get; set; }
 
         private Binary _Binary = null!;
         private Boolean _writeHeader;

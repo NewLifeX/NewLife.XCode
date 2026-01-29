@@ -749,7 +749,7 @@ internal class OracleMeta : RemoteDbMetaData
         }
 
         // 采用集合过滤，提高效率
-        String tableName = null;
+        String? tableName = null;
         if (names != null && names.Length == 1) tableName = names.FirstOrDefault();
         if (tableName.IsNullOrEmpty()) tableName = null;
 
@@ -757,7 +757,9 @@ internal class OracleMeta : RemoteDbMetaData
         //if (owner.IsNullOrEmpty()) owner = UserID;
 
         var dt = GetSchema(_.Tables, [owner, tableName]);
-        if (dt?.Rows != null && !dt.Columns.Contains("TABLE_TYPE"))
+        if (dt == null || dt.Rows.Count == 0) return [];
+
+        if (!dt.Columns.Contains("TABLE_TYPE"))
         {
             dt.Columns.Add("TABLE_TYPE", typeof(String));
             foreach (var dr in dt.Rows.ToArray())
@@ -786,7 +788,7 @@ internal class OracleMeta : RemoteDbMetaData
 
         // 如果表太多，则只要目标表数据
         var mulTable = "";
-        if (dt != null && dt.Rows.Count > 10 && names != null && names.Length > 0)
+        if (dt.Rows.Count > 10 && names != null && names.Length > 0)
         {
             //var tablenames = dt.Rows.ToArray().Select(e => "'{0}'".F(e["TABLE_NAME"]));
             //mulTable = " And TABLE_NAME in ({0})".F(tablenames.Join(","));
@@ -847,7 +849,7 @@ internal class OracleMeta : RemoteDbMetaData
         return Database.CreateSession().Query(sql).Tables[0];
     }
 
-    protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable> data)
+    protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable?>? data)
     {
         base.FixTable(table, dr, data);
 
@@ -908,7 +910,7 @@ internal class OracleMeta : RemoteDbMetaData
     //    return drs != null && drs.Length > 0;
     //}
 
-    private String? GetTableComment(String name, IDictionary<String, DataTable> data)
+    private String? GetTableComment(String name, IDictionary<String, DataTable?>? data)
     {
         var dt = data?["TableComment"];
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
@@ -987,7 +989,7 @@ internal class OracleMeta : RemoteDbMetaData
             if (field.RawType.StartsWithIgnoreCase("NUMBER"))
             {
                 var prec = fi.Precision;
-                Type type = null;
+                Type? type = null;
                 if (fi.Scale == 0)
                 {
                     // 0表示长度不限制，为了方便使用，转为最常见的Int32

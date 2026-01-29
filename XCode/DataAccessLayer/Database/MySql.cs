@@ -785,16 +785,16 @@ internal class MySqlMetaData : RemoteDbMetaData
         return sb.Return(true);
     }
 
-    public override String AddTableDescriptionSQL(IDataTable table)
+    public override String? AddTableDescriptionSQL(IDataTable table)
     {
         if (String.IsNullOrEmpty(table.Description)) return null;
 
         return $"Alter Table {FormatName(table)} Comment '{table.Description}'";
     }
 
-    public override String AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"Alter Table {FormatName(field.Table)} Modify Column {FieldClause(field, false)}";
+    public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"Alter Table {FormatName(field.Table)} Modify Column {FieldClause(field, false)}";
 
-    public override String AddColumnDescriptionSQL(IDataColumn field) =>
+    public override String? AddColumnDescriptionSQL(IDataColumn field) =>
         // 返回String.Empty表示已经在别的SQL中处理
         String.Empty;
 

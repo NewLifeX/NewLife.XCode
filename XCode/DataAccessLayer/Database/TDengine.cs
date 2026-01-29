@@ -227,7 +227,7 @@ internal class TDengineSession : RemoteDbSession
     #endregion
 
     #region 架构
-    public override DataTable GetSchema(DbConnection? conn, String collectionName, String?[]? restrictionValues) => null;
+    public override DataTable GetSchema(DbConnection? conn, String collectionName, String?[]? restrictionValues) => null!;
     #endregion
 }
 
@@ -280,7 +280,7 @@ class TDengineMetaData : RemoteDbMetaData
         {
             var sql = "SHOW TABLES";
             var dt = ss.Query(sql, null);
-            if (dt.Rows.Count == 0) return null;
+            if (dt.Rows.Count == 0) return [];
 
             var hs = new HashSet<String>(names ?? [], StringComparer.OrdinalIgnoreCase);
 
@@ -306,7 +306,7 @@ class TDengineMetaData : RemoteDbMetaData
                     field.RawType = dc["Type"] + "";
                     field.Length = dc["Length"].ToInt();
                     field.Master = dc["Note"] as String == "TAGS";
-                    field.DataType = GetDataType(field);
+                    field.DataType = GetDataType(field)!;
 
                     field.Fix();
 

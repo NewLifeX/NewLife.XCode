@@ -272,7 +272,7 @@ internal class SQLite : FileDbBase
     {
         if (field.DataType == typeof(Byte[]))
         {
-            var bts = (Byte[])value;
+            var bts = (Byte[]?)value;
             if (bts == null || bts.Length <= 0) return "0x0";
 
             return "X'" + BitConverter.ToString(bts).Replace("-", null) + "'";
@@ -562,7 +562,7 @@ internal class SQLiteMetaData : FileDbMetaData
         for (var dr = 0; dr < dts.Rows.Count; dr++)
         {
             var name = dts.Get<String>(dr, "tbl_name");
-            if (hs.Count > 0 && !hs.Contains(name)) continue;
+            if (name.IsNullOrEmpty() || hs.Count > 0 && !hs.Contains(name)) continue;
 
             var table = DAL.CreateTable();
             table.TableName = name;
@@ -770,7 +770,7 @@ internal class SQLiteMetaData : FileDbMetaData
     #endregion
 
     #region 数据定义
-    public override Object? SetSchema(DDLSchema schema, params Object[] values)
+    public override Object? SetSchema(DDLSchema schema, params Object?[] values)
     {
         {
             var db = (Database as DbBase)!;
@@ -785,7 +785,7 @@ internal class SQLiteMetaData : FileDbMetaData
                     if (!dbname.IsNullOrEmpty()) dbname = Path.GetFileNameWithoutExtension(dbname);
                     var file = "";
                     if (values != null && values.Length > 0) file = values[0] as String;
-                    return Backup(dbname, file, false);
+                    return Backup(dbname!, file, false);
 
                 default:
                     break;

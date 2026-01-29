@@ -197,7 +197,7 @@ public static class ModelHelper
 
         var hasAttr = atts != null && atts.Count > 0;
         // 如果含有命名空间则添加
-        if (hasAttr && atts.TryGetValue("xmlns", out var xmlns))
+        if (hasAttr && atts!.TryGetValue("xmlns", out var xmlns))
             writer.WriteStartElement("EntityModel", xmlns);
         else
             writer.WriteStartElement("EntityModel");
@@ -206,7 +206,7 @@ public static class ModelHelper
         //writer.WriteAttributeString("Version", Assembly.GetExecutingAssembly().GetName().Version.ToString());
         if (hasAttr)
         {
-            foreach (var item in atts)
+            foreach (var item in atts!)
             {
                 // 处理命名空间
                 if (item.Key.EqualIgnoreCase("xmlns")) continue;
@@ -434,7 +434,7 @@ public static class ModelHelper
                         var v = reader.GetAttribute("DataType");
                         if (v != null)
                         {
-                            dc.DataType = v.GetTypeEx();
+                            dc.DataType = v.GetTypeEx()!;
                             v = reader.GetAttribute("Length");
                             if (v != null && Int32.TryParse(v, out var len)) dc.Length = len;
 
@@ -726,7 +726,7 @@ public static class ModelHelper
                 {
                     var sb = new StringBuilder();
                     var arr = obj as IEnumerable;
-                    foreach (var elm in arr)
+                    foreach (var elm in arr!)
                     {
                         if (sb.Length > 0) sb.Append(',');
                         sb.Append(elm);
@@ -735,7 +735,7 @@ public static class ModelHelper
                 }
                 else if (pi.PropertyType == typeof(Type))
                 {
-                    obj = (obj as Type).Name;
+                    obj = (obj as Type)?.Name;
                 }
                 else
                 {

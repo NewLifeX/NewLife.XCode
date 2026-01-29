@@ -146,6 +146,7 @@ public class EntityPersistence : IEntityPersistence
         if (sql.IsNullOrEmpty()) return 0;
 
         var rs = 0;
+        dps ??= [];
 
         //检查是否有标识列，标识列需要特殊处理
         var field = factory.Table.Identity;
@@ -217,6 +218,7 @@ public class EntityPersistence : IEntityPersistence
             entity.Dirtys.Clear();
         }
 
+        dps ??= [];
         var rs = session.Execute(sql, CommandType.Text, dps);
 
         //EntityAddition.ClearValues(entity as EntityBase);
@@ -234,6 +236,7 @@ public class EntityPersistence : IEntityPersistence
         var sql = SQL(session, entity, DataObjectMethodType.Delete, ref dps);
         if (sql.IsNullOrEmpty()) return 0;
 
+        dps ??= [];
         var rs = session.Execute(sql, CommandType.Text, dps);
 
         // 清除脏数据，避免重复提交保存
@@ -663,7 +666,7 @@ public class EntityPersistence : IEntityPersistence
         var db = session.Dal.Db;
 
         var exp = GetPrimaryCondition(entity);
-        var ps = !db.UseParameter ? null : new Dictionary<String, Object>();
+        var ps = !db.UseParameter ? null : new Dictionary<String, Object?>();
         var def = exp?.GetString(db, ps);
         if (def.IsNullOrEmpty()) return null;
 
@@ -801,7 +804,7 @@ public class EntityPersistence : IEntityPersistence
         return dp;
     }
 
-    static Boolean TryCheckAdditionalValue(IDictionary<String, Object[]>? dfs, String name, out Object? value, out Boolean sign)
+    static Boolean TryCheckAdditionalValue(IDictionary<String, Object?[]>? dfs, String name, out Object? value, out Boolean sign)
     {
         value = null;
         sign = false;

@@ -584,9 +584,9 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         return sql;
     }
 
-    protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
+    protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
-        String str = null;
+        String? str = null;
         if (!field.Nullable) str = " NOT NULL";
 
         if (field.Identity) str = " serial NOT NULL";

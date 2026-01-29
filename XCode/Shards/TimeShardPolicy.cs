@@ -142,8 +142,8 @@ public class TimeShardPolicy : IShardPolicy
         var table = Factory.Table;
 
         // 这里不区分时区，而是直接使用时间
-        String? connName = null;
-        String? tableName = null;
+        var connName = table.ConnName;
+        var tableName = table.TableName;
         if (!ConnPolicy.IsNullOrEmpty()) connName = String.Format(ConnPolicy, table.ConnName, time);
         if (!TablePolicy.IsNullOrEmpty()) tableName = String.Format(TablePolicy, table.TableName, time);
 

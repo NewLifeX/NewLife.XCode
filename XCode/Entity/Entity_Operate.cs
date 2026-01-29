@@ -45,16 +45,16 @@ public partial class Entity<TEntity>
         public virtual ICollection<String> FieldNames => Meta.FieldNames;
 
         /// <summary>唯一键，返回第一个标识列或者唯一的主键</summary>
-        public virtual FieldItem Unique => Meta.Unique;
+        public virtual FieldItem? Unique => Meta.Unique;
 
         /// <summary>主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
-        public virtual FieldItem Master => Meta.Master;
+        public virtual FieldItem? Master => Meta.Master;
 
         /// <summary>连接名。当前线程正在使用的连接名</summary>
-        public virtual String ConnName { get => Meta.ConnName!; set => Meta.ConnName = value; }
+        public virtual String ConnName { get => Meta.ConnName; set => Meta.ConnName = value; }
 
         /// <summary>表名。当前线程正在使用的表名</summary>
-        public virtual String TableName { get => Meta.TableName!; set => Meta.TableName = value; }
+        public virtual String TableName { get => Meta.TableName; set => Meta.TableName = value; }
         #endregion
 
         #region 构造
@@ -459,7 +459,7 @@ public partial class Entity<TEntity>
             set => _SelectStat = value;
         }
 
-        private IList<StatField> _StatFields;
+        private IList<StatField>? _StatFields;
         /// <summary>统计字段集合</summary>
         public IList<StatField> StatFields
         {

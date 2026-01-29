@@ -91,5 +91,5 @@ public partial class ValidHelper
     /// <typeparam name="T">目标类型</typeparam>
     /// <param name="value">要转换的对象</param>
     /// <returns>引用类型数组，若转换失败返回 null</returns>
-    public static T[]? ToObjectArray<T>(Object? value) where T : class => ToArray(value, ToObject<T>);
+    public static T?[]? ToObjectArray<T>(Object? value) where T : class => ToArray(value, ToObject<T>);
 }

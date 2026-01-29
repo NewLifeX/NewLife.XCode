@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace XCode;
+﻿namespace XCode;
 
 /// <summary>实体累加接口。实现Count=Count+123的效果</summary>
 public interface IEntityAddition
@@ -19,38 +15,34 @@ public interface IEntityAddition
 
     /// <summary>获取快照</summary>
     /// <returns></returns>
-    IDictionary<String, Object[]> Get();
+    IDictionary<String, Object?[]> Get();
 
     /// <summary>使用快照重置</summary>
     /// <param name="value"></param>
-    void Reset(IDictionary<String, Object[]> value);
+    void Reset(IDictionary<String, Object?[]> value);
     #endregion
 }
 
 /// <summary>实体累加接口。实现Count+=1的效果</summary>
-public class EntityAddition : IEntityAddition
+/// <remarks>实例化</remarks>
+/// <param name="entity"></param>
+public class EntityAddition(IEntity entity) : IEntityAddition
 {
     #region 属性
     /// <summary>实体对象</summary>
-    public IEntity Entity { get; }
-    #endregion
-
-    #region 构造
-    /// <summary>实例化</summary>
-    /// <param name="entity"></param>
-    public EntityAddition(IEntity entity) => Entity = entity;
+    public IEntity Entity { get; } = entity;
     #endregion
 
     #region 累加
-    private String[] _Names;
-    private Object[] _Values;
+    private String[]? _Names;
+    private Object?[]? _Values;
 
     /// <summary>设置累加字段</summary>
     /// <param name="names">字段集合</param>
     public void Set(IEnumerable<String> names)
     {
         var ns = new List<String>();
-        var vs = new List<Object>();
+        var vs = new List<Object?>();
         foreach (var item in names)
         {
             ns.Add(item);
@@ -63,16 +55,16 @@ public class EntityAddition : IEntityAddition
 
     /// <summary>获取累加备份</summary>
     /// <returns></returns>
-    public IDictionary<String, Object[]> Get()
+    public IDictionary<String, Object?[]> Get()
     {
-        var dic = new Dictionary<String, Object[]>();
-        if (_Names == null) return dic;
+        var dic = new Dictionary<String, Object?[]>();
+        if (_Names == null || _Values == null) return dic;
 
         for (var i = 0; i < _Names.Length; i++)
         {
             var key = _Names[i];
 
-            var vs = new Object[2];
+            var vs = new Object?[2];
             dic[key] = vs;
 
             vs[0] = Entity[key];
@@ -84,10 +76,10 @@ public class EntityAddition : IEntityAddition
 
     /// <summary>重置累加备份</summary>
     /// <param name="dfs"></param>
-    public void Reset(IDictionary<String, Object[]> dfs)
+    public void Reset(IDictionary<String, Object?[]> dfs)
     {
         if (dfs == null || dfs.Count == 0) return;
-        if (_Names == null) return;
+        if (_Names == null || _Values == null) return;
 
         for (var i = 0; i < _Names.Length; i++)
         {

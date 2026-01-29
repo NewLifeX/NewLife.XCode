@@ -88,14 +88,14 @@ public partial class Entity<TEntity>
             private String? _ConnName;
             public String ConnName
             {
-                get => _ConnName ??= Table.ConnName;
+                get => _ConnName ?? Table.ConnName;
                 set { _ConnName = value; Reset(); }
             }
 
             private String? _TableName;
             public String TableName
             {
-                get => _TableName ??= Table.TableName;
+                get => _TableName ?? Table.TableName;
                 set { _TableName = value; Reset(); }
             }
 
@@ -232,7 +232,7 @@ public partial class Entity<TEntity>
             {
                 // 如果目标分表不存在，则不要展开查询
                 var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : Session.Dal;
-                if (!dal.TableNames.Contains(shard.TableName)) continue;
+                if (shard.TableName.IsNullOrEmpty() || !dal.TableNames.Contains(shard.TableName)) continue;
 
                 using var split = new SplitPackge(shard.ConnName, shard.TableName);
                 yield return callback();
@@ -247,7 +247,7 @@ public partial class Entity<TEntity>
             /// <summary>表名</summary>
             public String? TableName { get; set; }
 
-            public SplitPackge(String connName, String tableName)
+            public SplitPackge(String? connName, String? tableName)
             {
                 ConnName = Meta.ConnName;
                 TableName = Meta.TableName;
@@ -255,8 +255,8 @@ public partial class Entity<TEntity>
                 XTrace.WriteLine("CreateSplit: {0}->{2}, {1}->{3}", ConnName, TableName, connName, tableName);
 #endif
 
-                Meta.ConnName = connName;
-                Meta.TableName = tableName;
+                Meta.ConnName = connName!;
+                Meta.TableName = tableName!;
                 _InShard = true;
             }
 

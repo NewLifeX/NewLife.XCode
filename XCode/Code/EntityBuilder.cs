@@ -17,6 +17,9 @@ public class EntityBuilder : ClassBuilder
     /// <summary>合并业务类，当业务类已存在时。默认true</summary>
     public Boolean MergeBusiness { get; set; } = true;
 
+    /// <summary>是否启用升级模块名称。当XCode版本>=11.23.2026.127-beta0417时，自动将旧的Module类名升级为Interceptor。默认false</summary>
+    public Boolean EnableUpgradeModuleNames { get; set; }
+
     ///// <summary>使用缓存。默认true，标记为大数据的表不使用缓存</summary>
     //public Boolean UsingCache { get; set; } = true;
 
@@ -203,6 +206,14 @@ public class EntityBuilder : ClassBuilder
         if (output.IsNullOrEmpty()) output = ".";
         log?.Info("生成实体类 {0}", output.GetBasePath());
 
+        // 检测XCode版本，自动决定是否启用模块名称升级
+        var version = DetectXCodeVersion(output.GetBasePath());
+        var needUpgrade = NeedUpgradeModuleNames(version);
+        if (needUpgrade)
+        {
+            log?.Info("检测到XCode版本 {0}，启用模块名称升级", version);
+        }
+
         var displayNames = new HashSet<String>();
 
         var count = 0;
@@ -216,7 +227,8 @@ public class EntityBuilder : ClassBuilder
             {
                 AllTables = tables,
                 Option = option.Clone(),
-                Log = log
+                Log = log,
+                EnableUpgradeModuleNames = needUpgrade
             };
 
             // 不能对option赋值，否则所有table的ModelNameForToModel就相同了
@@ -258,6 +270,125 @@ public class EntityBuilder : ClassBuilder
     }
 
     #endregion 静态快速
+
+    #region 版本检测
+
+    /// <summary>检测项目中引用的XCode版本</summary>
+    /// <param name="startPath">起始路径</param>
+    /// <param name="maxLevels">最多向上查找的层级，默认5</param>
+    /// <returns>XCode版本号，如果未找到则返回null</returns>
+    /// <remarks>
+    /// 从指定路径开始，向上查找最多 maxLevels 层目录中的 csproj 文件。
+    /// 找到后解析其中 PackageReference 引用的 NewLife.XCode 版本号。
+    /// 用于自动判断是否需要升级模块名称（Module -> Interceptor）。
+    /// </remarks>
+    public static String? DetectXCodeVersion(String startPath, Int32 maxLevels = 5)
+    {
+        if (startPath.IsNullOrEmpty()) return null;
+
+        var dir = new DirectoryInfo(startPath);
+        if (!dir.Exists) return null;
+
+        // 向上查找csproj文件，最多查找maxLevels层
+        for (var i = 0; i < maxLevels && dir != null; i++)
+        {
+            var csprojFiles = dir.GetFiles("*.csproj", SearchOption.TopDirectoryOnly);
+            foreach (var csprojFile in csprojFiles)
+            {
+                var version = ParseXCodeVersionFromCsproj(csprojFile.FullName);
+                if (!version.IsNullOrEmpty()) return version;
+            }
+
+            dir = dir.Parent;
+        }
+
+        return null;
+    }
+
+    /// <summary>从csproj文件中解析XCode版本号</summary>
+    /// <param name="csprojPath">csproj文件路径</param>
+    /// <returns>XCode版本号，如果未找到则返回null</returns>
+    private static String? ParseXCodeVersionFromCsproj(String csprojPath)
+    {
+        try
+        {
+            var xml = File.ReadAllText(csprojPath);
+            
+            // 查找 <PackageReference Include="NewLife.XCode" Version="..." />
+            var match = Regex.Match(xml, @"<PackageReference\s+Include\s*=\s*[""']NewLife\.XCode[""']\s+Version\s*=\s*[""']([^""']+)[""']");
+            if (match.Success) return match.Groups[1].Value;
+
+            // 查找 <PackageReference Include="NewLife.XCode"><Version>...</Version></PackageReference>
+            match = Regex.Match(xml, @"<PackageReference\s+Include\s*=\s*[""']NewLife\.XCode[""']\s*>\s*<Version>([^<]+)</Version>", RegexOptions.Singleline);
+            if (match.Success) return match.Groups[1].Value;
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>检查XCode版本是否需要升级模块名称</summary>
+    /// <param name="version">XCode版本号</param>
+    /// <returns>是否需要升级（版本>=11.23.2026.127-beta0417）</returns>
+    /// <remarks>
+    /// 从 XCode 11.23.2026.127-beta0417 版本开始，旧的模块类名（如 TimeModule）
+    /// 已升级为拦截器类名（如 TimeInterceptor）。
+    /// 此方法判断指定版本是否需要执行名称升级。
+    /// </remarks>
+    public static Boolean NeedUpgradeModuleNames(String? version)
+    {
+        if (version.IsNullOrEmpty()) return false;
+
+        try
+        {
+            // 目标版本：11.23.2026.127-beta0417
+            var targetVersion = new Version(11, 23, 2026, 127);
+            
+            // 解析版本号，去除beta后缀
+            var versionStr = version;
+            var dashIndex = versionStr.IndexOf('-');
+            if (dashIndex > 0) versionStr = versionStr[..dashIndex];
+
+            if (Version.TryParse(versionStr, out var currentVersion))
+            {
+                // 比较版本号
+                var result = currentVersion.CompareTo(targetVersion);
+                if (result > 0) return true;
+                if (result < 0) return false;
+
+                // 版本号相同时，比较beta后缀
+                if (dashIndex > 0)
+                {
+                    var betaPart = version[(dashIndex + 1)..];
+                    // beta0417 格式
+                    if (betaPart.StartsWith("beta"))
+                    {
+                        var betaNumber = betaPart[4..];
+                        if (Int32.TryParse(betaNumber, out var beta))
+                        {
+                            return beta >= 417;
+                        }
+                    }
+                }
+                else
+                {
+                    // 没有beta后缀，说明是正式版，大于等于目标版本
+                    return true;
+                }
+            }
+        }
+        catch
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    #endregion 版本检测
 
     #region 方法
 
@@ -496,7 +627,9 @@ public class EntityBuilder : ClassBuilder
             var fileName = GetFileName(ext, chineseFileName);
             if (File.Exists(fileName))
             {
-                UpgradeModuleNames(fileName);
+                // 根据配置决定是否执行模块名称升级
+                if (EnableUpgradeModuleNames)
+                    UpgradeModuleNames(fileName);
 
                 if (!overwrite && MergeBusiness)
                 {

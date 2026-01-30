@@ -70,6 +70,10 @@ public class BuilderOption
     /// <summary>扩展数据</summary>
     public IDictionary<String, String> Items { get; set; } = new Dictionary<String, String>();
 
+    /// <summary>模型版本号。用于自动升级配置，不参与XML序列化</summary>
+    [XmlIgnore, IgnoreDataMember]
+    public Version? ModelVersion { get; set; }
+
     #endregion 属性
 
     #region 构造

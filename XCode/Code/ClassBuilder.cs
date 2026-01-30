@@ -94,6 +94,12 @@ public class ClassBuilder
                 }
             }
 
+            // 特殊处理ModelVersion，该属性不参与XML序列化，需要单独读取
+            if (atts.TryGetValue("ModelVersion", out var versionStr) && Version.TryParse(versionStr, out var version))
+            {
+                option.ModelVersion = version;
+            }
+
             // 去掉空属性
             foreach (var item in atts.ToKeyArray())
             {

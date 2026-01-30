@@ -167,6 +167,19 @@ public class EntityBuilder : ClassBuilder
         atts["xmlns"] = "https://newlifex.com/Model202509.xsd";
         atts["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202509.xsd";
 
+        // 添加模型版本号，用于自动升级配置（2.0.2026.0130开始ChineseFileName默认为true）
+        const String currentModelVersion = "2.0.2026.0130";
+        var curVer = Version.Parse(currentModelVersion);
+        
+        // 如果模型版本低于当前版本，则更新
+        if (option.ModelVersion == null || option.ModelVersion < curVer)
+        {
+            option.ModelVersion = curVer;
+        }
+        
+        // 将版本号写入atts，用于保存到XML
+        atts["ModelVersion"] = option.ModelVersion.ToString();
+
         // 版本和教程
         //var asm = AssemblyX.Create(Assembly.GetExecutingAssembly());
         //atts["Version"] = asm.FileVersion + "";

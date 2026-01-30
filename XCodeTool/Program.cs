@@ -124,6 +124,39 @@ class Program
         var option = new CubeBuilderOption();
         var tables = ClassBuilder.LoadModels(modelFile, option, out var atts, log);
 
+        // 自动升级旧配置：2026年1月30日之前的xml文件，ChineseFileName默认值从false改为true
+        // 通过ModelVersion字段判断是否为旧版本配置
+        if (!option.ChineseFileName)
+        {
+            var needUpgrade = false;
+            var targetVersion = new Version(2, 0, 2026, 130);
+            
+            if (option.ModelVersion != null)
+            {
+                // 如果有版本号，检查是否低于2.0.2026.0130（从该版本开始ChineseFileName默认为true）
+                if (option.ModelVersion < targetVersion)
+                {
+                    needUpgrade = true;
+                    XTrace.WriteLine("检测到旧版本({0})模型文件，自动启用中文文件名", option.ModelVersion);
+                }
+            }
+            else
+            {
+                // 没有版本号，说明是旧文件，需要升级
+                // 同时检查文件最后修改时间是否在2026年1月30日之前
+                var cutoffDate = new DateTime(2026, 1, 30);
+                var fileInfo = new FileInfo(modelFile);
+                if (fileInfo.LastWriteTime < cutoffDate)
+                {
+                    needUpgrade = true;
+                    XTrace.WriteLine("检测到旧版本模型文件(无版本号且修改时间早于2026-01-30)，自动启用中文文件名");
+                }
+            }
+
+            if (needUpgrade)
+                option.ChineseFileName = true;
+        }
+
         try
         {
             XTrace.WriteLine("修正模型：{0}", modelFile);

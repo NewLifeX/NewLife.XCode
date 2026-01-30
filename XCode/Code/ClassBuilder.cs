@@ -88,6 +88,11 @@ public class ClassBuilder
                 {
                     if (pi.PropertyType.IsEnum)
                         option.SetValue(pi, Enum.Parse(pi.PropertyType, val, true));
+                    else if (pi.PropertyType == typeof(Version))
+                    {
+                        if (Version.TryParse(val, out var ver))
+                            option.SetValue(pi, ver);
+                    }
                     else
                         option.SetValue(pi, val);
                     atts.Remove(pi.Name);

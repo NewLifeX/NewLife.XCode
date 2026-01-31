@@ -1003,6 +1003,33 @@ internal partial class DbMetaData
     }
     #endregion
 
+    #region 注释格式化
+    /// <summary>格式化注释文本，转义特殊字符以避免SQL语法错误</summary>
+    /// <param name="comment">原始注释文本</param>
+    /// <returns>转义后的注释文本</returns>
+    /// <remarks>
+    /// 处理以下特殊字符：
+    /// 1. 单引号(') - SQL字符串分隔符，需要转义为两个单引号('')
+    /// 2. 回车换行(\r\n) - 替换为空格，避免多行注释问题
+    /// 3. 换行(\n) - 替换为空格
+    /// 4. 回车(\r) - 替换为空格
+    /// </remarks>
+    protected virtual String? FormatComment(String? comment)
+    {
+        if (comment.IsNullOrEmpty()) return comment;
+
+        // 转义单引号
+        comment = comment.Replace("'", "''");
+
+        // 替换换行符为空格，避免多行注释问题
+        comment = comment.Replace("\r\n", " ");
+        comment = comment.Replace("\n", " ");
+        comment = comment.Replace("\r", " ");
+
+        return comment;
+    }
+    #endregion
+
     #region 数据定义语句
     public virtual String CreateDatabaseSQL(String dbname, String? file) => $"Create Database {Database.FormatName(dbname)}";
 

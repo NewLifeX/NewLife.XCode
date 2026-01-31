@@ -579,4 +579,128 @@ public class MySqlTests
         Assert.DoesNotContain("Sslmode=InvalidValue", connStr, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Sslmode=", connStr, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact(DisplayName = "测试COMMENT中的单引号转义")]
+    public void CommentWithSingleQuoteTest()
+    {
+        var db = DbFactory.Create(DatabaseType.MySql);
+        Assert.NotNull(db);
+
+        // 创建包含单引号的表定义
+        var table = DAL.CreateTable();
+        table.TableName = "AlarmRule";
+        table.Description = "告警规则。通用告警规则配置，支持产品级默认规则和设备级覆盖规则，可配置阈值告警、状态告警、离线告警等场景";
+
+        var field1 = table.CreateColumn();
+        field1.ColumnName = "Id";
+        field1.DataType = typeof(Int32);
+        field1.Identity = true;
+        field1.PrimaryKey = true;
+        field1.Description = "编号";
+        table.Columns.Add(field1);
+
+        var field2 = table.CreateColumn();
+        field2.ColumnName = "Threshold";
+        field2.DataType = typeof(String);
+        field2.Length = 50;
+        field2.Description = "阈值。触发告警的阈值，支持单值和范围值'10,100'";
+        table.Columns.Add(field2);
+
+        var field3 = table.CreateColumn();
+        field3.ColumnName = "Expression";
+        field3.DataType = typeof(String);
+        field3.Length = 500;
+        field3.Description = "表达式。复杂条件时使用C#表达式，优先于简单值判断";
+        table.Columns.Add(field3);
+
+        var field4 = table.CreateColumn();
+        field4.ColumnName = "Operator";
+        field4.DataType = typeof(String);
+        field4.Length = 50;
+        field4.Description = "操作符。比较操作符，如>/</==/!=/>=/<=/between/notbetween";
+        table.Columns.Add(field4);
+
+        // 生成建表SQL
+        var meta = db.CreateMetaData();
+        var sql = meta.GetSchemaSQL(DDLSchema.CreateTable, table);
+        Assert.NotNull(sql);
+        Assert.NotEmpty(sql);
+
+        // 输出SQL用于调试
+        XTrace.WriteLine("生成的建表SQL:");
+        XTrace.WriteLine(sql);
+
+        // 验证单引号已被转义（'10,100' 应该变成 ''10,100''）
+        Assert.Contains("COMMENT '阈值。触发告警的阈值，支持单值和范围值''10,100'''", sql);
+        Assert.Contains("COMMENT '表达式。复杂条件时使用C#表达式，优先于简单值判断'", sql);
+
+        // 验证不应该包含未转义的单引号序列（这会导致SQL错误）
+        Assert.DoesNotContain("范围值'10,100',", sql);  // 错误：单引号未转义会导致SQL截断
+
+        // 测试表描述的转义
+        var descSql = meta.GetSchemaSQL(DDLSchema.AddTableDescription, table);
+        if (!String.IsNullOrEmpty(descSql))
+        {
+            Assert.NotNull(descSql);
+            XTrace.WriteLine("生成的表描述SQL:");
+            XTrace.WriteLine(descSql);
+            // MySQL的表描述修改SQL
+            Assert.Contains($"Comment '{table.Description}'", descSql);
+        }
+    }
+
+    [Fact(DisplayName = "测试FormatComment方法的特殊字符转义")]
+    public void FormatCommentTest()
+    {
+        var db = DbFactory.Create(DatabaseType.MySql);
+        Assert.NotNull(db);
+
+        var meta = db.CreateMetaData();
+        Assert.NotNull(meta);
+
+        // 使用反射访问protected方法FormatComment
+        var formatCommentMethod = meta.GetType()
+            .GetMethod("FormatComment", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        Assert.NotNull(formatCommentMethod);
+
+        // 测试单引号转义
+        var result1 = formatCommentMethod!.Invoke(meta, ["It's a test"]) as String;
+        Assert.Equal("It''s a test", result1);
+
+        // 测试多个单引号
+        var result2 = formatCommentMethod.Invoke(meta, ["范围值'10,100'"]) as String;
+        Assert.Equal("范围值''10,100''", result2);
+
+        // 测试回车换行转义
+        var result3 = formatCommentMethod.Invoke(meta, ["Line1\r\nLine2"]) as String;
+        Assert.Equal("Line1 Line2", result3);
+
+        // 测试换行符转义
+        var result4 = formatCommentMethod.Invoke(meta, ["Line1\nLine2"]) as String;
+        Assert.Equal("Line1 Line2", result4);
+
+        // 测试回车符转义
+        var result5 = formatCommentMethod.Invoke(meta, ["Line1\rLine2"]) as String;
+        Assert.Equal("Line1 Line2", result5);
+
+        // 测试混合场景：单引号+换行符
+        var result6 = formatCommentMethod.Invoke(meta, ["It's a test\r\nwith 'quotes'"]) as String;
+        Assert.Equal("It''s a test with ''quotes''", result6);
+
+        // 测试空字符串
+        var result7 = formatCommentMethod.Invoke(meta, [""]) as String;
+        Assert.Equal("", result7);
+
+        // 测试null
+        var result8 = formatCommentMethod.Invoke(meta, new Object?[] { null }) as String;
+        Assert.Null(result8);
+
+        // 测试复杂场景：来自真实需求的描述
+        var result9 = formatCommentMethod.Invoke(meta, ["阈值。触发告警的阈值，支持单值和范围值'10,100'"]) as String;
+        Assert.Equal("阈值。触发告警的阈值，支持单值和范围值''10,100''", result9);
+
+        var result10 = formatCommentMethod.Invoke(meta, ["表达式。复杂条件时使用C#表达式，优先于简单值判断"]) as String;
+        Assert.Equal("表达式。复杂条件时使用C#表达式，优先于简单值判断", result10);
+    }
 }
+

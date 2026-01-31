@@ -596,7 +596,7 @@ internal class HanaMetaData : RemoteDbMetaData
     {
         if (String.IsNullOrEmpty(table.Description)) return null;
 
-        return $"Alter Table {FormatName(table)} Comment '{table.Description}'";
+        return $"Alter Table {FormatName(table)} Comment '{FormatComment(table.Description)}'";
     }
 
     public override String AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"Alter Table {FormatName(field.Table)} Modify Column {FieldClause(field, false)}";

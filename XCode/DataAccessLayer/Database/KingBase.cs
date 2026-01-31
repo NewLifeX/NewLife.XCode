@@ -533,7 +533,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
     public override String? AddTableDescriptionSQL(IDataTable table)
     {
         if (String.IsNullOrEmpty(table.Description)) { return null; }
-        return $"COMMENT ON TABLE {FormatName(table)} IS '{table.Description}'";
+        return $"COMMENT ON TABLE {FormatName(table)} IS '{FormatComment(table.Description)}'";
     }
     public override String? DropTableDescriptionSQL(IDataTable table) => $"COMMENT ON TABLE {FormatName(table)} IS NULL";
     public override String? AddColumnSQL(IDataColumn field) => $"ALTER TABLE {FormatName(field.Table)} ADD COLUMN {FormatName(field)} {GetFieldType(field)}";
@@ -542,7 +542,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
     {
         if (String.IsNullOrEmpty(field.Description)) return null;
 
-        return $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS '{field.Description}'";
+        return $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS '{FormatComment(field.Description)}'";
     }
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS NULL";
     public override String CreateIndexSQL(IDataIndex index)

@@ -436,7 +436,7 @@ internal class HighGoMetaData : RemoteDbMetaData
         var description = table.Description;
         if (description.IsNullOrEmpty()) return null;
 
-        return $"COMMENT ON TABLE {FormatName(table)} IS '{description}'";
+        return $"COMMENT ON TABLE {FormatName(table)} IS '{FormatComment(description)}'";
     }
 
     public override String? DropTableDescriptionSQL(IDataTable table) => $"COMMENT ON TABLE {FormatName(table)} IS NULL";
@@ -446,7 +446,7 @@ internal class HighGoMetaData : RemoteDbMetaData
         var description = field.Description;
         if (description.IsNullOrEmpty()) return null;
 
-        return $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS '{description}'";
+        return $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS '{FormatComment(description)}'";
     }
 
     public override String? DropColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS NULL";

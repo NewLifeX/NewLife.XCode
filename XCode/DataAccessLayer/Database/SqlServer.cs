@@ -1534,7 +1534,8 @@ internal class SqlServerMetaData : RemoteDbMetaData
         return String.Join("; " + Environment.NewLine, ss);
     }
 
-    public override String? AddTableDescriptionSQL(IDataTable table) => $"EXEC dbo.sp_addextendedproperty @name=N'MS_Description', @value=N'{table.Description}' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'{table.TableName}'";
+    public override String? AddTableDescriptionSQL(IDataTable table) => $"EXEC dbo.sp_addextendedproperty @name=N'MS_Description', @value=N'{FormatComment(table.Description)}' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'{table.TableName}'";
+
 
     public override String? DropTableDescriptionSQL(IDataTable table) => $"EXEC dbo.sp_dropextendedproperty @name=N'MS_Description', @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'{table.TableName}'";
 
@@ -1636,7 +1637,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
     public override String AddColumnDescriptionSQL(IDataColumn field)
     {
-        var sql = $"EXEC dbo.sp_addextendedproperty @name=N'MS_Description', @value=N'{field.Description}' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'{field.Table.TableName}', @level2type=N'COLUMN',@level2name=N'{field.ColumnName}'";
+        var sql = $"EXEC dbo.sp_addextendedproperty @name=N'MS_Description', @value=N'{FormatComment(field.Description)}' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'{field.Table.TableName}', @level2type=N'COLUMN',@level2name=N'{field.ColumnName}'";
         return sql;
     }
 

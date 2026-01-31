@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
+﻿using System.Diagnostics;
 using NewLife.Log;
 using NewLife.Model;
 
@@ -17,10 +15,15 @@ partial class DAL
         InitConnections();
     }
 
-    #region Sql日志输出
+    #region 属性
     /// <summary>是否调试</summary>
     public static Boolean Debug { get; set; } = XCodeSetting.Current.Debug;
 
+    /// <summary>服务提供者。用于获取配置的连接字符串，主要对接星尘配置中心</summary>
+    public static IServiceProvider ServiceProvider { get; set; } = ObjectContainer.Provider;
+    #endregion
+
+    #region Sql日志输出
     /// <summary>输出日志</summary>
     /// <param name="format"></param>
     /// <param name="args"></param>

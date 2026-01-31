@@ -505,17 +505,23 @@ public partial class DAL
         // 自动从对象容器里取得配置提供者
         if (getConfig == null && _configProvider == null)
         {
-            var prv = ObjectContainer.Provider.GetService<IConfigProvider>();
-            if (prv != null)
+            lock (typeof(DAL))
             {
-                WriteLog("DAL自动绑定配置提供者 {0}", prv);
+                if (getConfig == null && _configProvider == null)
+                {
+                    var prv = ServiceProvider?.GetService<IConfigProvider>();
+                    if (prv != null)
+                    {
+                        WriteLog("DAL自动绑定配置提供者 {0}", prv);
 
-                prv.Bind(new MyDAL());
-                _configProvider = prv;
+                        prv.Bind(new MyDAL());
+                        _configProvider = prv;
+                    }
+                }
             }
         }
 
-        if (getConfig == null) getConfig = _configProvider?.GetConfig;
+        getConfig ??= _configProvider?.GetConfig;
         {
             var str = getConfig?.Invoke("db:" + connName);
             if (str.IsNullOrEmpty()) return false;

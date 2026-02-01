@@ -5,7 +5,7 @@
     <Description>引入SQLite数据库驱动包</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
-    <VersionPrefix>11.15</VersionPrefix>
+    <VersionPrefix>11.24</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>

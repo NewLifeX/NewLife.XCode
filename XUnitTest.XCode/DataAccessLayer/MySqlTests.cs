@@ -67,7 +67,7 @@ public class MySqlTests
         var factory = db.Factory;
 
         var conn = factory.CreateConnection();
-        conn.ConnectionString = _ConnStr;
+        conn.ConnectionString = _ConnStr.Replace("Server=.;", "Server=localhost;");
         conn.Open();
     }
 

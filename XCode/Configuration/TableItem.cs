@@ -160,17 +160,10 @@ public class TableItem
         // 不能给没有BindTableAttribute特性的类型创建TableItem，否则可能会在InitFields中抛出异常
         if (type.GetCustomAttribute<BindTableAttribute>(true) == null) throw new ArgumentOutOfRangeException(nameof(type));
 
-        // 先创建，然后合并外部文件模型
+        // 创建实例
         var ti = new TableItem(type);
 
         if (connName.IsNullOrEmpty()) connName = ti.ConnName;
-        if (!connName.IsNullOrEmpty())
-        {
-            // 根据默认连接名找到目标文件模型，如果存在则合并
-            var table = DAL.Create(connName).ModelTables.FirstOrDefault(e => e.Name == ti.EntityType.Name);
-            if (table != null) ti.Merge(table);
-        }
-
         ti._connName = connName;
 
         return _cache.GetOrAdd(key, ti);
@@ -357,70 +350,6 @@ public class TableItem
     #endregion
 
     #region 方法
-    /// <summary>合并目标表到当前元数据</summary>
-    /// <param name="table"></param>
-    public void Merge(IDataTable table)
-    {
-        table = (table.Clone() as IDataTable)!;
-        if (table == null) return;
-
-        DataTable = table;
-
-        // 合并字段
-        _tableName = table.TableName;
-        _description = table.Description;
-
-        var allfields = AllFields.ToList();
-        var fields = Fields.ToList();
-        var pkeys = new List<FieldItem>();
-        foreach (var column in table.Columns)
-        {
-            if (column.Name.IsNullOrEmpty()) continue;
-
-            var fi = fields.FirstOrDefault(e => e.Name.EqualIgnoreCase(column.Name));
-            if (fi is null)
-            {
-                fi = new Field(this, column.Name, column.DataType!, column.Description, column.Length)
-                {
-                    ColumnName = column.ColumnName,
-                    IsNullable = column.Nullable,
-                    IsIdentity = column.Identity,
-                    PrimaryKey = column.PrimaryKey,
-                    Master = column.Master,
-                    DisplayName = column.DisplayName,
-                    Description = column.Description,
-                    //Map = column.Map,
-                    IsDataObjectField = true,
-                    Field = column,
-                };
-
-                fields.Add(fi);
-
-                if (!allfields.Any(e => e.Name.EqualIgnoreCase(column.Name)))
-                    allfields.Add(fi);
-            }
-            else
-            {
-                fi.ColumnName = column.ColumnName;
-                fi.IsNullable = column.Nullable;
-                fi.IsIdentity = column.Identity;
-                fi.PrimaryKey = column.PrimaryKey;
-                fi.Master = column.Master;
-                fi.DisplayName = column.DisplayName;
-                fi.Description = column.Description;
-                fi.Field = column;
-            }
-
-            if (fi.PrimaryKey) pkeys.Add(fi);
-            if (fi.IsIdentity) Identity = fi;
-            if (fi.Master) Master = fi;
-        }
-
-        Fields = fields.ToArray();
-        AllFields = allfields.ToArray();
-        PrimaryKeys = pkeys.ToArray();
-    }
-
     private IDictionary<String, Field?>? _all;
 
     /// <summary>根据名称查找</summary>

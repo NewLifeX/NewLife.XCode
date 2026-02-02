@@ -898,31 +898,4 @@ public partial class DAL
         return sb.ToString();
     }
     #endregion
-
-    #region 模型管理
-    private IList<IDataTable>? _ModelTables;
-    /// <summary>获取 或 设置 当前连接下的模型表</summary>
-    /// <remarks>
-    /// 实体类默认使用实体类特性来构建数据操作SQL语句。
-    /// 如果实体类对应的连接模型表存在，则优先使用连接模型表，以达到通过修改配置即可修改表名字段名映射的目标。
-    /// </remarks>
-    /// <returns></returns>
-    public IList<IDataTable> ModelTables
-    {
-        get
-        {
-            if (_ModelTables == null)
-            {
-                var modelPath = XCodeSetting.Current.ModelPath;
-                if (modelPath.IsNullOrEmpty()) modelPath = "Models";
-
-                var modelFile = modelPath.CombinePath(ConnName + ".xml");
-                _ModelTables = ImportFrom(modelFile);
-            }
-
-            return _ModelTables;
-        }
-        set => _ModelTables = value;
-    }
-    #endregion
 }

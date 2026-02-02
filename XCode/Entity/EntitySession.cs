@@ -77,8 +77,10 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         TableName = tableName;
         Key = connName + "###" + tableName;
 
-        var ti = Table = TableItem.Create(ThisType, connName);
-        DataTable = (Table.DataTable.Clone() as IDataTable)!;
+        Table = TableItem.Create(ThisType);
+        var dt = DataTable = (Table.DataTable.Clone() as IDataTable)!;
+        dt.ConnName = connName;
+        dt.TableName = tableName;
 
         Queue = new EntityQueue(this)
         {

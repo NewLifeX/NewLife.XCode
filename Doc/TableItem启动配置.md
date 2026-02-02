@@ -104,10 +104,12 @@ Product.Meta.Table.ConnName = $"Tenant_{tenantId}";
 │  ┌──────────────┐                                   │
 │  │ ConnName     │ ←── 默认从特性读取，可在启动时修改   │
 │  │ TableName    │     (使用 C# 14 field 关键字)     │
-│  └──────────────┘                                   │
+│  └──────┬───────┘                                   │
+│         │                                            │
+│         │ 自动同步                                    │
 │         ↓                                            │
 │  ┌──────────────┐                                   │
-│  │  DataTable   │ ←── 独立属性，需手动修改            │
+│  │  DataTable   │ ←── 自动同步 TableItem 的值        │
 │  │  .ConnName   │                                    │
 │  │  .TableName  │                                    │
 │  └──────────────┘                                   │
@@ -117,7 +119,7 @@ Product.Meta.Table.ConnName = $"Tenant_{tenantId}";
 ### 核心原则
 
 - `TableItem.ConnName/TableName`：默认从特性读取，可在启动时修改（全局生效）
-- `DataTable.ConnName/TableName`：独立属性，如需影响反向工程需手动修改
+- 修改 `TableItem` 属性时，会自动同步到 `DataTable`
 - XCode 内部直接使用 `TableItem` 的值
 
 ### 实现细节（C# 14 field 关键字）
@@ -136,7 +138,7 @@ public class TableItem
 **说明**：
 - 使用 C# 14 的 `field` 关键字，自动生成后备字段
 - getter：首次访问时从 `_Table` 特性读取并缓存
-- setter：直接赋值到 `field`，不会同步到 `DataTable`
+- setter：修改时会自动同步到 `DataTable`
 
 ---
 
@@ -417,17 +419,9 @@ public static void Main(String[] args)
 
 属性 setter 不是线程安全的，应在启动配置阶段完成，避免并发修改。
 
-### 3. DataTable 不会自动同步
+### 3. 自动同步
 
-修改 `TableItem.ConnName/TableName` **不会**自动同步到 `DataTable`。如果需要影响反向工程，需要手动修改 `DataTable`：
-
-```csharp
-// 修改 TableItem
-User.Meta.Table.ConnName = "NewConnection";
-
-// 如果需要影响反向工程，需手动同步到 DataTable
-User.Meta.Table.DataTable.ConnName = "NewConnection";
-```
+修改 `TableItem.ConnName/TableName` 会自动同步到 `DataTable`，确保反向工程使用正确的表名。
 
 ### 4. 优先级
 
@@ -482,15 +476,12 @@ using (var entity = User.Meta.CreateEntity())
 
 ### Q4：是否会影响反向工程？
 
-A：不会自动影响。修改 `TableItem.ConnName/TableName` 不会同步到 `DataTable`。如需影响反向工程，需手动修改：
+A：会。修改 `TableItem.ConnName/TableName` 会自动同步到 `DataTable`，反向工程会使用新的表名。
 
 ```csharp
-// 方式1：只修改 TableItem（不影响反向工程）
+// 修改 TableItem，自动影响反向工程
 User.Meta.Table.TableName = "new_table";
-
-// 方式2：同时修改 DataTable（影响反向工程）
-User.Meta.Table.TableName = "new_table";
-User.Meta.Table.DataTable.TableName = "new_table";
+// DataTable.TableName 也会自动更新为 "new_table"
 ```
 
 ### Q5：如何批量配置多个实体？
@@ -536,17 +527,35 @@ public class TableItem
     private readonly BindTableAttribute _Table;
     
     /// <summary>连接名。来自实体类特性，可在启动时修改用于全局分表分库</summary>
-    public String ConnName { get => field ??= _Table?.ConnName ?? ""; set; }
+    public String ConnName
+    {
+        get => field ??= _Table?.ConnName ?? "";
+        set
+        {
+            field = value;
+            // 同步到 DataTable
+            if (DataTable != null) DataTable.ConnName = value;
+        }
+    }
     
     /// <summary>表名。来自实体类特性，可在启动时修改用于全局分表分库</summary>
-    public String TableName { get => field ??= _Table?.Name ?? EntityType.Name; set; }
+    public String TableName
+    {
+        get => field ??= _Table?.Name ?? EntityType.Name;
+        set
+        {
+            field = value;
+            // 同步到 DataTable
+            if (DataTable != null) DataTable.TableName = value;
+        }
+    }
 }
 ```
 
 **关键点**：
 - `field` 是 C# 14 引入的关键字，指向编译器自动生成的后备字段
 - getter：`field ??=` 实现了延迟初始化（首次访问时从特性读取并缓存）
-- setter：直接赋值到 `field`，**不会**同步到 `DataTable`
+- setter：赋值到 `field` 并自动同步到 `DataTable`
 
 ### 初始化流程
 
@@ -563,9 +572,9 @@ public class TableItem
    ↓
 6. 触发 setter：field = value
    ↓
-7. 后续访问直接使用修改后的值
-
-注意：修改 TableItem 不会同步到 DataTable
+7. 自动同步到 DataTable.ConnName
+   ↓
+8. 后续访问直接使用修改后的值
 ```
 
 ### 为什么这样设计？
@@ -651,7 +660,7 @@ public class TableItemConfigTests
 
 1. **访问方式**：使用 `User.Meta.Table` 而不是 `TableItem.Create()`
 2. **调用时机**：启动时配置，首次访问实体类之前
-3. **不会自动同步**：修改 `TableItem` 不会同步到 `DataTable`
+3. **自动同步**：修改 `TableItem` 时自动同步到 `DataTable`
 4. **实用性优先**：让 `TableItem` 属性可修改，避免修改 173 处现有代码
 5. **C# 14 特性**：使用 `field` 关键字实现延迟初始化和缓存
 

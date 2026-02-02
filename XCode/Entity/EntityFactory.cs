@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Reflection;
-using NewLife;
 using NewLife.Log;
 using NewLife.Reflection;
 using XCode.Configuration;
@@ -93,7 +92,8 @@ public static class EntityFactory
             // 实体类的基类必须是泛型，避免多级继承导致误判
             if (!type.BaseType.IsGenericType) continue;
 
-            var name = type.GetCustomAttribute<BindTableAttribute>(true)?.ConnName;
+            var ti = TableItem.Create(type);
+            var name = ti.ConnName;
             if (name == null)
                 XTrace.WriteLine("实体类[{0}]无法创建TableItem", type.FullName);
             else if (name == connName)
@@ -117,16 +117,12 @@ public static class EntityFactory
             list.Add(type.Name);
 
             // 过滤掉第一次使用才加载的
-            if (checkMode)
-            {
-                var att = type.GetCustomAttribute<ModelCheckModeAttribute>(true);
-                if (att != null && att.Mode != ModelCheckModes.CheckAllTablesWhenInit) continue;
-            }
+            var ti = TableItem.Create(type);
+            if (checkMode && ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
             list2.Add(type.Name);
 
-            var table = TableItem.Create(type, connName).DataTable;
-
             // 判断表名是否已存在
+            var table = ti.DataTable;
             if (dic.TryGetValue(table.TableName, out var oldType))
             {
                 // 两个都不是，报错吧！
@@ -166,8 +162,11 @@ public static class EntityFactory
             var connNames = new List<String>();
             foreach (var type in types)
             {
-                var (name, mode) = GetInfo(type);
-                if (name == null || connNames.Contains(name) || mode != ModelCheckModes.CheckAllTablesWhenInit) continue;
+                var ti = TableItem.Create(type);
+                if (ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
+
+                var name = ti.ConnName;
+                if (name.IsNullOrEmpty() || connNames.Contains(name)) continue;
                 connNames.Add(name);
 
                 Init(name, types, true);
@@ -180,14 +179,6 @@ public static class EntityFactory
             span?.SetError(ex, null);
             throw;
         }
-    }
-
-    private static (String? connName, ModelCheckModes mode) GetInfo(Type type)
-    {
-        var att = type.GetCustomAttribute<BindTableAttribute>(true);
-        var att2 = type.GetCustomAttribute<ModelCheckModeAttribute>(true);
-
-        return (att?.ConnName, att2?.Mode ?? ModelCheckModes.CheckAllTablesWhenInit);
     }
 
     /// <summary>初始化所有数据库连接的实体类和数据表</summary>
@@ -205,8 +196,11 @@ public static class EntityFactory
             var connNames = new List<String>();
             foreach (var type in types)
             {
-                var (name, mode) = GetInfo(type);
-                if (name == null || connNames.Contains(name) || mode != ModelCheckModes.CheckAllTablesWhenInit) continue;
+                var ti = TableItem.Create(type);
+                if (ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
+
+                var name = ti.ConnName;
+                if (name.IsNullOrEmpty() || connNames.Contains(name)) continue;
                 connNames.Add(name);
 
                 ts.Add(Task.Factory.StartNew(() => Init(name, types, false), TaskCreationOptions.LongRunning));
@@ -239,12 +233,14 @@ public static class EntityFactory
             var facts = new List<IEntityFactory>();
             foreach (var type in types)
             {
-                var (name, mode) = GetInfo(type);
-                if (name != null && name == connName && mode == ModelCheckModes.CheckAllTablesWhenInit)
-                {
-                    var fact = CreateFactory(type);
-                    if (fact != null) facts.Add(fact);
-                }
+                var ti = TableItem.Create(type);
+                if (ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
+
+                var name = ti.ConnName;
+                if (!name.EqualIgnoreCase(connName)) continue;
+
+                var fact = CreateFactory(type);
+                if (fact != null) facts.Add(fact);
             }
 
             var dal = DAL.Create(connName);

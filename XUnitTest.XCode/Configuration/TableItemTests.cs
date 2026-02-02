@@ -10,7 +10,7 @@ public class TableItemTests
     [Fact]
     public void TrimIndex()
     {
-        var ti = TableItem.Create(typeof(Log2), null);
+        var ti = TableItem.Create(typeof(Log2));
         XTrace.WriteLine(ti.TableName);
         Assert.Equal(4, ti.DataTable.Indexes.Count);
     }

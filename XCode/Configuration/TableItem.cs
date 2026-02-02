@@ -44,10 +44,28 @@ public class TableItem
 
     #region 属性
     /// <summary>表名。来自实体类特性，可在启动时修改用于全局分表分库</summary>
-    public String TableName { get => field ??= _Table?.Name ?? EntityType.Name; set; }
+    public String TableName
+    {
+        get => field ??= _Table?.Name ?? EntityType.Name;
+        set
+        {
+            field = value;
+            // 同步到 DataTable
+            DataTable?.TableName = value;
+        }
+    }
 
     /// <summary>连接名。来自实体类特性，可在启动时修改用于全局分表分库</summary>
-    public String ConnName { get => field ??= _Table?.ConnName ?? ""; set; }
+    public String ConnName
+    {
+        get => field ??= _Table?.ConnName ?? "";
+        set
+        {
+            field = value;
+            // 同步到 DataTable
+            DataTable?.ConnName = value;
+        }
+    }
     #endregion
 
     #region 扩展属性
@@ -146,13 +164,12 @@ public class TableItem
     private static readonly ConcurrentDictionary<String, TableItem> _cache = new();
     /// <summary>创建数据表元数据信息。并合并连接名上的文件模型映射</summary>
     /// <param name="type">类型</param>
-    /// <param name="connName">连接名。该类型的架构信息，则不同连接上可能存在文件模型映射，导致不一致</param>
     /// <returns></returns>
-    public static TableItem Create(Type type, String? connName)
+    public static TableItem Create(Type type)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
 
-        var key = $"{type.FullName}#{connName}";
+        var key = type.FullName;
         if (_cache.TryGetValue(key, out var tableItem)) return tableItem;
 
         // 不能给没有BindTableAttribute特性的类型创建TableItem，否则可能会在InitFields中抛出异常
@@ -178,7 +195,7 @@ public class TableItem
         table.DbType = bt.DbType;
         table.IsView = bt.IsView || bt.Name[0] == '#';
         table.Description = Description;
-        //table.ConnName = ConnName;
+        table.ConnName = ConnName;
 
         var allfields = new List<FieldItem>();
         var fields = new List<FieldItem>();

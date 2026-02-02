@@ -102,7 +102,7 @@ public partial class Entity<TEntity>
             private TableItem? _Table;
             public TableItem Table
             {
-                get => _Table ??= TableItem.Create(ThisType, _ConnName);
+                get => _Table ??= TableItem.Create(ThisType);
                 set { _Table = value; _Session = null; }
             }
 

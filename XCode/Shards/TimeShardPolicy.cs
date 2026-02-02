@@ -144,8 +144,8 @@ public class TimeShardPolicy : IShardPolicy
         // 这里不区分时区，而是直接使用时间
         var connName = table.ConnName;
         var tableName = table.TableName;
-        if (!ConnPolicy.IsNullOrEmpty()) connName = String.Format(ConnPolicy, table.ConnName, time);
-        if (!TablePolicy.IsNullOrEmpty()) tableName = String.Format(TablePolicy, table.TableName, time);
+        if (!ConnPolicy.IsNullOrEmpty()) connName = String.Format(ConnPolicy, connName, time);
+        if (!TablePolicy.IsNullOrEmpty()) tableName = String.Format(TablePolicy, tableName, time);
 
         return new(connName, tableName);
     }

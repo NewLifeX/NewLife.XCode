@@ -80,12 +80,6 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         var ti = Table = TableItem.Create(ThisType, connName);
         DataTable = (Table.DataTable.Clone() as IDataTable)!;
 
-        // 使用文件模型映射的表名
-        if (tableName == ti.RawTableName)
-            TableName = DataTable.TableName;
-        else
-            DataTable.TableName = tableName;
-
         Queue = new EntityQueue(this)
         {
             InsertOnly = DataTable.InsertOnly
@@ -153,13 +147,13 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
         {
             if (_Default != null) return _Default;
 
-            var cname = Table.ConnName;
-            var tname = Table.TableName;
+            var connName = Table.ConnName;
+            var tableName = Table.TableName;
 
-            if (ConnName == cname && TableName == tname)
+            if (ConnName == connName && TableName == tableName)
                 _Default = this;
             else
-                _Default = Create(cname, tname);
+                _Default = Create(connName, tableName);
 
             return _Default;
         }

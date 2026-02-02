@@ -17,7 +17,7 @@ public class TableItem
     public Type EntityType { get; }
 
     /// <summary>绑定表特性</summary>
-    private readonly BindTableAttribute? _Table;
+    private readonly BindTableAttribute _Table;
 
     /// <summary>绑定索引特性</summary>
     private readonly BindIndexAttribute[] _Indexes;
@@ -31,8 +31,11 @@ public class TableItem
         {
             if (_description != null) return _description;
 
-            if (_Description != null && !String.IsNullOrEmpty(_Description.Description)) return _description = _Description.Description;
-            if (_Table != null && !String.IsNullOrEmpty(_Table.Description)) return _description = _Table.Description;
+            var ds = _Description;
+            if (ds != null && !ds.Description.IsNullOrEmpty()) return _description = ds.Description;
+
+            var tb = _Table;
+            if (tb != null && !tb.Description.IsNullOrEmpty()) return _description = tb.Description;
 
             return _description;
         }
@@ -40,16 +43,11 @@ public class TableItem
     #endregion
 
     #region 属性
-    private String? _tableName;
-    /// <summary>表名。来自实体类特性，合并文件模型</summary>
-    public String TableName => _tableName ??= _Table?.Name ?? EntityType.Name;
+    /// <summary>表名。来自实体类特性，可在启动时修改用于全局分表分库</summary>
+    public String TableName { get => field ??= _Table?.Name ?? EntityType.Name; set; }
 
-    /// <summary>原始表名</summary>
-    public String RawTableName => _Table?.Name ?? EntityType.Name;
-
-    private String? _connName;
-    /// <summary>连接名。来自实体类特性，合并文件模型</summary>
-    public String ConnName => _connName ??= _Table?.ConnName + "";
+    /// <summary>连接名。来自实体类特性，可在启动时修改用于全局分表分库</summary>
+    public String ConnName { get => field ??= _Table?.ConnName ?? ""; set; }
     #endregion
 
     #region 扩展属性
@@ -162,9 +160,6 @@ public class TableItem
 
         // 创建实例
         var ti = new TableItem(type);
-
-        if (connName.IsNullOrEmpty()) connName = ti.ConnName;
-        ti._connName = connName;
 
         return _cache.GetOrAdd(key, ti);
     }

@@ -195,7 +195,7 @@ public static class TableConfigExtensions
     {
         foreach (var type in types)
         {
-            var meta = EntityFactory.CreateOperate(type);
+            var meta = type.AsFactory();
             meta.Table.ConnName = connName;
         }
     }
@@ -205,7 +205,7 @@ public static class TableConfigExtensions
     {
         foreach (var type in types)
         {
-            var meta = EntityFactory.CreateOperate(type);
+            var meta = type.AsFactory();
             var table = meta.Table;
             table.TableName = $"{prefix}_{table.TableName}";
         }
@@ -220,35 +220,53 @@ types.AddTablePrefix("sys");
 
 ### 动态分表分库（临时修改）
 
+**重要提示**：临时修改 `Meta.ConnName` 或 `Meta.TableName` 后，**必须在操作完成后恢复**（设置为 `null` 恢复默认值）。
+
+#### 方式1：推荐使用 CreateSplit（自动恢复）
+
 ```csharp
-// 临时修改，仅影响当前操作
-using (var entity = User.Meta.CreateEntity())
+// ✅ 推荐：使用 CreateSplit，离开作用域时自动恢复
+using var _ = User.Meta.CreateSplit("Shard_01", null);
+var user = new User { Name = "Test" };
+user.Insert();
+// 离开作用域后自动恢复为默认连接名
+```
+
+#### 方式2：手动修改并恢复
+
+```csharp
+// ⚠️ 需要手动恢复：临时修改后必须改回来
+User.Meta.ConnName = "Shard_01";
+try
 {
-    entity.Meta.ConnName = "Shard_01";  // 临时修改
-    entity.Insert();
+    var user = new User { Name = "Test" };
+    user.Insert();
 }
-// 操作完成后，其他地方仍使用 User.Meta.Table.ConnName
+finally
+{
+    User.Meta.ConnName = null;  // 恢复默认值
+}
 ```
 
 #### 多租户场景（推荐使用临时修改）
 
+**注意**：XCode 自带多租户支持，可通过 `TenantContext.CurrentId` 获取当前租户标识。
+
 ```csharp
-// 在 Web 请求中根据当前租户动态切换数据库
 public class OrderController : ControllerBase
 {
     [HttpGet]
     public IActionResult GetOrders()
     {
-        // 从请求头或上下文获取当前租户ID
-        var tenantId = HttpContext.Items["TenantId"]?.ToString();
+        // XCode 自带多租户支持
+        var tenantId = TenantContext.CurrentId;
+        // var tenantId = HttpContext.Items["TenantId"]?.ToString();  // 或从上下文获取
+        
         var connName = $"Tenant_{tenantId}";
         
-        // 临时修改连接名，仅影响当前请求
-        Order.Meta.ConnName = connName;
-        
-        // 查询数据（使用租户数据库）
+        // 推荐：使用 CreateSplit 自动恢复
+        using var _ = Order.Meta.CreateSplit(connName, null);
         var orders = Order.FindAll();
-        
         return Ok(orders);
     }
 }
@@ -273,17 +291,27 @@ public class TenantMiddleware
         
         if (!String.IsNullOrEmpty(tenantId))
         {
-            // 设置到上下文，供后续使用
-            context.Items["TenantId"] = tenantId;
+            // 设置到 XCode 租户上下文
+            TenantContext.Current = new TenantContext { TenantId = tenantId.ToInt() };
             
-            // 临时修改连接名
+            // 临时修改连接名（需要在请求结束后恢复）
             var connName = $"Tenant_{tenantId}";
             User.Meta.ConnName = connName;
             Order.Meta.ConnName = connName;
             Product.Meta.ConnName = connName;
         }
         
-        await _next(context);
+        try
+        {
+            await _next(context);
+        }
+        finally
+        {
+            // 恢复默认值
+            User.Meta.ConnName = null;
+            Order.Meta.ConnName = null;
+            Product.Meta.ConnName = null;
+        }
     }
 }
 
@@ -357,13 +385,13 @@ public class SingleTenantConfig
 ```csharp
 public class MultiTenantService
 {
-    public List<Order> GetOrders(String tenantId)
+    public List<Order> GetOrders(Int32 tenantId)
     {
         // 根据租户ID临时切换数据库
         var connName = $"Tenant_{tenantId}";
-        Order.Meta.ConnName = connName;
         
-        // 查询数据（使用租户数据库）
+        // 推荐：使用 CreateSplit 自动恢复
+        using var _ = Order.Meta.CreateSplit(connName, null);
         return Order.FindAll();
     }
 }
@@ -377,13 +405,26 @@ public class TenantMiddleware
         
         if (!String.IsNullOrEmpty(tenantId))
         {
+            // 设置到 XCode 租户上下文
+            TenantContext.Current = new TenantContext { TenantId = tenantId.ToInt() };
+            
             var connName = $"Tenant_{tenantId}";
             User.Meta.ConnName = connName;
             Order.Meta.ConnName = connName;
             Product.Meta.ConnName = connName;
         }
         
-        await _next(context);
+        try
+        {
+            await _next(context);
+        }
+        finally
+        {
+            // 恢复默认值
+            User.Meta.ConnName = null;
+            Order.Meta.ConnName = null;
+            Product.Meta.ConnName = null;
+        }
     }
 }
 ```
@@ -441,47 +482,63 @@ var session = User.Meta.Session;  // 使用新连接 "NewConnection"
 
 ## 常见问题
 
-### Q1：如何获取原始值？
+### Q1：如何区分全局配置和临时修改？
 
-A：通过 `Meta.ConnName` 和 `Meta.TableName` 获取（这两个属性来自 `BindTableAttribute` 特性）。
+A：
+- **全局配置**：`User.Meta.Table.ConnName`（启动时配置，全局生效）
+- **临时修改**：`User.Meta.ConnName`（运行时修改，可设置为 `null` 恢复全局配置）
+- **原始值**：需要反射读取 `BindTableAttribute` 特性
 
 ```csharp
-// 获取原始值（从特性读取）
-var originalConn = User.Meta.ConnName;
-var originalTable = User.Meta.TableName;
+// 全局配置（启动时）
+User.Meta.Table.ConnName = "GlobalDB";
 
-// 修改
-User.Meta.Table.ConnName = "NewConnection";
+// 临时修改（运行时）
+User.Meta.ConnName = "TempDB";
 
-// 恢复原始值
-User.Meta.Table.ConnName = originalConn;
+// 恢复全局配置
+User.Meta.ConnName = null;  // 恢复为 User.Meta.Table.ConnName
+
+// 获取原始值（需要反射）
+var attr = typeof(User).GetCustomAttribute<BindTableAttribute>();
+var originalConn = attr?.ConnName;
+var originalTable = attr?.Name;
 ```
 
 ### Q2：如何检查是否被修改过？
 
-A：对比 `Meta.Table.ConnName` 和 `Meta.ConnName`。
+A：
+- **全局配置是否修改**：对比 `Meta.Table.ConnName` 与原始特性值
+- **临时修改是否生效**：检查 `Meta.ConnName` 是否为 `null`
 
 ```csharp
-if (User.Meta.Table.ConnName != User.Meta.ConnName)
+// 检查临时修改是否生效
+if (User.Meta.ConnName != null)
 {
-    Console.WriteLine($"连接名已被修改：{User.Meta.ConnName} => {User.Meta.Table.ConnName}");
+    Console.WriteLine($"连接名已被临时修改为：{User.Meta.ConnName}");
+}
+
+// 检查全局配置（需要反射获取原始值）
+var attr = typeof(User).GetCustomAttribute<BindTableAttribute>();
+if (User.Meta.Table.ConnName != attr?.ConnName)
+{
+    Console.WriteLine($"全局连接名已修改：{attr?.ConnName} => {User.Meta.Table.ConnName}");
 }
 ```
 
-### Q3：启动配置和动态修改哪个优先级高？
+### Q3：启动配置和临时修改哪个优先级高？
 
-A：动态修改（`Meta.ConnName`）优先级更高。
+A：临时修改（`Meta.ConnName`）优先级更高，且**必须在使用后恢复**。
 
 ```csharp
 // 启动配置
 User.Meta.Table.ConnName = "DefaultDB";
 
-// 运行时动态修改（优先级更高）
-using (var entity = User.Meta.CreateEntity())
-{
-    entity.Meta.ConnName = "TempDB";  // 覆盖启动配置
-    entity.Insert();
-}
+// 临时修改（优先级更高）
+using var _ = User.Meta.CreateSplit("TempDB", null);
+var user = new User { Name = "Test" };
+user.Insert();  // 使用 TempDB
+// 离开作用域后自动恢复为 DefaultDB
 ```
 
 ### Q4：是否会影响反向工程？
@@ -506,23 +563,25 @@ types.SetConnName("TenantA_DB");
 // 方式2：循环
 foreach (var type in types)
 {
-    var meta = EntityFactory.CreateOperate(type);
+    var meta = type.AsFactory();
     meta.Table.ConnName = "TenantA_DB";
 }
 ```
 
-### Q6：为什么使用 `User.Meta.Table` 而不是 `TableItem.Create()`？
+### Q6：为什么使用 `User.Meta.Table` 而不是 `type.AsFactory()`？
 
 A：
-- `User.Meta.Table`：简洁直观，编译时检查，智能提示
-- `TableItem.Create(typeof(User), null)`：需要知道类型，容易出错
+- **已知实体类**：使用 `User.Meta.Table`（编译时检查，智能提示）
+- **动态类型**：使用 `type.AsFactory()`（批量处理、反射场景）
 
 ```csharp
-// ✅ 推荐
+// ✅ 已知实体类
 User.Meta.Table.ConnName = "NewConnection";
 
-// ⚠️ 不推荐
-TableItem.Create(typeof(User), null).ConnName = "NewConnection";
+// ✅ 动态类型（批量处理）
+var type = typeof(User);
+var meta = type.AsFactory();
+meta.Table.ConnName = "NewConnection";
 ```
 
 ---
@@ -595,84 +654,16 @@ public class TableItem
 
 ---
 
-## 单元测试示例
-
-```csharp
-using System;
-using Xunit;
-using XCode;
-
-namespace XCode.Tests.Configuration;
-
-public class TableItemConfigTests
-{
-    [Fact(DisplayName = "设置连接名")]
-    public void SetConnName_ShouldModifyConnName()
-    {
-        // Arrange
-        var originalConn = User.Meta.ConnName;
-        
-        // Act
-        User.Meta.Table.ConnName = "NewConnection";
-        
-        // Assert
-        Assert.Equal("NewConnection", User.Meta.Table.ConnName);
-        Assert.NotEqual(originalConn, User.Meta.Table.ConnName);
-        
-        // Cleanup
-        User.Meta.Table.ConnName = originalConn;
-    }
-    
-    [Fact(DisplayName = "设置表名")]
-    public void SetTableName_ShouldModifyTableName()
-    {
-        // Arrange
-        var originalTable = User.Meta.TableName;
-        
-        // Act
-        User.Meta.Table.TableName = "new_table";
-        
-        // Assert
-        Assert.Equal("new_table", User.Meta.Table.TableName);
-        Assert.NotEqual(originalTable, User.Meta.Table.TableName);
-        
-        // Cleanup
-        User.Meta.Table.TableName = originalTable;
-    }
-    
-    [Fact(DisplayName = "批量配置连接名")]
-    public void BatchSetConnName_ShouldWork()
-    {
-        // Arrange
-        var types = new[] { typeof(User), typeof(Order), typeof(Product) };
-        var connName = "TenantA_DB";
-        
-        // Act
-        foreach (var type in types)
-        {
-            var meta = EntityFactory.CreateOperate(type);
-            meta.Table.ConnName = connName;
-        }
-        
-        // Assert
-        Assert.Equal(connName, User.Meta.Table.ConnName);
-        Assert.Equal(connName, Order.Meta.Table.ConnName);
-        Assert.Equal(connName, Product.Meta.Table.ConnName);
-    }
-}
-```
-
----
-
 ## 总结
 
 ### 核心要点
 
-1. **访问方式**：使用 `User.Meta.Table` 而不是 `TableItem.Create()`
+1. **访问方式**：已知实体类用 `User.Meta.Table`，动态类型用 `type.AsFactory()`
 2. **调用时机**：启动时配置，首次访问实体类之前
 3. **自动同步**：修改 `TableItem` 时自动同步到 `DataTable`
-4. **实用性优先**：让 `TableItem` 属性可修改，避免修改 173 处现有代码
-5. **C# 14 特性**：使用 `field` 关键字实现延迟初始化和缓存
+4. **临时修改**：推荐使用 `Meta.CreateSplit()`，离开作用域时自动恢复；手动修改必须设置为 `null` 恢复
+5. **多租户支持**：XCode 自带 `TenantContext.CurrentId` 获取当前租户
+6. **C# 14 特性**：使用 `field` 关键字实现延迟初始化和缓存
 
 ### 适用场景
 

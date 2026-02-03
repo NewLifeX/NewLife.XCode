@@ -107,12 +107,39 @@ public partial class Entity<TEntity>
             }
 
             private EntitySession<TEntity>? _Session;
-            public EntitySession<TEntity> Session => _Session ??= EntitySession<TEntity>.Create(ConnName, TableName);
+            private String? _SessionConnName;
+            private String? _SessionTableName;
+            public EntitySession<TEntity> Session
+            {
+                get
+                {
+                    var currentConn = ConnName;
+                    var currentTable = TableName;
+                    
+                    // 如果连接名或表名变化，重置 Session
+                    if (_Session != null && (_SessionConnName != currentConn || _SessionTableName != currentTable))
+                    {
+                        _Session = null;
+                    }
+                    
+                    // 延迟初始化或重新创建 Session
+                    if (_Session == null)
+                    {
+                        _Session = EntitySession<TEntity>.Create(currentConn, currentTable);
+                        _SessionConnName = currentConn;
+                        _SessionTableName = currentTable;
+                    }
+                    
+                    return _Session;
+                }
+            }
 
             void Reset()
             {
                 _Table = null;
                 _Session = null;
+                _SessionConnName = null;
+                _SessionTableName = null;
             }
         }
         #endregion

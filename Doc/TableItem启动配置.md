@@ -423,6 +423,16 @@ public static void Main(String[] args)
 
 修改 `TableItem.ConnName/TableName` 会自动同步到 `DataTable`，确保反向工程使用正确的表名。
 
+同时，`Meta.Session` 会自动检测连接名/表名的变化并重新创建，确保后续操作使用新的连接。
+
+```csharp
+// 修改 TableItem
+User.Meta.Table.ConnName = "NewConnection";
+
+// Meta.Session 会自动检测变化并重新创建
+var session = User.Meta.Session;  // 使用新连接 "NewConnection"
+```
+
 ### 4. 优先级
 
 动态修改（`Meta.ConnName`）优先级更高，会覆盖启动配置的值。

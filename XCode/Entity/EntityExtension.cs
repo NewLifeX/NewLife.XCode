@@ -386,7 +386,7 @@ public static class EntityExtension
         }
 
         // 统一清空缓存，避免因事务回滚等原因导致缓存数据不一致
-        session?.ClearCache(func + "", true);
+        session?.ClearCache(func.Method + "", true);
 
         return count;
 

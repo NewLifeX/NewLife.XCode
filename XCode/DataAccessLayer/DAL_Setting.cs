@@ -83,7 +83,7 @@ partial class DAL
 
     /// <summary>建立数据表对象</summary>
     /// <returns></returns>
-    internal static IDataTable CreateTable() => ObjectContainer.Current.GetService<IDataTable>() ?? throw new InvalidDataException($"未注册[IDataTable]");
+    public static IDataTable CreateTable() => ObjectContainer.Current.GetService<IDataTable>() ?? throw new InvalidDataException($"未注册[IDataTable]");
 
     /// <summary>是否支持批操作</summary>
     /// <returns></returns>

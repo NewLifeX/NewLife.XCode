@@ -12,6 +12,7 @@ public class InfluxDBConnection : DbConnection
     #region 属性
     private String _connectionString = String.Empty;
     private ConnectionState _state = ConnectionState.Closed;
+    private static HttpClient? _sharedHttpClient;
     private HttpClient? _httpClient;
     private String _database = String.Empty;
     private String _dataSource = String.Empty;
@@ -69,15 +70,17 @@ public class InfluxDBConnection : DbConnection
         // 解析连接字符串
         ParseConnectionString();
 
-        // 创建 HTTP 客户端
-        _httpClient = new HttpClient
+        // 使用共享 HttpClient 以避免 socket 耗尽
+        // 为每个连接创建独立的 headers
+        if (_sharedHttpClient == null)
         {
-            BaseAddress = new Uri(_dataSource),
-            Timeout = TimeSpan.FromSeconds(30)
-        };
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Token {Token}");
-        _httpClient.DefaultRequestHeaders.Add("Accept", "application/csv");
+            _sharedHttpClient = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+        }
 
+        _httpClient = _sharedHttpClient;
         _state = ConnectionState.Open;
     }
 
@@ -86,7 +89,7 @@ public class InfluxDBConnection : DbConnection
     {
         if (_state == ConnectionState.Closed) return;
 
-        _httpClient?.Dispose();
+        // 不要释放共享的 HttpClient
         _httpClient = null;
         _state = ConnectionState.Closed;
     }

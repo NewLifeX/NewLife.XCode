@@ -57,10 +57,14 @@ public class InfluxDBCommand : DbCommand
         if (httpClient == null)
             throw new InvalidOperationException("HttpClient is not initialized.");
 
-        var url = $"/api/v2/write?org={conn.Organization}&bucket={conn.Bucket}&precision=ns";
-        var content = new StringContent(CommandText, System.Text.Encoding.UTF8, "text/plain");
+        var baseUrl = conn.DataSource.TrimEnd('/');
+        var url = $"{baseUrl}/api/v2/write?org={conn.Organization}&bucket={conn.Bucket}&precision=ns";
+        
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Headers.Add("Authorization", $"Token {conn.Token}");
+        request.Content = new StringContent(CommandText, System.Text.Encoding.UTF8, "text/plain");
 
-        var response = httpClient.PostAsync(url, content).Result;
+        var response = httpClient.SendAsync(request).Result;
         if (!response.IsSuccessStatusCode)
         {
             var error = response.Content.ReadAsStringAsync().Result;
@@ -101,7 +105,8 @@ public class InfluxDBCommand : DbCommand
             throw new InvalidOperationException("HttpClient is not initialized.");
 
         // InfluxDB 查询使用 Flux 语言
-        var url = $"/api/v2/query?org={conn.Organization}";
+        var baseUrl = conn.DataSource.TrimEnd('/');
+        var url = $"{baseUrl}/api/v2/query?org={conn.Organization}";
         var fluxQuery = CommandText;
 
         // 确保查询中包含 bucket 信息
@@ -110,9 +115,12 @@ public class InfluxDBCommand : DbCommand
             fluxQuery = $"from(bucket:\"{conn.Bucket}\") |> {fluxQuery}";
         }
 
-        var content = new StringContent(fluxQuery, System.Text.Encoding.UTF8, "application/vnd.flux");
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Headers.Add("Authorization", $"Token {conn.Token}");
+        request.Headers.Add("Accept", "application/csv");
+        request.Content = new StringContent(fluxQuery, System.Text.Encoding.UTF8, "application/vnd.flux");
 
-        var response = httpClient.PostAsync(url, content).Result;
+        var response = httpClient.SendAsync(request).Result;
         if (!response.IsSuccessStatusCode)
         {
             var error = response.Content.ReadAsStringAsync().Result;

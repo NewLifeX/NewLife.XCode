@@ -222,7 +222,7 @@ internal class InfluxDBSession : RemoteDbSession
     #endregion
 
     #region 架构
-    public override DataTable GetSchema(DbConnection? conn, String collectionName, String?[]? restrictionValues) => null!;
+    public override DataTable GetSchema(DbConnection? conn, String collectionName, String?[]? restrictionValues) => new DataTable();
     #endregion
 }
 

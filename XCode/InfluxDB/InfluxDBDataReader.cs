@@ -135,12 +135,22 @@ public class InfluxDBDataReader : DbDataReader
     /// <summary>获取布尔值</summary>
     /// <param name="ordinal">索引</param>
     /// <returns></returns>
-    public override Boolean GetBoolean(Int32 ordinal) => Boolean.Parse(GetValue(ordinal).ToString()!);
+    public override Boolean GetBoolean(Int32 ordinal)
+    {
+        var value = GetValue(ordinal);
+        if (value == DBNull.Value) return false;
+        return Boolean.TryParse(value.ToString(), out var result) ? result : false;
+    }
 
     /// <summary>获取字节</summary>
     /// <param name="ordinal">索引</param>
     /// <returns></returns>
-    public override Byte GetByte(Int32 ordinal) => Byte.Parse(GetValue(ordinal).ToString()!);
+    public override Byte GetByte(Int32 ordinal)
+    {
+        var value = GetValue(ordinal);
+        if (value == DBNull.Value) return 0;
+        return Byte.TryParse(value.ToString(), out var result) ? result : (Byte)0;
+    }
 
     /// <summary>获取字节数组</summary>
     /// <param name="ordinal">索引</param>
@@ -154,7 +164,12 @@ public class InfluxDBDataReader : DbDataReader
     /// <summary>获取字符</summary>
     /// <param name="ordinal">索引</param>
     /// <returns></returns>
-    public override Char GetChar(Int32 ordinal) => Char.Parse(GetValue(ordinal).ToString()!);
+    public override Char GetChar(Int32 ordinal)
+    {
+        var value = GetValue(ordinal);
+        if (value == DBNull.Value) return '\0';
+        return Char.TryParse(value.ToString(), out var result) ? result : '\0';
+    }
 
     /// <summary>获取字符数组</summary>
     /// <param name="ordinal">索引</param>

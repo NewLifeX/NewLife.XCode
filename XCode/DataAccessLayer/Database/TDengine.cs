@@ -19,19 +19,22 @@ class TDengine : RemoteDb
     /// <returns></returns>
     protected override DbProviderFactory CreateFactory()
     {
-        var links = GetLinkNames("NewLife.TDengine.dll", true);
-        _ = DriverLoader.Load("NewLife.TDengine.TDengineFactory", null, "taos.dll", links.Join(","));
-
+        // HTTP模式不再需要加载native dll
         return TDengineFactory.Instance;
     }
 
     const String Server_Key = "Server";
+    const String Port_Key = "Port";
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
         base.OnSetConnectionString(builder);
 
         var key = builder[Server_Key];
         if (key.EqualIgnoreCase(".", "localhost")) builder[Server_Key] = IPAddress.Loopback.ToString();
+        
+        // HTTP模式默认端口为6041
+        if (builder[Port_Key].IsNullOrEmpty())
+            builder[Port_Key] = "6041";
     }
     #endregion
 

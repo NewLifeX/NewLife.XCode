@@ -18,7 +18,8 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
 public class TDengineTests
 {
-    private static String _ConnStr = "Server=gz01.newlifex.com;Port=6030;Database=db;user=root;password=taosdata";
+    // HTTP模式默认使用6041端口
+    private static String _ConnStr = "Server=gz01.newlifex.com;Port=6041;Database=db;user=root;password=taosdata";
 
     public TDengineTests()
     {

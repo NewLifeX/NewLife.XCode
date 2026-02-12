@@ -14,6 +14,7 @@
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -48,7 +49,7 @@ enum TDengineDataType
 class TDengineMeta
 {
     /// <summary>字段名</summary>
-    public String name;
+    public String name = String.Empty;
     
     /// <summary>字段大小</summary>
     public Int16 size;
@@ -99,16 +100,16 @@ class TDengineMeta
 class TDengineResult
 {
     /// <summary>状态</summary>
-    public String status { get; set; }
+    public String? status { get; set; }
     
     /// <summary>列名</summary>
-    public List<String> head { get; set; }
+    public List<String>? head { get; set; }
     
     /// <summary>列类型</summary>
-    public List<String> column_meta { get; set; }
+    public List<String>? column_meta { get; set; }
     
     /// <summary>数据</summary>
-    public List<List<Object>> data { get; set; }
+    public List<List<Object>>? data { get; set; }
     
     /// <summary>行数</summary>
     public Int32 rows { get; set; }
@@ -117,7 +118,10 @@ class TDengineResult
     public Int32 code { get; set; }
     
     /// <summary>错误描述</summary>
-    public String desc { get; set; }
+    public String? desc { get; set; }
+    
+    /// <summary>当前数据行索引</summary>
+    public Int32 CurrentRowIndex { get; set; } = -1;
 }
 
 /// <summary>TDengine连接信息</summary>
@@ -127,25 +131,25 @@ class TDengineConnectionInfo
     public Int64 Id { get; set; }
     
     /// <summary>服务器地址</summary>
-    public String Server { get; set; }
+    public String Server { get; set; } = String.Empty;
     
     /// <summary>端口</summary>
     public Int32 Port { get; set; }
     
     /// <summary>用户名</summary>
-    public String User { get; set; }
+    public String User { get; set; } = String.Empty;
     
     /// <summary>密码</summary>
-    public String Password { get; set; }
+    public String Password { get; set; } = String.Empty;
     
     /// <summary>数据库</summary>
-    public String Database { get; set; }
+    public String Database { get; set; } = String.Empty;
     
     /// <summary>HTTP客户端</summary>
-    public HttpClient Client { get; set; }
+    public HttpClient? Client { get; set; }
     
     /// <summary>服务器版本</summary>
-    public String ServerVersion { get; set; }
+    public String ServerVersion { get; set; } = "3.0";
 }
 
 /// <summary>TDengine HTTP驱动</summary>
@@ -155,8 +159,8 @@ class TDengine
     public const Int32 TSDB_CODE_SUCCESS = 0;
     
     private static Int64 _connectionIdSeed = 0;
-    private static readonly Dictionary<Int64, TDengineConnectionInfo> _connections = [];
-    private static readonly Dictionary<Int64, TDengineResult> _results = [];
+    private static readonly ConcurrentDictionary<Int64, TDengineConnectionInfo> _connections = new();
+    private static readonly ConcurrentDictionary<Int64, TDengineResult> _results = new();
     private static Int64 _resultIdSeed = 0;
     
     /// <summary>初始化</summary>
@@ -336,6 +340,39 @@ class TDengine
         }
         
         return metas;
+    }
+    
+    /// <summary>获取下一行数据</summary>
+    static public IntPtr FetchRows(IntPtr res)
+    {
+        if (res == IntPtr.Zero) return IntPtr.Zero;
+        
+        if (_results.TryGetValue(res.ToInt64(), out var result))
+        {
+            if (result.data != null && result.CurrentRowIndex < result.data.Count - 1)
+            {
+                result.CurrentRowIndex++;
+                return new IntPtr(result.CurrentRowIndex + 1); // 返回非零表示有数据
+            }
+        }
+        
+        return IntPtr.Zero; // 没有更多数据
+    }
+    
+    /// <summary>获取当前行的列数据指针（用于DataReader）</summary>
+    static public List<Object>? GetCurrentRow(IntPtr res)
+    {
+        if (res == IntPtr.Zero) return null;
+        
+        if (_results.TryGetValue(res.ToInt64(), out var result))
+        {
+            if (result.data != null && result.CurrentRowIndex >= 0 && result.CurrentRowIndex < result.data.Count)
+            {
+                return result.data[result.CurrentRowIndex];
+            }
+        }
+        
+        return null;
     }
     
     /// <summary>从列元数据获取类型</summary>

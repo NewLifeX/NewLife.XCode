@@ -73,6 +73,10 @@ public enum DatabaseType
     [Description("VastBase数据库")]
     VastBase = 16,
 
+    /// <summary>InfluxDB时序数据库</summary>
+    [Description("InfluxDB时序数据库")]
+    InfluxDB = 17,
+
     ///// <summary>网络虚拟数据库</summary>
     //[Description("网络虚拟数据库")]
     //Network = 100,

@@ -16,7 +16,7 @@ namespace XCode.TDengine
         private readonly CommandBehavior _behavior;
         private readonly List<TDengineMeta>? _metas = null;
         private IntPtr _handler;
-        private IntPtr _data;
+        private List<Object>? _currentRow;
 
         /// <summary>深度</summary>
         public override Int32 Depth => 0;
@@ -75,8 +75,15 @@ namespace XCode.TDengine
         {
             if (_handler == IntPtr.Zero) throw new InvalidOperationException("读取器已关闭");
 
-            _data = TD.FetchRows(_handler);
-            return _data != IntPtr.Zero;
+            var result = TD.FetchRows(_handler);
+            if (result != IntPtr.Zero)
+            {
+                _currentRow = TD.GetCurrentRow(_handler);
+                return _currentRow != null;
+            }
+            
+            _currentRow = null;
+            return false;
         }
 
         /// <summary>下一个结果集</summary>
@@ -138,30 +145,46 @@ namespace XCode.TDengine
         /// <returns></returns>
         public override Boolean IsDBNull(Int32 ordinal) => GetValue(ordinal) == DBNull.Value;
 
-        public override Boolean GetBoolean(Int32 ordinal) => Marshal.ReadByte(GetValuePtr(ordinal)) != 0;
-        public override Byte GetByte(Int32 ordinal) => Marshal.ReadByte(GetValuePtr(ordinal));
+        public override Boolean GetBoolean(Int32 ordinal) => Convert.ToBoolean(GetValue(ordinal));
+        public override Byte GetByte(Int32 ordinal) => Convert.ToByte(GetValue(ordinal));
         public override Char GetChar(Int32 ordinal) => GetFieldValue<Char>(ordinal);
-        public override DateTime GetDateTime(Int32 ordinal) => Marshal.ReadInt64(GetValuePtr(ordinal)).ToDateTime().ToLocalTime();
+        public override DateTime GetDateTime(Int32 ordinal)
+        {
+            var val = GetValue(ordinal);
+            if (val is DateTime dt) return dt;
+            if (val is Int64 ts) return ts.ToDateTime().ToLocalTime();
+            if (val is String str) return DateTime.Parse(str);
+            return Convert.ToDateTime(val);
+        }
         public virtual DateTimeOffset GetDateTimeOffset(Int32 ordinal) => GetDateTime(ordinal);
-        public virtual TimeSpan GetTimeSpan(Int32 ordinal) => TimeSpan.FromMilliseconds(Marshal.ReadInt64(GetValuePtr(ordinal)));
-        public override Decimal GetDecimal(Int32 ordinal) => (Decimal)GetValue(ordinal);
-        public override Double GetDouble(Int32 ordinal) => (Double)GetValue(ordinal);
-        public override Single GetFloat(Int32 ordinal) => (Single)GetValue(ordinal);
+        public virtual TimeSpan GetTimeSpan(Int32 ordinal)
+        {
+            var val = GetValue(ordinal);
+            if (val is Int64 ts) return TimeSpan.FromMilliseconds(ts);
+            return TimeSpan.Parse(val.ToString());
+        }
+        public override Decimal GetDecimal(Int32 ordinal) => Convert.ToDecimal(GetValue(ordinal));
+        public override Double GetDouble(Int32 ordinal) => Convert.ToDouble(GetValue(ordinal));
+        public override Single GetFloat(Int32 ordinal) => Convert.ToSingle(GetValue(ordinal));
         public override Guid GetGuid(Int32 ordinal) => GetFieldValue<Guid>(ordinal);
-        public override Int16 GetInt16(Int32 ordinal) => (Int16)GetValue(ordinal);
-        public UInt16 GetUInt16(Int32 ordinal) => (UInt16)GetValue(ordinal);
-        public override Int32 GetInt32(Int32 ordinal) => (Int32)GetValue(ordinal);
-        public UInt32 GetUInt32(Int32 ordinal) => (UInt32)GetValue(ordinal);
-        public override Int64 GetInt64(Int32 ordinal) => (Int64)GetValue(ordinal);
-        public UInt64 GetUInt64(Int32 ordinal) => (UInt64)GetValue(ordinal);
-        public override String GetString(Int32 ordinal) => (String)GetValue(ordinal);
+        public override Int16 GetInt16(Int32 ordinal) => Convert.ToInt16(GetValue(ordinal));
+        public UInt16 GetUInt16(Int32 ordinal) => Convert.ToUInt16(GetValue(ordinal));
+        public override Int32 GetInt32(Int32 ordinal) => Convert.ToInt32(GetValue(ordinal));
+        public UInt32 GetUInt32(Int32 ordinal) => Convert.ToUInt32(GetValue(ordinal));
+        public override Int64 GetInt64(Int32 ordinal) => Convert.ToInt64(GetValue(ordinal));
+        public UInt64 GetUInt64(Int32 ordinal) => Convert.ToUInt64(GetValue(ordinal));
+        public override String GetString(Int32 ordinal) => GetValue(ordinal)?.ToString() ?? String.Empty;
 
         public override Int64 GetBytes(Int32 ordinal, Int64 dataOffset, Byte[] buffer, Int32 bufferOffset, Int32 length)
         {
-            var buf = new Byte[length + bufferOffset];
-            Marshal.Copy(GetValuePtr(ordinal), buf, (Int32)dataOffset, length + bufferOffset);
-            Array.Copy(buf, bufferOffset, buffer, 0, length);
-            return length;
+            var val = GetValue(ordinal);
+            if (val is Byte[] bytes)
+            {
+                var copyLen = Math.Min(length, bytes.Length - (Int32)dataOffset);
+                Array.Copy(bytes, (Int32)dataOffset, buffer, bufferOffset, copyLen);
+                return copyLen;
+            }
+            return 0;
         }
 
         public override Int64 GetChars(Int32 ordinal, Int64 dataOffset, Char[] buffer, Int32 bufferOffset, Int32 length)
@@ -179,65 +202,39 @@ namespace XCode.TDengine
         /// <returns></returns>
         public override IEnumerator GetEnumerator() => new DbEnumerator(this, closeReader: false);
 
-        public IntPtr GetValuePtr(Int32 ordinal) => Marshal.ReadIntPtr(_data, IntPtr.Size * ordinal);
-
-        public static Encoding GetEncoding(Byte[] buf)
-        {
-            var encodings = new List<Encoding> { Encoding.UTF8, Encoding.BigEndianUnicode, Encoding.Unicode, Encoding.Default };
-            var e936 = Encoding.GetEncoding(936);
-            if (e936 != null) encodings.Add(e936);
-
-            foreach (var enc in encodings)
-            {
-                var ps = enc.GetPreamble();
-                if (buf.Take(ps.Length).SequenceEqual(ps)) return enc;
-            }
-
-            return Encoding.UTF8;
-        }
-
         /// <summary>获取数值</summary>
         /// <param name="ordinal"></param>
         /// <returns></returns>
         public override Object GetValue(Int32 ordinal)
         {
-            var data = Marshal.ReadIntPtr(_data, IntPtr.Size * ordinal);
-            if (data == IntPtr.Zero) return DBNull.Value;
-
-            var meta = _metas[ordinal];
-            var type = (TDengineDataType)meta.type;
-            Object rs = type switch
+            if (_currentRow == null || ordinal < 0 || ordinal >= _currentRow.Count)
+                return DBNull.Value;
+            
+            var val = _currentRow[ordinal];
+            if (val == null) return DBNull.Value;
+            
+            // 处理时间戳字符串转DateTime
+            if (_metas != null && ordinal < _metas.Count)
             {
-                TDengineDataType.TSDB_DATA_TYPE_BOOL => Marshal.ReadByte(data) != 0,
-                TDengineDataType.TSDB_DATA_TYPE_TINYINT => (SByte)Marshal.ReadByte(data),
-                TDengineDataType.TSDB_DATA_TYPE_UTINYINT => Marshal.ReadByte(data),
-                TDengineDataType.TSDB_DATA_TYPE_SMALLINT => Marshal.ReadInt16(data),
-                TDengineDataType.TSDB_DATA_TYPE_USMALLINT => (UInt16)Marshal.ReadInt16(data),
-                TDengineDataType.TSDB_DATA_TYPE_INT => Marshal.ReadInt32(data),
-                TDengineDataType.TSDB_DATA_TYPE_UINT => (UInt32)Marshal.ReadInt32(data),
-                TDengineDataType.TSDB_DATA_TYPE_BIGINT => Marshal.ReadInt64(data),
-                TDengineDataType.TSDB_DATA_TYPE_UBIGINT => (UInt64)Marshal.ReadInt64(data),
-                TDengineDataType.TSDB_DATA_TYPE_FLOAT => (Single)Marshal.PtrToStructure(data, typeof(Single)),
-                TDengineDataType.TSDB_DATA_TYPE_DOUBLE => (Double)Marshal.PtrToStructure(data, typeof(Double)),
-                TDengineDataType.TSDB_DATA_TYPE_BINARY => Marshal.PtrToStringAnsi(data, meta.size)?.TrimEnd('\0'),
-                TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP => Marshal.ReadInt64(data).ToDateTime().ToLocalTime(),
-                _ => DBNull.Value,
-            };
-
-            if (type == TDengineDataType.TSDB_DATA_TYPE_NCHAR)
-            {
-                if (meta.size > 0)
+                var meta = _metas[ordinal];
+                var type = (TDengineDataType)meta.type;
+                
+                if (type == TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP)
                 {
-                    var buf = new Byte[meta.size];
-                    Marshal.Copy(data, buf, 0, meta.size);
-
-                    rs = GetEncoding(buf).GetString(buf);
+                    if (val is String str && DateTime.TryParse(str, out var dt))
+                        return dt;
+                    if (val is Int64 ts)
+                        return ts.ToDateTime().ToLocalTime();
                 }
-                else
-                    rs = String.Empty;
+                else if (type == TDengineDataType.TSDB_DATA_TYPE_BOOL)
+                {
+                    if (val is Boolean b) return b;
+                    if (val is Int64 i) return i != 0;
+                    if (val is String s) return s == "true" || s == "1";
+                }
             }
-
-            return rs;
+            
+            return val;
         }
 
         /// <summary>获取数值</summary>

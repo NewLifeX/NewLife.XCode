@@ -30,7 +30,7 @@ public partial class TDengineConnection : DbConnection
             if (_handler == IntPtr.Zero) throw new XCodeException("连接未打开");
 
             if (_version.IsNullOrEmpty())
-                _version = Marshal.PtrToStringAnsi(TD.GetServerInfo(_handler));
+                _version = TD.GetServerInfo(_handler);
 
             return _version;
         }
@@ -58,21 +58,11 @@ public partial class TDengineConnection : DbConnection
     #region 构造
     static TDengineConnection()
     {
-        var configPath = "C:/TDengine/cfg";
-
-        if (Runtime.Linux)
-            configPath = "/etc/taos";
-
-        TD.Options((Int32)TDengineInitOption.TDDB_OPTION_CONFIGDIR, configPath);
-        TD.Options((Int32)TDengineInitOption.TDDB_OPTION_SHELL_ACTIVITY_TIMER, "60");
+        // HTTP模式下不需要配置路径和初始化
         TD.Init();
 
-        var h = TD.GetClientInfo();
-        if (h != IntPtr.Zero)
-        {
-            var str = Marshal.PtrToStringAnsi(h);
-            XTrace.WriteLine("TDengine v{0}", str);
-        }
+        var clientInfo = TD.GetClientInfo();
+        XTrace.WriteLine("TDengine {0}", clientInfo);
 
         AppDomain.CurrentDomain.DomainUnload += (s, e) => TD.Cleanup();
     }

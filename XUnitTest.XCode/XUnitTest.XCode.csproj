@@ -86,10 +86,10 @@
   <ItemGroup>
     <PackageReference Include="InterSystems.Data.IRISClient" Version="2.6.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
-    <PackageReference Include="NewLife.Core" Version="11.11.2026.201" />
+    <PackageReference Include="NewLife.Core" Version="11.11.2026.214-beta0003" />
     <PackageReference Include="NewLife.IP" Version="2.4.2026.102" />
     <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.102" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.2" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.3" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>

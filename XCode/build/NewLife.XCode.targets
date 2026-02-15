@@ -12,13 +12,12 @@
       <_NewLifeXCode_CopilotInstructions_GitRoot>$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildProjectDirectory)', '.git'))</_NewLifeXCode_CopilotInstructions_GitRoot>
       <!-- 其次使用解决方案目录（从解决方案构建时 SolutionDir 会被设置） -->
       <_NewLifeXCode_CopilotInstructions_SlnRoot Condition="'$(_NewLifeXCode_CopilotInstructions_GitRoot)' == '' and '$(SolutionDir)' != '' and '$(SolutionDir)' != '*Undefined*'">$(SolutionDir.TrimEnd('\'))</_NewLifeXCode_CopilotInstructions_SlnRoot>
-      <!-- 最终确定目标根目录：Git根目录 > 解决方案目录 > 项目目录 -->
+      <!-- 最终确定目标根目录：Git根目录 > 解决方案目录，找不到则跳过（避免在每个项目目录下生成） -->
       <_NewLifeXCode_CopilotInstructions_Root Condition="'$(_NewLifeXCode_CopilotInstructions_GitRoot)' != ''">$(_NewLifeXCode_CopilotInstructions_GitRoot)</_NewLifeXCode_CopilotInstructions_Root>
       <_NewLifeXCode_CopilotInstructions_Root Condition="'$(_NewLifeXCode_CopilotInstructions_Root)' == '' and '$(_NewLifeXCode_CopilotInstructions_SlnRoot)' != ''">$(_NewLifeXCode_CopilotInstructions_SlnRoot)</_NewLifeXCode_CopilotInstructions_Root>
-      <_NewLifeXCode_CopilotInstructions_Root Condition="'$(_NewLifeXCode_CopilotInstructions_Root)' == ''">$(MSBuildProjectDirectory)</_NewLifeXCode_CopilotInstructions_Root>
 
-      <_NewLifeXCode_CopilotInstructions_DestDir>$(_NewLifeXCode_CopilotInstructions_Root)\.github\instructions\</_NewLifeXCode_CopilotInstructions_DestDir>
-      <_NewLifeXCode_CopilotInstructions_DestFile>$(_NewLifeXCode_CopilotInstructions_DestDir)xcode.instructions.md</_NewLifeXCode_CopilotInstructions_DestFile>
+      <_NewLifeXCode_CopilotInstructions_DestDir Condition="'$(_NewLifeXCode_CopilotInstructions_Root)' != ''">$(_NewLifeXCode_CopilotInstructions_Root)\.github\instructions\</_NewLifeXCode_CopilotInstructions_DestDir>
+      <_NewLifeXCode_CopilotInstructions_DestFile Condition="'$(_NewLifeXCode_CopilotInstructions_Root)' != ''">$(_NewLifeXCode_CopilotInstructions_DestDir)xcode.instructions.md</_NewLifeXCode_CopilotInstructions_DestFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -43,8 +42,8 @@
            1. 目标文件不存在
            2. 目标文件存在且包含"新生命团队"（表示是从包安装的）且源文件比目标文件新
       -->
-      <_NewLifeXCode_CopilotInstructions_ShouldCopy Condition="!Exists('$(_NewLifeXCode_CopilotInstructions_DestFile)')">true</_NewLifeXCode_CopilotInstructions_ShouldCopy>
-      <_NewLifeXCode_CopilotInstructions_ShouldCopy Condition="Exists('$(_NewLifeXCode_CopilotInstructions_DestFile)') and $([System.String]::Copy('$(_NewLifeXCode_CopilotInstructions_ExistingText)').Contains('新生命团队')) and '$(_NewLifeXCode_CopilotInstructions_SourceTime)' &gt; '$(_NewLifeXCode_CopilotInstructions_DestTime)'">true</_NewLifeXCode_CopilotInstructions_ShouldCopy>
+      <_NewLifeXCode_CopilotInstructions_ShouldCopy Condition="'$(_NewLifeXCode_CopilotInstructions_Root)' != '' and !Exists('$(_NewLifeXCode_CopilotInstructions_DestFile)')">true</_NewLifeXCode_CopilotInstructions_ShouldCopy>
+      <_NewLifeXCode_CopilotInstructions_ShouldCopy Condition="'$(_NewLifeXCode_CopilotInstructions_Root)' != '' and Exists('$(_NewLifeXCode_CopilotInstructions_DestFile)') and $([System.String]::Copy('$(_NewLifeXCode_CopilotInstructions_ExistingText)').Contains('新生命团队')) and '$(_NewLifeXCode_CopilotInstructions_SourceTime)' &gt; '$(_NewLifeXCode_CopilotInstructions_DestTime)'">true</_NewLifeXCode_CopilotInstructions_ShouldCopy>
     </PropertyGroup>
 
     <MakeDir Directories="$(_NewLifeXCode_CopilotInstructions_DestDir)" 
@@ -64,5 +63,8 @@
     <Message Text="NewLife.XCode: Copilot 指令文件已安装到 $(_NewLifeXCode_CopilotInstructions_DestFile)" 
              Condition="'@(_NewLifeXCode_CopilotInstructions_CopiedFiles)' != ''" 
              Importance="high" />
+    <Message Text="NewLife.XCode: 未找到 Git 根目录或解决方案目录，跳过 Copilot 指令文件安装" 
+             Condition="'$(_NewLifeXCode_CopilotInstructions_Root)' == ''" 
+             Importance="normal" />
   </Target>
 </Project>

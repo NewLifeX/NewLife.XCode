@@ -59,8 +59,6 @@ internal class SQLite : FileDbBase
     /// </remarks>
     public Boolean AutoVacuum { get; set; }
 
-    private Boolean _recovered = false;
-
     private static readonly String MemoryDatabase = ":memory:";
 
     protected override String OnResolveFile(String file)
@@ -98,6 +96,7 @@ internal class SQLite : FileDbBase
             //if (!builder.ContainsKey("Journal Mode")) builder["Journal Mode"] = "Memory";
             // 数据库中一种高效的日志算法，对于非内存数据库而言，磁盘I/O操作是数据库效率的一大瓶颈。
             // 在相同的数据量下，采用WAL日志的数据库系统在事务提交时，磁盘写操作只有传统的回滚日志的一半左右，大大提高了数据库磁盘I/O操作的效率，从而提高了数据库的性能。
+            // WAL 模式支持多进程并发读写，SQLite 在打开连接时会自动检测并应用 WAL 文件中的更改，无需手动干预。
             if (!Readonly) builder.TryAdd("Journal Mode", "WAL");
             // 绝大多数情况下，都是小型应用，发生数据损坏的几率微乎其微，而多出来的问题让人觉得很烦，所以还是采用内存设置
             // 将来可以增加自动恢复数据的功能
@@ -151,51 +150,14 @@ internal class SQLite : FileDbBase
     #endregion
 
     #region 方法
-    /// <summary>打开连接。精准触发自动恢复</summary>
+    /// <summary>打开连接</summary>
+    /// <remarks>
+    /// SQLite 在 Open 时会自动处理 WAL 恢复，无需手动干预。
+    /// WAL 文件存在是正常状态，不代表需要恢复。
+    /// 多进程场景下，WAL 文件可能被其他进程使用，不应擅自执行 checkpoint。
+    /// </remarks>
     /// <returns></returns>
-    public override DbConnection OpenConnection()
-    {
-        if (!_recovered)
-        {
-            _recovered = true;
-
-            var db = DatabaseName;
-            var wal = db + "-wal";
-            if (!db.IsNullOrEmpty() && File.Exists(db) && File.Exists(wal))
-            {
-                var name = Path.GetFileName(db);
-                DAL.WriteLog($"开始恢复 SQLite 数据库[{name}]");
-
-                using var span = Tracer?.NewSpan($"db:{ConnName}:RecoverSQLite", new { db, wal });
-                try
-                {
-                    // 关键：临时用 Synchronous=Full 确保恢复完整性
-                    var safeConnStr = $"Data Source={db};Journal Mode=WAL;Synchronous=Full;BusyTimeout=30000";
-
-                    using var conn = Factory.CreateConnection();
-                    conn.ConnectionString = safeConnStr;
-
-                    conn.Open(); // 此操作自动触发 WAL 恢复机制！
-
-                    // 再显式执行 TRUNCATE checkpoint（确保 WAL 归零）
-                    using var cmd = Factory.CreateCommand();
-                    cmd.Connection = conn;
-                    cmd.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
-                    var rs = cmd.ExecuteNonQuery();
-
-                    // 后续操作仍用 Synchronous=Off
-                    DAL.WriteLog($"恢复 SQLite 数据库[{name}]成功！result={rs}");
-                }
-                catch (Exception ex)
-                {
-                    span?.SetError(ex);
-                    DAL.WriteLog($"恢复 SQLite 数据库[{name}]时出错！{ex.Message}");
-                }
-            }
-        }
-
-        return base.OpenConnection();
-    }
+    public override DbConnection OpenConnection() => base.OpenConnection();
 
     /// <summary>创建数据库会话</summary>
     /// <returns></returns>

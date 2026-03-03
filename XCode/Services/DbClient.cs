@@ -2,6 +2,7 @@
 using NewLife.Log;
 using NewLife.Remoting;
 using NewLife.Serialization;
+using XCode.DataAccessLayer;
 
 namespace XCode.Services;
 
@@ -125,11 +126,13 @@ public class DbClient : DisposeBase, ILogFeature
         var client = Client ?? throw new InvalidOperationException("客户端未初始化");
 
         var args = BuildArgs(sql, ps);
-        var json = await client.PostAsync<String>("Db/Query", args).ConfigureAwait(false);
-        if (json.IsNullOrEmpty()) return null;
+        var packet = await client.PostAsync<IPacket>("Db/Query", args).ConfigureAwait(false);
+        if (packet == null || packet.Total <= 0) return null;
 
-        // 从JSON反序列化为DbTable
-        return DeserializeDbTable(json);
+        var dt = new DbTable();
+        dt.Read(packet);
+
+        return dt;
     }
 
     /// <summary>异步执行SQL，返回受影响行数</summary>
@@ -169,78 +172,40 @@ public class DbClient : DisposeBase, ILogFeature
 
         var client = Client ?? throw new InvalidOperationException("客户端未初始化");
 
-        return await client.GetAsync<Int64>("Db/QueryCount", new { tableName }).ConfigureAwait(false);
+        return await client.GetAsync<Int64>("Db/QueryCount", new { tableName, db = Db, token = Token }).ConfigureAwait(false);
     }
 
     /// <summary>异步获取表结构</summary>
     /// <returns></returns>
-    public async Task<String?> GetTablesAsync()
+    public async Task<IDataTable[]?> GetTablesAsync()
     {
         await EnsureLogin().ConfigureAwait(false);
 
         var client = Client ?? throw new InvalidOperationException("客户端未初始化");
 
-        return await client.GetAsync<String>("Db/GetTables").ConfigureAwait(false);
+        var json = await client.GetAsync<String>("Db/GetTables", new { db = Db, token = Token }).ConfigureAwait(false);
+        if (json.IsNullOrEmpty()) return null;
+
+        return JsonHelper.Convert<IDataTable[]>(json);
     }
     #endregion
 
     #region 辅助
-    /// <summary>构建请求参数</summary>
+    /// <summary>构建请求参数，包含 sql/parameters/db/token</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">参数字典</param>
     /// <returns></returns>
-    private static Object BuildArgs(String sql, IDictionary<String, Object?>? ps)
+    private Object BuildArgs(String sql, IDictionary<String, Object?>? ps)
     {
+        // 控制器方法需要 db 和 token 参数做鉴权
         if (ps == null || ps.Count == 0)
-            return new { sql };
+            return new { sql, db = Db, token = Token };
 
-        // 将参数转为可序列化的格式
-        var parameters = new Dictionary<String, Object?>();
-        foreach (var item in ps)
-        {
-            parameters[item.Key] = item.Value;
-        }
+        // 控制器期望 parameters 为 JSON 字符串
+        var parameters = JsonHelper.ToJson(ps);
 
-        return new { sql, parameters };
+        return new { sql, parameters, db = Db, token = Token };
     }
 
-    /// <summary>从JSON反序列化DbTable</summary>
-    /// <param name="json">JSON字符串</param>
-    /// <returns></returns>
-    private static DbTable? DeserializeDbTable(String json)
-    {
-        if (json.IsNullOrEmpty()) return null;
-
-        // 解析JSON数组为字典列表，再构建DbTable
-        var list = JsonParser.Decode(json) as IList<Object>;
-        if (list == null || list.Count == 0) return null;
-
-        var dt = new DbTable();
-
-        // 从第一行获取列名
-        if (list[0] is IDictionary<String, Object?> first)
-        {
-            dt.Columns = first.Keys.ToArray();
-            dt.Types = new Type[dt.Columns.Length];
-
-            var rows = new List<Object?[]>();
-            foreach (var item in list)
-            {
-                if (item is IDictionary<String, Object?> dic)
-                {
-                    var row = new Object?[dt.Columns.Length];
-                    for (var i = 0; i < dt.Columns.Length; i++)
-                    {
-                        if (dic.TryGetValue(dt.Columns[i], out var val))
-                            row[i] = val;
-                    }
-                    rows.Add(row);
-                }
-            }
-            dt.Rows = rows;
-        }
-
-        return dt;
-    }
     #endregion
 }

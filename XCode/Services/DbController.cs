@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using NewLife.Caching;
+using NewLife.Data;
+using NewLife.Remoting;
 using NewLife.Serialization;
 using XCode.DataAccessLayer;
 
@@ -23,8 +25,20 @@ public class DbController
     /// <summary>数据库服务。处理实际的数据库操作</summary>
     public DbService Service { get; set; } = null!;
 
-    /// <summary>会话字典。Key 为令牌，Value 为 DAL 实例。用于缓存登录会话</summary>
-    private static readonly ConcurrentDictionary<String, DAL> _sessions = new(StringComparer.OrdinalIgnoreCase);
+    /// <summary>令牌校验缓存。Key 为 token:db</summary>
+    public ICache TokenCache { get; set; } = new MemoryCache { Expire = 600 };
+
+    /// <summary>令牌校验缓存有效期，单位秒</summary>
+    public Int32 TokenCacheExpire { get; set; } = 600;
+    #endregion
+
+    #region 构造
+    /// <summary>实例化数据库控制器</summary>
+    public DbController() { }
+
+    /// <summary>实例化数据库控制器</summary>
+    /// <param name="service">数据库服务</param>
+    public DbController(DbService service) => Service = service;
     #endregion
 
     #region 登录
@@ -32,29 +46,19 @@ public class DbController
     /// <param name="db">数据库连接名</param>
     /// <param name="token">令牌</param>
     /// <returns></returns>
-    public Object Login(String db, String token)
+    public LoginInfo Login(String db, String token)
     {
-        if (db.IsNullOrEmpty()) return new { code = 401, message = "数据库名称不能为空" };
-        if (token.IsNullOrEmpty()) return new { code = 401, message = "令牌不能为空" };
+        if (db.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, "数据库名称不能为空");
+        if (token.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, "令牌不能为空");
 
-        try
+        ValidateToken(token, db);
+        var dal = DAL.Create(db);
+
+        return new LoginInfo
         {
-            var dal = Service.Login(token, db);
-
-            // 缓存会话
-            var key = $"{token}:{db}";
-            _sessions[key] = dal;
-
-            return new LoginInfo
-            {
-                DbType = dal.DbType,
-                Version = dal.Db.ServerVersion,
-            };
-        }
-        catch (Exception ex)
-        {
-            return new { code = 401, message = ex.Message };
-        }
+            DbType = dal.DbType,
+            Version = dal.Db.ServerVersion,
+        };
     }
     #endregion
 
@@ -65,24 +69,16 @@ public class DbController
     /// <param name="token">令牌（从Header或参数传入）</param>
     /// <param name="db">数据库名（从Header或参数传入）</param>
     /// <returns></returns>
-    public Object? Query(String sql, String? parameters, String? token, String? db)
+    public IPacket? Query(String sql, String? parameters, String? token, String? db)
     {
         var dal = GetDal(token, db);
-        if (dal == null) return new { code = 401, message = "未登录或令牌无效" };
 
-        try
-        {
-            var ps = DeserializeParameters(parameters);
-            var rs = Service.Query(dal, sql, ps);
-            if (rs == null) return null;
+        var ps = DeserializeParameters(parameters);
+        var rs = Service.Query(dal, sql, ps);
+        if (rs == null) return null;
 
-            // 返回JSON格式结果集
-            return rs.ToJson();
-        }
-        catch (Exception ex)
-        {
-            return new { code = 500, message = ex.Message };
-        }
+        // 使用二进制包返回结果集，减少序列化开销
+        return rs.ToPacket();
     }
 
     /// <summary>快速查询单表记录数</summary>
@@ -93,16 +89,8 @@ public class DbController
     public Object QueryCount(String tableName, String? token, String? db)
     {
         var dal = GetDal(token, db);
-        if (dal == null) return new { code = 401, message = "未登录或令牌无效" };
 
-        try
-        {
-            return Service.QueryCount(dal, tableName);
-        }
-        catch (Exception ex)
-        {
-            return new { code = 500, message = ex.Message };
-        }
+        return new { data = Service.QueryCount(dal, tableName) };
     }
     #endregion
 
@@ -116,17 +104,9 @@ public class DbController
     public Object Execute(String sql, String? parameters, String? token, String? db)
     {
         var dal = GetDal(token, db);
-        if (dal == null) return new { code = 401, message = "未登录或令牌无效" };
 
-        try
-        {
-            var ps = DeserializeParameters(parameters);
-            return Service.Execute(dal, sql, ps);
-        }
-        catch (Exception ex)
-        {
-            return new { code = 500, message = ex.Message };
-        }
+        var ps = DeserializeParameters(parameters);
+        return new { data = Service.Execute(dal, sql, ps) };
     }
 
     /// <summary>执行插入语句并返回自增ID</summary>
@@ -138,17 +118,9 @@ public class DbController
     public Object InsertAndGetIdentity(String sql, String? parameters, String? token, String? db)
     {
         var dal = GetDal(token, db);
-        if (dal == null) return new { code = 401, message = "未登录或令牌无效" };
 
-        try
-        {
-            var ps = DeserializeParameters(parameters);
-            return Service.InsertAndGetIdentity(dal, sql, ps);
-        }
-        catch (Exception ex)
-        {
-            return new { code = 500, message = ex.Message };
-        }
+        var ps = DeserializeParameters(parameters);
+        return new { data = Service.InsertAndGetIdentity(dal, sql, ps) };
     }
     #endregion
 
@@ -157,22 +129,14 @@ public class DbController
     /// <param name="token">令牌</param>
     /// <param name="db">数据库名</param>
     /// <returns></returns>
-    public Object? GetTables(String? token, String? db)
+    public IDataTable[]? GetTables(String? token, String? db)
     {
         var dal = GetDal(token, db);
-        if (dal == null) return new { code = 401, message = "未登录或令牌无效" };
 
-        try
-        {
-            var tables = Service.GetTables(dal);
-            if (tables == null) return null;
+        var tables = Service.GetTables(dal);
+        if (tables == null) return null;
 
-            return tables.ToJson();
-        }
-        catch (Exception ex)
-        {
-            return new { code = 500, message = ex.Message };
-        }
+        return tables;
     }
     #endregion
 
@@ -181,13 +145,35 @@ public class DbController
     /// <param name="token">令牌</param>
     /// <param name="db">数据库名</param>
     /// <returns></returns>
-    private static DAL? GetDal(String? token, String? db)
+    private DAL GetDal(String? token, String? db)
     {
-        if (token.IsNullOrEmpty() || db.IsNullOrEmpty()) return null;
+        if (db.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, "数据库名称不能为空");
 
-        var key = $"{token}:{db}";
-        _sessions.TryGetValue(key, out var dal);
-        return dal;
+        ValidateToken(token, db);
+
+        return DAL.Create(db);
+    }
+
+    /// <summary>验证令牌并检查是否可访问指定数据库</summary>
+    /// <param name="token">令牌</param>
+    /// <param name="db">数据库名</param>
+    private void ValidateToken(String? token, String db)
+    {
+        if (token.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "未登录或令牌无效");
+
+        var key = $"db:token:{token}:{db}";
+        if (TokenCache.TryGetValue<Boolean>(key, out var ok) && ok) return;
+
+        try
+        {
+            Service.ValidateToken(token, db);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            throw new ApiException(ApiCode.Unauthorized, "未登录或令牌无效");
+        }
+
+        TokenCache.Set(key, true, TokenCacheExpire);
     }
 
     /// <summary>反序列化参数字典</summary>
@@ -202,5 +188,6 @@ public class DbController
 
         return null;
     }
+
     #endregion
 }

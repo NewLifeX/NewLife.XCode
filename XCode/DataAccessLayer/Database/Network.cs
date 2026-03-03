@@ -41,15 +41,10 @@ internal class NetworkDb : DbBase
     {
         base.OnSetConnectionString(builder);
 
-        // 提取Server、Database、Password
-        if (builder.TryGetAndRemove("Server", out var server))
-            _serverUrl = server;
-
-        if (builder.TryGetAndRemove("Database", out var database))
-            _database = database;
-
-        if (builder.TryGetAndRemove("Password", out var password))
-            _token = password;
+        // 提取Server、Database、Password，保留在builder中避免连接字符串变空
+        _serverUrl = builder["Server"];
+        _database = builder["Database"];
+        _token = builder["Password"];
     }
     #endregion
 

@@ -1,5 +1,6 @@
 ﻿using NewLife.Http;
 using NewLife.Log;
+using NewLife.Model;
 
 namespace XCode.Services;
 
@@ -48,6 +49,11 @@ public class DbServer : HttpServer
     /// <summary>开始时调用。注册控制器路由</summary>
     protected override void OnStart()
     {
+        // 注册DbService到服务容器，以便控制器通过构造函数注入获取
+        var container = new ObjectContainer();
+        container.AddSingleton(Service);
+        ServiceProvider = container.BuildServiceProvider();
+
         // 注册控制器，路由映射到 /Db/*
         MapController<DbController>();
 

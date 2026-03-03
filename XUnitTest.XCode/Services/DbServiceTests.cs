@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using NewLife;
@@ -54,6 +54,15 @@ public class DbServiceTests : IDisposable
         service.Tokens["validtoken"] = new[] { "db1" };
 
         Assert.Throws<UnauthorizedAccessException>(() => service.Login("invalidtoken", "db1"));
+    }
+
+    [Fact]
+    public void ValidateToken_TokenNoDB_Unauthorized()
+    {
+        var service = new DbService();
+        service.Tokens["mytoken"] = new[] { "db1", "db2" };
+
+        Assert.Throws<UnauthorizedAccessException>(() => service.ValidateToken("mytoken", "db3"));
     }
 
     [Fact]

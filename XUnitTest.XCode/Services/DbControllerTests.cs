@@ -1,10 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using NewLife;
-using NewLife.Log;
-using NewLife.Security;
+using NewLife.Data;
 using NewLife.Serialization;
+using NewLife.Log;
+using NewLife.Remoting;
+using NewLife.Security;
 using XCode.DataAccessLayer;
 using XCode.Services;
 using Xunit;
@@ -42,12 +44,9 @@ public class DbControllerTests : IDisposable
     {
         var controller = new DbController { Service = CreateService() };
 
-        var result = controller.Login("", "mytoken");
+        var ex = Assert.Throws<ApiException>(() => controller.Login("", "mytoken"));
 
-        Assert.NotNull(result);
-        // 匿名对象检查
-        var json = result.ToJson();
-        Assert.Contains("401", json);
+        Assert.Equal(ApiCode.BadRequest, ex.Code);
     }
 
     [Fact]
@@ -55,11 +54,9 @@ public class DbControllerTests : IDisposable
     {
         var controller = new DbController { Service = CreateService() };
 
-        var result = controller.Login("testdb", "");
+        var ex = Assert.Throws<ApiException>(() => controller.Login("testdb", ""));
 
-        Assert.NotNull(result);
-        var json = result.ToJson();
-        Assert.Contains("401", json);
+        Assert.Equal(ApiCode.BadRequest, ex.Code);
     }
 
     [Fact]
@@ -79,11 +76,9 @@ public class DbControllerTests : IDisposable
     {
         var controller = new DbController { Service = CreateService() };
 
-        var result = controller.Query("SELECT 1", null, null, null);
+        var ex = Assert.Throws<ApiException>(() => controller.Query("SELECT 1", null, null, _connName));
 
-        Assert.NotNull(result);
-        var json = result.ToJson();
-        Assert.Contains("401", json);
+        Assert.Equal(ApiCode.Unauthorized, ex.Code);
     }
 
     [Fact]
@@ -92,9 +87,8 @@ public class DbControllerTests : IDisposable
         var service = CreateService();
         var controller = new DbController { Service = service };
 
-        // 先登录
         var token = "testtoken";
-        controller.Login(_connName, token);
+        service.Tokens[token] = new[] { _connName };
 
         // 创建测试表
         _dal.Execute("CREATE TABLE IF NOT EXISTS ctrl_test(id INTEGER PRIMARY KEY, name TEXT)");
@@ -104,9 +98,11 @@ public class DbControllerTests : IDisposable
         var result = controller.Query("SELECT * FROM ctrl_test", null, token, _connName);
 
         Assert.NotNull(result);
-        Assert.IsType<String>(result);
-        var json = (String)result!;
-        Assert.Contains("test", json);
+        var packet = Assert.IsAssignableFrom<IPacket>(result);
+
+        var dt = new DbTable();
+        dt.Read(packet);
+        Assert.Equal("test", dt.Rows[0][1]?.ToString());
     }
 
     [Fact]
@@ -116,14 +112,14 @@ public class DbControllerTests : IDisposable
         var controller = new DbController { Service = service };
 
         var token = "testtoken";
-        controller.Login(_connName, token);
+        service.Tokens[token] = new[] { _connName };
 
         _dal.Execute("CREATE TABLE IF NOT EXISTS ctrl_exec(id INTEGER PRIMARY KEY, name TEXT)");
 
         var result = controller.Execute("INSERT INTO ctrl_exec(id,name) VALUES(1,'hello')", null, token, _connName);
 
-        Assert.NotNull(result);
-        Assert.Equal(1L, Convert.ToInt64(result));
+        var json = result.ToJson();
+        Assert.Contains("\"data\":1", json);
     }
 
     [Fact]
@@ -133,15 +129,14 @@ public class DbControllerTests : IDisposable
         var controller = new DbController { Service = service };
 
         var token = "testtoken";
-        controller.Login(_connName, token);
+        service.Tokens[token] = new[] { _connName };
 
         _dal.Execute("CREATE TABLE IF NOT EXISTS ctrl_ident(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)");
 
         var result = controller.InsertAndGetIdentity("INSERT INTO ctrl_ident(name) VALUES('first')", null, token, _connName);
 
-        Assert.NotNull(result);
-        var id = Convert.ToInt64(result);
-        Assert.True(id > 0);
+        var json = result.ToJson();
+        Assert.Contains("\"data\":", json);
     }
 
     [Fact]
@@ -151,7 +146,7 @@ public class DbControllerTests : IDisposable
         var controller = new DbController { Service = service };
 
         var token = "testtoken";
-        controller.Login(_connName, token);
+        service.Tokens[token] = new[] { _connName };
 
         _dal.Execute("CREATE TABLE IF NOT EXISTS ctrl_count(id INTEGER PRIMARY KEY, name TEXT)");
         _dal.Execute("INSERT INTO ctrl_count(id,name) VALUES(1,'a')");
@@ -159,9 +154,8 @@ public class DbControllerTests : IDisposable
 
         var result = controller.QueryCount("ctrl_count", token, _connName);
 
-        Assert.NotNull(result);
-        var count = Convert.ToInt64(result);
-        Assert.True(count >= 2);
+        var json = result.ToJson();
+        Assert.Contains("\"data\":", json);
     }
 
     [Fact]
@@ -171,13 +165,45 @@ public class DbControllerTests : IDisposable
         var controller = new DbController { Service = service };
 
         var token = "testtoken";
-        controller.Login(_connName, token);
+        service.Tokens[token] = new[] { _connName };
 
         _dal.Execute("CREATE TABLE IF NOT EXISTS ctrl_t1(id INTEGER PRIMARY KEY, name TEXT)");
 
         var result = controller.GetTables(token, _connName);
 
         Assert.NotNull(result);
-        Assert.IsType<String>(result);
+        Assert.IsType<IDataTable[]>(result);
+        Assert.True(result.Length >= 1);
+    }
+
+    [Fact]
+    public void Query_TokenCannotAccessDb_Unauthorized()
+    {
+        var service = CreateService();
+        var controller = new DbController { Service = service };
+
+        service.Tokens["testtoken"] = new[] { "db1" };
+
+        var ex = Assert.Throws<ApiException>(() => controller.Query("SELECT 1", null, "testtoken", _connName));
+
+        Assert.Equal(ApiCode.Unauthorized, ex.Code);
+    }
+
+    [Fact]
+    public void Query_ValidationCached_WorksWithinCachePeriod()
+    {
+        var service = CreateService();
+        var controller = new DbController { Service = service };
+
+        var token = "cachetoken";
+        service.Tokens[token] = new[] { _connName };
+
+        var first = controller.Query("SELECT 1", null, token, _connName);
+        Assert.NotNull(first);
+
+        service.Tokens.Clear();
+
+        var second = controller.Query("SELECT 1", null, token, _connName);
+        Assert.NotNull(second);
     }
 }

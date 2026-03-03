@@ -27,25 +27,30 @@ public class DbService
     #endregion
 
     #region 方法
+    /// <summary>验证令牌是否可访问指定数据库</summary>
+    /// <param name="token">令牌</param>
+    /// <param name="db">数据库连接名</param>
+    public void ValidateToken(String token, String db)
+    {
+        if (token.IsNullOrEmpty()) throw new ArgumentException("令牌不能为空", nameof(token));
+        if (db.IsNullOrEmpty()) throw new ArgumentException("数据库名称不能为空", nameof(db));
+
+        if (Tokens.Count <= 0) return;
+
+        if (!Tokens.TryGetValue(token, out var dbs))
+            throw new UnauthorizedAccessException("无效令牌");
+
+        if (dbs != null && dbs.Length > 0 && !dbs.Contains(db, StringComparer.OrdinalIgnoreCase))
+            throw new UnauthorizedAccessException($"令牌无权访问数据库[{db}]");
+    }
+
     /// <summary>验证令牌并获取 DAL 实例</summary>
     /// <param name="token">令牌</param>
     /// <param name="db">数据库连接名</param>
     /// <returns></returns>
     public DAL Login(String token, String db)
     {
-        if (token.IsNullOrEmpty()) throw new ArgumentException("令牌不能为空", nameof(token));
-        if (db.IsNullOrEmpty()) throw new ArgumentException("数据库名称不能为空", nameof(db));
-
-        // 验证令牌
-        if (Tokens.Count > 0)
-        {
-            if (!Tokens.TryGetValue(token, out var dbs))
-                throw new UnauthorizedAccessException("无效令牌");
-
-            // 如果指定了允许的数据库列表，则检查
-            if (dbs != null && dbs.Length > 0 && !dbs.Contains(db, StringComparer.OrdinalIgnoreCase))
-                throw new UnauthorizedAccessException($"令牌无权访问数据库[{db}]");
-        }
+        ValidateToken(token, db);
 
         var dal = DAL.Create(db);
 
@@ -125,7 +130,7 @@ public class DbService
     #endregion
 
     #region 辅助
-    /// <summary>将可空值字典转换为非空值字典</summary>
+    /// <summary>将可空值字典转换为非空值字典，同时去掉参数名的@前缀避免CreateParameters重复添加</summary>
     /// <param name="parameters">参数字典</param>
     /// <returns></returns>
     private static IDictionary<String, Object>? ConvertToDictionary(IDictionary<String, Object?>? parameters)
@@ -136,7 +141,10 @@ public class DbService
         foreach (var item in parameters)
         {
             if (item.Value != null)
-                dic[item.Key] = item.Value;
+            {
+                var key = item.Key.TrimStart('@');
+                dic[key] = item.Value;
+            }
         }
         return dic.Count > 0 ? dic : null;
     }

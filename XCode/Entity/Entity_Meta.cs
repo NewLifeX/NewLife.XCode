@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using NewLife.Log;
 using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;

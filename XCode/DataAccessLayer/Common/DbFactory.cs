@@ -25,9 +25,9 @@ public static class DbFactory
         Register<VastBase>(DatabaseType.VastBase);
         Register<InfluxDB>(DatabaseType.InfluxDB);
         Register<NovaDb>(DatabaseType.NovaDb);
+        Register<NetworkDb>(DatabaseType.Network);
         //Register<Access>(DatabaseType.Access);
         //Register<SqlCe>(DatabaseType.SqlCe);
-        //Register<Network>(DatabaseType.Network);
     }
     #endregion
 

@@ -56,7 +56,6 @@
     <Compile Remove="Interfaces\**" />
     <Compile Remove="Membership\Config\**" />
     <Compile Remove="Membership\Log\**" />
-    <Compile Remove="Service\**" />
     <Compile Remove="Sync\**" />
     <Compile Remove="tools\**" />
     <Compile Remove="Web\**" />
@@ -64,7 +63,6 @@
     <EmbeddedResource Remove="Interfaces\**" />
     <EmbeddedResource Remove="Membership\Config\**" />
     <EmbeddedResource Remove="Membership\Log\**" />
-    <EmbeddedResource Remove="Service\**" />
     <EmbeddedResource Remove="Sync\**" />
     <EmbeddedResource Remove="tools\**" />
     <EmbeddedResource Remove="Web\**" />
@@ -72,7 +70,6 @@
     <None Remove="Interfaces\**" />
     <None Remove="Membership\Config\**" />
     <None Remove="Membership\Log\**" />
-    <None Remove="Service\**" />
     <None Remove="Sync\**" />
     <None Remove="tools\**" />
     <None Remove="Web\**" />
@@ -80,7 +77,6 @@
   <ItemGroup>
     <Compile Remove="DataAccessLayer\Common\ConnectionPool.cs" />
     <Compile Remove="DataAccessLayer\Database\Firebird.cs" />
-    <Compile Remove="DataAccessLayer\Database\Network.cs" />
     <Compile Remove="DataAccessLayer\Model\SerializableDataMember.cs" />
     <Compile Remove="DataAccessLayer\MSPageSplit.cs" />
     <Compile Remove="Membership\IPasswordProvider.cs" />

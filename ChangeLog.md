@@ -1,5 +1,33 @@
 # NewLife.XCode 更新日志
 
+## v11.25.2026.0227 (2026-02-27)
+
+### 新功能
+- **NovaDb 数据库支持**：新增对 NewLife 自研 NovaDb 数据库的适配，扩展国产自主数据库生态
+- **InfluxDB 2.x 时序数据库适配**：新增 InfluxDB 数据库适配器与驱动基础设施，支持时序数据 CRUD 及单元测试覆盖
+- **TDengine 改用 HTTP 驱动**：将 TDengine 驱动从原生驱动切换为 HTTP 协议，提升跨平台兼容性，更新默认端口与文档
+- **TableItem 启动时全局配置**：支持在应用启动阶段全局永久修改实体的表名（TableName）和连接名（ConnName），适用于表前缀、分库、单租户等场景；属性变更同时自动同步到 DataTable，无需手动调用
+- **Meta.Session 自动同步**：完善 `Entity<TEntity>.Meta.Session` 逻辑，自动检测并同步 ConnName / TableName 变化，确保 Session 始终指向最新连接和表名
+- **CreateTable() 方法公开**：将 `internal static IDataTable CreateTable()` 改为 `public`，方便外部直接构造实体元数据
+
+### 重大变更（破坏性）
+- **移除模型表（外部 XML 映射）功能**：彻底移除通过外部 xml 文件动态映射实体表结构的支持，包括 `TableItem` 合并逻辑、`DAL.ModelTables` 属性、`XCodeSetting.ModelPath` 配置项及相关单元测试；实体表结构现仅以代码特性为准
+- **移除 SQLite WAL 自动恢复与手动操作代码**：简化 `OpenConnection` 逻辑，删除 WAL 恢复和 `_checkpoint_` 手动干预，依赖 SQLite 自身自动处理，避免多进程场景下的干预风险
+
+### 性能与代码优化
+- **缓存清理精确化**：`ClearCache` 改用 `func.Method` 标识具体方法，避免因委托实例不同导致缓存未被正确清理
+- **MySQL 驱动替换**：以 `NewLife.MySql` 替换 `MySql.Data`，统一 MySqlSslMode 类型兼容性处理
+
+### 文档与工具
+- **XCode 数据模型与结构同步文档**：新增完整的数据模型体系、正反向工程、类型映射、分表分库原理及与主流 ORM 对比说明
+- **TableItem 启动配置文档**：新增详细说明启动配置与动态修改的区别、典型用法及注意事项
+- **InfluxDB 支持说明文档**：新增 InfluxDB 接入与使用说明
+
+### 依赖更新
+- 升级 `NewLife.Core`、`NewLife.MySql` 等依赖包至最新版本
+
+---
+
 ## v11.24.2026.0102 (2026-01-02)
 
 ### 新功能

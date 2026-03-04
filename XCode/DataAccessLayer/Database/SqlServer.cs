@@ -549,7 +549,7 @@ internal class SqlServerSession : RemoteDbSession
         return dt;
     }
 
-    private Int32[] GetFields(DbTable dt, DbDataReader dr)
+    private Int32[]? GetFields(DbTable dt, DbDataReader dr)
     {
         // 干掉rowNumber
         var idx = Array.FindIndex(dt.Columns, c => c.EqualIgnoreCase("rowNumber"));
@@ -568,7 +568,7 @@ internal class SqlServerSession : RemoteDbSession
             return fs.ToArray();
         }
 
-        return [];
+        return null;
     }
 
     /// <summary>快速查询单表记录数，稍有偏差</summary>

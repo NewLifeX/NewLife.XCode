@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <AssemblyTitle>数据中间件KingBase包</AssemblyTitle>
-    <Description>引入KingBase数据库驱动包</Description>
+    <AssemblyTitle>XCode 金仓适配包</AssemblyTitle>
+    <Description>为 XCode 提供金仓数据库驱动接入与方言支持，支持自动建模迁移、缓存协同与高性能数据访问。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>11.24</VersionPrefix>

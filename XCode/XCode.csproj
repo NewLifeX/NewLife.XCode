@@ -3,8 +3,8 @@
     <TargetFrameworks>net45;net461;netstandard2.0;netstandard2.1</TargetFrameworks>
     <AssemblyName>XCode</AssemblyName>
     <RootNamespace>XCode</RootNamespace>
-    <AssemblyTitle>NewLife数据中间件</AssemblyTitle>
-    <Description>数据中间件，支持MySQL、SQLite、SqlServer、Oracle、Postgresql、TDengine、达梦，重点在缓存、性能、分表、自动建表。</Description>
+    <AssemblyTitle>XCode超级ORM中间件</AssemblyTitle>
+    <Description>高性能 .NET 数据中间件（超级ORM），聚焦添删改查与海量数据，内置多级缓存、自动迁移、分表分库、强类型查询与跨库迁移。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>11.25</VersionPrefix>
@@ -112,7 +112,7 @@
   </ItemGroup>
   <!-- Copilot Instructions 打包配置 -->
   <ItemGroup>
-    <None Include="build\NewLife.XCode.targets" Pack="true" PackagePath="build\" />
+    <None Include="build\NewLife.X.Code.targets" Pack="true" PackagePath="build\" />
     <Content Include="..\.github\instructions\xcode.instructions.md" Pack="true" PackagePath="content\.github\instructions\" />
   </ItemGroup>
 </Project>

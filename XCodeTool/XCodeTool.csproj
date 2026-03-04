@@ -4,8 +4,8 @@
     <TargetFrameworks>net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>xcodetool</AssemblyName>
     <RootNamespace>XCode</RootNamespace>
-    <AssemblyTitle>数据中间件工具</AssemblyTitle>
-    <Description>数据中间件，代码生成</Description>
+    <AssemblyTitle>XCode实体生成工具</AssemblyTitle>
+    <Description>XCode 官方命令行工具，基于 Model.xml 生成实体数据类与业务类，支持快速建模与持续迭代。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>11.24</VersionPrefix>

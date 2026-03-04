@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
     <TargetFrameworks>net451</TargetFrameworks>
-    <AssemblyTitle>数据中间件SQLite包</AssemblyTitle>
-    <Description>引入SQLite数据库驱动包</Description>
+    <AssemblyTitle>XCode 瀚高适配包</AssemblyTitle>
+    <Description>为 XCode 提供瀚高数据库驱动接入与方言支持，支持自动建模迁移、缓存协同与高性能数据访问。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>11.24</VersionPrefix>

@@ -195,4 +195,159 @@ public class DbServiceTests : IDisposable
         Assert.NotNull(tables);
         Assert.True(tables!.Length >= 2);
     }
+
+    [Fact]
+    public void GetTables_NullDal_ThrowsException()
+    {
+        var service = new DbService();
+
+        Assert.Throws<ArgumentNullException>(() => service.GetTables(null!));
+    }
+
+    [Fact]
+    public void QueryCount_NullDal_ThrowsException()
+    {
+        var service = new DbService();
+
+        Assert.Throws<ArgumentNullException>(() => service.QueryCount(null!, "test"));
+    }
+
+    [Fact]
+    public void QueryCount_EmptyTableName_ThrowsException()
+    {
+        var service = new DbService();
+
+        Assert.Throws<ArgumentException>(() => service.QueryCount(_dal, ""));
+    }
+
+    [Fact]
+    public void InsertAndGetIdentity_NullDal_ThrowsException()
+    {
+        var service = new DbService();
+
+        Assert.Throws<ArgumentNullException>(() => service.InsertAndGetIdentity(null!, "INSERT ...", null));
+    }
+
+    [Fact]
+    public void InsertAndGetIdentity_EmptySql_ThrowsException()
+    {
+        var service = new DbService();
+
+        Assert.Throws<ArgumentException>(() => service.InsertAndGetIdentity(_dal, "", null));
+    }
+
+    [Fact]
+    public void Execute_NullDal_ThrowsException()
+    {
+        var service = new DbService();
+
+        Assert.Throws<ArgumentNullException>(() => service.Execute(null!, "DELETE FROM ...", null));
+    }
+
+    [Fact]
+    public void Execute_EmptySql_ThrowsException()
+    {
+        var service = new DbService();
+
+        Assert.Throws<ArgumentException>(() => service.Execute(_dal, "", null));
+    }
+
+    [Fact]
+    public void ValidateToken_EmptyToken_ThrowsException()
+    {
+        var service = new DbService();
+
+        Assert.Throws<ArgumentException>(() => service.ValidateToken("", "db"));
+    }
+
+    [Fact]
+    public void ValidateToken_EmptyDb_ThrowsException()
+    {
+        var service = new DbService();
+
+        Assert.Throws<ArgumentException>(() => service.ValidateToken("token", ""));
+    }
+
+    [Fact]
+    public void ValidateToken_NoTokens_AllowAll()
+    {
+        var service = new DbService();
+        // 空Tokens字典时不抛异常
+        service.ValidateToken("anytoken", "anydb");
+    }
+
+    [Fact]
+    public void ValidateToken_TokenWithEmptyDbs_AllowAll()
+    {
+        var service = new DbService();
+        service.Tokens["mytoken"] = [];
+
+        // 空数组表示允许所有数据库
+        service.ValidateToken("mytoken", "anydb");
+    }
+
+    [Fact]
+    public void ValidateToken_CaseInsensitive()
+    {
+        var service = new DbService();
+        service.Tokens["MyToken"] = new[] { "DB1" };
+
+        // Token的key查找应不区分大小写
+        service.ValidateToken("mytoken", "DB1");
+    }
+
+    [Fact]
+    public void Execute_WithAtPrefixParameters_StripsPrefix()
+    {
+        _dal.Execute("CREATE TABLE IF NOT EXISTS test_atp(id INTEGER PRIMARY KEY, name TEXT)");
+
+        var service = new DbService();
+        var ps = new Dictionary<String, Object?> { ["@name"] = "stripped" };
+        service.Execute(_dal, "INSERT INTO test_atp(id,name) VALUES(1,@name)", ps);
+
+        var dt = service.Query(_dal, "SELECT name FROM test_atp WHERE id=1", null);
+        Assert.NotNull(dt);
+        Assert.Equal("stripped", dt!.Rows[0][0]?.ToString());
+    }
+
+    [Fact]
+    public void Query_WithParameters_Works()
+    {
+        _dal.Execute("CREATE TABLE IF NOT EXISTS test_qp(id INTEGER PRIMARY KEY, name TEXT)");
+        _dal.Execute("INSERT INTO test_qp(id,name) VALUES(1,'hello')");
+        _dal.Execute("INSERT INTO test_qp(id,name) VALUES(2,'world')");
+
+        var service = new DbService();
+        var dt = service.Query(_dal, "SELECT * FROM test_qp WHERE id=1", null);
+
+        Assert.NotNull(dt);
+        Assert.Single(dt!.Rows);
+    }
+
+    [Fact]
+    public void QueryCount_ReturnsCount()
+    {
+        _dal.Execute("CREATE TABLE IF NOT EXISTS test_cnt(id INTEGER PRIMARY KEY, name TEXT)");
+        _dal.Execute("INSERT INTO test_cnt(id,name) VALUES(1,'a')");
+        _dal.Execute("INSERT INTO test_cnt(id,name) VALUES(2,'b')");
+        _dal.Execute("INSERT INTO test_cnt(id,name) VALUES(3,'c')");
+
+        var service = new DbService();
+        var count = service.QueryCount(_dal, "test_cnt");
+
+        Assert.Equal(3, count);
+    }
+
+    [Fact]
+    public void Tokens_ConcurrentDictionary()
+    {
+        var service = new DbService();
+
+        // 验证Tokens是线程安全的ConcurrentDictionary
+        service.Tokens["t1"] = new[] { "db1" };
+        service.Tokens["t2"] = new[] { "db2" };
+
+        Assert.Equal(2, service.Tokens.Count);
+        Assert.True(service.Tokens.ContainsKey("t1"));
+    }
 }

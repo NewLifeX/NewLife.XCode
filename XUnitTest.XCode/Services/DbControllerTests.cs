@@ -206,4 +206,123 @@ public class DbControllerTests : IDisposable
         var second = controller.Query("SELECT 1", null, token, _connName);
         Assert.NotNull(second);
     }
+
+    [Fact]
+    public void Ctor_Default()
+    {
+        var controller = new DbController();
+
+        Assert.Null(controller.Service);
+        Assert.NotNull(controller.TokenCache);
+        Assert.Equal(600, controller.TokenCacheExpire);
+    }
+
+    [Fact]
+    public void Ctor_WithService()
+    {
+        var service = CreateService();
+        var controller = new DbController(service);
+
+        Assert.Same(service, controller.Service);
+    }
+
+    [Fact]
+    public void Execute_EmptyDb_ThrowsApiException()
+    {
+        var controller = new DbController { Service = CreateService() };
+
+        var ex = Assert.Throws<ApiException>(() => controller.Execute("INSERT ...", null, "token", ""));
+
+        Assert.Equal(ApiCode.BadRequest, ex.Code);
+    }
+
+    [Fact]
+    public void InsertAndGetIdentity_EmptyDb_ThrowsApiException()
+    {
+        var controller = new DbController { Service = CreateService() };
+
+        var ex = Assert.Throws<ApiException>(() => controller.InsertAndGetIdentity("INSERT ...", null, "token", ""));
+
+        Assert.Equal(ApiCode.BadRequest, ex.Code);
+    }
+
+    [Fact]
+    public void QueryCount_EmptyDb_ThrowsApiException()
+    {
+        var controller = new DbController { Service = CreateService() };
+
+        var ex = Assert.Throws<ApiException>(() => controller.QueryCount("test", "token", ""));
+
+        Assert.Equal(ApiCode.BadRequest, ex.Code);
+    }
+
+    [Fact]
+    public void GetTables_EmptyDb_ThrowsApiException()
+    {
+        var controller = new DbController { Service = CreateService() };
+
+        var ex = Assert.Throws<ApiException>(() => controller.GetTables("token", ""));
+
+        Assert.Equal(ApiCode.BadRequest, ex.Code);
+    }
+
+    [Fact]
+    public void Query_WithJsonParameters_Works()
+    {
+        var service = CreateService();
+        var controller = new DbController { Service = service };
+
+        var token = "testtoken";
+        service.Tokens[token] = new[] { _connName };
+
+        _dal.Execute("CREATE TABLE IF NOT EXISTS ctrl_jsonp(id INTEGER PRIMARY KEY, name TEXT)");
+        _dal.Execute("INSERT INTO ctrl_jsonp(id,name) VALUES(1,'test')");
+
+        // 传入JSON格式的参数
+        var result = controller.Query("SELECT * FROM ctrl_jsonp WHERE id=1", null, token, _connName);
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void Execute_WithJsonParameters_Works()
+    {
+        var service = CreateService();
+        var controller = new DbController { Service = service };
+
+        var token = "testtoken";
+        service.Tokens[token] = new[] { _connName };
+
+        _dal.Execute("CREATE TABLE IF NOT EXISTS ctrl_jsonpe(id INTEGER PRIMARY KEY, name TEXT)");
+
+        var json = "{\"name\":\"world\"}";
+        var result = controller.Execute("INSERT INTO ctrl_jsonpe(id,name) VALUES(1,@name)", json, token, _connName);
+
+        var resultJson = result.ToJson();
+        Assert.Contains("\"data\":1", resultJson);
+    }
+
+    [Fact]
+    public void Query_NullToken_ThrowsUnauthorized()
+    {
+        var service = CreateService();
+        service.Tokens["valid"] = new[] { _connName };
+        var controller = new DbController { Service = service };
+
+        var ex = Assert.Throws<ApiException>(() => controller.Query("SELECT 1", null, null, _connName));
+
+        Assert.Equal(ApiCode.Unauthorized, ex.Code);
+    }
+
+    [Fact]
+    public void GetTables_NullToken_ThrowsUnauthorized()
+    {
+        var service = CreateService();
+        service.Tokens["valid"] = new[] { _connName };
+        var controller = new DbController { Service = service };
+
+        var ex = Assert.Throws<ApiException>(() => controller.GetTables(null, _connName));
+
+        Assert.Equal(ApiCode.Unauthorized, ex.Code);
+    }
 }

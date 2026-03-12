@@ -463,7 +463,7 @@ public abstract class EntityInterceptor : IEntityInterceptor
     /// </remarks>
     protected virtual Boolean SetNoDirtyItem(ICollection<FieldItem> fields, IEntity entity, String name, Object? value)
     {
-        var fi = fields.FirstOrDefault(e => e.Name.EqualIgnoreCase(name));
+        var fi = fields.FirstOrDefault(e => name.EqualIgnoreCase(e.Name, e.ColumnName));
         if (fi == null) return false;
 
         name = fi.Name;

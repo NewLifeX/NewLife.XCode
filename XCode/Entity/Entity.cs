@@ -1882,7 +1882,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
 
         var builder = new SelectBuilder
         {
-            Column = selects,
+            Column = FormatSelects(db, factory, selects),
             Table = session.FormatedTableName,
             OrderBy = order,
             // 谨记：某些项目中可能在where中使用了GroupBy，在分页时可能报错
@@ -1955,6 +1955,53 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             }
         }
         return builder;
+    }
+
+    /// <summary>格式化查询列名，将属性名或列名转换为数据库引用标识符。</summary>
+    /// <remarks>解决KingBase等大小写敏感数据库中，未加引号的标识符被自动转小写导致查询失败的问题。</remarks>
+    /// <param name="db">数据库</param>
+    /// <param name="factory">实体工厂</param>
+    /// <param name="selects">查询列，可以是属性名、列名或SQL表达式</param>
+    /// <returns>格式化后的查询列字符串</returns>
+    private static String? FormatSelects(IDatabase db, IEntityFactory factory, String? selects)
+    {
+        if (selects.IsNullOrEmpty() || selects == "*") return selects;
+
+        var cols = selects.Split(',');
+
+        // 构建字段字典，用属性名和列名双重索引，以便O(1)查找
+        var fieldMap = new Dictionary<String, FieldItem>(StringComparer.OrdinalIgnoreCase);
+        foreach (var fi in factory.Fields)
+        {
+            if (!fi.Name.IsNullOrEmpty() && !fieldMap.ContainsKey(fi.Name))
+                fieldMap[fi.Name] = fi;
+            if (!fi.ColumnName.IsNullOrEmpty() && !fi.ColumnName.EqualIgnoreCase(fi.Name) && !fieldMap.ContainsKey(fi.ColumnName))
+                fieldMap[fi.ColumnName] = fi;
+        }
+
+        var sb = Pool.StringBuilder.Get();
+        foreach (var col in cols)
+        {
+            if (sb.Length > 0) sb.Append(',');
+            var name = col.Trim();
+
+            // 简单标识符才尝试格式化：不含空格、括号，且未被引号包裹
+            // 含空格/括号的通常是SQL表达式（如 COUNT(*), SUM(Amount), col AS alias）
+            // 已带引号的标识符直接透传，避免重复引用
+            if (!name.Contains(' ') && !name.Contains('(') && !name.Contains(')')
+                && name.Length >= 1
+                && name[0] != '"' && name[0] != '`' && name[0] != '[')
+            {
+                if (fieldMap.TryGetValue(name, out var fi))
+                {
+                    sb.Append(db.FormatName(fi.Field));
+                    continue;
+                }
+            }
+            sb.Append(name);
+        }
+
+        return sb.Return(true);
     }
 
     private static SelectBuilder FixParam(SelectBuilder builder, IDictionary<String, Object?>? ps)

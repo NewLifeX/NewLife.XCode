@@ -50,6 +50,26 @@ public class KingBaseTests
         Assert.NotNull(dp);
     }
 
+    [Theory]
+    [InlineData("FastCode", "\"FastCode\"")]
+    [InlineData("name", "\"name\"")]
+    [InlineData("Name,DisplayName", "\"Name\",\"DisplayName\"")]
+    [InlineData("*", "*")]
+    [InlineData("", "")]
+    [InlineData("Count(*) as Count", "Count(*) as Count")]
+    [InlineData("Name,Count(*) as Total", "\"Name\",Count(*) as Total")]
+    [InlineData("\"AlreadyQuoted\"", "\"AlreadyQuoted\"")]
+    [InlineData("`BacktickQuoted`", "`BacktickQuoted`")]
+    public void FormatBuilderColumnsTest(String input, String expected)
+    {
+        var db = DbFactory.Create(DatabaseType.KingBase) as KingBase;
+        Assert.NotNull(db);
+
+        var builder = new SelectBuilder { Column = input };
+        db.FormatBuilderColumns(builder);
+        Assert.Equal(expected, builder.Column);
+    }
+
     [Fact(Skip = "跳过")]
     public void ConnectTest()
     {

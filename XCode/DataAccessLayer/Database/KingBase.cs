@@ -82,9 +82,42 @@ internal class KingBase : RemoteDb
     protected override IDbSession OnCreateSession() => new KingBaseSession(this);
 
     #region 分页
-    public override SelectBuilder PageSplit(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows) => PostgreSQL.PageSplitByOffsetLimit(builder, startRowIndex, maximumRows);
+    public override SelectBuilder PageSplit(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
+    {
+        // 格式化查询列，解决Oracle模式下未加引号的标识符被转小写的问题。
+        // 此处在转换为SQL字符串前调用，确保异步分页路径（QueryAsync）也能正确处理。
+        FormatBuilderColumns(builder);
+        return PostgreSQL.PageSplitByOffsetLimit(builder, startRowIndex, maximumRows);
+    }
     public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn) => PostgreSQL.PageSplitByOffsetLimit(sql, startRowIndex, maximumRows);
     #endregion
+
+    /// <summary>格式化查询列中的简单标识符，加上双引号以保持大小写，解决 Oracle 模式下大小写敏感问题。</summary>
+    /// <param name="builder">查询生成器</param>
+    internal void FormatBuilderColumns(SelectBuilder builder)
+    {
+        if (builder.Column.IsNullOrEmpty() || builder.Column == "*") return;
+
+        var cols = builder.Column.Split(',');
+        var sb = Pool.StringBuilder.Get();
+        foreach (var col in cols)
+        {
+            if (sb.Length > 0) sb.Append(',');
+            var name = col.Trim();
+
+            // 简单标识符才格式化：不含空格、括号（排除SQL表达式），且未被引号包裹
+            if (!name.Contains(' ') && !name.Contains('(') && !name.Contains(')')
+                && name.Length >= 1
+                && name[0] != '"' && name[0] != '`' && name[0] != '[')
+            {
+                sb.Append(FormatName(name));
+                continue;
+            }
+            sb.Append(name);
+        }
+
+        builder.Column = sb.Return(true);
+    }
 }
 
 /// <summary>人大金仓(KingBase)数据库</summary>
@@ -93,6 +126,18 @@ internal class KingBaseSession : RemoteDbSession
     #region 构造函数
     public KingBaseSession(IDatabase db) : base(db) { }
     #endregion
+
+    /// <summary>执行SQL查询，格式化查询列后返回记录集。解决 Oracle 模式下 SELECT 列未加引号导致大小写敏感报错的问题。
+    /// 覆盖所有同步查询路径（含无分页直接查询和分页查询）。</summary>
+    /// <param name="builder">查询生成器</param>
+    /// <returns>记录集</returns>
+    public override DbTable Query(SelectBuilder builder)
+    {
+        // KingBaseSession 始终由 KingBase.OnCreateSession 创建，Database 类型固定为 KingBase
+        var db = (Database as KingBase)!;
+        db.FormatBuilderColumns(builder);
+        return base.Query(builder);
+    }
 
     #region 快速查询单表记录数量
     public override Int64 QueryCountFast(String tableName)

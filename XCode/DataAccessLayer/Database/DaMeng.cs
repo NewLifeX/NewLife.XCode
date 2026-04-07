@@ -131,8 +131,8 @@ class DaMeng : RemoteDb
 
         var dp = base.CreateParameter(name, value, type);
 
-        // 修正时间映射
-        if (type == typeof(DateTime)) dp.DbType = DbType.Date;
+        // 修正时间映射，使用DateTime保留时间部分（Date仅保留日期，批量插入时会丢失时间）
+        if (type == typeof(DateTime)) dp.DbType = DbType.DateTime;
 
         return dp;
     }

@@ -519,7 +519,7 @@ internal class KingBaseMetaData : RemoteDbMetaData
         // 所有表
         foreach (var dr in dt)
         {
-            var name = $"{dr["Name"]}";
+            var name = $"{dr["TableName"]}";
             if (!name.IsNullOrEmpty()) list.Add(name);
         }
         return list;

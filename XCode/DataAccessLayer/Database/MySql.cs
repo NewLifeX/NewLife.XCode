@@ -224,6 +224,19 @@ internal class MySql : RemoteDb
         // MySql的枚举要用 DbType.String
         if (type == typeof(Boolean))
         {
+            if (value is Array arr && value.GetType() != typeof(Byte[]))
+            {
+                var values = new Int16[arr.Length];
+                for (var i = 0; i < arr.Length; i++)
+                {
+                    values[i] = arr.GetValue(i).ToBoolean() ? (Int16)1 : (Int16)0;
+                }
+
+                dp.DbType = DbType.Int16;
+                dp.Value = values;
+                return dp;
+            }
+
             var v = value.ToBoolean();
             //if (field?.Table != null && EnumTables.Contains(field.Table.TableName))
             //{

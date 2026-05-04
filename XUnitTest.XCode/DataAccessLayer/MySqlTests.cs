@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
+
 using NewLife;
 using NewLife.Log;
 using NewLife.Security;
 using NewLife.Serialization;
+
 using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
+
 using Xunit;
+
 using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
@@ -58,6 +63,19 @@ public class MySqlTests
 
         var dp = factory.CreateParameter();
         Assert.NotNull(dp);
+    }
+
+    [Fact(DisplayName = "CreateParameter - Boolean数组应保留逐项值")]
+    public void CreateParameter_BooleanArray()
+    {
+        var db = DbFactory.Create(DatabaseType.MySql);
+
+        var dp = db.CreateParameter("Enable", new Boolean[] { true, false, true }, typeof(Boolean));
+
+        Assert.Equal(DbType.Int16, dp.DbType);
+
+        var values = Assert.IsType<Int16[]>(dp.Value);
+        Assert.Equal(new Int16[] { 1, 0, 1 }, values);
     }
 
     [Fact]

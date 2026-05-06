@@ -487,7 +487,7 @@ internal class DB2Session : RemoteDbSession
     {
         var ps = new HashSet<String>();
         var insert = GetInsertSql(table, columns, ps);
-        var update = GetUpdateSql(table, columns, updateColumns, addColumns, ps);
+        var update = BuildUpdateSql(table, columns, updateColumns, addColumns, ps);
 
         var sb = Pool.StringBuilder.Get();
         sb.AppendLine("BEGIN");
@@ -515,55 +515,10 @@ internal class DB2Session : RemoteDbSession
         return Execute(sql, CommandType.Text, dps);
     }
 
-    private String? GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps)
-    {
-        if ((updateColumns == null || updateColumns.Count == 0)
-            && (addColumns == null || addColumns.Count == 0)) return null;
-
-        var sb = Pool.StringBuilder.Get();
-        var db = (Database as DbBase)!;
-
-        // 字段列表
-        sb.AppendFormat("Update {0} Set ", db!.FormatName(table));
-        foreach (var dc in columns)
-        {
-            if (dc.Identity || dc.PrimaryKey) continue;
-
-            if (addColumns != null && addColumns.Contains(dc.Name))
-            {
-                sb.AppendFormat("{0}={0}+{1},", db.FormatName(dc), db.FormatParameterName(dc.Name));
-
-                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
-            }
-            else if (updateColumns != null && updateColumns.Contains(dc.Name))
-            {
-                sb.AppendFormat("{0}={1},", db.FormatName(dc), db.FormatParameterName(dc.Name));
-
-                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
-            }
-        }
-        sb.Length--;
-
-        // 条件
-        sb.Append(" Where ");
-        foreach (var dc in columns)
-        {
-            if (!dc.PrimaryKey) continue;
-
-            sb.AppendFormat("{0}={1}", db.FormatName(dc), db.FormatParameterName(dc.Name));
-            sb.Append(" And ");
-
-            if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
-        }
-        sb.Length -= " And ".Length;
-
-        return sb.Return(true);
-    }
-
     public override Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var ps = new HashSet<String>();
-        var sql = GetUpdateSql(table, columns, updateColumns, addColumns, ps);
+        var sql = BuildUpdateSql(table, columns, updateColumns, addColumns, ps);
         if (sql.IsNullOrEmpty()) return 0;
         DefaultSpan.Current?.AppendTag(sql);
 

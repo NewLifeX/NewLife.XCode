@@ -489,46 +489,6 @@ internal class MySqlSession : RemoteDbSession
         return Execute(sql);
     }
 
-    private String? GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps)
-    {
-        if ((updateColumns == null || updateColumns.Count == 0)
-            && (addColumns == null || addColumns.Count == 0)) return null;
-
-        var sb = Pool.StringBuilder.Get();
-        var db = (Database as DbBase)!;
-
-        sb.AppendFormat("Update {0} Set ", db.FormatName(table));
-        foreach (var dc in columns)
-        {
-            if (dc.Identity || dc.PrimaryKey) continue;
-
-            if (addColumns != null && addColumns.Contains(dc.Name))
-            {
-                sb.AppendFormat("{0}={0}+{1},", db.FormatName(dc), db.FormatParameterName(dc.Name));
-                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
-            }
-            else if (updateColumns != null && updateColumns.Contains(dc.Name))
-            {
-                sb.AppendFormat("{0}={1},", db.FormatName(dc), db.FormatParameterName(dc.Name));
-                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
-            }
-        }
-        sb.Length--;
-
-        sb.Append(" Where ");
-        foreach (var dc in columns)
-        {
-            if (!dc.PrimaryKey) continue;
-
-            sb.AppendFormat("{0}={1}", db.FormatName(dc), db.FormatParameterName(dc.Name));
-            sb.Append(" And ");
-            if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
-        }
-        sb.Length -= " And ".Length;
-
-        return sb.Return(true);
-    }
-
     private IDataParameter[] GetArrayParameters(IDataColumn[] columns, ICollection<String> ps, IModel[] list)
     {
         var db = Database;
@@ -564,7 +524,7 @@ internal class MySqlSession : RemoteDbSession
         if (!db.IsNewLifeDriver) return base.Update(table, columns, updateColumns, addColumns, list);
 
         var ps = new HashSet<String>();
-        var sql = GetUpdateSql(table, columns, updateColumns, addColumns, ps);
+        var sql = BuildUpdateSql(table, columns, updateColumns, addColumns, ps);
         if (sql.IsNullOrEmpty()) return 0;
 
         var arr = list.ToArray();

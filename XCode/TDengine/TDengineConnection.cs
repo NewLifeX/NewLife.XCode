@@ -121,7 +121,7 @@ public partial class TDengineConnection : DbConnection
         //if (State != ConnectionState.Closed) TD.Close(_handler);
 
         var pool = GetPool(ConnectionString);
-        pool.Put(_handler);
+        pool.Return(_handler);
         _handler = IntPtr.Zero;
 
         Transaction?.Dispose();

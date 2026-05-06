@@ -883,6 +883,67 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
             }
         }
     }
+
+    /// <summary>构建批量 Update SQL 语句。updateColumns 与 addColumns 均为空时返回 null</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="columns">所有字段</param>
+    /// <param name="updateColumns">要赋值更新的字段。属性名，不是字段名</param>
+    /// <param name="addColumns">要累加更新的字段。属性名，不是字段名</param>
+    /// <param name="ps">收集所用参数名的集合，由调用方传入，方法内部填充</param>
+    /// <returns>UPDATE ... SET ... WHERE ... 语句；两个集合均为空时返回 null</returns>
+    public String? BuildUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps)
+    {
+        if (columns == null || columns.Length == 0) return null;
+
+        // WHERE 主键条件
+        if (!columns.Any(e => e.PrimaryKey)) throw new InvalidOperationException("未指定用于更新的主键");
+
+        if ((updateColumns == null || updateColumns.Count == 0)
+            && (addColumns == null || addColumns.Count == 0)) return null;
+
+        var sb = Pool.StringBuilder.Get();
+        var database = Database;
+
+        // SET 字段列表
+        sb.AppendFormat("Update {0} Set ", database.FormatName(table));
+        var startLen = sb.Length;
+        foreach (var dc in columns)
+        {
+            if (dc.Identity || dc.PrimaryKey) continue;
+
+            if (addColumns != null && addColumns.Contains(dc.Name))
+            {
+                sb.AppendFormat("{0}={0}+{1},", database.FormatName(dc), database.FormatParameterName(dc.Name));
+                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
+            }
+            else if (updateColumns != null && updateColumns.Contains(dc.Name))
+            {
+                sb.AppendFormat("{0}={1},", database.FormatName(dc), database.FormatParameterName(dc.Name));
+                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
+            }
+        }
+
+        // 没有任何可更新字段（传入的列名与 columns 全不匹配）
+        if (sb.Length == startLen)
+        {
+            Pool.StringBuilder.Return(sb);
+            return null;
+        }
+        sb.Length--;
+
+        sb.Append(" Where ");
+        foreach (var dc in columns)
+        {
+            if (!dc.PrimaryKey) continue;
+
+            sb.AppendFormat("{0}={1}", database.FormatName(dc), database.FormatParameterName(dc.Name));
+            sb.Append(" And ");
+            if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
+        }
+        sb.Length -= " And ".Length;
+
+        return sb.Return(true);
+    }
     #endregion
 
     #region 高级

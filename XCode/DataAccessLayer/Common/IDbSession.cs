@@ -182,6 +182,15 @@ public interface IDbSession : IDisposable2
     /// <param name="list">实体列表</param>
     /// <returns></returns>
     Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list);
+
+    /// <summary>构建批量 Update SQL 语句。updateColumns 与 addColumns 均为空时返回 null</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="columns">所有字段</param>
+    /// <param name="updateColumns">要赋值更新的字段。属性名，不是字段名</param>
+    /// <param name="addColumns">要累加更新的字段。属性名，不是字段名</param>
+    /// <param name="ps">收集所用参数名的集合，由调用方传入，方法内部填充</param>
+    /// <returns>UPDATE ... SET ... WHERE ... 语句；两个集合均为空时返回 null</returns>
+    String? BuildUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps);
     #endregion
 
     #region 高级

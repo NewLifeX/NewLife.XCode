@@ -659,7 +659,7 @@ internal class SqlServerSession : RemoteDbSession
     {
         var ps = new HashSet<String>();
         var insert = GetInsertSql(table, columns, ps);
-        var update = GetUpdateSql(table, columns, updateColumns, addColumns, ps);
+        var update = BuildUpdateSql(table, columns, updateColumns, addColumns, ps);
 
         // 先更新，根据更新结果影响的条目数判断是否需要插入
         var sb = Pool.StringBuilder.Get();
@@ -677,53 +677,6 @@ internal class SqlServerSession : RemoteDbSession
         return BatchExecute(sql, dpsList);
     }
 
-    private String GetUpdateSql(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, ICollection<String> ps)
-    {
-        var sb = Pool.StringBuilder.Get();
-        var db = (Database as DbBase)!;
-
-        // 字段列表
-        sb.AppendFormat("Update {0} Set ", db.FormatName(table));
-        foreach (var dc in columns)
-        {
-            if (dc.Identity || dc.PrimaryKey) continue;
-
-            // 修复当columns看存在updateColumns不存在列时构造出来的Sql语句会出现连续逗号的问题
-            if (updateColumns != null && updateColumns.Contains(dc.Name) && (addColumns == null || !addColumns.Contains(dc.Name)))
-            {
-                sb.AppendFormat("{0}={1},", db.FormatName(dc), db.FormatParameterName(dc.Name));
-
-                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
-            }
-            else if (addColumns != null && addColumns.Contains(dc.Name))
-            {
-                sb.AppendFormat("{0}={0}+{1},", db.FormatName(dc), db.FormatParameterName(dc.Name));
-
-                if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
-            }
-            //sb.Append(",");
-        }
-        sb.Length--;
-        //sb.Append(")");
-
-        // 条件
-        var pks = columns.Where(e => e.PrimaryKey).ToArray();
-        if (pks == null || pks.Length == 0) throw new InvalidOperationException("未指定用于更新的主键");
-
-        sb.Append(" Where ");
-        foreach (var dc in columns)
-        {
-            if (!dc.PrimaryKey) continue;
-
-            sb.AppendFormat("{0}={1}", db.FormatName(dc), db.FormatParameterName(dc.Name));
-            sb.Append(" And ");
-
-            if (!ps.Contains(dc.Name)) ps.Add(dc.Name);
-        }
-        sb.Length -= " And ".Length;
-
-        return sb.Return(true);
-    }
     #endregion
 
     #region 修复实现SqlServer批量操作增添方法

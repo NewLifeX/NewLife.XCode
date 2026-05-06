@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.Collections;
+using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -1035,8 +1036,12 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                         else
                             sv = str;
                     }
+                    else if (v is DateTime dt)
+                        sv = dt.ToFullString();
+                    else if (v is IList list && list.Count > 0)
+                        sv = $"{list[0].GetType().Name}[{list.Count}]";
                     else
-                        sv = v is DateTime dt ? dt.ToFullString() : (v + "");
+                        sv = v + "";
                     sb.AppendFormat("{0}={1}", ps[i].ParameterName, sv);
                 }
                 sb.Append(']');

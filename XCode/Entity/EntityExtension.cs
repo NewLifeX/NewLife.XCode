@@ -176,6 +176,7 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // 支持批量Update的数据库（Oracle/MySql NewLife驱动等）直接批量更新
+        // BatchUpdate 内部已处理：跳过无脏数据实体、Dirtys 并集取 UpdateColumns，无需在此分组
         return session.Dal.BatchCapabilities.HasFlag(BatchCapability.Update) && array.Length > 1
             ? BatchUpdate(array.Valid(false), null, session)
             : DoAction(array, useTransition, e => e.Update(), session);
@@ -741,29 +742,47 @@ public static class EntityExtension
 
         // 批量Update需要主键参与构建Where子句，即使主键是自增列也要保留；仅排除非主键的自增列
         option.Columns ??= fact.Fields.Where(e => e.Field != null).Select(e => e.Field!).Where(e => !e.Identity || e.PrimaryKey).ToArray();
-        //if (updateColumns == null) updateColumns = entity.Dirtys.Keys;
-        if (option.UpdateColumns == null)
-        {
-            // 所有实体对象的脏字段作为更新字段
-            var dirtys = GetDirtyColumns(fact, list2.Cast<IEntity>());
-            // 创建时间等字段不参与Update
-            dirtys = dirtys.Where(e => !e.Name.StartsWithIgnoreCase("Create")).ToArray();
 
-            // 统一约定，updateColumns 外部传入Name，内部再根据columns转为专用字段名
-            if (dirtys.Count > 0) option.UpdateColumns = dirtys.Select(e => e.Name).ToArray();
-        }
-        var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
 
+        if (option.UpdateColumns == null)
+        {
+            // 直接遍历各实体 Dirtys 取并集，不使用 GetDirtyColumns（该方法含 IsFromDatabase 全字段逻辑，仅适用于 Insert 场景）
+            // 过滤掉无脏数据实体（与单体 e.Update() 行为一致：无脏数据则不执行 SQL，即使有 addColumns 累加字段也不例外）
+            // 同时收集所有实体的脏字段并集，作为 UpdateColumns
+            var dirtyNames = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+            var filtered = new List<T>(list2.Count);
+            foreach (var e in list2)
+            {
+                var hasDirty = false;
+                foreach (var k in e.Dirtys)
+                {
+                    dirtyNames.Add(k);
+                    hasDirty = true;
+                }
+                if (hasDirty) filtered.Add(e);
+            }
+            list2 = filtered;
+
+            if (dirtyNames.Count > 0) option.UpdateColumns = dirtyNames.ToArray();
+        }
+        var updateColumns = option.UpdateColumns;
+
         if ((updateColumns == null || updateColumns.Count <= 0) && (addColumns == null || addColumns.Count <= 0)) return 0;
+        if (list2.Count == 0) return 0;
 
         var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
-        span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
-        span?.AppendTag($"UpdateColumns: {updateColumns?.Join()}");
-        span?.AppendTag($"AddColumns: {addColumns.Join()}");
+        var csStr = option.Columns.Join(",", e => e.Name);
+        span?.AppendTag($"Columns: {csStr}");
+        var usStr = updateColumns?.Join();
+        if (!usStr.IsNullOrEmpty() && usStr != csStr)
+            span?.AppendTag($"UpdateColumns: {usStr}");
+        var asStr = addColumns?.Join();
+        if (!asStr.IsNullOrEmpty() && asStr != csStr)
+            span?.AppendTag($"AddColumns: {asStr}");
         try
         {
             var rs = 0;
@@ -892,13 +911,16 @@ public static class EntityExtension
         //if (updateColumns == null) updateColumns = entity.Dirtys.Keys;
         if (option.UpdateColumns == null)
         {
-            // 所有实体对象的脏字段作为更新字段
-            var dirtys = GetDirtyColumns(fact, list2.Cast<IEntity>());
-            // 创建时间等字段不参与Update
-            dirtys = dirtys.Where(e => !e.Name.StartsWithIgnoreCase("Create")).ToArray();
+            // 直接遍历各实体 Dirtys 取并集，与 BatchUpdate 保持一致
+            // Upsert 场景存在 Insert 分支，故此处不过滤无脏数据实体（已有主键的记录即使无脏字段也要参与 upsert）
+            var dirtyNames = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+            foreach (var e in list2)
+            {
+                foreach (var k in e.Dirtys) dirtyNames.Add(k);
+            }
 
             // 统一约定，updateColumns 外部传入Name，内部再根据columns转为专用字段名
-            if (dirtys.Count > 0) option.UpdateColumns = dirtys.Select(e => e.Name).ToArray();
+            if (dirtyNames.Count > 0) option.UpdateColumns = dirtyNames.ToArray();
         }
         var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
@@ -909,7 +931,14 @@ public static class EntityExtension
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
         span?.AppendTag($"BatchSize: {option.BatchSize}");
-        span?.AppendTag($"Columns: {option.Columns.Join(",", e => e.Name)}");
+        var csStr = option.Columns.Join(",", e => e.Name);
+        span?.AppendTag($"Columns: {csStr}");
+        var usStr = updateColumns?.Join();
+        if (!usStr.IsNullOrEmpty() && usStr != csStr)
+            span?.AppendTag($"UpdateColumns: {usStr}");
+        var asStr = addColumns?.Join();
+        if (!asStr.IsNullOrEmpty() && asStr != csStr)
+            span?.AppendTag($"AddColumns: {asStr}");
         try
         {
             var rs = 0;
@@ -992,7 +1021,7 @@ public static class EntityExtension
             }
             option.Columns = columns;
         }
-        option.UpdateColumns ??= entity.Dirtys.Where(e => !e.StartsWithIgnoreCase("Create")).Distinct().ToArray();
+        option.UpdateColumns ??= entity.Dirtys.Where(e => !e.EqualIgnoreCase("CreateTime", "CreateUser", "CreateUserId")).Distinct().ToArray();
         option.AddColumns ??= fact.AdditionalFields;
 
         //dal.CheckDatabase();

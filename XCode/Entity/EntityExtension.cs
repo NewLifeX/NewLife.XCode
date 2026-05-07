@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Data;
 using System.IO.Compression;
+using NewLife.Collections;
 using NewLife.Data;
 using NewLife.IO;
 using NewLife.Log;
@@ -774,15 +775,7 @@ public static class EntityExtension
         var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpdate:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
-        span?.AppendTag($"BatchSize: {option.BatchSize}");
-        var csStr = option.Columns.Join(",", e => e.Name);
-        span?.AppendTag($"Columns: {csStr}");
-        var usStr = updateColumns?.Join();
-        if (!usStr.IsNullOrEmpty() && usStr != csStr)
-            span?.AppendTag($"UpdateColumns: {usStr}");
-        var asStr = addColumns?.Join();
-        if (!asStr.IsNullOrEmpty() && asStr != csStr)
-            span?.AppendTag($"AddColumns: {asStr}");
+        span?.AppendTag(option, updateColumns, addColumns, entity);
         try
         {
             var rs = 0;
@@ -806,6 +799,35 @@ public static class EntityExtension
         {
             span?.SetError(ex, entity);
             throw;
+        }
+    }
+
+    private static void AppendTag(this ISpan span, BatchOption option, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEntity entity)
+    {
+        if (span == null) return;
+
+        span?.AppendTag($"BatchSize: {option.BatchSize}");
+        var csStr = option.Columns?.Join(",", e => e.Name);
+        //span?.AppendTag($"Columns: {csStr}");
+        var usStr = updateColumns?.Join();
+        if (!usStr.IsNullOrEmpty() && usStr != csStr)
+            span?.AppendTag($"UpdateColumns: {usStr}");
+        var asStr = addColumns?.Join();
+        if (!asStr.IsNullOrEmpty() && asStr != csStr)
+            span?.AppendTag($"AddColumns: {asStr}");
+        if (updateColumns != null && updateColumns.Count > 0)
+        {
+            //span?.AppendTag($"First: {updateColumns.Join(", ", e => $"{e}={entity[e]}")}");
+            var sb = Pool.StringBuilder.Get();
+            foreach (var item in updateColumns)
+            {
+                var val = entity[item] + "";
+                if (val.Length > 32) val = val[..32] + "...";
+
+                if (sb.Length > 0) sb.Append(", ");
+                sb.Append($"{item}={val}");
+            }
+            span?.AppendTag($"First: {sb.Return(true)}");
         }
     }
 
@@ -930,15 +952,7 @@ public static class EntityExtension
         var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
         using var span = tracer?.NewSpan($"db:{dal.ConnName}:BatchUpsert:{DAL.TrimTableName(fact.Table.TableName)}", $"{session.TableName}[{total}]", total);
-        span?.AppendTag($"BatchSize: {option.BatchSize}");
-        var csStr = option.Columns.Join(",", e => e.Name);
-        span?.AppendTag($"Columns: {csStr}");
-        var usStr = updateColumns?.Join();
-        if (!usStr.IsNullOrEmpty() && usStr != csStr)
-            span?.AppendTag($"UpdateColumns: {usStr}");
-        var asStr = addColumns?.Join();
-        if (!asStr.IsNullOrEmpty() && asStr != csStr)
-            span?.AppendTag($"AddColumns: {asStr}");
+        span?.AppendTag(option, updateColumns, addColumns, entity);
         try
         {
             var rs = 0;

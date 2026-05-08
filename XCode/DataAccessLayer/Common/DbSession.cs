@@ -944,6 +944,61 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
         return sb.Return(true);
     }
+
+    /// <summary>计算累加字段差值。从 IEntity 的 Addition 快照获取 cur-old，用于批量 Update 传入正确差值。</summary>
+    /// <param name="model">实体模型，必须实现 IEntity 且拥有该字段的 Addition 快照</param>
+    /// <param name="fieldName">字段属性名</param>
+    /// <param name="targetType">目标数组元素类型，差值将转换为此类型</param>
+    /// <returns>已转换为 targetType 的有符号差值</returns>
+    protected static Object CalcAdditionDiff(IModel model, String fieldName, Type targetType)
+    {
+        if (model is not IEntity entity)
+            throw new InvalidOperationException($"批量累加更新字段 [{fieldName}] 要求实体实现 IEntity 接口");
+
+        var dfs = entity.Addition?.Get();
+        if (dfs == null || !dfs.TryGetValue(fieldName, out var vs))
+            throw new InvalidOperationException($"实体字段 [{fieldName}] 未找到累加快照，请确保实体已从数据库加载");
+
+        var cur = vs[0];
+        var old = vs[1];
+        if (cur == null) return Convert.ChangeType(0, targetType)!;
+
+        Object diff;
+        switch (Type.GetTypeCode(cur.GetType()))
+        {
+            case TypeCode.Char:
+            case TypeCode.Byte:
+            case TypeCode.SByte:
+            case TypeCode.Int16:
+            case TypeCode.Int32:
+            case TypeCode.Int64:
+            case TypeCode.UInt16:
+            case TypeCode.UInt32:
+            case TypeCode.UInt64:
+                diff = Convert.ToInt64(cur) - Convert.ToInt64(old);
+                break;
+            case TypeCode.Single:
+                {
+                    var v = (Single)cur - (Single)old;
+                    diff = Single.IsNaN(v) ? (Single)0 : v;
+                }
+                break;
+            case TypeCode.Double:
+                {
+                    var v = (Double)cur - (Double)old;
+                    diff = Double.IsNaN(v) ? 0.0 : v;
+                }
+                break;
+            case TypeCode.Decimal:
+                diff = (Decimal)cur - (Decimal)old;
+                break;
+            default:
+                diff = cur;
+                break;
+        }
+
+        return Convert.ChangeType(diff, targetType)!;
+    }
     #endregion
 
     #region 高级

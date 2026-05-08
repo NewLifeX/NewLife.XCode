@@ -789,6 +789,9 @@ public static class EntityExtension
                 {
                     item.Dirtys.Clear();
                 }
+
+                // 推进累加快照，避免下次 BatchUpdate 重复累加同一差值
+                ResetAdditionSnapshots(tmp.Cast<IEntity>(), addColumns);
             }
 
             session.ClearCache(nameof(BatchUpdate), true);
@@ -799,6 +802,29 @@ public static class EntityExtension
         {
             span?.SetError(ex, entity);
             throw;
+        }
+    }
+
+    private static void ResetAdditionSnapshots(IEnumerable<IEntity> list, ICollection<String>? columns)
+    {
+        if (columns == null || columns.Count == 0) return;
+
+        foreach (var entity in list)
+        {
+            var addition = entity.Addition;
+            var dfs = addition?.Get();
+            if (dfs == null || dfs.Count == 0) continue;
+
+            Dictionary<String, Object?[]>? current = null;
+            foreach (var name in columns)
+            {
+                if (!dfs.TryGetValue(name, out var values) || values == null || values.Length == 0) continue;
+
+                current ??= new Dictionary<String, Object?[]>(StringComparer.OrdinalIgnoreCase);
+                current[name] = values;
+            }
+
+            if (current != null && current.Count > 0) addition?.Reset(current);
         }
     }
 
@@ -946,8 +972,42 @@ public static class EntityExtension
         }
         var updateColumns = option.UpdateColumns;
         var addColumns = option.AddColumns ??= fact.AdditionalFields;
+        HashSet<String>? overwriteAdditionColumns = null;
         // 没有任何数据变更则直接返回0
         if ((updateColumns == null || updateColumns.Count <= 0) && (addColumns == null || addColumns.Count <= 0)) return 0;
+
+        // Upsert 中 INSERT 路径需要原值，UPDATE 路径需要差值，同一参数无法两用。
+        // 有 Addition 快照的字段静默降级为普通覆写（updateColumns），避免数据错乱。
+        if (addColumns != null && addColumns.Count > 0)
+        {
+            var hasSnapshot = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+            foreach (var e in list2)
+            {
+                if (e is not IEntity ie) break;
+                var dfs = ie.Addition?.Get();
+                if (dfs == null || dfs.Count == 0) continue;
+                foreach (var name in addColumns)
+                {
+                    if (dfs.ContainsKey(name)) hasSnapshot.Add(name);
+                }
+            }
+
+            if (hasSnapshot.Count > 0)
+            {
+                overwriteAdditionColumns = hasSnapshot;
+
+                var newUpdate = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+                if (updateColumns != null)
+                {
+                    foreach (var c in updateColumns) newUpdate.Add(c);
+                }
+                foreach (var n in hasSnapshot) newUpdate.Add(n);
+
+                addColumns = addColumns.Where(n => !hasSnapshot.Contains(n)).ToList();
+                if (addColumns.Count == 0) addColumns = null;
+                updateColumns = newUpdate;
+            }
+        }
 
         var total = list2.Count;
         var tracer = dal.Tracer ?? DAL.GlobalTracer;
@@ -966,6 +1026,9 @@ public static class EntityExtension
                 {
                     item.Dirtys.Clear();
                 }
+
+                // 降级为覆写的累加字段已经按当前值入库，需要推进快照基线
+                ResetAdditionSnapshots(tmp.Cast<IEntity>(), overwriteAdditionColumns);
             }
 
             session.ClearCache(nameof(BatchUpsert), true);

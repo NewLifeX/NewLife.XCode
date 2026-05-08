@@ -336,9 +336,10 @@ internal class DaMengSession : RemoteDbSession
         return sb.Return(true);
     }
 
-    private IDataParameter[] GetParameters(IDataColumn[] columns, ICollection<String> ps, IEnumerable<IModel> list)
+    private IDataParameter[] GetParameters(IDataColumn[] columns, ICollection<String> ps, IEnumerable<IModel> list, ICollection<String>? addColumns = null)
     {
         var db = Database;
+        var listArr = list.ToArray();
         var dps = new List<IDataParameter>();
         foreach (var dc in columns)
         {
@@ -347,12 +348,11 @@ internal class DaMengSession : RemoteDbSession
             var type = dc.DataType ?? throw new ArgumentNullException(nameof(dc.DataType));
             if (type.IsEnum) type = typeof(Int32);
 
-            var arr = Array.CreateInstance(type, list.Count());
-            var k = 0;
-            foreach (var entity in list)
+            var isAddCol = addColumns != null && addColumns.Contains(dc.Name);
+            var arr = Array.CreateInstance(type, listArr.Length);
+            for (var k = 0; k < listArr.Length; k++)
             {
-                //vs.Add(entity[dc.Name]);
-                arr.SetValue(entity[dc.Name], k++);
+                arr.SetValue(isAddCol ? CalcAdditionDiff(listArr[k], dc.Name, type) : listArr[k][dc.Name], k);
             }
             var dp = db.CreateParameter(dc.Name, arr, dc);
 
@@ -408,7 +408,7 @@ internal class DaMengSession : RemoteDbSession
         if (sql.IsNullOrEmpty()) return 0;
         DefaultSpan.Current?.AppendTag(sql);
 
-        var dps = GetParameters(columns, ps, list);
+        var dps = GetParameters(columns, ps, list, addColumns);
 
         return Execute(sql, CommandType.Text, dps);
     }

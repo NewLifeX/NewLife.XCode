@@ -489,7 +489,7 @@ internal class MySqlSession : RemoteDbSession
         return Execute(sql);
     }
 
-    private IDataParameter[] GetArrayParameters(IDataColumn[] columns, ICollection<String> ps, IModel[] list)
+    private IDataParameter[] GetArrayParameters(IDataColumn[] columns, ICollection<String> ps, IModel[] list, ICollection<String>? addColumns = null)
     {
         var db = Database;
         var dps = new List<IDataParameter>();
@@ -500,9 +500,10 @@ internal class MySqlSession : RemoteDbSession
             var type = dc.DataType ?? throw new ArgumentNullException(nameof(dc.DataType));
             if (type.IsEnum) type = typeof(Int32);
 
+            var isAddCol = addColumns != null && addColumns.Contains(dc.Name);
             var arr = Array.CreateInstance(type, list.Length);
             for (var k = 0; k < list.Length; k++)
-                arr.SetValue(list[k][dc.Name], k);
+                arr.SetValue(isAddCol ? CalcAdditionDiff(list[k], dc.Name, type) : list[k][dc.Name], k);
 
             dps.Add(db.CreateParameter(dc.Name, arr, dc));
         }
@@ -528,7 +529,7 @@ internal class MySqlSession : RemoteDbSession
         if (sql.IsNullOrEmpty()) return 0;
 
         var arr = list.ToArray();
-        var dps = GetArrayParameters(columns, ps, arr);
+        var dps = GetArrayParameters(columns, ps, arr, addColumns);
         DefaultSpan.Current?.AppendTag(sql);
 
         using var cmd = OnCreateCommand(sql, CommandType.Text, dps);

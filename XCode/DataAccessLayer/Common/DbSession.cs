@@ -1119,6 +1119,11 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         try
         {
             var sql = cmd.CommandText;
+            var previewSql = cmd.ToString();
+            var usePreviewSql = !previewSql.IsNullOrEmpty() &&
+                previewSql != cmd.GetType().ToString() &&
+                previewSql != sql;
+            if (usePreviewSql) sql = previewSql;
             var isInsert = sql.StartsWithIgnoreCase("Insert");
 
             // 诊断信息
@@ -1126,7 +1131,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
             sql = $"[{Database.ConnName}] {sql}";
 
             var ps = cmd.Parameters;
-            if (ps != null && ps.Count > 0)
+            if (!usePreviewSql && ps != null && ps.Count > 0)
             {
                 var sb = Pool.StringBuilder.Get();
                 sb.Append(sql);

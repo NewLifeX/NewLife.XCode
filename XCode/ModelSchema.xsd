@@ -275,6 +275,13 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+    <xs:attribute name="Migration" type="xs:string">
+      <xs:annotation>
+        <xs:documentation xml:lang="zh-cn">
+          表级反向工程模式，可选 Off/ReadOnly/On/Full。未配置时继承全局 Migration。仅用于收紧全局 Migration，比如全局 Full、当前表 On。
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
     <xs:attribute name="MaxCacheCount" type="xs:int">
       <xs:annotation>
         <xs:documentation xml:lang="zh-cn">

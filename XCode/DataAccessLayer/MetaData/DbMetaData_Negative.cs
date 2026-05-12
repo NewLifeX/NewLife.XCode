@@ -135,6 +135,7 @@ internal partial class DbMetaData
         {
             try
             {
+                var currentMode = ResolveMigration(item, mode);
                 var name = FormatName(item, false);
 
                 // 在MySql中，可能存在同名表（大小写不一致），需要先做确定查找，再做不区分大小写的查找
@@ -143,15 +144,29 @@ internal partial class DbMetaData
 
                 // 判断指定表是否存在于数据库中，以决定是创建表还是修改表
                 if (dbtable != null)
-                    CheckTable(item, dbtable, mode, set);
+                    CheckTable(item, dbtable, currentMode, set);
                 else
-                    CheckTable(item, null, mode, set);
+                    CheckTable(item, null, currentMode, set);
             }
             catch (Exception ex)
             {
                 WriteLog(ex.ToString());
             }
         }
+    }
+
+    /// <summary>解析数据表的反向工程模式。表级配置只能收紧全局模式，不能放大权限。</summary>
+    /// <param name="entitytable">实体表模型</param>
+    /// <param name="mode">全局反向工程模式</param>
+    /// <returns>当前数据表生效的反向工程模式</returns>
+    protected virtual Migration ResolveMigration(IDataTable entitytable, Migration mode)
+    {
+        if (entitytable == null) throw new ArgumentNullException(nameof(entitytable));
+
+        if (!entitytable.Properties.TryGetValue(nameof(Migration), out var value) || value.IsNullOrEmpty()) return mode;
+        if (!Enum.TryParse<Migration>(value, true, out var tableMode)) return mode;
+
+        return tableMode < mode ? tableMode : mode;
     }
 
     protected virtual void CheckTable(IDataTable entitytable, IDataTable? dbtable, Migration mode, XCodeSetting set)

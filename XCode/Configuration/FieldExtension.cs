@@ -8,37 +8,148 @@ namespace XCode;
 public static class FieldExtension
 {
     #region 时间复杂运算
-    /// <summary>时间专用区间函数，左闭合右开放，开始结束都是日期时包含结束日期（也即结束日期加一天）</summary>
-    /// <param name="fi"></param>
+    /// <summary>时间区间函数，左闭合右开放，开始结束都是日期时包含结束日期（也即结束日期加一天）。
+    /// 支持 DateTime 字段（直接比较时间值）以及字符串字段：
+    /// ItemType 为 date 时转为 "yyyyMMdd" 纯日期字符串；其他情况转为 ToFullString 标准时间字符串。</summary>
+    /// <param name="fi">字段，必须是 DateTime 或 String 类型</param>
     /// <param name="start">起始时间，大于等于</param>
-    /// <param name="end">结束时间，小于。如果是日期，则加一天</param>
+    /// <param name="end">结束时间，小于。DateTime 字段且开始结束都是纯日期时，结束加一天</param>
     /// <returns></returns>
     public static Expression Between(this FieldItem fi, DateTime start, DateTime end)
     {
-        if (fi.Type != typeof(DateTime)) throw new NotSupportedException($"[{nameof(Between)}]函数仅支持时间日期字段！");
+        var exp = new WhereExpression();
+        if (fi == null) return exp;
+
+        var type = fi.Type;
+
+        // DateTime 字段：左闭右开，都是纯日期时结束加一天
+        if (type == typeof(DateTime))
+        {
+            if (start <= DateTime.MinValue || start >= DateTime.MaxValue)
+            {
+                if (end <= DateTime.MinValue || end >= DateTime.MaxValue) return exp;
+
+                //// 如果只有日期，则加一天，表示包含这一天
+                //if (end == end.Date) end = end.AddDays(1);
+
+                return fi < end;
+            }
+            else
+            {
+                exp &= fi >= start;
+                if (end <= DateTime.MinValue || end >= DateTime.MaxValue) return exp;
+
+                // 如果只有日期，则加一天，表示包含这一天
+                if (start == start.Date && end == end.Date) end = end.AddDays(1);
+
+                return exp & fi < end;
+            }
+        }
+
+        // 字符串字段：按 ItemType 决定格式化方式，左闭右开
+        if (type == typeof(String))
+        {
+            if (start <= DateTime.MinValue || start >= DateTime.MaxValue)
+            {
+                if (end <= DateTime.MinValue || end >= DateTime.MaxValue) return exp;
+                return fi < FormatDateTimeForString(fi, end);
+            }
+            else
+            {
+                exp &= fi >= FormatDateTimeForString(fi, start);
+                if (end <= DateTime.MinValue || end >= DateTime.MaxValue) return exp;
+                return exp & fi < FormatDateTimeForString(fi, end);
+            }
+        }
+
+        throw new NotSupportedException($"[{nameof(Between)}]函数不支持字段类型 {type?.Name}，仅支持 DateTime/String 字段！整数或小数字段请使用 Between(Int64/Double) 重载。");
+    }
+
+    /// <summary>将时间格式化为字符串字段的比较值。ItemType 为 date 时使用 yyyyMMdd 格式，否则使用 ToFullString 标准格式</summary>
+    /// <param name="fi">字段</param>
+    /// <param name="dt">时间值</param>
+    /// <returns></returns>
+    private static String FormatDateTimeForString(FieldItem fi, DateTime dt)
+    {
+        var itemType = fi.Field?.ItemType ?? fi.Column?.ItemType;
+        return itemType.EqualIgnoreCase("date") ? dt.ToString("yyyyMMdd") : dt.ToFullString();
+    }
+
+    /// <summary>数值区间函数，SQL92 两端闭合语义（>= start AND &lt;= end）。
+    /// 适用于存储整数日期（如 20250101）或其他整数区间查询。start 等于 end 时直接生成等号；start 大于 end 时返回空。</summary>
+    /// <param name="fi">字段，必须是 Int16/Int32/Int64 类型</param>
+    /// <param name="start">起始值，大于等于</param>
+    /// <param name="end">结束值，小于等于</param>
+    /// <returns></returns>
+    public static Expression Between(this FieldItem fi, Int64 start, Int64 end)
+    {
+        var type = fi?.Type;
+        if (type != typeof(Int16) && type != typeof(Int32) && type != typeof(Int64))
+            throw new NotSupportedException($"[{nameof(Between)}]函数仅支持 Int16/Int32/Int64 字段，当前类型为 {type?.Name}！");
 
         var exp = new WhereExpression();
         if (fi == null) return exp;
 
-        if (start <= DateTime.MinValue || start >= DateTime.MaxValue)
-        {
-            if (end <= DateTime.MinValue || end >= DateTime.MaxValue) return exp;
+        if (start == end) return fi.Equal(start);
+        if (start > end) return exp;
 
-            //// 如果只有日期，则加一天，表示包含这一天
-            //if (end == end.Date) end = end.AddDays(1);
+        exp &= fi >= start;
+        exp &= fi <= end;
+        return exp;
+    }
 
-            return fi < end;
-        }
-        else
-        {
-            exp &= fi >= start;
-            if (end <= DateTime.MinValue || end >= DateTime.MaxValue) return exp;
+    /// <summary>数值区间函数，SQL92 两端闭合语义（>= start AND &lt;= end）。Int32 快捷重载，委托给 Int64 版本。</summary>
+    /// <param name="fi">字段，必须是 Int16/Int32/Int64 类型</param>
+    /// <param name="start">起始值，大于等于</param>
+    /// <param name="end">结束值，小于等于</param>
+    /// <returns></returns>
+    public static Expression Between(this FieldItem fi, Int32 start, Int32 end) => fi.Between((Int64)start, (Int64)end);
 
-            // 如果只有日期，则加一天，表示包含这一天
-            if (start == start.Date && end == end.Date) end = end.AddDays(1);
+    /// <summary>数值区间函数，SQL92 两端闭合语义（>= start AND &lt;= end）。
+    /// 适用于浮点数区间查询。start 等于 end 时直接生成等号；start 大于 end 时返回空。</summary>
+    /// <param name="fi">字段，必须是 Single/Double/Decimal 类型</param>
+    /// <param name="start">起始值，大于等于</param>
+    /// <param name="end">结束值，小于等于</param>
+    /// <returns></returns>
+    public static Expression Between(this FieldItem fi, Double start, Double end)
+    {
+        var type = fi?.Type;
+        if (type != typeof(Single) && type != typeof(Double) && type != typeof(Decimal))
+            throw new NotSupportedException($"[{nameof(Between)}]函数仅支持 Single/Double/Decimal 字段，当前类型为 {type?.Name}！");
 
-            return exp & fi < end;
-        }
+        var exp = new WhereExpression();
+        if (fi == null) return exp;
+
+        // ReSharper disable once CompareOfFloatsByEqualityOperator
+        if (start == end) return fi.Equal(start);
+        if (start > end) return exp;
+
+        exp &= fi >= start;
+        exp &= fi <= end;
+        return exp;
+    }
+
+    /// <summary>数值区间函数，SQL92 两端闭合语义（>= start AND &lt;= end）。Decimal 专用重载，避免精度丢失。
+    /// start 等于 end 时直接生成等号；start 大于 end 时返回空。</summary>
+    /// <param name="fi">字段，必须是 Single/Double/Decimal 类型</param>
+    /// <param name="start">起始值，大于等于</param>
+    /// <param name="end">结束值，小于等于</param>
+    /// <returns></returns>
+    public static Expression Between(this FieldItem fi, Decimal start, Decimal end)
+    {
+        var type = fi?.Type;
+        if (type != typeof(Single) && type != typeof(Double) && type != typeof(Decimal))
+            throw new NotSupportedException($"[{nameof(Between)}]函数仅支持 Single/Double/Decimal 字段，当前类型为 {type?.Name}！");
+
+        var exp = new WhereExpression();
+        if (fi == null) return exp;
+
+        if (start == end) return fi.Equal(start);
+        if (start > end) return exp;
+
+        exp &= fi >= (Object)start;
+        exp &= fi <= (Object)end;
+        return exp;
     }
 
     /// <summary>时间专用区间函数，左闭合右开放，开始结束都是日期时包含结束日期（也即结束日期加一天）</summary>

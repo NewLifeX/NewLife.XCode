@@ -116,6 +116,8 @@ abstract class DbBase : DisposeBase, IDatabase
             // 先创建，再加锁加入集合。允许重复创建，避免死锁
             factory = CreateFactory();
             if (factory == null) return null;
+            if (factory is ITracerFeature tf) tf.Tracer = DAL.GlobalTracer;
+            //if (factory is ILogFeature lf) lf.Log = XTrace.Log;
 
             lock (_factories)
             {

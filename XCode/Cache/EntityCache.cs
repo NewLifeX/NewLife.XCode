@@ -206,8 +206,8 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
     {
         if (!Using) return;
 
-        var factory = Entity<TEntity>.Meta.Factory;
-        using var span = DAL.GlobalTracer?.NewSpan($"db:{factory.ConnName}:ClearCache:{factory.TableName}", new { reason, force });
+        //var factory = Entity<TEntity>.Meta.Factory;
+        //using var span = DAL.GlobalTracer?.NewSpan($"db:{factory.ConnName}:ClearCache:{factory.TableName}", new { reason, force });
 
         //// 直接执行异步更新，明明白白，确保任何情况下数据最新，并且不影响其它任务的性能
         //UpdateCacheAsync(reason);

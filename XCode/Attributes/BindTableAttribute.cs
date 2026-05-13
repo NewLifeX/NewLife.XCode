@@ -25,6 +25,9 @@ public sealed class BindTableAttribute : Attribute
     /// </remarks>
     public DatabaseType DbType { get; set; }
 
+    /// <summary>表级反向工程模式。未指定时继承全局配置。</summary>
+    public String? Migration { get; set; }
+
     /// <summary>是否视图</summary>
     public Boolean IsView { get; set; }
 

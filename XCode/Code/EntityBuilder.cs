@@ -872,7 +872,11 @@ public class EntityBuilder : ClassBuilder
 
         var connName = dt.Properties["ConnName"];
         if (connName.IsNullOrEmpty()) connName = EntityOption.ConnName;
-        WriteLine("[BindTable(\"{0}\", Description = \"{1}\", ConnName = \"{2}\", DbType = DatabaseType.{3})]", dt.TableName, dt.Description, connName, dt.DbType);
+        var migration = dt.Properties[nameof(Migration)];
+        var bindTable = $"[BindTable(\"{dt.TableName}\", Description = \"{dt.Description}\", ConnName = \"{connName}\", DbType = DatabaseType.{dt.DbType}";
+        if (!migration.IsNullOrEmpty()) bindTable += $", Migration = \"{migration}\"";
+        bindTable += ")]";
+        WriteLine(bindTable);
     }
 
     /// <summary>生成每一项</summary>

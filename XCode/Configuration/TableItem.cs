@@ -196,6 +196,7 @@ public class TableItem
         table.IsView = bt.IsView || bt.Name[0] == '#';
         table.Description = Description;
         table.ConnName = ConnName;
+        if (!bt.Migration.IsNullOrEmpty()) table.Properties[nameof(Migration)] = bt.Migration;
 
         var allfields = new List<FieldItem>();
         var fields = new List<FieldItem>();

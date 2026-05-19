@@ -427,8 +427,10 @@ internal class SQLiteSession : FileDbSession
             }
 
             sb.Append(" Do Update Set ");
+            var hasUpdate = false;
             if (updateColumns != null)
             {
+                var startLen = sb.Length;
                 foreach (var dc in columns)
                 {
                     if (dc.Identity || dc.PrimaryKey) continue;
@@ -436,11 +438,15 @@ internal class SQLiteSession : FileDbSession
                     if (updateColumns.Contains(dc.Name) && (addColumns == null || !addColumns.Contains(dc.Name)))
                         sb.AppendFormat("{0}=excluded.{0},", db.FormatName(dc));
                 }
-                sb.Length--;
+                if (sb.Length > startLen)
+                {
+                    sb.Length--;
+                    hasUpdate = true;
+                }
             }
             if (addColumns != null)
             {
-                sb.Append(',');
+                if (hasUpdate) sb.Append(',');
                 foreach (var dc in columns)
                 {
                     if (dc.Identity || dc.PrimaryKey) continue;

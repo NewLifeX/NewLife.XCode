@@ -27,7 +27,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>同步升级依赖 NewLife.XCode 11.26； Model模型规范升级至202604版本新增多款数据库与字段类型</PackageReleaseNotes>
+    <PackageReleaseNotes>同步升级依赖NewLife.XCode 11.27；支持表级反向工程模式与Migration配置；增强Between区间查询表达能力并完善测试；支持DbCommand.ToString作为SQL预览输出；优化批量Update与Upsert SQL生成稳定性</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
   </PropertyGroup>

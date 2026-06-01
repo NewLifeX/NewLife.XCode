@@ -21,7 +21,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageReleaseNotes>同步升级依赖NewLife.XCode 11.27；优化批量Update与Upsert SQL生成逻辑并修复逗号拼接问题；支持DbCommand.ToString作为SQL预览输出；增强FieldExtension.Between区间查询能力；MySql参数支持Boolean数组自动转换为Int16数组，提升驱动兼容性</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>Readme.MD</PackageReadmeFile>

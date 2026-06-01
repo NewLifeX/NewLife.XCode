@@ -21,7 +21,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>同步升级依赖 NewLife.XCode 11.26；修复达梦BatchInsert时间字段丢失；修复Nullable类型映射；批量Update强制主键参与Where子句；重构批量保存方法统一验证与批量能力判断</PackageReleaseNotes>
+    <PackageReleaseNotes>同步升级依赖NewLife.XCode 11.27；支持DbCommand.ToString作为SQL预览输出；增强FieldExtension.Between区间查询能力；优化批量Update与Upsert SQL生成逻辑并修复逗号拼接问题；统一批量实体操作过滤空元素并优化批处理稳定性</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>Readme.MD</PackageReadmeFile>

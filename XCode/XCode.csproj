@@ -7,7 +7,7 @@
     <Description>高性能 .NET 数据中间件（超级ORM），聚焦添删改查与海量数据，内置多级缓存、自动迁移、分表分库、强类型查询与跨库迁移。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
-    <VersionPrefix>11.26</VersionPrefix>
+    <VersionPrefix>11.27</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -31,7 +31,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>Model模型规范升级至202604版本新增多款数据库与字段类型；重构批量保存方法统一验证与批量能力判断；批量Update强制主键参与Where子句；修复达梦BatchInsert时间字段丢失；修复Nullable类型映射；修复KingBase GetTableNames列名错误；新增AddQueue链路追踪埋点</PackageReleaseNotes>
+    <PackageReleaseNotes>新增表级反向工程模式并支持模型配置Migration；增强FieldExtension.Between区间查询并补齐单元测试；支持DbCommand.ToString直接预览SQL提升排障效率；优化批量Update与Upsert SQL生成并修复逗号拼接问题；批量累加字段支持快照差值与降级覆写；MySql参数支持Boolean数组自动转换为Int16数组；统一批量实体操作过滤空元素并增强链路追踪埋点</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -46,7 +46,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="11.15.2026.525-beta1518" />
+    <PackageReference Include="NewLife.Core" Version="11.16.2026.601" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="NewLife" />

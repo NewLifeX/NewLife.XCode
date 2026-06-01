@@ -100,6 +100,7 @@ XML 模型 (Tables/Columns/Indexes) → 代码生成器（xcodetool 或 VS T4）
 
 ### 3.6 反向工程 & 迁移
 - 根据实体反向创建/修改表结构、索引，自动维持一致。
+- 支持表级 `Migration` 配置，可按实体粒度控制反向工程策略（Off / ReadOnly / On / Full）。
 - 支持任意数据库间模型抽取 + 跨库数据迁移（配套工具 DataMigration）。
 
 ### 3.7 分表分库 (ShardPolicy)

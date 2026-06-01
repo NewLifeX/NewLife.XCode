@@ -81,7 +81,7 @@ public class EntityQueue(IEntitySession session) : DisposeBase
         if (_count >= MaxEntity) return false;
 
         var ss = Session;
-        using var span = Tracer?.NewSpan($"db:{ss.ConnName}:AddQueue:{DAL.TrimTableName(ss.TableName)}", new { entity = entity + "", msDelay });
+        //using var span = Tracer?.NewSpan($"db:{ss.ConnName}:AddQueue:{DAL.TrimTableName(ss.TableName)}", new { entity = entity + "", msDelay });
 
         // 首次使用时初始化定时器
         if (_Timer == null)

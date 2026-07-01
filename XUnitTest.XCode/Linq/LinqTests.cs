@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using LinqExpr = System.Linq.Expressions.Expression;
 using NewLife;
 using XCode;
 using XCode.DataAccessLayer;
@@ -58,38 +59,132 @@ public class LinqTests : IDisposable
     [Fact] public void ToList_NotNull() => Assert.NotNull(Role.Query.ToList());
     [Fact] public void ToArray_NotNull() => Assert.NotNull(Role.Query.ToArray());
 
-    // ====== 4. 表达式组合验证（不执行） ======
+    // ====== 4. 表达式解析验证（用 Parse 方法不执行数据库） ======
 
-    [Fact] public void Compose_Where_OrderBy_Skip_Take()
+    [Fact] public void Parse_Where_Equals()
     {
-        var q = Role.Query.Where(r => r.ID > 0).OrderByDescending(r => r.Name).Skip(5).Take(10);
-        Assert.NotNull(q);
-        Assert.NotNull(q.Expression);
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.Where(r => r.ID > 0).Expression);
+        Assert.NotNull(v.WhereExpression);
+        Assert.False(v.WhereExpression!.IsEmpty);
+        Assert.Contains("ID>0", v.WhereExpression.ToString());
     }
 
-    [Fact] public void Compose_WhereIf_Mixed()
+    [Fact] public void Parse_Where_String()
     {
-        var q = Role.Query.WhereIf(true, r => r.ID > 0).WhereIf(false, r => r.Name == "x").OrderBy(r => r.ID);
-        Assert.NotNull(q.Expression);
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.Where(r => r.Name == "Admin").Expression);
+        Assert.NotNull(v.WhereExpression);
+        Assert.Contains("Name='Admin'", v.WhereExpression.ToString());
     }
 
-    [Fact] public void Compose_MultipleWhere()
+    [Fact] public void Parse_OrderBy_Asc()
     {
-        var q = Role.Query.Where(r => r.ID > 0).Where(r => r.ID < 100).Where(r => r.Name != null);
-        Assert.NotNull(q.Expression);
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.OrderBy(r => r.ID).Expression);
+        Assert.Equal("ID", v.OrderBy);
     }
 
-    [Fact] public void Compose_ThenBy_AfterOrderBy()
+    [Fact] public void Parse_OrderBy_Desc()
     {
-        var q = Role.Query.OrderBy(r => r.ID).ThenBy(r => r.Name).ThenByDescending(r => r.ID);
-        Assert.NotNull(q.Expression);
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.OrderByDescending(r => r.ID).Expression);
+        Assert.Equal("ID desc", v.OrderBy);
     }
 
-    [Fact] public void Compose_Select()
+    [Fact] public void Parse_ThenBy()
     {
-        // Select 表达式投影暂不执行，仅验证不抛异常
-        var q = Role.Query.Where(r => r.ID > 0).Select(r => new { r.ID, r.Name });
-        Assert.NotNull(q);
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.OrderBy(r => r.ID).ThenBy(r => r.Name).Expression);
+        Assert.Equal("ID,Name", v.OrderBy);
+    }
+
+    [Fact] public void Parse_ThenByDescending()
+    {
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.OrderBy(r => r.ID).ThenByDescending(r => r.Name).Expression);
+        Assert.Equal("ID,Name desc", v.OrderBy);
+    }
+
+    [Fact] public void Parse_Skip()
+    {
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.Skip(15).Expression);
+        Assert.Equal(15, v.Skip);
+    }
+
+    [Fact] public void Parse_Take()
+    {
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.Take(25).Expression);
+        Assert.Equal(25, v.Take);
+    }
+
+    [Fact] public void Parse_Skip_Take()
+    {
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.Skip(5).Take(10).Expression);
+        Assert.Equal(5, v.Skip);
+        Assert.Equal(10, v.Take);
+    }
+
+    [Fact] public void Parse_Count()
+    {
+        var q = Role.Query.Where(r => r.ID > 0);
+        var countExpr = LinqExpr.Call(
+            typeof(Queryable), "Count", [typeof(Role)], q.Expression);
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(countExpr);
+        Assert.True(v.IsCount);
+    }
+
+    [Fact] public void Parse_FirstOrDefault()
+    {
+        var q = Role.Query;
+        var expr = LinqExpr.Call(
+            typeof(Queryable), "FirstOrDefault", [typeof(Role)], q.Expression);
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(expr);
+        Assert.True(v.IsFirst);
+        Assert.False(v.ThrowIfNotFound);
+        Assert.Equal(1, v.Take);
+    }
+
+    [Fact] public void Parse_Single()
+    {
+        var q = Role.Query.Where(r => r.ID == 1);
+        var expr = LinqExpr.Call(
+            typeof(Queryable), "Single", [typeof(Role)], q.Expression);
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(expr);
+        Assert.True(v.IsSingle);
+        Assert.True(v.ThrowIfNotFound);
+        Assert.Equal(2, v.Take);
+    }
+
+    [Fact] public void Parse_SingleOrDefault()
+    {
+        var q = Role.Query;
+        var expr = LinqExpr.Call(
+            typeof(Queryable), "SingleOrDefault", [typeof(Role)], q.Expression);
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(expr);
+        Assert.True(v.IsSingle);
+        Assert.False(v.ThrowIfNotFound);
+    }
+
+    [Fact] public void Parse_Complex()
+    {
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.Where(r => r.ID > 0).OrderByDescending(r => r.Name).Skip(5).Take(10).Expression);
+        Assert.NotNull(v.WhereExpression);
+        Assert.Equal("Name desc", v.OrderBy);
+        Assert.Equal(5, v.Skip);
+        Assert.Equal(10, v.Take);
+    }
+
+    [Fact] public void Parse_NoWhere_OrderBy()
+    {
+        var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
+            Role.Query.OrderBy(r => r.ID).Expression);
+        Assert.Null(v.WhereExpression);
+        Assert.Equal("ID", v.OrderBy);
     }
 
     // ====== 5. WhereIf ======

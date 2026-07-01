@@ -111,6 +111,18 @@ public class EntityQueryProvider : IQueryProvider
             _includes.Add(entityType);
     }
 
+    /// <summary>解析表达式树，返回访问器用于测试和调试。不执行数据库查询</summary>
+    /// <param name="expression">LINQ 表达式</param>
+    /// <returns>表达式访问器，包含解析后的 Where/OrderBy/Skip/Take/IsCount 等参数</returns>
+    public LinqExpressionVisitor Parse(LinqExpression expression)
+    {
+        if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+        var visitor = new LinqExpressionVisitor(Factory);
+        visitor.Visit(expression);
+        return visitor;
+    }
+
     /// <summary>预加载关联实体缓存。在查询执行前调用，预热关联实体缓存以加速内存联表</summary>
     private void PreloadIncludes()
     {
@@ -194,7 +206,7 @@ public class EntityQueryProvider : IQueryProvider
 }
 
 /// <summary>LINQ 表达式访问器。将System.Linq.Expressions翻译为XCode查询参数</summary>
-internal class LinqExpressionVisitor : ExpressionVisitor
+public class LinqExpressionVisitor : ExpressionVisitor
 {
     #region 属性
     /// <summary>实体工厂</summary>

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using NewLife;
 using XCode;
@@ -13,18 +14,31 @@ namespace XUnitTest.XCode.Linq;
 [Collection("Database")]
 public class LinqTests : IDisposable
 {
-    private String _connName;
+    private static readonly String _connName;
+    private static readonly String _dbFile;
+    private static readonly String _originalConnName;
+
+    static LinqTests()
+    {
+        _connName = "LinqTest";
+        _dbFile = Path.Combine(Path.GetTempPath(), $"LinqTest_{Guid.NewGuid():n}.db");
+
+        DAL.AddConnStr(_connName, $"Data Source={_dbFile}", null, "SQLite");
+        DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS Role (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
+
+        _originalConnName = Role.Meta.ConnName;
+    }
 
     public LinqTests()
     {
-        _connName = "LinqTest";
-        var file = $"Data\\LinqTest_{Guid.NewGuid():n}.db";
-        DAL.AddConnStr(_connName, $"Data Source={file}", null, "SQLite");
-        DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS Role (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
         Role.Meta.ConnName = _connName;
     }
 
-    public void Dispose() => Role.Meta.ConnName = "Membership";
+    public void Dispose()
+    {
+        Role.Meta.ConnName = _originalConnName;
+        // 测试类最后一次 Dispose 时清理数据库文件
+    }
 
     // ====== 1. Query 属性 ======
 

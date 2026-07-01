@@ -1,0 +1,507 @@
+#if NET6_0_OR_GREATER
+
+using System.Collections;
+using System.Linq.Expressions;
+using System.Reflection;
+using NewLife;
+using NewLife.Reflection;
+using LinqExpression = System.Linq.Expressions.Expression;
+
+namespace XCode.Linq;
+
+/// <summary>XCode LINQ 查询提供者。将LINQ表达式树翻译为XCode查询，支持条件编译仅在net6.0+启用</summary>
+/// <remarks>
+/// 为 XCode 实体提供标准 IQueryable&lt;T&gt; 支持，兼容 EF Core 风格的 LINQ 查询。
+/// net45/net461 项目通过条件编译排除此文件。
+/// </remarks>
+public class XCodeQueryProvider : IQueryProvider
+{
+    #region 属性
+    /// <summary>实体工厂</summary>
+    public IEntityFactory Factory { get; }
+
+    /// <summary>实体会话</summary>
+    public IEntitySession Session => Factory.Session;
+    #endregion
+
+    #region 构造
+    /// <summary>实例化查询提供者</summary>
+    /// <param name="factory"></param>
+    public XCodeQueryProvider(IEntityFactory factory)
+    {
+        Factory = factory ?? throw new ArgumentNullException(nameof(factory));
+    }
+    #endregion
+
+    #region IQueryProvider
+    /// <summary>创建查询</summary>
+    /// <typeparam name="TElement"></typeparam>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    public IQueryable<TElement> CreateQuery<TElement>(LinqExpression expression)
+    {
+        if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+        return new XCodeQueryable<TElement>(this, expression);
+    }
+
+    /// <summary>创建查询</summary>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    public IQueryable CreateQuery(LinqExpression expression)
+    {
+        if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+        var elementType = expression.Type.GetElementTypeEx() ?? expression.Type.GenericTypeArguments[0];
+        var queryType = typeof(XCodeQueryable<>).MakeGenericType(elementType);
+        return (IQueryable)Activator.CreateInstance(queryType, this, expression)!;
+    }
+
+    /// <summary>执行查询</summary>
+    /// <typeparam name="TResult"></typeparam>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    public TResult Execute<TResult>(LinqExpression expression)
+    {
+        if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+        var result = Execute(expression);
+
+        // 处理不同类型的返回值
+        if (result is TResult typedResult) return typedResult;
+
+        // 计数类型转换
+        if (typeof(TResult) == typeof(Int32) && result is Int64 longCount)
+            return (TResult)(Object)(Int32)longCount;
+
+        if (typeof(TResult) == typeof(Int64) && result is Int32 intCount)
+            return (TResult)(Object)(Int64)intCount;
+
+        // 列表转换
+        if (result is IList list)
+        {
+            if (typeof(TResult).IsGenericType && typeof(TResult).GetGenericTypeDefinition() == typeof(IList<>))
+                return (TResult)list;
+
+            if (typeof(TResult).IsGenericType && typeof(TResult).GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                return (TResult)list;
+        }
+
+        return (TResult)result!;
+    }
+
+    /// <summary>执行查询</summary>
+    /// <param name="expression"></param>
+    /// <returns></returns>
+    public Object? Execute(LinqExpression expression)
+    {
+        if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+        // 解析表达式树，构建查询参数
+        var visitor = new XCodeLinqVisitor(Factory);
+        visitor.Visit(expression);
+
+        var where = visitor.WhereExpression;
+        var orderBy = visitor.OrderBy;
+        var skip = visitor.Skip;
+        var take = visitor.Take;
+        var isCount = visitor.IsCount;
+        var isFirst = visitor.IsFirst;
+        var isSingle = visitor.IsSingle;
+
+        // 计数查询
+        if (isCount)
+        {
+            return Factory.FindCount(where ?? new WhereExpression());
+        }
+
+        // 单条查询
+        if (isFirst || isSingle)
+        {
+            var maxRows = isSingle ? 2 : 1;
+            var list = Factory.FindAll(where ?? new WhereExpression(), orderBy, null, 0, maxRows);
+            if (list.Count > 0)
+            {
+                if (isSingle && list.Count > 1)
+                    throw new InvalidOperationException("序列包含多个元素");
+
+                return list[0];
+            }
+
+            if (isSingle)
+                throw new InvalidOperationException("序列不包含任何元素");
+
+            return null;
+        }
+
+        // 常规查询
+        return Factory.FindAll(where ?? new WhereExpression(), orderBy, null, skip, take);
+    }
+    #endregion
+}
+
+/// <summary>XCode LINQ 表达式访问器。将System.Linq.Expressions翻译为XCode查询参数</summary>
+internal class XCodeLinqVisitor : System.Linq.Expressions.ExpressionVisitor
+{
+    #region 属性
+    /// <summary>实体工厂</summary>
+    public IEntityFactory Factory { get; }
+
+    /// <summary>查询条件</summary>
+    public XCode.Expression? WhereExpression { get; set; }
+
+    /// <summary>排序字段</summary>
+    public String? OrderBy { get; set; }
+
+    /// <summary>跳过行数</summary>
+    public Int32 Skip { get; set; }
+
+    /// <summary>获取行数</summary>
+    public Int32 Take { get; set; }
+
+    /// <summary>是否计数查询</summary>
+    public Boolean IsCount { get; set; }
+
+    /// <summary>是否取第一条（First/FirstOrDefault）</summary>
+    public Boolean IsFirst { get; set; }
+
+    /// <summary>是否取单条（Single/SingleOrDefault）</summary>
+    public Boolean IsSingle { get; set; }
+    #endregion
+
+    #region 构造
+    /// <summary>实例化</summary>
+    /// <param name="factory"></param>
+    public XCodeLinqVisitor(IEntityFactory factory)
+    {
+        Factory = factory;
+    }
+    #endregion
+
+    #region 方法访问
+    /// <summary>访问方法调用表达式</summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    protected override LinqExpression VisitMethodCall(MethodCallExpression node)
+    {
+        if (node == null) throw new ArgumentNullException(nameof(node));
+
+        var methodName = node.Method.Name;
+
+        // 处理链式调用的内部表达式
+        if (node.Arguments.Count > 0)
+        {
+            var firstArg = node.Arguments[0];
+            if (firstArg is MethodCallExpression || firstArg.NodeType == ExpressionType.Constant)
+            {
+                Visit(firstArg);
+            }
+        }
+
+        switch (methodName)
+        {
+            case "Where":
+                VisitWhere(node);
+                break;
+            case "OrderBy":
+            case "OrderByDescending":
+            case "ThenBy":
+            case "ThenByDescending":
+                VisitOrderBy(node, methodName);
+                break;
+            case "Skip":
+                VisitSkip(node);
+                break;
+            case "Take":
+                VisitTake(node);
+                break;
+            case "Select":
+                // Select 暂不处理（字段投影），保留原有逻辑
+                break;
+            case "Count":
+            case "LongCount":
+                IsCount = true;
+                break;
+            case "First":
+            case "FirstOrDefault":
+                IsFirst = true;
+                Take = 1;
+                break;
+            case "Single":
+            case "SingleOrDefault":
+                IsSingle = true;
+                Take = 2;
+                break;
+            case "ToList":
+            case "ToArray":
+            case "ToListAsync":
+            case "ToArrayAsync":
+                break;
+        }
+
+        return node;
+    }
+
+    private void VisitWhere(MethodCallExpression node)
+    {
+        if (node.Arguments.Count < 2) return;
+
+        var lambda = node.Arguments[1] as LambdaExpression;
+        if (lambda == null)
+        {
+            if (node.Arguments[1] is UnaryExpression unary && unary.Operand is LambdaExpression lam)
+                lambda = lam;
+        }
+
+        if (lambda == null) return;
+
+        var xexp = TranslateExpression(lambda.Body);
+        if (xexp != null)
+        {
+            if (WhereExpression == null)
+                WhereExpression = xexp;
+            else
+                WhereExpression &= xexp;
+        }
+    }
+
+    private void VisitOrderBy(MethodCallExpression node, String methodName)
+    {
+        if (node.Arguments.Count < 2) return;
+
+        var lambda = node.Arguments[1] as LambdaExpression;
+        if (lambda == null)
+        {
+            if (node.Arguments[1] is UnaryExpression unary && unary.Operand is LambdaExpression lam)
+                lambda = lam;
+        }
+
+        if (lambda == null) return;
+
+        var fieldName = GetMemberName(lambda.Body);
+        if (fieldName.IsNullOrEmpty()) return;
+
+        var desc = methodName.Contains("Descending") ? " desc" : "";
+        var orderClause = $"{fieldName}{desc}";
+
+        if (OrderBy.IsNullOrEmpty() || methodName.StartsWith("OrderBy"))
+            OrderBy = orderClause;
+        else
+            OrderBy += $",{orderClause}";
+    }
+
+    private void VisitSkip(MethodCallExpression node)
+    {
+        if (node.Arguments.Count < 2) return;
+
+        var arg = node.Arguments[1];
+        if (arg is ConstantExpression constant)
+        {
+            Skip = constant.Value.ToInt();
+        }
+    }
+
+    private void VisitTake(MethodCallExpression node)
+    {
+        if (node.Arguments.Count < 2) return;
+
+        var arg = node.Arguments[1];
+        if (arg is ConstantExpression constant)
+        {
+            Take = constant.Value.ToInt();
+        }
+    }
+
+    private static String? GetMemberName(LinqExpression expression)
+    {
+        if (expression is MemberExpression member)
+            return member.Member.Name;
+
+        if (expression is UnaryExpression unary)
+            return GetMemberName(unary.Operand);
+
+        return null;
+    }
+    #endregion
+
+    #region 表达式翻译
+    /// <summary>翻译表达式为XCode Expression</summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    private XCode.Expression? TranslateExpression(LinqExpression node)
+    {
+        if (node == null) return null;
+
+        switch (node.NodeType)
+        {
+            case ExpressionType.Equal:
+            case ExpressionType.NotEqual:
+            case ExpressionType.GreaterThan:
+            case ExpressionType.GreaterThanOrEqual:
+            case ExpressionType.LessThan:
+            case ExpressionType.LessThanOrEqual:
+                return TranslateBinary((BinaryExpression)node);
+            case ExpressionType.AndAlso:
+            case ExpressionType.OrElse:
+                return TranslateLogical((BinaryExpression)node);
+            case ExpressionType.Call:
+                return TranslateMethodCall((MethodCallExpression)node);
+            case ExpressionType.Not:
+                return TranslateNot((UnaryExpression)node);
+            case ExpressionType.Convert:
+                return TranslateExpression(((UnaryExpression)node).Operand);
+            default:
+                return null;
+        }
+    }
+
+    private XCode.Expression? TranslateBinary(BinaryExpression node)
+    {
+        var left = GetFieldItem(node.Left);
+        if (left == null) return null;
+
+        var value = GetValue(node.Right);
+        var op = node.NodeType switch
+        {
+            ExpressionType.Equal => "=",
+            ExpressionType.NotEqual => "<>",
+            ExpressionType.GreaterThan => ">",
+            ExpressionType.GreaterThanOrEqual => ">=",
+            ExpressionType.LessThan => "<",
+            ExpressionType.LessThanOrEqual => "<=",
+            _ => "="
+        };
+
+        var fieldName = left.Name;
+        return new XCode.Expression($"{fieldName}{op}{value}");
+    }
+
+    private XCode.Expression? TranslateLogical(BinaryExpression node)
+    {
+        var left = TranslateExpression(node.Left);
+        var right = TranslateExpression(node.Right);
+
+        if (left == null && right == null) return null;
+        if (left == null) return right;
+        if (right == null) return left;
+
+        return node.NodeType == ExpressionType.AndAlso
+            ? left & right
+            : left | right;
+    }
+
+    private XCode.Expression? TranslateMethodCall(MethodCallExpression node)
+    {
+        var methodName = node.Method.Name;
+        var obj = node.Object;
+
+        if (methodName == "Contains" && obj != null)
+        {
+            var field = GetFieldItem(obj);
+            if (field != null && node.Arguments.Count > 0)
+            {
+                var value = GetValue(node.Arguments[0]);
+                return new XCode.Expression($"{field.Name} Like '%{value?.Trim('\'')}%'");
+            }
+        }
+
+        if (methodName == "StartsWith" && obj != null)
+        {
+            var field = GetFieldItem(obj);
+            if (field != null && node.Arguments.Count > 0)
+            {
+                var value = GetValue(node.Arguments[0]);
+                return new XCode.Expression($"{field.Name} Like '{value?.Trim('\'')}%'");
+            }
+        }
+
+        if (methodName == "EndsWith" && obj != null)
+        {
+            var field = GetFieldItem(obj);
+            if (field != null && node.Arguments.Count > 0)
+            {
+                var value = GetValue(node.Arguments[0]);
+                return new XCode.Expression($"{field.Name} Like '%{value?.Trim('\'')}'");
+            }
+        }
+
+        return null;
+    }
+
+    private XCode.Expression? TranslateNot(UnaryExpression node)
+    {
+        var inner = TranslateExpression(node.Operand);
+        if (inner == null) return null;
+
+        return new XCode.Expression($"NOT ({inner})");
+    }
+
+    private FieldItem? GetFieldItem(LinqExpression expression)
+    {
+        if (expression is MemberExpression member)
+        {
+            var fieldName = member.Member.Name;
+            return Factory.Table.FindByName(fieldName) as FieldItem;
+        }
+
+        if (expression is UnaryExpression unary)
+            return GetFieldItem(unary.Operand);
+
+        return null;
+    }
+
+    private static String? GetValue(LinqExpression expression)
+    {
+        if (expression is ConstantExpression constant)
+        {
+            var value = constant.Value;
+            if (value == null) return "null";
+
+            return value is String ? $"'{value}'" : value.ToString();
+        }
+
+        if (expression is MemberExpression member)
+        {
+            var value = EvaluateMember(member);
+            if (value == null) return "null";
+
+            return value is String ? $"'{value}'" : value.ToString();
+        }
+
+        var lambda = System.Linq.Expressions.Expression.Lambda(expression);
+        var compiled = lambda.Compile();
+        var result = compiled.DynamicInvoke();
+        if (result == null) return "null";
+
+        return result is String ? $"'{result}'" : result.ToString();
+    }
+
+    private static Object? EvaluateMember(MemberExpression member)
+    {
+        if (member.Expression is ConstantExpression constExp)
+        {
+            var container = constExp.Value;
+            if (container == null) return null;
+
+            var fieldInfo = member.Member as FieldInfo;
+            if (fieldInfo != null)
+                return fieldInfo.GetValue(container);
+
+            var propInfo = member.Member as PropertyInfo;
+            if (propInfo != null)
+                return propInfo.GetValue(container);
+        }
+
+        try
+        {
+            var lambda = System.Linq.Expressions.Expression.Lambda(member);
+            return lambda.Compile().DynamicInvoke();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+    #endregion
+}
+#endif

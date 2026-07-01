@@ -10,13 +10,13 @@ namespace XCode.Cache;
 /// 基于分布式缓存的版本号机制：每次清除缓存时递增版本号，其它进程检测到版本变化后主动过期本地缓存。
 /// 配置示例：
 /// <code>
-/// XCodeSetting.Current.CacheProvider = new FullRedis("server=127.0.0.1:6379;db=0");
+/// CacheInvalidator.Provider = new FullRedis("server=127.0.0.1:6379;db=0");
 /// </code>
 /// </remarks>
 public static class CacheInvalidator
 {
-    /// <summary>分布式缓存提供者</summary>
-    public static ICache? Provider => XCodeSetting.Current.CacheProvider;
+    /// <summary>分布式缓存提供者。设置为 Redis/FullRedis 等分布式缓存后自动启用跨进程失效协调</summary>
+    public static ICache? Provider { get; set; }
 
     private const String KeyPrefix = "XCode:Cache:Ver";
 

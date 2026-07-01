@@ -58,9 +58,8 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     #endregion
 
     #region LINQ 查询支持
-#if NET6_0_OR_GREATER
     private static IQueryable<TEntity>? _query;
-    /// <summary>获取LINQ可查询对象。仅在net6.0+启用</summary>
+    /// <summary>获取LINQ可查询对象</summary>
     /// <remarks>
     /// 提供标准 IQueryable&lt;T&gt; 支持，兼容 EF Core 风格的 LINQ 查询。
     /// 示例：
@@ -78,7 +77,6 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
             return _query;
         }
     }
-#endif
     #endregion
 
     #region 填充数据

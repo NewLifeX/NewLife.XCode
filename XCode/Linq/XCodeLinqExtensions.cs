@@ -1,5 +1,3 @@
-#if NET6_0_OR_GREATER
-
 using System.Linq.Expressions;
 
 namespace XCode.Linq;
@@ -31,4 +29,3 @@ public static class XCodeLinqExtensions
         return condition ? source.Where(predicate) : source;
     }
 }
-#endif

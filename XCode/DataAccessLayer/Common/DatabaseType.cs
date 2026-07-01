@@ -81,6 +81,18 @@ public enum DatabaseType
     [Description("NovaDb数据库")]
     NovaDb = 18,
 
+    /// <summary>ClickHouse列式分析数据库</summary>
+    [Description("ClickHouse列式分析数据库")]
+    ClickHouse = 19,
+
+    /// <summary>DuckDB嵌入式OLAP数据库</summary>
+    [Description("DuckDB嵌入式OLAP数据库")]
+    DuckDB = 20,
+
+    /// <summary>MongoDB文档数据库</summary>
+    [Description("MongoDB文档数据库")]
+    MongoDB = 21,
+
     /// <summary>网络虚拟数据库。通过HTTP接口转发数据库操作到远端服务执行</summary>
     [Description("网络虚拟数据库")]
     Network = 100,

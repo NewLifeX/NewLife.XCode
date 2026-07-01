@@ -25,6 +25,9 @@ public static class DbFactory
         Register<VastBase>(DatabaseType.VastBase);
         Register<InfluxDB>(DatabaseType.InfluxDB);
         Register<NovaDb>(DatabaseType.NovaDb);
+        Register<ClickHouse>(DatabaseType.ClickHouse);
+        Register<DuckDB>(DatabaseType.DuckDB);
+        Register<MongoDB>(DatabaseType.MongoDB);
         Register<NetworkDb>(DatabaseType.Network);
         //Register<Access>(DatabaseType.Access);
         //Register<SqlCe>(DatabaseType.SqlCe);

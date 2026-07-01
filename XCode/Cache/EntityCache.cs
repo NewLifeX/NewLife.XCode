@@ -26,6 +26,9 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
     /// <summary>缓存更新次数</summary>
     public Int32 Times => _Times;
 
+    /// <summary>本地记录的分布式缓存版本号</summary>
+    private Int64 _distributedVersion;
+
     /// <summary>过期时间。单位是秒，默认10秒</summary>
     public Int32 Expire { get; set; }
 
@@ -69,6 +72,9 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
     {
         // 更新统计信息
         CheckShowStatics(ref Total, ShowStatics);
+
+        // 检查分布式缓存版本号（二级缓存失效通知）
+        CheckDistributedVersion();
 
         var sec = (TimerX.Now - ExpiredTime).TotalSeconds;
         if (sec < 0)
@@ -123,6 +129,20 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
 
         // 只要访问了实体缓存数据集合，就认为是使用了实体缓存，允许更新缓存数据期间向缓存集合添删数据
         Using = true;
+    }
+
+    /// <summary>检查分布式缓存版本号，如果有更新则强制过期本地缓存</summary>
+    private void CheckDistributedVersion()
+    {
+        if (CacheInvalidator.Provider == null) return;
+
+        var remoteVer = CacheInvalidator.GetVersion(typeof(TEntity));
+        if (remoteVer > _distributedVersion)
+        {
+            _distributedVersion = remoteVer;
+            ExpiredTime = DateTime.MinValue;
+            WriteLog("检测到二级缓存版本变化 {0} => {1}，强制过期本地缓存", _distributedVersion, remoteVer);
+        }
     }
 
     /// <summary>检索与指定谓词定义的条件匹配的所有元素。</summary>
@@ -223,6 +243,9 @@ public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEnti
             ExpiredTime = DateTime.Now;
             WriteLog("非强制清除缓存，下次访问时异步更新无需阻塞等待");
         }
+
+        // 通知分布式缓存其它进程
+        CacheInvalidator.Invalidate(typeof(TEntity), reason);
     }
 
     private readonly IEntityFactory _factory = Entity<TEntity>.Meta.Factory;

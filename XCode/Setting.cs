@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using NewLife.Caching;
 using NewLife.Configuration;
 using XCode.DataAccessLayer;
 
@@ -99,6 +100,11 @@ public class XCodeSetting : Config<XCodeSetting>
     #endregion
 
     #region 缓存
+    /// <summary>分布式缓存提供者。设置后实体缓存可通过Redis等分布式缓存跨进程协调失效，配合本地内存缓存实现二级缓存</summary>
+    [Category("缓存")]
+    [Description("分布式缓存提供者。设置后实体缓存可通过Redis等分布式缓存跨进程协调失效，配合本地内存缓存实现二级缓存")]
+    public ICache? CacheProvider { get; set; }
+
     /// <summary>数据层缓存。根据sql做缓存，默认0秒</summary>
     [Category("缓存")]
     [Description("数据层缓存。根据sql做缓存，默认0秒")]

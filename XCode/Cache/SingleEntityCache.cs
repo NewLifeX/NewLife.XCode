@@ -480,6 +480,9 @@ public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntit
         }
 
         Using = false;
+
+        // 通知分布式缓存其它进程
+        CacheInvalidator.Invalidate(typeof(TEntity), reason);
     }
     #endregion
 

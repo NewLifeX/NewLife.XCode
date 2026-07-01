@@ -9,13 +9,13 @@ using Xunit;
 
 namespace XUnitTest.XCode.Linq;
 
-/// <summary>XCode LINQ 查询完整演示测试。使用SQLite数据库，覆盖 Query/Where/WhereIf/OrderBy/Skip/Take/Count/First/Include/FindAllWhereIf</summary>
+/// <summary>LINQ 查询完整演示测试。使用SQLite数据库，覆盖 Query/Where/WhereIf/OrderBy/Skip/Take/Count/First/Include/FindAllWhereIf</summary>
 [Collection("Database")]
-public class XCodeLinqTests : IDisposable
+public class LinqTests : IDisposable
 {
     private String _connName;
 
-    public XCodeLinqTests()
+    public LinqTests()
     {
         _connName = "LinqDemoTest";
 

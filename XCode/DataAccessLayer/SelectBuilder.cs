@@ -40,6 +40,9 @@ public class SelectBuilder
     /// <summary>分页用的Limit语句</summary>
     public String? Limit { get; set; }
 
+    /// <summary>窗口函数。例如 ROW_NUMBER() OVER(ORDER BY ID) AS RowNum</summary>
+    public String? Window { get; set; }
+
     /// <summary>参数集合</summary>
     public List<IDataParameter> Parameters { get; set; } = [];
     #endregion
@@ -146,6 +149,7 @@ $";
         var sb = Pool.StringBuilder.Get();
         sb.Append("Select ");
         sb.Append(Column.IsNullOrEmpty() ? "*" : Column);
+        if (!Window.IsNullOrEmpty()) sb.Append(", " + Window);
         sb.Append(" From ");
         sb.Append(Table);
         if (!Where.IsNullOrEmpty()) sb.Append(" Where " + Where);
@@ -196,6 +200,7 @@ $";
             GroupBy = GroupBy,
             Having = Having,
             Limit = Limit,
+            Window = Window,
         };
 
         sb.Parameters.AddRange(Parameters);

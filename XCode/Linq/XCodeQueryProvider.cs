@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using NewLife;
@@ -9,12 +10,12 @@ using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace XCode.Linq;
 
-/// <summary>XCode LINQ 查询提供者。将LINQ表达式树翻译为XCode查询，支持条件编译仅在net6.0+启用</summary>
+/// <summary>实体查询提供者。将LINQ表达式树翻译为XCode查询</summary>
 /// <remarks>
 /// 为 XCode 实体提供标准 IQueryable&lt;T&gt; 支持，兼容 EF Core 风格的 LINQ 查询。
-/// net45/net461 项目通过条件编译排除此文件。
+/// 通过 LinqExpressionVisitor 将 LINQ 表达式树翻译为 XCode WhereExpression 和排序/分页参数。
 /// </remarks>
-public class XCodeQueryProvider : IQueryProvider
+public class EntityQueryProvider : IQueryProvider
 {
     #region 属性
     /// <summary>实体工厂</summary>
@@ -30,7 +31,7 @@ public class XCodeQueryProvider : IQueryProvider
     #region 构造
     /// <summary>实例化查询提供者</summary>
     /// <param name="factory"></param>
-    public XCodeQueryProvider(IEntityFactory factory)
+    public EntityQueryProvider(IEntityFactory factory)
     {
         Factory = factory ?? throw new ArgumentNullException(nameof(factory));
     }
@@ -45,7 +46,7 @@ public class XCodeQueryProvider : IQueryProvider
     {
         if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-        return new XCodeQueryable<TElement>(this, expression);
+        return new EntityQueryable<TElement>(this, expression);
     }
 
     /// <summary>创建查询</summary>
@@ -56,7 +57,7 @@ public class XCodeQueryProvider : IQueryProvider
         if (expression == null) throw new ArgumentNullException(nameof(expression));
 
         var elementType = expression.Type.GetElementTypeEx() ?? expression.Type.GenericTypeArguments[0];
-        var queryType = typeof(XCodeQueryable<>).MakeGenericType(elementType);
+        var queryType = typeof(EntityQueryable<>).MakeGenericType(elementType);
         return (IQueryable)Activator.CreateInstance(queryType, this, expression)!;
     }
 
@@ -70,7 +71,7 @@ public class XCodeQueryProvider : IQueryProvider
 
         var result = Execute(expression);
 
-        // 处理不同类型的返回值
+        // 直接类型匹配
         if (result is TResult typedResult) return typedResult;
 
         // 计数类型转换
@@ -80,14 +81,23 @@ public class XCodeQueryProvider : IQueryProvider
         if (typeof(TResult) == typeof(Int64) && result is Int32 intCount)
             return (TResult)(Object)(Int64)intCount;
 
-        // 列表转换
-        if (result is IList list)
+        // 列表转换：IList<IEntity> → IList<T>
+        if (result is IEnumerable enumerable)
         {
-            if (typeof(TResult).IsGenericType && typeof(TResult).GetGenericTypeDefinition() == typeof(IList<>))
-                return (TResult)list;
+            var elementType = typeof(TResult).GenericTypeArguments.FirstOrDefault();
+            if (elementType != null)
+            {
+                var typedList = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+                foreach (var item in enumerable)
+                {
+                    typedList.Add(item);
+                }
+                return (TResult)typedList;
+            }
 
+            // IEnumerable<T> 协变
             if (typeof(TResult).IsGenericType && typeof(TResult).GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                return (TResult)list;
+                return (TResult)(Object)enumerable.Cast<Object>().ToList();
         }
 
         return (TResult)result!;
@@ -139,7 +149,7 @@ public class XCodeQueryProvider : IQueryProvider
         PreloadIncludes();
 
         // 解析表达式树，构建查询参数
-        var visitor = new XCodeLinqVisitor(Factory);
+        var visitor = new LinqExpressionVisitor(Factory);
         visitor.Visit(expression);
 
         var where = visitor.WhereExpression;
@@ -181,8 +191,8 @@ public class XCodeQueryProvider : IQueryProvider
     #endregion
 }
 
-/// <summary>XCode LINQ 表达式访问器。将System.Linq.Expressions翻译为XCode查询参数</summary>
-internal class XCodeLinqVisitor : System.Linq.Expressions.ExpressionVisitor
+/// <summary>LINQ 表达式访问器。将System.Linq.Expressions翻译为XCode查询参数</summary>
+internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
 {
     #region 属性
     /// <summary>实体工厂</summary>
@@ -213,7 +223,7 @@ internal class XCodeLinqVisitor : System.Linq.Expressions.ExpressionVisitor
     #region 构造
     /// <summary>实例化</summary>
     /// <param name="factory"></param>
-    public XCodeLinqVisitor(IEntityFactory factory)
+    public LinqExpressionVisitor(IEntityFactory factory)
     {
         Factory = factory;
     }
@@ -262,16 +272,19 @@ internal class XCodeLinqVisitor : System.Linq.Expressions.ExpressionVisitor
             case "Count":
             case "LongCount":
                 IsCount = true;
+                VisitPredicate(node);
                 break;
             case "First":
             case "FirstOrDefault":
                 IsFirst = true;
                 Take = 1;
+                VisitPredicate(node);
                 break;
             case "Single":
             case "SingleOrDefault":
                 IsSingle = true;
                 Take = 2;
+                VisitPredicate(node);
                 break;
             case "ToList":
             case "ToArray":
@@ -350,6 +363,30 @@ internal class XCodeLinqVisitor : System.Linq.Expressions.ExpressionVisitor
         if (arg is ConstantExpression constant)
         {
             Take = constant.Value.ToInt();
+        }
+    }
+
+    /// <summary>提取方法中的 predicate 参数作为 WHERE 条件</summary>
+    private void VisitPredicate(MethodCallExpression node)
+    {
+        if (node.Arguments.Count < 2) return;
+
+        var lambda = node.Arguments[1] as LambdaExpression;
+        if (lambda == null)
+        {
+            if (node.Arguments[1] is UnaryExpression unary && unary.Operand is LambdaExpression lam)
+                lambda = lam;
+        }
+
+        if (lambda == null) return;
+
+        var xexp = TranslateExpression(lambda.Body);
+        if (xexp != null)
+        {
+            if (WhereExpression == null)
+                WhereExpression = xexp;
+            else
+                WhereExpression &= xexp;
         }
     }
 

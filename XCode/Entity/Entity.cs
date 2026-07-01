@@ -73,7 +73,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         get
         {
-            _query ??= new XCode.Linq.XCodeQueryable<TEntity>(new XCode.Linq.XCodeQueryProvider(Meta.Factory));
+            _query ??= new XCode.Linq.EntityQueryable<TEntity>(new XCode.Linq.EntityQueryProvider(Meta.Factory));
             return _query;
         }
     }

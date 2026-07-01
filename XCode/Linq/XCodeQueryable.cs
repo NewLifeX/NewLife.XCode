@@ -3,13 +3,13 @@ using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace XCode.Linq;
 
-/// <summary>XCode LINQ 可查询对象。将标准LINQ操作符翻译为XCode实体查询</summary>
+/// <summary>实体可查询对象。将标准LINQ操作符翻译为XCode实体查询</summary>
 /// <typeparam name="T">实体类型</typeparam>
 /// <remarks>
 /// 为 XCode 实体提供 IQueryable&lt;T&gt; 接口，支持 Where/OrderBy/Skip/Take/ToList/First/Count 等标准 LINQ 操作。
-/// 每次调用 Where/OrderBy 等方法会返回新的 XCodeQueryable，延迟执行直到 ToList/First/Count 等终端方法。
+/// 每次调用 Where/OrderBy 等方法会返回新的 EntityQueryable，延迟执行直到 ToList/First/Count 等终端方法。
 /// </remarks>
-public class XCodeQueryable<T> : IQueryable<T>, IOrderedQueryable<T>
+public class EntityQueryable<T> : IQueryable<T>, IOrderedQueryable<T>
 {
     #region 属性
     /// <summary>查询提供者</summary>
@@ -26,7 +26,7 @@ public class XCodeQueryable<T> : IQueryable<T>, IOrderedQueryable<T>
     /// <summary>实例化</summary>
     /// <param name="provider"></param>
     /// <param name="expression"></param>
-    public XCodeQueryable(IQueryProvider provider, LinqExpression expression)
+    public EntityQueryable(IQueryProvider provider, LinqExpression expression)
     {
         Provider = provider ?? throw new ArgumentNullException(nameof(provider));
         Expression = expression ?? throw new ArgumentNullException(nameof(expression));
@@ -34,7 +34,7 @@ public class XCodeQueryable<T> : IQueryable<T>, IOrderedQueryable<T>
 
     /// <summary>实例化（使用常量表达式）</summary>
     /// <param name="provider"></param>
-    public XCodeQueryable(IQueryProvider provider)
+    public EntityQueryable(IQueryProvider provider)
     {
         Provider = provider ?? throw new ArgumentNullException(nameof(provider));
         Expression = LinqExpression.Constant(this);

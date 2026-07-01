@@ -3,8 +3,8 @@ using System.Linq.Expressions;
 
 namespace XCode.Linq;
 
-/// <summary>XCode LINQ 扩展方法。提供 WhereIf 等增强查询方法</summary>
-public static class XCodeLinqExtensions
+/// <summary>LINQ 扩展方法。提供 WhereIf、Include 等增强查询方法</summary>
+public static class LinqExtensions
 {
     /// <summary>内联条件判断。条件满足时才应用Where，否则忽略</summary>
     /// <typeparam name="T">实体类型</typeparam>
@@ -49,7 +49,7 @@ public static class XCodeLinqExtensions
         if (source == null) throw new ArgumentNullException(nameof(source));
         if (relatedType == null) throw new ArgumentNullException(nameof(relatedType));
 
-        var provider = source.Provider as XCodeQueryProvider;
+        var provider = source.Provider as EntityQueryProvider;
         provider?.AddInclude(relatedType);
 
         return source;

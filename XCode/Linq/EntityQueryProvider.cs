@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Linq;
+﻿using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
-using NewLife;
 using NewLife.Reflection;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
@@ -159,6 +157,7 @@ public class EntityQueryProvider : IQueryProvider
         var isCount = visitor.IsCount;
         var isFirst = visitor.IsFirst;
         var isSingle = visitor.IsSingle;
+        var throwIfNotFound = visitor.ThrowIfNotFound;
 
         // 计数查询
         if (isCount)
@@ -179,11 +178,14 @@ public class EntityQueryProvider : IQueryProvider
                 return list[0];
             }
 
-            if (isSingle)
+            if (throwIfNotFound)
                 throw new InvalidOperationException("序列不包含任何元素");
 
             return null;
         }
+
+        // Take=0 直接返回空集合
+        if (take == 0 && !isFirst && !isSingle) return new List<IEntity>();
 
         // 常规查询
         return Factory.FindAll(where ?? new WhereExpression(), orderBy, null, skip, take);
@@ -192,14 +194,14 @@ public class EntityQueryProvider : IQueryProvider
 }
 
 /// <summary>LINQ 表达式访问器。将System.Linq.Expressions翻译为XCode查询参数</summary>
-internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
+internal class LinqExpressionVisitor : ExpressionVisitor
 {
     #region 属性
     /// <summary>实体工厂</summary>
     public IEntityFactory Factory { get; }
 
     /// <summary>查询条件</summary>
-    public XCode.Expression? WhereExpression { get; set; }
+    public Expression? WhereExpression { get; set; }
 
     /// <summary>排序字段</summary>
     public String? OrderBy { get; set; }
@@ -218,6 +220,9 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
 
     /// <summary>是否取单条（Single/SingleOrDefault）</summary>
     public Boolean IsSingle { get; set; }
+
+    /// <summary>无匹配时是否抛异常。Single=true，SingleOrDefault=false</summary>
+    public Boolean ThrowIfNotFound { get; set; }
     #endregion
 
     #region 构造
@@ -275,14 +280,25 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
                 VisitPredicate(node);
                 break;
             case "First":
-            case "FirstOrDefault":
                 IsFirst = true;
                 Take = 1;
                 VisitPredicate(node);
                 break;
+            case "FirstOrDefault":
+                IsFirst = true;
+                ThrowIfNotFound = false;
+                Take = 1;
+                VisitPredicate(node);
+                break;
             case "Single":
+                IsSingle = true;
+                ThrowIfNotFound = true;
+                Take = 2;
+                VisitPredicate(node);
+                break;
             case "SingleOrDefault":
                 IsSingle = true;
+                ThrowIfNotFound = false;
                 Take = 2;
                 VisitPredicate(node);
                 break;
@@ -406,7 +422,7 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
     /// <summary>翻译表达式为XCode Expression</summary>
     /// <param name="node"></param>
     /// <returns></returns>
-    private XCode.Expression? TranslateExpression(LinqExpression node)
+    private Expression? TranslateExpression(LinqExpression node)
     {
         if (node == null) return null;
 
@@ -433,7 +449,7 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
         }
     }
 
-    private XCode.Expression? TranslateBinary(BinaryExpression node)
+    private Expression? TranslateBinary(BinaryExpression node)
     {
         var left = GetFieldItem(node.Left);
         if (left == null) return null;
@@ -451,10 +467,10 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
         };
 
         var fieldName = left.Name;
-        return new XCode.Expression($"{fieldName}{op}{value}");
+        return new Expression($"{fieldName}{op}{value}");
     }
 
-    private XCode.Expression? TranslateLogical(BinaryExpression node)
+    private Expression? TranslateLogical(BinaryExpression node)
     {
         var left = TranslateExpression(node.Left);
         var right = TranslateExpression(node.Right);
@@ -468,7 +484,7 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
             : left | right;
     }
 
-    private XCode.Expression? TranslateMethodCall(MethodCallExpression node)
+    private Expression? TranslateMethodCall(MethodCallExpression node)
     {
         var methodName = node.Method.Name;
         var obj = node.Object;
@@ -479,7 +495,7 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
             if (field != null && node.Arguments.Count > 0)
             {
                 var value = GetValue(node.Arguments[0]);
-                return new XCode.Expression($"{field.Name} Like '%{value?.Trim('\'')}%'");
+                return new Expression($"{field.Name} Like '%{value?.Trim('\'')}%'");
             }
         }
 
@@ -489,7 +505,7 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
             if (field != null && node.Arguments.Count > 0)
             {
                 var value = GetValue(node.Arguments[0]);
-                return new XCode.Expression($"{field.Name} Like '{value?.Trim('\'')}%'");
+                return new Expression($"{field.Name} Like '{value?.Trim('\'')}%'");
             }
         }
 
@@ -499,19 +515,19 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
             if (field != null && node.Arguments.Count > 0)
             {
                 var value = GetValue(node.Arguments[0]);
-                return new XCode.Expression($"{field.Name} Like '%{value?.Trim('\'')}'");
+                return new Expression($"{field.Name} Like '%{value?.Trim('\'')}'");
             }
         }
 
         return null;
     }
 
-    private XCode.Expression? TranslateNot(UnaryExpression node)
+    private Expression? TranslateNot(UnaryExpression node)
     {
         var inner = TranslateExpression(node.Operand);
         if (inner == null) return null;
 
-        return new XCode.Expression($"NOT ({inner})");
+        return new Expression($"NOT ({inner})");
     }
 
     private FieldItem? GetFieldItem(LinqExpression expression)
@@ -534,6 +550,7 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
         {
             var value = constant.Value;
             if (value == null) return "null";
+            if (value is Boolean b) return b ? "1" : "0";
 
             return value is String ? $"'{value}'" : value.ToString();
         }
@@ -542,6 +559,7 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
         {
             var value = EvaluateMember(member);
             if (value == null) return "null";
+            if (value is Boolean b2) return b2 ? "1" : "0";
 
             return value is String ? $"'{value}'" : value.ToString();
         }
@@ -550,6 +568,7 @@ internal class LinqExpressionVisitor : System.Linq.Expressions.ExpressionVisitor
         var compiled = lambda.Compile();
         var result = compiled.DynamicInvoke();
         if (result == null) return "null";
+        if (result is Boolean b3) return b3 ? "1" : "0";
 
         return result is String ? $"'{result}'" : result.ToString();
     }

@@ -12,7 +12,7 @@ namespace NewLife.Caching;
 /// <remarks>
 /// 构建一个操作队列，新增、更新、删除等操作全部排队单线程执行，以改进性能
 /// </remarks>
-public class DbCache : NewLife.Caching.Cache
+public class DbCache : Cache
 {
     #region 属性
     /// <summary>实体工厂</summary>

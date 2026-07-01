@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Data;
 using System.Text.RegularExpressions;
-using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
@@ -10,6 +9,7 @@ using NewLife.Serialization;
 using XCode.Common;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
+using XCode.Linq;
 using XCode.Model;
 using XCode.Shards;
 
@@ -73,7 +73,7 @@ public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Ent
     {
         get
         {
-            _query ??= new XCode.Linq.EntityQueryable<TEntity>(new XCode.Linq.EntityQueryProvider(Meta.Factory));
+            _query ??= new EntityQueryable<TEntity>(new EntityQueryProvider(Meta.Factory));
             return _query;
         }
     }

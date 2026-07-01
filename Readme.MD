@@ -6,7 +6,9 @@
 ![Nuget](https://img.shields.io/nuget/v/newlife.xcode?logo=nuget)
 ![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/newlife.xcode?label=dev%20nuget&logo=nuget)
 
-高性能 .NET 数据中间件，聚焦“添删改查 + 极致性能 + 海量数据”，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / 达梦 / 金仓 / 瀚高 / DB2 等。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
+高性能 .NET 数据中间件，聚焦"添删改查 + 极致性能 + 海量数据"，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / 达梦 / 金仓 / 瀚高 / DB2 / ClickHouse / DuckDB / MongoDB 等。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
+
+[English](README.en.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Español](README.es.md) | [Français](README.fr.md)
 
 文档：https://newlifex.com/xcode   社区交流QQ群：1600800 / 1600838
 
@@ -18,8 +20,8 @@
   - 3.1 模型与代码生成
   - 3.2 实体运行时 (Meta / Session / Operate)
   - 3.3 DAL 抽象层
-  - 3.4 查询 DSL 与 WhereExpression
-  - 3.5 多级缓存体系 (Meta.Count / EntityCache / SingleCache)
+  - 3.4 查询 DSL（IQueryable LINQ / WhereExpression / 窗口函数）
+  - 3.5 多级缓存体系 (Meta.Count / EntityCache / SingleCache / 二级缓存分布式)
   - 3.6 反向工程 & 迁移机制
   - 3.7 分表分库 (ShardPolicy)
   - 3.8 事务与缓存一致性
@@ -86,9 +88,12 @@ XML 模型 (Tables/Columns/Indexes) → 代码生成器（xcodetool 或 VS T4）
 - CheckTables()：启动/首次访问按需异步或同步检查并同步结构。
 
 ### 3.4 查询 DSL
+- **IQueryable&lt;T&gt; LINQ 查询（v12.0 新增）**：`Entity<T>.Query` 返回 `IQueryable<T>`，支持 `Where/OrderBy/Skip/Take/Count/First/ToList` 等标准 LINQ 操作。
+- **WhereIf 内联条件**：`Query.WhereIf(condition, predicate)` 和 `FindAllWhereIf` 实现动态条件筛选。
 - WhereExpression：链式 & / | / Contains / Between / Like 等表达式组合。
 - Find / FindAll / Query / PageFindAll 分页。
 - Pager / PageParameter：携带分页、排序、统计 TotalCount、数据权限扩展。
+- **窗口函数（v12.0 新增）**：`SelectBuilder.Window` + `WindowFunction` 支持 ROW_NUMBER/RANK/DENSE_RANK 及聚合窗口函数。
 
 ### 3.5 多级缓存体系
 针对“读多写少”模式设计：
@@ -97,6 +102,7 @@ XML 模型 (Tables/Columns/Indexes) → 代码生成器（xcodetool 或 VS T4）
 - SingleCache (Meta.SingleCache[key])：主键/从键字典级单对象缓存，适合频繁点查用户等。
 - 过期策略：默认 60s。过期访问立即返回旧数据 + 异步刷新。写操作即时使缓存失效 / 更新。
 - 事务支持：事务中累积修改，提交/回滚后统一处理缓存清空或回滚。
+- **二级缓存（v12.0 新增）**：`CacheInvalidator.Provider` 注入 Redis，基于版本号机制跨进程协调实体缓存失效。
 
 ### 3.6 反向工程 & 迁移
 - 根据实体反向创建/修改表结构、索引，自动维持一致。

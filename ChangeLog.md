@@ -1,5 +1,32 @@
 # NewLife.XCode 更新日志
 
+## v12.0.2026.0702 (2026-07-02)
+
+### LINQ 查询体系
+- **IQueryable&lt;T&gt; LINQ 查询**：实体 `Query` 属性返回 `EntityQueryable<T>`，支持 Where/OrderBy/Skip/Take/Count/First/Single/ToList 等标准 LINQ 操作。`EntityQueryProvider` + `LinqExpressionVisitor` 将表达式树翻译为 XCode WhereExpression
+- **WhereIf 内联条件**：`LinqExtensions.WhereIf(condition, predicate)` 扩展方法，条件不满足时自动忽略；`FindAllWhereIf(params (bool, Expression)[])` 实体级动态筛选
+- **Include 预加载**：`Include(Type)` 预加载关联实体整表缓存（EntityCache），与内存联表策略互补
+
+### 新数据库支持
+- **ClickHouse**：列式分析型数据库 Provider，支持 ClickHouse.Client 驱动，HTTP 端口 8123
+- **DuckDB**：嵌入式 OLAP 数据库 Provider，支持 DuckDB.NET.Data 驱动，兼容 PostgreSQL 方言
+- **MongoDB**：文档型 NoSQL 数据库 Provider，支持 MongoDB.Driver 驱动
+
+### 窗口函数
+- **SelectBuilder.Window**：新增 `Window` 属性，支持在 SELECT 列中注入窗口函数
+- **WindowFunction 助手类**：`RowNumber()`/`Rank()`/`DenseRank()`/`Aggregate()` 静态方法，生成标准 SQL 窗口函数语法
+
+### 二级缓存（分布式）
+- **CacheInvalidator**：基于分布式 ICache 的版本号机制跨进程协调实体缓存失效
+- **EntityCache/SingleCache** 集成：Clear 操作自动递增分布式版本号，CheckCache 定时比对远程版本号
+
+### 测试与文档
+- **测试扩充**：Linq 42 用例（含 Parse 精确断言）、窗口函数 14 用例、二级缓存 6 用例、新 Provider 测试
+- **文档重写**：需求文档、功能模块清单、竞品分析报告全面更新至 2026-07-02 版本
+- **类重命名**：Linq 类名去掉 XCode 前缀（`EntityQueryable`/`EntityQueryProvider`/`LinqExtensions`）
+
+---
+
 ## v11.27.2026.0601 (2026-06-01)
 
 ### 模型与反向工程

@@ -4,6 +4,7 @@ using System.Reflection;
 using NewLife;
 using NewLife.Reflection;
 using XCode.Configuration;
+using XCode.DataAccessLayer;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace XCode.Linq;
@@ -21,6 +22,9 @@ public class XCodeQueryProvider : IQueryProvider
 
     /// <summary>实体会话</summary>
     public IEntitySession Session => Factory.Session;
+
+    /// <summary>需要预加载的关联实体类型列表</summary>
+    private readonly List<Type> _includes = [];
     #endregion
 
     #region 构造
@@ -89,12 +93,50 @@ public class XCodeQueryProvider : IQueryProvider
         return (TResult)result!;
     }
 
+    /// <summary>添加需要预加载的关联实体类型</summary>
+    /// <param name="entityType">关联实体类型</param>
+    public void AddInclude(Type entityType)
+    {
+        if (entityType == null) return;
+
+        if (!_includes.Contains(entityType))
+            _includes.Add(entityType);
+    }
+
+    /// <summary>预加载关联实体缓存。在查询执行前调用，预热关联实体缓存以加速内存联表</summary>
+    private void PreloadIncludes()
+    {
+        if (_includes.Count == 0) return;
+
+        foreach (var entityType in _includes)
+        {
+            try
+            {
+                var factory = entityType.AsFactory();
+                if (factory != null)
+                {
+                    // 触发整表缓存加载（适合 <1000 行的小表）
+                    var list = factory.FindAllWithCache();
+                    if (DAL.Debug)
+                        DAL.WriteLog("Include 预加载 [{0}] 缓存，共 {1} 条", entityType.Name, list.Count);
+                }
+            }
+            catch (Exception ex)
+            {
+                DAL.WriteLog("Include 预加载 [{0}] 失败: {1}", entityType.Name, ex.Message);
+            }
+        }
+    }
+
     /// <summary>执行查询</summary>
     /// <param name="expression"></param>
     /// <returns></returns>
     public Object? Execute(LinqExpression expression)
     {
         if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+        // 先预加载关联实体缓存（Include）
+        PreloadIncludes();
 
         // 解析表达式树，构建查询参数
         var visitor = new XCodeLinqVisitor(Factory);

@@ -54,4 +54,25 @@ public static class LinqExtensions
 
         return source;
     }
+
+    /// <summary>分页查询。等价于 Skip((page - 1) * size).Take(size)</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <param name="source">查询源</param>
+    /// <param name="page">页码，从 1 开始</param>
+    /// <param name="size">每页大小</param>
+    /// <returns></returns>
+    /// <remarks>对齐 FreeSql 的 Page 用法，简化分页代码</remarks>
+    /// <example>
+    /// <code>
+    /// var list = dal.Select&lt;User&gt;().Where(u => u.Enable == true).Page(2, 20).ToList();
+    /// </code>
+    /// </example>
+    public static IQueryable<T> Page<T>(this IQueryable<T> source, Int32 page, Int32 size)
+    {
+        if (source == null) throw new ArgumentNullException(nameof(source));
+        if (page < 1) throw new ArgumentOutOfRangeException(nameof(page), "页码必须大于等于 1");
+        if (size < 0) throw new ArgumentOutOfRangeException(nameof(size), "每页大小不能为负数");
+
+        return source.Skip((page - 1) * size).Take(size);
+    }
 }

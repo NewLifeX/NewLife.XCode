@@ -24,6 +24,9 @@ public class EntityQueryProvider : IQueryProvider
 
     /// <summary>需要预加载的关联实体类型列表</summary>
     private readonly List<Type> _includes = [];
+
+    /// <summary>指定连接名。非空时 Execute 将临时切换到该连接执行查询，用于 DAL.Select&lt;T&gt;() 多连接场景</summary>
+    private readonly String? _connName;
     #endregion
 
     #region 构造
@@ -32,6 +35,15 @@ public class EntityQueryProvider : IQueryProvider
     public EntityQueryProvider(IEntityFactory factory)
     {
         Factory = factory ?? throw new ArgumentNullException(nameof(factory));
+    }
+
+    /// <summary>实例化查询提供者，绑定到指定连接名</summary>
+    /// <param name="factory">实体工厂</param>
+    /// <param name="connName">连接名。非空时所有查询将路由到该连接</param>
+    public EntityQueryProvider(IEntityFactory factory, String connName)
+    {
+        Factory = factory ?? throw new ArgumentNullException(nameof(factory));
+        _connName = connName;
     }
     #endregion
 
@@ -171,36 +183,46 @@ public class EntityQueryProvider : IQueryProvider
         var isSingle = visitor.IsSingle;
         var throwIfNotFound = visitor.ThrowIfNotFound;
 
-        // 计数查询
-        if (isCount)
+        // 临时切换到指定连接（DAL.Select<T>() 注入）
+        var oldConn = _connName != null ? Factory.ConnName : null;
+        if (_connName != null) Factory.ConnName = _connName;
+        try
         {
-            return Factory.FindCount(where ?? new WhereExpression());
-        }
-
-        // 单条查询
-        if (isFirst || isSingle)
-        {
-            var maxRows = isSingle ? 2 : 1;
-            var list = Factory.FindAll(where ?? new WhereExpression(), orderBy, null, 0, maxRows);
-            if (list.Count > 0)
+            // 计数查询
+            if (isCount)
             {
-                if (isSingle && list.Count > 1)
-                    throw new InvalidOperationException("序列包含多个元素");
-
-                return list[0];
+                return Factory.FindCount(where ?? new WhereExpression());
             }
 
-            if (throwIfNotFound)
-                throw new InvalidOperationException("序列不包含任何元素");
+            // 单条查询
+            if (isFirst || isSingle)
+            {
+                var maxRows = isSingle ? 2 : 1;
+                var list = Factory.FindAll(where ?? new WhereExpression(), orderBy, null, 0, maxRows);
+                if (list.Count > 0)
+                {
+                    if (isSingle && list.Count > 1)
+                        throw new InvalidOperationException("序列包含多个元素");
 
-            return null;
+                    return list[0];
+                }
+
+                if (throwIfNotFound)
+                    throw new InvalidOperationException("序列不包含任何元素");
+
+                return null;
+            }
+
+            // Take(0) 显式调用时返回空集合（此时 HasTake=true 且 take==0）
+            if (take == 0 && !isFirst && !isSingle && visitor.HasTake) return new List<IEntity>();
+
+            // 常规查询
+            return Factory.FindAll(where ?? new WhereExpression(), orderBy, null, skip, take);
         }
-
-        // Take=0 直接返回空集合
-        if (take == 0 && !isFirst && !isSingle) return new List<IEntity>();
-
-        // 常规查询
-        return Factory.FindAll(where ?? new WhereExpression(), orderBy, null, skip, take);
+        finally
+        {
+            if (_connName != null) Factory.ConnName = oldConn!;
+        }
     }
     #endregion
 }
@@ -223,6 +245,9 @@ public class LinqExpressionVisitor : ExpressionVisitor
 
     /// <summary>获取行数</summary>
     public Int32 Take { get; set; }
+
+    /// <summary>是否显式调用了 Take</summary>
+    public Boolean HasTake { get; set; }
 
     /// <summary>是否计数查询</summary>
     public Boolean IsCount { get; set; }
@@ -391,6 +416,7 @@ public class LinqExpressionVisitor : ExpressionVisitor
         if (arg is ConstantExpression constant)
         {
             Take = constant.Value.ToInt();
+            HasTake = true;
         }
     }
 

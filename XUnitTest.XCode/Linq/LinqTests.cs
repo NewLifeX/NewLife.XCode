@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -244,4 +244,149 @@ public class LinqTests : IDisposable
     }
     [Fact] public void Provider_AddInclude_Null_Ok() { new EntityQueryProvider(Role.Meta.Factory).AddInclude(null); }
     [Fact] public void Provider_AddInclude_Duplicate_Ok() { var p = new EntityQueryProvider(Role.Meta.Factory); p.AddInclude(typeof(Role)); p.AddInclude(typeof(Role)); }
+
+    // ====== 9. EntityQueryProvider 连接名注入 ======
+
+    [Fact] public void Provider_Ctor_WithConnName()
+    {
+        var p = new EntityQueryProvider(Role.Meta.Factory, "TestConn");
+        Assert.NotNull(p);
+        Assert.Same(Role.Meta.Factory, p.Factory);
+    }
+
+    [Fact] public void Provider_Ctor_WithConnName_Null()
+    {
+        var p = new EntityQueryProvider(Role.Meta.Factory, null!);
+        Assert.NotNull(p);
+    }
+
+    // ====== 10. DAL.Select<T>() ======
+
+    [Fact]
+    public void DAL_Select_ReturnsQueryable()
+    {
+        var dal = DAL.Create(_connName);
+        var q = dal.Select<Role>();
+        Assert.NotNull(q);
+        Assert.IsType<EntityQueryable<Role>>(q);
+    }
+
+    [Fact]
+    public void DAL_Select_WhereIf_ToList()
+    {
+        var dal = DAL.Create(_connName);
+        var list = dal.Select<Role>()
+            .WhereIf(true, r => r.ID >= 0)
+            .WhereIf(false, r => r.Name == "ignored")
+            .ToList();
+        Assert.NotNull(list);
+    }
+
+    [Fact]
+    public void DAL_Select_WhereIf_False_ReturnsAll()
+    {
+        var dal = DAL.Create(_connName);
+        // 所有 WhereIf 条件均为 false，应返回全部记录
+        var listAll = dal.Select<Role>().ToList();
+        var listFiltered = dal.Select<Role>()
+            .WhereIf(false, r => r.ID > 999999)
+            .WhereIf(false, r => r.Name!.Contains("notexist"))
+            .ToList();
+        Assert.Equal(listAll.Count, listFiltered.Count);
+    }
+
+    [Fact]
+    public void DAL_Select_OrderByDescending()
+    {
+        var dal = DAL.Create(_connName);
+        var list = dal.Select<Role>()
+            .Where(r => r.ID >= 0)
+            .OrderByDescending(r => r.ID)
+            .ToList();
+        Assert.NotNull(list);
+        // 验证降序排列：每对相邻元素，前者 ID >= 后者 ID
+        for (var i = 1; i < list.Count; i++)
+        {
+            Assert.True(list[i - 1].ID >= list[i].ID);
+        }
+    }
+
+    [Fact]
+    public void DAL_Select_Page()
+    {
+        var dal = DAL.Create(_connName);
+        var list = dal.Select<Role>()
+            .Where(r => r.ID >= 0)
+            .OrderBy(r => r.ID)
+            .Page(1, 10)
+            .ToList();
+        Assert.NotNull(list);
+        Assert.True(list.Count <= 10);
+    }
+
+    [Fact]
+    public void DAL_Select_Page_InvalidPage_Throws()
+    {
+        var dal = DAL.Create(_connName);
+        var q = dal.Select<Role>();
+        Assert.Throws<ArgumentOutOfRangeException>(() => q.Page(0, 10));
+    }
+
+    [Fact]
+    public void DAL_Select_Count()
+    {
+        var dal = DAL.Create(_connName);
+        // 插入测试数据
+        var count = dal.Select<Role>().Count();
+        Assert.True(count >= 0);
+    }
+
+    [Fact]
+    public void DAL_Select_FirstOrDefault()
+    {
+        var dal = DAL.Create(_connName);
+        var entity = dal.Select<Role>().Where(r => r.ID >= 0).OrderBy(r => r.ID).FirstOrDefault();
+        // 可能为 null（表为空），但不抛异常
+    }
+
+    [Fact]
+    public void DAL_Select_UsesDALConnection()
+    {
+        // 核心验证：DAL.Select<T>() 能查到刚插入的数据
+        var r = new Role { Name = "DalSelectTest", Enable = true };
+        r.Insert();
+        var insertedId = r.ID;
+
+        // 控制组：XCode 原生 Expression 查询
+        var controlList = Role.FindAll(Role._.ID == insertedId);
+        Assert.Single(controlList);
+
+        // 实验组：DAL.Select<T>().Where 使用 LINQ 表达式
+        var dal = DAL.Create(_connName);
+        var list = dal.Select<Role>().Where(e => e.ID == insertedId).ToList();
+        Assert.Single(list);
+        Assert.Equal("DalSelectTest", list[0].Name);
+    }
+
+    [Fact]
+    public void Role_Query_Where_FindsInsertedData()
+    {
+        // 验证基础 LINQ 查询能否找到刚插入的数据
+        var r = new Role { Name = "QueryTest", Enable = true };
+        r.Insert();
+        var id = r.ID;
+
+        // Role.FindAll（原生 Expression）应该能找到
+        var nativeList = Role.FindAll(Role._.ID == id);
+        Assert.Single(nativeList);
+
+        // Role.Query.Where（LINQ）也应该能找到
+        var linqList = Role.Query.Where(e => e.ID == id).ToList();
+        Assert.Single(linqList);
+    }
+
+    private static void TryDelete(String filePath)
+    {
+        try { if (File.Exists(filePath)) File.Delete(filePath); } catch { }
+    }
 }

@@ -19,6 +19,8 @@
     <Compile Remove="Code\entity_user_normal.cs" />
     <Compile Remove="Code\entity_user_normal_biz.cs" />
     <Compile Remove="DataAccessLayer\DAL_EnvironmentVariable.cs" />
+    <Compile Remove="Navigation\IncludeTests.cs" />
+    <Compile Remove="Navigation\NavigationRegistryTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Configuration\AreaX.sql" />

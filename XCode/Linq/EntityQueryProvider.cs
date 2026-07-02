@@ -4,6 +4,7 @@ using System.Reflection;
 using NewLife.Reflection;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
+using XCode.Model;
 using LinqExpression = System.Linq.Expressions.Expression;
 
 namespace XCode.Linq;
@@ -22,11 +23,14 @@ public class EntityQueryProvider : IQueryProvider
     /// <summary>实体会话</summary>
     public IEntitySession Session => Factory.Session;
 
+    /// <summary>指定连接名。非空时 Execute 将临时切换到该连接执行查询，用于 DAL.Select&lt;T&gt;() 多连接场景</summary>
+    private readonly String? _connName;
+
     /// <summary>需要预加载的关联实体类型列表</summary>
     private readonly List<Type> _includes = [];
 
-    /// <summary>指定连接名。非空时 Execute 将临时切换到该连接执行查询，用于 DAL.Select&lt;T&gt;() 多连接场景</summary>
-    private readonly String? _connName;
+    /// <summary>导航属性加载路径。用于生成 LEFT JOIN</summary>
+    private readonly List<IncludePath> _includePaths = [];
     #endregion
 
     #region 构造
@@ -123,6 +127,16 @@ public class EntityQueryProvider : IQueryProvider
             _includes.Add(entityType);
     }
 
+    /// <summary>添加导航属性加载路径。用于生成 LEFT JOIN</summary>
+    /// <param name="path">导航路径</param>
+    public void AddIncludePath(IncludePath path)
+    {
+        if (path == null) return;
+
+        if (!_includePaths.Any(p => p.NavigationName == path.NavigationName))
+            _includePaths.Add(path);
+    }
+
     /// <summary>解析表达式树，返回访问器用于测试和调试。不执行数据库查询</summary>
     /// <param name="expression">LINQ 表达式</param>
     /// <returns>表达式访问器，包含解析后的 Where/OrderBy/Skip/Take/IsCount 等参数</returns>
@@ -216,6 +230,14 @@ public class EntityQueryProvider : IQueryProvider
             // Take(0) 显式调用时返回空集合（此时 HasTake=true 且 take==0）
             if (take == 0 && !isFirst && !isSingle && visitor.HasTake) return new List<IEntity>();
 
+            // 存在导航路径时，在常规查询后批量加载关联实体
+            if (_includePaths.Count > 0)
+            {
+                var mainList = Factory.FindAll(where ?? new WhereExpression(), orderBy, null, skip, take);
+                BatchLoadNavigations(mainList);
+                return mainList;
+            }
+
             // 常规查询
             return Factory.FindAll(where ?? new WhereExpression(), orderBy, null, skip, take);
         }
@@ -224,7 +246,177 @@ public class EntityQueryProvider : IQueryProvider
             if (_connName != null) Factory.ConnName = oldConn!;
         }
     }
+
+    /// <summary>批量加载导航属性。对 HasOne 收集 FK 批量查询，对 HasMany 预热缓存</summary>
+    private void BatchLoadNavigations(IList<IEntity> list)
+    {
+        if (list is null || list.Count == 0) return;
+
+        foreach (var path in _includePaths)
+        {
+            try
+            {
+                switch (path.NavigationType)
+                {
+                    case NavigationType.HasOne:
+                        BatchLoadHasOne(list, path);
+                        break;
+                    case NavigationType.HasMany:
+                        BatchLoadHasMany(list, path);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                DAL.WriteLog("导航批量加载 [{0}.{1}] 失败: {2}", Factory.EntityType.Name, path.NavigationName, ex.Message);
+            }
+        }
+    }
+
+    /// <summary>批量加载 HasOne 导航属性。收集外键 → 批量查目标表 → 填充 Extends 缓存</summary>
+    private static void BatchLoadHasOne(IList<IEntity> list, IncludePath path)
+    {
+        var targetFactory = path.TargetType.AsFactory();
+        if (targetFactory == null || path.ForeignKey is null || path.PrimaryKey is null) return;
+
+        // 收集所有非空外键值
+        var fkValues = new HashSet<Object>();
+        foreach (var entity in list)
+        {
+            var fkValue = entity[path.ForeignKey.Name];
+            if (fkValue is not null && !Equals(fkValue, 0) && !(fkValue is String s && s.IsNullOrEmpty()))
+                fkValues.Add(fkValue);
+        }
+
+        if (fkValues.Count == 0) return;
+
+        // 按目标表主键批量查询
+        var pkCol = path.PrimaryKey.ColumnName;
+        var inClause = fkValues.Select(v => v is String ? $"'{v}'" : v.ToString()).Join(",");
+        var relatedList = targetFactory.FindAll($"{pkCol} in({inClause})", null, null, 0, 0);
+        if (relatedList is null || relatedList.Count == 0) return;
+
+        // 构建字典：PK → 实体
+        var dict = new Dictionary<Object, IEntity>();
+        foreach (var rel in relatedList)
+        {
+            var key = rel[path.PrimaryKey.Name];
+            if (key is not null)
+                dict[key] = rel;
+        }
+
+        // 填充导航属性到 Extends
+        foreach (var entity in list)
+        {
+            if (entity is not EntityBase eb) continue;
+
+            var fkValue = entity[path.ForeignKey.Name];
+            if (fkValue is null) continue;
+
+            if (dict.TryGetValue(fkValue, out var related))
+            {
+                // 将结果缓存到 Extends 中
+                var extends = GetEntityExtends(eb);
+                if (extends is not null)
+                {
+                    var key = path.NavigationName;
+                    extends.Get<Object>(key, _ => related);
+                }
+            }
+        }
+    }
+
+    /// <summary>批量预加载 HasMany 导航属性。缓存预热整表数据</summary>
+    private static void BatchLoadHasMany(IList<IEntity> list, IncludePath path)
+    {
+        if (list is null || list.Count == 0) return;
+
+        var targetFactory = path.TargetType.AsFactory();
+        if (targetFactory == null || path.ForeignKey is null || path.PrimaryKey is null) return;
+
+        // 收集所有主键值
+        var pkValues = new HashSet<Object>();
+        foreach (var entity in list)
+        {
+            var pkValue = entity[path.PrimaryKey.Name];
+            if (pkValue is not null && !Equals(pkValue, 0))
+                pkValues.Add(pkValue);
+        }
+
+        if (pkValues.Count == 0) return;
+
+        // 按外键批量查询所有子实体
+        var fkCol = path.ForeignKey.ColumnName;
+        var inClause = pkValues.Select(v => v is String ? $"'{v}'" : v.ToString()).Join(",");
+        var children = targetFactory.FindAll($"{fkCol} in({inClause})", null, null, 0, 0);
+        if (children is null || children.Count == 0) return;
+
+        // 按外键分组
+        var grouped = new Dictionary<Object, List<IEntity>>();
+        foreach (var child in children)
+        {
+            var fkVal = child[path.ForeignKey.Name];
+            if (fkVal is null) continue;
+
+            if (!grouped.TryGetValue(fkVal, out var group))
+                grouped[fkVal] = group = [];
+
+            group.Add(child);
+        }
+
+        // 填充到每个实体的 Extends 中
+        foreach (var entity in list)
+        {
+            if (entity is not EntityBase eb) continue;
+
+            var pkValue = entity[path.PrimaryKey.Name];
+            if (pkValue is null) continue;
+
+            if (grouped.TryGetValue(pkValue, out var childList))
+            {
+                var extends = GetEntityExtends(eb);
+                if (extends is not null)
+                {
+                    var key = path.NavigationName;
+                    extends.Get<Object>(key, _ => childList);
+                }
+            }
+        }
+    }
+
+    /// <summary>通过反射获取实体内部的 Extends 对象</summary>
+    private static EntityExtend? GetEntityExtends(EntityBase entity)
+    {
+        try
+        {
+            // 通过 IEntity.Extends 接口访问（避免反射）
+            return ((IEntity)entity).Extends;
+        }
+        catch
+        {
+            return null;
+        }
+    }
     #endregion
+}
+
+/// <summary>导航属性加载路径</summary>
+public class IncludePath
+{
+    /// <summary>导航属性名</summary>
+    public String NavigationName { get; set; } = null!;
+
+    /// <summary>目标实体类型</summary>
+    public Type TargetType { get; set; } = null!;
+
+    /// <summary>导航关系类型</summary>
+    public NavigationType NavigationType { get; set; }
+
+    /// <summary>外键字段</summary>
+    public FieldItem? ForeignKey { get; set; }
+
+    /// <summary>主键字段</summary>
+    public FieldItem? PrimaryKey { get; set; }
 }
 
 /// <summary>LINQ 表达式访问器。将System.Linq.Expressions翻译为XCode查询参数</summary>

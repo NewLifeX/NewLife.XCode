@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using NewLife.Data;
 using XCode.Configuration;
+using XCode.Model;
 using XCode.Shards;
 using XCode.Statistics;
 
@@ -54,6 +55,14 @@ public interface IEntityFactory
 
     /// <summary>主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
     FieldItem? Master { get; }
+
+    /// <summary>已注册的导航属性列表</summary>
+    IReadOnlyList<NavigationProperty> Navigations { get; }
+
+    /// <summary>按名称查找导航属性</summary>
+    /// <param name="name">导航名称</param>
+    /// <returns></returns>
+    NavigationProperty? FindNavigation(String name);
 
     /// <summary>连接名。当前线程正在使用的连接名</summary>
     String ConnName { get; set; }

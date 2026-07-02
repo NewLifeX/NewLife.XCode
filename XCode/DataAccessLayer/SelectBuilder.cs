@@ -43,6 +43,9 @@ public class SelectBuilder
     /// <summary>窗口函数。例如 ROW_NUMBER() OVER(ORDER BY ID) AS RowNum</summary>
     public String? Window { get; set; }
 
+    /// <summary>连接子句。例如 LEFT JOIN [Role] ON [User].[RoleId]=[Role].[Id]</summary>
+    public String? Join { get; set; }
+
     /// <summary>参数集合</summary>
     public List<IDataParameter> Parameters { get; set; } = [];
     #endregion
@@ -152,6 +155,7 @@ $";
         if (!Window.IsNullOrEmpty()) sb.Append(", " + Window);
         sb.Append(" From ");
         sb.Append(Table);
+        if (!Join.IsNullOrEmpty()) sb.Append(' ').Append(Join);
         if (!Where.IsNullOrEmpty()) sb.Append(" Where " + Where);
         if (!GroupBy.IsNullOrEmpty()) sb.Append(" Group By " + GroupBy);
         if (!Having.IsNullOrEmpty()) sb.Append(" Having " + Having);
@@ -201,6 +205,7 @@ $";
             Having = Having,
             Limit = Limit,
             Window = Window,
+            Join = Join,
         };
 
         sb.Parameters.AddRange(Parameters);

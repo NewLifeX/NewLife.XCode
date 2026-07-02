@@ -8,6 +8,7 @@ using System.Xml.Serialization;
 using NewLife.Data;
 using NewLife.Reflection;
 using XCode.Common;
+using XCode.Model;
 
 namespace XCode;
 
@@ -346,6 +347,107 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
         }
 
         return true;
+    }
+    #endregion
+
+    #region 导航属性
+    /// <summary>获取导航属性（单个关联实体）。首次访问时惰性加载，后续从 Extends 缓存获取</summary>
+    /// <typeparam name="T">关联实体类型</typeparam>
+    /// <param name="name">导航名称</param>
+    /// <param name="loader">自定义加载委托。不指定时自动从 NavigationRegistry 推导</param>
+    /// <returns></returns>
+    /// <remarks>
+    /// 复用 EntityExtend 缓存机制，默认 10 秒过期。
+    /// 若已通过 NavigationRegistry 注册关系，可自动推导 loader 无需手动传入。
+    /// <code>
+    /// // 手动指定 loader
+    /// public Role? Role => GetNavigation&lt;Role&gt;(nameof(Role), k => Role.FindByKey(RoleId));
+    /// 
+    /// // 自动推导（需先注册 HasOne）
+    /// public Role? Role => GetNavigation&lt;Role&gt;(nameof(Role));
+    /// </code>
+    /// </remarks>
+    protected T? GetNavigation<T>(String name, Func<String, T?>? loader = null) where T : class
+    {
+        if (name.IsNullOrEmpty()) return default;
+
+        var factory = GetType().AsFactory();
+        var nav = factory?.FindNavigation(name);
+
+        // 构造默认 loader：通过外键查找关联实体
+        if (loader == null && nav is not null && nav.Type == NavigationType.HasOne)
+        {
+            var fkField = nav.ForeignKey;
+            var pkField = nav.PrimaryKey;
+            if (fkField is not null && pkField is not null)
+            {
+                var fkValue = this[fkField.Name];
+                var targetType = nav.TargetType;
+                loader = _ =>
+                {
+                    if (fkValue is null || Equals(fkValue, 0) || (fkValue is String s && s.IsNullOrEmpty()))
+                        return default;
+
+                    var targetFactory = targetType.AsFactory();
+                    if (targetFactory == null) return default;
+
+                    var entity = targetFactory.FindByKey(fkValue);
+                    return entity as T;
+                };
+            }
+        }
+
+        return Extends.Get(name, loader);
+    }
+
+    /// <summary>获取导航属性集合（一对多子实体列表）。首次访问时惰性加载，后续从 Extends 缓存获取</summary>
+    /// <typeparam name="T">子实体类型</typeparam>
+    /// <param name="name">导航名称</param>
+    /// <param name="loader">自定义加载委托。不指定时自动从 NavigationRegistry 推导</param>
+    /// <returns></returns>
+    /// <remarks>
+    /// 复用 EntityExtend 缓存机制，默认 10 秒过期。
+    /// <code>
+    /// // 手动指定 loader
+    /// public IList&lt;Order&gt; Orders => GetNavigationCollection&lt;Order&gt;(nameof(Orders), 
+    ///     k => Order.FindAll(Order._.UserId == Id));
+    /// 
+    /// // 自动推导（需先注册 HasMany）
+    /// public IList&lt;Order&gt; Orders => GetNavigationCollection&lt;Order&gt;(nameof(Orders));
+    /// </code>
+    /// </remarks>
+    protected IList<T> GetNavigationCollection<T>(String name, Func<String, IList<T>>? loader = null) where T : class
+    {
+        if (name.IsNullOrEmpty()) return [];
+
+        var factory = GetType().AsFactory();
+        var nav = factory?.FindNavigation(name);
+
+        // 构造默认 loader：通过主键查找所有子实体
+        if (loader == null && nav is not null && nav.Type == NavigationType.HasMany)
+        {
+            var pkField = nav.PrimaryKey;
+            var fkField = nav.ForeignKey;
+            if (pkField is not null && fkField is not null)
+            {
+                var pkValue = this[pkField.Name];
+                var targetType = nav.TargetType;
+                loader = _ =>
+                {
+                    if (pkValue is null || Equals(pkValue, 0))
+                        return [];
+
+                    var targetFactory = targetType.AsFactory();
+                    if (targetFactory == null) return [];
+
+                    // 构造 WhereExpression：目标实体外键 == 当前实体主键
+                    var list = targetFactory.FindAll($"{fkField.Name}='{pkValue}'", null, null, 0, 0);
+                    return list.Cast<T>().ToList();
+                };
+            }
+        }
+
+        return Extends.Get(name, loader) ?? [];
     }
     #endregion
 }

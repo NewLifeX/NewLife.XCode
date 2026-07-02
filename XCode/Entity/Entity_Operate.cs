@@ -50,6 +50,14 @@ public partial class Entity<TEntity>
         /// <summary>主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
         public virtual FieldItem? Master => Meta.Master;
 
+        /// <summary>已注册的导航属性列表</summary>
+        public virtual IReadOnlyList<NavigationProperty> Navigations => NavigationRegistry.Global.GetNavigations(EntityType);
+
+        /// <summary>按名称查找导航属性</summary>
+        /// <param name="name">导航名称</param>
+        /// <returns></returns>
+        public virtual NavigationProperty? FindNavigation(String name) => NavigationRegistry.Global.Find(EntityType, name);
+
         /// <summary>连接名。当前线程正在使用的连接名</summary>
         public virtual String ConnName { get => Meta.ConnName; set => Meta.ConnName = value; }
 

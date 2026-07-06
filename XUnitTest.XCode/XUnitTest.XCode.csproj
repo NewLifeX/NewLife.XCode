@@ -88,7 +88,7 @@
   <ItemGroup>
     <PackageReference Include="InterSystems.Data.IRISClient" Version="2.6.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
-    <PackageReference Include="NewLife.Core" Version="11.16.2026.601" />
+    <PackageReference Include="NewLife.Core" Version="11.17.2026.706-beta0929" />
     <PackageReference Include="NewLife.IP" Version="2.4.2026.501" />
     <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.425-beta0044" />
     <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.102" />

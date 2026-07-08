@@ -871,7 +871,8 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
             }
             if (addColumns != null && addColumns.Count > 0)
             {
-                sb.Append(',');
+                // 如果前面 updateColumns 已写入内容，需要逗号分隔
+                if (updateColumns != null && updateColumns.Count > 0) sb.Append(',');
                 foreach (var dc in columns)
                 {
                     if (dc.Identity || dc.PrimaryKey) continue;

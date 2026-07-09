@@ -63,7 +63,7 @@ abstract class FileDbSession : DbSession
 
     protected virtual void CreateDatabase()
     {
-        if (!File.Exists(FileName)) Database.CreateMetaData().SetSchema(DDLSchema.CreateDatabase);
+        if (!File.Exists(FileName)) Database.CreateMetaData().CreateDatabase("");
     }
     #endregion
 
@@ -87,41 +87,14 @@ abstract class FileDbMetaData : DbMetaData
     public String? FileName => (Database as FileDbBase)?.DatabaseName;
     #endregion
 
-    #region 数据定义
-    /// <summary>设置数据定义模式</summary>
-    /// <param name="schema"></param>
-    /// <param name="values"></param>
-    /// <returns></returns>
-    public override Object? SetSchema(DDLSchema schema, Object?[] values)
+    #region DDL 执行方法
+    /// <summary>建立数据库（文件型数据库创建文件）</summary>
+    /// <param name="databaseName">数据库名，忽略</param>
+    /// <param name="file">数据文件路径，忽略</param>
+    /// <returns>是否成功</returns>
+    public override Boolean CreateDatabase(String databaseName, String? file = null)
     {
-        if (Database is DbBase db)
-        {
-            var tracer = db.Tracer;
-            if (schema is not DDLSchema.DatabaseExist and not DDLSchema.CreateDatabase and not DDLSchema.DropDatabase) tracer = null;
-            using var span = tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
-
-            //Object obj = null;
-            switch (schema)
-            {
-                case DDLSchema.CreateDatabase:
-                    CreateDatabase();
-                    return null;
-                case DDLSchema.DropDatabase:
-                    DropDatabase();
-                    return null;
-                case DDLSchema.DatabaseExist:
-                    return File.Exists(FileName);
-                default:
-                    break;
-            }
-        }
-        return base.SetSchema(schema, values);
-    }
-
-    /// <summary>创建数据库</summary>
-    protected virtual void CreateDatabase()
-    {
-        if (String.IsNullOrEmpty(FileName)) return;
+        if (String.IsNullOrEmpty(FileName)) return false;
 
         // 提前创建目录
         var dir = Path.GetDirectoryName(FileName);
@@ -133,9 +106,14 @@ abstract class FileDbMetaData : DbMetaData
 
             File.Create(FileName).Dispose();
         }
+
+        return true;
     }
 
-    protected virtual void DropDatabase()
+    /// <summary>删除数据库（文件型数据库删除文件）</summary>
+    /// <param name="databaseName">数据库名，忽略</param>
+    /// <returns>是否成功</returns>
+    public override Boolean DropDatabase(String databaseName)
     {
         //首先关闭数据库
         if (Database is DbBase db)
@@ -147,6 +125,22 @@ abstract class FileDbMetaData : DbMetaData
         GC.Collect();
 
         if (File.Exists(FileName)) File.Delete(FileName);
+
+        return true;
+    }
+
+    /// <summary>数据库是否存在</summary>
+    /// <param name="databaseName">数据库名，忽略</param>
+    /// <returns></returns>
+    public override Boolean DatabaseExist(String? databaseName)
+    {
+        return File.Exists(FileName);
     }
     #endregion
+
+    /// <summary>创建数据库。已被 CreateDatabase(String, String?) 替代</summary>
+    protected virtual void CreateDatabase() => CreateDatabase("", null);
+
+    /// <summary>删除数据库。已被 DropDatabase(String) 替代</summary>
+    protected virtual void DropDatabase() => DropDatabase("");
 }

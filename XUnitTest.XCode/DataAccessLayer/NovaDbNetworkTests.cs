@@ -385,7 +385,7 @@ public class NovaDbNetworkTests
         XTrace.WriteLine("tables: {0}", tables.Join());
         Assert.Contains(tables, t => t.TableName == table.TableName);
 
-        dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+        dal.Db.CreateMetaData().DropTable(table);
 
         tableNames = dal.GetTableNames();
         XTrace.WriteLine("tableNames: {0}", tableNames.Join());

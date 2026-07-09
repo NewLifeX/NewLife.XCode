@@ -763,8 +763,10 @@ internal class VastBaseMetaData : RemoteDbMetaData
     //    return base.SetSchema(schema, values);
     //}
 
-    protected override Boolean DatabaseExist(String databaseName)
+    public override Boolean DatabaseExist(String? databaseName)
     {
+        if (databaseName.IsNullOrEmpty()) return base.DatabaseExist(databaseName);
+
         // 不使用 GetSchema,直接查询 pg_database 避免 pg_user 权限问题
         var session = Database.CreateSession();
 

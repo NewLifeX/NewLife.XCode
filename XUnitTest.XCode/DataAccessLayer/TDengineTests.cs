@@ -107,11 +107,11 @@ public class TDengineTests
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
         var dal = DAL.Create("sysTDengine");
 
-        var rs = dal.Db.CreateMetaData().SetSchema(DDLSchema.CreateDatabase, "newlife");
-        Assert.Equal(0, rs);
+        var rs = dal.Db.CreateMetaData().CreateDatabase("newlife");
+        Assert.True(rs);
 
-        rs = dal.Db.CreateMetaData().SetSchema(DDLSchema.DropDatabase, "newlife");
-        Assert.Equal(0, rs);
+        rs = dal.Db.CreateMetaData().DropDatabase("newlife");
+        Assert.True(rs);
     }
 
     [TestOrder(34)]
@@ -305,7 +305,7 @@ public class TDengineTests
         XTrace.WriteLine("tables: {0}", tables.Join());
         Assert.Contains(tables, t => t.TableName == table.TableName);
 
-        dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+        dal.Db.CreateMetaData().DropTable(table);
 
         tableNames = dal.GetTableNames();
         XTrace.WriteLine("tableNames: {0}", tableNames.Join());

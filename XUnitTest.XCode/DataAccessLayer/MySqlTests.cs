@@ -415,7 +415,7 @@ public class MySqlTests
         XTrace.WriteLine("tables: {0}", tables.Join());
         Assert.Contains(tables, t => t.TableName == table.TableName);
 
-        dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+        dal.Db.CreateMetaData().DropTable(table);
 
         tableNames = dal.GetTableNames();
         XTrace.WriteLine("tableNames: {0}", tableNames.Join());
@@ -482,7 +482,7 @@ public class MySqlTests
         Assert.Contains(" ENGINE=MyISAM", sql);
 
         if (dal.TableNames.Contains(table.TableName))
-            dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+            dal.Db.CreateMetaData().DropTable(table);
 
         dal.SetTables(table);
 
@@ -510,7 +510,7 @@ public class MySqlTests
         Assert.Contains(" KEY_BLOCK_SIZE=4", sql);
 
         if (dal.TableNames.Contains(table.TableName))
-            dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+            dal.Db.CreateMetaData().DropTable(table);
 
         dal.SetTables(table);
 
@@ -547,7 +547,7 @@ public class MySqlTests
         Assert.Contains(" ENGINE=Archive", sql);
 
         if (dal.TableNames.Contains(table.TableName))
-            dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+            dal.Db.CreateMetaData().DropTable(table);
 
         dal.SetTables(table);
 

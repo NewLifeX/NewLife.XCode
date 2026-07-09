@@ -90,7 +90,7 @@ internal partial class DbMetaData
         var dbExist = false;
         try
         {
-            dbExist = (Boolean)(SetSchema(DDLSchema.DatabaseExist) ?? false);
+            dbExist = DatabaseExist(null);
         }
         catch
         {
@@ -103,7 +103,7 @@ internal partial class DbMetaData
             if (mode > Migration.ReadOnly)
             {
                 WriteLog("创建数据库：{0}", ConnName);
-                SetSchema(DDLSchema.CreateDatabase, [null, null]);
+                CreateDatabase(Database.DatabaseName);
 
                 dbExist = true;
             }
@@ -878,41 +878,27 @@ internal partial class DbMetaData
     /// <returns></returns>
     public virtual Object? SetSchema(DDLSchema schema, params Object?[] values)
     {
-        if (Database is not DbBase db) return null;
-
-        using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:SetSchema:{schema}", values);
-
-        var sql = GetSchemaSQL(schema, values);
-        if (sql.IsNullOrEmpty()) return null;
-
-        if (span != null) span.Tag += Environment.NewLine + sql;
-
-        var session = Database.CreateSession();
-
-        if (/*schema == DDLSchema.TableExist ||*/ schema == DDLSchema.DatabaseExist) return session.QueryCount(sql) > 0;
-
-        // 分隔符是分号加换行，如果不想被拆开执行（比如有事务），可以在分号和换行之间加一个空格
-        var sqls = sql.Split([";" + Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
-        if (sqls == null || sqls.Length <= 1) return session.Execute(sql);
-
-        session.BeginTransaction(IsolationLevel.Serializable);
-        try
+        return schema switch
         {
-            foreach (var item in sqls)
-            {
-                session.Execute(item);
-            }
-            session.Commit();
-        }
-        catch (Exception ex)
-        {
-            span?.SetError(ex, null);
-
-            session.Rollback();
-            throw;
-        }
-
-        return 0;
+            DDLSchema.CreateDatabase => CreateDatabase((String)values[0]!, values.Length > 1 ? (String?)values[1] : null),
+            DDLSchema.DropDatabase => DropDatabase((String)values[0]!),
+            DDLSchema.DatabaseExist => DatabaseExist(values.Length > 0 ? (String?)values[0] : null),
+            DDLSchema.CreateTable => CreateTable((IDataTable)values[0]!),
+            DDLSchema.DropTable => DropTable((IDataTable)values[0]!),
+            DDLSchema.AddTableDescription => AddTableDescription((IDataTable)values[0]!),
+            DDLSchema.DropTableDescription => DropTableDescription((IDataTable)values[0]!),
+            DDLSchema.AddColumn => AddColumn((IDataColumn)values[0]!),
+            DDLSchema.AlterColumn => AlterColumn((IDataColumn)values[0]!, values.Length > 1 ? (IDataColumn)values[1]! : null),
+            DDLSchema.DropColumn => DropColumn((IDataColumn)values[0]!),
+            DDLSchema.AddColumnDescription => AddColumnDescription((IDataColumn)values[0]!),
+            DDLSchema.DropColumnDescription => DropColumnDescription((IDataColumn)values[0]!),
+            DDLSchema.CreateIndex => CreateIndex((IDataIndex)values[0]!),
+            DDLSchema.DropIndex => DropIndex((IDataIndex)values[0]!),
+            DDLSchema.BackupDatabase => BackupDatabase(values?.Length > 0 ? (String?)values[0] : null, values?.Length > 1 ? (String?)values[1] : null),
+            DDLSchema.RestoreDatabase => RestoreDatabase((String)values[0]!, values?.Length > 1 ? (String?)values[1] : null),
+            DDLSchema.CompactDatabase => CompactDatabase(),
+            _ => throw new NotSupportedException("不支持该操作！"),
+        };
     }
 
     /// <summary>字段片段</summary>
@@ -1113,5 +1099,209 @@ internal partial class DbMetaData
     public virtual String? Backup(String dbname, String? bakfile, Boolean compressed) => null;
 
     //public virtual Int32 CompactDatabase() => -1;
+    #endregion
+
+    #region DDL 执行方法
+    /// <summary>执行DDL语句，封装追踪和事务</summary>
+    /// <param name="sql">SQL语句</param>
+    /// <param name="spanName">追踪片段名</param>
+    /// <returns>是否成功</returns>
+    private Boolean ExecuteDDL(String? sql, String spanName)
+    {
+        if (sql.IsNullOrEmpty()) return false;
+        if (Database is not DbBase db) return false;
+
+        using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:{spanName}", sql);
+        if (span != null) span.Tag += Environment.NewLine + sql;
+
+        var session = Database.CreateSession();
+
+        // 分隔符是分号加换行，如果不想被拆开执行（比如有事务），可以在分号和换行之间加一个空格
+        var sqls = sql.Split([";" + Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+        if (sqls.Length <= 1)
+        {
+            session.Execute(sql);
+            return true;
+        }
+
+        session.BeginTransaction(IsolationLevel.Serializable);
+        try
+        {
+            foreach (var item in sqls)
+            {
+                session.Execute(item);
+            }
+            session.Commit();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+            session.Rollback();
+            throw;
+        }
+    }
+
+    /// <summary>建立数据库</summary>
+    /// <param name="databaseName">数据库名</param>
+    /// <param name="file">数据文件路径</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean CreateDatabase(String databaseName, String? file = null)
+    {
+        var sql = CreateDatabaseSQL(databaseName, file);
+        return ExecuteDDL(sql, "CreateDatabase");
+    }
+
+    /// <summary>删除数据库</summary>
+    /// <param name="databaseName">数据库名</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean DropDatabase(String databaseName)
+    {
+        var sql = DropDatabaseSQL(databaseName);
+        return ExecuteDDL(sql, "DropDatabase");
+    }
+
+    /// <summary>数据库是否存在</summary>
+    /// <param name="databaseName">数据库名。为空时使用当前数据库</param>
+    /// <returns></returns>
+    public virtual Boolean DatabaseExist(String? databaseName)
+    {
+        databaseName ??= Database.DatabaseName;
+        if (databaseName.IsNullOrEmpty()) return false;
+
+        var sql = DatabaseExistSQL(databaseName);
+        if (sql.IsNullOrEmpty()) return false;
+        if (Database is not DbBase db) return false;
+
+        using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:DatabaseExist", databaseName);
+        var session = Database.CreateSession();
+        return session.QueryCount(sql) > 0;
+    }
+
+    /// <summary>建立表</summary>
+    /// <param name="table">表模型</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean CreateTable(IDataTable table)
+    {
+        var sql = CreateTableSQL(table);
+        return ExecuteDDL(sql, "CreateTable");
+    }
+
+    /// <summary>删除表</summary>
+    /// <param name="table">表模型</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean DropTable(IDataTable table)
+    {
+        var sql = DropTableSQL(table);
+        return ExecuteDDL(sql, "DropTable");
+    }
+
+    /// <summary>添加表说明</summary>
+    /// <param name="table">表模型</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean AddTableDescription(IDataTable table)
+    {
+        var sql = AddTableDescriptionSQL(table);
+        return ExecuteDDL(sql, "AddTableDescription");
+    }
+
+    /// <summary>删除表说明</summary>
+    /// <param name="table">表模型</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean DropTableDescription(IDataTable table)
+    {
+        var sql = DropTableDescriptionSQL(table);
+        return ExecuteDDL(sql, "DropTableDescription");
+    }
+
+    /// <summary>添加字段</summary>
+    /// <param name="column">字段</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean AddColumn(IDataColumn column)
+    {
+        var sql = AddColumnSQL(column);
+        return ExecuteDDL(sql, "AddColumn");
+    }
+
+    /// <summary>修改字段</summary>
+    /// <param name="column">字段</param>
+    /// <param name="oldColumn">原字段。为null时忽略旧字段对比</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean AlterColumn(IDataColumn column, IDataColumn? oldColumn)
+    {
+        var sql = AlterColumnSQL(column, oldColumn);
+        return ExecuteDDL(sql, "AlterColumn");
+    }
+
+    /// <summary>删除字段</summary>
+    /// <param name="column">字段</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean DropColumn(IDataColumn column)
+    {
+        var sql = DropColumnSQL(column);
+        return ExecuteDDL(sql, "DropColumn");
+    }
+
+    /// <summary>添加字段说明</summary>
+    /// <param name="column">字段</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean AddColumnDescription(IDataColumn column)
+    {
+        var sql = AddColumnDescriptionSQL(column);
+        return ExecuteDDL(sql, "AddColumnDescription");
+    }
+
+    /// <summary>删除字段说明</summary>
+    /// <param name="column">字段</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean DropColumnDescription(IDataColumn column)
+    {
+        var sql = DropColumnDescriptionSQL(column);
+        return ExecuteDDL(sql, "DropColumnDescription");
+    }
+
+    /// <summary>建立索引</summary>
+    /// <param name="index">索引</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean CreateIndex(IDataIndex index)
+    {
+        var sql = CreateIndexSQL(index);
+        return ExecuteDDL(sql, "CreateIndex");
+    }
+
+    /// <summary>删除索引</summary>
+    /// <param name="index">索引</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean DropIndex(IDataIndex index)
+    {
+        var sql = DropIndexSQL(index);
+        return ExecuteDDL(sql, "DropIndex");
+    }
+
+    /// <summary>备份数据库</summary>
+    /// <param name="dbName">数据库名</param>
+    /// <param name="backupFile">备份文件</param>
+    /// <returns>备份文件路径</returns>
+    public virtual String? BackupDatabase(String? dbName = null, String? backupFile = null)
+    {
+        return null;
+    }
+
+    /// <summary>还原数据库</summary>
+    /// <param name="backupFile">备份文件</param>
+    /// <param name="recoverDir">还原目录</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean RestoreDatabase(String backupFile, String? recoverDir = null)
+    {
+        return false;
+    }
+
+    /// <summary>收缩数据库</summary>
+    /// <returns>是否成功</returns>
+    public virtual Boolean CompactDatabase()
+    {
+        var sql = CompactDatabaseSQL();
+        return ExecuteDDL(sql, "CompactDatabase");
+    }
     #endregion
 }

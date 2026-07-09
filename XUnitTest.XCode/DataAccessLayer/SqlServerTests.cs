@@ -149,7 +149,7 @@ public class SqlServerTests
             try
             {
                 //dal.Execute("drop database membership_test");
-                dal.Db.CreateMetaData().SetSchema(DDLSchema.DropDatabase, "membership_test");
+                dal.Db.CreateMetaData().DropDatabase("membership_test");
             }
             catch (Exception ex)
             {
@@ -197,7 +197,7 @@ public class SqlServerTests
             try
             {
                 //dal.Execute("drop database membership_table_prefix");
-                dal.Db.CreateMetaData().SetSchema(DDLSchema.DropDatabase, "membership_table_prefix");
+                dal.Db.CreateMetaData().DropDatabase("membership_table_prefix");
             }
             catch (Exception ex)
             {
@@ -339,7 +339,7 @@ public class SqlServerTests
         XTrace.WriteLine("tables: {0}", tables.Join());
         Assert.Contains(tables, t => t.TableName == table.TableName);
 
-        dal.Db.CreateMetaData().SetSchema(DDLSchema.DropTable, table);
+        dal.Db.CreateMetaData().DropTable(table);
 
         tableNames = dal.GetTableNames();
         XTrace.WriteLine("tableNames: {0}", tableNames.Join());
@@ -353,20 +353,20 @@ public class SqlServerTests
         var dal = DAL.Create("bakSqlServer");
         var meta = dal.Db.CreateMetaData();
 
-        var file1 = meta.SetSchema(DDLSchema.BackupDatabase) as String;
+        var file1 = meta.BackupDatabase();
         Assert.NotEmpty(file1);
         Assert.True(File.Exists(file1));
         File.Delete(file1);
 
         var dbname = "AO_Test";
-        var file2 = meta.SetSchema(DDLSchema.BackupDatabase, dbname) as String;
+        var file2 = meta.BackupDatabase(dbname);
         Assert.NotEmpty(file2);
         Assert.Contains(dbname, file2);
         Assert.True(File.Exists(file2));
         File.Delete(file2);
 
         var file = $"bak_{Rand.NextString(8)}.bak";
-        var file4 = meta.SetSchema(DDLSchema.BackupDatabase, dbname, file) as String;
+        var file4 = meta.BackupDatabase(dbname, file);
         Assert.NotEmpty(file4);
         Assert.Equal(file, Path.GetFileName(file4));
         Assert.True(File.Exists(file4));
@@ -380,17 +380,14 @@ public class SqlServerTests
         var dal = DAL.Create("restoreSqlServer");
         var meta = dal.Db.CreateMetaData();
 
-        var result = meta.SetSchema(DDLSchema.RestoreDatabase) as String;
-        Assert.Empty(result);
+        var result = meta.RestoreDatabase("");
+        Assert.False(result);
 
-        var result2 = meta.SetSchema(DDLSchema.RestoreDatabase, "C:\\bak_bvi93mq5.bak") as String;
-        Assert.NotEmpty(result2);
-        Assert.Equal("ok", result2);
+        var result2 = meta.RestoreDatabase(@"C:\bak_bvi93mq5.bak");
+        Assert.True(result2);
 
-
-        var result3 = meta.SetSchema(DDLSchema.RestoreDatabase, "C:\\bak_bvi93mq5.bak", "D:\\Program Files (x86)\\Microsoft SQL Server\\MSSQL10_50.MSSQLSERVER\\MSSQL\\DATA") as String;
-        Assert.NotEmpty(result3);
-        Assert.Equal("ok", result3);
+        var result3 = meta.RestoreDatabase(@"C:\bak_bvi93mq5.bak", @"D:\Program Files (x86)\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQL\DATA");
+        Assert.True(result3);
 
     }
 

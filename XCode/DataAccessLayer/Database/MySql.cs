@@ -879,8 +879,10 @@ internal class MySqlMetaData : RemoteDbMetaData
 
     #region 反向工程
 
-    protected override Boolean DatabaseExist(String databaseName)
+    public override Boolean DatabaseExist(String? databaseName)
     {
+        if (databaseName.IsNullOrEmpty()) return base.DatabaseExist(databaseName);
+
         // MySqlConnector 不支持获取单个数据库架构，需要整体获取后再过滤
         if (Database.Factory.GetType().Name.Contains("MySqlConnector"))
         {

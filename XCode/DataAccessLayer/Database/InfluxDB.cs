@@ -340,8 +340,10 @@ schema.measurements(bucket: v.bucket)
     #endregion
 
     #region 反向工程
-    protected override Boolean DatabaseExist(String databaseName)
+    public override Boolean DatabaseExist(String? databaseName)
     {
+        if (databaseName.IsNullOrEmpty()) return base.DatabaseExist(databaseName);
+
         // InfluxDB 2.x 使用 bucket 概念
         var flux = @"buckets() |> filter(fn: (r) => r.name == """ + databaseName + @""")";
         var dt = Database.CreateSession().Query(flux, null);

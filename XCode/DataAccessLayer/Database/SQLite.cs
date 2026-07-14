@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -798,6 +798,9 @@ internal class SQLiteMetaData : FileDbMetaData
 
         return base.CreateDatabase(databaseName, file);
     }
+
+    /// <summary>创建数据库的SQL语句，包含IF NOT EXISTS确保幂等</summary>
+    public override String CreateDatabaseSQL(String dbname, String? file) => $"Create Database If Not Exists {Database.FormatName(dbname)}";
 
     /// <summary>删除数据库。内存数据库跳过文件删除</summary>
     /// <param name="databaseName">数据库名</param>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using NewLife;
@@ -248,5 +248,17 @@ public class PostgreSQLTests
         tableNames = dal.GetTableNames();
         XTrace.WriteLine("tableNames: {0}", tableNames.Join());
         Assert.DoesNotContain(table.TableName, tableNames);
+    }
+
+    /// <summary>验证 CreateDatabaseSQL 生成的 SQL 包含 IF NOT EXISTS</summary>
+    [Fact(DisplayName = "CreateDatabaseSQL应包含IF NOT EXISTS确保幂等")]
+    public void CreateDatabaseSQL_ShouldContain_IfNotExists()
+    {
+        var db = DbFactory.Create(DatabaseType.PostgreSQL);
+        var meta = db.CreateMetaData();
+
+        var sql = meta.GetSchemaSQL(DDLSchema.CreateDatabase, "test_db", null);
+        Assert.NotNull(sql);
+        Assert.Contains("IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
     }
 }

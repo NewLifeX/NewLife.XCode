@@ -104,6 +104,20 @@ public class BatchCapabilityTests
     }
 
     [Fact]
+    [System.ComponentModel.Description("InfluxDB具备Insert/Upsert能力，不含Update/InsertIgnore/Replace")]
+    public void InfluxDB_BatchCapability()
+    {
+        var db = DbFactory.Create(DatabaseType.InfluxDB);
+        var cap = db.BatchCapability;
+
+        Assert.True(cap.HasFlag(BatchCapability.Insert));
+        Assert.True(cap.HasFlag(BatchCapability.Upsert));
+        Assert.False(cap.HasFlag(BatchCapability.Update));
+        Assert.False(cap.HasFlag(BatchCapability.InsertIgnore));
+        Assert.False(cap.HasFlag(BatchCapability.Replace));
+    }
+
+    [Fact]
     [System.ComponentModel.Description("BatchCapability枚举值满足Flags语义，组合标志可通过HasFlag判断")]
     public void BatchCapability_FlagsSemantics()
     {

@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Reflection;
@@ -1270,12 +1270,13 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
     public override String DatabaseExistSQL(String dbname) => $"SELECT * FROM sysdatabases WHERE name = N'{dbname}'";
 
-    /// <summary>使用数据架构确定数据库是否存在，因为使用系统视图可能没有权限</summary>
+    /// <summary>数据库是否存在。空值时从连接字符串解析数据库名，使用GetSchema查询（系统视图可能无权限）</summary>
     /// <param name="dbname"></param>
     /// <returns></returns>
     public override Boolean DatabaseExist(String? dbname)
     {
-        if (dbname.IsNullOrEmpty()) return base.DatabaseExist(dbname);
+        // 空值时解析为当前数据库名，走GetSchema路径（而非委托基类）
+        if (dbname.IsNullOrEmpty()) dbname = Database.DatabaseName;
 
         var dt = GetSchema(_.Databases, [dbname]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;

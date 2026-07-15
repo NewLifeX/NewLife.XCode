@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -521,5 +521,32 @@ public class SqlServerTests
                 if (DAL.ConnStrs.ContainsKey(connName)) DAL.ConnStrs.Remove(connName);
             }
         }
+    }
+
+    /// <summary>验证 DatabaseExistSQL 返回有效的 SQL 查询语句</summary>
+    [Fact(DisplayName = "DatabaseExistSQL应返回有效SQL")]
+    public void DatabaseExistSQL_ShouldReturnValidSql()
+    {
+        var db = DbFactory.Create(DatabaseType.SqlServer);
+        var meta = db.CreateMetaData();
+
+        var sql = meta.GetSchemaSQL(DDLSchema.DatabaseExist, "test_db");
+        Assert.NotNull(sql);
+        Assert.Contains("sysdatabases", sql);
+        Assert.Contains("test_db", sql);
+    }
+
+    /// <summary>验证 CreateDatabaseSQL 生成正确的建库SQL（SqlServer不支持IF NOT EXISTS）</summary>
+    [Fact(DisplayName = "CreateDatabaseSQL应生成正确的SqlServer建库SQL")]
+    public void CreateDatabaseSQL_ShouldBeValid()
+    {
+        var db = DbFactory.Create(DatabaseType.SqlServer);
+        var meta = db.CreateMetaData();
+
+        var sql = meta.GetSchemaSQL(DDLSchema.CreateDatabase, "test_db", null);
+        Assert.NotNull(sql);
+        Assert.Contains("CREATE DATABASE", sql);
+        Assert.Contains("test_db", sql);
+        Assert.Contains("COLLATE", sql);
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.Common;
 using NewLife.Collections;
 using NewLife.Data;
@@ -701,9 +701,11 @@ internal class IRISMetaData : RemoteDbMetaData
 
     #region 反向工程
 
+    /// <summary>数据库是否存在。空值时从连接字符串解析数据库名，使用GetSchema查询</summary>
     public override Boolean DatabaseExist(String? databaseName)
     {
-        if (databaseName.IsNullOrEmpty()) return base.DatabaseExist(databaseName);
+        // 空值时解析为当前数据库名，走GetSchema路径（而非委托基类）
+        if (databaseName.IsNullOrEmpty()) databaseName = Database.DatabaseName;
 
         // IRISConnector 不支持获取单个数据库架构，需要整体获取后再过滤
         if (Database.Factory.GetType().Name.Contains("IRISConnector"))
@@ -716,7 +718,7 @@ internal class IRISMetaData : RemoteDbMetaData
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
 
-    public override String CreateDatabaseSQL(String dbname, String? file) => base.CreateDatabaseSQL(dbname, file) + " DEFAULT CHARACTER SET utf8mb4";
+    public override String CreateDatabaseSQL(String dbname, String? file) => $"Create Database If Not Exists {Database.FormatName(dbname)} DEFAULT CHARACTER SET utf8mb4";
 
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";
 

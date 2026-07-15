@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -146,5 +146,18 @@ public class DaMengTests
         tableNames = dal.GetTableNames();
         XTrace.WriteLine("tableNames: {0}", tableNames.Join());
         Assert.DoesNotContain(table.TableName, tableNames);
+    }
+
+    /// <summary>验证 CreateDatabaseSQL 生成正确的建库SQL（达梦不支持IF NOT EXISTS）</summary>
+    [Fact(DisplayName = "CreateDatabaseSQL应生成正确的达梦建库SQL")]
+    public void CreateDatabaseSQL_ShouldBeValid()
+    {
+        var db = DbFactory.Create(DatabaseType.DaMeng);
+        var meta = db.CreateMetaData();
+
+        var sql = meta.GetSchemaSQL(DDLSchema.CreateDatabase, "test_db", null);
+        Assert.NotNull(sql);
+        Assert.Contains("Create Database", sql);
+        Assert.Contains("test_db", sql);
     }
 }

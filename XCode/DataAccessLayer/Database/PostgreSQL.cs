@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Data;
 using System.Data.Common;
 using System.Net;
@@ -631,14 +631,12 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     //    return base.SetSchema(schema, values);
     //}
 
+    /// <summary>数据库是否存在。空值时从连接字符串解析数据库名，使用GetSchema查询</summary>
     public override Boolean DatabaseExist(String? databaseName)
     {
-        if (databaseName.IsNullOrEmpty()) return base.DatabaseExist(databaseName);
+        // 空值时解析为当前数据库名，走GetSchema路径（而非委托基类）
+        if (databaseName.IsNullOrEmpty()) databaseName = Database.DatabaseName;
 
-        //return base.DatabaseExist(databaseName);
-
-        var session = Database.CreateSession();
-        //var dt = GetSchema(_.Databases, new String[] { databaseName.ToLower() });
         var dt = GetSchema(_.Databases, [databaseName]);
         return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
@@ -648,7 +646,7 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     /// </summary>
     public override String CreateDatabaseSQL(String dbname, String? file)
     {
-        return String.Format("Create Database \"{0}\" ENCODING \"UTF8\"", dbname.Replace("\"", "\"\""));
+        return String.Format("Create Database If Not Exists \"{0}\" ENCODING \"UTF8\"", dbname.Replace("\"", "\"\""));
     }
 
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";

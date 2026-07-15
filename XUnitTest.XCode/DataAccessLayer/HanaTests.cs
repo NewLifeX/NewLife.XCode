@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -471,5 +471,17 @@ public class HanaTests
         dal.SetTables(table);
 
         Assert.Contains(dal.Tables, t => t.TableName == table.TableName);
+    }
+
+    /// <summary>验证 CreateDatabaseSQL 生成的 SQL 包含 IF NOT EXISTS</summary>
+    [Fact(DisplayName = "CreateDatabaseSQL应包含IF NOT EXISTS确保幂等")]
+    public void CreateDatabaseSQL_ShouldContain_IfNotExists()
+    {
+        var db = DbFactory.Create(DatabaseType.Hana);
+        var meta = db.CreateMetaData();
+
+        var sql = meta.GetSchemaSQL(DDLSchema.CreateDatabase, "test_db", null);
+        Assert.NotNull(sql);
+        Assert.Contains("IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
     }
 }

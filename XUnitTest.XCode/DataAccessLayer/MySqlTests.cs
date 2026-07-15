@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -852,6 +852,32 @@ public class MySqlTests
         var admin = list.FirstOrDefault(r => r.Name == "管理员");
         Assert.NotNull(admin);
         Assert.True(admin.ID > 0);
+    }
+
+    /// <summary>验证 DatabaseExist(null) 能正确从连接字符串解析数据库名并判断存在</summary>
+    [Fact(DisplayName = "DatabaseExist(null)应解析连接字符串中的数据库名并返回true")]
+    public void DatabaseExist_Null_ShouldReturnTrue()
+    {
+        // 使用 sys 库连接，sys 是 MySQL 系统库，一定存在
+        DAL.AddConnStr("MySql_DatabaseExist_Null", _ConnStr, null, "MySql");
+        var dal = DAL.Create("MySql_DatabaseExist_Null");
+        var meta = dal.Db.CreateMetaData();
+
+        // 传入 null，应自动从连接字符串解析出 Database=sys，并返回 true
+        var exists = meta.DatabaseExist(null);
+        Assert.True(exists);
+    }
+
+    /// <summary>验证 CreateDatabaseSQL 生成的 SQL 包含 IF NOT EXISTS</summary>
+    [Fact(DisplayName = "CreateDatabaseSQL应包含IF NOT EXISTS确保幂等")]
+    public void CreateDatabaseSQL_ShouldContain_IfNotExists()
+    {
+        var db = DbFactory.Create(DatabaseType.MySql);
+        var meta = db.CreateMetaData();
+
+        var sql = meta.GetSchemaSQL(DDLSchema.CreateDatabase, "test_db", null);
+        Assert.NotNull(sql);
+        Assert.Contains("IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
     }
 
     private class MyMySqlRole

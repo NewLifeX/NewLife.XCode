@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Text;
 using NewLife.Collections;
 using NewLife.Data;
@@ -51,6 +52,8 @@ class InfluxDB : RemoteDb
     #endregion
 
     #region 数据库特性
+    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.Upsert;
+
     protected override String ReservedWordsStr => "AND,OR,NOT,FROM,WHERE,SELECT,DELETE,DROP,SHOW,MEASUREMENT,TAG,FIELD,TIME";
 
     /// <summary>格式化关键字</summary>
@@ -69,17 +72,29 @@ class InfluxDB : RemoteDb
     /// <returns></returns>
     public override String FormatValue(IDataColumn field, Object? value)
     {
+        if (value == null)
+            return field.Nullable ? "null" : "";
+
         var code = System.Type.GetTypeCode(field.DataType);
         if (code == TypeCode.String)
         {
-            if (value == null)
-                return field.Nullable ? "null" : "\"\"";
-
             return "\"" + value.ToString()?.Replace("\"", "\\\"") + "\"";
         }
         else if (code == TypeCode.Boolean)
         {
             return value.ToBoolean() ? "true" : "false";
+        }
+        else if (code is TypeCode.SByte or TypeCode.Byte or TypeCode.Int16 or TypeCode.UInt16 or TypeCode.Int32 or TypeCode.UInt32 or TypeCode.Int64)
+        {
+            return $"{value}i";
+        }
+        else if (code == TypeCode.UInt64)
+        {
+            return $"{value}u";
+        }
+        else if (code is TypeCode.Single or TypeCode.Double or TypeCode.Decimal)
+        {
+            return Convert.ToString(value, CultureInfo.InvariantCulture) ?? "0";
         }
 
         return base.FormatValue(field, value);
@@ -149,61 +164,7 @@ internal class InfluxDBSession : RemoteDbSession
     /// <returns></returns>
     public override Int32 Insert(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
     {
-        var sb = Pool.StringBuilder.Get();
-        var db = (Database as DbBase)!;
-
-        // InfluxDB 使用 Line Protocol 格式写入
-        // 格式: measurement,tag1=value1,tag2=value2 field1=value1,field2=value2 timestamp
-        foreach (var entity in list)
-        {
-            // measurement 名称（表名）
-            sb.Append(db.FormatName(table));
-
-            // tags（索引字段，通常是维度）
-            var tags = columns.Where(c => c.PrimaryKey || c.Master).ToArray();
-            if (tags.Length > 0)
-            {
-                sb.Append(',');
-                sb.Append(tags.Join(",", c =>
-                {
-                    var value = entity[c.Name];
-                    return $"{db.FormatName(c)}={value}";
-                }));
-            }
-
-            // fields（数据字段）
-            var fields = columns.Where(c => !c.PrimaryKey && !c.Master).ToArray();
-            if (fields.Length > 0)
-            {
-                sb.Append(' ');
-                sb.Append(fields.Join(",", c =>
-                {
-                    var value = entity[c.Name];
-                    var strValue = value?.ToString() ?? "";
-                    // 字符串字段需要加引号
-                    if (c.DataType == typeof(String))
-                        strValue = $"\"{strValue}\"";
-                    return $"{db.FormatName(c)}={strValue}";
-                }));
-            }
-
-            // timestamp（纳秒级时间戳）
-            var timeCol = columns.FirstOrDefault(c => c.Name.EqualIgnoreCase("Time", "CreateTime", "UpdateTime"));
-            if (timeCol != null)
-            {
-                var time = entity[timeCol.Name];
-                if (time is DateTime dt)
-                {
-                    var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                    var nanos = (dt.ToUniversalTime() - epoch).Ticks * 100;
-                    sb.Append($" {nanos}");
-                }
-            }
-
-            sb.AppendLine();
-        }
-
-        var lineProtocol = sb.Return(true);
+        var lineProtocol = BuildLineProtocol(Database, table, columns, list);
         return Execute(lineProtocol);
     }
 
@@ -218,6 +179,65 @@ internal class InfluxDBSession : RemoteDbSession
     {
         // InfluxDB 自动处理相同 measurement + tags + timestamp 的写入，新值会覆盖旧值
         return Insert(table, columns, list);
+    }
+
+    private static String BuildLineProtocol(IDatabase database, IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
+    {
+        var sb = Pool.StringBuilder.Get();
+        var db = (database as DbBase)!;
+
+        foreach (var entity in list)
+        {
+            var timeCol = columns.FirstOrDefault(c =>
+            {
+                var name = c.Name ?? c.ColumnName;
+                return !name.IsNullOrEmpty() && name.EqualIgnoreCase("Time", "CreateTime", "UpdateTime") && entity[name] != null;
+            });
+
+            sb.Append(db.FormatName(table));
+
+            var tags = columns.Where(c => (c.PrimaryKey || c.Master) && c != timeCol).ToArray();
+            if (tags.Length > 0)
+            {
+                sb.Append(',');
+                sb.Append(tags.Join(",", c =>
+                {
+                    var name = c.Name ?? c.ColumnName;
+                    return $"{db.FormatName(c)}={entity[name]}";
+                }));
+            }
+
+            var fields = columns.Where(c => !c.PrimaryKey && !c.Master && c != timeCol).ToArray();
+            if (fields.Length > 0)
+            {
+                sb.Append(' ');
+                sb.Append(fields.Join(",", c =>
+                {
+                    var name = c.Name ?? c.ColumnName;
+                    return $"{db.FormatName(c)}={db.FormatValue(c, entity[name])}";
+                }));
+            }
+
+            if (timeCol != null)
+            {
+                var name = timeCol.Name ?? timeCol.ColumnName;
+                var time = entity[name];
+                if (time is DateTime dt)
+                    sb.Append($" {ToNanoseconds(dt)}");
+                else if (time is DateTimeOffset dto)
+                    sb.Append($" {ToNanoseconds(dto.UtcDateTime)}");
+            }
+
+            sb.Append('\n');
+        }
+
+        return sb.Return(true);
+    }
+
+    private static Int64 ToNanoseconds(DateTime dt)
+    {
+        var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        return (dt.ToUniversalTime() - epoch).Ticks * 100;
     }
     #endregion
 

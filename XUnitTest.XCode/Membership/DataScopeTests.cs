@@ -218,7 +218,7 @@ public class DataScopeTests : IDisposable
     #region DataScopeContext 多线程测试
     [Fact]
     [DisplayName("Current在多线程下隔离")]
-    public void DataScopeContext_Current_ThreadIsolation()
+    public async Task DataScopeContext_Current_ThreadIsolation()
     {
         // Arrange
         DataScopeContext.Current = new DataScopeContext { UserId = 1 };
@@ -230,7 +230,7 @@ public class DataScopeTests : IDisposable
             DataScopeContext.Current = new DataScopeContext { UserId = 2 };
             thread2UserId = DataScopeContext.Current?.UserId ?? 0;
         });
-        task.Wait();
+        await task;
 
         // Assert
         Assert.Equal(1, DataScopeContext.Current?.UserId); // 主线程仍然是 1

@@ -22,11 +22,12 @@ using XCode.Cache;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 using XCode.Membership;
+// EntityTree 在 XCode 命名空间下，已在全局 using 中覆盖
 
 namespace XUnitTest.XCode.TestEntity
 {
     /// <summary>菜单</summary>
-    public partial class Menu2 : Entity<Menu2>
+    public partial class Menu2 : EntityTree<Menu2>
     {
         #region 对象操作
         static Menu2()

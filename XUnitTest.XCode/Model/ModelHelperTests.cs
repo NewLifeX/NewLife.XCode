@@ -135,7 +135,7 @@ public class ModelHelperTests
 
         Assert.NotNull(tables);
         Assert.NotEmpty(tables);
-        Assert.Equal(1, tables.Count);
+        Assert.Single(tables);
 
         var column = tables[0].Columns[6];
         Assert.NotNull(column.Name);
@@ -152,7 +152,7 @@ public class ModelHelperTests
         tables = ModelHelper.FromXml(xml, DAL.CreateTable, option, atts);
         Assert.NotNull(tables);
         Assert.NotEmpty(tables);
-        Assert.Equal(1, tables.Count);
+        Assert.Single(tables);
 
         var xml2 = DAL.Export(tables);
         //Assert.Equal(xml, xml2);

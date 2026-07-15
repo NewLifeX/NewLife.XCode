@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using NewLife;
 using XCode;
 using XCode.Configuration;
@@ -465,7 +466,7 @@ public class TenantContextTests : IDisposable
     #region 多线程测试
     [Fact]
     [DisplayName("Current在多线程下隔离")]
-    public void Current_ThreadIsolation()
+    public async Task Current_ThreadIsolation()
     {
         // Arrange
         TenantContext.Current = new TenantContext { TenantId = 1 };
@@ -477,7 +478,7 @@ public class TenantContextTests : IDisposable
             TenantContext.Current = new TenantContext { TenantId = 2 };
             thread2TenantId = TenantContext.CurrentId;
         });
-        task.Wait();
+        await task;
 
         // Assert
         Assert.Equal(1, TenantContext.CurrentId); // 主线程仍然是 1

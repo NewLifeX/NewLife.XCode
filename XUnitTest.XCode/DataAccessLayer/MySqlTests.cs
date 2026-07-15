@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using NewLife;
 using NewLife.Log;
@@ -836,7 +837,7 @@ public class MySqlTests
     }
 
     [Fact(DisplayName = "QueryModelsAsync — 直接映射模型列表，跳过DbTable中间层")]
-    public async void QueryModelsAsyncTest()
+    public async Task QueryModelsAsyncTest()
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
         DAL.AddConnStr("MySql_QueryModels", connStr, null, "MySql");

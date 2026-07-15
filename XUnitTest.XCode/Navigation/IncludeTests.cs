@@ -63,7 +63,7 @@ public class IncludeTests : IDisposable
         // 如果没抛异常说明注册成功
     }
 
-    // ====== 导航属性 Include<T,TProperty> ======
+    // ====== 导航属性 Include 与注册 ======
 
     [Fact(DisplayName = "Include_Navigation_WithRegisteredNav_DoesNotThrow")]
     public void Include_Navigation_WithRegisteredNav_DoesNotThrow()
@@ -78,15 +78,31 @@ public class IncludeTests : IDisposable
         };
         NavigationRegistry.Global.Register(nav);
 
-        // Include 不抛异常（由于是递归类型，实际不会执行查询）
-        var q = Role.Query.Include<Role, Role>(r => r);
+        // Include 通过 Type 参数预加载
+        var q = Role.Query.Include(typeof(Role));
         Assert.NotNull(q);
+        Assert.IsAssignableFrom<IQueryable<Role>>(q);
     }
 
-    [Fact(DisplayName = "Include_Navigation_ReturnsIQueryable")]
-    public void Include_Navigation_ReturnsIQueryable()
+    [Fact(DisplayName = "NavigationRegistry_Register_GetNavigations")]
+    public void NavigationRegistry_Register_GetNavigations()
     {
-        var q = Role.Query.Include<Role, Role>(r => r);
-        Assert.IsAssignableFrom<IQueryable<Role>>(q);
+        var nav = new NavigationProperty
+        {
+            Name = "Department",
+            Type = NavigationType.HasOne,
+            SourceType = typeof(Role),
+            TargetType = typeof(Department),
+        };
+        NavigationRegistry.Global.Register(nav);
+
+        var navs = NavigationRegistry.Global.GetNavigations(typeof(Role));
+        Assert.Contains(navs, n => n.Name == "Department");
+    }
+
+    [Fact(DisplayName = "NavigationRegistry_Global_NotNull")]
+    public void NavigationRegistry_Global_NotNull()
+    {
+        Assert.NotNull(NavigationRegistry.Global);
     }
 }

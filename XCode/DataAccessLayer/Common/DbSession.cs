@@ -378,7 +378,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
-    /// <returns></returns>
+    /// <returns>数据表</returns>
     public virtual DbTable Query(String sql, IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, CommandType.Text, ps);
@@ -401,7 +401,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
-    /// <returns></returns>
+    /// <returns>总记录数</returns>
     public virtual Int64 QueryCount(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         if (sql.Contains(" "))

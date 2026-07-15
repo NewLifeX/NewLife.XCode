@@ -104,19 +104,19 @@ public interface IDbSession : IDisposable2
 
     /// <summary>快速查询单表记录数，稍有偏差</summary>
     /// <param name="tableName">表名</param>
-    /// <returns></returns>
+    /// <returns>记录数</returns>
     Int64 QueryCountFast(String tableName);
 
     /// <summary>执行SQL语句，返回受影响的行数</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
-    /// <returns></returns>
+    /// <returns>受影响的行数</returns>
     Int32 Execute(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps);
 
     /// <summary>执行DbCommand，返回受影响的行数</summary>
     /// <param name="cmd">DbCommand</param>
-    /// <returns></returns>
+    /// <returns>受影响的行数</returns>
     Int32 Execute(DbCommand cmd);
 
     /// <summary>执行插入语句并返回新增行的自动编号</summary>

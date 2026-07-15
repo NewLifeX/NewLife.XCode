@@ -39,7 +39,7 @@ namespace XCode.Model
 
         #region 方法
         /// <summary>处理一批</summary>
-        /// <param name="list"></param>
+        /// <param name="list">待处理的实体列表</param>
         public override Int32 Process(IList<Object> list)
         {
             if (list.Count == 0) return 0;

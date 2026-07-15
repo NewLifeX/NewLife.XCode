@@ -228,20 +228,6 @@ abstract class RemoteDbMetaData : DbMetaData
         return false;
     }
 
-    /// <summary>数据库是否存在</summary>
-    /// <param name="databaseName">数据库名。为空时使用当前数据库</param>
-    /// <returns></returns>
-    public override Boolean DatabaseExist(String? databaseName)
-    {
-        if (databaseName.IsNullOrEmpty()) databaseName = Database.DatabaseName;
-        if (databaseName.IsNullOrEmpty()) return false;
-
-        var sql = GetSchemaSQL(DDLSchema.DatabaseExist, [databaseName]);
-        if (sql.IsNullOrEmpty()) return false;
-
-        var session = Database.CreateSession();
-        return session.QueryCount(sql) > 0;
-    }
     #endregion
 
     //Object ProcessWithSystem(Func<IDbSession, Object> callback) => (Database.CreateSession() as RemoteDbSession).ProcessWithSystem((s, c) => callback(s));

@@ -1169,13 +1169,20 @@ internal partial class DbMetaData
         databaseName ??= Database.DatabaseName;
         if (databaseName.IsNullOrEmpty()) return false;
 
+        // 优先使用 DatabaseExistSQL 路径（子类可实现精确 SQL）
         var sql = DatabaseExistSQL(databaseName);
-        if (sql.IsNullOrEmpty()) return false;
-        if (Database is not DbBase db) return false;
+        if (!sql.IsNullOrEmpty())
+        {
+            if (Database is not DbBase db) return false;
 
-        using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:DatabaseExist", databaseName);
-        var session = Database.CreateSession();
-        return session.QueryCount(sql) > 0;
+            using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:DatabaseExist", databaseName);
+            var session = Database.CreateSession();
+            return session.QueryCount(sql) > 0;
+        }
+
+        // 无自定义 SQL 时，回退到 ADO.NET 架构发现（GetSchema）。大多数数据库子类无需再重写此方法
+        var dt = GetSchema(_.Databases, [databaseName]);
+        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
 
     /// <summary>建立表</summary>

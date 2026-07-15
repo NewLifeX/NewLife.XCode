@@ -420,16 +420,6 @@ internal class NovaDbMetaData : RemoteDbMetaData
 
     #region 反向工程
 
-    /// <summary>数据库是否存在。空值时从连接字符串解析数据库名，使用GetSchema查询</summary>
-    public override Boolean DatabaseExist(String? databaseName)
-    {
-        // 空值时解析为当前数据库名，走GetSchema路径（而非委托基类）
-        if (databaseName.IsNullOrEmpty()) databaseName = Database.DatabaseName;
-
-        var dt = GetSchema(_.Databases, [databaseName]);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
-    }
-
     public override String CreateDatabaseSQL(String dbname, String? file) => $"Create Database If Not Exists {Database.FormatName(dbname)} DEFAULT CHARACTER SET utf8mb4";
 
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";

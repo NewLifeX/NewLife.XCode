@@ -1090,16 +1090,6 @@ internal class OracleMeta : RemoteDbMetaData
         return $"CREATE DATABASE {Database.FormatName(dbname)} CHARACTER SET AL32UTF8";
     }
 
-    /// <summary>数据库是否存在。空值时从连接字符串解析数据库名，使用GetSchema查询</summary>
-    public override Boolean DatabaseExist(String? databaseName)
-    {
-        // 空值时解析为当前数据库名，走GetSchema路径（而非依赖DatabaseExistSQL）
-        if (databaseName.IsNullOrEmpty()) databaseName = Database.DatabaseName;
-
-        var dt = GetSchema(_.Databases, [databaseName]);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
-    }
-
     public override String DatabaseExistSQL(String dbname) => String.Empty;
 
     protected override String GetFieldConstraints(IDataColumn field, Boolean onlyDefine)

@@ -462,8 +462,8 @@ public class EntityBuilderTests
         // 验证不存在孤立的[Map(...)]特性（即[Map后面紧跟空行或#endregion）
         Assert.DoesNotContain("[Map(nameof(ReleaseId)", code);
 
-        // 验证仍然生成了对象引用属性（ProductRelease对象）
-        Assert.Contains("ProductRelease", code);
+        // 验证仍然生成了对象引用属性（ProductRelease对象），且使用 Extends.Get 模式
+        Assert.Contains("public ProductRelease? Release => Extends.Get(nameof(Release), k => ProductRelease.FindById(ReleaseId));", code);
     }
 
     [Fact(Skip = "跳过")]

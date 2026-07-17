@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NewLife.Log;
@@ -398,6 +399,71 @@ public class EntityBuilderTests
 
         var xml = File.ReadAllText(file);
         Assert.Contains("Name", xml);
+    }
+
+    /// <summary>
+    /// 验证：Map特性只有表@主键（无显示字段），且被映射表无Master/Name字段时，
+    /// 不应生成孤立的[Map(...)]特性（缺少属性声明）
+    /// </summary>
+    [Fact]
+    public void BuildMap_NoDisplayField_NoOrphanedMapAttribute()
+    {
+        // 构造 ProductRelease 表（无 Master 字段，无 Name 字段）
+        var releaseTable = new XTable("ProductRelease") { Description = "产品版本" };
+        var releaseId = (XField)releaseTable.CreateColumn();
+        releaseId.Name = "Id";
+        releaseId.DataType = typeof(Int32);
+        releaseId.Identity = true;
+        releaseId.PrimaryKey = true;
+        releaseTable.Columns.Add(releaseId);
+
+        var releaseVersion = (XField)releaseTable.CreateColumn();
+        releaseVersion.Name = "Version";
+        releaseVersion.DataType = typeof(String);
+        releaseTable.Columns.Add(releaseVersion);
+
+        // 构造 ProductPackage 表，ReleaseId 的 Map 只有 "ProductRelease@Id"（无显示字段）
+        var packageTable = new XTable("ProductPackage") { Description = "产品发布包" };
+        var pkgId = (XField)packageTable.CreateColumn();
+        pkgId.Name = "Id";
+        pkgId.DataType = typeof(Int32);
+        pkgId.Identity = true;
+        pkgId.PrimaryKey = true;
+        packageTable.Columns.Add(pkgId);
+
+        var releaseIdCol = (XField)packageTable.CreateColumn();
+        releaseIdCol.Name = "ReleaseId";
+        releaseIdCol.DataType = typeof(Int32);
+        releaseIdCol.Map = "ProductRelease@Id";
+        releaseIdCol.Description = "发布版本。所属发布版本";
+        packageTable.Columns.Add(releaseIdCol);
+
+        var allTables = new List<IDataTable> { releaseTable, packageTable };
+
+        var option = new EntityBuilderOption
+        {
+            ConnName = "Test",
+            Namespace = "Test",
+            Nullable = true,
+        };
+
+        var builder = new EntityBuilder
+        {
+            Table = packageTable,
+            AllTables = allTables,
+            Option = option,
+        };
+
+        builder.Execute();
+        var code = builder.ToString();
+
+        Assert.NotEmpty(code);
+
+        // 验证不存在孤立的[Map(...)]特性（即[Map后面紧跟空行或#endregion）
+        Assert.DoesNotContain("[Map(nameof(ReleaseId)", code);
+
+        // 验证仍然生成了对象引用属性（ProductRelease对象）
+        Assert.Contains("ProductRelease", code);
     }
 
     [Fact(Skip = "跳过")]

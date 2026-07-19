@@ -1176,7 +1176,7 @@ public class EntityBuilder : ClassBuilder
                 mapName ??= mapTable.Columns.FirstOrDefault(e => e.Master);
                 mapName ??= mapTable.GetColumn("Name");
             }
-            else
+            else if (ss.Length > 2)
             {
                 // 默认字符串类型
                 mapName = new XField { Name = ss[2], DataType = typeof(String) };
@@ -1205,8 +1205,12 @@ public class EntityBuilder : ClassBuilder
                 if (mapName != null && mapName.Name != "$") myName += mapName.Name;
             }
 
-            // 扩展属性有可能恰巧跟已有字段同名
-            if (!myName.IsNullOrEmpty() && !Table.Columns.Any(e => e.Name.EqualIgnoreCase(myName)))
+            // $表示用ToString()替代显示字段
+            var useToString = ss.Length > 2 && ss[2] == "$";
+
+            // 扩展属性有可能恰巧跟已有字段同名，且需要有显示字段才能生成扩展属性
+            if (!myName.IsNullOrEmpty() && !Table.Columns.Any(e => e.Name.EqualIgnoreCase(myName))
+                && (mapName != null || useToString))
             {
                 var type = Option.Nullable ? "String?" : "String";
 
@@ -1215,7 +1219,7 @@ public class EntityBuilder : ClassBuilder
                 WriteLine("[Map(nameof({0}), typeof({1}), \"{2}\")]", column.Name, fullName, mapIdName);
                 if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
                     WriteLine("[Category(\"{0}\")]", att);
-                if (ss.Length > 2 && ss[2] == "$")
+                if (useToString)
                     WriteLine("public {2} {0} => {1}?.ToString();", myName, name, type);
                 else if (mapName != null)
                 {

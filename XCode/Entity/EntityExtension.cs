@@ -221,6 +221,7 @@ public static class EntityExtension
 
         var rs = 0;
         var fact = entity.GetType().AsFactory();
+        var useShard = session == null && fact.ShardPolicy != null;
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
@@ -242,13 +243,44 @@ public static class EntityExtension
             }
 
             if (valid) others = others.Valid(true);
-            rs += BatchSave(session, others, null);
+            if (useShard)
+            {
+                var groups = GroupByShardSession(others, fact, session);
+                foreach (var item in groups)
+                {
+                    rs += BatchSave(item.Key, item.Value, null);
+                }
+            }
+            else
+                rs += BatchSave(session, others, null);
         }
 
         if (valid)
             return rs + DoAction(array, useTransition, e => e.Save(), session);
         else
             return rs + DoAction(array, useTransition, e => e.SaveWithoutValid(), session);
+    }
+
+    internal static Dictionary<IEntitySession, List<T>> GroupByShardSession<T>(IEnumerable<T> list, IEntityFactory fact, IEntitySession session) where T : IEntity
+    {
+        var rs = new Dictionary<IEntitySession, List<T>>();
+        foreach (var item in list)
+        {
+            if (item == null) continue;
+
+            var shard = fact.ShardPolicy?.Shard(item);
+            var ss = fact.GetSession(shard?.ConnName ?? session.ConnName, shard?.TableName ?? session.TableName);
+
+            if (!rs.TryGetValue(ss, out var entities))
+            {
+                entities = [];
+                rs[ss] = entities;
+            }
+
+            entities.Add(item);
+        }
+
+        return rs;
     }
 
     /// <summary>拆分为来自数据库的更新和其它的Upsert</summary>

@@ -1,15 +1,16 @@
 # Shards 分配策略与路由（Shards）
 
-分表分库是 XCode 处理海量数据的核心能力之一。`XCode.Shards` 提供策略接口 `IShardPolicy` 与内置实现 `TimeShardPolicy`，用于把“实体对象/时间/雪花Id/查询表达式”映射到目标库表。
+分表分库是 XCode 处理海量数据的核心能力之一。`XCode.Shards` 提供策略接口 `IShardPolicy` 与两个内置实现 `TimeShardPolicy`（时间分片）和 `FieldShardPolicy`（业务字段分片），用于把"实体对象/时间/雪花Id/查询表达式"映射到目标库表。
 
 ## 核心对象
 
 - `IShardPolicy`
-  - `Shard(Object value)`：单值路由（实体、时间、雪花Id）
+  - `Shard(Object value)`：单值路由（实体、时间、雪花Id、直接字段值）
   - `Shards(DateTime start, DateTime end)`：按时间区间给出多分片
   - `Shards(Expression expression)`：从查询条件推导多分片
 - `ShardModel(String ConnName, String TableName)`：目标分片描述
 - `TimeShardPolicy`：内置时间分片策略，支持连接名与表名双路由
+- `FieldShardPolicy`：内置业务字段分片策略，按任意字段值（如 UserId）路由到对应分表
 
 ## 1）策略挂载位置
 
@@ -115,7 +116,84 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
 };
 ```
 
-## 9）常见问题
+## 9）业务字段分表策略（FieldShardPolicy）
+
+`FieldShardPolicy` 适用于多租户等按业务字段固定路由的场景。整张分表内，该字段的值保持一致。
+
+### 核心特性
+
+- 按任意字段（`Int32`/`Int64`/`String` 等）的**等值**路由
+- 写入（Insert/Update/Delete）和等值查询均自动路由到对应分表
+- 非等值查询（`>`、`<` 等）不路由，回落到主表（安全降级）
+- 不支持时间区间扫描（`Shards(start, end)` 返回空数组）
+
+### 配置示例
+
+```csharp
+// 按 UserId 字段分表，UserId=1000 时表名为 UserLog_1000
+Meta.ShardPolicy = new FieldShardPolicy(nameof(UserId), Meta.Factory)
+{
+    TablePolicy = "{0}_{1}",
+};
+
+// 同时分库分表
+Meta.ShardPolicy = new FieldShardPolicy(nameof(TenantId), Meta.Factory)
+{
+    ConnPolicy = "{0}_{1}",
+    TablePolicy = "{0}_{1}",
+};
+```
+
+其中：
+- `ConnPolicy`：连接名格式，`{0}` 基础连接名，`{1}` 字段值（如 `{0}_{1}` → `mydb_1000`）
+- `TablePolicy`：表名格式，`{0}` 基础表名，`{1}` 字段值（如 `{0}_{1}` → `Log_1000`）
+- 默认 `TablePolicy = "{0}_{1}"`，`ConnPolicy` 为空（不切库）
+
+### 路由输入类型
+
+`FieldShardPolicy.Shard(Object value)` 支持：
+
+- `IModel`：从实体对象读取指定分片字段值
+- 任意直接值（`Int32`/`Int64`/`String` 等）：直接格式化进策略
+
+### 查询路由
+
+`Shards(Expression expression)` 从查询条件中寻找分片字段的**等值条件**：
+
+- `UserId == 1000` → 路由到 `Log_1000`
+- `Success == true & UserId == 2000` → 路由到 `Log_2000`
+- `UserId > 0`（非等值）→ 返回空，回落主表
+- 不含分片字段条件 → 返回空，回落主表
+
+### 推荐配置模板
+
+#### 多租户按 TenantId 分表
+
+```csharp
+// 一般在实体类的静态构造函数中配置
+static UserLog()
+{
+    Meta.ShardPolicy = new FieldShardPolicy(nameof(TenantId), Meta.Factory)
+    {
+        TablePolicy = "{0}_{1}",
+    };
+}
+```
+
+#### 多租户按 UserId 分库分表
+
+```csharp
+static Log()
+{
+    Meta.ShardPolicy = new FieldShardPolicy(nameof(UserId), Meta.Factory)
+    {
+        ConnPolicy = "db_{1}",
+        TablePolicy = "{0}_{1}",
+    };
+}
+```
+
+## 10）常见问题
 
 - **为何查询没走分片？**
   - 查询条件里缺少分片字段，或表达式无法提取范围。
@@ -123,10 +201,13 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
   - `ShardPolicy` 未配置，或输入对象分片字段值无效。
 - **雪花Id分片报错？**
   - Id 不是合法雪花值，无法解析时间。
+- **FieldShardPolicy 范围查询不分表？**
+  - `FieldShardPolicy` 仅支持等值条件路由，范围查询（`>`、`<`）会回落主表，这是预期行为。
 
-## 10）实践建议
+## 11）实践建议
 
-- 分片键必须稳定、可提取区间（推荐时间或雪花Id）。
-- `Step` 尽量与分片粒度一致，避免过度扫描。
+- 分片键必须稳定、可提取区间（`TimeShardPolicy` 推荐时间或雪花Id，`FieldShardPolicy` 推荐租户/用户Id）。
+- `TimeShardPolicy` 的 `Step` 尽量与分片粒度一致，避免过度扫描。
+- `FieldShardPolicy` 适合整表固定属于某个业务主体的场景（如多租户日志）。
 - 批量写入时优先交给框架自动分组，不要手工拆库拆表。
 - 分片策略应与数据保留策略（按天/按月清理）统一设计。

@@ -919,7 +919,8 @@ public partial class Area : Entity<Area>
         //if (url.IsNullOrEmpty()) url = "http://x.newlifex.com/data/202401xzqh.html";
         if (url.IsNullOrEmpty()) url = NewLife.Setting.Current.PluginServer.TrimEnd("/") + "/data/202401xzqh.html";
 
-        var http = new HttpClient();
+        // Task.Run 避免同步上下文死锁；低版本框架无同步 GetString，用 using 确保释放 HttpClient
+        using var http = new HttpClient();
         var html = Task.Run(() => http.GetStringAsync(url)).Result;
         if (html.IsNullOrEmpty()) return 0;
 
@@ -1160,7 +1161,8 @@ public partial class Area : Entity<Area>
 
         if (csvFile.StartsWithIgnoreCase("http://", "https://"))
         {
-            var http = new HttpClient();
+            // Task.Run 避免同步上下文死锁；using 确保 HttpClient 释放，防止重复调用造成 socket 耗尽
+            using var http = new HttpClient();
             var stream = Task.Run(() => http.GetStreamAsync(csvFile)).Result;
             if (csvFile.EndsWithIgnoreCase(".gz"))
             {

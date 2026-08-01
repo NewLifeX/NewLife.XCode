@@ -370,6 +370,7 @@ internal class MySqlSession : RemoteDbSession
         var method = _readTableAsync ??= dr.GetType().GetMethod("ReadTableAsync", [typeof(CancellationToken)]);
         if (method == null) return base.OnFill(dr);
 
+        // OnFill 是同步 API，只能同步等待异步读取完成；方法已静态缓存，反射仅一次，ConfigureAwait(false) 避免上下文死锁
         return method.As<Func<CancellationToken, Task<DbTable>>>(dr)!(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 

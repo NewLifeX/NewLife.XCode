@@ -17,6 +17,8 @@ using XUnitTest.XCode.TestEntity;
 namespace XUnitTest.XCode.Configuration;
 
 [TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
+/// <summary>SQL 模板测试。使用全局 DAL.LocalFilter 捕获 SQL 与共享实体元数据，需与其他数据库测试串行避免污染</summary>
+[Collection("Database")]
 public class SqlTemplateTests
 {
     private static String _mysql_ConnStr = "Server=.;Port=3306;Database=sys;Uid=root;Pwd=root";

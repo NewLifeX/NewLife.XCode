@@ -9,6 +9,8 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode;
 
+/// <summary>分页参数测试。使用全局 DAL.LocalFilter 捕获 SQL，需与其他数据库测试串行避免污染</summary>
+[Collection("Database")]
 public class PageParameterTest
 {
     [ThreadStatic]

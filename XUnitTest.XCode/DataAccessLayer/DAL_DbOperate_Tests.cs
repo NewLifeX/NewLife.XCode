@@ -12,6 +12,8 @@ using Xunit;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
+/// <summary>DAL 数据库操作测试。操作共享 Membership 库，需与其他数据库测试串行，避免并行读写干扰</summary>
+[Collection("Database")]
 public class DAL_DbOperate_Tests
 {
     public DAL_DbOperate_Tests()

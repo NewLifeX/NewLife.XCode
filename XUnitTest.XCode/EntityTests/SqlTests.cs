@@ -288,12 +288,13 @@ public class SqlTests
         Assert.StartsWith($"[test_{time:yyyy}] Delete From Log2_{time:yyyyMMdd} Where", sqls[^1]);
 
         var list = Log2.Search(null, null, -1, null, -1, time.AddHours(-24), time, null, new PageParameter { PageSize = 100 });
-        sqls.RemoveAll(e => e.EndsWith("sqlite_master"));
+        // DAL.LocalFilter 为全局静态，并行测试会混入其它 SQL，只保留本分表相关语句再断言
+        sqls.RemoveAll(e => !e.Contains("Log2_"));
         Assert.StartsWith($"[test_{time.AddHours(-24):yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-00):yyyyMMdd} Where", sqls[^1]);
 
         list = Log2.Search(null, null, -1, null, -1, time.AddHours(-24), time, null, new PageParameter { PageIndex = 2, PageSize = 100 });
-        sqls.RemoveAll(e => e.EndsWith("sqlite_master"));
+        sqls.RemoveAll(e => !e.Contains("Log2_"));
         Assert.StartsWith($"[test_{time.AddHours(-24):yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^3]);
         Assert.StartsWith($"[test_{time.AddHours(-24):yyyy}] Select Count(*) From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-00):yyyyMMdd} Where", sqls[^1]);

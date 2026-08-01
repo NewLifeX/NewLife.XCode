@@ -13,6 +13,8 @@ using Xunit;
 namespace XUnitTest.XCode.Entity;
 
 /// <summary>累加字段（Addition）相关测试：EntityAddition in-memory 行为、CalcAdditionDiff 差值计算、BatchUpsert 降级 SQL 生成</summary>
+/// <remarks>使用全局 DAL.LocalFilter 捕获 SQL，需与其他数据库测试串行避免污染</remarks>
+[Collection("Database")]
 public class AdditionTests
 {
     #region 辅助

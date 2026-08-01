@@ -7,6 +7,8 @@ using Xunit;
 
 namespace XUnitTest.XCode.Membership;
 
+/// <summary>用户测试。操作共享 Membership 库，需与其他数据库测试串行，避免并行读写干扰</summary>
+[Collection("Database")]
 public class UserTests
 {
     [Fact]

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NewLife.Model;
 using XCode.DataAccessLayer;
 using Xunit;
@@ -220,6 +221,63 @@ public class DbSession_BuildUpdateSqlTests
         Assert.DoesNotContain("Set Id=", sql);
         Assert.Contains("Amount=@Amount", sql);
         Assert.Contains("Where Id=@Id", sql);
+    }
+
+    #endregion
+
+    #region ProcessAsync 重试
+
+    [Fact]
+    [System.ComponentModel.Description("ProcessAsync 可重试异常重试后成功，且重试间隔不阻塞线程池")]
+    public async Task ProcessAsync_Retry_EventuallySucceeds()
+    {
+        // Func<Task<TResult>> 重载仅在 DbSession 具体类上，转型以复用不打开连接的测试路径
+        var session = (DbSession)_session;
+        var db = session.Database;
+        var old = db.RetryOnFailure;
+        db.RetryOnFailure = 2;
+        try
+        {
+            var calls = 0;
+            var rs = await session.ProcessAsync(() =>
+            {
+                calls++;
+                if (calls < 3) throw new TimeoutException("模拟超时");
+                return Task.FromResult(42);
+            });
+
+            Assert.Equal(42, rs);
+            Assert.Equal(3, calls);
+        }
+        finally
+        {
+            db.RetryOnFailure = old;
+        }
+    }
+
+    [Fact]
+    [System.ComponentModel.Description("ProcessAsync 不可重试异常直接抛出，不重试")]
+    public async Task ProcessAsync_NonRetryable_NoRetry()
+    {
+        var session = (DbSession)_session;
+        var db = session.Database;
+        var old = db.RetryOnFailure;
+        db.RetryOnFailure = 2;
+        try
+        {
+            var calls = 0;
+            await Assert.ThrowsAsync<InvalidOperationException>(() => session.ProcessAsync<Int32>(() =>
+            {
+                calls++;
+                throw new InvalidOperationException("不可重试");
+            }));
+
+            Assert.Equal(1, calls);
+        }
+        finally
+        {
+            db.RetryOnFailure = old;
+        }
     }
 
     #endregion

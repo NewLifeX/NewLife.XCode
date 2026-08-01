@@ -109,12 +109,10 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
             dc.SaveAsync();
         }
 
-        _task = null;
-
         return dic;
     }
 
-    private Task<IDictionary<String, String>>? _task;
+    private readonly Object _sync = new();
     /// <summary>获取所有类别名称</summary>
     /// <returns></returns>
     public IDictionary<String, String> FindAllName()
@@ -124,12 +122,18 @@ public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<T
         var key = $"{typeof(TEntity).Name}_{_field?.Name}";
         var dc = DataCache.Current;
 
-        if (_task == null || _task.IsCompleted) _task = Task.Run(GetAll);
-
-        // 优先从缓存读取
+        // 优先从缓存读取，避免锁竞争
         if (dc.FieldCache.TryGetValue(key, out var rs)) return rs;
 
-        return _task.Result;
+        // 并发首次访问时，只允许一个线程查询，其余线程等待，避免重复查询和重复写盘
+        // 曾经使用 Task.Run + Result 异步加载，但 _task 非原子赋值存在竞态，且 Result 阻塞调用有死锁风险
+        lock (_sync)
+        {
+            // 二次检查，等待期间可能已被其他线程填充
+            if (dc.FieldCache.TryGetValue(key, out rs)) return rs;
+
+            return GetAll();
+        }
     }
 
     #region 辅助

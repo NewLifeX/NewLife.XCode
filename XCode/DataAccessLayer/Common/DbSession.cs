@@ -166,7 +166,8 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                 if (i == retry || !ShouldRetryOn(ex)) throw;
 
                 Log?.Debug("retry {0}，delay {1}", i + 1, delay);
-                Thread.Sleep(delay);
+                // 异步路径使用 Task.Delay 而非 Thread.Sleep，避免阻塞线程池线程
+                await Task.Delay(delay).ConfigureAwait(false);
 
                 // 间隔时间倍增，最大30秒
                 delay *= 2;
@@ -202,7 +203,8 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                 if (i == retry || !ShouldRetryOn(ex)) throw;
 
                 Log?.Debug("retry {0}，delay {1}", i + 1, delay);
-                Thread.Sleep(delay);
+                // 异步路径使用 Task.Delay 而非 Thread.Sleep，避免阻塞线程池线程
+                await Task.Delay(delay).ConfigureAwait(false);
 
                 // 间隔时间倍增，最大30秒
                 delay *= 2;
@@ -1010,7 +1012,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     #endregion
 
     #region 架构
-    /// <summary>返回数据源的架构信息。缓存10分钟</summary>
+    /// <summary>返回数据源的架构信息。不缓存，保证元数据实时性</summary>
     /// <param name="conn">连接</param>
     /// <param name="collectionName">指定要返回的架构的名称。</param>
     /// <param name="restrictionValues">为请求的架构指定一组限制值。</param>
@@ -1023,14 +1025,14 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
         var db = (Database as DbBase)!;
         DataTable dt;
+        // 曾经考虑过缓存架构信息10分钟，但元数据需要实时性，且各库切换频繁，放弃缓存
         //var dt = db._SchemaCache.Get<DataTable>(key);
         //if (dt == null)
         {
-            /*
-            * TODO: Bug
-            * sqlserver切换到master库时,仍然使用Process去获取DbConnection，然而此时DataBase对象为连接字符串中的数据库
-            * 这里不知道是应该在RemoteDb的OpenDatabase方法（改变DataBase对象）抑或是修改这里的Process方法
-            */
+            // 连接参数优先使用外部传入的连接；为null时从连接池获取当前数据库连接
+            // 历史问题：sqlserver切换到master库时，Process仍从连接池获取连接字符串中的数据库连接，
+            // 导致元数据查询落在原库而非master。该场景已由 RemoteDbSession.GetSchema 处理：
+            // 当前库查询失败时，自动通过 ProcessWithSystem 切换到系统库（master）重试
             if (conn != null)
                 dt = GetSchemaInternal(conn, key, collectionName, restrictionValues);
             else

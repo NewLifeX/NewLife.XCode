@@ -1,5 +1,42 @@
 # NewLife.XCode 更新日志
 
+## v12.1.2026.0802 (2026-08-02)
+
+### 导航属性与流式查询
+- **导航属性框架**：新增导航注册（`NavigationRegistry`）、`HasOne`/`HasMany` Fluent API 配置、Include 路径构建与批量加载（`BatchLoadNavigations`/`BatchLoadHasOne`/`BatchLoadHasMany`）；`SelectBuilder` 支持导航关系 JOIN 构建，实体操作接口提供导航基础支持
+- **DAL.Select&lt;T&gt;() 流式 LINQ 查询**：DAL 新增 `Select<T>()` 工厂方法，返回 `IQueryable<T>` 并自动绑定当前连接，支持 `WhereIf`/`Where`/`OrderBy`/`Skip`/`Take`/`Page`/`Count`/`FirstOrDefault`/`ToList` 全链式流式调用
+- **LinqExtensions.Page 扩展**：新增 `Page(page, size)` 分页扩展方法
+- **[fix] 流式查询 take==0 误判**：修复 `EntityQueryProvider.Execute()` 中 `take==0` 误判导致查询全量返回空的 bug
+
+### 数据库元数据重构
+- **DbMetaData 标准化**：重构数据库元数据（DbMetaData）及其实现，标准化 DDL 操作方法接口（`CreateDatabase`/`DropDatabase`/`CreateTable`/`DropTable`），替代原有 `SetSchema` 多用途方法，各数据库类型同步实现，提升类型安全性、可读性与扩展性
+- **DatabaseExist 统一**：统一各库 `DatabaseExist` 实现，空值时从连接字符串解析数据库名并使用 `GetSchema` 查询；子类判断数据库存在不再走基类
+- **创建数据库完善**：创建数据库增加数据库名判断，完善 `CreateDatabaseSQL`
+- **[fix] 字段类型日志**：修正字段类型日志输出，改用 `TrimPrefix` 方法
+- **[fix] SQL 拼接逗号**：修正 SQL 拼接时多余逗号的问题
+
+### 连接池与并发优化
+- **ConnectionPool 重构**：重构连接池实现，支持异步借出归还、泛型 `Execute`，异常处理更完善，补全单元测试覆盖边界场景，升级 NewLife.Core 依赖
+- **[fix] FieldCache 并发竞态**：`FieldCache<T>.FindAllName()` 中 `_task` 非原子赋值导致并发首次访问启动多个 `Task.Run(GetAll)` 重复查询与写盘，且 `_task.Result` 阻塞调用存在死锁风险。改为锁内二次检查单飞行同步执行，移除 Task 体系
+- **[fix] 异步重试阻塞线程池**：`DbSession.ProcessAsync` 两个重载的重试循环由 `Thread.Sleep` 改为 `await Task.Delay`，避免异步路径阻塞线程池线程（同步 `Process` 保持不动）
+- **[fix] HttpClient 泄漏**：`地区.Biz.FetchAndSave`/`Import` 中 `new HttpClient()` 未释放，重复调用存在 socket 耗尽风险，补充 `using` 释放
+
+### 新数据库支持
+- **Hana/IRIS/VastBase/Network/NovaDb**：新增 SAP HANA、InterSystems IRIS、VastBase、Network 网络虚拟数据库、NovaDb 自研数据库支持列表
+
+### 代码清理
+- **清理废弃代码**：移除已废弃接口（`IMenu`/`IRole`/`IUser`）、ETL 引擎、数据同步框架、Web 行为模块等冗余代码，精简代码库
+
+### Bug 修复
+- **[fix] InfluxDB 批量写入**：规范 InfluxDB 批量写入与能力声明
+
+### 测试与文档
+- **测试隔离性与并发健壮性**：消除共享 `Membership.db` 与全局 `DAL.LocalFilter` 导致的并行测试干扰，相关测试统一加入 `[Collection("Database")]` 串行集合；新增 FieldCache/ProcessAsync 并发回归测试；修复 `ShardTestSQLite2` 并行干扰；并行全量失败由 30 降至 28，剩余全为外部数据库依赖
+- **注释补全**：补全审计发现的 6 处空 XML 注释标签；`DbSession.GetSchema` 移除误导性"缓存10分钟"注释，明确不缓存以保元数据实时性
+- **文档编排**：按前置依赖原则重新编排功能模块、需求文档及架构设计文档；新增架构设计文档，更新需求文档与竞品分析报告
+
+---
+
 ## v12.0.2026.0702 (2026-07-02)
 
 ### LINQ 查询体系

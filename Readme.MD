@@ -89,6 +89,8 @@ XML 模型 (Tables/Columns/Indexes) → 代码生成器（xcodetool 或 VS T4）
 
 ### 3.4 查询 DSL
 - **IQueryable&lt;T&gt; LINQ 查询（v12.0 新增）**：`Entity<T>.Query` 返回 `IQueryable<T>`，支持 `Where/OrderBy/Skip/Take/Count/First/ToList` 等标准 LINQ 操作。
+- **DAL.Select&lt;T&gt;() 流式查询（v12.1 新增）**：`DAL.Select<T>()` 返回 `IQueryable<T>` 并自动绑定当前连接，支持 `WhereIf/Where/OrderBy/Skip/Take/Page/Count/FirstOrDefault/ToList` 全链式流式调用。
+- **导航属性（v12.1 新增）**：`HasOne`/`HasMany` Fluent API 配置导航关系，`Include` 路径构建 + 批量加载，`SelectBuilder` 支持导航关系 JOIN。
 - **WhereIf 内联条件**：`Query.WhereIf(condition, predicate)` 和 `FindAllWhereIf` 实现动态条件筛选。
 - WhereExpression：链式 & / | / Contains / Between / Like 等表达式组合。
 - Find / FindAll / Query / PageFindAll 分页。

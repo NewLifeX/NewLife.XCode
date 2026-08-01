@@ -36,7 +36,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.MySql" Version="1.1.2026.501" />
+    <PackageReference Include="NewLife.MySql" Version="1.4.2026.801" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XCode\XCode.csproj" />

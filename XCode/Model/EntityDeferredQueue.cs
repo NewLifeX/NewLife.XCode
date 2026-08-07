@@ -57,8 +57,10 @@ namespace XCode.Model
                             // 来自数据库，更新
                             if (item.IsFromDatabase)
                                 rs += item.Update();
-                            else
+                            else if (Session != null)
                                 rs += item.Upsert(null, null, null, Session);
+                            else
+                                rs += item.Save();
                             break;
                         case EntityActions.Insert:
                             rs += item.Insert();
@@ -69,8 +71,10 @@ namespace XCode.Model
                         case EntityActions.Upsert:
                             if (item.IsFromDatabase)
                                 rs += item.Update();
-                            else
+                            else if (Session != null)
                                 rs += item.Upsert(null, null, null, Session);
+                            else
+                                rs += item.Save();
                             break;
                         case EntityActions.Delete:
                             rs += item.Delete();
@@ -123,7 +127,15 @@ namespace XCode.Model
 
             if (us.Count > 0) rs += us.Update(null, Session);
             if (ns.Count > 0) rs += ns.Insert(null, Session);
-            if (ps.Count > 0) rs += ps.Valid(true).Upsert(null, null, null, Session);
+            if (ps.Count > 0)
+            {
+                // 未指定会话时，逐个保存以支持自动分表
+                if (Session != null)
+                    rs += ps.Valid(true).Upsert(null, null, null, Session);
+                else
+                    foreach (IEntity item in ps)
+                        rs += item.Save();
+            }
             if (ds.Count > 0) rs += ds.Delete(null, Session);
 
             return rs;

@@ -204,7 +204,7 @@ public static class EntityFactory
             var name = ti.ConnName;
             if (name == null)
                 XTrace.WriteLine("实体类[{0}]无法创建TableItem", type.FullName);
-            else if (name == connName)
+            else if (name.EqualIgnoreCase(connName))
                 yield return type;
         }
     }

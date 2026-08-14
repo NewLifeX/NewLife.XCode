@@ -26,7 +26,7 @@ using XCode.Shards;
 
 namespace XCode.Membership666;
 
-public partial class Role : Entity<Role>
+public partial class Role : Entity<Role>, ITenantScope
 {
     #region 对象操作
     // 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走实体缓存

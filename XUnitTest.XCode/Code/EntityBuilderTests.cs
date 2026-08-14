@@ -11,6 +11,7 @@ namespace XUnitTest.XCode.Code;
 
 public class EntityBuilderTests
 {
+    private IList<IDataTable> _tables;
     private IDataTable _table;
     private IDataTable _tableLog;
     private BuilderOption _option;
@@ -18,9 +19,9 @@ public class EntityBuilderTests
     public EntityBuilderTests()
     {
         _option = new BuilderOption();
-        var tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
-        _table = tables.FirstOrDefault(e => e.Name == "User");
-        _tableLog = tables.FirstOrDefault(e => e.Name == "Log");
+        _tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
+        _table = _tables.FirstOrDefault(e => e.Name == "User");
+        _tableLog = _tables.FirstOrDefault(e => e.Name == "Log");
     }
 
     private String ReadTarget(String file, String text)
@@ -381,6 +382,45 @@ public class EntityBuilderTests
             rs = File.ReadAllText("Output\\EntityInterfaces\\IMemberLog.cs".GetFullPath());
             ReadTarget("Code\\EntityInterfaces\\IMemberLog.cs", rs);
         }
+    }
+
+    [Fact]
+    public void BusinessTenantTable_ImplementsITenantScope()
+    {
+        var option = new EntityBuilderOption
+        {
+            ConnName = "Test",
+            Namespace = "Test",
+            Nullable = true,
+        };
+
+        var table = _tables.First(e => e.Name == "Role");
+        var builder = new EntityBuilder
+        {
+            Table = table,
+            AllTables = _tables,
+            Option = option,
+            Business = true,
+        };
+
+        builder.Execute();
+        var code = builder.ToString();
+
+        Assert.Contains("public partial class Role : Entity<Role>, ITenantScope", code);
+        Assert.Contains("Meta.Interceptors.Add<TenantInterceptor>();", code);
+
+        table = _tables.First(e => e.Name == "Tenant");
+        builder = new EntityBuilder
+        {
+            Table = table,
+            AllTables = _tables,
+            Option = option,
+        };
+
+        builder.Execute();
+        code = builder.ToString();
+
+        Assert.DoesNotContain("public partial class Tenant : Entity<Tenant>, ITenantScope", code);
     }
 
     [Fact]

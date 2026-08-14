@@ -588,6 +588,7 @@ public class EntityBuilder : ClassBuilder
         //}
 
         var bs = baseClass?.Split(',').Select(e => e.Trim()).ToList() ?? [];
+        var hasTenantScope = bs.Any(e => e.EqualIgnoreCase("ITenantScope"));
 
         // 数据类的基类只有接口，业务类基类则比较复杂
         var name = "";
@@ -599,6 +600,10 @@ public class EntityBuilder : ClassBuilder
             if (name.IsNullOrEmpty()) name = "Entity";
 
             name = $"{name}<{ClassName}>";
+
+            // 多租户业务类实现租户作用域接口，便于 TenantInterceptor 生效
+            if (Table.Columns.Any(e => e.Name.EqualIgnoreCase("TenantId")) && !hasTenantScope)
+                name += ", ITenantScope";
         }
         else
         {

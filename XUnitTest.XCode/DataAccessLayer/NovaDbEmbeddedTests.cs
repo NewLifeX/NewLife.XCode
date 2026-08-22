@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NewLife;
 using NewLife.Log;
+using NewLife.NovaDb.Client;
 using NewLife.Security;
 using NewLife.Serialization;
 using XCode;
@@ -77,6 +78,8 @@ public class NovaDbEmbeddedTests
     {
         var dataDir = "Data\\nova_select";
         var fullDir = dataDir.GetFullPath();
+        // 清理上次残留前先释放共享引擎，避免内存映射文件阻止删除（Windows 语义）
+        NovaConnection.DisposeSharedEngines();
         if (Directory.Exists(fullDir)) Directory.Delete(fullDir, true);
 
         DAL.AddConnStr("novaEmbed_select", $"Data Source={dataDir}", null, "NovaDb");
@@ -101,7 +104,8 @@ public class NovaDbEmbeddedTests
         // 来个耗时操作，把前面堵住
         Area.FetchAndSave();
 
-        // 清理现场
+        // 清理现场。释放共享引擎后删除数据目录，避免内存映射文件阻止删除
+        NovaConnection.DisposeSharedEngines();
         if (Directory.Exists(fullDir)) Directory.Delete(fullDir, true);
     }
 
@@ -140,6 +144,8 @@ public class NovaDbEmbeddedTests
     {
         var dataDir = "Data\\nova_prefix";
         var fullDir = dataDir.GetFullPath();
+        // 清理上次残留前先释放共享引擎，避免内存映射文件阻止删除（Windows 语义）
+        NovaConnection.DisposeSharedEngines();
         if (Directory.Exists(fullDir)) Directory.Delete(fullDir, true);
 
         DAL.AddConnStr("novaEmbed_prefix", $"Data Source={dataDir};TablePrefix=nova_", null, "NovaDb");
@@ -160,7 +166,8 @@ public class NovaDbEmbeddedTests
         var list3 = Role.Search("用户", null);
         Assert.Equal(2, list3.Count);
 
-        // 清理现场
+        // 清理现场。释放共享引擎后删除数据目录，避免内存映射文件阻止删除
+        NovaConnection.DisposeSharedEngines();
         if (Directory.Exists(fullDir)) Directory.Delete(fullDir, true);
     }
 

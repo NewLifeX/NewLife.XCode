@@ -72,8 +72,10 @@ public class DataScopeInterceptor : EntityInterceptor
         }
         catch (InvalidOperationException ex)
         {
-            // 失败时记录审计日志
+            // 失败时记录审计日志，并拒绝该操作（返回 false），避免越权写入
             LogProvider.Provider.WriteLog(entity.GetType(), method + "", false, ex.Message);
+
+            return false;
         }
 
         return true;

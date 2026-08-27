@@ -110,7 +110,8 @@ public class DataScopeContext
         // 全部权限不需要缓存
         if (scope == DataScopes.全部) return null;
 
-        var key = $"DataScope:{userId}:{(Int32)scope}";
+        // 缓存键包含部门编号，用户调岗（DepartmentID 变化）后立即使用新的部门列表，无需等待过期
+        var key = $"DataScope:{userId}:{deptId}:{(Int32)scope}";
         return _cache.GetOrAdd(key, k => DataScopeHelper.GetAccessibleDepartmentIds(deptId, roles, scope));
     }
 
@@ -120,10 +121,11 @@ public class DataScopeContext
     {
         if (userId > 0)
         {
-            // 清除该用户所有范围的缓存
-            for (var i = 0; i <= 4; i++)
+            // 清除该用户所有缓存键（同时兼容旧键 DataScope:{userId}:{scope} 与新键 DataScope:{userId}:{deptId}:{scope}）
+            var prefix = $"DataScope:{userId}:";
+            foreach (var key in _cache.Keys.ToArray())
             {
-                _cache.Remove($"DataScope:{userId}:{i}");
+                if (key.StartsWith(prefix)) _cache.Remove(key);
             }
         }
         else
@@ -310,6 +312,8 @@ public static class DataScopeHelper
 
         if (typeof(IUserScope).IsAssignableFrom(type))
         {
+            // 纯用户实体（无部门列，如日志）：非全部权限始终按当前用户过滤。
+            // 无部门列时，本部门/自定义等范围不会 join 用户表放大成同事数据，避免越权可见。
             var userField = GetUserField(factory);
             if (userField is not null)
                 return userField.Equal(context.UserId);
@@ -319,7 +323,7 @@ public static class DataScopeHelper
         {
             var deptField = GetDepartmentField(factory);
             if (deptField is not null)
-                return BuildDepartmentFilter(context, deptField);
+                return BuildDepartmentScopeFilter(context, deptField);
         }
 
         return null;
@@ -367,6 +371,30 @@ public static class DataScopeHelper
         if (deptIds == null) return null; // null 表示不限制
 
         if (deptIds.Length == 0) return deptField.Equal(-1); // 空数组表示无权限，返回恒假条件
+        if (deptIds.Length == 1) return deptField.Equal(deptIds[0]);
+
+        return deptField.In(deptIds);
+    }
+
+    /// <summary>构建纯部门实体的过滤表达式</summary>
+    /// <remarks>
+    /// 适用于“一行一个部门”的表（如部门表，DepartmentId 映射到主键 ID）。
+    /// 仅本人时没有可访问部门列表，退化为“当前用户所在部门”，即 ID=当前用户.DepartmentID，
+    /// 而不是恒假条件 Equal(-1) 导致空表。
+    /// </remarks>
+    private static Expression? BuildDepartmentScopeFilter(DataScopeContext context, FieldItem? deptField)
+    {
+        if (deptField is null) return null;
+
+        // 仅本人：部门表退化为“当前用户所在部门”
+        if (context.DataScope == DataScopes.仅本人)
+            return deptField.Equal(context.DepartmentId);
+
+        var deptIds = context.AccessibleDepartmentIds;
+        if (deptIds == null) return null; // null 表示不限制
+
+        // 空数组时退化为当前用户所在部门，避免恒假条件导致空表
+        if (deptIds.Length == 0) return deptField.Equal(context.DepartmentId);
         if (deptIds.Length == 1) return deptField.Equal(deptIds[0]);
 
         return deptField.In(deptIds);
@@ -430,6 +458,10 @@ public static class DataScopeHelper
 
         // 全部权限可访问所有数据
         if (context.DataScope == DataScopes.全部) return true;
+
+        // 仅本人：部门表“一行一个部门”，退化为“当前用户所在部门”
+        if (context.DataScope == DataScopes.仅本人)
+            return entity.DepartmentId == context.DepartmentId;
 
         var deptIds = context.AccessibleDepartmentIds;
         if (deptIds == null) return true;

@@ -130,7 +130,9 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
                 Type = IsSystem ? RoleTypes.系统 : RoleTypes.普通;
         }
 
-        if (DataScope == 0)
+        // 仅在新增且未显式设置数据范围时，按角色类型填充默认值。
+        // DataScopes.全部==0，更新或已显式赋值时，0 就表示“全部”，不再改写。
+        if (method == DataMethod.Insert && !IsDirty(__.DataScope) && DataScope == 0)
         {
             DataScope = Type switch
             {

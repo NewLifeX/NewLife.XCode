@@ -122,6 +122,7 @@ public class DataScopeContext
         if (userId > 0)
         {
             // 清除该用户所有缓存键（同时兼容旧键 DataScope:{userId}:{scope} 与新键 DataScope:{userId}:{deptId}:{scope}）
+            // 缓存失效为尽力而为：快照期间并发新增的键可能被漏删，但其值本身就是最新计算结果，漏删无害
             var prefix = $"DataScope:{userId}:";
             foreach (var key in _cache.Keys.ToArray())
             {
@@ -380,24 +381,18 @@ public static class DataScopeHelper
     /// <remarks>
     /// 适用于“一行一个部门”的表（如部门表，DepartmentId 映射到主键 ID）。
     /// 仅本人时没有可访问部门列表，退化为“当前用户所在部门”，即 ID=当前用户.DepartmentID，
-    /// 而不是恒假条件 Equal(-1) 导致空表。
+    /// 而不是恒假条件 Equal(-1) 导致空表。其余数据范围与普通部门过滤保持一致。
     /// </remarks>
     private static Expression? BuildDepartmentScopeFilter(DataScopeContext context, FieldItem? deptField)
     {
         if (deptField is null) return null;
 
-        // 仅本人：部门表退化为“当前用户所在部门”
+        // 仅本人：部门表退化为“当前用户所在部门”，避免恒假条件导致空表
         if (context.DataScope == DataScopes.仅本人)
             return deptField.Equal(context.DepartmentId);
 
-        var deptIds = context.AccessibleDepartmentIds;
-        if (deptIds == null) return null; // null 表示不限制
-
-        // 空数组时退化为当前用户所在部门，避免恒假条件导致空表
-        if (deptIds.Length == 0) return deptField.Equal(context.DepartmentId);
-        if (deptIds.Length == 1) return deptField.Equal(deptIds[0]);
-
-        return deptField.In(deptIds);
+        // 其余范围（本部门/本部门及下级/自定义）与普通部门过滤语义一致，空数组仍为恒假条件
+        return BuildDepartmentFilter(context, deptField);
     }
     #endregion
 

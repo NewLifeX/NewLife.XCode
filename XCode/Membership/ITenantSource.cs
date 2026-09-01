@@ -197,6 +197,9 @@ public class TenantInterceptor : EntityInterceptor
     /// <returns>修改后的查询条件，已合并租户过滤</returns>
     protected override XCode.Expression? OnQuery(IEntityFactory factory, XCode.Expression? where, QueryAction action)
     {
-        return (where & XCode.Expression.Empty).ApplyTenant(factory);
+        // 转为 WhereExpression 以便应用租户过滤。where 可能为 null 或普通 Expression，需显式包装
+        var exp = where as WhereExpression ?? new WhereExpression(where, Operator.Space, null);
+
+        return exp.ApplyTenant(factory);
     }
 }

@@ -37,6 +37,11 @@ public partial class Menu : EntityTree<Menu>, IMenu
 
         if (Icon == "&#xe63f;") Icon = null;
 
+        // 数据范围默认 -1（使用角色默认）。列默认值为 -1，但枚举默认是 0=全部，
+        // 新建或未显式配置的菜单若保存为 0 会覆盖角色默认为“全部”，故此处保持 -1。
+        if (method == DataMethod.Insert && !IsDirty(__.DataScope) && (Int32)DataScope == 0)
+            DataScope = (DataScopes)(-1);
+
         SavePermission();
 
         return base.Valid(method);

@@ -9,7 +9,7 @@ using NewLife.Log;
 namespace XCode.Membership;
 
 /// <summary>部门。组织机构，多级树状结构</summary>
-public partial class Department : Entity<Department>, ITenantScope
+public partial class Department : Entity<Department>, ITenantScope, IDepartmentScope, IDataScopeFieldProvider
 {
     #region 对象操作
     private static Int32 MaxCacheCount = 10000;
@@ -28,6 +28,7 @@ public partial class Department : Entity<Department>, ITenantScope
         Meta.Interceptors.Add<TimeInterceptor>();
         Meta.Interceptors.Add<IPInterceptor>();
         Meta.Interceptors.Add<TenantInterceptor>();
+        Meta.Interceptors.Add<DataScopeInterceptor>();
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
@@ -260,5 +261,15 @@ public partial class Department : Entity<Department>, ITenantScope
     #endregion
 
     #region 业务操作
+    #endregion
+
+    #region IDepartmentScope 成员
+    Int32 IDepartmentScope.DepartmentId { get => ID; set => ID = value; }
+    #endregion
+
+    #region IDataScopeFieldProvider 成员
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetUserField() => null;
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetDepartmentField() => _.ID;
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetTenantField() => _.TenantId;
     #endregion
 }

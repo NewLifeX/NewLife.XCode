@@ -477,7 +477,8 @@ public class DataScopeTests : IDisposable
             DataScope = DataScopes.仅本人
         };
         var entity = new DataScopeTestEntity { UserId = 999, DepartmentId = 888 };
-        // 不修改任何属性，所以没有脏数据
+        // 清除脏数据，模拟没有任何字段被修改的更新场景
+        ((IEntity)entity).Dirtys.Clear();
 
         // Act
         var result = module.Valid(entity, DataMethod.Update);
@@ -1388,6 +1389,172 @@ public class DataScopeTests : IDisposable
         Assert.Equal(2, (Int32)DataScopes.本部门);
         Assert.Equal(3, (Int32)DataScopes.仅本人);
         Assert.Equal(4, (Int32)DataScopes.自定义);
+    }
+    #endregion
+
+    #region 行权事实源验收测试
+    [Fact]
+    [DisplayName("角色_普通角色全部_Update后仍为全部")]
+    public void Role_NormalRole_ScopeAll_Update_StaysAll()
+    {
+        // Arrange 普通角色显式使用“全部（0）”
+        var role = new Role { Name = "普通角色", Type = RoleTypes.普通, DataScope = DataScopes.全部 };
+
+        // Act 更新时不应把 0 改写成“本部门”
+        role.Valid(DataMethod.Update);
+
+        // Assert
+        Assert.Equal(DataScopes.全部, role.DataScope);
+    }
+
+    [Fact]
+    [DisplayName("角色_Insert未赋DataScope时填充Type默认值")]
+    public void Role_Insert_WithoutDataScope_FillsTypeDefault()
+    {
+        // Arrange 未显式赋值 DataScope
+        var role = new Role { Name = "业务角色", Type = RoleTypes.普通 };
+
+        // Act
+        role.Valid(DataMethod.Insert);
+
+        // Assert 普通角色默认本部门
+        Assert.Equal(DataScopes.本部门, role.DataScope);
+    }
+
+    [Fact]
+    [DisplayName("拦截器_仅本人_拒绝修改他人IDataScope数据")]
+    public void Interceptor_SelfOnly_RejectUpdateOthersData()
+    {
+        // Arrange
+        var module = new DataScopeInterceptor();
+        DataScopeContext.Current = new DataScopeContext
+        {
+            UserId = 100,
+            DepartmentId = 200,
+            DataScope = DataScopes.仅本人
+        };
+        var entity = new DataScopeTestEntity { UserId = 999, DepartmentId = 888 };
+        entity.Name = "改动"; // 制造脏数据
+
+        // Act
+        var result = module.Valid(entity, DataMethod.Update);
+
+        // Assert 校验失败不再放行
+        Assert.False(result);
+    }
+
+    [Fact]
+    [DisplayName("拦截器_本部门_拒绝在越权部门插入")]
+    public void Interceptor_Department_RejectInsertForeignDept()
+    {
+        // Arrange
+        var module = new DataScopeInterceptor();
+        DataScopeContext.Current = new DataScopeContext
+        {
+            UserId = 100,
+            DepartmentId = 200,
+            DataScope = DataScopes.本部门,
+            AccessibleDepartmentIds = [200]
+        };
+        var entity = new DepartmentScopeTestEntity { DepartmentId = 999 };
+
+        // Act
+        var result = module.Valid(entity, DataMethod.Insert);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    [DisplayName("User_本部门滤DepartmentID_仅本人滤ID")]
+    public void User_Filter_Department_And_SelfOnly()
+    {
+        // 本部门：按部门过滤
+        DataScopeContext.Current = new DataScopeContext
+        {
+            UserId = 100,
+            DepartmentId = 200,
+            DataScope = DataScopes.本部门,
+            AccessibleDepartmentIds = [200]
+        };
+        var deptFilter = DataScopeHelper.GetFilter<User>();
+        Assert.NotNull(deptFilter);
+        var deptSql = deptFilter!.ToString();
+        Assert.Contains("DepartmentID", deptSql);
+        Assert.Contains("200", deptSql);
+
+        // 仅本人：按用户主键 ID 过滤
+        DataScopeContext.Current = new DataScopeContext
+        {
+            UserId = 100,
+            DepartmentId = 200,
+            DataScope = DataScopes.仅本人
+        };
+        var selfFilter = DataScopeHelper.GetFilter<User>();
+        Assert.NotNull(selfFilter);
+        var selfSql = selfFilter!.ToString();
+        Assert.DoesNotContain("DepartmentID", selfSql);
+        Assert.Contains("100", selfSql);
+    }
+
+    [Fact]
+    [DisplayName("Log_本部门仍按CreateUserID过滤")]
+    public void Log_Filter_Department_UsesCreateUserID()
+    {
+        // 日志表无部门列，本部门范围仍按创建用户过滤，不放大成同事数据
+        DataScopeContext.Current = new DataScopeContext
+        {
+            UserId = 100,
+            DepartmentId = 200,
+            DataScope = DataScopes.本部门,
+            AccessibleDepartmentIds = [200]
+        };
+        var filter = DataScopeHelper.GetFilter<Log>();
+        Assert.NotNull(filter);
+        var sql = filter!.ToString();
+        Assert.Contains("CreateUserID", sql);
+        Assert.Contains("100", sql);
+    }
+
+    [Fact]
+    [DisplayName("Department_仅本人滤当前部门ID而非-1")]
+    public void Department_Filter_SelfOnly_UsesCurrentDeptId()
+    {
+        // 部门表“一行一个部门”，仅本人退化为 ID=当前用户所在部门，而不是恒假条件 -1
+        DataScopeContext.Current = new DataScopeContext
+        {
+            UserId = 100,
+            DepartmentId = 200,
+            DataScope = DataScopes.仅本人
+        };
+        var filter = DataScopeHelper.GetFilter<Department>();
+        Assert.NotNull(filter);
+        var sql = filter!.ToString();
+        Assert.Contains("200", sql);
+        Assert.DoesNotContain("-1", sql);
+    }
+
+    [Fact]
+    [DisplayName("缓存_更换部门后可访问部门列表立即更新")]
+    public void Cache_DepartmentChange_UpdatesImmediately()
+    {
+        // Arrange
+        DataScopeContext.ClearCache();
+        var user = new MockUser { ID = 100, DepartmentID = 200 };
+        var role = new MockRole { ID = 1, IsSystem = false, DataScope = DataScopes.本部门 };
+        user.Role = role;
+        user.Roles = [role];
+
+        // Act 初次创建
+        var ctx1 = DataScopeContext.Create(user);
+        Assert.NotNull(ctx1);
+        Assert.Equal([200], ctx1!.AccessibleDepartmentIds);
+
+        // 调岗后再次创建，缓存键含部门编号，立即生效
+        user.DepartmentID = 300;
+        var ctx2 = DataScopeContext.Create(user);
+        Assert.NotNull(ctx2);
+        Assert.Equal([300], ctx2!.AccessibleDepartmentIds);
     }
     #endregion
 }

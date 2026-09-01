@@ -5,7 +5,7 @@ using XCode.Cache;
 namespace XCode.Membership;
 
 /// <summary>日志</summary>
-public partial class Log : Entity<Log>
+public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
 {
     #region 对象操作
     static Log()
@@ -17,6 +17,7 @@ public partial class Log : Entity<Log>
         Meta.Interceptors.Add<UserInterceptor>();
         Meta.Interceptors.Add<IPInterceptor>();
         Meta.Interceptors.Add<TraceInterceptor>();
+        Meta.Interceptors.Add<DataScopeInterceptor>();
 
 #if !DEBUG
         // 关闭SQL日志
@@ -231,5 +232,16 @@ public partial class Log : Entity<Log>
     /// <summary>已重载。</summary>
     /// <returns></returns>
     public override String ToString() => $"{Category} {Action} {UserName} {CreateTime:yyyy-MM-dd HH:mm:ss} {Remark}";
+    #endregion
+
+    #region IUserScope 成员
+    // 日志表没有部门列，仅按创建用户过滤；本部门/自定义等范围不会 join 用户表放大成同事数据
+    Int32 IUserScope.UserId { get => CreateUserID; set => CreateUserID = value; }
+    #endregion
+
+    #region IDataScopeFieldProvider 成员
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetUserField() => _.CreateUserID;
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetDepartmentField() => null;
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetTenantField() => null;
     #endregion
 }

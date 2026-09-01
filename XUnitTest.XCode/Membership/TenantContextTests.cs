@@ -324,6 +324,100 @@ public class TenantContextTests : IDisposable
     }
     #endregion
 
+    #region TenantModule.OnQuery 测试
+    [Fact]
+    [DisplayName("OnQuery_有租户上下文时FindAll空查询自动追加TenantId条件")]
+    public void TenantModule_OnQuery_WithContext_FindAllNullWhere_AddsTenantFilter()
+    {
+        // Arrange
+        var module = new TenantInterceptor();
+        TenantContext.Current = new TenantContext { TenantId = 123 };
+        var factory = TenantTestEntity.Meta.Factory;
+
+        // Act
+        var result = module.Query(factory, null, QueryAction.FindAll);
+
+        // Assert
+        var sql = result.ToString();
+        Assert.Contains("TenantId", sql);
+        Assert.Contains("123", sql);
+    }
+
+    [Fact]
+    [DisplayName("OnQuery_有租户上下文时Find空查询自动追加TenantId条件")]
+    public void TenantModule_OnQuery_WithContext_FindNullWhere_AddsTenantFilter()
+    {
+        // Arrange
+        var module = new TenantInterceptor();
+        TenantContext.Current = new TenantContext { TenantId = 321 };
+        var factory = TenantTestEntity.Meta.Factory;
+
+        // Act
+        var result = module.Query(factory, null, QueryAction.Find);
+
+        // Assert
+        var sql = result.ToString();
+        Assert.Contains("TenantId", sql);
+        Assert.Contains("321", sql);
+    }
+
+    [Fact]
+    [DisplayName("OnQuery_有租户且已有WhereExpression时合并租户条件")]
+    public void TenantModule_OnQuery_WithTenantAndWhereExpression_MergesTenantFilter()
+    {
+        // Arrange
+        var module = new TenantInterceptor();
+        TenantContext.Current = new TenantContext { TenantId = 456 };
+        var factory = TenantTestEntity.Meta.Factory;
+        var where = new WhereExpression();
+        where &= TenantTestEntity._.Name == "Stone";
+
+        // Act
+        var result = module.Query(factory, where, QueryAction.FindAll);
+
+        // Assert
+        var sql = result.ToString();
+        Assert.Contains("Name", sql);
+        Assert.Contains("Stone", sql);
+        Assert.Contains("TenantId", sql);
+        Assert.Contains("456", sql);
+    }
+
+    [Fact]
+    [DisplayName("OnQuery_TenantId为0时不过滤可见全部")]
+    public void TenantModule_OnQuery_TenantIdZero_DoesNotAddTenantFilter()
+    {
+        // Arrange
+        var module = new TenantInterceptor();
+        TenantContext.Current = new TenantContext { TenantId = 0 };
+        var factory = TenantTestEntity.Meta.Factory;
+
+        // Act
+        var result = module.Query(factory, null, QueryAction.FindAll);
+
+        // Assert
+        Assert.True(result.IsEmpty);
+    }
+
+    [Fact]
+    [DisplayName("OnQuery_无租户上下文时不报错且不追加TenantId条件")]
+    public void TenantModule_OnQuery_WithoutContext_DoesNotThrow()
+    {
+        // Arrange
+        var module = new TenantInterceptor();
+        TenantContext.Current = null!;
+        var factory = TenantTestEntity.Meta.Factory;
+
+        // Act
+        var error = Record.Exception(() => module.Query(factory, null, QueryAction.FindAll));
+        var result = module.Query(factory, null, QueryAction.FindAll);
+
+        // Assert
+        Assert.Null(error);
+        Assert.True(result.IsEmpty);
+    }
+    #endregion
+
     #region TenantSourceHelper.ApplyTenant 测试
     [Fact]
     [DisplayName("ApplyTenant_有租户上下文时添加条件")]

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using NewLife;
 using NewLife.Log;
 using NewLife.Security;
@@ -96,5 +97,62 @@ public class UserTests
         Assert.Equal(user.ID, user2.ID);
 
         user.Delete();
+    }
+
+    [Fact]
+    [DisplayName("新用户无角色时自动分配默认角色")]
+    public void DefaultRole_WhenNoRoles()
+    {
+        // 确保默认角色存在
+        var role = Role.Add("普通用户", false);
+        Assert.NotNull(role);
+
+        var user = new User { Name = Rand.NextString(16) };
+        user.Insert();
+
+        try
+        {
+            // 默认角色为"普通用户"或"游客"
+            Assert.True(user.RoleID > 0);
+        }
+        finally
+        {
+            user.Delete();
+        }
+    }
+
+    [Fact]
+    [DisplayName("租户上下文下角色列表替代为租户关系角色")]
+    public void GetRoleIDs_WithTenantContext_UsesTenantRoles()
+    {
+        var roleA = Role.Add("租户测试A" + Rand.NextString(4), false, RoleTypes.普通, DataScopes.本部门);
+        var roleB = Role.Add("租户测试B" + Rand.NextString(4), false, RoleTypes.普通, DataScopes.本部门);
+
+        var user = new User { Name = Rand.NextString(16), RoleID = roleA.ID };
+        user.Insert();
+
+        var tu = new TenantUser { TenantId = 9527, UserId = user.ID, RoleId = roleB.ID, Enable = true };
+        tu.Insert();
+
+        try
+        {
+            // 无租户上下文：返回自有角色
+            TenantContext.Current = null!;
+            Assert.Equal(new[] { roleA.ID }, user.GetRoleIDs());
+            Assert.Equal(new[] { roleA.ID }, user.GetOwnRoleIDs());
+
+            // 有租户上下文：以租户关系角色替代自有角色
+            TenantContext.Current = new TenantContext { TenantId = 9527 };
+            Assert.Equal(new[] { roleB.ID }, user.GetRoleIDs());
+            Assert.Equal(new[] { roleA.ID }, user.GetOwnRoleIDs());
+        }
+        finally
+        {
+            TenantContext.Current = null!;
+            tu.Delete();
+            user.Delete();
+            roleB.Delete();
+            roleA.Delete();
+        }
     }
 }

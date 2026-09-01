@@ -96,11 +96,11 @@ public partial class Role : IRole, IEntity<IRole>
     public Boolean ViewSensitive { get => _ViewSensitive; set { if (OnPropertyChanging("ViewSensitive", value)) { _ViewSensitive = value; OnPropertyChanged("ViewSensitive"); } } }
 
     private String? _Permission;
-    /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
+    /// <summary>权限。对不同资源的权限，逗号分隔，每个资源编号与权限值用井号分隔，如 1#3,2#7</summary>
     [DisplayName("权限")]
-    [Description("权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔")]
+    [Description("权限。对不同资源的权限，逗号分隔，每个资源编号与权限值用井号分隔，如 1#3,2#7")]
     [DataObjectField(false, false, true, -1)]
-    [BindColumn("Permission", "权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔", "")]
+    [BindColumn("Permission", "权限。对不同资源的权限，逗号分隔，每个资源编号与权限值用井号分隔，如 1#3,2#7", "")]
     public String? Permission { get => _Permission; set { if (OnPropertyChanging("Permission", value)) { _Permission = value; OnPropertyChanged("Permission"); } } }
 
     private Int32 _Sort;
@@ -455,7 +455,7 @@ public partial class Role : IRole, IEntity<IRole>
         /// <summary>敏感字段。是否可以查看其他人的敏感字段数据</summary>
         public static readonly Field ViewSensitive = FindByName("ViewSensitive");
 
-        /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
+        /// <summary>权限。对不同资源的权限，逗号分隔，每个资源编号与权限值用井号分隔，如 1#3,2#7</summary>
         public static readonly Field Permission = FindByName("Permission");
 
         /// <summary>排序</summary>
@@ -539,7 +539,7 @@ public partial class Role : IRole, IEntity<IRole>
         /// <summary>敏感字段。是否可以查看其他人的敏感字段数据</summary>
         public const String ViewSensitive = "ViewSensitive";
 
-        /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
+        /// <summary>权限。对不同资源的权限，逗号分隔，每个资源编号与权限值用井号分隔，如 1#3,2#7</summary>
         public const String Permission = "Permission";
 
         /// <summary>排序</summary>

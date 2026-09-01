@@ -226,33 +226,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
     /// <param name="menu">指定菜单</param>
     /// <param name="flags">是否拥有多个权限中的任意一个，或的关系。如果需要表示与的关系，可以传入一个多权限位合并</param>
     /// <returns></returns>
-    public Boolean Has(IMenu menu, params PermissionFlags[] flags)
-    {
-        if (menu == null) throw new ArgumentNullException(nameof(menu));
-
-        // 角色集合
-        var rs = Roles;
-
-        // 如果没有指定权限子项，则指判断是否拥有资源
-        if (flags == null || flags.Length == 0) return rs.Any(r => r.Has(menu.ID));
-
-        foreach (var item in flags)
-        {
-            // 如果判断None，则直接返回
-            if (item == PermissionFlags.None) return true;
-
-            // 菜单必须拥有这些权限位才行
-            if (menu.Permissions.ContainsKey((Int32)item))
-            {
-                //// 如果判断None，则直接返回
-                //if (item == PermissionFlags.None) return true;
-
-                if (rs.Any(r => r.Has(menu.ID, item))) return true;
-            }
-        }
-
-        return false;
-    }
+    public Boolean Has(IMenu menu, params PermissionFlags[] flags) => Role.HasRoles(Roles, menu, flags);
 
     #endregion 业务操作
 }

@@ -41,7 +41,7 @@ public partial class RoleModel : IModel
     /// <summary>敏感字段。是否可以查看其他人的敏感字段数据</summary>
     public Boolean ViewSensitive { get; set; }
 
-    /// <summary>权限。对不同资源的权限，逗号分隔，每个资源的权限子项竖线分隔</summary>
+    /// <summary>权限。对不同资源的权限，逗号分隔，每个资源编号与权限值用井号分隔，如 1#3,2#7</summary>
     public String? Permission { get; set; }
 
     /// <summary>排序</summary>

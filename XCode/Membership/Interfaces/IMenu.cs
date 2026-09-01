@@ -53,7 +53,7 @@ public partial interface IMenu
     /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
     String? DataDepartmentIds { get; set; }
 
-    /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
+    /// <summary>权限子项。逗号分隔，每个权限子项编号与名称用井号分隔</summary>
     String? Permission { get; set; }
 
     /// <summary>扩展1</summary>

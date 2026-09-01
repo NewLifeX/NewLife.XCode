@@ -3,6 +3,9 @@
 /// <summary>数据范围。角色的数据权限范围</summary>
 public enum DataScopes
 {
+    /// <summary>默认。使用角色或上级默认值，仅用于菜单等覆盖场景，角色本身不应使用该值</summary>
+    默认 = -1,
+
     /// <summary>全部</summary>
     全部 = 0,
 

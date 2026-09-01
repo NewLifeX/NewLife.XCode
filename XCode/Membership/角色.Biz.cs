@@ -134,10 +134,12 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
         // DataScopes.全部==0，更新或已显式赋值时，0 就表示“全部”，不再改写。
         if (method == DataMethod.Insert && !IsDirty(__.DataScope) && DataScope == 0)
         {
+            // 不再按名称推断数据范围（如名称含"高级"），默认取本部门；
+            // 特殊角色通过 Add(name, issys, type, scope, remark) 显式指定数据范围
             DataScope = Type switch
             {
                 RoleTypes.系统 => DataScopes.全部,
-                RoleTypes.普通 => Name.Contains("高级") ? DataScopes.本部门及下级 : DataScopes.本部门,
+                RoleTypes.普通 => DataScopes.本部门,
                 RoleTypes.租户 => DataScopes.本部门及下级,
                 _ => DataScopes.仅本人,
             };
@@ -176,7 +178,12 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
             throw new XException(msg);
         }
 
-        return base.Delete();
+        var rs = base.Delete();
+
+        // 删除角色后，清理用户与租户关系中的角色引用，避免遗留孤儿角色编号
+        if (rs > 0) User.ClearRole(ID);
+
+        return rs;
     }
 
     /// <summary>已重载。</summary>
@@ -294,6 +301,36 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
         if (flag == PermissionFlags.None) return true;
 
         return pf.Has(flag);
+    }
+
+    /// <summary>判断角色集合是否拥有指定菜单的指定权限</summary>
+    /// <param name="roles">角色集合</param>
+    /// <param name="menu">指定菜单</param>
+    /// <param name="flags">是否拥有多个权限中的任意一个，或的关系。如果需要表示与的关系，可以传入一个多权限位合并</param>
+    /// <returns></returns>
+    public static Boolean HasRoles(IRole[] roles, IMenu menu, params PermissionFlags[] flags)
+    {
+        if (menu == null) throw new ArgumentNullException(nameof(menu));
+
+        // 空角色集合没有权限
+        if (roles == null || roles.Length == 0) return false;
+
+        // 如果没有指定权限子项，则指判断是否拥有资源
+        if (flags == null || flags.Length == 0) return roles.Any(r => r.Has(menu.ID));
+
+        foreach (var item in flags)
+        {
+            // 如果判断None，则直接返回
+            if (item == PermissionFlags.None) return true;
+
+            // 菜单必须拥有这些权限位才行
+            if (menu.Permissions.ContainsKey((Int32)item))
+            {
+                if (roles.Any(r => r.Has(menu.ID, item))) return true;
+            }
+        }
+
+        return false;
     }
 
     private void Remove(Int32 resourceId)

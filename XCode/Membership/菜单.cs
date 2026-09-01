@@ -136,11 +136,11 @@ public partial class Menu : IMenu, IEntity<IMenu>
     public String? DataDepartmentIds { get => _DataDepartmentIds; set { if (OnPropertyChanging("DataDepartmentIds", value)) { _DataDepartmentIds = value; OnPropertyChanged("DataDepartmentIds"); } } }
 
     private String? _Permission;
-    /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
+    /// <summary>权限子项。逗号分隔，每个权限子项编号与名称用井号分隔</summary>
     [DisplayName("权限子项")]
-    [Description("权限子项。逗号分隔，每个权限子项名值竖线分隔")]
+    [Description("权限子项。逗号分隔，每个权限子项编号与名称用井号分隔")]
     [DataObjectField(false, false, true, 2000)]
-    [BindColumn("Permission", "权限子项。逗号分隔，每个权限子项名值竖线分隔", "")]
+    [BindColumn("Permission", "权限子项。逗号分隔，每个权限子项编号与名称用井号分隔", "")]
     public String? Permission { get => _Permission; set { if (OnPropertyChanging("Permission", value)) { _Permission = value; OnPropertyChanged("Permission"); } } }
 
     private Int32 _Ex1;
@@ -479,7 +479,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
         /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
         public static readonly Field DataDepartmentIds = FindByName("DataDepartmentIds");
 
-        /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
+        /// <summary>权限子项。逗号分隔，每个权限子项编号与名称用井号分隔</summary>
         public static readonly Field Permission = FindByName("Permission");
 
         /// <summary>扩展1</summary>
@@ -575,7 +575,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
         /// <summary>数据部门。数据范围为自定义时，选择的部门编号列表</summary>
         public const String DataDepartmentIds = "DataDepartmentIds";
 
-        /// <summary>权限子项。逗号分隔，每个权限子项名值竖线分隔</summary>
+        /// <summary>权限子项。逗号分隔，每个权限子项编号与名称用井号分隔</summary>
         public const String Permission = "Permission";
 
         /// <summary>扩展1</summary>

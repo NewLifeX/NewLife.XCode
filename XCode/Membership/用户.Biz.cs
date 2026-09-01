@@ -69,6 +69,15 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         if (!HasDirty) return true;
 
         if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, "用户名不能为空！");
+
+        // 新用户默认角色。仅当没有任何角色时生效，避免干扰下方对 RoleIds 的角色整理；
+        // 不依赖数据库默认值3（可能因角色删除或顺序变化而失效）
+        if (method == DataMethod.Insert && RoleID <= 0 && RoleIds.IsNullOrEmpty())
+        {
+            var role = Role.FindByName("普通用户") ?? Role.FindByName("游客");
+            if (role != null) RoleID = role.ID;
+        }
+
         //if (RoleID < 1) throw new ArgumentNullException(__.RoleID, "没有指定角色！");
 
         //var pass = Password;
@@ -88,8 +97,8 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         //    }
         //}
 
-        // 重新整理角色
-        var ids = GetRoleIDs();
+        // 重新整理角色（仅自有角色，避免租户上下文下把租户角色写回本表）
+        var ids = GetOwnRoleIDs();
         if (ids.Length > 0)
         {
             RoleID = ids[0];
@@ -335,7 +344,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     }
 
     /// <summary>在租户中搜索</summary>
-    /// <param name="tencentId"></param>
+    /// <param name="tenantId">租户</param>
     /// <param name="roleIds"></param>
     /// <param name="departmentIds"></param>
     /// <param name="areaIds"></param>
@@ -345,9 +354,9 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <param name="key"></param>
     /// <param name="page"></param>
     /// <returns></returns>
-    public static IList<User>? SearchWithTenant(Int32 tencentId, Int32[] roleIds, Int32[] departmentIds, Int32[] areaIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+    public static IList<User>? SearchWithTenant(Int32 tenantId, Int32[] roleIds, Int32[] departmentIds, Int32[] areaIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
-        var exp = TenantUser._.TenantId == tencentId;
+        var exp = TenantUser._.TenantId == tenantId;
         if (roleIds != null && roleIds.Length > 0)
         {
             var exp2 = new WhereExpression();
@@ -396,6 +405,73 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         entity.Save();
 
         return entity;
+    }
+
+    /// <summary>清除用户与租户关系中指定角色的引用。用于角色删除后的数据一致性维护</summary>
+    /// <param name="roleId">角色编号</param>
+    /// <returns>受影响的数据行数</returns>
+    public static Int32 ClearRole(Int32 roleId)
+    {
+        if (roleId <= 0) return 0;
+
+        var count = 0;
+
+        // 清理用户主角色与角色组
+        foreach (var user in FindAll(_.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",")))
+        {
+            if (user.RoleID == roleId)
+            {
+                // 主角色被删除，从角色组中提升一个作为主角色
+                var ids = user.RoleIds.SplitAsInt();
+                if (ids.Length > 0)
+                {
+                    user.RoleID = ids[0];
+                    user.RoleIds = ids.Length > 1 ? "," + ids.Skip(1).Join(",") + "," : null;
+                }
+                else
+                {
+                    user.RoleID = 0;
+                    user.RoleIds = null;
+                }
+            }
+            else
+            {
+                var ids = user.RoleIds.SplitAsInt().Where(e => e != roleId).ToArray();
+                user.RoleIds = ids.Length > 0 ? "," + ids.Join(",") + "," : null;
+            }
+
+            user.Update();
+            count++;
+        }
+
+        // 清理租户关系中的角色
+        foreach (var tu in TenantUser.FindAll(TenantUser._.RoleId == roleId | TenantUser._.RoleIds.Contains("," + roleId + ",")))
+        {
+            if (tu.RoleId == roleId)
+            {
+                var ids = tu.RoleIds.SplitAsInt();
+                if (ids.Length > 0)
+                {
+                    tu.RoleId = ids[0];
+                    tu.RoleIds = ids.Length > 1 ? "," + ids.Skip(1).Join(",") + "," : null;
+                }
+                else
+                {
+                    tu.RoleId = 0;
+                    tu.RoleIds = null;
+                }
+            }
+            else
+            {
+                var ids = tu.RoleIds.SplitAsInt().Where(e => e != roleId).ToArray();
+                tu.RoleIds = ids.Length > 0 ? "," + ids.Join(",") + "," : null;
+            }
+
+            tu.Update();
+            count++;
+        }
+
+        return count;
     }
 
     /// <summary>已重载。显示友好名字</summary>
@@ -611,20 +687,32 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
     public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Cast<IRole>().ToArray()) ?? [];
 
-    /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>
+    /// <summary>获取当前上下文下的角色列表。主角色在前，其它角色升序在后；进入租户后以租户关系角色组替代自有角色组进行鉴权</summary>
     /// <returns></returns>
     public virtual Int32[] GetRoleIDs()
     {
-        //var tenantId = (TenantContext.Current?.TenantId).ToInt(-1);
-        //if (tenantId > 0)
-        //{
-        //    var tuEntity = TenantUser.FindByTenantIdAndUserId(tenantId, ID);
-        //    var idlist = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
-        //    if (tuEntity != null && tuEntity.RoleId > 0) idlist.Insert(0, tuEntity.RoleId);
+        // 曾经尝试过在自有角色组上叠加租户角色（TenantUser.RoleId 插入最前），
+        // 但 TenantUser 的设计语义是"替代自有角色组进行鉴权"，叠加会导致 User.Roles 与 ManageProvider.Has 两套鉴权路径不一致
+        var tenantId = TenantContext.CurrentId;
+        if (tenantId > 0)
+        {
+            var tu = TenantUser.FindByTenantIdAndUserId(tenantId, ID);
+            if (tu != null && tu.Enable)
+            {
+                var ids = tu.RoleIds.SplitAsInt().OrderBy(e => e).ToList();
+                if (tu.RoleId > 0) ids.Insert(0, tu.RoleId);
 
-        //    return idlist.Distinct().ToArray();
-        //}
+                return ids.Distinct().ToArray();
+            }
+        }
 
+        return GetOwnRoleIDs();
+    }
+
+    /// <summary>获取自有角色列表。主角色在前，其它角色升序在后</summary>
+    /// <returns></returns>
+    public virtual Int32[] GetOwnRoleIDs()
+    {
         var ids = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
         if (RoleID > 0) ids.Insert(0, RoleID);
 
@@ -644,33 +732,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <param name="menu">指定菜单</param>
     /// <param name="flags">是否拥有多个权限中的任意一个，或的关系。如果需要表示与的关系，可以传入一个多权限位合并</param>
     /// <returns></returns>
-    public Boolean Has(IMenu menu, params PermissionFlags[] flags)
-    {
-        if (menu == null) throw new ArgumentNullException(nameof(menu));
-
-        // 角色集合
-        var rs = Roles;
-
-        // 如果没有指定权限子项，则指判断是否拥有资源
-        if (flags == null || flags.Length == 0) return rs.Any(r => r.Has(menu.ID));
-
-        foreach (var item in flags)
-        {
-            // 如果判断None，则直接返回
-            if (item == PermissionFlags.None) return true;
-
-            // 菜单必须拥有这些权限位才行
-            if (menu.Permissions.ContainsKey((Int32)item))
-            {
-                //// 如果判断None，则直接返回
-                //if (item == PermissionFlags.None) return true;
-
-                if (rs.Any(r => r.Has(menu.ID, item))) return true;
-            }
-        }
-
-        return false;
-    }
+    public Boolean Has(IMenu menu, params PermissionFlags[] flags) => Role.HasRoles(Roles, menu, flags);
 
     #endregion
 

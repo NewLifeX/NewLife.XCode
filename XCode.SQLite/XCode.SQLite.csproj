@@ -21,7 +21,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>同步升级依赖NewLife.XCode 11.27；支持DbCommand.ToString作为SQL预览输出；增强FieldExtension.Between区间查询能力；优化批量Update与Upsert SQL生成逻辑并修复逗号拼接问题；统一批量实体操作过滤空元素并优化批处理稳定性</PackageReleaseNotes>
+    <PackageReleaseNotes>同步升级依赖NewLife.XCode 12.2；升级SQLite原生库System.Data.SQLite 2.0.4与SourceGear.sqlite3 3.53.4；支持DbCommand.ToString作为SQL预览输出；增强FieldExtension.Between区间查询能力；优化批量Update与Upsert SQL生成逻辑并修复逗号拼接问题；统一批量实体操作过滤空元素并优化批处理稳定性</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <PackageReadmeFile>Readme.MD</PackageReadmeFile>

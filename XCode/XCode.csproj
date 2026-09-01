@@ -7,7 +7,7 @@
     <Description>高性能 .NET 数据中间件（超级ORM），聚焦添删改查与海量数据，内置多级缓存、自动迁移、分表分库、强类型查询与跨库迁移。</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
-    <VersionPrefix>12.1</VersionPrefix>
+    <VersionPrefix>12.2</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -31,7 +31,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>新增导航属性框架，支持导航注册、Include 路径与批量加载；新增 DAL.Select&lt;T&gt;() 流式 LINQ 查询入口，支持全链式流式调用；重构 DbMetaData 标准化 DDL 操作接口，统一 DatabaseExist 实现；重构 ConnectionPool 支持异步借出归还与泛型 Execute；新增 Hana/IRIS/VastBase/Network/NovaDb 数据库支持；修复 FieldCache 并发竞态、异步重试阻塞线程池、HttpClient 泄漏等缺陷；清理废弃接口、ETL 引擎与同步框架等冗余代码；提升测试隔离性与并发健壮性</PackageReleaseNotes>
+    <PackageReleaseNotes>数据权限（DataScope）增强：校验失败拒绝越权写入、缓存键含部门编号支持调岗即时生效、纯部门/纯用户实体过滤修正；多租户：TenantInterceptor 查询自动附加租户过滤，EntityBuilder 为含 TenantId 业务类自动实现 ITenantScope；修复 EntityDeferredQueue 自动分表 Flush 异常、NovaDb Truncate 表不存在静默返回、XCodeTool BuildMap 孤立 Map 特性</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>

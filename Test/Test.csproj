@@ -36,8 +36,8 @@
     <Folder Include="Model\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Redis" Version="6.6.2026.801" />
-    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.801" />
+    <PackageReference Include="NewLife.Redis" Version="6.6.2026.901" />
+    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.901" />
     <PackageReference Include="NewLife.Stardust" Version="3.10.2026.801" />
     <PackageReference Include="SourceGear.sqlite3" Version="3.53.4" />
     <PackageReference Include="System.Data.SQLite" Version="2.0.4" />

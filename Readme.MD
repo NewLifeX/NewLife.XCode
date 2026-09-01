@@ -26,6 +26,7 @@
   - 3.7 分表分库 (ShardPolicy)
   - 3.8 事务与缓存一致性
   - 3.9 性能优化手段一览
+  - 3.10 数据权限与多租户 (DataScope / Tenant)
 - 4. 快速入门（模型→代码→CRUD）
 - 5. 高级用法示例
 - 6. 索引 / 自动方法生成
@@ -127,6 +128,11 @@ XML 模型 (Tables/Columns/Indexes) → 代码生成器（xcodetool 或 VS T4）
 - 惰性/异步：行数、模型检查、缓存刷新均可异步。
 - 反射缓存 / 委托加速：实体属性访问器预热。
 - 内存关联：先缓存主表，再在内存中做“伪联表”。
+
+### 3.10 数据权限与多租户
+- **数据权限（Data Scope）**：行级数据访问控制，支持“全部 / 本部门及下级 / 本部门 / 仅本人 / 自定义”五种范围，通过 `DataScopeContext` + `DataScopeInterceptor` 自动完成查询过滤、新增默认归属、修改删除校验。实体实现 `IUserScope` / `IDepartmentScope` / `IDataScope` 接口即可接入。
+- **多租户**：实体实现 `ITenantScope` 后，`TenantInterceptor` 自动在查询时附加租户过滤、写入时校验/补充租户标识；EntityBuilder 为含 `TenantId` 列的业务类自动实现 `ITenantScope`。
+- 详细用法见 `Doc/数据权限.md`、`Doc/权限管理.md`。
 
 ---
 ## 4. 快速入门

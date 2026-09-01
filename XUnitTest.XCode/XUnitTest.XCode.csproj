@@ -90,7 +90,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
     <PackageReference Include="NewLife.Core" Version="11.19.2026.901" />
     <PackageReference Include="NewLife.IP" Version="2.5.2026.804" />
-    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.822" />
+    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.901" />
     <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.102" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.11" />
     <PackageReference Include="xunit" Version="2.9.3" />

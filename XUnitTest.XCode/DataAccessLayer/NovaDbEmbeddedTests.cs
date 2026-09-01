@@ -101,20 +101,19 @@ public class NovaDbEmbeddedTests
         var list3 = Role.Search("用户", null);
         Assert.Equal(2, list3.Count);
 
-        // 来个耗时操作，把前面堵住
-        Area.FetchAndSave();
+        //// 来个耗时操作，把前面堵住
+        //Area.FetchAndSave();
 
-        // 清理现场。释放共享引擎后删除数据目录，避免内存映射文件阻止删除
-        NovaConnection.DisposeSharedEngines();
-        if (Directory.Exists(fullDir)) Directory.Delete(fullDir, true);
+        //// 清理现场。释放共享引擎后删除数据目录，避免内存映射文件阻止删除
+        //NovaConnection.DisposeSharedEngines();
+        //if (Directory.Exists(fullDir)) Directory.Delete(fullDir, true);
     }
 
     [Fact(DisplayName = "嵌入模式Membership操作")]
     public void MembershipTest()
     {
         var dataDir = "Data\\nova_member";
-
-        DAL.AddConnStr("novaEmbed_member", $"Data Source={dataDir}", null, "NovaDb");
+                DAL.AddConnStr("novaEmbed_member", $"Data Source={dataDir}", null, "NovaDb");
 
         User.Meta.ConnName = "novaEmbed_member";
         Role.Meta.ConnName = "novaEmbed_member";

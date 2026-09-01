@@ -199,7 +199,7 @@ public class AreaTests
         Assert.Equal(Area.Root, ar);
     }
 
-    [Fact(Skip = "跳过，需要网络访问")]
+    [Fact]
     public async Task Download()
     {
         //var url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
@@ -214,7 +214,7 @@ public class AreaTests
         Assert.True(File.Exists(file));
     }
 
-    [Fact(Skip = "跳过，需要网络访问")]
+    [Fact]
     public async Task Download2024()
     {
         //var url = "http://www.mca.gov.cn/article/sj/xzqh/2020/2020/2020092500801.html";
@@ -230,7 +230,7 @@ public class AreaTests
         Assert.True(File.Exists(file));
     }
 
-    [Fact(Skip = "跳过，依赖事先下载的文件")]
+    [Fact]
     public void ParseTest()
     {
         var file = "area.html".GetFullPath();
@@ -246,7 +246,7 @@ public class AreaTests
         Assert.Equal(3208, rs.Count);
     }
 
-    [Fact(Skip = "跳过，依赖事先下载的文件")]
+    [Fact]
     public void ParseTest2024()
     {
         var file = "area2024.html".GetFullPath();
@@ -277,7 +277,7 @@ public class AreaTests
     //    Assert.Equal(15, rs.Count);
     //}
 
-    [Fact(Skip = "跳过，依赖事先下载的文件")]
+    [Fact]
     public void ParseAndSave()
     {
         var file = "area2024.html".GetFullPath();
@@ -300,7 +300,7 @@ public class AreaTests
         Assert.Equal("直辖县", r.Parent.Name);
     }
 
-    [Fact(Skip = "跳过，需要网络访问")]
+    [Fact]
     public void FetchAndSave()
     {
         Area.Meta.Session.Dal.Db.ShowSQL = false;
@@ -322,12 +322,12 @@ public class AreaTests
     }
 
     [TestOrder(0)]
-    [Fact(Skip = "跳过，需要网络下载资源")]
+    [Fact]
     public async Task Import()
     {
         Area.Meta.Session.Dal.Db.ShowSQL = false;
 
-        //if (Area.Meta.Count == 0)
+        if (Area.Meta.Count == 0)
         {
             var url = "http://x.newlifex.com/Area.csv.gz";
             var file = "Area.csv.gz";
@@ -352,7 +352,7 @@ public class AreaTests
     }
 
     [TestOrder(10)]
-    [Fact(Skip = "跳过，依赖前置数据导入")]
+    [Fact]
     public void Export()
     {
         var file = $"Data/Area_{DateTime.Now:yyyyMMdd}.csv.gz";

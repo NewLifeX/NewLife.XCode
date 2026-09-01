@@ -1,5 +1,30 @@
 # NewLife.XCode 更新日志
 
+## v12.2.2026.0901 (2026-09-01)
+
+### 数据权限（DataScope）增强
+- **拒绝越权写入**：`DataScopeModule.OnValid` 校验失败时返回 `false` 拒绝操作（原实现仅记录审计日志后放行），避免越权新增/修改/删除
+- **缓存键含部门编号**：数据权限缓存键由 `DataScope:{userId}:{scope}` 改为 `DataScope:{userId}:{deptId}:{scope}`，用户调岗（DepartmentID 变化）后立即使用新部门列表；失效清理兼容新旧键，并说明缓存失效为尽力而为
+- **纯部门实体过滤修正**：部门表"一行一个部门"，仅本人范围退化为"当前用户所在部门"（`ID == 当前用户.DepartmentID`），避免恒假条件导致空表；新增 `BuildDepartmentScopeFilter`
+- **纯用户实体过滤修正**：日志等无部门列表，非全部权限始终按当前用户过滤，避免 join 用户表放大成同事数据
+- **菜单/角色 DataScope 默认值修正**：`DataScope` 列默认 `-1`（使用角色默认），仅在新增且未显式设置时按角色类型填充，避免显式 0（全部）被覆盖
+- **内置实体挂载**：用户/部门/日志/菜单等内置实体挂载 `DataScopeInterceptor`；日志实现 `IUserScope`+`IDataScopeFieldProvider`，部门实现 `IDepartmentScope`+`IDataScopeFieldProvider`
+
+### 多租户
+- **查询自动附加租户过滤**：`TenantInterceptor.OnQuery` 查询时自动合并租户条件，业务代码无需手动调用 `ApplyTenant`
+- **业务类自动实现 ITenantScope**：`EntityBuilder` 为含 `TenantId` 列的业务类自动追加 `ITenantScope` 接口，便于租户拦截器生效
+
+### Bug 修复
+- **EntityDeferredQueue 自动分表**：未指定会话时逐个 `Save()` 以支持自动分表，修复 Flush 异常
+- **NovaDb Truncate 静默处理**：表不存在时返回 0 而非报错，对齐 SQLite 驱动语义
+- **XCodeTool BuildMap**：映射表无显示字段时不再生成孤立 `[Map]` 特性；修复 `ss[2]` 越界风险；`$` 表示 `ToString()` 替代显示字段
+
+### 依赖与测试
+- **依赖升级**：NewLife.Core 升级至稳定版 11.19.2026.901（原 beta 版）；SQLite 原生库与测试依赖同步升级
+- **测试补充**：新增租户 OnQuery/ApplyTenant 场景、DataScope 行权、NovaDb 嵌入模式等单元测试；本地（非外部数据库依赖）测试 861 项全部通过
+
+---
+
 ## v12.1.2026.0802 (2026-08-02)
 
 ### 导航属性与流式查询

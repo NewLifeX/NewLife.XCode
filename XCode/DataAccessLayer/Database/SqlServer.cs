@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Reflection;
@@ -646,6 +646,25 @@ internal class SqlServerSession : RemoteDbSession
         sb.Append(')');
 
         return sb.Return(true);
+    }
+
+    /// <summary>批量更新</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="columns">要更新的字段，默认所有字段</param>
+    /// <param name="updateColumns">要更新的字段，默认脏数据</param>
+    /// <param name="addColumns">要累加更新的字段，默认累加</param>
+    /// <param name="list">实体列表</param>
+    /// <returns>更新行数</returns>
+    public override Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
+    {
+        var ps = new HashSet<String>();
+        var sql = BuildUpdateSql(table, columns, updateColumns, addColumns, ps);
+        if (sql.IsNullOrEmpty()) return 0;
+
+        DefaultSpan.Current?.AppendTag(sql);
+
+        var dpsList = GetParametersList(columns, ps, list, true);
+        return BatchExecute(sql, dpsList);
     }
 
     /// <summary>批量插入或更新</summary>

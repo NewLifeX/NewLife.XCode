@@ -8,7 +8,7 @@ using NewLife.Log;
 using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.User;
-
+using XCode.Membership;
 namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户</summary>
@@ -56,7 +56,7 @@ public class User : EntityController<User>
     {
         var roleId = p["roleId"].ToInt(-1);
         var departmentId = p["departmentId"].ToInt(-1);
-        var sex = (XCode.Membership.SexKinds)p["sex"].ToInt(-1);
+        var sex = (SexKinds)p["sex"].ToInt(-1);
         var mailVerified = p["mailVerified"]?.ToBoolean();
         var mobileVerified = p["mobileVerified"]?.ToBoolean();
         var areaId = p["areaId"].ToInt(-1);

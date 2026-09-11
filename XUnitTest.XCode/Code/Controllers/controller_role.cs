@@ -8,7 +8,7 @@ using NewLife.Log;
 using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Role;
-
+using XCode.Membership;
 namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限</summary>
@@ -55,9 +55,9 @@ public class Role : EntityController<Role>
     protected override IEnumerable<Role> Search(Pager p)
     {
         var tenantId = p["tenantId"].ToInt(-1);
-        var type = (XCode.Membership.RoleTypes)p["type"].ToInt(-1);
+        var type = (RoleTypes)p["type"].ToInt(-1);
         var isSystem = p["isSystem"]?.ToBoolean();
-        var dataScope = (XCode.Membership.DataScopes)p["dataScope"].ToInt(-1);
+        var dataScope = (DataScopes)p["dataScope"].ToInt(-1);
         var viewSensitive = p["viewSensitive"]?.ToBoolean();
         var enable = p["enable"]?.ToBoolean();
 

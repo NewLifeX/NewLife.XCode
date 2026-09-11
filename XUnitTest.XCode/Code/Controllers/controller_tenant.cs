@@ -8,7 +8,7 @@ using NewLife.Log;
 using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Tenant;
-
+using XCode.Membership;
 namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>租户。多租户SAAS平台，用于隔离业务数据</summary>
@@ -55,7 +55,7 @@ public class Tenant : EntityController<Tenant>
     protected override IEnumerable<Tenant> Search(Pager p)
     {
         var code = p["code"];
-        var type = (XCode.Membership.TenantTypes)p["type"].ToInt(-1);
+        var type = (TenantTypes)p["type"].ToInt(-1);
         var managerId = p["managerId"].ToInt(-1);
         var enable = p["enable"]?.ToBoolean();
 

@@ -950,6 +950,68 @@ public class DataScopeTests : IDisposable
         Assert.NotNull(result);
         Assert.Empty(result);
     }
+
+    [Fact]
+    [DisplayName("GetAccessibleDepartmentIds_未传用户编号时不并入管理线")]
+    public void DataScopeHelper_GetAccessibleDepartmentIds_NoUserId_NoManagedDepartments()
+    {
+        // userId 缺省（0）时保持原有纯计算行为，不查询部门表
+        var roles = new IRole[] { new MockRole { IsSystem = false, DataScope = DataScopes.本部门 } };
+
+        var result = DataScopeHelper.GetAccessibleDepartmentIds(100, roles, DataScopes.本部门);
+
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Contains(100, result);
+    }
+
+    [Fact]
+    [DisplayName("GetManagedDepartmentIds_未传用户编号返回空数组")]
+    public void DataScopeHelper_GetManagedDepartmentIds_ZeroUser_ReturnsEmpty()
+    {
+        var result = DataScopeHelper.GetManagedDepartmentIds(0);
+
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    [DisplayName("GetManagedDepartmentIds_无管理部门返回空数组")]
+    public void DataScopeHelper_GetManagedDepartmentIds_NoManaged_ReturnsEmpty()
+    {
+        // 该用户编号不存在任何部门的管理者，返回空数组（同时验证查询异常时安全退化）
+        var result = DataScopeHelper.GetManagedDepartmentIds(99_999_999);
+
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    [DisplayName("GetManagedDepartmentIds_管理线并入可访问部门")]
+    public void DataScopeHelper_GetManagedDepartmentIds_Managed_Merged()
+    {
+        // Arrange：插入一个由指定用户管理的部门
+        var userId = 987_654;
+        var dept = new Department { Name = "管理线测试部", ParentID = 0, ManagerId = userId, Enable = true, Visible = true };
+        try
+        {
+            dept.Insert();
+
+            // Act
+            var managed = DataScopeHelper.GetManagedDepartmentIds(userId);
+            var roles = new IRole[] { new MockRole { IsSystem = false, DataScope = DataScopes.本部门 } };
+            var accessible = DataScopeHelper.GetAccessibleDepartmentIds(0, roles, DataScopes.本部门, userId);
+
+            // Assert：管理线本身并入，且无部门用户的可访问列表不再为空（不会被归一化退化为仅本人）
+            Assert.Contains(dept.ID, managed);
+            Assert.Contains(dept.ID, accessible);
+        }
+        finally
+        {
+            dept.Delete();
+            DataScopeContext.ClearCache();
+        }
+    }
     #endregion
 
     #region DataScopeHelper.ParseDepartmentIds 测试

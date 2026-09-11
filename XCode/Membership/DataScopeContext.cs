@@ -47,6 +47,14 @@ public class DataScopeContext
 
     /// <summary>部门缓存。缓存用户可访问的部门列表，key=userId，过期时间5分钟</summary>
     private static readonly ICache _cache = MemoryCache.Instance;
+
+#if NET45
+    private static readonly ThreadLocal<Boolean> _building = new();
+#else
+    private static readonly AsyncLocal<Boolean> _building = new();
+#endif
+    /// <summary>是否正在构建数据权限上下文。构建期间跳过数据权限过滤，避免计算过程查询实体时递归创建上下文</summary>
+    internal static Boolean IsBuilding { get => _building.Value; set => _building.Value = value; }
     #endregion
 
     #region 构造
@@ -58,50 +66,61 @@ public class DataScopeContext
     {
         if (user == null) return null;
 
-        var ctx = new DataScopeContext
+        // 构建期间置位，拦截器跳过过滤：计算"我管理的部门"等过程需要查询实体，
+        // 若拦截器再次触发上下文创建将造成无限递归
+        var old = _building.Value;
+        _building.Value = true;
+        try
         {
-            UserId = user.ID,
-            DepartmentId = user.DepartmentID,
-            MenuId = menu?.ID ?? 0,
-        };
-
-        // 获取所有角色
-        var roles = user.Roles;
-        if (roles == null || roles.Length == 0)
-        {
-            var role = user.Role;
-            if (role != null) roles = [role];
-        }
-
-        if (roles != null && roles.Length > 0)
-        {
-            // 系统角色不受数据权限约束
-            if (roles.Any(e => e.IsSystem))
+            var ctx = new DataScopeContext
             {
-                ctx.DataScope = DataScopes.全部;
-                ctx.ViewSensitive = true;
-                return ctx;
+                UserId = user.ID,
+                DepartmentId = user.DepartmentID,
+                MenuId = menu?.ID ?? 0,
+            };
+
+            // 获取所有角色
+            var roles = user.Roles;
+            if (roles == null || roles.Length == 0)
+            {
+                var role = user.Role;
+                if (role != null) roles = [role];
             }
 
-            // 多角色取最大权限（数值越小权限越大，全部=0 > 本部门及下级=1 > 本部门=2 > 仅本人=3）
-            ctx.DataScope = roles.Min(e => e.DataScope);
+            if (roles != null && roles.Length > 0)
+            {
+                // 系统角色不受数据权限约束
+                if (roles.Any(e => e.IsSystem))
+                {
+                    ctx.DataScope = DataScopes.全部;
+                    ctx.ViewSensitive = true;
+                    return ctx;
+                }
 
-            // 敏感字段权限，任一角色有权即可
-            ctx.ViewSensitive = roles.Any(e => e.ViewSensitive);
+                // 多角色取最大权限（数值越小权限越大，全部=0 > 本部门及下级=1 > 本部门=2 > 仅本人=3）
+                ctx.DataScope = roles.Min(e => e.DataScope);
 
-            // 检查菜单级数据权限覆盖
-            if (menu != null) ctx.SetMenu(menu);
+                // 敏感字段权限，任一角色有权即可
+                ctx.ViewSensitive = roles.Any(e => e.ViewSensitive);
 
-            // 从缓存获取或计算可访问部门列表
-            ctx.AccessibleDepartmentIds ??= GetCachedDepartmentIds(user.ID, user.DepartmentID, roles, ctx.DataScope);
+                // 检查菜单级数据权限覆盖
+                if (menu != null) ctx.SetMenu(menu);
+
+                // 从缓存获取或计算可访问部门列表
+                ctx.AccessibleDepartmentIds ??= GetCachedDepartmentIds(user.ID, user.DepartmentID, roles, ctx.DataScope);
+            }
+            else
+            {
+                // 没有角色时，默认仅本人
+                ctx.DataScope = DataScopes.仅本人;
+            }
+
+            return ctx;
         }
-        else
+        finally
         {
-            // 没有角色时，默认仅本人
-            ctx.DataScope = DataScopes.仅本人;
+            _building.Value = old;
         }
-
-        return ctx;
     }
 
     /// <summary>从缓存获取可访问部门列表</summary>
@@ -112,7 +131,7 @@ public class DataScopeContext
 
         // 缓存键包含部门编号，用户调岗（DepartmentID 变化）后立即使用新的部门列表，无需等待过期
         var key = $"DataScope:{userId}:{deptId}:{(Int32)scope}";
-        return _cache.GetOrAdd(key, k => DataScopeHelper.GetAccessibleDepartmentIds(deptId, roles, scope));
+        return _cache.GetOrAdd(key, k => DataScopeHelper.GetAccessibleDepartmentIds(deptId, roles, scope, userId));
     }
 
     /// <summary>清除用户的数据权限缓存</summary>
@@ -192,8 +211,9 @@ public static class DataScopeHelper
     /// <param name="userDeptId">用户所属部门编号</param>
     /// <param name="roles">用户的所有角色</param>
     /// <param name="scope">指定的数据范围，为 null 时从角色中取最大权限</param>
+    /// <param name="userId">用户编号。大于0时，并入该用户作为管理者（ManagerId）负责的部门及其下级部门</param>
     /// <returns>可访问的部门编号列表，null 表示不限制（全部可访问）</returns>
-    public static Int32[]? GetAccessibleDepartmentIds(Int32 userDeptId, IRole[] roles, DataScopes? scope = null)
+    public static Int32[]? GetAccessibleDepartmentIds(Int32 userDeptId, IRole[] roles, DataScopes? scope = null, Int32 userId = 0)
     {
         if (roles == null || roles.Length == 0) return [];
 
@@ -242,7 +262,56 @@ public static class DataScopeHelper
                 break;
         }
 
+        // 部门管理者：并入"我管理的部门"及其下级部门。
+        // 管理职责独立于所属部门，用户即使不属于被管理部门，也应当能够访问其管理范围内的数据。
+        // 仅本人范围保持最小语义，不并入管理范围。
+        if (userId > 0 && effectiveScope != DataScopes.仅本人)
+        {
+            foreach (var id in GetManagedDepartmentIds(userId))
+            {
+                allDeptIds.Add(id);
+            }
+        }
+
         return allDeptIds.ToArray();
+    }
+
+    /// <summary>获取用户作为管理者（ManagerId）负责的部门及其所有下级部门编号</summary>
+    /// <param name="userId">用户编号</param>
+    /// <returns>部门编号数组。查询失败时返回空数组</returns>
+    /// <remarks>
+    /// 用于数据权限增强：部门管理者应当能够访问其管理范围内的数据，即使本人不属于这些部门。
+    /// 该查询发生在数据权限上下文建立之前（DataScopeContext.Current 为空），不会触发数据权限递归过滤。
+    /// </remarks>
+    public static Int32[] GetManagedDepartmentIds(Int32 userId)
+    {
+        if (userId <= 0) return [];
+
+        try
+        {
+            var managed = Department.FindAll(Department._.ManagerId == userId & Department._.Enable == true);
+            if (managed.Count == 0) return [];
+
+            var ids = new HashSet<Int32>();
+            foreach (var dept in managed)
+            {
+                if (ids.Add(dept.ID))
+                {
+                    foreach (var id in GetDepartmentAndChildren(dept.ID))
+                    {
+                        ids.Add(id);
+                    }
+                }
+            }
+
+            return ids.ToArray();
+        }
+        catch (Exception ex)
+        {
+            // 数据权限辅助计算失败不应影响主流程，退化为不扩展
+            XTrace.WriteException(ex);
+            return [];
+        }
     }
 
     /// <summary>获取部门及其所有下级部门的编号</summary>
@@ -356,7 +425,14 @@ public static class DataScopeHelper
             case DataScopes.本部门:
             case DataScopes.本部门及下级:
             case DataScopes.自定义:
-                return BuildDepartmentFilter(context, deptField);
+                var deptFilter = BuildDepartmentFilter(context, deptField);
+
+                // 本人数据始终可见：无部门归属、调岗或兼任管理部门时，
+                // 仅按部门集合过滤会把用户自己的数据排除在外（例如个人中心打不开自己的记录）
+                if (userField is not null && deptFilter is not null)
+                    return deptFilter | userField.Equal(context.UserId);
+
+                return deptFilter;
 
             default:
                 return null;
@@ -417,6 +493,9 @@ public static class DataScopeHelper
             case DataScopes.本部门:
             case DataScopes.本部门及下级:
             case DataScopes.自定义:
+                // 本人数据始终可访问：无部门归属、调岗或兼任管理部门时，仅按部门集合校验会拒绝用户自己的数据
+                if (entity.UserId == context.UserId) return true;
+
                 var deptIds = context.AccessibleDepartmentIds;
                 if (deptIds == null) return true;
                 return deptIds.Contains(entity.DepartmentId);

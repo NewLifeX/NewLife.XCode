@@ -235,6 +235,9 @@ public class DataScopeInterceptor : EntityInterceptor
     /// <summary>获取数据权限上下文</summary>
     private static DataScopeContext? GetContext()
     {
+        // 构建上下文期间跳过过滤：上下文尚未就绪，且计算过程可能查询实体，禁止递归创建
+        if (DataScopeContext.IsBuilding) return null;
+
         // 优先使用已设置的上下文
         var ctx = DataScopeContext.Current;
         if (ctx != null) return ctx;

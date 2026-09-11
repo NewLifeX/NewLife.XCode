@@ -66,6 +66,34 @@ public class TableItem
             DataTable?.ConnName = value;
         }
     }
+
+    /// <summary>表级反向工程模式。可在启动时修改，空值表示继承全局配置</summary>
+    public Migration? Migration
+    {
+        get
+        {
+            var value = String.Empty;
+            if (DataTable != null && DataTable.Properties.TryGetValue(nameof(Migration), out var str) && !str.IsNullOrEmpty()) value = str;
+            if (value.IsNullOrEmpty()) value = _Table?.Migration;
+            if (value.IsNullOrEmpty()) return null;
+
+            return Enum.TryParse<XCode.DataAccessLayer.Migration>(value, true, out var mode) ? mode : null;
+        }
+        set
+        {
+            if (DataTable == null) return;
+
+            if (value == null)
+            {
+                if (!_Table.Migration.IsNullOrEmpty())
+                    DataTable.Properties[nameof(Migration)] = _Table.Migration;
+                else
+                    DataTable.Properties.Remove(nameof(Migration));
+            }
+            else
+                DataTable.Properties[nameof(Migration)] = value.Value.ToString();
+        }
+    }
     #endregion
 
     #region 扩展属性

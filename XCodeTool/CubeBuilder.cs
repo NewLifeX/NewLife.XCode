@@ -52,7 +52,7 @@ public class CubeBuilder : ClassBuilder
         using NewLife.Web;
         using XCode.Membership;
         using static {EntityNamespace}.{EntityName};
-
+        {EnumList}
         namespace {RootNamespace}.Areas.{Name}.Controllers;
         
         /// <summary>{DisplayName}</summary>
@@ -312,7 +312,8 @@ public class CubeBuilder : ClassBuilder
         if (Table.Columns.Any(c => c.Name.EqualIgnoreCase("TraceId")))
             code = code.Replace("//ListFields.TraceUrl(", "ListFields.TraceUrl(");
 
-        var ss = BuildSearch();
+        var ss = BuildSearch(out var enumList);
+        code = code.Replace("{EnumList}", enumList);
         if (!ss.IsNullOrEmpty())
         {
             var p1 = code.IndexOf("        //var deviceId = p[\"deviceId\"].ToInt(-1);");
@@ -332,8 +333,12 @@ public class CubeBuilder : ClassBuilder
     #endregion
 
     #region 辅助
-    private String BuildSearch()
+    /// <summary>构建搜索参数和枚举字典</summary>
+    /// <remarks>该方法用于生成高级查询模板，并收集枚举类型的命名空间信息，将枚举命名空间加入到using位置</remarks>
+    /// <returns></returns>
+    private String BuildSearch(out string enumNameSpaceStr)
     {
+        enumNameSpaceStr = "";
         // 收集索引信息，索引中的所有字段都参与，构造一个高级查询模板
         var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
         var cs = builder.GetColumns();
@@ -345,6 +350,7 @@ public class CubeBuilder : ClassBuilder
         var sb = Pool.StringBuilder.Get();
 
         var pis = new List<String>();
+        var enumList = new List<String>();
         foreach (var dc in cs)
         {
             //var name = dc.CamelName();
@@ -354,9 +360,18 @@ public class CubeBuilder : ClassBuilder
             if (dc.DataType.IsInt())
             {
                 if (dc.DataType.IsEnum)
-                    sb.AppendLine($"        var {name} = ({dc.DataType.FullName})p[\"{name}\"].ToInt(-1);");
+                {
+                    enumList.Add($"using {dc.DataType.Namespace};");
+                    sb.AppendLine($"        var {name} = ({dc.DataType.Name})p[\"{name}\"].ToInt(-1);");
+                }
                 else if (!dc.Properties["Type"].IsNullOrEmpty())
-                    sb.AppendLine($"        var {name} = ({dc.Properties["Type"]})p[\"{name}\"].ToInt(-1);");
+                {
+                    var tt = dc.Properties["Type"];
+                    var tempNamespace = tt.CutEnd(".");
+                    var trueType = tt.CutStart(tempNamespace + ".");
+                    enumList.Add($"using {tempNamespace};");
+                    sb.AppendLine($"        var {name} = ({trueType})p[\"{name}\"].ToInt(-1);");
+                }
                 else if (dc.DataType == typeof(Int64))
                     sb.AppendLine($"        var {name} = p[\"{name}\"].ToLong(-1);");
                 else
@@ -366,13 +381,19 @@ public class CubeBuilder : ClassBuilder
                 sb.AppendLine($"        var {name} = p[\"{name}\"]?.ToBoolean();");
             else if (dc.DataType == typeof(DateTime))
                 sb.AppendLine($"        var {name} = p[\"{name}\"].ToDateTime();");
+            else if (dc.DataType == typeof(Double) || dc.DataType == typeof(Single))
+                sb.AppendLine($"        var {name} = p[\"{name}\"].ToDouble();");
             else if (dc.DataType == typeof(String))
                 sb.AppendLine($"        var {name} = p[\"{name}\"];");
             else
                 // 不支持的类型，跳过
                 continue;
 
+            if (enumList.Any()) enumNameSpaceStr = enumList.Distinct().Join($"{Environment.NewLine}");
+
+            // 该字段参与查询，必须加入参数列表，顺序与实体 Search 方法保持一致
             pis.Add(name);
+
         }
 
         if (builder.DataTime != null)

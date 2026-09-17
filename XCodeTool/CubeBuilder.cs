@@ -362,7 +362,7 @@ public class CubeBuilder : ClassBuilder
                 if (dc.DataType.IsEnum)
                 {
                     enumList.Add($"using {dc.DataType.Namespace};");
-                    sb.AppendLine($"        var {name} = ({dc.DataType.Name})p[\"{name}\"].ToInt(-1);");
+                    sb.AppendLine($"        var {name} = (global::{dc.DataType.Name})p[\"{name}\"].ToInt(-1);");
                 }
                 else if (!dc.Properties["Type"].IsNullOrEmpty())
                 {

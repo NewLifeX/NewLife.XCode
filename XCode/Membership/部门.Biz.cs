@@ -37,6 +37,9 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
     {
         if (method == DataMethod.Delete) return true;
 
+        // 清理富文本编辑器遗留的空内容（如 <p><br></p>），避免脏值写入数据库并经 SSO 同步扩散；随本次更新写库清除
+        if (EmptyHtmlHelper.IsEmptyHtml(Remark)) Remark = null;
+
         // 如果没有脏数据，则不需要进行任何处理
         if (!HasDirty) return true;
 

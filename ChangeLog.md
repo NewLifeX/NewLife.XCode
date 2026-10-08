@@ -1,5 +1,11 @@
 # NewLife.XCode 更新日志
 
+## [Unreleased]
+
+- 新增 SonnetDB 官方 ADO.NET 驱动适配和 net10.0 的 XCode.SonnetDB 依赖包，支持关系表元数据、常用 CRUD、自增、分页、批量 Insert/InsertIgnore/Upsert、单主键有界删除及基本迁移。
+- 对未完成的 Decimal/时间精度、长度、注释、Replace、复合主键删除和隔离等级明确保护或记录；能力与 SonnetDB issue/发布依赖见 `Doc/SonnetDB.md`，不宣称完整等价支持。
+- 修复实体表达式批量删除生成参数后未传给执行接口的问题，使用数据库方言生成可执行条件。
+
 ## v12.2.2026.0901 (2026-09-01)
 
 ### 数据权限（DataScope）增强

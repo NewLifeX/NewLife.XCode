@@ -104,6 +104,7 @@
     <ProjectReference Include="..\XCode.DB2\XCode.DB2.csproj" />
     <ProjectReference Include="..\XCode.HighGo\XCode.HighGo.csproj" />
     <ProjectReference Include="..\XCode.KingBase\XCode.KingBase.csproj" />
+    <ProjectReference Include="..\XCode.SonnetDB\XCode.SonnetDB.csproj" />
     <ProjectReference Include="..\XCodeTool\XCodeTool.csproj" />
     <ProjectReference Include="..\XCode\XCode.csproj" />
   </ItemGroup>

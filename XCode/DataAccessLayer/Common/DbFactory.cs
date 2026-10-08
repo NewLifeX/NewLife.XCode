@@ -28,6 +28,7 @@ public static class DbFactory
         Register<ClickHouse>(DatabaseType.ClickHouse);
         Register<DuckDB>(DatabaseType.DuckDB);
         Register<MongoDB>(DatabaseType.MongoDB);
+        Register<SonnetDB>(DatabaseType.SonnetDB);
         Register<NetworkDb>(DatabaseType.Network);
         //Register<Access>(DatabaseType.Access);
         //Register<SqlCe>(DatabaseType.SqlCe);

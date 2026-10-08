@@ -85,6 +85,6 @@ var values = ValidHelper.ToStringArray(raw) ?? [];
 ## 5. 实战建议
 
 1. 控制器层统一走 `ValidHelper`，不要各处手写 `Convert`。
-2. 对数组参数优先 `ToXxxArray`，避免 `Split+Parse` 重复代码。
+2. 对数组参数优先使用数组助手（如 `ToInt32Array`/`ToStringArray`），避免 `Split+Parse` 重复代码。
 3. 关键业务字段转换后立即做范围校验（如 ID>0、时间区间合法）。
 4. 如需复杂对象反序列化，不要依赖 `ToObject<T>`，应走 JSON 序列化器。

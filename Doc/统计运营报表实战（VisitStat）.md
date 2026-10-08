@@ -1,6 +1,8 @@
 # 统计运营报表实战（VisitStat）
 
-本文基于仓库现有实现 `XCode/Membership/访问统计.Biz.cs`，演示如何用 `VisitStat + StatHelper` 快速落地一个“日/月/年”运营报表链路。
+> ⚠️ **示例实体已移除**：`VisitStat`（访问统计）及其模型随 Membership 清理于 2026-07-15（v12.1，提交 `f033bd45b`）移除；`StatHelper`/`StatModel`/`FieldCache`/`DictionaryCache` 等统计框架能力仍在，示例实体与模型需按本文模式自建。
+
+本文基于原内置实现 `XCode/Membership/访问统计.Biz.cs`（已移除），演示如何用 `VisitStat + StatHelper` 快速落地一个“日/月/年”运营报表链路。
 
 ## 1. 现成能力盘点
 

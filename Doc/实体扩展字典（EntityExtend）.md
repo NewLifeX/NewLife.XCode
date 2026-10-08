@@ -126,6 +126,6 @@ public Int32 Expire { get; set; }
 
 ## 7. 注意事项
 
-- 如果同一实体可能被多个地方修改，`Clear()` 应在 `AfterUpdate` / `AfterDelete` 里调用，防止脏读。
+- 如果同一实体可能被多个地方修改，`Clear()` 应在实体重写 `Update()` / `Delete()` 时调用，防止脏读。
 - `func` 内部不要再访问同一实体的 `Extends`，否则可能构成循环依赖。
 - 值为 `null` / `default` 时，`EntityExtend` **不会缓存**（避免因未初始化完毕导致永久返回空）。如需缓存 null，可用包装类型。

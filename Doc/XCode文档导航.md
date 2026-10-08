@@ -146,8 +146,8 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
 ## 统计报表
 
 - [高级统计（数据报表利器）](https://newlifex.com/xcode/stat)
-- [统计模型与聚合扩展实践](/xcode/statistics_model)
-- [统计运营报表实战（VisitStat）](/xcode/visit_stat_practice)
+- [统计模型与聚合扩展实践](/xcode/statistics_model)（示例模型已移除）
+- [统计运营报表实战（VisitStat）](/xcode/visit_stat_practice)（示例实体已移除）
 - [统计报表实战（二）：同比环比与异常告警](/xcode/statistics_yoy_mom_alert)
 
 ---
@@ -198,8 +198,8 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
 - [数据库HTTP服务（DbService）](/xcode/db_service)
 - [网络虚拟数据库（NetworkDb）](/xcode/network_db)
 - [配置中心（DbConfigProvider）](/xcode/db_config_provider)
-- [Web行为模块与运行时监测](/xcode/web_runtime_monitor)
-- [ASP.NET Core行为监测迁移指南](/xcode/aspnetcore_runtime_migration)
+- [Web行为模块与运行时监测](/xcode/web_runtime_monitor)（已移除）
+- [ASP.NET Core行为监测迁移指南](/xcode/aspnetcore_runtime_migration)（部分过时）
 - [TDengine时序数据库支持（TDengine）](/xcode/tdengine)
 - [InfluxDB时序数据库支持说明](/xcode/influxdb)
 - [MySql客户端驱动NewLife.MySql](https://newlifex.com/xcode/mysql)

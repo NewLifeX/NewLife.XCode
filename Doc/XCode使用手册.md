@@ -615,14 +615,15 @@ XCode 内置了多个实体拦截器：
 
 | 拦截器 | 功能 |
 |--------|------|
-| `UserModule` | 自动填充 CreateUser/UpdateUser |
-| `TimeModule` | 自动填充 CreateTime/UpdateTime |
-| `IPModule` | 自动填充 CreateIP/UpdateIP |
+| `UserInterceptor` | 自动填充 CreateUser/UpdateUser |
+| `TimeInterceptor` | 自动填充 CreateTime/UpdateTime |
+| `IPInterceptor` | 自动填充 CreateIP/UpdateIP |
+| `TraceInterceptor` | 自动填充 TraceId |
 
 ### 8.2 自定义拦截器
 
 ```csharp
-public class MyModule : EntityModule
+public class MyInterceptor : EntityInterceptor
 {
     protected override Boolean OnValid(IEntity entity, DataMethod method)
     {
@@ -635,7 +636,7 @@ public class MyModule : EntityModule
 }
 
 // 注册拦截器
-User.Meta.Interceptors.Add<MyModule>();
+User.Meta.Interceptors.Add<MyInterceptor>();
 ```
 
 ---

@@ -8,7 +8,7 @@ using NewLife.Log;
 using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Tenant;
-using XCode.Membership;
+using TenantTypes = XCode.Membership.TenantTypes;
 namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>租户。多租户SAAS平台，用于隔离业务数据</summary>

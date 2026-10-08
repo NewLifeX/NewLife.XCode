@@ -137,7 +137,7 @@ internal class SonnetDB : RemoteDb
                 if (Convert.ToDecimal((Double)number) == number) return;
             }
             catch (OverflowException) { }
-            throw new NotSupportedException("SonnetDB 4.0.0无法精确保留此Decimal值，已拒绝写入。参见SonnetDB issue #235，等待精确十进制参数支持发布。");
+            throw new NotSupportedException("SonnetDB 4.0.0无法精确保留此Decimal值，已拒绝写入。参见SonnetDB issue #235，尚需实现精确十进制参数支持并正式发布。");
         }
         if (value is DateTimeOffset offset)
         {
@@ -154,7 +154,7 @@ internal class SonnetDB : RemoteDb
     private static void CheckTime(Int64 ticks)
     {
         if (ticks % TimeSpan.TicksPerMillisecond != 0)
-            throw new NotSupportedException("SonnetDB 4.0.0 DATETIME只能保留毫秒精度，已拒绝亚毫秒时间。参见SonnetDB issue #236，等待完整时间精度支持发布。");
+            throw new NotSupportedException("SonnetDB 4.0.0 DATETIME只能保留毫秒精度，已拒绝亚毫秒时间。参见SonnetDB issue #236，尚需实现完整时间精度支持并正式发布。");
     }
 
     /// <inheritdoc/>
@@ -414,7 +414,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
 
     private void ReadViewColumns(IDataTable table)
     {
-        // GetSchema("Columns")只包含关系表；零行查询仍提供视图的声明列元数据。
+        // GetSchema("Columns")只包含关系表；尝试读取视图列元数据，声明类型缺失时明确拒绝。
         using var connection = Database.OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText = $"SELECT * FROM {Database.FormatName(table.TableName)} LIMIT 0";
@@ -426,7 +426,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
             column.ColumnName = (String)row[SchemaTableColumn.ColumnName];
             column.DataType = (Type)row[SchemaTableColumn.DataType];
             if (column.DataType.FullName == "System.TimeOnly") column.DataType = typeof(TimeSpan);
-            column.RawType = GetFieldType(column) ?? throw new NotSupportedException($"SonnetDB视图{table.TableName}字段{column.ColumnName}未提供可映射的声明类型。参见SonnetDB issue #261，等待视图声明元数据发布。");
+            column.RawType = GetFieldType(column) ?? throw new NotSupportedException($"SonnetDB视图{table.TableName}字段{column.ColumnName}未提供可映射的声明类型。参见SonnetDB issue #261，尚需补齐视图声明元数据并正式发布。");
             column.Nullable = (Boolean)row[SchemaTableColumn.AllowDBNull];
             column.PrimaryKey = (Boolean)row[SchemaTableColumn.IsKey];
             column.Identity = (Boolean)row[SchemaTableOptionalColumn.IsAutoIncrement];
@@ -511,7 +511,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
     {
         if (oldfield != null && field.DataType == typeof(String) && field.Length != oldfield.Length && field.Length > 0 && field.Length < Int32.MaxValue)
-            throw new NotSupportedException("SonnetDB STRING尚未支持长度约束变更。参见SonnetDB issue #240，等待对应能力发布。");
+            throw new NotSupportedException("SonnetDB STRING尚未支持长度约束变更。参见SonnetDB issue #240，尚需实现对应能力并正式发布。");
         CheckDecimalMigration(field);
         if (oldfield != null && (field.Identity != oldfield.Identity || field.PrimaryKey != oldfield.PrimaryKey))
             throw new NotSupportedException("SonnetDB现有列的自增或主键变更需要单独迁移，不能通过ALTER COLUMN完成。");
@@ -535,7 +535,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     private static void CheckDecimalMigration(IDataColumn field)
     {
         if (field.DataType == typeof(Decimal) && field.Precision > 0 && (field.Precision != 38 || field.Scale != 28))
-            throw new NotSupportedException("SonnetDB 4.0.0的DECIMAL ADD/ALTER会丢失显式精度，已拒绝执行以保留模型语义。参见SonnetDB issue #241，等待修复版本发布。");
+            throw new NotSupportedException("SonnetDB 4.0.0的DECIMAL ADD/ALTER会丢失显式精度，已拒绝执行以保留模型语义。参见SonnetDB issue #241，尚需修复并正式发布。");
     }
 
     /// <inheritdoc/>
@@ -595,13 +595,13 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     /// <inheritdoc/>
     public override String? DropColumnDescriptionSQL(IDataColumn field) => throw CommentsUnsupported();
 
-    private static NotSupportedException CommentsUnsupported() => new("SonnetDB尚未支持表和字段注释的持久化。参见SonnetDB issue #237，等待对应能力发布。");
+    private static NotSupportedException CommentsUnsupported() => new("SonnetDB尚未支持表和字段注释的持久化。参见SonnetDB issue #237，尚需实现对应能力并正式发布。");
 
     protected override Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
     {
         if (schema is DDLSchema.AddTableDescription or DDLSchema.DropTableDescription or DDLSchema.AddColumnDescription or DDLSchema.DropColumnDescription)
         {
-            WriteLog("[SonnetDB]未完成{0}：尚未支持表和字段注释持久化，需要等待SonnetDB发布。", schema);
+            WriteLog("[SonnetDB]未完成{0}：尚未支持表和字段注释持久化，需要SonnetDB实现并正式发布，参见issue #237。", schema);
             return false;
         }
         return base.PerformSchema(sb, onlySql, schema, values);

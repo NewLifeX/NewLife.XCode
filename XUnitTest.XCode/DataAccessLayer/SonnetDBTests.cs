@@ -70,7 +70,7 @@ public class SonnetDBTests
         Assert.Contains("#261", error.Message);
     }
 
-    [Fact(Skip = "⏳ 等待 SonnetDB 视图声明元数据发布：https://github.com/IoTSharp/SonnetDB/issues/261")]
+    [Fact(Skip = "🛠️ SonnetDB 尚需补齐视图声明元数据并正式发布：https://github.com/IoTSharp/SonnetDB/issues/261")]
     public void ViewMetadataRetainsDeclaredTypesWithoutReadingRows()
     {
         using var scope = new DatabaseScope();
@@ -286,7 +286,7 @@ public class SonnetDBTests
         Assert.Equal("original", Assert.Single(SonnetTestRow.FindAll()).Remark);
     }
 
-    [Fact(Skip = "⏳ 等待 SonnetDB REPLACE 发布：https://github.com/IoTSharp/SonnetDB/issues/242")]
+    [Fact(Skip = "🛠️ SonnetDB 尚需实现原子 REPLACE 并正式发布：https://github.com/IoTSharp/SonnetDB/issues/242")]
     public void BatchReplaceDeletesThenInserts()
     {
         using var scope = new DatabaseScope();
@@ -344,7 +344,7 @@ public class SonnetDBTests
         Assert.Throws<NotSupportedException>(() => scope.Dal.Db.FormatValue(unsigned, UInt64.MaxValue));
     }
 
-    [Fact(Skip = "⏳ 等待 SonnetDB 高精度 decimal 与亚毫秒 DATETIME 保真修复发布：https://github.com/IoTSharp/SonnetDB/issues/235 https://github.com/IoTSharp/SonnetDB/issues/236")]
+    [Fact(Skip = "🛠️ SonnetDB 尚需修复高精度 decimal 与亚毫秒 DATETIME 保真并正式发布：https://github.com/IoTSharp/SonnetDB/issues/235 https://github.com/IoTSharp/SonnetDB/issues/236")]
     public void HighPrecisionValuesRoundtrip()
     {
         using var scope = new DatabaseScope();
@@ -363,7 +363,7 @@ public class SonnetDBTests
         Assert.Equal(time, Convert.ToDateTime(record[1]));
     }
 
-    [Fact(Skip = "⏳ 等待 SonnetDB DECIMAL ADD/ALTER 精度修复发布：https://github.com/IoTSharp/SonnetDB/issues/241")]
+    [Fact(Skip = "🛠️ SonnetDB 尚需修复 DECIMAL ADD/ALTER 精度并正式发布：https://github.com/IoTSharp/SonnetDB/issues/241")]
     public void DecimalColumnMigrationRetainsPrecision()
     {
         using var scope = new DatabaseScope();

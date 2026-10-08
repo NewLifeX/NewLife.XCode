@@ -62,6 +62,7 @@ DAL.AddConnStr("remote",
 | 大于 Int32 的分页位置 | ⛔ 原生 LIMIT/OFFSET 限为 Int32；适配明确拒绝更大 Int64 值 | 🛠️ [#256](https://github.com/IoTSharp/SonnetDB/issues/256) → 🧪 → 📦 → 🔧 |
 | Rank / DenseRank | ⛔ XCode WindowFunction 已有这些接口，SonnetDB 当前窗口不支持 | 🛠️ [#222](https://github.com/IoTSharp/SonnetDB/issues/222) → 🧪 → 📦 → 🔧 |
 | 更高隔离等级 | ⛔ Serializable 标签无对应完整隔离；适配仅开放 ReadCommitted / Unspecified | 🛠️ [#225](https://github.com/IoTSharp/SonnetDB/issues/225) → 🧪 → 📦 → 🔧 |
+| 事务内锁定读 | ⛔ 尚无真实锁定读，乐观并发不能替代此合同 | 🛠️ [#233](https://github.com/IoTSharp/SonnetDB/issues/233) → 🧪 → 📦 → 🔧 |
 | 主键演进 | ⛔ 现有列主键/自增定义变化不由普通 ALTER COLUMN 完成，需要完整迁移合同 | 🛠️ [#226](https://github.com/IoTSharp/SonnetDB/issues/226) → 🧪 → 📦 → 🔧 |
 | 事务内 DDL | ⛔ 原生轻事务拒绝 DDL，不能称迁移支持事务回滚 | 🛠️ [#227](https://github.com/IoTSharp/SonnetDB/issues/227) → 🧪 → 📦 → 🔧 |
 | 多结果集 | ⛔ 多条 SELECT / NextResult 不完整；单结果集 DataSet 补齐不代表这项完成 | 🛠️ [#229](https://github.com/IoTSharp/SonnetDB/issues/229) → 🧪 → 📦 → 🔧 |

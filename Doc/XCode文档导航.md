@@ -13,7 +13,7 @@ XCode 是新生命团队专为 .NET 企业应用设计的高性能**数据中间
 - **高吞吐批量写入**：`EntityQueue` 将多线程写入自动合并批量落库，单机峰值 TPS 可达十万级
 - **多数据库无缝切换**：同一套业务代码，MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / 达梦 / 金仓 / 瀚高自由迁移，仅需修改连接字符串
 - **内置 RBAC 权限体系**：用户、角色、菜单、行级数据权限、多租户隔离全覆盖，开箱即用，可与 NewLife.Cube 无缝集成
-- **数据管道 ETL**：内置增量抽取与同步框架，跨库迁移与数据中台首选
+- **数据管道 ETL**：内置增量抽取器与跨库数据搬运（DAL_Backup/DbPackage）；ETL 执行引擎与 Sync 同步框架已移除（相关文档为历史参考）
 
 ```csharp
 // 示例：一行配置开启按天分表
@@ -129,17 +129,17 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
 
 ## ETL 与数据同步
 
-- [ETL数据抽取转换](/xcode/etl_transform)
-- [ETL执行内核与并发调度（ETL）](/xcode/etl_engine)
-- [抽取配置与运行上下文（ExtractSetting_DataContext）](/xcode/extract_setting_data_context)
-- [ETL模块管道与生命周期（IETLModule）](/xcode/etl_module)
-- [ETL统计指标与观测模型（IETLStat）](/xcode/etl_stat)
-- [抽取器族谱与选型（Extracter）](/xcode/extracter_family)
+- [ETL数据抽取转换](/xcode/etl_transform)（已移除）
+- [ETL执行内核与并发调度（ETL）](/xcode/etl_engine)（已移除）
+- [抽取配置与运行上下文（ExtractSetting_DataContext）](/xcode/extract_setting_data_context)（部分过时）
+- [ETL模块管道与生命周期（IETLModule）](/xcode/etl_module)（已移除）
+- [ETL统计指标与观测模型（IETLStat）](/xcode/etl_stat)（已移除）
+- [抽取器族谱与选型（Extracter）](/xcode/extracter_family)（部分过时）
 - [数据包并行管道与抽取策略（DbPackage）](/xcode/db_package)
 - [备份恢复与同步（数据搬运专家）](https://newlifex.com/xcode/backup)
 - [数据备份恢复与跨库同步（DAL_Backup）](/xcode/dal_backup_sync)
-- [数据同步（Sync）](/xcode/data_sync)
-- [增量同步框架（Transform.Sync）](/xcode/transform_sync)
+- [数据同步（Sync）](/xcode/data_sync)（已移除）
+- [增量同步框架（Transform.Sync）](/xcode/transform_sync)（已移除）
 
 ---
 
@@ -157,7 +157,7 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
 - [反向工程（自动建表建库大杀器）](https://newlifex.com/xcode/negative)
 - [元数据管理总览](/xcode/metadata_overview)
 - [表元数据（TableItem）](/xcode/table_item)
-- [TableItem全局启动配置（连接名/表名永久改嵌）](/xcode/table_item_startup)
+- [TableItem全局启动配置（连接名/表名/Migration 永久修改）](/xcode/table_item_startup)
 - [字段元数据（FieldItem与ShowIn）](/xcode/field_item_showin)
 - [XCode数据模型与结构同步（IDataTable正/反向工程）](/xcode/data_model_sync)
 

@@ -10,6 +10,8 @@
 
 [English](README.en.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Español](README.es.md) | [Français](README.fr.md)
 
+> 多语言版为精简摘要，更新可能滞后；完整内容以中文版为准。
+
 文档：https://newlifex.com/xcode   社区交流QQ群：1600800 / 1600838
 
 ---
@@ -109,7 +111,7 @@ XML 模型 (Tables/Columns/Indexes) → 代码生成器（xcodetool 或 VS T4）
 
 ### 3.6 反向工程 & 迁移
 - 根据实体反向创建/修改表结构、索引，自动维持一致。
-- 支持表级 `Migration` 配置，可按实体粒度控制反向工程策略（Off / ReadOnly / On / Full）。
+- 支持表级 `Migration` 配置（模型 `Table` 属性 / `[BindTable]` / `TableItem` 启动覆盖），可按实体粒度控制反向工程策略（Off / ReadOnly / On / Full）。
 - 支持任意数据库间模型抽取 + 跨库数据迁移（配套工具 DataMigration）。
 
 ### 3.7 分表分库 (ShardPolicy)
@@ -130,7 +132,7 @@ XML 模型 (Tables/Columns/Indexes) → 代码生成器（xcodetool 或 VS T4）
 - 内存关联：先缓存主表，再在内存中做“伪联表”。
 
 ### 3.10 数据权限与多租户
-- **数据权限（Data Scope）**：行级数据访问控制，支持“全部 / 本部门及下级 / 本部门 / 仅本人 / 自定义”五种范围，通过 `DataScopeContext` + `DataScopeInterceptor` 自动完成查询过滤、新增默认归属、修改删除校验。实体实现 `IUserScope` / `IDepartmentScope` / `IDataScope` 接口即可接入。
+- **数据权限（Data Scope）**：行级数据访问控制，支持“全部 / 本部门及下级 / 本部门 / 仅本人 / 自定义”五种范围，通过 `DataScopeContext` + `DataScopeInterceptor` 自动完成查询过滤、新增默认归属、修改删除校验。实体实现 `IUserScope` / `IDepartmentScope` / `IDataScope` 接口即可接入；部门管理者自动纳入可见范围，本人数据始终可访问。
 - **多租户**：实体实现 `ITenantScope` 后，`TenantInterceptor` 自动在查询时附加租户过滤、写入时校验/补充租户标识；EntityBuilder 为含 `TenantId` 列的业务类自动实现 `ITenantScope`。
 - 详细用法见 `Doc/数据权限.md`、`Doc/权限管理.md`。
 
@@ -236,7 +238,7 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(UserInfo.Id), Meta.Factory)
 ## 10. FAQ 精要
 - 为什么第一次 Count 很快？Meta.Count 走系统索引；SQLite 首次可能取自增最大值再异步精确。
 - 数据更新后多久缓存一致？本进程写操作立即反映；跨进程需等缓存过期或主动失效策略。
-- 可否关闭自动迁移？设置 Migration=Off，或按需使用 ReadOnly/On/Full。
+- 可否关闭自动迁移？设置 Migration=Off（全局或表级），或按需使用 ReadOnly/On/Full。
 - 复杂多表查询？推荐多次单表 + 内存关联（缓存命中更快 & 结构更清晰）。
 
 ---

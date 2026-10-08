@@ -99,7 +99,7 @@ XCode 的代码生成由 `XCodeTool` 驱动，核心生成器在 `XCode.Code` �
 项目中已有：
 
 - `CustomBuilder`：可额外生成 `.CusBiz.cs`（仅首次）
-- `CubeBuilder`：生成区域类与控制器模板
+- `CubeBuilder`：生成区域类与控制器模板；搜索参数中的枚举类型自动生成 using 命名空间并使用 global:: 前缀，Double/Single 字段生成 ToDouble 解析
 
 `CustomBuilder` 适合沉淀“永不覆盖”的业务代码骨架。
 

@@ -4,7 +4,7 @@
 
 `TableItem` 是 XCode 实体类的元数据，记录了从特性中读取的连接名和表名。
 
-`TableItem.ConnName` 和 `TableItem.TableName` 支持在启动时修改，用于全局永久配置，区别于运行时的临时动态修改。
+`TableItem.ConnName`、`TableItem.TableName` 和 `TableItem.Migration` 支持在启动时修改，用于全局永久配置，区别于运行时的临时动态修改。
 
 XCode 支持两种修改方式：
 
@@ -91,6 +91,18 @@ User.Meta.Table.ConnName = $"Tenant_{tenantId}";
 Order.Meta.Table.ConnName = $"Tenant_{tenantId}";
 Product.Meta.Table.ConnName = $"Tenant_{tenantId}";
 ```
+
+#### 场景4：表级反向工程模式
+
+```csharp
+// 收紧单表的反向工程策略：全局 Full（开发环境），仅本表 On（只建不改，防止误删）
+Log.Meta.Table.Migration = Migration.On;
+
+// 置回 null 恢复继承全局配置（或特性中配置的值）
+Log.Meta.Table.Migration = null;
+```
+
+可选值 `Off / ReadOnly / On / Full`，空值表示继承全局 Migration。表级配置只能收紧、不能放大全局模式（例如全局 `Full`、当前表 `On`）。表级配置也可写在模型 `<Table Migration="On">` 或实体特性 `[BindTable(Migration = "On")]`。
 
 ---
 
@@ -462,7 +474,7 @@ public static void Main(String[] args)
 
 ### 3. 自动同步
 
-修改 `TableItem.ConnName/TableName` 会自动同步到 `DataTable`，确保反向工程使用正确的表名。
+修改 `TableItem.ConnName/TableName` 会自动同步到 `DataTable`，确保反向工程使用正确的表名；`TableItem.Migration` 会同步到 `DataTable.Properties`，反向工程按表优先生效。
 
 同时，`Meta.Session` 会自动检测连接名/表名的变化并重新创建，确保后续操作使用新的连接。
 
@@ -661,9 +673,10 @@ public class TableItem
 1. **访问方式**：已知实体类用 `User.Meta.Table`，动态类型用 `type.AsFactory()`
 2. **调用时机**：启动时配置，首次访问实体类之前
 3. **自动同步**：修改 `TableItem` 时自动同步到 `DataTable`
-4. **临时修改**：推荐使用 `Meta.CreateSplit()`，离开作用域时自动恢复；手动修改必须设置为 `null` 恢复
-5. **多租户支持**：XCode 自带 `TenantContext.CurrentId` 获取当前租户
-6. **C# 14 特性**：使用 `field` 关键字实现延迟初始化和缓存
+4. **表级迁移**：`TableItem.Migration` 覆盖单表反向工程模式（Off/ReadOnly/On/Full），置 `null` 继承全局或特性配置
+5. **临时修改**：推荐使用 `Meta.CreateSplit()`，离开作用域时自动恢复；手动修改必须设置为 `null` 恢复
+6. **多租户支持**：XCode 自带 `TenantContext.CurrentId` 获取当前租户
+7. **C# 14 特性**：使用 `field` 关键字实现延迟初始化和缓存
 
 ### 适用场景
 

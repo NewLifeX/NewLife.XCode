@@ -1,5 +1,7 @@
 # 抽取配置与运行上下文（ExtractSetting_DataContext）
 
+> ⚠️ **部分已过时**：`DataContext` 已于 2026-07-15（v12.1 清理）移除，`ExtractSetting`/`IExtractSetting` 仍在使用。文中 DataContext 相关章节（第 3~5 节）为历史参考。
+
 `ExtractSetting` 与 `DataContext` 是 Transform 管道中的“状态中枢”：
 
 - `ExtractSetting` 负责定义“本轮抽取窗口与批大小”

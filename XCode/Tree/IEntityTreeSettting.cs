@@ -107,11 +107,8 @@ public class EntityTreeSetting<TEntity> : IEntityTreeSetting where TEntity : Ent
     /// <summary>文本键名</summary>
     public virtual String Text
     {
-        get
-        {
-            return Factory.FieldNames.Where(f => f.EqualIgnoreCase("Text", "Display", "DisplayName")).FirstOrDefault();
-        }
-        set { _Text = value; }
+        get => _Text ??= Factory.FieldNames.Where(f => f.EqualIgnoreCase("Text", "Display", "DisplayName")).FirstOrDefault();
+        set => _Text = value;
     }
 
     /// <summary>是否大排序，较大排序值在前面</summary>

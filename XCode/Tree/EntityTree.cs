@@ -338,7 +338,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
     protected static IList<TEntity> FindAllParents(IEntityTree entity, Boolean includeSelf = false)
     {
         var pkey = Setting.Parent;
-        if (entity == null || pkey.IsNullOrEmpty() || IsNull((TKey)entity[pkey]!) || entity.Parent == null) return [];
+        if (entity == null || pkey.IsNullOrEmpty()) return [];
 
         var list = new List<TEntity>();
         var item = entity as TEntity;
@@ -523,7 +523,7 @@ public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEnti
         for (var i = 0; i < list.Count; i++)
         {
             var cur = list[i];
-            if (i > 1 && EqualTo(cur))
+            if (i > 0 && EqualTo(cur))
             {
                 var prev = list[i - 1];
                 (prev.Sort, cur.Sort) = (cur.Sort, prev.Sort);

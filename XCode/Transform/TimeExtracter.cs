@@ -112,9 +112,14 @@ public class TimeExtracter : IExtracter<DbTable>
                 if (count == BatchSize) break;
             }
 
-            // 踏空，加大步进
-            if (startRow == 0 && step < maxStep)
-                step += step;
+            // 踏空（当前分片无数据），跳过该分片并加大步进，避免历史数据永远无法逼近当前时间
+            if (startRow == 0)
+            {
+                if (step < maxStep)
+                    step += step;
+
+                StartTime = end;
+            }
 
             // 止步于当前时间
             if (StartTime.Add(minStep) >= DateTime.Now) break;

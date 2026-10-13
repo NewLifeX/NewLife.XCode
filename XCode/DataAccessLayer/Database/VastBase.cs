@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text;
 
@@ -528,6 +529,7 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     protected override String? ArrayTypePostfix => "[]";
 
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "数组类型按字段类型动态创建，AOT 下由应用侧保证字段类型可用")]
     protected override Type? GetDataType(IDataColumn field)
     {
         var postfix = ArrayTypePostfix!;

@@ -1,4 +1,6 @@
-﻿namespace XCode.Membership;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace XCode.Membership;
 
 /// <summary>数据权限拦截器。在增删改查时自动应用数据权限</summary>
 /// <remarks>
@@ -18,6 +20,7 @@ public class DataScopeInterceptor : EntityInterceptor
     /// <summary>初始化。检查实体类是否实现了数据权限相关接口</summary>
     /// <param name="entityType">实体类型</param>
     /// <returns>是否匹配</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "实体类型来自 XCode 内部拦截入口，AOT/裁剪下由应用侧保证实体类型接口被保留")]
     protected override Boolean OnInit(Type entityType)
     {
         var interfaces = entityType.GetInterfaces();

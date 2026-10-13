@@ -3,12 +3,13 @@ using System.Diagnostics;
 using NewLife;
 using NewLife.Log;
 using NewLife.Security;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.Common;
 
 /// <summary>数据模拟</summary>
 /// <typeparam name="T"></typeparam>
-public class DataSimulation<T> : DataSimulation where T : Entity<T>, new()
+public class DataSimulation<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T> : DataSimulation where T : Entity<T>, new()
 {
     /// <summary>实例化</summary>
     public DataSimulation() => Factory = Entity<T>.Meta.Factory;

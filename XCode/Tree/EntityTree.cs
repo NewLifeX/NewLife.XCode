@@ -4,13 +4,14 @@ using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife;
 using NewLife.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode;
 
 /// <summary>主键为整型的实体树基类</summary>
 /// <typeparam name="TEntity"></typeparam>
 [Serializable]
-public class EntityTree<TEntity> : EntityTree<Int32, TEntity> where TEntity : EntityTree<TEntity>, new()
+public class EntityTree<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : EntityTree<Int32, TEntity> where TEntity : EntityTree<TEntity>, new()
 { }
 
 /// <summary>实体树基类，具有树形结构的实体继承该类即可得到各种树操作功能</summary>
@@ -24,7 +25,7 @@ public class EntityTree<TEntity> : EntityTree<Int32, TEntity> where TEntity : En
 /// <typeparam name="TKey">主键类型</typeparam>
 /// <typeparam name="TEntity">实体类型</typeparam>
 [Serializable]
-public abstract partial class EntityTree<TKey, TEntity> : Entity<TEntity>, IEntityTree where TEntity : EntityTree<TKey, TEntity>, new()
+public abstract partial class EntityTree<TKey, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : Entity<TEntity>, IEntityTree where TEntity : EntityTree<TKey, TEntity>, new()
 {
     #region 静态构造
     static EntityTree()

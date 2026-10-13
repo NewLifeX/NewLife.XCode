@@ -711,7 +711,7 @@ internal class IRISMetaData : RemoteDbMetaData
         if (Database.Factory.GetType().Name.Contains("IRISConnector"))
         {
             var dbs = GetSchema(_.Databases, null);
-            return dbs != null && dbs.Select($"schema_name='{databaseName}'").Length > 0;
+            return dbs != null && dbs.SelectRows($"schema_name='{databaseName}'").Length > 0;
         }
 
         var dt = GetSchema(_.Databases, [databaseName]);

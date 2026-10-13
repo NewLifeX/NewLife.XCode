@@ -1,4 +1,5 @@
 ﻿using NewLife.Log;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.Statistics;
 
@@ -13,7 +14,7 @@ public static class StatHelper
     /// <param name="find"></param>
     /// <param name="onCreate"></param>
     /// <returns></returns>
-    public static TEntity? GetOrAdd<TEntity, TModel>(TModel model, Func<TModel, Boolean, TEntity> find, Action<TEntity>? onCreate = null)
+    public static TEntity? GetOrAdd<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity, TModel>(TModel model, Func<TModel, Boolean, TEntity> find, Action<TEntity>? onCreate = null)
         where TModel : StatModel
         where TEntity : Entity<TEntity>, IStat, new()
     {

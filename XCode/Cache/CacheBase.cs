@@ -2,11 +2,12 @@
 using NewLife.Log;
 using NewLife.Threading;
 using XCode.DataAccessLayer;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.Cache;
 
 /// <summary>缓存基类</summary>
-public abstract class CacheBase<TEntity> : CacheBase where TEntity : Entity<TEntity>, new()
+public abstract class CacheBase<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : CacheBase where TEntity : Entity<TEntity>, new()
 {
     #region 属性
     /// <summary>连接名</summary>

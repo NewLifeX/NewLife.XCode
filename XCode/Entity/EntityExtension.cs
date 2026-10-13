@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using NewLife.Collections;
 using NewLife.Data;
@@ -21,6 +22,7 @@ public static class EntityExtension
     /// <param name="list">实体列表</param>
     /// <param name="valueField">作为Value部分的字段，默认为空表示整个实体对象为值</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "按运行时键值类型构造字典，AOT 下由应用侧保证键值类型可用")]
     public static IDictionary ToDictionary<T>(this IEnumerable<T> list, String? valueField = null) where T : IEntity
     {
         var list2 = list.RemoveNull();
@@ -1551,6 +1553,7 @@ public static class EntityExtension
     /// <summary>转为DataTable</summary>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "字段类型来自实体模型，AOT/裁剪下由应用侧保证字段类型成员保留")]
     public static DataTable ToDataTable<T>(this IEnumerable<T> list) where T : IEntity
     {
         var dt = new DataTable();

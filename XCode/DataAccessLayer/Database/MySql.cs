@@ -6,6 +6,7 @@ using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
 using NewLife.Reflection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.DataAccessLayer;
 
@@ -65,6 +66,7 @@ internal class MySql : RemoteDb
 
     private const String Sslmode = "Sslmode";
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "探测MySql驱动枚举SslMode取值，AOT/裁剪下失败即跳过兼容修正")]
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
         base.OnSetConnectionString(builder);
@@ -362,6 +364,7 @@ internal class MySqlSession : RemoteDbSession
     /// <summary>重载同步填充，使用MySqlDataReader.ReadTableAsync零拷贝读取</summary>
     /// <param name="dr">数据读取器</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "探测NewLife.MySql驱动的零拷贝优化入口，找不到时回退常规路径")]
     protected override DbTable OnFill(DbDataReader dr)
     {
         var db = (Database as MySql)!;
@@ -378,6 +381,7 @@ internal class MySqlSession : RemoteDbSession
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "探测NewLife.MySql驱动的零拷贝优化入口，找不到时回退常规路径")]
     public override Task<DbTable> QueryAsync(String sql, IDataParameter[]? ps)
     {
         var db = (Database as MySql)!;
@@ -403,7 +407,10 @@ internal class MySqlSession : RemoteDbSession
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public override Task<IEnumerable<T>> QueryModelsAsync<T>(String sql, IDataParameter[]? ps)
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "探测NewLife.MySql驱动的零拷贝优化入口，找不到时回退常规路径")]
+    [UnconditionalSuppressMessage("Trimming", "IL2060", Justification = "MySql 驱动零拷贝读取入口为泛型方法，AOT/裁剪下探测失败即回退常规路径")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "MySql 驱动零拷贝读取入口为泛型方法，AOT/裁剪下探测失败即回退常规路径")]
+    public override Task<IEnumerable<T>> QueryModelsAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, IDataParameter[]? ps)
     {
         var db = (Database as MySql)!;
         if (!db.IsNewLifeDriver) return base.QueryModelsAsync<T>(sql, ps);
@@ -490,6 +497,7 @@ internal class MySqlSession : RemoteDbSession
         return Execute(sql);
     }
 
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "批量参数按字段运行时类型创建数组，AOT 下由应用侧保证字段类型可用")]
     private IDataParameter[] GetArrayParameters(IDataColumn[] columns, ICollection<String> ps, IModel[] list, ICollection<String>? addColumns = null)
     {
         var db = Database;
@@ -520,6 +528,7 @@ internal class MySqlSession : RemoteDbSession
     /// <param name="addColumns">要累加更新的字段，默认累加</param>
     /// <param name="list">实体列表</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "探测NewLife.MySql驱动的零拷贝优化入口，找不到时回退常规路径")]
     public override Int32 Update(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list)
     {
         var db = (Database as MySql)!;
@@ -892,7 +901,7 @@ internal class MySqlMetaData : RemoteDbMetaData
         if (Database.Factory.GetType().Name.Contains("MySqlConnector"))
         {
             var dbs = GetSchema(_.Databases, null);
-            return dbs != null && dbs.Select($"schema_name='{databaseName}'").Length > 0;
+            return dbs != null && dbs.SelectRows($"schema_name='{databaseName}'").Length > 0;
         }
 
         var dt = GetSchema(_.Databases, [databaseName]);

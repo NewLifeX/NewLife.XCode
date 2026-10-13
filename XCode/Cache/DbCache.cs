@@ -139,6 +139,7 @@ public class DbCache : Cache
     /// <param name="key">键</param>
     /// <returns></returns>
     [return: MaybeNull]
+    [UnconditionalSuppressMessage("Trimming", "IL2091", Justification = "缓存取值的泛型类型由调用方决定；AOT 下需调用方保证目标类型成员已被保留")]
     public override T Get<T>(String key)
     {
         var e = Find(key);

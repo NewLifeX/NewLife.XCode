@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.Serialization;
@@ -507,6 +508,7 @@ public partial class Area : Entity<Area>
     /// <param name="ip"></param>
     /// <param name="maxLevel">最大层级，默认3级</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "IP 定位解析器为可选外部组件，通过反射探测 GetAddress 方法")]
     public static IList<Area> SearchIP(String ip, Int32 maxLevel = 3)
     {
         if (!_initGetIp)

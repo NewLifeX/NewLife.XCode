@@ -133,6 +133,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     /// <param name="setDirty">是否设置脏数据</param>
     /// <param name="getDirty">仅拷贝有脏数据的源字段。仅对IEntity源有效，其它源无效</param>
     /// <returns>实际复制成员数</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "源对象为运行时实例，属性仅用于复制，AOT/裁剪下由应用侧保证其成员保留")]
     public virtual Int32 CopyFrom(Object source, Boolean setDirty, Boolean getDirty)
     {
         if (source == null || ReferenceEquals(source, this)) return 0;

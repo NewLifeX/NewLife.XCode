@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Reflection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.Statistics;
 
@@ -128,6 +129,7 @@ public class StatModel
     /// <summary>使用参数填充</summary>
     /// <param name="ps">请求参数</param>
     /// <param name="defLevel">默认级别</param>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "统计模型属性为运行时类型，AOT/裁剪下由应用侧保证其成员保留")]
     public virtual void Fill(IDictionary<String, String> ps, StatLevels defLevel = StatLevels.Day)
     {
         //this.Copy(ps, true);

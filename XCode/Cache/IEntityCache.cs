@@ -1,4 +1,6 @@
-﻿namespace XCode.Cache;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace XCode.Cache;
 
 /// <summary>缓存基接口</summary>
 public interface IEntityCacheBase
@@ -71,7 +73,7 @@ public interface ISingleEntityCache : IEntityCacheBase
 /// <summary></summary>
 /// <typeparam name="TKey"></typeparam>
 /// <typeparam name="TEntity"></typeparam>
-public interface ISingleEntityCache<TKey, TEntity> : ISingleEntityCache where TEntity : Entity<TEntity>, new()
+public interface ISingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : ISingleEntityCache where TEntity : Entity<TEntity>, new()
 {
     /// <summary>获取数据</summary>
     /// <param name="key"></param>

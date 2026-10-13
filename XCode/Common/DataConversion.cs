@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace XCode.Common;
 
@@ -10,6 +11,7 @@ public class DataConversion
     /// <param name="objSource"></param>
     /// <param name="objTarjet"></param>
     /// <param name="ignoreTarjetProperties"></param>
+    [UnconditionalSuppressMessage("SingleFile", "IL3002", Justification = "单文件发布下模块名不可用，仅用于调试判断")]
     public static void CopyProperty(Object objSource, Object objTarjet, List<String>? ignoreTarjetProperties = null)
     {
         Object? obj = null;
@@ -78,5 +80,6 @@ public class DataConversion
     /// <param name="obj"></param>
     /// <param name="withBindingFlags"></param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "源对象为运行时实例，AOT/裁剪下由应用侧保证其成员保留")]
     public static PropertyInfo[] GetProperties(Object obj, Boolean withBindingFlags = false) => withBindingFlags ? obj.GetType().GetProperties(_bf) : obj.GetType().GetProperties();
 }

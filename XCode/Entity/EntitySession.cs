@@ -115,6 +115,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     #endregion
 
     #region 主要属性
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
     private Type ThisType => typeof(TEntity);
 
     /// <summary>数据表元数据信息。合并连接上的文件模型，可能跟Meta.Table不一致</summary>

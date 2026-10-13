@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
 using TDengineDriver;
@@ -117,7 +118,8 @@ namespace XCode.TDengine
         /// <summary>获取字段类型</summary>
         /// <param name="ordinal"></param>
         /// <returns></returns>
-        public override Type GetFieldType(Int32 ordinal)
+        [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)]
+    public override Type GetFieldType(Int32 ordinal)
         {
             var type = (TDengineDataType)_metas[ordinal].type switch
             {
@@ -257,7 +259,8 @@ namespace XCode.TDengine
 
         /// <summary>获取架构表</summary>
         /// <returns></returns>
-        public override DataTable GetSchemaTable()
+        [UnconditionalSuppressMessage("Trimming", "IL2111", Justification = "模式表的 DataType 列仅承载 Type 实例本身，不通过反射访问其成员")]
+    public override DataTable GetSchemaTable()
         {
             var table = new DataTable("SchemaTable");
             if (_metas != null && _metas.Count > 0)

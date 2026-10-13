@@ -6,6 +6,7 @@ using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Reflection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.DataAccessLayer;
 
@@ -28,7 +29,7 @@ public partial class DAL
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public IEnumerable<T> Query<T>(String sql, Object? param = null)
+    public IEnumerable<T> Query<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param = null)
     {
         if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
@@ -51,7 +52,7 @@ public partial class DAL
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns></returns>
-    public IEnumerable<T> Query<T>(String sql, Object? param, Int64 startRowIndex, Int64 maximumRows)
+    public IEnumerable<T> Query<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param, Int64 startRowIndex, Int64 maximumRows)
     {
         if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
@@ -70,7 +71,7 @@ public partial class DAL
     /// <param name="param">参数对象</param>
     /// <param name="page">分页参数</param>
     /// <returns></returns>
-    public IEnumerable<T> Query<T>(String sql, Object? param, PageParameter page)
+    public IEnumerable<T> Query<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param, PageParameter page)
     {
         if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
@@ -94,14 +95,14 @@ public partial class DAL
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public T QuerySingle<T>(String sql, Object? param = null) => Query<T>(sql, param).FirstOrDefault();
+    public T QuerySingle<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param = null) => Query<T>(sql, param).FirstOrDefault();
 
     /// <summary>查询Sql并映射为结果集</summary>
     /// <typeparam name="T">实体类</typeparam>
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public async Task<IEnumerable<T>> QueryAsync<T>(String sql, Object? param = null)
+    public async Task<IEnumerable<T>> QueryAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param = null)
     {
         if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
 
@@ -123,7 +124,7 @@ public partial class DAL
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public async Task<T> QuerySingleAsync<T>(String sql, Object? param = null) => (await QueryAsync<T>(sql, param).ConfigureAwait(false)).FirstOrDefault();
+    public async Task<T> QuerySingleAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param = null) => (await QueryAsync<T>(sql, param).ConfigureAwait(false)).FirstOrDefault();
 
     private static Boolean IsValueTuple(Type type)
     {
@@ -293,6 +294,7 @@ public partial class DAL
     /// <param name="where">查询条件。默认使用Id字段</param>
     /// <param name="tableName">表名</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "更新数据对象为调用方运行时传入的任意类型，其属性访问依赖对象实例自身，AOT 下由调用方保证类型成员可见")]
     public Int32 Update(Object data, Object where, String? tableName = null)
     {
         if (tableName.IsNullOrEmpty() && GetTableName != null) tableName = OnGetTableName(data.GetType());
@@ -492,6 +494,7 @@ public partial class DAL
     /// <param name="where">查询条件。默认使用Id字段</param>
     /// <param name="tableName">表名</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "更新数据对象为调用方运行时传入的任意类型，其属性访问依赖对象实例自身，AOT 下由调用方保证类型成员可见")]
     public Task<Int32> UpdateAsync(Object data, Object where, String? tableName = null)
     {
         if (tableName.IsNullOrEmpty() && GetTableName != null) tableName = OnGetTableName(data.GetType());

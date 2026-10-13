@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.InfluxDB;
 
@@ -125,6 +126,7 @@ public class InfluxDBDataReader : DbDataReader
     /// <summary>获取字段类型</summary>
     /// <param name="ordinal">索引</param>
     /// <returns></returns>
+    [return: DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicProperties)]
     public override Type GetFieldType(Int32 ordinal) => typeof(String);
 
     /// <summary>获取数据类型名称</summary>
@@ -231,6 +233,7 @@ public class InfluxDBDataReader : DbDataReader
 
     /// <summary>获取模式表</summary>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2111", Justification = "模式表的 DataType 列仅承载 Type 实例本身，不通过反射访问其成员")]
     public override DataTable GetSchemaTable()
     {
         var table = new DataTable("SchemaTable");

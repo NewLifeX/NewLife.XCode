@@ -1,4 +1,6 @@
-﻿namespace XCode;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace XCode;
 
 /// <summary>实体树设置</summary>
 public interface IEntityTreeSetting
@@ -29,7 +31,7 @@ public interface IEntityTreeSetting
 }
 
 /// <summary>实体树设置</summary>
-public class EntityTreeSetting<TEntity> : IEntityTreeSetting where TEntity : Entity<TEntity>, new()
+public class EntityTreeSetting<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : IEntityTreeSetting where TEntity : Entity<TEntity>, new()
 {
     #region 属性
     private IEntityFactory _Factory = Entity<TEntity>.Meta.Factory;

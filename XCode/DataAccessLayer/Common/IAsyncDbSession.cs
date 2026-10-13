@@ -65,6 +65,6 @@ public interface IAsyncDbSession : IDisposable2
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    Task<IEnumerable<T>> QueryModelsAsync<T>(String sql, IDataParameter[]? ps);
+    Task<IEnumerable<T>> QueryModelsAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, IDataParameter[]? ps);
     #endregion
 }

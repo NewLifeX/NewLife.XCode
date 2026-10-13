@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using NewLife.Log;
@@ -118,6 +118,8 @@ public static class EntityFactory
     /// var factory = typeof(User).AsFactory();
     /// var users = factory.FindAll();
     /// </code></example>
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "反射兜底路径服务于非标准实体继承的历史场景，AOT 下常规实体走静态工厂 GetFactory<TEntity>")]
+    [UnconditionalSuppressMessage("Trimming", "IL2071", Justification = "反射兜底路径的场景与裁剪前置条件由应用侧保证实体类型成员保留")]
     public static IEntityFactory CreateFactory(Type type)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
@@ -189,6 +191,10 @@ public static class EntityFactory
     /// </code></example>
     public static IEntityFactory AsFactory(this Type type) => CreateFactory(type);
 
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "实体类型来自 IEntity 全子类扫描，AOT/裁剪下由应用侧保证实体类型成员被保留")]
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "实体类型来自 IEntity 全子类扫描，AOT/裁剪下由应用侧保证实体类型成员被保留")]
+    private static TableItem CreateTableItem(Type type) => TableItem.Create(type);
+
     /// <summary>注册自定义实体工厂实例</summary>
     /// <remarks>
     /// 内部方法，在实体类的静态构造函数中调用，以注册特定的工厂实现。
@@ -228,7 +234,7 @@ public static class EntityFactory
             // 实体类的基类必须是泛型，避免多级继承导致误判
             if (!type.BaseType.IsGenericType) continue;
 
-            var ti = TableItem.Create(type);
+            var ti = CreateTableItem(type);
             var name = ti.ConnName;
             if (name == null)
                 XTrace.WriteLine("实体类[{0}]无法创建TableItem", type.FullName);
@@ -260,7 +266,7 @@ public static class EntityFactory
             list.Add(type.Name);
 
             // 过滤掉第一次使用才加载的
-            var ti = TableItem.Create(type);
+            var ti = CreateTableItem(type);
             if (checkMode && ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
             list2.Add(type.Name);
 
@@ -329,7 +335,7 @@ public static class EntityFactory
             var connNames = new List<String>();
             foreach (var type in types)
             {
-                var ti = TableItem.Create(type);
+                var ti = CreateTableItem(type);
                 if (ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
 
                 var name = ti.ConnName;
@@ -396,7 +402,7 @@ public static class EntityFactory
             var connNames = new List<String>();
             foreach (var type in types)
             {
-                var ti = TableItem.Create(type);
+                var ti = CreateTableItem(type);
                 if (ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
 
                 var name = ti.ConnName;
@@ -493,7 +499,7 @@ public static class EntityFactory
             var facts = new List<IEntityFactory>();
             foreach (var type in types)
             {
-                var ti = TableItem.Create(type);
+                var ti = CreateTableItem(type);
                 if (ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
 
                 var name = ti.ConnName;

@@ -176,11 +176,11 @@ partial class DbMetaData
         DataRow[]? drs = null;
         var where = $"{_.TalbeName}='{table.TableName}'";
         if (dt.Columns.Contains(_.OrdinalPosition))
-            drs = dt.Select(where, _.OrdinalPosition);
+            drs = dt.SelectRows(where, _.OrdinalPosition);
         else if (dt.Columns.Contains(_.ID))
-            drs = dt.Select(where, _.ID);
+            drs = dt.SelectRows(where, _.ID);
         else
-            drs = dt.Select(where);
+            drs = dt.SelectRows(where);
 
         return GetFields(table, drs);
     }
@@ -273,7 +273,7 @@ partial class DbMetaData
     {
         if (indexes == null) return [];
 
-        var drs = indexes.Select($"{_.TalbeName}='{table.TableName}'");
+        var drs = indexes.SelectRows($"{_.TalbeName}='{table.TableName}'");
         if (drs == null || drs.Length <= 0) return [];
 
         var list = new List<IDataIndex>();
@@ -295,7 +295,7 @@ partial class DbMetaData
                 else if (indexColumns.Columns.Contains(_.ColumnPosition))
                     orderby = _.ColumnPosition;
 
-                var dics = indexColumns.Select($"{_.TalbeName}='{table.TableName}' And {_.IndexName}='{di.Name}'", orderby);
+                var dics = indexColumns.SelectRows($"{_.TalbeName}='{table.TableName}' And {_.IndexName}='{di.Name}'", orderby);
                 if (dics != null && dics.Length > 0)
                 {
                     var ns = new List<String>();

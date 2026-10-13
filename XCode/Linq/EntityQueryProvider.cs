@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using NewLife.Reflection;
@@ -66,6 +67,7 @@ public class EntityQueryProvider : IQueryProvider
     /// <summary>创建查询</summary>
     /// <param name="expression"></param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "实体 LINQ 表达式在运行时编译委托，AOT/裁剪下不支持该路径")]
     public IQueryable CreateQuery(LinqExpression expression)
     {
         if (expression == null) throw new ArgumentNullException(nameof(expression));
@@ -79,6 +81,7 @@ public class EntityQueryProvider : IQueryProvider
     /// <typeparam name="TResult"></typeparam>
     /// <param name="expression"></param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "实体 LINQ 表达式在运行时编译委托，AOT/裁剪下不支持该路径")]
     public TResult Execute<TResult>(LinqExpression expression)
     {
         if (expression == null) throw new ArgumentNullException(nameof(expression));
@@ -774,6 +777,7 @@ public class LinqExpressionVisitor : ExpressionVisitor
         return null;
     }
 
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "实体 LINQ 表达式在运行时编译委托，AOT/裁剪下不支持该路径")]
     private static String? GetValue(LinqExpression expression)
     {
         if (expression is ConstantExpression constant)
@@ -803,6 +807,7 @@ public class LinqExpressionVisitor : ExpressionVisitor
         return result is String ? $"'{result}'" : result.ToString();
     }
 
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "实体 LINQ 表达式在运行时编译委托，AOT/裁剪下不支持该路径")]
     private static Object? EvaluateMember(MemberExpression member)
     {
         if (member.Expression is ConstantExpression constExp)

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
 using NewLife;
@@ -594,6 +595,7 @@ internal class OracleSession : RemoteDbSession
         return sb.Return(true);
     }
 
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "批量参数按字段运行时类型创建数组，AOT 下由应用侧保证字段类型可用")]
     private IDataParameter[] GetParameters(IDataColumn[] columns, ICollection<String> ps, IEnumerable<IModel> list, ICollection<String>? addColumns = null)
     {
         var db = Database;
@@ -815,7 +817,7 @@ internal class OracleMeta : RemoteDbMetaData
         var dt = data?["PrimaryKeys"];
         if (dt != null && dt.Rows.Count > 0)
         {
-            var drs = dt.Select($"{_.TalbeName}='{table.TableName}'");
+            var drs = dt.SelectRows($"{_.TalbeName}='{table.TableName}'");
             if (drs != null && drs.Length > 0)
             {
                 // 找到主键所在索引，这个索引的列才是主键
@@ -874,7 +876,7 @@ internal class OracleMeta : RemoteDbMetaData
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
 
         var where = $"TABLE_NAME='{name}'";
-        var drs = dt.Select(where);
+        var drs = dt.SelectRows(where);
         if (drs != null && drs.Length > 0) return Convert.ToString(drs[0]["COMMENTS"]);
 
         return null;
@@ -923,7 +925,7 @@ internal class OracleMeta : RemoteDbMetaData
         if (dt?.Rows == null || dt.Rows.Count <= 0) return null;
 
         var where = $"{_.TalbeName}='{tableName}' AND {_.ColumnName}='{columnName}'";
-        var drs = dt.Select(where);
+        var drs = dt.SelectRows(where);
         if (drs != null && drs.Length > 0) return Convert.ToString(drs[0]["COMMENTS"]);
         return null;
     }

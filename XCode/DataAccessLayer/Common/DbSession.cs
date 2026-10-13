@@ -598,7 +598,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual async Task<IEnumerable<T>> QueryModelsAsync<T>(String sql, IDataParameter[]? ps)
+    public virtual async Task<IEnumerable<T>> QueryModelsAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, IDataParameter[]? ps)
     {
         var dt = await QueryAsync(sql, ps).ConfigureAwait(false);
         return dt.ReadModels<T>();

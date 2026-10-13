@@ -329,6 +329,7 @@ public class TableItem
     /// <summary>获取属性，保证基类属性在前</summary>
     /// <param name="type">类型</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2070", Justification = "type 来自 TableItem 创建入口（已由该入口 DAM 注解保证）")]
     private IEnumerable<Field> GetFields(Type type)
     {
         // 先拿到所有属性，可能是先排子类，再排父类

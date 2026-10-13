@@ -3,6 +3,7 @@ using System.Data;
 using NewLife;
 using NewLife.Log;
 using XCode.DataAccessLayer;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode;
 
@@ -20,7 +21,7 @@ namespace XCode;
 /// }
 /// </code>
 /// </example>
-public class EntityTransaction<TEntity> : EntityTransaction where TEntity : Entity<TEntity>, new()
+public class EntityTransaction<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : EntityTransaction where TEntity : Entity<TEntity>, new()
 {
     /// <summary>为实体类实例化一个事务区域</summary>
     public EntityTransaction()

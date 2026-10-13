@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>AotSmoke</RootNamespace>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\XCode\XCode.csproj" />
+    <!-- NovaDb 作为嵌入式真库验证对象（阶段 5：实体 CRUD/缓存覆盖） -->
+    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.901" />
+    <!-- NovaDb 1.0.2026.901 传递依赖的 Remoting 3.9.2026.901 引用了已被新版 Core 删除的 NewLife.Model.IPipelineHandler（JIT 惰性解析可过，ILC 急切解析失败），直接升至已适配版本 -->
+    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1009" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 静态引用驱动裁剪根：配合 XCode 驱动加载器的"程序集限定名"降级路径，在 AOT 下无需动态加载即可命中驱动 -->
+    <TrimmerRootAssembly Include="NewLife.NovaDb" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,65 @@
+name: aot
+
+on:
+  push:
+    branches: [ '*' ]
+  pull_request:
+    branches: [ '*' ]
+  workflow_dispatch:
+
+jobs:
+  # AOT 防回归：分析器 0 告警硬约束（与 RID 无关，单一 job）。
+  # 库自身 AOT/裁剪分析器告警当前 0 条（net8.0/net10.0）；-warnaserror 仅对 IL 告警生效，任一新增即阻断。
+  aot-analyzer:
+    name: aot analyzer check
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.x
+    - name: AOT Analyzer Check
+      run: |
+        dotnet build XCode\XCode.csproj -f net8.0 -c Release -warnaserror:IL2026,IL2046,IL2057,IL2060,IL2067,IL2070,IL2071,IL2072,IL2075,IL2091,IL2093,IL2095,IL2111,IL3000,IL3002,IL3050
+        dotnet build XCode\XCode.csproj -f net10.0 -c Release -warnaserror:IL2026,IL2046,IL2057,IL2060,IL2067,IL2070,IL2071,IL2072,IL2075,IL2091,IL2093,IL2095,IL2111,IL3000,IL3002,IL3050
+
+  # NativeAOT 冒烟：NativeAOT 不支持跨 OS 编译，每个 RID 用原生 runner 发布运行。
+  # win-x64 为阻断基线；linux-x64 先观察期（continue-on-error），稳定全绿后转阻断（见 Doc/AOT兼容性分析.md）。
+  aot:
+    name: aot (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    continue-on-error: ${{ matrix.experimental == true }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+            bin: AotSmoke.exe
+          - rid: linux-x64
+            os: ubuntu-latest
+            bin: AotSmoke
+            experimental: true
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.x
+    - name: Install NativeAOT Prerequisites (Linux)
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+    - name: JIT Baseline
+      # 同一冒烟工程以 JIT 运行（9 场景），为 AOT 结果提供对照
+      run: dotnet run -c Release --project AotSmoke/AotSmoke.csproj
+    - name: Publish NativeAOT Smoke
+      run: dotnet publish AotSmoke/AotSmoke.csproj -c Release -r ${{ matrix.rid }} -o AotSmoke/bin/aot-out
+    - name: Run NativeAOT Smoke
+      # 任一场景失败即非 0 退出码
+      shell: bash
+      run: ./AotSmoke/bin/aot-out/${{ matrix.bin }}

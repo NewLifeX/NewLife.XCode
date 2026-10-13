@@ -2,13 +2,13 @@
 
 > 基线：v12.2（依赖 NewLife.Core 12.0.2026.1013-beta0732）｜评估日期：2026-10-09（2026-10-13 复核：各指标与首评一致）
 > 评估方式：**分析器实测 + NativeAOT 真实发布编译 + 原生运行实测**（win-x64，.NET 10）
-> 冒烟工程：临时工程 `Bin/AotSmoke/`（不入库，复现方法见 §7）
+> 冒烟工程：`AotSmoke/`（已入库，9 场景 JIT/AOT 双跑，由 `.github/workflows/aot.yml` 自动执行）
 
 ---
 
 ## 1. 现状摘要
 
-- **结论先行（2026-10-13 阶段 3 更新）**：核心实体回路（元数据扫描、工厂创建、属性/索引器、行映射）已在 NativeAOT 下**真实可用**——原生发布运行冒烟 7/7 全部通过，三处断裂消除；动态能力边界声明与告警收敛已完成，库内 AOT/裁剪分析器告警由 131 处收敛至 **0**，NativeAOT 发布 XCode 源侧告警同样清零。
+- **结论先行（2026-10-13 阶段 5 更新）**：核心实体回路（元数据扫描、工厂创建、属性/索引器、行映射）已在 NativeAOT 下**真实可用**——原生发布运行冒烟 9/9 全部通过，三处断裂消除；动态能力边界声明与告警收敛已完成，库内 AOT/裁剪分析器告警由 131 处收敛至 **0**，NativeAOT 发布 XCode 源侧告警同样清零；冒烟与 CI 已落地（`AotSmoke` 工程 + `aot.yml`，含 NovaDb 嵌入库真库 CRUD 与实体缓存）。
 - **有利条件**：① 生成实体代码的成员访问已是静态实现（`this[name]` switch、显式属性），最难的成员存取通道无需改造；② 上游 NewLife.Core v12 已完成 AOT 改造（net8+ 常驻 `IsAotCompatible`、源生成器体系、0 告警），依赖升级即可继承。
 - **实测基线数据**：临时启用 net10.0 目标 + `IsAotCompatible` 后，库内分析器告警 **188 条**（IL2xxx/IL3xxx）；NativeAOT 真实发布（含 RID 编译与 ILC 阶段）告警 **55 条**；6 场景运行冒烟 **3 失败**（含 1 处静默降级）。
 - **目标框架现状**：库现多目标 `net45;net461;netstandard2.0;netstandard2.1;net8.0;net10.0`（2026-10-13 新增现代目标并常驻 `IsAotCompatible`）；net8/net10 首次编译暴露的 14 处错误（`NETCOREAPP` 死分支 `StackTraceHiddenAttribute` 缺 using）已修复。
@@ -56,6 +56,7 @@
 
 - AOT 判真：发布件 `Assembly.Location` 为空、`IsDynamicCodeSupported=False`；同样 6 场景在 JIT（严格 AOT 姿态）下全部通过，确认失败均源于裁剪/原生编译，而非功能开关。
 - **2026-10-13 阶段 2 复测**（冒烟扩充为 7 场景，新增实体行映射 LoadData）：NativeAOT 原生运行**全部通过**，三处断裂消除——元数据 `Fields.Length=2`、`Meta.Factory.Create()` 正常、行映射正确装载（静态工厂路径 + `DynamicallyAccessedMembers` 保留注解传导）。
+- **2026-10-13 阶段 5 复测**（冒烟扩充为 9 场景，新增 NovaDb 嵌入库真库 CRUD 与实体缓存；工程入库 `AotSmoke/`）：JIT 与 NativeAOT 原生运行均 **9/9 全部通过**（insert/find/update/表达式查询/delete 全链路 + 缓存命中）。期间修复驱动加载器 AOT 缺陷：`Assembly.GetCallingAssembly()` 在 NativeAOT 下抛 `PlatformNotSupportedException`、`Assembly.LoadFrom` 动态加载不可用——新增"程序集限定名"静态引用降级路径并防护平台异常。
 
 ---
 
@@ -88,7 +89,7 @@
 
 > Core 的 `Doc/AOT兼容性分析.md` 与 `AotSmoke` 工程可直接作为方法论与验收标准模板。
 >
-> 2026-10-13 更新：目标框架/分析器、动态能力声明两项差距均已补齐（阶段 1/3 落地）；冒烟与 CI 仍待建设（阶段 5）。
+> 2026-10-13 更新：目标框架/分析器、动态能力声明、冒烟与 CI 三项差距均已补齐（阶段 1/3/5 落地）；驱动矩阵（各 XCode.* 提供者逐个验证）仍待专项。
 
 ---
 
@@ -100,7 +101,7 @@
 | 2 元数据保留主线 | `Entity<TEntity>` 泛型参数加保留注解并传导；`TableItem.Create`/`GetFields` 增加泛型入口；`EntityFactory` 工厂静态注册/生成具体工厂；`EntityBase.GetCachedProperties` 泛型化 | 消除 §2.3 的 3 处断裂；2026-10-13 完成：静态工厂路径 + 保留注解传导，原生冒烟 7/7 通过；框架内部泛型推导告警（IL2091）随阶段 3 收敛 | 中（核心） |
 | 3 动态能力边界声明 | LINQ `Expression.Compile`、驱动动态装载/私有反射、`DataTable.Select` 表达式、映射/转换反射面：`RequiresDynamicCode`/`RequiresUnreferencedCode` 声明 + 明确降级或异常 | 对标 Core 收口记录做法；2026-10-13 完成：库内告警 131→0（net8/net10 双目标），NativeAOT 发布 XCode 源侧 0 条 | 中 |
 | 4 静态化通道（可选增强） | 由 XCodeTool/Build.tt 生成静态元数据表与工厂注册（类似 Core 源生成器，开发者侧零配置；缺失时回退反射，语义不变） | XCode 独有优势：实体代码本就是生成的 | 中 |
-| 5 冒烟与 CI | 正式 `XCode.AotSmoke` 工程（JIT/AOT 双跑：实体 CRUD/元数据/缓存/LINQ 子集）；`aot.yml`（分析器阻断 + win-x64 冒烟，linux-x64 观察期）；驱动矩阵 AOT 验证（MySql/PostgreSQL/SqlServer/SQLite…） | 对标 Core | 中 |
+| 5 冒烟与 CI | 正式 `XCode.AotSmoke` 工程（JIT/AOT 双跑：实体 CRUD/元数据/缓存/LINQ 子集）；`aot.yml`（分析器阻断 + win-x64 冒烟，linux-x64 观察期）；驱动矩阵 AOT 验证（MySql/PostgreSQL/SqlServer/SQLite…） | 对标 Core；2026-10-13 完成：`AotSmoke`（9 场景）入库并进解决方案，`aot.yml`（IL 告警 -warnaserror 阻断 + win-x64 阻断/linux-x64 观察期）；NovaDb 嵌入库真库 CRUD 已纳入阻断冒烟；其余驱动矩阵待专项 | 中 |
 
 **驱动与提供者专项**（阶段 5 前置调研）：各 `XCode.*` 提供者需补现代 TFM 并逐个验证；`System.Data.SQLite`（原生互操作 + 动态装载）在 NativeAOT 下不适用，需评估 `Microsoft.Data.Sqlite`（SQLitePCLRaw）路线或明确不支持；`NewLife.MySql`/`Npgsql` 等驱动需按各自 AOT 语义确认。
 
@@ -119,28 +120,33 @@
 | 驱动私有反射优化入口 | `MySql` 零拷贝读取/批量执行探测、批量数组参数 | 抑制声明 + 探测失败回退常规路径（graceful） |
 | 运行时反射映射 | `DAL_Mapper.Update`、`DataConversion`、`StatModel.Fill`、`ClassBuilder`、`TableItem.GetFields` | 抑制声明；AOT/裁剪下由应用侧保证目标类型成员保留 |
 | `DataTable.Select` 表达式 | 元数据正反向工程各 `*Meta` 类 | 收敛为 `DataTableHelper.SelectRows` 单点抑制；刻意保持筛选语义 100% 一致 |
+| 驱动加载器 AOT 降级 | `DriverLoader.Load` | 2026-10-13 完成：新增"程序集限定名"静态引用降级（AOT/单文件下命中已随应用发布的驱动）+ `GetCallingAssembly` 平台防护；动态下载/插件加载仍为 AOT 设计性不支持 |
+| Remoting/Core 版本兼容 | `NewLife.Remoting` 3.9.2026.901（经 NovaDb 传递依赖进入） | 该版本引用已被新版 Core 删除的 `NewLife.Model.IPipelineHandler`，ILC 急切解析报错（JIT 惰性解析无感）；冒烟侧直接升级 3.9.2026.1009 规避，建议上游重发布 NovaDb 刷新依赖 |
 
 ---
 
 ## 7. 复现方法
 
 ```powershell
-# 1) 分析器：XCode.csproj 已常驻 net8.0/net10.0 目标与 net8+ 条件 IsAotCompatible（阶段 1 落地）
-#    net8/net10 编译所需 using System.Diagnostics; 修复已内置（原 NETCOREAPP 死分支）
+# 1) 分析器：库内 AOT/裁剪分析器告警应为 0（net8.0/net10.0 双目标，阶段 1 起常驻 IsAotCompatible）
+dotnet build XCode\XCode.csproj -f net8.0 -c Release
 dotnet build XCode\XCode.csproj -f net10.0 -c Release
+# CI 硬约束等价命令（-warnaserror 仅对 IL 告警生效，任一新增即阻断）
+dotnet build XCode\XCode.csproj -f net10.0 -c Release -warnaserror:IL2026,IL2046,IL2057,IL2060,IL2067,IL2070,IL2071,IL2072,IL2075,IL2091,IL2093,IL2095,IL2111,IL3000,IL3002,IL3050
 
-# 2) 冒烟：临时控制台工程（PublishAot=true 写入工程文件，勿用命令行 -p:PublishAot=true 全局属性）
-dotnet publish <冒烟目录>\AotSmoke.csproj -c Release -r win-x64 -o out
-.\out\AotSmoke.exe
+# 2) 冒烟（9 场景 JIT/AOT 双跑；任一失败即非 0 退出码）
+dotnet run -c Release --project AotSmoke/AotSmoke.csproj
+dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/aot-out
+.\AotSmoke\bin\aot-out\AotSmoke.exe
 ```
 
-> 本次实测的完整告警清单与发布日志保存在评估会话工作区，未随仓库提交。
+> CI 由 `.github/workflows/aot.yml` 自动执行：analyzer 阻断（IL 告警 -warnaserror）+ win-x64 冒烟阻断 + linux-x64 观察期（稳定后转阻断）。
 
 ---
 
 ## 8. 结论与建议
 
 1. **可行性**：中等偏高。最难的成员访问通道已由代码生成器静态化；剩余为「元数据保留 + 边界声明」两条主线，工作量与 Core v12 的 AOT 改造（IMP-24 系列）大体相当。
-2. **建议路线**：阶段 1→2→3 已于 2026-10-13 完成（现代 TFM 常驻 + 元数据保留主线 + 边界声明与告警归零），阶段 4 静态化与阶段 5 冒烟/CI 随后收口；期间维持 JIT 语义不变（生成器缺失/未覆盖自动回退反射）。
+2. **建议路线**：阶段 1→2→3→5 已于 2026-10-13 完成（现代 TFM 常驻 + 元数据保留主线 + 边界声明与告警归零 + 冒烟工程与 CI 防线），阶段 4 静态化属可选增强（跨层大改，建议另行方案讨论）；期间维持 JIT 语义不变（生成器缺失/未覆盖自动回退反射）。
 3. **风险提示**：元数据静默为空属"剪裁后不报错"类型缺陷，评估/实施阶段应对关键路径增加显式校验（本次冒烟已按此设计探针）。
 4. **立项决策点**：云原生/Serverless 场景需求是否明确；是否接受为 AOT 新增驱动依赖策略（如 SQLite 驱动替换）。

@@ -137,6 +137,49 @@ internal class NovaDb : RemoteDb
     }
 
     #endregion 数据库特性
+
+    #region 分页
+    /// <summary>已重写。NovaDb 分页语法为 LIMIT n OFFSET m，不支持 MySQL 逗号语法</summary>
+    /// <param name="sql">SQL语句</param>
+    /// <param name="startRowIndex">开始行，0表示第一行</param>
+    /// <param name="maximumRows">最大返回行数，0表示所有行</param>
+    /// <param name="keyColumn">主键列。用于not in分页</param>
+    /// <returns></returns>
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn) => PageSplitByLimitOffset(sql, startRowIndex, maximumRows);
+
+    /// <summary>已重写。NovaDb 分页语法为 LIMIT n OFFSET m，不支持 MySQL 逗号语法</summary>
+    /// <param name="builder">查询生成器</param>
+    /// <param name="startRowIndex">开始行，0表示第一行</param>
+    /// <param name="maximumRows">最大返回行数，0表示所有行</param>
+    /// <returns>分页SQL</returns>
+    public override SelectBuilder PageSplit(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows) => PageSplitByLimitOffset(builder, startRowIndex, maximumRows);
+
+    static String PageSplitByLimitOffset(String sql, Int64 startRowIndex, Int64 maximumRows)
+    {
+        if (startRowIndex <= 0)
+        {
+            if (maximumRows < 1) return sql;
+
+            return $"{sql} limit {maximumRows}";
+        }
+        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+
+        return $"{sql} limit {maximumRows} offset {startRowIndex}";
+    }
+
+    static SelectBuilder PageSplitByLimitOffset(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
+    {
+        if (startRowIndex <= 0)
+        {
+            if (maximumRows > 0) builder.Limit = $"limit {maximumRows}";
+            return builder;
+        }
+        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+
+        builder.Limit = $"limit {maximumRows} offset {startRowIndex}";
+        return builder;
+    }
+    #endregion
 }
 
 /// <summary>NovaDb数据库会话</summary>

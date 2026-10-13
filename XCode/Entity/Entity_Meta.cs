@@ -31,8 +31,7 @@ public partial class Entity<TEntity>
                 // 不能缓存Factory，因为后期可能会改变注册，比如Menu
                 //if (_Factory != null) return _Factory;
 
-                var type = ThisType;
-                return type.AsFactory();
+                return EntityFactory.GetFactory<TEntity>();
             }
         }
         #endregion
@@ -101,7 +100,7 @@ public partial class Entity<TEntity>
             private TableItem? _Table;
             public TableItem Table
             {
-                get => _Table ??= TableItem.Create(ThisType);
+                get => _Table ??= TableItem.Create<TEntity>();
                 set { _Table = value; _Session = null; }
             }
 

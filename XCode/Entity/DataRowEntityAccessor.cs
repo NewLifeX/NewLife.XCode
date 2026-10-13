@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using NewLife;
 using NewLife.Data;
 using XCode.Configuration;
@@ -13,17 +14,17 @@ public interface IDataRowEntityAccessor
     /// <summary>加载数据表。无数据时返回空集合而不是null。</summary>
     /// <param name="dt">数据表</param>
     /// <returns>实体数组</returns>
-    IList<T> LoadData<T>(DataTable dt) where T : Entity<T>, new();
+    IList<T> LoadData<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>(DataTable dt) where T : Entity<T>, new();
 
     /// <summary>加载数据表。无数据时返回空集合而不是null。</summary>
     /// <param name="ds">数据表</param>
     /// <returns>实体数组</returns>
-    IList<T> LoadData<T>(DbTable ds) where T : Entity<T>, new();
+    IList<T> LoadData<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>(DbTable ds) where T : Entity<T>, new();
 
     /// <summary>加载数据表。无数据时返回空集合而不是null。</summary>
     /// <param name="dr">数据读取器</param>
     /// <returns>实体数组</returns>
-    IList<T> LoadData<T>(IDataReader dr) where T : Entity<T>, new();
+    IList<T> LoadData<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>(IDataReader dr) where T : Entity<T>, new();
 }
 
 class DataRowEntityAccessor : IDataRowEntityAccessor
@@ -32,7 +33,7 @@ class DataRowEntityAccessor : IDataRowEntityAccessor
     /// <summary>加载数据表。无数据时返回空集合而不是null。</summary>
     /// <param name="dt">数据表</param>
     /// <returns>实体数组</returns>
-    public IList<T> LoadData<T>(DataTable dt) where T : Entity<T>, new()
+    public IList<T> LoadData<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>(DataTable dt) where T : Entity<T>, new()
     {
         // 准备好实体列表
         var list = new List<T>();
@@ -77,7 +78,7 @@ class DataRowEntityAccessor : IDataRowEntityAccessor
     /// <summary>加载数据表。无数据时返回空集合而不是null。</summary>
     /// <param name="ds">数据表</param>
     /// <returns>实体数组</returns>
-    public IList<T> LoadData<T>(DbTable ds) where T : Entity<T>, new()
+    public IList<T> LoadData<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>(DbTable ds) where T : Entity<T>, new()
     {
         // 准备好实体列表
         var list = new List<T>();
@@ -123,7 +124,7 @@ class DataRowEntityAccessor : IDataRowEntityAccessor
     /// <summary>加载数据表。无数据时返回空集合而不是null。</summary>
     /// <param name="dr">数据读取器</param>
     /// <returns>实体数组</returns>
-    public IList<T> LoadData<T>(IDataReader dr) where T : Entity<T>, new()
+    public IList<T> LoadData<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>(IDataReader dr) where T : Entity<T>, new()
     {
         // 准备好实体列表
         var list = new List<T>();

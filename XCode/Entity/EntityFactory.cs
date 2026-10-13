@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using NewLife.Log;
 using NewLife.Reflection;
@@ -147,6 +148,33 @@ public static class EntityFactory
 
         //!!! 有可能多线程同时初始化相同实体类的实体工厂，需要避免返回不同的工厂实例，确保工厂成员的唯一性，例如雪花实例
         //_factories.TryAdd(type, factory);
+        factory = _factories.GetOrAdd(type, factory);
+
+        return factory;
+    }
+
+    /// <summary>获取实体工厂。默认工厂使用静态构造路径，规避运行时泛型实例化，AOT 友好</summary>
+    /// <typeparam name="TEntity">实体类型</typeparam>
+    /// <returns>实体工厂实例，保证非 null</returns>
+    public static IEntityFactory GetFactory<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity>() where TEntity : Entity<TEntity>, new()
+    {
+        var type = typeof(TEntity);
+        if (_factories.TryGetValue(type, out var factory)) return factory;
+
+        // 读取特性中指定的自定义工厂，若未指定，则使用默认工厂
+        var att = type.GetCustomAttribute<EntityFactoryAttribute>();
+        if (att?.Type != null)
+        {
+            // 自定义工厂的反射实例化属 AOT 边界，需保证该类型已被静态引用或注册
+            factory = att.Type.CreateInstance() as IEntityFactory;
+            if (factory == null) throw new XCodeException("无法创建[{0}]的实体工厂！", type.FullName);
+        }
+        else
+        {
+            factory = new Entity<TEntity>.DefaultEntityFactory();
+        }
+
+        //!!! 有可能多线程同时初始化相同实体类的实体工厂，需要避免返回不同的工厂实例，确保工厂成员的唯一性，例如雪花实例
         factory = _factories.GetOrAdd(type, factory);
 
         return factory;

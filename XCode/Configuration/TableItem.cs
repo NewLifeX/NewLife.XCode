@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -193,7 +194,7 @@ public class TableItem
     /// <summary>创建数据表元数据信息。并合并连接名上的文件模型映射</summary>
     /// <param name="type">类型</param>
     /// <returns></returns>
-    public static TableItem Create(Type type)
+    public static TableItem Create([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type type)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
 
@@ -208,6 +209,11 @@ public class TableItem
 
         return _cache.GetOrAdd(key, ti);
     }
+
+    /// <summary>创建数据表元数据信息（泛型入口）。裁剪器可按 T 保留属性元数据</summary>
+    /// <typeparam name="T">实体类型</typeparam>
+    /// <returns></returns>
+    public static TableItem Create<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] T>() => Create(typeof(T));
 
     private void InitFields()
     {

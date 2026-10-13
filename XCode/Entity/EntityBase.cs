@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
@@ -237,7 +238,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     }
 
     private static readonly ConcurrentDictionary<Type, PropertyInfo[]> _propertyCache = new();
-    private static PropertyInfo[] GetCachedProperties(Type type) => _propertyCache.GetOrAdd(type, t => t.GetProperties(true).ToArray());
+    private static PropertyInfo[] GetCachedProperties([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type type) => _propertyCache.GetOrAdd(type, t => t.GetProperties(true).ToArray());
     #endregion
 
     #region 脏数据

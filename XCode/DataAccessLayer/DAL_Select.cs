@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using XCode.Linq;
 
@@ -24,9 +25,9 @@ partial class DAL
     ///     .ToList();
     /// </code>
     /// </example>
-    public IQueryable<T> Select<T>() where T : Entity<T>, new()
+    public IQueryable<T> Select<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.All)] T>() where T : Entity<T>, new()
     {
-        var factory = typeof(T).AsFactory();
+        var factory = EntityFactory.GetFactory<T>();
         var provider = new EntityQueryProvider(factory, ConnName);
         return new EntityQueryable<T>(provider);
     }

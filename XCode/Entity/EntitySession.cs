@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using NewLife.Data;
@@ -57,7 +58,7 @@ using TaskEx = System.Threading.Tasks.Task;
 namespace XCode;
 
 /// <summary>实体会话。每个实体类、连接名和表名形成一个实体会话</summary>
-public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity : Entity<TEntity>, new()
+public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : DisposeBase, IEntitySession where TEntity : Entity<TEntity>, new()
 {
     #region 属性
     /// <summary>连接名</summary>
@@ -122,7 +123,7 @@ public class EntitySession<TEntity> : DisposeBase, IEntitySession where TEntity 
     /// <summary>数据表</summary>
     public IDataTable DataTable { get; }
 
-    IEntityFactory Factory { get; } = typeof(TEntity).AsFactory();
+    IEntityFactory Factory { get; } = EntityFactory.GetFactory<TEntity>();
 
     //private DAL _readDal;
     private DAL? _Dal;

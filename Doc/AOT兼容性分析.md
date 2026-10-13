@@ -8,7 +8,7 @@
 
 ## 1. 现状摘要
 
-- **结论先行**：XCode 当前**不能**在 NativeAOT 下工作；核心实体回路存在 3 处断裂（实体静态构造、实体工厂实例化、元数据静默为空）。改造**可行性中等偏高**，主要工作集中在「元数据保留」与「动态能力边界声明」两条主线。
+- **结论先行（2026-10-13 阶段 2 更新）**：核心实体回路（元数据扫描、工厂创建、属性/索引器、行映射）已在 NativeAOT 下**真实可用**——原生发布运行冒烟 7/7 全部通过，三处断裂消除；余下为动态能力边界声明与告警收敛（阶段 3）。
 - **有利条件**：① 生成实体代码的成员访问已是静态实现（`this[name]` switch、显式属性），最难的成员存取通道无需改造；② 上游 NewLife.Core v12 已完成 AOT 改造（net8+ 常驻 `IsAotCompatible`、源生成器体系、0 告警），依赖升级即可继承。
 - **实测基线数据**：临时启用 net10.0 目标 + `IsAotCompatible` 后，库内分析器告警 **188 条**（IL2xxx/IL3xxx）；NativeAOT 真实发布（含 RID 编译与 ILC 阶段）告警 **55 条**；6 场景运行冒烟 **3 失败**（含 1 处静默降级）。
 - **目标框架现状**：库现多目标 `net45;net461;netstandard2.0;netstandard2.1;net8.0;net10.0`（2026-10-13 新增现代目标并常驻 `IsAotCompatible`）；net8/net10 首次编译暴露的 14 处错误（`NETCOREAPP` 死分支 `StackTraceHiddenAttribute` 缺 using）已修复。
@@ -53,6 +53,7 @@
 | 6 | XTrace 日志 | ✅ | Core 能力，AOT 正常 |
 
 - AOT 判真：发布件 `Assembly.Location` 为空、`IsDynamicCodeSupported=False`；同样 6 场景在 JIT（严格 AOT 姿态）下全部通过，确认失败均源于裁剪/原生编译，而非功能开关。
+- **2026-10-13 阶段 2 复测**（冒烟扩充为 7 场景，新增实体行映射 LoadData）：NativeAOT 原生运行**全部通过**，三处断裂消除——元数据 `Fields.Length=2`、`Meta.Factory.Create()` 正常、行映射正确装载（静态工厂路径 + `DynamicallyAccessedMembers` 保留注解传导）。
 
 ---
 
@@ -60,8 +61,8 @@
 
 | 机制 | 代表位置 | 现状 | AOT 处置方向 |
 |------|---------|------|-------------|
-| 实体元数据反射构建 | `TableItem.Create(Type)`、`FieldItem(PropertyInfo)`（特性扫描实体属性） | 运行时反射，AOT 下静默为空 | 泛型入口 + 保留注解；或生成器静态元数据（见 §5） |
-| 实体工厂动态实例化 | `EntityFactory.CreateFactory`：`typeof(Entity<>.DefaultEntityFactory).MakeGenericType(type)` + `CreateInstance` | AOT 下 ctor 被裁剪抛异常 | 每个实体由代码生成器生成具体工厂类型 / 静态注册；泛型入口 |
+| 实体元数据反射构建 | `TableItem.Create(Type)`、`FieldItem(PropertyInfo)`（特性扫描实体属性） | 运行时反射，AOT 下静默为空；**阶段 2 已解决**（泛型入口 + 保留注解，原生冒烟字段完整） | 泛型入口 + 保留注解；或生成器静态元数据（见 §5） |
+| 实体工厂动态实例化 | `EntityFactory.CreateFactory`：`typeof(Entity<>.DefaultEntityFactory).MakeGenericType(type)` + `CreateInstance` | AOT 下 ctor 被裁剪抛异常；**阶段 2 已解决**（`GetFactory<TEntity>()` 静态构造默认工厂） | 每个实体由代码生成器生成具体工厂类型 / 静态注册；泛型入口 |
 | 驱动动态装载 | `DriverLoader`（`Assembly.Load`/`Type.GetType`/在线下载）、`SqlCe.EngineType` | AOT 设计性不支持 | 声明动态语义 + 静态引用驱动降级路径 |
 | 驱动私有反射 | `MySql.QueryModelsAsync`（`GetMethod`+`MakeGenericMethod`）、`SqlServer` 批量（`GetMethodEx`） | AOT 下不可用 | 声明边界 + 回退公共 API 路径 |
 | LINQ 表达式编译 | `EntityQueryProvider`（`lambda.Compile()`、`InvokeMember`） | AOT 下不可用 | `RequiresDynamicCode` 声明 + 解释执行/降级 |
@@ -92,7 +93,7 @@
 | 阶段 | 任务 | 说明 | 预估 |
 |:----:|------|------|:----:|
 | 1 基础设施 | 新增 net8.0/net10.0 目标；修复 `NETCOREAPP` 死分支编译（`StackTraceHidden` using 等，建议全库排查同类分支）；低版本 TFM 补 `DynamicallyAccessedMembers`/`DynamicDependency`/`UnconditionalSuppressMessage` 垫片；net8+ 启用 `IsAotCompatible` | 对齐 Core 的 csproj 策略；2026-10-13 完成：net8.0/net10.0 与 `IsAotCompatible` 已落地，低版本 TFM 垫片随阶段 2 标注按需引入 | 小 |
-| 2 元数据保留主线 | `Entity<TEntity>` 泛型参数加保留注解并传导；`TableItem.Create`/`GetFields` 增加泛型入口；`EntityFactory` 工厂静态注册/生成具体工厂；`EntityBase.GetCachedProperties` 泛型化 | 消除 §2.3 的 3 处断裂 | 中（核心） |
+| 2 元数据保留主线 | `Entity<TEntity>` 泛型参数加保留注解并传导；`TableItem.Create`/`GetFields` 增加泛型入口；`EntityFactory` 工厂静态注册/生成具体工厂；`EntityBase.GetCachedProperties` 泛型化 | 消除 §2.3 的 3 处断裂；2026-10-13 完成：静态工厂路径 + 保留注解传导，原生冒烟 7/7 通过；框架内部泛型推导告警（IL2091）随阶段 3 收敛 | 中（核心） |
 | 3 动态能力边界声明 | LINQ `Expression.Compile`、驱动动态装载/私有反射、`DataTable.Select` 表达式、映射/转换反射面：`RequiresDynamicCode`/`RequiresUnreferencedCode` 声明 + 明确降级或异常 | 对标 Core 收口记录做法 | 中 |
 | 4 静态化通道（可选增强） | 由 XCodeTool/Build.tt 生成静态元数据表与工厂注册（类似 Core 源生成器，开发者侧零配置；缺失时回退反射，语义不变） | XCode 独有优势：实体代码本就是生成的 | 中 |
 | 5 冒烟与 CI | 正式 `XCode.AotSmoke` 工程（JIT/AOT 双跑：实体 CRUD/元数据/缓存/LINQ 子集）；`aot.yml`（分析器阻断 + win-x64 冒烟，linux-x64 观察期）；驱动矩阵 AOT 验证（MySql/PostgreSQL/SqlServer/SQLite…） | 对标 Core | 中 |

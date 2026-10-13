@@ -67,7 +67,7 @@ public class EntityQueryProvider : IQueryProvider
     /// <summary>创建查询</summary>
     /// <param name="expression"></param>
     /// <returns></returns>
-    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "实体 LINQ 表达式在运行时编译委托，AOT/裁剪下不支持该路径")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "表达式委托运行时编译：JIT 下动态生成，AOT 下由运行时解释器回退执行（net8/net10 实测可用）")]
     public IQueryable CreateQuery(LinqExpression expression)
     {
         if (expression == null) throw new ArgumentNullException(nameof(expression));
@@ -81,7 +81,7 @@ public class EntityQueryProvider : IQueryProvider
     /// <typeparam name="TResult"></typeparam>
     /// <param name="expression"></param>
     /// <returns></returns>
-    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "实体 LINQ 表达式在运行时编译委托，AOT/裁剪下不支持该路径")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "表达式委托运行时编译：JIT 下动态生成，AOT 下由运行时解释器回退执行（net8/net10 实测可用）")]
     public TResult Execute<TResult>(LinqExpression expression)
     {
         if (expression == null) throw new ArgumentNullException(nameof(expression));
@@ -777,7 +777,7 @@ public class LinqExpressionVisitor : ExpressionVisitor
         return null;
     }
 
-    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "实体 LINQ 表达式在运行时编译委托，AOT/裁剪下不支持该路径")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "表达式委托运行时编译：JIT 下动态生成，AOT 下由运行时解释器回退执行（net8/net10 实测可用）")]
     private static String? GetValue(LinqExpression expression)
     {
         if (expression is ConstantExpression constant)
@@ -807,7 +807,7 @@ public class LinqExpressionVisitor : ExpressionVisitor
         return result is String ? $"'{result}'" : result.ToString();
     }
 
-    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "实体 LINQ 表达式在运行时编译委托，AOT/裁剪下不支持该路径")]
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "表达式委托运行时编译：JIT 下动态生成，AOT 下由运行时解释器回退执行（net8/net10 实测可用）")]
     private static Object? EvaluateMember(MemberExpression member)
     {
         if (member.Expression is ConstantExpression constExp)

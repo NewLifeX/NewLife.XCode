@@ -1,4 +1,4 @@
-// XCode NativeAOT 冒烟：9 场景逐项 PASS/FAIL，任一失败以非 0 退出码结束。
+// XCode NativeAOT 冒烟：12 场景逐项 PASS/FAIL，任一失败以非 0 退出码结束。
 // 同一工程双跑对照：JIT（dotnet run -c Release）与 NativeAOT（dotnet publish -c Release -r <rid> 后运行产物）。
 // 由 .github/workflows/aot.yml 的 analyzer/aot job 自动执行（win-x64 阻断基线，linux-x64 观察期）。
 // 背景与实测结论见 Doc/AOT兼容性分析.md。
@@ -128,6 +128,73 @@ Run("9.实体缓存 FindAllWithCache", () =>
     var list = SmokeUser.FindAllWithCache();
     Console.WriteLine($"    (insert={n} cached={list.Count})");
     return list.Count >= 1;
+});
+
+// 10. 实体 LINQ（IQueryable：Where/OrderBy/ToList/Count/FirstOrDefault）
+Run("10.实体 LINQ 查询", () =>
+{
+    var e1 = new SmokeUser { Name = "linq1" }; e1.Insert();
+    var e2 = new SmokeUser { Name = "linq2" }; e2.Insert();
+
+    var list = SmokeUser.Query.Where(e => e.ID >= e1.ID).OrderBy(e => e.ID).ToList();
+    var n1 = list.Any(x => x.Name == "linq1") && list.Any(x => x.Name == "linq2");
+
+    var cnt = SmokeUser.Query.Count(e => e.Name == "linq2");
+    var n2 = cnt == 1;
+
+    var first = SmokeUser.Query.Where(e => e.Name == "linq1").FirstOrDefault();
+    var n3 = first != null && first.ID == e1.ID && first.Name == "linq1";
+
+    Console.WriteLine($"    (id1={e1.ID} id2={e2.ID} list={list.Count} cnt={cnt} first={first?.ID})");
+    return n1 && n2 && n3;
+});
+
+// 11. LINQ 闭包变量与表达式求值（GetValue/EvaluateMember 路径）
+Run("11.LINQ 闭包变量与表达式求值", () =>
+{
+    var name = "linq2";
+    var list = SmokeUser.Query.Where(e => e.Name == name).ToList();
+    var n1 = list.Count == 1 && list[0].Name == "linq2";
+
+    var cut = 0;
+    var cnt = SmokeUser.Query.Count(e => e.ID >= cut + 0);
+    var total = SmokeUser.FindCount();
+    var n2 = cnt == total;
+
+    var id1 = list[0].ID;
+    var q = SmokeUser.Query.Where(e => e.ID >= id1).ToList();
+    var n3 = q.Count >= 1 && q[0].Name == "linq2";
+
+    Console.WriteLine($"    (closure={list.Count} arith={cnt}/{total} nested={q.Count})");
+    return n1 && n2 && n3;
+});
+
+// 12. LINQ 表达式求值深水区（直接 Compile/方法调用/常量算术/分页/ToDictionary）
+Run("12.LINQ 表达式求值深水区", () =>
+{
+    // 表达式树运行时编译（AOT 下由运行时解释器回退）
+    var compiled = System.Linq.Expressions.Expression.Lambda(System.Linq.Expressions.Expression.Constant(42)).Compile();
+    var n0 = compiled.DynamicInvoke() is Int32 i42 && i42 == 42;
+
+    // 方法调用链谓词 → GetValue 回退路径
+    var name = "linq2";
+    var a = SmokeUser.Query.Where(e => e.Name == name.ToUpper().ToLower()).ToList();
+    var n1 = a.Count == 1 && a[0].Name == "linq2";
+
+    // 常量算术谓词 → 二元表达式求值路径
+    var cnt = SmokeUser.Query.Count(e => e.ID >= 1 + 1);
+    var n2 = cnt >= 1;
+
+    // Skip/Take 分页（NovaDb 使用 LIMIT n OFFSET m）
+    var page = SmokeUser.Query.OrderBy(e => e.ID).Skip(1).Take(1).ToList();
+    var n3 = page.Count <= 1;
+
+    // ToDictionary：运行时构造 Dictionary<主键类型, 实体类型>
+    var dict = SmokeUser.FindAll().ToDictionary();
+    var n4 = dict.Count >= 2;
+
+    Console.WriteLine($"    (directCompile={n0} method={a.Count} arith={cnt} page={page.Count} dict={dict.Count})");
+    return n0 && n1 && n2 && n3 && n4;
 });
 
 Console.WriteLine(failures.Count == 0 ? "全部通过" : $"失败 {failures.Count}：{String.Join("、", failures)}");

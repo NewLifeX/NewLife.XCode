@@ -2,7 +2,7 @@
 
 > 基线：v12.2（依赖 NewLife.Core 12.0.2026.1013-beta0732）｜更新：2026-10-13
 > 验证方式：分析器（net8.0/net10.0 常驻 `IsAotCompatible`）+ NativeAOT 真实发布 + 原生运行冒烟（win-x64，.NET 10）
-> 冒烟工程：`AotSmoke/`（9 场景 JIT/AOT 双跑，`.github/workflows/aot.yml` 自动执行）
+> 冒烟工程：`AotSmoke/`（12 场景 JIT/AOT 双跑，`.github/workflows/aot.yml` 自动执行）
 
 ---
 
@@ -24,6 +24,8 @@
 | 实体行映射 | `Accessor.LoadData<T>`（DataTable → 实体列表） |
 | 实体 CRUD | NovaDb 嵌入库：建表/Insert/FindByKey/Update/Delete |
 | 表达式查询 | `FindAll(_.Field == value)` 等 WhereExpression 条件 |
+| 实体 LINQ（IQueryable） | Where/OrderBy/Skip/Take/First/Count；闭包变量与方法调用求值（AOT 下运行时解释器回退） |
+| 实体列表转字典 | `ToDictionary()`（运行时构造 `Dictionary<主键类型, 实体类型>`） |
 | 实体缓存 | `FindAllWithCache` |
 | 数据库访问 | DAL 元数据对象创建、SQL 执行 |
 | 驱动加载 | 静态引用驱动（工程引用/deps）按程序集限定名降级加载 |
@@ -35,7 +37,6 @@
 
 | 功能 | 现状 | 方向 |
 |------|------|------|
-| 实体 LINQ 的 AOT 可用 | AOT 下不可用（表达式树运行时编译）；`WhereExpression`/`FindAll` 主链不受影响 | 解释执行/降级路径 |
 | 驱动矩阵 AOT 验证 | 仅 NovaDb 嵌入库通过冒烟，其余 `XCode.*` 提供者未验证 | 各提供者补现代 TFM 并逐个验证；SQLite 评估 `Microsoft.Data.Sqlite`（SQLitePCLRaw）路线 |
 | 静态化通道（可选增强） | 未实施（暂缓，待真实诉求） | XCodeTool 生成静态元数据表与工厂注册；配套全实体扫描的注册表替代 |
 | 运行时反射面泛型化 | 暂以边界声明 + 应用侧保留承接 | `Reflect.*<T>` 风格泛型入口（`DAL_Mapper`/`DataConversion`/`StatModel` 等） |
@@ -61,7 +62,7 @@
 dotnet build XCode\XCode.csproj -f net8.0 -c Release
 dotnet build XCode\XCode.csproj -f net10.0 -c Release
 
-# 冒烟（9 场景 JIT/AOT 双跑；任一失败即非 0 退出码）
+# 冒烟（12 场景 JIT/AOT 双跑；任一失败即非 0 退出码）
 dotnet run -c Release --project AotSmoke/AotSmoke.csproj
 dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/aot-out
 .\AotSmoke\bin\aot-out\AotSmoke.exe

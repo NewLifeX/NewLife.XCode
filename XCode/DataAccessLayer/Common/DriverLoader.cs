@@ -32,6 +32,15 @@ public static class DriverLoader
 
         if (dll.IsNullOrEmpty()) return null;
 
+        // 静态引用降级：驱动已随应用发布（工程引用/deps 声明）时，按程序集限定名直接解析。
+        // 动态加载（Assembly.LoadFrom）在 NativeAOT/单文件下不可用，此路径可命中已随应用发布的驱动
+        var asmName = Path.GetFileNameWithoutExtension(dll);
+        if (!asmName.IsNullOrEmpty())
+        {
+            try { type = Type.GetType($"{typeName}, {asmName}"); } catch { }
+            if (type != null) return type;
+        }
+
         var set = NewLife.Setting.Current;
 
         var file = "";
@@ -39,7 +48,11 @@ public static class DriverLoader
         {
             // 先检查程序集所在目录，再检查当前目录、基准目录和插件目录。在应用发布时，插件很可能跟常规应用程序集放在同一目录下
             var exe = Assembly.GetEntryAssembly()?.Location;
-            if (exe.IsNullOrEmpty()) exe = Assembly.GetCallingAssembly()?.Location;
+            if (exe.IsNullOrEmpty())
+            {
+                // GetCallingAssembly 在 NativeAOT 下不受支持（PlatformNotSupportedException），探测失败即跳过
+                try { exe = Assembly.GetCallingAssembly()?.Location; } catch (PlatformNotSupportedException) { }
+            }
             if (exe.IsNullOrEmpty()) exe = Assembly.GetExecutingAssembly()?.Location;
             if (!exe.IsNullOrEmpty()) file = Path.GetDirectoryName(exe).CombinePath(dll).GetFullPath();
             if (!File.Exists(file)) file = dll.GetCurrentPath();

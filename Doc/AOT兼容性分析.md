@@ -8,7 +8,7 @@
 
 ## 1. 现状摘要
 
-- **结论先行（2026-10-13 阶段 5 更新）**：核心实体回路（元数据扫描、工厂创建、属性/索引器、行映射）已在 NativeAOT 下**真实可用**——原生发布运行冒烟 9/9 全部通过，三处断裂消除；动态能力边界声明与告警收敛已完成，库内 AOT/裁剪分析器告警由 131 处收敛至 **0**，NativeAOT 发布 XCode 源侧告警同样清零；冒烟与 CI 已落地（`AotSmoke` 工程 + `aot.yml`，含 NovaDb 嵌入库真库 CRUD 与实体缓存）。
+- **结论先行**：核心实体回路（元数据扫描、工厂创建、属性/索引器、行映射）已在 NativeAOT 下**真实可用**——原生发布运行冒烟 9/9 全部通过，三处断裂消除；库内 AOT/裁剪分析器告警由 131 处收敛至 **0**，NativeAOT 发布 XCode 源侧告警清零；冒烟与 CI 已落地（`AotSmoke` 工程 + `aot.yml`，含 NovaDb 嵌入库真库 CRUD 与实体缓存）。
 - **有利条件**：① 生成实体代码的成员访问已是静态实现（`this[name]` switch、显式属性），最难的成员存取通道无需改造；② 上游 NewLife.Core v12 已完成 AOT 改造（net8+ 常驻 `IsAotCompatible`、源生成器体系、0 告警），依赖升级即可继承。
 - **实测基线数据**：临时启用 net10.0 目标 + `IsAotCompatible` 后，库内分析器告警 **188 条**（IL2xxx/IL3xxx）；NativeAOT 真实发布（含 RID 编译与 ILC 阶段）告警 **55 条**；6 场景运行冒烟 **3 失败**（含 1 处静默降级）。
 - **目标框架现状**：库现多目标 `net45;net461;netstandard2.0;netstandard2.1;net8.0;net10.0`（2026-10-13 新增现代目标并常驻 `IsAotCompatible`）；net8/net10 首次编译暴露的 14 处错误（`NETCOREAPP` 死分支 `StackTraceHiddenAttribute` 缺 using）已修复。
@@ -60,20 +60,20 @@
 
 ---
 
-## 3. 阻塞面清单（按机制归并）
+## 3. 机制清单与 AOT 现状（按机制归并）
 
-| 机制 | 代表位置 | 现状 | AOT 处置方向 |
-|------|---------|------|-------------|
-| 实体元数据反射构建 | `TableItem.Create(Type)`、`FieldItem(PropertyInfo)`（特性扫描实体属性） | 运行时反射，AOT 下静默为空；**阶段 2 已解决**（泛型入口 + 保留注解，原生冒烟字段完整） | 泛型入口 + 保留注解；或生成器静态元数据（见 §5） |
-| 实体工厂动态实例化 | `EntityFactory.CreateFactory`：`typeof(Entity<>.DefaultEntityFactory).MakeGenericType(type)` + `CreateInstance` | AOT 下 ctor 被裁剪抛异常；**阶段 2 已解决**（`GetFactory<TEntity>()` 静态构造默认工厂） | 每个实体由代码生成器生成具体工厂类型 / 静态注册；泛型入口 |
-| 驱动动态装载 | `DriverLoader`（`Assembly.Load`/`Type.GetType`/在线下载）、`SqlCe.EngineType` | AOT 设计性不支持；阶段 3 已完成边界声明（IL2026/IL2057/IL3000 抑制收口） | 声明动态语义 + 静态引用驱动降级路径 |
-| 驱动私有反射 | `MySql.QueryModelsAsync`（`GetMethod`+`MakeGenericMethod`）、`SqlServer` 批量（`GetMethodEx`） | AOT 下不可用；阶段 3 已声明并保留回退常规路径 | 声明边界 + 回退公共 API 路径 |
-| LINQ 表达式编译 | `EntityQueryProvider`（`lambda.Compile()`、`InvokeMember`） | AOT 下不可用；阶段 3 已完成 IL3050 声明收口 | `RequiresDynamicCode` 声明 + 解释执行/降级 |
-| 通用映射/转换 | `DAL_Mapper`、`DataConversion`、`EntityBase.GetCachedProperties` | 运行时 `GetProperties`；阶段 3 已边界声明 | 泛型入口（`Reflect.*<T>` 风格）或声明边界 |
-| ComponentModel 面 | `EntityBase_Interface`（`ICustomTypeDescriptor`/`TypeDescriptor`） | 设计器/DataTable 适配场景反射；阶段 3 已逐成员对齐接口注解（7 处 RUC 匹配 + 反向新增改抑制），主链不依赖 | 声明裁剪语义；主链不依赖 |
-| `DataTable.Select` 表达式 | 元数据正反向工程各 `*Meta` 类 | `RequiresUnreferencedCode`；阶段 3 已收敛 `DataTableHelper.SelectRows` 单点边界 | 改用 LINQ/循环替代，或边界声明 |
-| 程序集/类型发现 | `EntityFactory.LoadEntities`（`GetAllSubclasses`） | 全扫描发现；阶段 3 已 `CreateTableItem` 单点声明 | 注册表/生成清单替代，或声明不支持 |
-| 其他 | `StatModel`、`ModelHelper`（模型 XML 反射填充）等 | 运行时反射 | 泛型入口/声明边界 |
+| 机制 | 代表位置 | AOT 现状与处置 |
+|------|---------|---------------|
+| 实体元数据反射构建 | `TableItem.Create(Type)`、`FieldItem(PropertyInfo)`（特性扫描实体属性） | 泛型入口 + `DynamicallyAccessedMembers` 保留注解；NativeAOT 下字段完整 |
+| 实体工厂动态实例化 | `EntityFactory.CreateFactory`（`MakeGenericType` + `CreateInstance`） | `GetFactory<TEntity>()` 静态构造默认工厂（AOT 友好）；`CreateFactory(Type)` 保留为反射兜底 |
+| 驱动动态装载 | `DriverLoader`（`Assembly.Load`/`Type.GetType`/在线下载）、`SqlCe.EngineType` | 在线下载/`LoadFrom` 设计性不支持；静态引用驱动走"程序集限定名"降级加载 |
+| 驱动私有反射 | `MySql.QueryModelsAsync`（`GetMethod`+`MakeGenericMethod`）、`SqlServer` 批量（`GetMethodEx`） | 探测失败自动回退公共 API（已声明边界） |
+| LINQ 表达式编译 | `EntityQueryProvider`（`lambda.Compile()`、`InvokeMember`） | AOT 下不可用（RDC）；`WhereExpression`/`FindAll` 主链不受影响 |
+| 通用映射/转换 | `DAL_Mapper`、`DataConversion`、`EntityBase.GetCachedProperties` | 声明边界；AOT/裁剪下由应用侧保证目标类型成员保留 |
+| ComponentModel 面 | `EntityBase_Interface`（`ICustomTypeDescriptor`/`TypeDescriptor`） | 与接口注解逐一对齐（RUC 声明）；设计器场景主链不依赖 |
+| `DataTable.Select` 表达式 | 元数据正反向工程各 `*Meta` 类 | 收敛 `DataTableHelper.SelectRows` 单点抑制；筛选语义 100% 不变 |
+| 程序集/类型发现 | `EntityFactory.LoadEntities`（`GetAllSubclasses`） | 单点声明（`CreateTableItem`）；扫描依赖应用侧保留实体类型 |
+| 模型 XML 反射填充 | `StatModel`、`ModelHelper` 等 | 声明边界 |
 
 ---
 
@@ -89,39 +89,33 @@
 
 > Core 的 `Doc/AOT兼容性分析.md` 与 `AotSmoke` 工程可直接作为方法论与验收标准模板。
 >
-> 2026-10-13 更新：目标框架/分析器、动态能力声明、冒烟与 CI 三项差距均已补齐（阶段 1/3/5 落地）；驱动矩阵（各 XCode.* 提供者逐个验证）仍待专项。
+> 2026-10-13：上述差距均已补齐（阶段 1/3/5）；驱动矩阵（各 XCode.* 提供者）按需专项。
 
 ---
 
-## 5. 工作分解（建议分阶段推进）
+## 5. 工作分解与进展
 
-| 阶段 | 任务 | 说明 | 预估 |
-|:----:|------|------|:----:|
-| 1 基础设施 | 新增 net8.0/net10.0 目标；修复 `NETCOREAPP` 死分支编译（`StackTraceHidden` using 等，建议全库排查同类分支）；低版本 TFM 补 `DynamicallyAccessedMembers`/`DynamicDependency`/`UnconditionalSuppressMessage` 垫片；net8+ 启用 `IsAotCompatible` | 对齐 Core 的 csproj 策略；2026-10-13 完成：net8.0/net10.0 与 `IsAotCompatible` 已落地，低版本 TFM 垫片随阶段 2 标注按需引入 | 小 |
-| 2 元数据保留主线 | `Entity<TEntity>` 泛型参数加保留注解并传导；`TableItem.Create`/`GetFields` 增加泛型入口；`EntityFactory` 工厂静态注册/生成具体工厂；`EntityBase.GetCachedProperties` 泛型化 | 消除 §2.3 的 3 处断裂；2026-10-13 完成：静态工厂路径 + 保留注解传导，原生冒烟 7/7 通过；框架内部泛型推导告警（IL2091）随阶段 3 收敛 | 中（核心） |
-| 3 动态能力边界声明 | LINQ `Expression.Compile`、驱动动态装载/私有反射、`DataTable.Select` 表达式、映射/转换反射面：`RequiresDynamicCode`/`RequiresUnreferencedCode` 声明 + 明确降级或异常 | 对标 Core 收口记录做法；2026-10-13 完成：库内告警 131→0（net8/net10 双目标），NativeAOT 发布 XCode 源侧 0 条 | 中 |
-| 4 静态化通道（可选增强） | 由 XCodeTool/Build.tt 生成静态元数据表与工厂注册（类似 Core 源生成器，开发者侧零配置；缺失时回退反射，语义不变） | XCode 独有优势：实体代码本就是生成的 | 中 |
-| 5 冒烟与 CI | 正式 `XCode.AotSmoke` 工程（JIT/AOT 双跑：实体 CRUD/元数据/缓存/LINQ 子集）；`aot.yml`（分析器阻断 + win-x64 冒烟，linux-x64 观察期）；驱动矩阵 AOT 验证（MySql/PostgreSQL/SqlServer/SQLite…） | 对标 Core；2026-10-13 完成：`AotSmoke`（9 场景）入库并进解决方案，`aot.yml`（IL 告警 -warnaserror 阻断 + win-x64 阻断/linux-x64 观察期）；NovaDb 嵌入库真库 CRUD 已纳入阻断冒烟；其余驱动矩阵待专项 | 中 |
+| 阶段 | 任务 | 状态 |
+|:----:|------|------|
+| 1 基础设施 | 新增 net8.0/net10.0 目标；修复 `NETCOREAPP` 死分支编译；低版本 TFM 补 `DynamicallyAccessedMembers`/`UnconditionalSuppressMessage` 垫片；net8+ 启用 `IsAotCompatible` | ✅ 完成（2026-10-13） |
+| 2 元数据保留主线 | `Entity<TEntity>` 泛型参数加保留注解并传导；`TableItem.Create`/`GetFields` 增加泛型入口；`EntityFactory` 工厂静态注册/生成具体工厂 | ✅ 完成（2026-10-13） |
+| 3 动态能力边界声明 | LINQ `Expression.Compile`、驱动动态装载/私有反射、`DataTable.Select` 表达式、映射/转换反射面：`RequiresDynamicCode`/`RequiresUnreferencedCode` 声明 + 明确降级或异常 | ✅ 完成（库内告警 131→0，发布侧 0） |
+| 4 静态化通道（可选增强） | 由 XCodeTool 生成静态元数据表与工厂注册（开发者侧零配置；缺失时回退反射，语义不变） | 🧊 暂缓：核心目标已由阶段 2/3 达成，待真实诉求再评估 |
+| 5 冒烟与 CI | `AotSmoke` 工程（JIT/AOT 双跑）+ `aot.yml`（分析器阻断 + win-x64 阻断/linux-x64 观察期） | ✅ 完成（9 场景；NovaDb 真库 CRUD 纳入阻断） |
 
-**驱动与提供者专项**（阶段 5 前置调研）：各 `XCode.*` 提供者需补现代 TFM 并逐个验证；`System.Data.SQLite`（原生互操作 + 动态装载）在 NativeAOT 下不适用，需评估 `Microsoft.Data.Sqlite`（SQLitePCLRaw）路线或明确不支持；`NewLife.MySql`/`Npgsql` 等驱动需按各自 AOT 语义确认。
+**驱动与提供者专项**：各 `XCode.*` 提供者的现代 TFM 与 AOT 验证按需推进；`System.Data.SQLite`（原生互操作 + 动态装载）不适用于 NativeAOT，可评估 `Microsoft.Data.Sqlite`（SQLitePCLRaw）路线；NovaDb 嵌入库已通过 AotSmoke 验证。
 
 ---
 
-## 6. 已知边界（阶段 3 收口登记）
+## 6. 已知边界（AOT 下受限能力与范围）
 
-| 项 | 位置 | 处置 |
+| 项 | 位置 | 说明 |
 |----|------|------|
-| 驱动在线下载/动态装载 | `DriverLoader.Load` | AOT 设计性不支持；静态引用驱动 + 声明动态语义（2026-10-13 已实现：IL2026/IL2057/IL3000 抑制声明收口） |
-| 全实体扫描发现 | `EntityFactory.LoadEntities` | 注册表/生成清单替代，或声明不支持（2026-10-13 已实现：`CreateTableItem` 单点声明；注册表替代留待阶段 4） |
-| 设计器/ComponentModel 场景 | `EntityBase_Interface` | 声明裁剪语义，不逐点改造（2026-10-13 已实现：与接口注解逐一对齐，7 处 RUC 声明 + 3 处反向新增改抑制） |
-| 编译排除模块（Firebird/SqlCe 等） | 已移除/未编译 | 不纳入 AOT 范围 |
-| XCodeTool 运行期形态 | 开发期工具 | 不要求 AOT（可另行评估 PublishAot 工具链收益） |
-| LINQ 表达式编译 | `EntityQueryProvider`、`EntityExtension.ToDictionary` | `IL3050` 边界声明；AOT 下不支持实体 LINQ 编译路径 |
-| 驱动私有反射优化入口 | `MySql` 零拷贝读取/批量执行探测、批量数组参数 | 抑制声明 + 探测失败回退常规路径（graceful） |
-| 运行时反射映射 | `DAL_Mapper.Update`、`DataConversion`、`StatModel.Fill`、`ClassBuilder`、`TableItem.GetFields` | 抑制声明；AOT/裁剪下由应用侧保证目标类型成员保留 |
-| `DataTable.Select` 表达式 | 元数据正反向工程各 `*Meta` 类 | 收敛为 `DataTableHelper.SelectRows` 单点抑制；刻意保持筛选语义 100% 一致 |
-| 驱动加载器 AOT 降级 | `DriverLoader.Load` | 2026-10-13 完成：新增"程序集限定名"静态引用降级（AOT/单文件下命中已随应用发布的驱动）+ `GetCallingAssembly` 平台防护；动态下载/插件加载仍为 AOT 设计性不支持 |
-| Remoting/Core 版本兼容 | `NewLife.Remoting` 3.9.2026.901（经 NovaDb 传递依赖进入） | 该版本引用已被新版 Core 删除的 `NewLife.Model.IPipelineHandler`，ILC 急切解析报错（JIT 惰性解析无感）；冒烟侧直接升级 3.9.2026.1009 规避，建议上游重发布 NovaDb 刷新依赖 |
+| 实体 LINQ 表达式 | `EntityQueryProvider`、`EntityExtension.ToDictionary` | AOT 下不可用（表达式树运行时编译）；`WhereExpression`/`FindAll` 主链不受影响 |
+| 驱动在线下载/动态装载 | `DriverLoader` | 设计性不支持（`Assembly.LoadFrom`）；静态引用驱动可正常加载，探测失败自动回退 |
+| 运行时反射面 | `DAL_Mapper.Update`、`DataConversion`、`StatModel.Fill`、`ClassBuilder`、`TableItem.GetFields`、`EntityFactory.LoadEntities` | 依赖目标类型成员；AOT/裁剪下由应用侧保证保留 |
+| 设计器/ComponentModel 场景 | `EntityBase_Interface` | 主链不依赖；相关成员已声明裁剪语义 |
+| 范围外 | 未注册数据库驱动（Firebird 已移除、SqlCe 等）、XCodeTool 开发期工具 | 不纳入 AOT 范围 |
 
 ---
 
@@ -144,9 +138,9 @@ dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/ao
 
 ---
 
-## 8. 结论与建议
+## 8. 结论
 
-1. **可行性**：中等偏高。最难的成员访问通道已由代码生成器静态化；剩余为「元数据保留 + 边界声明」两条主线，工作量与 Core v12 的 AOT 改造（IMP-24 系列）大体相当。
-2. **建议路线**：阶段 1→2→3→5 已于 2026-10-13 完成（现代 TFM 常驻 + 元数据保留主线 + 边界声明与告警归零 + 冒烟工程与 CI 防线），阶段 4 静态化属可选增强（跨层大改，建议另行方案讨论）；期间维持 JIT 语义不变（生成器缺失/未覆盖自动回退反射）。
-3. **风险提示**：元数据静默为空属"剪裁后不报错"类型缺陷，评估/实施阶段应对关键路径增加显式校验（本次冒烟已按此设计探针）。
-4. **立项决策点**：云原生/Serverless 场景需求是否明确；是否接受为 AOT 新增驱动依赖策略（如 SQLite 驱动替换）。
+1. **AOT 可用性**：核心实体回路（元数据/工厂/索引器/行映射/CRUD/缓存）已在 NativeAOT 下真实可用（9 场景双跑全通过）；库内 AOT/裁剪分析器告警 0 条，CI 以 `-warnaserror` 硬约束防回归。
+2. **路线执行**：阶段 1/2/3/5 完成（2026-10-13）；阶段 4（静态化通道）为可选增强，暂缓待真实诉求再评估。
+3. **设计经验**：元数据静默为空属"剪裁后不报错"类型缺陷，关键路径应有显式校验（冒烟已按此设计探针）。
+4. **后续跟踪**：各 `XCode.*` 提供者的 AOT 验证按需专项推进。

@@ -76,6 +76,15 @@ public class DataConversion
         }
     }
 
+    /// <summary>拷贝。泛型入口，AOT/裁剪下自动保留源与目标类型的公开属性</summary>
+    /// <typeparam name="TSource">源类型</typeparam>
+    /// <typeparam name="TTarget">目标类型</typeparam>
+    /// <param name="objSource">源对象</param>
+    /// <param name="objTarjet">目标对象</param>
+    /// <param name="ignoreTarjetProperties">忽略的目标属性</param>
+    public static void CopyProperty<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TSource, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TTarget>(TSource objSource, TTarget objTarjet, List<String>? ignoreTarjetProperties = null)
+        => CopyProperty((Object)objSource!, (Object)objTarjet!, ignoreTarjetProperties);
+
     /// <summary>获取属性</summary>
     /// <param name="obj"></param>
     /// <param name="withBindingFlags"></param>

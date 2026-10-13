@@ -1,4 +1,4 @@
-// XCode NativeAOT 冒烟：13 场景逐项 PASS/FAIL，任一失败以非 0 退出码结束。
+// XCode NativeAOT 冒烟：14 场景逐项 PASS/FAIL，任一失败以非 0 退出码结束。
 // 同一工程双跑对照：JIT（dotnet run -c Release）与 NativeAOT（dotnet publish -c Release -r <rid> 后运行产物）。
 // 由 .github/workflows/aot.yml 的 analyzer/aot job 自动执行（win-x64 阻断基线，linux-x64 观察期）。
 // 背景与实测结论见 Doc/AOT兼容性分析.md。
@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using NewLife;
 using NewLife.Log;
 using XCode;
+using XCode.Common;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 
@@ -230,6 +231,17 @@ Run("13.SQLite 嵌入库（Microsoft.Data.Sqlite）", () =>
 
     Console.WriteLine($"    (factory={dal.Db.Factory?.GetType().FullName} insert={ok1} find={ok2} update={ok3} query={ok4} tables={tables.Count} delete={ok6})");
     return ok1 && ok2 && ok3 && ok4 && ok5 && ok6;
+});
+
+// 14. 泛型属性拷贝（DataConversion.CopyProperty<TSource,TTarget>：源与目标不同类型，AOT 下自动保留公开属性）
+Run("14.泛型属性拷贝 CopyProperty<TSource,TTarget>", () =>
+{
+    var src = new SmokeUser { ID = 7, Name = "copy" };
+    var dst = new SmokeSqliteUser();
+    DataConversion.CopyProperty(src, dst);
+
+    Console.WriteLine($"    (ID={dst.ID} Name={dst.Name})");
+    return dst.ID == 7 && dst.Name == "copy";
 });
 
 Console.WriteLine(failures.Count == 0 ? "全部通过" : $"失败 {failures.Count}：{String.Join("、", failures)}");

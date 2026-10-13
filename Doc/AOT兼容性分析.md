@@ -1,6 +1,6 @@
 # NewLife.XCode AOT 兼容性分析
 
-> 基线：v12.2（依赖 NewLife.Core 12.0.2026.1009-beta0916）｜评估日期：2026-10-09
+> 基线：v12.2（依赖 NewLife.Core 12.0.2026.1013-beta0732）｜评估日期：2026-10-09（2026-10-13 复核：各指标与首评一致）
 > 评估方式：**分析器实测 + NativeAOT 真实发布编译 + 原生运行实测**（win-x64，.NET 10）
 > 冒烟工程：临时工程 `Bin/AotSmoke/`（不入库，复现方法见 §7）
 
@@ -11,7 +11,7 @@
 - **结论先行**：XCode 当前**不能**在 NativeAOT 下工作；核心实体回路存在 3 处断裂（实体静态构造、实体工厂实例化、元数据静默为空）。改造**可行性中等偏高**，主要工作集中在「元数据保留」与「动态能力边界声明」两条主线。
 - **有利条件**：① 生成实体代码的成员访问已是静态实现（`this[name]` switch、显式属性），最难的成员存取通道无需改造；② 上游 NewLife.Core v12 已完成 AOT 改造（net8+ 常驻 `IsAotCompatible`、源生成器体系、0 告警），依赖升级即可继承。
 - **实测基线数据**：临时启用 net10.0 目标 + `IsAotCompatible` 后，库内分析器告警 **188 条**（IL2xxx/IL3xxx）；NativeAOT 真实发布（含 RID 编译与 ILC 阶段）告警 **55 条**；6 场景运行冒烟 **3 失败**（含 1 处静默降级）。
-- **目标框架现状**：库仍多目标 `net45;net461;netstandard2.0;netstandard2.1`，**无 net6+ 目标**，`IsAotCompatible` 无从启用；同时 net10 目标暴露 14 处编译错误（`NETCOREAPP` 死分支，`StackTraceHiddenAttribute` 缺 using，2 行可修）。
+- **目标框架现状**：库现多目标 `net45;net461;netstandard2.0;netstandard2.1;net8.0;net10.0`（2026-10-13 新增现代目标并常驻 `IsAotCompatible`）；net8/net10 首次编译暴露的 14 处错误（`NETCOREAPP` 死分支 `StackTraceHiddenAttribute` 缺 using）已修复。
 
 ---
 
@@ -91,7 +91,7 @@
 
 | 阶段 | 任务 | 说明 | 预估 |
 |:----:|------|------|:----:|
-| 1 基础设施 | 新增 net8.0/net10.0 目标；修复 `NETCOREAPP` 死分支编译（`StackTraceHidden` using 等，建议全库排查同类分支）；低版本 TFM 补 `DynamicallyAccessedMembers`/`DynamicDependency`/`UnconditionalSuppressMessage` 垫片；net8+ 启用 `IsAotCompatible` | 对齐 Core 的 csproj 策略 | 小 |
+| 1 基础设施 | 新增 net8.0/net10.0 目标；修复 `NETCOREAPP` 死分支编译（`StackTraceHidden` using 等，建议全库排查同类分支）；低版本 TFM 补 `DynamicallyAccessedMembers`/`DynamicDependency`/`UnconditionalSuppressMessage` 垫片；net8+ 启用 `IsAotCompatible` | 对齐 Core 的 csproj 策略；2026-10-13 完成：net8.0/net10.0 与 `IsAotCompatible` 已落地，低版本 TFM 垫片随阶段 2 标注按需引入 | 小 |
 | 2 元数据保留主线 | `Entity<TEntity>` 泛型参数加保留注解并传导；`TableItem.Create`/`GetFields` 增加泛型入口；`EntityFactory` 工厂静态注册/生成具体工厂；`EntityBase.GetCachedProperties` 泛型化 | 消除 §2.3 的 3 处断裂 | 中（核心） |
 | 3 动态能力边界声明 | LINQ `Expression.Compile`、驱动动态装载/私有反射、`DataTable.Select` 表达式、映射/转换反射面：`RequiresDynamicCode`/`RequiresUnreferencedCode` 声明 + 明确降级或异常 | 对标 Core 收口记录做法 | 中 |
 | 4 静态化通道（可选增强） | 由 XCodeTool/Build.tt 生成静态元数据表与工厂注册（类似 Core 源生成器，开发者侧零配置；缺失时回退反射，语义不变） | XCode 独有优势：实体代码本就是生成的 | 中 |

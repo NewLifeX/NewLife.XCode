@@ -55,7 +55,7 @@ jobs:
       if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
     - name: JIT Baseline
-      # 同一冒烟工程以 JIT 运行（9 场景），为 AOT 结果提供对照
+      # 同一冒烟工程以 JIT 运行（13 场景），为 AOT 结果提供对照
       run: dotnet run -c Release --project AotSmoke/AotSmoke.csproj
     - name: Publish NativeAOT Smoke
       run: dotnet publish AotSmoke/AotSmoke.csproj -c Release -r ${{ matrix.rid }} -o AotSmoke/bin/aot-out

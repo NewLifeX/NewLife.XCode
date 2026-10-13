@@ -2,7 +2,7 @@
 
 > 基线：v12.2（依赖 NewLife.Core 12.0.2026.1013-beta0732）｜更新：2026-10-13
 > 验证方式：分析器（net8.0/net10.0 常驻 `IsAotCompatible`）+ NativeAOT 真实发布 + 原生运行冒烟（win-x64，.NET 10）
-> 冒烟工程：`AotSmoke/`（12 场景 JIT/AOT 双跑，`.github/workflows/aot.yml` 自动执行）
+> 冒烟工程：`AotSmoke/`（13 场景 JIT/AOT 双跑，`.github/workflows/aot.yml` 自动执行）
 
 ---
 
@@ -27,6 +27,7 @@
 | 实体 LINQ（IQueryable） | Where/OrderBy/Skip/Take/First/Count；闭包变量与方法调用求值（AOT 下运行时解释器回退） |
 | 实体列表转字典 | `ToDictionary()`（运行时构造 `Dictionary<主键类型, 实体类型>`） |
 | 实体缓存 | `FindAllWithCache` |
+| SQLite 嵌入库 | Microsoft.Data.Sqlite（SQLitePCLRaw）路线：建表/CRUD/反向工程；System.Data.SQLite 为混合编译不支持 AOT |
 | 数据库访问 | DAL 元数据对象创建、SQL 执行 |
 | 驱动加载 | 静态引用驱动（工程引用/deps）按程序集限定名降级加载 |
 | 基础能力 | Utility 类型转换、XTrace 日志 |
@@ -37,7 +38,7 @@
 
 | 功能 | 现状 | 方向 |
 |------|------|------|
-| 驱动矩阵 AOT 验证 | 仅 NovaDb 嵌入库通过冒烟，其余 `XCode.*` 提供者未验证 | 各提供者补现代 TFM 并逐个验证；SQLite 评估 `Microsoft.Data.Sqlite`（SQLitePCLRaw）路线 |
+| 驱动矩阵 AOT 验证 | 嵌入库已验证：NovaDb、SQLite（Microsoft.Data.Sqlite 路线）；其余 `XCode.*` 提供者需外部服务器，未验证；瀚高内置 `Nhgdb.dll` 为 .NET Framework 4.5.1 构建，现代 .NET 需厂商提供新驱动 | 具备服务器环境时逐个验证（SqlServer/MySql/PostgreSQL/Oracle/达梦/DB2/人大金仓/瀚高） |
 | 静态化通道（可选增强） | 未实施（暂缓，待真实诉求） | XCodeTool 生成静态元数据表与工厂注册；配套全实体扫描的注册表替代 |
 | 运行时反射面泛型化 | 暂以边界声明 + 应用侧保留承接 | `Reflect.*<T>` 风格泛型入口（`DAL_Mapper`/`DataConversion`/`StatModel` 等） |
 | 驱动私有反射优化入口 | AOT 下探测失败回退常规路径 | 改为公共 API 直调（MySql 零拷贝读取/批量执行） |
@@ -62,7 +63,7 @@
 dotnet build XCode\XCode.csproj -f net8.0 -c Release
 dotnet build XCode\XCode.csproj -f net10.0 -c Release
 
-# 冒烟（12 场景 JIT/AOT 双跑；任一失败即非 0 退出码）
+# 冒烟（13 场景 JIT/AOT 双跑；任一失败即非 0 退出码）
 dotnet run -c Release --project AotSmoke/AotSmoke.csproj
 dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/aot-out
 .\AotSmoke\bin\aot-out\AotSmoke.exe

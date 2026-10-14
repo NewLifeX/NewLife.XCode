@@ -19,6 +19,8 @@
     <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1009" />
     <!-- SQLite 嵌入式真库验证对象：AOT 路线为 Microsoft.Data.Sqlite（SQLitePCLRaw 原生库），System.Data.SQLite 为混合编译不支持 AOT -->
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
+    <!-- MySQL 真库验证对象（官方连接器）：连接串来自环境变量 XCode_mysql，未设置时跳过该场景 -->
+    <PackageReference Include="MySql.Data" Version="26.7.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +31,9 @@
     <TrimmerRootAssembly Include="SQLitePCLRaw.batteries_v2" />
     <TrimmerRootAssembly Include="SQLitePCLRaw.provider.e_sqlite3" />
     <TrimmerRootAssembly Include="SQLitePCLRaw.core" />
+    <TrimmerRootAssembly Include="MySql.Data" />
+    <!-- MySql.Data 读取 ConfigurationManager（Activator 创建 ClientConfigurationHost），裁剪后会 MissingMethodException -->
+    <TrimmerRootAssembly Include="System.Configuration.ConfigurationManager" />
   </ItemGroup>
 
 </Project>

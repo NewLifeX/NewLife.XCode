@@ -21,6 +21,8 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
     <!-- MySQL 真库验证对象（官方连接器）：连接串来自环境变量 XCode_mysql，未设置时跳过该场景 -->
     <PackageReference Include="MySql.Data" Version="26.7.0" />
+    <!-- SqlServer 真库验证对象（与 XCode.SqlServer 适配包同版本）：连接串来自环境变量 XCode_sqlserver，未设置时跳过该场景 -->
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,6 +36,7 @@
     <TrimmerRootAssembly Include="MySql.Data" />
     <!-- MySql.Data 读取 ConfigurationManager（Activator 创建 ClientConfigurationHost），裁剪后会 MissingMethodException -->
     <TrimmerRootAssembly Include="System.Configuration.ConfigurationManager" />
+    <TrimmerRootAssembly Include="System.Data.SqlClient" />
   </ItemGroup>
 
 </Project>

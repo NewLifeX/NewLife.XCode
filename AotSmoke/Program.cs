@@ -1,4 +1,4 @@
-// XCode NativeAOT 冒烟：15 场景逐项 PASS/FAIL，任一失败以非 0 退出码结束。
+// XCode NativeAOT 冒烟：16 场景逐项 PASS/FAIL，任一失败以非 0 退出码结束。
 // 同一工程双跑对照：JIT（dotnet run -c Release）与 NativeAOT（dotnet publish -c Release -r <rid> 后运行产物）。
 // 由 .github/workflows/aot.yml 的 analyzer/aot job 自动执行（win-x64 阻断基线，linux-x64 观察期）。
 // 背景与实测结论见 Doc/AOT兼容性分析.md。
@@ -282,6 +282,44 @@ Run("15.MySQL 真库（环境变量 XCode_mysql）", () =>
     return ok1 && ok2 && ok3 && ok4 && ok5 && ok6;
 });
 
+// 16. SqlServer 真库（官方 System.Data.SqlClient 连接器，与 XCode.SqlServer 适配包同版本；连接串来自环境变量 XCode_sqlserver，未设置时跳过。本机可用 LocalDB：(localdb)\MSSQLLocalDB）
+Run("16.SqlServer 真库（环境变量 XCode_sqlserver）", () =>
+{
+    var connStr = Environment.GetEnvironmentVariable("XCode_sqlserver");
+    if (connStr.IsNullOrEmpty())
+    {
+        Console.WriteLine("    (skip: 未设置 XCode_sqlserver)");
+        return true;
+    }
+
+    DAL.AddConnStr("aot_sqlserver", connStr, null, "SqlServer");
+
+    var dal = DAL.Create("aot_sqlserver");
+    dal.Execute("if object_id('smoke_sqlserver_user') is null Create Table smoke_sqlserver_user (ID Int Identity(1,1) Primary Key, Name Varchar(50))");
+    dal.Execute("Delete From smoke_sqlserver_user");
+
+    var e = new SmokeSqlServerUser { Name = "sqlserver" };
+    var ok1 = e.Insert() > 0 && e.ID > 0;
+
+    var q = SmokeSqlServerUser.FindByKey(e.ID);
+    var ok2 = q != null && q.Name == "sqlserver";
+
+    q!.Name = "sqlserver2";
+    var ok3 = q.Update() > 0;
+
+    var list = SmokeSqlServerUser.FindAll(SmokeSqlServerUser._.Name == "sqlserver2");
+    var ok4 = list.Count == 1;
+
+    // DAL 层查询（走驱动 OnFill）
+    var dt = dal.Query("select * from smoke_sqlserver_user");
+    var ok5 = dt != null && dt.Rows.Count == 1;
+
+    var ok6 = q.Delete() > 0;
+
+    Console.WriteLine($"    (factory={dal.Db.Factory?.GetType().FullName} insert={ok1} find={ok2} update={ok3} query={ok4} dalQuery={ok5} delete={ok6})");
+    return ok1 && ok2 && ok3 && ok4 && ok5 && ok6;
+});
+
 Console.WriteLine(failures.Count == 0 ? "全部通过" : $"失败 {failures.Count}：{String.Join("、", failures)}");
 return failures.Count == 0 ? 0 : 1;
 
@@ -447,6 +485,64 @@ public class SmokeMySqlUser : Entity<SmokeMySqlUser>
     }
 
     /// <summary>取得 MySQL 冒烟用户字段信息的快捷方式</summary>
+    public partial class _
+    {
+        /// <summary>编号</summary>
+        public static readonly Field ID = FindByName("ID");
+
+        /// <summary>名称</summary>
+        public static readonly Field Name = FindByName("Name");
+
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
+    }
+}
+
+/// <summary>SqlServer 冒烟实体（与 SmokeUser 同构，绑定 SqlServer 连接）</summary>
+[Serializable]
+[DataObject]
+[Description("SqlServer 冒烟用户")]
+[BindTable("smoke_sqlserver_user", Description = "SqlServer 冒烟用户", ConnName = "aot_sqlserver")]
+public class SmokeSqlServerUser : Entity<SmokeSqlServerUser>
+{
+    private Int32 _ID;
+    /// <summary>编号</summary>
+    [DisplayName("编号")]
+    [Description("编号")]
+    [DataObjectField(true, true, false, 0)]
+    [BindColumn("ID", "编号", "")]
+    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+
+    private String? _Name;
+    /// <summary>名称</summary>
+    [DisplayName("名称")]
+    [Description("名称")]
+    [DataObjectField(false, false, true, 50)]
+    [BindColumn("Name", "名称", "", Master = true)]
+    public String? Name { get => _Name; set { if (OnPropertyChanging("Name", value)) { _Name = value; OnPropertyChanged("Name"); } } }
+
+    /// <summary>获取/设置 字段值</summary>
+    /// <param name="name">字段名</param>
+    /// <returns></returns>
+    public override Object? this[String name]
+    {
+        get => name switch
+        {
+            "ID" => _ID,
+            "Name" => _Name,
+            _ => base[name]
+        };
+        set
+        {
+            switch (name)
+            {
+                case "ID": _ID = value.ToInt(); break;
+                case "Name": _Name = Convert.ToString(value); break;
+                default: base[name] = value; break;
+            }
+        }
+    }
+
+    /// <summary>取得 SqlServer 冒烟用户字段信息的快捷方式</summary>
     public partial class _
     {
         /// <summary>编号</summary>

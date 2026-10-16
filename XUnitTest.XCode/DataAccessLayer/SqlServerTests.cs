@@ -400,6 +400,7 @@ public class SqlServerTests
         var dal = DAL.Create("sysSqlServerv");
 
         //dal.SetTables(Role.Meta.Table.DataTable);
+        Role.Meta.ConnName = "sysSqlServerv";
         Role.Meta.Session.InitData();
 
         dal.Query<Role>("select * from Role order by id");

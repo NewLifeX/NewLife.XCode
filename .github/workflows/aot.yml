@@ -139,8 +139,8 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 10.x
-    - name: Warm NuGet cache
-      run: dotnet restore AotSmoke/AotSmoke.csproj
+    - name: Build AotSmoke (host，QEMU 内不跑 MSBuild)
+      run: dotnet build AotSmoke/AotSmoke.csproj -c Release
     - name: Download Loongson .NET SDK (linux-loongarch64)
       run: |
         curl -fL --retry 3 -o "$RUNNER_TEMP/la64-sdk.tar.gz" \
@@ -169,7 +169,7 @@ jobs:
             fi
             export LD_LIBRARY_PATH="$LIBDIR:$LD_LIBRARY_PATH"
             dotnet --info
-            timeout 180m dotnet run -c Release --project AotSmoke/AotSmoke.csproj --no-restore
+            timeout 180m dotnet /src/AotSmoke/bin/Release/net10.0/AotSmoke.dll
           '
     - name: NativeAOT not supported on linux-loongarch64
       run: |

@@ -300,6 +300,8 @@ jobs:
         dotnet-version: 10.x
     - name: Warm NuGet cache
       run: dotnet restore XUnitTest.XCode/XUnitTest.XCode.csproj
+    - name: Build for loong64 (host，QEMU 内不跑 MSBuild)
+      run: dotnet build XUnitTest.XCode/XUnitTest.XCode.csproj -c Release
     - name: Download Loongson .NET SDK (linux-loongarch64)
       run: |
         curl -fL --retry 3 -o "$RUNNER_TEMP/la64-sdk.tar.gz" \
@@ -329,9 +331,11 @@ jobs:
             fi
             export LD_LIBRARY_PATH="$LIBDIR:$LD_LIBRARY_PATH"
             dotnet --info
-            timeout 300m dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-restore \
-              --filter "FullyQualifiedName!~NovaDbNetworkTests&FullyQualifiedName!~MySqlTests&FullyQualifiedName!~PostgreSQLTests&FullyQualifiedName!~SqlServerTests&FullyQualifiedName!~EntityTestWithMySql" \
-              --logger "trx;LogFileName=test-linux-la64.trx" --results-directory TestResults
+            SDK=$(ls -d /opt/dotnet/sdk/*/ | head -1)
+            echo "vstest.console: ${SDK}vstest.console.dll"
+            timeout 300m dotnet "${SDK}vstest.console.dll" /src/Bin/UnitTest/XUnitTest.XCode.dll \
+              --TestCaseFilter:"FullyQualifiedName!=XUnitTest.XCode.DataAccessLayer.NovaDbNetworkTests&FullyQualifiedName!=XUnitTest.XCode.DataAccessLayer.MySqlTests&FullyQualifiedName!=XUnitTest.XCode.DataAccessLayer.PostgreSQLTests&FullyQualifiedName!=XUnitTest.XCode.DataAccessLayer.SqlServerTests&FullyQualifiedName!=XUnitTest.XCode.Configuration.SqlTemplateTests.EntityTestWithMySql" \
+              --logger:"trx;LogFileName=test-linux-la64.trx" --ResultsDirectory:/src/TestResults
           '
     - name: Upload Test Results
       if: always()

@@ -1862,10 +1862,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0)
         {
-            // 非分表情况，直接调用现有的参数化Delete方法
+            // Persistence.Delete仅接收SQL条件，不接收参数，使用数据库方言格式化值。
             var db = session.Dal.Db;
-            var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
-            var whereClause = where?.GetString(db, ps) ?? String.Empty;
+            var whereClause = where?.GetString(db, null) ?? String.Empty;
 
             return Persistence.Delete(session, whereClause, maximumRows);
         }

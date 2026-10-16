@@ -311,7 +311,7 @@ jobs:
     - name: Unit Tests (loong64 container)
       # 容器内安装 libsqlite3-0 并软链为 libe_sqlite3.so：SQLitePCLRaw 尚未提供 linux-loongarch64 原生库
       run: |
-        docker run --rm --platform linux/loong64 \
+        docker run --rm --platform linux/loong64 -w /src \
           -v "$PWD:/src" -v "$HOME/la64:/opt/dotnet:ro" -v "$HOME/.nuget:/home/runner/.nuget" \
           -e HOME=/home/runner -e DOTNET_CLI_HOME=/home/runner -e NUGET_PACKAGES=/home/runner/.nuget/packages \
           -e DOTNET_ROOT=/opt/dotnet -e PATH=/opt/dotnet:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \

@@ -151,7 +151,7 @@ jobs:
       run: docker run --privileged --rm ghcr.io/loong64/binfmt --install all
     - name: JIT Smoke (loong64 container)
       run: |
-        docker run --rm --platform linux/loong64 \
+        docker run --rm --platform linux/loong64 -w /src \
           -v "$PWD:/src" -v "$HOME/la64:/opt/dotnet:ro" -v "$HOME/.nuget:/home/runner/.nuget" \
           -e HOME=/home/runner -e DOTNET_CLI_HOME=/home/runner -e NUGET_PACKAGES=/home/runner/.nuget/packages \
           -e DOTNET_ROOT=/opt/dotnet -e PATH=/opt/dotnet:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \

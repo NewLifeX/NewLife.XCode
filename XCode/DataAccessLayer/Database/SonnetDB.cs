@@ -36,9 +36,11 @@ internal class SonnetDB : RemoteDb
         if (String.IsNullOrEmpty(DatabaseName))
         {
             var source = builder["Data Source"];
-            var uriSource = source?.StartsWith("sonnetdb+", StringComparison.OrdinalIgnoreCase) == true ? source.Substring("sonnetdb+".Length) : source;
+            // 嵌入式目录允许sonnetdb://前缀，官方驱动会剥离该前缀，数据库名必须与打开的目录保持一致
+            var embedded = source?.StartsWith("sonnetdb://", StringComparison.OrdinalIgnoreCase) == true ? source["sonnetdb://".Length..] : source;
+            var uriSource = embedded?.StartsWith("sonnetdb+", StringComparison.OrdinalIgnoreCase) == true ? embedded["sonnetdb+".Length..] : embedded;
             DatabaseName = Uri.TryCreate(uriSource, UriKind.Absolute, out var uri) && (uri.Scheme == "http" || uri.Scheme == "https")
-                ? Uri.UnescapeDataString(uri.AbsolutePath.Trim('/')) : source;
+                ? Uri.UnescapeDataString(uri.AbsolutePath.Trim('/')) : embedded;
         }
     }
 
@@ -90,7 +92,18 @@ internal class SonnetDB : RemoteDb
         if (value == null || value == DBNull.Value) return "NULL";
         var type = column?.DataType ?? value.GetType();
         type = Nullable.GetUnderlyingType(type) ?? type;
-        CheckValue(value, type.IsEnum ? Enum.GetUnderlyingType(type) : type);
+        var underlying = type.IsEnum ? Enum.GetUnderlyingType(type) : type;
+
+        // 外部文本先转换为列声明类型，转换失败直接抛错，避免未转义文本拼入SQL字面量
+        if (value is String text && underlying != typeof(String) && underlying != typeof(Char))
+        {
+            value = underlying == typeof(DateTime) ? Convert.ToDateTime(text, CultureInfo.InvariantCulture)
+                : underlying == typeof(DateTimeOffset) ? DateTimeOffset.Parse(text, CultureInfo.InvariantCulture)
+                : underlying == typeof(TimeSpan) ? TimeSpan.Parse(text, CultureInfo.InvariantCulture)
+                : underlying == typeof(Guid) ? Guid.Parse(text)
+                : Convert.ChangeType(text, underlying, CultureInfo.InvariantCulture);
+        }
+        CheckValue(value, underlying);
         if (type.IsEnum) return Convert.ToInt64(value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
         if (type == typeof(Boolean)) return Convert.ToBoolean(value, CultureInfo.InvariantCulture) ? "TRUE" : "FALSE";
         if (value is Byte[] bytes) return Quote(Convert.ToBase64String(bytes));
@@ -111,7 +124,9 @@ internal class SonnetDB : RemoteDb
         if (value is Decimal number) return number.ToString(CultureInfo.InvariantCulture);
         if (value is Double dbl) return dbl.ToString("R", CultureInfo.InvariantCulture);
         if (value is Single single) return single.ToString("R", CultureInfo.InvariantCulture);
-        return Convert.ToString(value, CultureInfo.InvariantCulture)!;
+        // 到这里只剩整数等无边界的数值，其他类型按文本加引号，禁止再输出未转义字面量
+        if (value is SByte or Byte or Int16 or Int32 or Int64 or UInt16 or UInt32 or UInt64) return Convert.ToString(value, CultureInfo.InvariantCulture)!;
+        return Quote(Convert.ToString(value, CultureInfo.InvariantCulture)!);
     }
 
     internal static String Quote(String value) => "'" + value.Replace("'", "''") + "'";
@@ -126,7 +141,7 @@ internal class SonnetDB : RemoteDb
         return Quote(dateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffK", CultureInfo.InvariantCulture));
     }
 
-    private static void CheckValue(Object value, Type? type)
+    internal static void CheckValue(Object value, Type? type)
     {
         if (value == DBNull.Value) return;
         if (type == typeof(Decimal) || value is Decimal)
@@ -152,7 +167,7 @@ internal class SonnetDB : RemoteDb
             throw new NotSupportedException("SonnetDB INT使用有符号Int64，仅支持不超过Int64.MaxValue的UInt64值。");
     }
 
-    private static void CheckTime(Int64 ticks)
+    internal static void CheckTime(Int64 ticks)
     {
         if (ticks % TimeSpan.TicksPerMillisecond != 0)
             throw new NotSupportedException("SonnetDB 4.0.0 DATETIME只能保留毫秒精度，已拒绝亚毫秒时间。参见SonnetDB issue #236，尚需实现完整时间精度支持并正式发布。");
@@ -328,8 +343,15 @@ internal class SonnetDBSession : RemoteDbSession
         if (ignore) sql.Append(" ON CONFLICT DO NOTHING");
         else if (updateColumns is { Count: > 0 } || addColumns is { Count: > 0 })
         {
-            var keys = table.Indexes.FirstOrDefault(index => index.Unique && index.Columns.Length > 0 && index.Columns.All(name => columns.Any(column => column.ColumnName.Equals(name, StringComparison.OrdinalIgnoreCase))))?.Columns
-                ?? table.PrimaryKeys.Select(column => column.ColumnName).ToArray();
+            // 索引列可能声明为逻辑属性名，先解析为物理列名再与写入列匹配，否则会错误回退到自增主键
+            var indexColumns = table.Indexes
+                .Where(item => item.Unique && item.Columns.Length > 0)
+                .Select(item => new { item.Columns, Resolved = table.GetColumns(item.Columns) })
+                .Where(item => item.Resolved.Length == item.Columns.Length
+                    && item.Resolved.All(column => columns.Any(inserted => inserted.ColumnName.Equals(column.ColumnName, StringComparison.OrdinalIgnoreCase))))
+                .Select(item => item.Resolved.Select(column => column.ColumnName).ToArray())
+                .FirstOrDefault();
+            var keys = indexColumns ?? table.PrimaryKeys.Select(column => column.ColumnName).ToArray();
             if (keys.Length == 0) throw new NotSupportedException("SonnetDB Upsert需要主键或完整的唯一索引冲突目标。");
             var setters = new List<String>();
             foreach (var column in columns)
@@ -459,15 +481,18 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     {
         var expectedDefault = GetDefault(entityColumn, false);
         if (expectedDefault != null) expectedDefault = expectedDefault.Substring(" DEFAULT ".Length);
+        // 字符串默认值是区分大小写的字面量，'ABC'与'abc'不能视为相同
+        var comparison = entityColumn.DataType == typeof(String) || entityColumn.DataType == typeof(Char) ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
         return entityColumn.Identity != dbColumn.Identity || entityColumn.PrimaryKey != dbColumn.PrimaryKey
             || (entityColumn.Nullable && !entityColumn.PrimaryKey && !entityColumn.Identity) != dbColumn.Nullable
-            || !String.Equals(expectedDefault?.Trim(), dbColumn.DefaultValue?.Trim(), StringComparison.OrdinalIgnoreCase);
+            || !String.Equals(expectedDefault?.Trim(), dbColumn.DefaultValue?.Trim(), comparison);
     }
 
     /// <inheritdoc/>
     public override String FieldClause(IDataColumn field, Boolean onlyDefine)
     {
         ReportLength(field);
+        CheckDefaultValue(field);
         var sql = $"{FormatName(field)} {GetFieldType(field) ?? throw new NotSupportedException($"SonnetDB不支持字段类型{field.DataType}")}";
         if (field.Identity) return sql + " AUTO_INCREMENT";
         sql += field.Nullable && !field.PrimaryKey ? " NULL" : " NOT NULL";
@@ -501,6 +526,26 @@ internal class SonnetDBMetaData : RemoteDbMetaData
         return null;
     }
 
+    /// <summary>校验字面量默认值，拒绝数据库无法保真的高精度值</summary>
+    private static void CheckDefaultValue(IDataColumn field)
+    {
+        var value = field.DefaultValue;
+        if (value.IsNullOrEmpty() || value.IndexOf('(') >= 0) return;
+
+        var text = value.Trim();
+        if (text.Length >= 2 && text[0] == '\'' && text[^1] == '\'') text = text[1..^1].Replace("''", "'");
+        if (text.Length == 0) return;
+
+        if (field.DataType == typeof(DateTime) || field.DataType == typeof(DateTimeOffset))
+        {
+            if (DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var time)) SonnetDB.CheckTime(time.Ticks);
+        }
+        else if (field.DataType == typeof(Decimal))
+        {
+            if (Decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out var number)) SonnetDB.CheckValue(number, typeof(Decimal));
+        }
+    }
+
     /// <inheritdoc/>
     public override String CreateTableSQL(IDataTable table)
     {
@@ -512,9 +557,12 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     /// <inheritdoc/>
     public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
     {
-        if (oldfield != null && field.DataType == typeof(String) && field.Length != oldfield.Length && field.Length > 0 && field.Length < Int32.MaxValue)
+        // 数据库的STRING长度元数据不可用（Int32.MaxValue）时不算长度变更，模型Length未变时仍允许修改可空性与默认值
+        if (oldfield != null && field.DataType == typeof(String) && field.Length > 0 && field.Length < Int32.MaxValue
+            && oldfield.Length > 0 && oldfield.Length < Int32.MaxValue && field.Length != oldfield.Length)
             throw new NotSupportedException("SonnetDB STRING尚未支持长度约束变更。参见SonnetDB issue #240，尚需实现对应能力并正式发布。");
         CheckDecimalMigration(field);
+        CheckDefaultValue(field);
         if (oldfield != null && (field.Identity != oldfield.Identity || field.PrimaryKey != oldfield.PrimaryKey))
             throw new NotSupportedException("SonnetDB现有列的自增或主键变更需要单独迁移，不能通过ALTER COLUMN完成。");
         var sql = $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
@@ -541,10 +589,20 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     }
 
     /// <inheritdoc/>
-    public override String? CreateIndexSQL(IDataIndex index) => $"CREATE {(index.Unique ? "UNIQUE " : String.Empty)}INDEX {Database.FormatName(index.Name!)} ON {FormatName(index.Table)} ({String.Join(",", index.Table.GetColumns(index.Columns).Select(FormatName))})";
+    public override String? CreateIndexSQL(IDataIndex index) => $"CREATE {(index.Unique ? "UNIQUE " : String.Empty)}INDEX {Database.FormatName(index.Name!)} ON {FormatIndexTable(index.Table)} ({String.Join(",", index.Table.GetColumns(index.Columns).Select(FormatName))})";
 
     /// <inheritdoc/>
-    public override String DropIndexSQL(IDataIndex index) => $"DROP INDEX {Database.FormatName(index.Name!)} ON {FormatName(index.Table)}";
+    public override String DropIndexSQL(IDataIndex index) => $"DROP INDEX {Database.FormatName(index.Name!)} ON {FormatIndexTable(index.Table)}";
+
+    /// <summary>格式化索引所属表名。反向工程得到的物理表名已包含表前缀，不能重复添加</summary>
+    private String FormatIndexTable(IDataTable table)
+    {
+        var prefix = Database.TablePrefix;
+        var name = table.TableName;
+        if (!prefix.IsNullOrEmpty() && name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return Database.FormatName(name);
+
+        return FormatName(table);
+    }
 
     /// <inheritdoc/>
     public override Boolean DatabaseExist(String? databaseName)

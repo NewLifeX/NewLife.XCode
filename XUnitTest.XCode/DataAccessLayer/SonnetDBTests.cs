@@ -54,6 +54,29 @@ public class SonnetDBTests
     }
 
     [Fact]
+    public void UpsertResolvesLogicalIndexColumnsToPhysicalNames()
+    {
+        using var scope = new DatabaseScope();
+        var table = CreateTable("LogicalIndexRows");
+        var title = table.Columns.Single(column => column.ColumnName == "Name");
+        title.Name = "Title";
+        AddColumn(table, "Amount", typeof(Decimal));
+        AddIndex(table, "IU_LogicalIndexRows_Title", true, "Title");
+        table.Fix();
+        scope.Dal.Db.CreateMetaData().SetTables(Migration.Full, table);
+
+        // 索引列是逻辑属性名Title，物理列名是Name，Upsert必须按物理唯一键更新而不是回退到Id
+        var columns = table.Columns.ToArray();
+        var session = scope.Dal.Session;
+        Assert.Equal(1, session.Insert(table, columns, new[] { new Row(new() { ["Id"] = 7L, ["Title"] = "before", ["Amount"] = 1m }) }));
+        Assert.Equal(1, session.Upsert(table, columns, new[] { "Amount" }, null, new[] { new Row(new() { ["Id"] = 8L, ["Title"] = "before", ["Amount"] = 5m }) }));
+
+        var formatted = scope.Dal.Db.FormatName(table);
+        Assert.Equal(1, session.ExecuteScalar<Int32>($"SELECT COUNT(*) FROM {formatted}"));
+        Assert.Equal(5m, session.ExecuteScalar<Decimal>($"SELECT Amount FROM {formatted} WHERE Id=7"));
+    }
+
+    [Fact]
     public void UnboundedStringsAndViewMetadataGuard()
     {
         using var scope = new DatabaseScope();
@@ -148,6 +171,21 @@ public class SonnetDBTests
         Assert.True(scope.Dal.Session.ExecuteScalar<Boolean>("SELECT Enabled FROM MetadataRows WHERE Name='default'"));
         Assert.True(meta.DropTable(table));
         Assert.DoesNotContain(table.TableName, meta.GetTableNames());
+    }
+
+    [Fact]
+    public void EmbeddedSourceUriPrefixIsNormalized()
+    {
+        using var scope = new DatabaseScope(sourcePrefix: "sonnetdb://");
+        var db = scope.Dal.Db;
+        // 官方驱动会剥离 sonnetdb:// 前缀，数据库名必须与打开的目录一致
+        Assert.False(db.DatabaseName.StartsWith("sonnetdb://", StringComparison.OrdinalIgnoreCase));
+        Assert.True(db.CreateMetaData().DatabaseExist(null));
+
+        var table = CreateTable("EmbeddedUriRows");
+        var meta = db.CreateMetaData();
+        meta.SetTables(Migration.Full, table);
+        Assert.Contains(table.TableName, meta.GetTableNames());
     }
 
     [Fact]
@@ -455,6 +493,73 @@ public class SonnetDBTests
     }
 
     [Fact]
+    public void SetTablesAppliesNullableChangeWhenStringLengthMetadataUnavailable()
+    {
+        using var scope = new DatabaseScope();
+        var table = CreateTable("LengthMetadataRows");
+        var meta = scope.Dal.Db.CreateMetaData();
+        meta.SetTables(Migration.Full, table);
+
+        // 数据库的STRING长度是不可用元数据，模型Length保持100时，可空性变化仍必须通过SetTables生效
+        var name = table.Columns.Single(e => e.ColumnName == "Name");
+        name.Nullable = true;
+        meta.SetTables(Migration.Full, table);
+
+        var actual = Assert.Single(meta.GetTables(), e => e.TableName == table.TableName);
+        Assert.True(actual.Columns.Single(e => e.ColumnName == "Name").Nullable);
+    }
+
+    [Fact]
+    public void StringDefaultChangesAreCaseSensitive()
+    {
+        using var scope = new DatabaseScope();
+        var table = CreateTable("CaseDefaultRows");
+        var code = AddColumn(table, "Code", typeof(String), true);
+        code.DefaultValue = "'ABC'";
+        var meta = scope.Dal.Db.CreateMetaData();
+        meta.SetTables(Migration.Full, table);
+        scope.Dal.Execute("INSERT INTO CaseDefaultRows (Name) VALUES ('first')");
+        Assert.Equal("ABC", scope.Dal.Session.ExecuteScalar<String>("SELECT Code FROM CaseDefaultRows"));
+
+        // 字符串默认值是区分大小写的字面量，'abc' 必须覆盖 'ABC'
+        code.DefaultValue = "'abc'";
+        meta.SetTables(Migration.Full, table);
+        var actual = Assert.Single(meta.GetTables(), e => e.TableName == table.TableName).Columns.Single(e => e.ColumnName == "Code");
+        Assert.Contains("abc", actual.DefaultValue);
+        Assert.DoesNotContain("ABC", actual.DefaultValue);
+        scope.Dal.Execute("INSERT INTO CaseDefaultRows (Name) VALUES ('second')");
+        Assert.Equal("abc", scope.Dal.Session.ExecuteScalar<String>("SELECT Code FROM CaseDefaultRows WHERE Name='second'"));
+    }
+
+    [Fact]
+    public void DefaultsThatWouldLosePrecisionFailClearly()
+    {
+        using var scope = new DatabaseScope();
+        var meta = scope.Dal.Db.CreateMetaData();
+
+        var table = CreateTable("PrecisionDefaultRows");
+        var time = AddColumn(table, "Created", typeof(DateTime), true);
+        time.DefaultValue = "'2026-10-08T12:34:56.0000001'";
+        var error = Assert.Throws<NotSupportedException>(() => meta.CreateTable(table));
+        Assert.Contains("#236", error.Message);
+        Assert.DoesNotContain(table.TableName, meta.GetTableNames());
+
+        var amount = AddColumn(table, "Amount", typeof(Decimal), true);
+        amount.DefaultValue = "9007199254740993.123456789";
+        time.DefaultValue = "'2026-10-08T12:34:56.123'";
+        error = Assert.Throws<NotSupportedException>(() => meta.CreateTable(table));
+        Assert.Contains("#235", error.Message);
+
+        // 可保真的默认值仍应生效，省略字段的插入必须拿到默认值
+        amount.DefaultValue = "1.2345";
+        Assert.True(meta.CreateTable(table));
+        scope.Dal.Execute("INSERT INTO PrecisionDefaultRows (Name) VALUES ('omit')");
+        var record = scope.Dal.Query("SELECT Created,Amount FROM PrecisionDefaultRows").Rows.Single();
+        Assert.Equal(new DateTime(2026, 10, 8, 12, 34, 56, 123), Convert.ToDateTime(record[0]));
+        Assert.Equal(1.2345m, Convert.ToDecimal(record[1]));
+    }
+
+    [Fact]
     public void EntityLinqUsesFilteringOrderingAndPaging()
     {
         using var scope = new DatabaseScope();
@@ -510,6 +615,26 @@ public class SonnetDBTests
     }
 
     [Fact]
+    public void SetTablesDropsRemovedIndexWithTablePrefix()
+    {
+        using var scope = new DatabaseScope("prefix_");
+        var table = CreateTable("PrefixedIndexRows");
+        var index = AddIndex(table, "IX_PrefixedIndexRows_Name", false, "Name");
+        var meta = scope.Dal.Db.CreateMetaData();
+        meta.SetTables(Migration.Full, table);
+
+        var physical = "prefix_" + table.TableName;
+        var actual = Assert.Single(meta.GetTables(), e => e.TableName == physical);
+        Assert.Contains(actual.Indexes, e => e.Name == index.Name);
+
+        // 模型中删除索引后，SetTables 必须按数据库里的物理表名删除索引，不能重复添加表前缀
+        table.Indexes.Remove(index);
+        meta.SetTables(Migration.Full, table);
+        actual = Assert.Single(meta.GetTables(), e => e.TableName == physical);
+        Assert.DoesNotContain(actual.Indexes, e => e.Name == index.Name);
+    }
+
+    [Fact]
     public void BoundedEntityDeleteRespectsMaximumRows()
     {
         using var scope = new DatabaseScope();
@@ -529,6 +654,23 @@ public class SonnetDBTests
         Assert.Equal(2, rows.BatchInsert());
         Assert.Equal(1, SonnetTestRow.Delete(SonnetTestRow.Meta.Table.FindByName("Name") == "O'Brien", 1));
         Assert.Equal("OBrien", Assert.Single(SonnetTestRow.FindAll()).Name);
+    }
+
+    [Fact]
+    public void EntityDeleteRejectsTextInNumericCondition()
+    {
+        using var scope = new DatabaseScope();
+        using var split = scope.CreateEntitySplit();
+        var row = new SonnetTestRow { Name = "keep", Amount = 1m };
+        Assert.Equal(1, row.Insert());
+
+        // 数值字段不接受任意文本，避免未转义内容进入删除条件
+        var idColumn = CreateTable("FormatGuardRows").Columns[0];
+        Assert.Throws<FormatException>(() => scope.Dal.Db.FormatValue(idColumn, "0 OR 1=1"));
+        Assert.Equal("7", scope.Dal.Db.FormatValue(idColumn, "7"));
+
+        Assert.Throws<FormatException>(() => SonnetTestRow.Delete(SonnetTestRow.Meta.Table.FindByName("Id").Equal("0 OR 1=1"), 1));
+        Assert.Equal("keep", Assert.Single(SonnetTestRow.FindAll()).Name);
     }
 
     [Theory]
@@ -573,6 +715,13 @@ public class SonnetDBTests
         public Object this[String name] { get => _values[name]; set => _values[name] = value; }
     }
 
+    private sealed class Row : NewLife.Data.IModel
+    {
+        private readonly Dictionary<String, Object> _values;
+        public Row(Dictionary<String, Object> values) => _values = values;
+        public Object this[String name] { get => _values[name]; set => _values[name] = value; }
+    }
+
     private static IDataTable CreateTable(String name)
     {
         var table = new XTable(name) { Name = name };
@@ -611,10 +760,10 @@ public class SonnetDBTests
         public String TableName { get; } = "SonnetRows_" + Guid.NewGuid().ToString("N");
         public DAL Dal { get; }
 
-        public DatabaseScope(String prefix = null)
+        public DatabaseScope(String prefix = null, String sourcePrefix = null)
         {
             Directory.CreateDirectory(_directory);
-            DAL.AddConnStr(ConnName, $"Data Source={_directory};Migration=Full;TablePrefix={prefix}", null, "SonnetDB");
+            DAL.AddConnStr(ConnName, $"Data Source={sourcePrefix}{_directory};Migration=Full;TablePrefix={prefix}", null, "SonnetDB");
             Dal = DAL.Create(ConnName);
         }
 

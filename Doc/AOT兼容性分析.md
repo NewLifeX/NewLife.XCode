@@ -104,7 +104,13 @@ dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/ao
   - 单元测试 `timeout 300m` 守护（QEMU 较慢，实测时长以 CI 日志为准）。
 - **自托管接入（有真机后升级为原生阻断）**：龙芯机器接入 GitHub Actions self-hosted runner 后，替换容器步骤并去掉仿真环境变量即可。
 
-### 6.3 明确排除（避免反复讨论）
+### 6.3 单元测试稳定性保障
+
+- `dotnet test` 统一启用 `--blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini`：崩溃或挂起时自动产出 mini 转储与 `Sequence_*.xml`，随 `TestResults/**` 一并上传，并打印逐用例日志（`console;verbosity=detailed`）便于定位崩溃点。
+- **linux-x64 失败自动重试一次**（`--no-build`，重试结果另存 `test-linux-x64-retry.trx`）：SQLite 原生驱动在此平台偶发进程级崩溃，重试成功仅告警不阻塞；重试仍失败则任务失败，转储保留在制品中。
+- 已知观察：首次全绿（2026-10-16）前，linux-x64 曾出现一次 testhost 原生崩溃（执行 25/1109 后中止，候选 `DataSimulationTests.CreateInstance` / `ConnectionPoolTests.GetReturn_BasicFlow`），WSL linux-x64 连续 6 轮全量（1109 用例）未复现；暂不调整 SQLite 驱动分层，复发时以转储定位。
+
+### 6.4 明确排除（避免反复讨论）
 
 | 目标 | 排除理由 |
 |---|---|

@@ -41,10 +41,9 @@ public class HanaTests
         {
             factory = db.Factory;
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is XCodeException or FileNotFoundException or FileLoadException or BadImageFormatException)
         {
-            // 未引入 Sap.Data.Hana.Core 驱动时无法创建工厂，视为跳过（CI 环境无法联网下载驱动；
-            // 缺失插件目录时抛 FileNotFoundException，而非 XCodeException）
+            // 缺少驱动或平台不支持时跳过（CI 无法联网下载 Sap.Data.Hana.Core 驱动，缺失时抛 FileNotFoundException）
             return;
         }
         Assert.NotNull(factory);

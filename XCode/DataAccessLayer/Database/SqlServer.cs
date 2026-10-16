@@ -1287,6 +1287,20 @@ internal class SqlServerMetaData : RemoteDbMetaData
         return sb.ToString();
     }
 
+    /// <summary>数据库是否存在</summary>
+    /// <remarks>目标数据库可能尚未创建而无法连接，不能直接执行 DatabaseExistSQL（sysdatabases 查询需要先连接目标库）；
+    /// 改用架构查询路径，连接失败时由 RemoteDbSession 自动切换到 master 重试</remarks>
+    /// <param name="databaseName">数据库名。为空时使用当前连接字符串中的数据库名</param>
+    /// <returns></returns>
+    public override Boolean DatabaseExist(String? databaseName)
+    {
+        databaseName ??= Database.DatabaseName;
+        if (databaseName.IsNullOrEmpty()) return false;
+
+        var dt = GetSchema(_.Databases, [databaseName]);
+        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
+    }
+
     public override String DatabaseExistSQL(String dbname) => $"SELECT * FROM sysdatabases WHERE name = N'{dbname}'";
 
     //protected override Boolean DropDatabase(String databaseName)

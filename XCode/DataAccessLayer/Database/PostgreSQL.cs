@@ -633,12 +633,34 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     //    return base.SetSchema(schema, values);
     //}
 
+    /// <summary>建立数据库</summary>
+    /// <remarks>PostgreSQL 不支持 CREATE DATABASE IF NOT EXISTS，先判断存在性，已存在时视为成功</remarks>
+    /// <param name="databaseName">数据库名</param>
+    /// <param name="file">数据文件路径</param>
+    /// <returns>是否成功</returns>
+    public override Boolean CreateDatabase(String databaseName, String? file = null)
+    {
+        if (DatabaseExist(databaseName)) return true;
+
+        try
+        {
+            return base.CreateDatabase(databaseName, file);
+        }
+        catch
+        {
+            // 并发创建时可能已被其它连接建好
+            if (DatabaseExist(databaseName)) return true;
+
+            throw;
+        }
+    }
+
     /// <summary>
     /// 创建数据库的 SQL 语句，强制带上双引号。默认使用 UTF8 编码。
     /// </summary>
     public override String CreateDatabaseSQL(String dbname, String? file)
     {
-        return String.Format("Create Database If Not Exists \"{0}\" ENCODING \"UTF8\"", dbname.Replace("\"", "\"\""));
+        return String.Format("Create Database \"{0}\" ENCODING \"UTF8\"", dbname.Replace("\"", "\"\""));
     }
 
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";

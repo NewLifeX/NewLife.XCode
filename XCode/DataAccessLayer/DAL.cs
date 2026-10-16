@@ -299,6 +299,8 @@ public partial class DAL
             fname = fname[fname.IndexOf(AppDomain.CurrentDomain.BaseDirectory, StringComparison.Ordinal)..].TrimEnd(')');
         }
         if (!File.Exists(file)) file = "app.config".GetFullPath();
+        // 大小写敏感系统（如Linux）上无法用 app.config 命中 App.config
+        if (!File.Exists(file)) file = "App.config".GetFullPath();
         if (!File.Exists(file)) file = $"{fname}.config".GetFullPath();
         if (!File.Exists(file)) file = $"{fname}.exe.config".GetFullPath();
         if (!File.Exists(file)) file = $"{fname}.dll.config".GetFullPath();

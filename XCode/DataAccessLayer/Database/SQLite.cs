@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -857,7 +858,25 @@ internal class SQLiteMetaData : FileDbMetaData
 
             //var method = conn.GetType().GetMethodEx("BackupDatabase");
             // 借助BackupDatabase函数可以实现任意两个SQLite之间倒数据，包括内存数据库
-            conn2.Invoke("BackupDatabase", conn, "main", "main", -1, null, 0);
+            // System.Data.SQLite 提供六参数重载，支持指定库名与分页重试；Microsoft.Data.Sqlite 仅提供单参数重载
+            var type = conn2.GetType();
+            MethodInfo? mi6 = null;
+            MethodInfo? mi1 = null;
+            foreach (var item in type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (item.Name != "BackupDatabase") continue;
+
+                var count = item.GetParameters().Length;
+                if (count == 6) mi6 = item;
+                else if (count == 1) mi1 = item;
+            }
+
+            if (mi6 != null)
+                mi6.Invoke(conn2, new Object?[] { conn, "main", "main", -1, null, 0 });
+            else if (mi1 != null)
+                mi1.Invoke(conn2, new Object?[] { conn });
+            else
+                throw new NotSupportedException($"当前SQLite驱动不支持BackupDatabase：{type.FullName}");
         }
 
         // 压缩

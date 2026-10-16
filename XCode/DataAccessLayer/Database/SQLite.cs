@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -817,6 +818,7 @@ internal class SQLiteMetaData : FileDbMetaData
     /// <param name="dbname"></param>
     /// <param name="bakfile"></param>
     /// <param name="compressed"></param>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "SQLite备份按运行时驱动类型反射解析BackupDatabase重载，裁剪/AOT下不支持该备份路径")]
     public override String? Backup(String dbname, String? bakfile, Boolean compressed)
     {
         var dbfile = FileName;

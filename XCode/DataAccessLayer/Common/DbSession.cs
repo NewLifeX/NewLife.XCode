@@ -358,6 +358,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <summary>执行DbCommand，返回记录集</summary>
     /// <param name="cmd">DbCommand</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "驱动不提供DataAdapter时的DataReader回退装配，仅在裁剪下需要DataTable相关成员；数据库访问本身依赖运行时驱动加载，不承诺裁剪后可用")]
     public virtual DataSet Query(DbCommand cmd)
     {
         return Execute(cmd, true, cmd2 =>

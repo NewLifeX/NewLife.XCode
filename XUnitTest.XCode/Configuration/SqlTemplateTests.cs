@@ -218,6 +218,9 @@ select * from userx where id=@id
 
         Menu2.Meta.ConnName = "mysql_member";
         Menu3.Meta.ConnName = "mysql_member";
+
+        // 全新数据库下先初始化实体完成建表，避免建表语句混入后续SQL断言
+        EntityFactory.InitEntity(typeof(Menu2));
         var n = Menu2.Meta.Count;
 
         // 拦截Sql

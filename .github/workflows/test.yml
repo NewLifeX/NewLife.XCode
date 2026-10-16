@@ -51,50 +51,91 @@ jobs:
       run: |
         $filter = @('FullyQualifiedName!~NovaDbNetworkTests')
 
-        # ---- MySQL 8.0（windows-latest 镜像自带）----
+        # ---- MySQL 8.0（镜像自带数据库工具；无服务时手动初始化并启动）----
         $mysqlOk = $false
-        $mysqlExe = 'C:\tools\mysql\current\bin\mysql.exe'
-        if (-not (Test-Path $mysqlExe)) { $mysqlExe = (Get-Command mysql -ErrorAction SilentlyContinue)?.Source }
-        $svc = Get-Service -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '*MySQL*' } | Select-Object -First 1
-        if ($svc -and $mysqlExe) {
-          try { if ($svc.Status -ne 'Running') { Start-Service $svc.Name } } catch { }
-          foreach ($pw in @('root', '', 'Password12!')) {
-            try {
-              $env:MYSQL_PWD = $pw
-              & $mysqlExe -h 127.0.0.1 -u root -e 'CREATE DATABASE IF NOT EXISTS sys;' 2>$null
-              if ($LASTEXITCODE -eq 0) {
-                $mysqlOk = $true
-                Add-Content -Path $env:GITHUB_ENV -Value "XCode_mysql=Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=$pw"
-                break
-              }
-            } catch { }
+        $mysqlPwd = 'root'
+        $mysqlExe = $null
+        foreach ($root in @('C:\tools\mysql\current', 'C:\tools\mysql', 'C:\Program Files\MySQL')) {
+          if (Test-Path $root) {
+            $f = Get-ChildItem $root -Recurse -Filter mysql.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($f) { $mysqlExe = $f.FullName; break }
+          }
+        }
+        if (-not $mysqlExe) { $mysqlExe = (Get-Command mysql -ErrorAction SilentlyContinue)?.Source }
+
+        $svc = Get-Service -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '*mysql*' } | Select-Object -First 1
+        if ($svc) {
+          try {
+            Set-Service $svc.Name -StartupType Manual -ErrorAction SilentlyContinue
+            if ((Get-Service $svc.Name).Status -ne 'Running') { Start-Service $svc.Name }
+          } catch { }
+        }
+
+        if ($mysqlExe) {
+          $mysqld = Join-Path (Split-Path $mysqlExe) 'mysqld.exe'
+          $listening = Get-NetTCPConnection -LocalPort 3306 -State Listen -ErrorAction SilentlyContinue
+          if (-not $listening -and (Test-Path $mysqld)) {
+            # 镜像未提供服务，则以无密码方式初始化数据目录并后台启动
+            $data = Join-Path $env:RUNNER_TEMP 'mysqldata'
+            if (-not (Test-Path (Join-Path $data 'mysql'))) {
+              New-Item -ItemType Directory -Path $data -Force | Out-Null
+              & $mysqld --initialize-insecure --datadir=$data 2>&1 | Out-Null
+            }
+            Start-Process $mysqld -ArgumentList "--datadir=$data", "--port=3306" -WindowStyle Hidden
+          }
+
+          for ($i = 0; $i -lt 30 -and -not $mysqlOk; $i++) {
+            foreach ($pw in @('', 'root')) {
+              try {
+                $env:MYSQL_PWD = $pw
+                & $mysqlExe -h 127.0.0.1 -u root -e 'CREATE DATABASE IF NOT EXISTS sys; select 1' 2>$null | Out-Null
+                if ($LASTEXITCODE -eq 0) { $mysqlOk = $true; $mysqlPwd = $pw; break }
+              } catch { }
+            }
+            if (-not $mysqlOk) { Start-Sleep -Seconds 2 }
           }
           $env:MYSQL_PWD = ''
         }
-        if (-not $mysqlOk) { $filter += 'FullyQualifiedName!~MySqlTests'; Write-Host 'MySQL 不可用，排除 MySqlTests' }
+        if ($mysqlOk) {
+          Add-Content -Path $env:GITHUB_ENV -Value ("XCode_mysql=Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=" + $mysqlPwd)
+        } else {
+          $filter += 'FullyQualifiedName!~MySqlTests'
+          $filter += 'FullyQualifiedName!~EntityTestWithMySql'
+          Write-Host 'MySQL 不可用，排除 MySqlTests 与 EntityTestWithMySql'
+        }
 
-        # ---- PostgreSQL 17（windows-latest 镜像自带）----
+        # ---- PostgreSQL 17（镜像自带，服务默认停止且禁用）----
         $pgOk = $false
+        $pgPwd = 'root'
         $pgBin = $env:PGBIN
         if (-not $pgBin) { $pgBin = (Get-ChildItem 'C:\Program Files\PostgreSQL\*\bin' -Directory -ErrorAction SilentlyContinue | Select-Object -First 1).FullName }
         $psqlExe = if ($pgBin) { Join-Path $pgBin 'psql.exe' } else { (Get-Command psql -ErrorAction SilentlyContinue)?.Source }
         $svc2 = Get-Service -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '*postgresql*' } | Select-Object -First 1
-        if ($svc2 -and $psqlExe -and (Test-Path $psqlExe)) {
-          try { if ($svc2.Status -ne 'Running') { Start-Service $svc2.Name } } catch { }
-          foreach ($pw in @('root', 'postgres', '', 'Password12!')) {
-            try {
-              $env:PGPASSWORD = $pw
-              & $psqlExe -U postgres -h 127.0.0.1 -p 5432 -d postgres -c 'select 1' 2>$null | Out-Null
-              if ($LASTEXITCODE -eq 0) {
-                $pgOk = $true
-                Add-Content -Path $env:GITHUB_ENV -Value "XCode_pgsql=Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=$pw"
-                break
-              }
-            } catch { }
+        if ($svc2) {
+          try {
+            Set-Service $svc2.Name -StartupType Manual -ErrorAction SilentlyContinue
+            if ((Get-Service $svc2.Name).Status -ne 'Running') { Start-Service $svc2.Name }
+          } catch { }
+        }
+        if ($psqlExe -and (Test-Path $psqlExe)) {
+          for ($i = 0; $i -lt 15 -and -not $pgOk; $i++) {
+            foreach ($pw in @('root', 'postgres', '')) {
+              try {
+                $env:PGPASSWORD = $pw
+                & $psqlExe -U postgres -h 127.0.0.1 -p 5432 -d postgres -c 'select 1' 2>$null | Out-Null
+                if ($LASTEXITCODE -eq 0) { $pgOk = $true; $pgPwd = $pw; break }
+              } catch { }
+            }
+            if (-not $pgOk) { Start-Sleep -Seconds 2 }
           }
           $env:PGPASSWORD = ''
         }
-        if (-not $pgOk) { $filter += 'FullyQualifiedName!~PostgreSQLTests'; Write-Host 'PostgreSQL 不可用，排除 PostgreSQLTests' }
+        if ($pgOk) {
+          Add-Content -Path $env:GITHUB_ENV -Value ("XCode_pgsql=Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=" + $pgPwd)
+        } else {
+          $filter += 'FullyQualifiedName!~PostgreSQLTests'
+          Write-Host 'PostgreSQL 不可用，排除 PostgreSQLTests'
+        }
 
         # ---- SQL Server LocalDB（Visual Studio 组件）----
         $sqlOk = $false
@@ -273,18 +314,23 @@ jobs:
         docker run --rm --platform linux/loong64 \
           -v "$PWD:/src" -v "$HOME/la64:/opt/dotnet:ro" -v "$HOME/.nuget:/home/runner/.nuget" \
           -e HOME=/home/runner -e DOTNET_CLI_HOME=/home/runner -e NUGET_PACKAGES=/home/runner/.nuget/packages \
-          -e DOTNET_ROOT=/opt/dotnet -e PATH=/opt/dotnet:/usr/local/bin:/usr/bin:/bin \
+          -e DOTNET_ROOT=/opt/dotnet -e PATH=/opt/dotnet:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
           -e DOTNET_CLI_TELEMETRY_OPTOUT=1 -e DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
           ghcr.io/loong64/debian:trixie bash -c '
             set -e
             apt-get update -qq || true
             apt-get install -y -qq ca-certificates libstdc++6 zlib1g libsqlite3-0 libunwind8 || true
             apt-get install -y -qq libssl3t64 || apt-get install -y -qq libssl3 || true
-            SQLITE=$(ls /usr/lib/loongarch64-linux-gnu/libsqlite3.so.0* 2>/dev/null | head -1 || true)
-            if [ -n "$SQLITE" ]; then ln -sf "$(readlink -f "$SQLITE")" /usr/lib/loongarch64-linux-gnu/libe_sqlite3.so; ldconfig; fi
+            LIBDIR=$(ls -d /usr/lib/*-linux-gnu* 2>/dev/null | head -1)
+            SQLITE=$(ls "$LIBDIR"/libsqlite3.so.0* 2>/dev/null | head -1 || true)
+            if [ -n "$SQLITE" ]; then
+              ln -sf "$(readlink -f "$SQLITE")" "$LIBDIR/libe_sqlite3.so"
+              /usr/sbin/ldconfig 2>/dev/null || ldconfig 2>/dev/null || true
+            fi
+            export LD_LIBRARY_PATH="$LIBDIR:$LD_LIBRARY_PATH"
             dotnet --info
             timeout 300m dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-restore \
-              --filter "FullyQualifiedName!~NovaDbNetworkTests&FullyQualifiedName!~MySqlTests&FullyQualifiedName!~PostgreSQLTests&FullyQualifiedName!~SqlServerTests" \
+              --filter "FullyQualifiedName!~NovaDbNetworkTests&FullyQualifiedName!~MySqlTests&FullyQualifiedName!~PostgreSQLTests&FullyQualifiedName!~SqlServerTests&FullyQualifiedName!~EntityTestWithMySql" \
               --logger "trx;LogFileName=test-linux-la64.trx" --results-directory TestResults
           '
     - name: Upload Test Results

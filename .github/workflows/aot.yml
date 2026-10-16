@@ -154,15 +154,20 @@ jobs:
         docker run --rm --platform linux/loong64 \
           -v "$PWD:/src" -v "$HOME/la64:/opt/dotnet:ro" -v "$HOME/.nuget:/home/runner/.nuget" \
           -e HOME=/home/runner -e DOTNET_CLI_HOME=/home/runner -e NUGET_PACKAGES=/home/runner/.nuget/packages \
-          -e DOTNET_ROOT=/opt/dotnet -e PATH=/opt/dotnet:/usr/local/bin:/usr/bin:/bin \
+          -e DOTNET_ROOT=/opt/dotnet -e PATH=/opt/dotnet:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
           -e DOTNET_CLI_TELEMETRY_OPTOUT=1 -e DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
           ghcr.io/loong64/debian:trixie bash -c '
             set -e
             apt-get update -qq || true
             apt-get install -y -qq ca-certificates libstdc++6 zlib1g libsqlite3-0 libunwind8 || true
             apt-get install -y -qq libssl3t64 || apt-get install -y -qq libssl3 || true
-            SQLITE=$(ls /usr/lib/loongarch64-linux-gnu/libsqlite3.so.0* 2>/dev/null | head -1 || true)
-            if [ -n "$SQLITE" ]; then ln -sf "$(readlink -f "$SQLITE")" /usr/lib/loongarch64-linux-gnu/libe_sqlite3.so; ldconfig; fi
+            LIBDIR=$(ls -d /usr/lib/*-linux-gnu* 2>/dev/null | head -1)
+            SQLITE=$(ls "$LIBDIR"/libsqlite3.so.0* 2>/dev/null | head -1 || true)
+            if [ -n "$SQLITE" ]; then
+              ln -sf "$(readlink -f "$SQLITE")" "$LIBDIR/libe_sqlite3.so"
+              /usr/sbin/ldconfig 2>/dev/null || ldconfig 2>/dev/null || true
+            fi
+            export LD_LIBRARY_PATH="$LIBDIR:$LD_LIBRARY_PATH"
             dotnet --info
             timeout 180m dotnet run -c Release --project AotSmoke/AotSmoke.csproj --no-restore
           '

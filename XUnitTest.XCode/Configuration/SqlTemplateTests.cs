@@ -223,9 +223,9 @@ select * from userx where id=@id
         EntityFactory.InitEntity(typeof(Menu2));
         var n = Menu2.Meta.Count;
 
-        // 拦截Sql；全新数据库首次访问可能仍会建表，过滤建表语句只保留查询
+        // 拦截Sql；全新数据库首次访问会混入建表与元数据探测语句，只保留业务查询
         var sql = "";
-        DAL.LocalFilter = s => { if (!s.Contains("Create Table")) sql = s; };
+        DAL.LocalFilter = s => { if (!s.Contains("Create Table") && !s.Contains("information_schema") && !s.Contains("SHOW TABLE")) sql = s; };
 
         var count = Menu3.Meta.Count;
         Assert.Equal("[mysql_member] Select Count(*) From (select * from menu2 where 'visible'=1) SourceTable", sql);

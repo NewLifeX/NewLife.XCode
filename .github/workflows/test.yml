@@ -302,6 +302,12 @@ jobs:
       run: dotnet restore XUnitTest.XCode/XUnitTest.XCode.csproj
     - name: Build for loong64 (host，QEMU 内不跑 MSBuild)
       run: dotnet build XUnitTest.XCode/XUnitTest.XCode.csproj -c Release
+    - name: Download xunit console runner (host，VSTest 不支持 LoongArch64)
+      run: |
+        curl -fsSL -o "$RUNNER_TEMP/xrc.nupkg" https://api.nuget.org/v3-flatcontainer/xunit.runner.console/2.9.3/xunit.runner.console.2.9.3.nupkg
+        mkdir -p "$HOME/xrc"
+        unzip -oj "$RUNNER_TEMP/xrc.nupkg" "tools/net6.0/*" -d "$HOME/xrc"
+        ls "$HOME/xrc"
     - name: Download Loongson .NET SDK (linux-loongarch64)
       run: |
         curl -fL --retry 3 -o "$RUNNER_TEMP/la64-sdk.tar.gz" \
@@ -314,10 +320,11 @@ jobs:
       # 容器内安装 libsqlite3-0 并软链为 libe_sqlite3.so：SQLitePCLRaw 尚未提供 linux-loongarch64 原生库
       run: |
         docker run --rm --platform linux/loong64 -w /src \
-          -v "$PWD:/src" -v "$HOME/la64:/opt/dotnet:ro" -v "$HOME/.nuget:/home/runner/.nuget" \
+          -v "$PWD:/src" -v "$HOME/la64:/opt/dotnet:ro" -v "$HOME/.nuget:/home/runner/.nuget" -v "$HOME/xrc:/opt/xunit:ro" \
           -e HOME=/home/runner -e DOTNET_CLI_HOME=/home/runner -e NUGET_PACKAGES=/home/runner/.nuget/packages \
           -e DOTNET_ROOT=/opt/dotnet -e PATH=/opt/dotnet:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
           -e DOTNET_CLI_TELEMETRY_OPTOUT=1 -e DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
+          -e DOTNET_ROLL_FORWARD=LatestMajor \
           ghcr.io/loong64/debian:trixie bash -c '
             set -e
             apt-get update -qq || true
@@ -331,16 +338,24 @@ jobs:
             fi
             export LD_LIBRARY_PATH="$LIBDIR:$LD_LIBRARY_PATH"
             dotnet --info
-            SDK=$(ls -d /opt/dotnet/sdk/*/ | head -1)
-            echo "vstest.console: ${SDK}vstest.console.dll"
-            timeout 300m dotnet "${SDK}vstest.console.dll" /src/Bin/UnitTest/XUnitTest.XCode.dll \
-              --TestCaseFilter:"FullyQualifiedName!=XUnitTest.XCode.DataAccessLayer.NovaDbNetworkTests&FullyQualifiedName!=XUnitTest.XCode.DataAccessLayer.MySqlTests&FullyQualifiedName!=XUnitTest.XCode.DataAccessLayer.PostgreSQLTests&FullyQualifiedName!=XUnitTest.XCode.DataAccessLayer.SqlServerTests&FullyQualifiedName!=XUnitTest.XCode.Configuration.SqlTemplateTests.EntityTestWithMySql" \
-              --logger:"trx;LogFileName=test-linux-la64.trx" --ResultsDirectory:/src/TestResults
+            # 把 xunit 控制台运行器放入测试输出目录，作为入口程序集保证 BaseDirectory 与 dotnet test 一致
+            cp /opt/xunit/* /src/Bin/UnitTest/
+            mkdir -p /src/TestResults
+            cd /src/Bin/UnitTest
+            timeout 300m dotnet xunit.console.dll XUnitTest.XCode.dll \
+              -noclass XUnitTest.XCode.DataAccessLayer.NovaDbNetworkTests \
+              -noclass XUnitTest.XCode.DataAccessLayer.MySqlTests \
+              -noclass XUnitTest.XCode.DataAccessLayer.PostgreSQLTests \
+              -noclass XUnitTest.XCode.DataAccessLayer.SqlServerTests \
+              -nomethod XUnitTest.XCode.Configuration.SqlTemplateTests.EntityTestWithMySql \
+              -xml /src/TestResults/test-linux-la64.xml
           '
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: test-results-linux-la64
-        path: TestResults/*.trx
+        path: |
+          TestResults/*.trx
+          TestResults/*.xml
         if-no-files-found: ignore

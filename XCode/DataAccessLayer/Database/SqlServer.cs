@@ -707,7 +707,10 @@ internal class SqlServerSession : RemoteDbSession
             //var conn = Database.Pool.Get();
 
             // 准备
-            var mBatcher = new SqlBatcher(Database.Factory);
+            var timeout = Database.CommandTimeout;
+            if (timeout <= 0) timeout = XCodeSetting.Current.CommandTimeout;
+
+            var mBatcher = new SqlBatcher(Database.Factory, timeout);
             mBatcher.StartBatch(conn);
 
             // 创建并添加Command
@@ -801,6 +804,7 @@ internal class SqlServerSession : RemoteDbSession
     {
         private DataAdapter? mAdapter;
         private readonly DbProviderFactory _factory;
+        private readonly Int32 _commandTimeout;
 
         /// <summary>获得批处理是否正在批处理状态。</summary>
         public Boolean IsStarted { get; private set; }
@@ -813,9 +817,10 @@ internal class SqlServerSession : RemoteDbSession
         Func<Int32>? _executeBatch;
         Action? _clearBatch;
 
-        public SqlBatcher(DbProviderFactory factory)
+        public SqlBatcher(DbProviderFactory factory, Int32 commandTimeout = 0)
         {
             _factory = factory;
+            _commandTimeout = commandTimeout;
 
             //if (_init == null)
             //{
@@ -839,6 +844,8 @@ internal class SqlServerSession : RemoteDbSession
 
             var cmd = _factory.CreateCommand();
             cmd.Connection = connection;
+            // 批量执行以InsertCommand的超时为准（InitializeBatching会复制其CommandTimeout到批命令），不能沿用驱动默认30秒
+            if (_commandTimeout > 0) cmd.CommandTimeout = _commandTimeout;
 
             var adapter = _factory.CreateDataAdapter();
             adapter.InsertCommand = cmd;

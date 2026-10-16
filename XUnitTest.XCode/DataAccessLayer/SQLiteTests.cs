@@ -37,7 +37,12 @@ public class SQLiteTests
         Assert.NotNull(cmd);
 
         var adp = factory.CreateDataAdapter();
-        Assert.NotNull(adp);
+        // Microsoft.Data.Sqlite 不实现 DataAdapter，DbProviderFactory 基类返回 null
+        var provider = factory.GetType().FullName + "";
+        if (provider.StartsWithIgnoreCase("Microsoft.Data.Sqlite"))
+            Assert.Null(adp);
+        else
+            Assert.NotNull(adp);
 
         var dp = factory.CreateParameter();
         Assert.NotNull(dp);
@@ -69,12 +74,19 @@ public class SQLiteTests
         var db = dal.Db;
         var connstr = db.ConnectionString;
         Assert.Equal(dbf, dal.Db.DatabaseName);
+
+        // 路径分隔符随平台变化
+        var sep = Path.DirectorySeparatorChar;
         //Assert.EndsWith("\\Data\\Membership.db;Cache Size=-524288;Synchronous=Off;Journal Mode=WAL", connstr);
-        Assert.EndsWith("\\Data\\Membership.db", connstr);
+        Assert.EndsWith($"{sep}Data{sep}Membership.db", connstr);
 
         using var conn = db.OpenConnection();
         connstr = conn.ConnectionString;
-        Assert.EndsWith("\\Data\\Membership.db;Cache Size=-524288;Synchronous=Off;Journal Mode=WAL", connstr);
+        // System.Data.SQLite 追加其专用参数；Microsoft.Data.Sqlite 不支持这些参数（arm64/loongarch64 等平台）
+        if ((db.Provider + "").StartsWithIgnoreCase("System.Data"))
+            Assert.EndsWith($"{sep}Data{sep}Membership.db;Cache Size=-524288;Synchronous=Off;Journal Mode=WAL", connstr);
+        else
+            Assert.Contains("Membership.db", connstr);
 
         var ver = dal.Db.ServerVersion;
         Assert.NotEmpty(ver);

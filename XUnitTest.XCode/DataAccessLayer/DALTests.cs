@@ -79,7 +79,8 @@ public class DALTests
     {
         var ds = new ConcurrentDictionary<String, DbInfo>(StringComparer.OrdinalIgnoreCase);
         var envs = Environment.GetEnvironmentVariables();
-        envs.Add("XCode_pgsql", "Server=.;Database=master;Uid=root;Pwd=root;provider=PostgreSql");
+        // 用索引器覆盖：CI 环境可能已预置 XCode_pgsql，Add 会因重复键崩溃
+        envs["XCode_pgsql"] = "Server=.;Database=master;Uid=root;Pwd=root;provider=PostgreSql";
 
         DAL.LoadEnvironmentVariable(ds, envs);
 

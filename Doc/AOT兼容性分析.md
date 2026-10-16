@@ -93,6 +93,7 @@ dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/ao
 
 - **NovaDb 网络组**需要外部 `NewLife.NovaServer` 服务，CI 中统一排除；本地以 NovaServer（源码构建）实测 **22/22 通过**。
 - win-x64 的三类真库为**尽力启用**：任一不可用时自动降级为排除该组，不阻塞任务。
+- **SQLite 驱动分层**：x86/x64（win/linux）由 `XCode.SQLite` 适配包提供 System.Data.SQLite；arm64/loongarch64 缺少该驱动原生库，自动降级为 Microsoft.Data.Sqlite（SQLitePCLRaw），单元测试按驱动分支断言连接串与 DataAdapter 能力。
 
 ### 6.2 LA64（linux-loongarch64，社区支持平台）
 
@@ -103,7 +104,14 @@ dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/ao
   - 单元测试 `timeout 300m` 守护（QEMU 较慢，实测时长以 CI 日志为准）。
 - **自托管接入（有真机后升级为原生阻断）**：龙芯机器接入 GitHub Actions self-hosted runner 后，替换容器步骤并去掉仿真环境变量即可。
 
-### 6.3 明确排除（避免反复讨论）
+### 6.3 单元测试稳定性保障
+
+- `dotnet test` 统一启用 `--blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini`：崩溃或挂起时自动产出 mini 转储与 `Sequence_*.xml`，随 `TestResults/**` 一并上传，并打印逐用例日志（`console;verbosity=detailed`）便于定位崩溃点。
+- **三个 dotnet test 任务（win-x64 / linux-x64 / linux-arm64）失败均自动重试一次**（`--no-build`，重试结果另存 `*-retry.trx`）：偶发 SQLite 原生崩溃、驱动联网下载超时、慢库命令超时等环境抖动不再直接判红；重试成功仅告警，重试仍失败则任务失败，转储与日志保留在制品中。
+- 驱动（Oracle / HANA / MySQL 等）缺失时由 `DriverLoader` 联网下载，网络抖动会导致工厂创建失败；各驱动的 `InitTest` 已统一在驱动不可用时跳过（`XCodeException` / `FileNotFoundException` / `FileLoadException` / `BadImageFormatException`）。
+- 已知观察：首次全绿（2026-10-16）前，linux-x64 曾出现一次 testhost 原生崩溃（执行 25/1109 后中止，候选 `DataSimulationTests.CreateInstance` / `ConnectionPoolTests.GetReturn_BasicFlow`），WSL linux-x64 连续 6 轮全量（1109 用例）未复现；暂不调整 SQLite 驱动分层，复发时以转储定位。
+
+### 6.4 明确排除（避免反复讨论）
 
 | 目标 | 排除理由 |
 |---|---|

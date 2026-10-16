@@ -358,15 +358,28 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <summary>执行DbCommand，返回记录集</summary>
     /// <param name="cmd">DbCommand</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "驱动不提供DataAdapter时的DataReader回退装配，仅在裁剪下需要DataTable相关成员；数据库访问本身依赖运行时驱动加载，不承诺裁剪后可用")]
     public virtual DataSet Query(DbCommand cmd)
     {
         return Execute(cmd, true, cmd2 =>
         {
-            using var da = Database.Factory.CreateDataAdapter();
-            da.SelectCommand = cmd2;
-
             var ds = new DataSet();
-            da.Fill(ds);
+            using var da = Database.Factory.CreateDataAdapter();
+            if (da != null)
+            {
+                da.SelectCommand = cmd2;
+                da.Fill(ds);
+                return ds;
+            }
+
+            // 部分驱动（如 Microsoft.Data.Sqlite）不提供 DataAdapter，改用 DataReader 装配结果集
+            using var reader = cmd2.ExecuteReader();
+            do
+            {
+                var table = new DataTable();
+                table.Load(reader);
+                if (table.Columns.Count > 0) ds.Tables.Add(table);
+            } while (!reader.IsClosed && reader.NextResult());
 
             return ds;
         });
@@ -566,7 +579,15 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
         cmd.CommandType = type;
         cmd.CommandText = sql;
-        if (ps != null && ps.Length > 0) cmd.Parameters.AddRange(ps);
+        if (ps != null && ps.Length > 0)
+        {
+            // 部分驱动（如 Microsoft.Data.Sqlite）要求显式 DBNull，参数值为 null 时执行会报错
+            foreach (var dp in ps)
+            {
+                if (dp != null && dp.Value == null && dp.Direction is ParameterDirection.Input) dp.Value = DBNull.Value;
+            }
+            cmd.Parameters.AddRange(ps);
+        }
 
         var timeout = Database.CommandTimeout;
         if (timeout <= 0) timeout = XCodeSetting.Current.CommandTimeout;

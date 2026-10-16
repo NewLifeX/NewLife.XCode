@@ -112,6 +112,15 @@ public class ShardTests
         };
         Log2.Meta.ShardPolicy = shard;
 
+        // 全新环境下相邻分表可能不存在，先写入一条昨天分表记录，确保后续查询生成完整的分表SQL
+        var today = DateTime.Now;
+        new Log2
+        {
+            ID = Log2.Meta.Factory.Snow.NewId(today.AddHours(-24)),
+            Action = "分表",
+            Category = Rand.NextString(8),
+        }.Insert();
+
         // 拦截Sql，仅为了断言，非业务代码
         var sqls = new List<String>();
         DAL.LocalFilter = s => sqls.Add(s);

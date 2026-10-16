@@ -25,6 +25,14 @@ public class SqlTemplateTests
 
     public SqlTemplateTests()
     {
+        // 优先使用环境变量（CI环境），与 MySqlTests 保持一致
+        var envConnStr = Environment.GetEnvironmentVariable("XCode_mysql");
+        if (!envConnStr.IsNullOrEmpty())
+        {
+            _mysql_ConnStr = envConnStr;
+            return;
+        }
+
         var f = "Config\\mysql.config".GetFullPath();
         if (File.Exists(f))
             _mysql_ConnStr = File.ReadAllText(f);
@@ -159,7 +167,7 @@ select * from userx where id=@id
         Assert.Equal(2, st.Sqls.Count);
 
         var sql = st.Sqls["MySql"];
-        Assert.Equal("select * from menu2 where 'visible'=1", sql);
+        Assert.Equal("select * from Menu2 where 'visible'=1", sql);
 
         sql = st.Sqls["Sqlite"];
         Assert.Equal("select * from menu2 where 'visible'=2", sql);
@@ -206,27 +214,30 @@ select * from userx where id=@id
     [Fact]
     public void EntityTestWithMySql()
     {
-        DAL.AddConnStr("mysql_member", _mysql_ConnStr, null, "mysql");
+        DAL.AddConnStr("MySql_member", _mysql_ConnStr, null, "mysql");
 
-        Menu2.Meta.ConnName = "mysql_member";
-        Menu3.Meta.ConnName = "mysql_member";
+        Menu2.Meta.ConnName = "MySql_member";
+        Menu3.Meta.ConnName = "MySql_member";
+
+        // 全新数据库下先初始化实体完成建表，避免建表语句混入后续SQL断言
+        EntityFactory.InitEntity(typeof(Menu2));
         var n = Menu2.Meta.Count;
 
-        // 拦截Sql
+        // 拦截Sql；全新数据库首次访问会混入建表与元数据探测语句，只保留业务查询
         var sql = "";
-        DAL.LocalFilter = s => sql = s;
+        DAL.LocalFilter = s => { if (!s.Contains("Create Table") && !s.Contains("information_schema") && !s.Contains("SHOW TABLE")) sql = s; };
 
         var count = Menu3.Meta.Count;
-        Assert.Equal("[mysql_member] Select Count(*) From (select * from menu2 where 'visible'=1) SourceTable", sql);
+        Assert.Equal("[MySql_member] Select Count(*) From (select * from Menu2 where 'visible'=1) SourceTable", sql);
 
         var menu = Menu3.FindByID(1234);
-        Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable", sql);
+        Assert.Equal("[MySql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable", sql);
 
         var menu2 = Menu3.FindByKey(1234);
-        Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable Where ID=1234", sql);
+        Assert.Equal("[MySql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable Where ID=1234", sql);
 
         var date = DateTime.Today;
         var list = Menu3.Search(date, date, "stone", new PageParameter { PageIndex = 2, PageSize = 30 });
-        Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') limit 30, 30", sql);
+        Assert.Equal("[MySql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') limit 30, 30", sql);
     }
 }

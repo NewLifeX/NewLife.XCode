@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
@@ -34,7 +36,16 @@ public class KingBaseTests
         var db = DbFactory.Create(DatabaseType.KingBase);
         Assert.NotNull(db);
 
-        var factory = db.Factory;
+        DbProviderFactory factory;
+        try
+        {
+            factory = db.Factory;
+        }
+        catch (Exception ex) when (ex is XCodeException or FileNotFoundException or FileLoadException or BadImageFormatException)
+        {
+            // 缺少驱动或平台不支持时跳过
+            return;
+        }
         Assert.NotNull(factory);
 
         var conn = factory.CreateConnection();

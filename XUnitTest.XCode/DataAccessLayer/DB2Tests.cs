@@ -1,10 +1,12 @@
 using System;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using NewLife;
 using NewLife.Log;
 using NewLife.Security;
+using XCode;
 using XCode.DataAccessLayer;
 using XCode.Membership;
 using Xunit;
@@ -23,6 +25,12 @@ public class DB2Tests
         if (!File.Exists(file)) file = "Plugins\\IBM.Data.DB2.dll".GetFullPath();
         if (!File.Exists(file)) file = "IBM.Data.DB2.Core.dll".GetFullPath();
         if (!File.Exists(file)) file = "Plugins\\IBM.Data.DB2.Core.dll".GetFullPath();
+        if (!File.Exists(file))
+        {
+            // 非 Windows 平台没有 DB2 驱动原生库，缺失时跳过
+            return;
+        }
+
         var asm = Assembly.LoadFrom(file);
         Assert.NotNull(asm);
 
@@ -41,7 +49,16 @@ public class DB2Tests
         var db = DbFactory.Create(DatabaseType.DB2);
         Assert.NotNull(db);
 
-        var factory = db.Factory;
+        DbProviderFactory factory;
+        try
+        {
+            factory = db.Factory;
+        }
+        catch (Exception ex) when (ex is XCodeException or FileNotFoundException or FileLoadException or BadImageFormatException)
+        {
+            // 缺少驱动或平台不支持时跳过（非 Windows 平台无 DB2 原生库）
+            return;
+        }
         Assert.NotNull(factory);
 
         var conn = factory.CreateConnection();

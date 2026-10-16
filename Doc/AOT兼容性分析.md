@@ -107,7 +107,8 @@ dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/ao
 ### 6.3 单元测试稳定性保障
 
 - `dotnet test` 统一启用 `--blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini`：崩溃或挂起时自动产出 mini 转储与 `Sequence_*.xml`，随 `TestResults/**` 一并上传，并打印逐用例日志（`console;verbosity=detailed`）便于定位崩溃点。
-- **linux-x64 失败自动重试一次**（`--no-build`，重试结果另存 `test-linux-x64-retry.trx`）：SQLite 原生驱动在此平台偶发进程级崩溃，重试成功仅告警不阻塞；重试仍失败则任务失败，转储保留在制品中。
+- **三个 dotnet test 任务（win-x64 / linux-x64 / linux-arm64）失败均自动重试一次**（`--no-build`，重试结果另存 `*-retry.trx`）：偶发 SQLite 原生崩溃、驱动联网下载超时、慢库命令超时等环境抖动不再直接判红；重试成功仅告警，重试仍失败则任务失败，转储与日志保留在制品中。
+- 驱动（Oracle / HANA / MySQL 等）缺失时由 `DriverLoader` 联网下载，网络抖动会导致工厂创建失败；各驱动的 `InitTest` 已统一在驱动不可用时跳过（`XCodeException` / `FileNotFoundException` / `FileLoadException` / `BadImageFormatException`）。
 - 已知观察：首次全绿（2026-10-16）前，linux-x64 曾出现一次 testhost 原生崩溃（执行 25/1109 后中止，候选 `DataSimulationTests.CreateInstance` / `ConnectionPoolTests.GetReturn_BasicFlow`），WSL linux-x64 连续 6 轮全量（1109 用例）未复现；暂不调整 SQLite 驱动分层，复发时以转储定位。
 
 ### 6.4 明确排除（避免反复讨论）

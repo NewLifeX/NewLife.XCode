@@ -1,11 +1,20 @@
 name: aot
 
+# NativeAOT 兼容性矩阵：win-x64 / linux-x64 / linux-arm64（原生发布运行）+ linux-la64（QEMU JIT 冒烟）。
+# 触发：push / pull_request / 手动（workflow_dispatch）；不采用夜间定时。
+# NativeAOT 官方不支持跨 OS 编译，每个 RID 均使用原生 runner 发布运行；
+# linux-loongarch64 无 NativeAOT 后端（官方不支持），以 JIT 冒烟覆盖运行期兼容性，详见 Doc/AOT兼容性分析.md。
+
 on:
   push:
     branches: [ '*' ]
   pull_request:
     branches: [ '*' ]
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # AOT 防回归：分析器 0 告警硬约束（与 RID 无关，单一 job）。
@@ -26,13 +35,11 @@ jobs:
         dotnet build XCode\XCode.csproj -f net8.0 -c Release -warnaserror:IL2026,IL2046,IL2057,IL2060,IL2067,IL2070,IL2071,IL2072,IL2075,IL2091,IL2093,IL2095,IL2111,IL3000,IL3002,IL3050
         dotnet build XCode\XCode.csproj -f net10.0 -c Release -warnaserror:IL2026,IL2046,IL2057,IL2060,IL2067,IL2070,IL2071,IL2072,IL2075,IL2091,IL2093,IL2095,IL2111,IL3000,IL3002,IL3050
 
-  # NativeAOT 冒烟：NativeAOT 不支持跨 OS 编译，每个 RID 用原生 runner 发布运行。
-  # win-x64 为阻断基线；linux-x64 先观察期（continue-on-error），稳定全绿后转阻断（见 Doc/AOT兼容性分析.md）。
+  # win-x64 与 linux-arm64：无外部依赖，嵌入库场景全跑（MySQL/SqlServer 真库场景未提供环境变量时自动跳过）
   aot:
     name: aot (${{ matrix.rid }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
-    continue-on-error: ${{ matrix.experimental == true }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -40,10 +47,9 @@ jobs:
           - rid: win-x64
             os: windows-latest
             bin: AotSmoke.exe
-          - rid: linux-x64
-            os: ubuntu-latest
+          - rid: linux-arm64
+            os: ubuntu-24.04-arm
             bin: AotSmoke
-            experimental: true
 
     steps:
     - uses: actions/checkout@v4
@@ -55,7 +61,7 @@ jobs:
       if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
     - name: JIT Baseline
-      # 同一冒烟工程以 JIT 运行（16 场景），为 AOT 结果提供对照；MySQL/SqlServer 场景需 XCode_mysql/XCode_sqlserver 环境变量，未设置自动跳过
+      # 同一冒烟工程以 JIT 运行（16 场景），为 AOT 结果提供对照
       run: dotnet run -c Release --project AotSmoke/AotSmoke.csproj
     - name: Publish NativeAOT Smoke
       run: dotnet publish AotSmoke/AotSmoke.csproj -c Release -r ${{ matrix.rid }} -o AotSmoke/bin/aot-out
@@ -63,3 +69,104 @@ jobs:
       # 任一场景失败即非 0 退出码
       shell: bash
       run: ./AotSmoke/bin/aot-out/${{ matrix.bin }}
+
+  # linux-x64：提供 MySQL/SqlServer 服务，场景 15/16 以真库验证 AOT（JIT 与原生发布双跑）
+  aot-linux-x64:
+    name: aot (linux-x64)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sys
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          SA_PASSWORD: Pass@word
+          MSSQL_PID: Developer
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Pass@word' -C -Q 'SELECT 1' || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+          --health-start-period=30s
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.x
+    - name: Install NativeAOT Prerequisites (Linux)
+      run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+    - name: JIT Baseline
+      env:
+        XCode_mysql: "Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=root"
+        XCode_sqlserver: "Server=127.0.0.1,1433;Database=master;Uid=sa;Pwd=Pass@word;TrustServerCertificate=true"
+      run: dotnet run -c Release --project AotSmoke/AotSmoke.csproj
+    - name: Publish NativeAOT Smoke
+      run: dotnet publish AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -o AotSmoke/bin/aot-out
+    - name: Run NativeAOT Smoke
+      env:
+        XCode_mysql: "Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=root"
+        XCode_sqlserver: "Server=127.0.0.1,1433;Database=master;Uid=sa;Pwd=Pass@word;TrustServerCertificate=true"
+      shell: bash
+      run: ./AotSmoke/bin/aot-out/AotSmoke
+
+  # linux-la64（龙芯）：QEMU 用户态仿真 + 龙芯 SDK；NativeAOT 无 LA64 后端，以 JIT 冒烟覆盖运行期场景
+  aot-linux-la64:
+    name: aot (linux-la64 / QEMU, JIT)
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET (host，用于预热 NuGet 缓存)
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.x
+    - name: Warm NuGet cache
+      run: dotnet restore AotSmoke/AotSmoke.csproj
+    - name: Download Loongson .NET SDK (linux-loongarch64)
+      run: |
+        curl -fL --retry 3 -o "$RUNNER_TEMP/la64-sdk.tar.gz" \
+          https://github.com/loongson/dotnet/releases/download/v10.0.113-loongarch64/dotnet-sdk-10.0.113-linux-loongarch64.tar.gz
+        mkdir -p "$HOME/la64" && tar -xzf "$RUNNER_TEMP/la64-sdk.tar.gz" -C "$HOME/la64"
+        ls "$HOME/la64" | head -20
+    - name: Install QEMU loong64 binfmt
+      run: docker run --privileged --rm ghcr.io/loong64/binfmt --install all
+    - name: JIT Smoke (loong64 container)
+      run: |
+        docker run --rm --platform linux/loong64 \
+          -v "$PWD:/src" -v "$HOME/la64:/opt/dotnet:ro" -v "$HOME/.nuget:/home/runner/.nuget" \
+          -e HOME=/home/runner -e DOTNET_CLI_HOME=/home/runner -e NUGET_PACKAGES=/home/runner/.nuget/packages \
+          -e DOTNET_ROOT=/opt/dotnet -e PATH=/opt/dotnet:/usr/local/bin:/usr/bin:/bin \
+          -e DOTNET_CLI_TELEMETRY_OPTOUT=1 -e DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
+          ghcr.io/loong64/debian:trixie bash -c '
+            set -e
+            apt-get update -qq || true
+            apt-get install -y -qq ca-certificates libstdc++6 zlib1g libsqlite3-0 libunwind8 || true
+            apt-get install -y -qq libssl3t64 || apt-get install -y -qq libssl3 || true
+            SQLITE=$(ls /usr/lib/loongarch64-linux-gnu/libsqlite3.so.0* 2>/dev/null | head -1 || true)
+            if [ -n "$SQLITE" ]; then ln -sf "$(readlink -f "$SQLITE")" /usr/lib/loongarch64-linux-gnu/libe_sqlite3.so; ldconfig; fi
+            dotnet --info
+            timeout 180m dotnet run -c Release --project AotSmoke/AotSmoke.csproj --no-restore
+          '
+    - name: NativeAOT not supported on linux-loongarch64
+      run: |
+        echo "NativeAOT 官方不支持 linux-loongarch64（无 ILCompiler 后端），本 RID 以 JIT 冒烟覆盖运行期兼容性；"
+        echo "分析器告警防线由 aot-analyzer 任务承担。"

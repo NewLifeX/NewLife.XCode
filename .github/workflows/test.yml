@@ -1,5 +1,11 @@
 name: test
 
+# 多 RID 单元测试矩阵：win-x64 / linux-x64 / linux-arm64 / linux-la64（龙芯）。
+# 触发：push / pull_request / 手动（workflow_dispatch）；不采用夜间定时。
+# linux-la64 无托管 runner，使用 QEMU 用户态仿真 + 龙芯 .NET SDK（github.com/loongson/dotnet），
+# 载体为 ghcr.io/loong64/debian:trixie 容器（loong64 社区官方镜像移植），详见 Doc/AOT兼容性分析.md。
+# NovaDbNetworkTests 依赖外部 NovaDb 服务（NewLife.NovaServer），CI 中统一排除；本地已验证 22/22 通过。
+
 on:
   push:
     branches: [ '*' ]
@@ -7,9 +13,119 @@ on:
     branches: [ '*' ]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  # 全解决方案编译校验：覆盖 net45/net461/netstandard2.0/netstandard2.1/net8.0/net10.0 全部目标
+  build:
+    name: build solution
+    runs-on: windows-latest
+    timeout-minutes: 40
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.x
+    - name: Build
+      run: dotnet build -c Release
+
+  # win-x64：启用镜像自带 MySQL 8.0 / PostgreSQL 17 服务与 SQL Server LocalDB（不可用时自动降级为排除该组）
+  test-win-x64:
+    name: test (win-x64)
+    runs-on: windows-latest
+    timeout-minutes: 90
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.x
+    - name: Setup Databases
+      shell: pwsh
+      # 尽力启用三类真库；任一不可用则把对应测试组加入排除过滤器，保证任务不因环境残缺而失败
+      run: |
+        $filter = @('FullyQualifiedName!~NovaDbNetworkTests')
+
+        # ---- MySQL 8.0（windows-latest 镜像自带）----
+        $mysqlOk = $false
+        $mysqlExe = 'C:\tools\mysql\current\bin\mysql.exe'
+        if (-not (Test-Path $mysqlExe)) { $mysqlExe = (Get-Command mysql -ErrorAction SilentlyContinue)?.Source }
+        $svc = Get-Service -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '*MySQL*' } | Select-Object -First 1
+        if ($svc -and $mysqlExe) {
+          try { if ($svc.Status -ne 'Running') { Start-Service $svc.Name } } catch { }
+          foreach ($pw in @('root', '', 'Password12!')) {
+            try {
+              $env:MYSQL_PWD = $pw
+              & $mysqlExe -h 127.0.0.1 -u root -e 'CREATE DATABASE IF NOT EXISTS sys;' 2>$null
+              if ($LASTEXITCODE -eq 0) {
+                $mysqlOk = $true
+                Add-Content -Path $env:GITHUB_ENV -Value "XCode_mysql=Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=$pw"
+                break
+              }
+            } catch { }
+          }
+          $env:MYSQL_PWD = ''
+        }
+        if (-not $mysqlOk) { $filter += 'FullyQualifiedName!~MySqlTests'; Write-Host 'MySQL 不可用，排除 MySqlTests' }
+
+        # ---- PostgreSQL 17（windows-latest 镜像自带）----
+        $pgOk = $false
+        $pgBin = $env:PGBIN
+        if (-not $pgBin) { $pgBin = (Get-ChildItem 'C:\Program Files\PostgreSQL\*\bin' -Directory -ErrorAction SilentlyContinue | Select-Object -First 1).FullName }
+        $psqlExe = if ($pgBin) { Join-Path $pgBin 'psql.exe' } else { (Get-Command psql -ErrorAction SilentlyContinue)?.Source }
+        $svc2 = Get-Service -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '*postgresql*' } | Select-Object -First 1
+        if ($svc2 -and $psqlExe -and (Test-Path $psqlExe)) {
+          try { if ($svc2.Status -ne 'Running') { Start-Service $svc2.Name } } catch { }
+          foreach ($pw in @('root', 'postgres', '', 'Password12!')) {
+            try {
+              $env:PGPASSWORD = $pw
+              & $psqlExe -U postgres -h 127.0.0.1 -p 5432 -d postgres -c 'select 1' 2>$null | Out-Null
+              if ($LASTEXITCODE -eq 0) {
+                $pgOk = $true
+                Add-Content -Path $env:GITHUB_ENV -Value "XCode_pgsql=Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=$pw"
+                break
+              }
+            } catch { }
+          }
+          $env:PGPASSWORD = ''
+        }
+        if (-not $pgOk) { $filter += 'FullyQualifiedName!~PostgreSQLTests'; Write-Host 'PostgreSQL 不可用，排除 PostgreSQLTests' }
+
+        # ---- SQL Server LocalDB（Visual Studio 组件）----
+        $sqlOk = $false
+        if (Get-Command sqllocaldb -ErrorAction SilentlyContinue) {
+          try {
+            sqllocaldb info MSSQLLocalDB *> $null
+            if ($LASTEXITCODE -ne 0) { sqllocaldb create MSSQLLocalDB *> $null }
+            sqllocaldb start MSSQLLocalDB *> $null
+            $sqlOk = $true
+            Add-Content -Path $env:GITHUB_ENV -Value 'XCode_sqlserver=Server=(localdb)\MSSQLLocalDB;Database=master;Trusted_Connection=True;Connection Timeout=5'
+          } catch { }
+        }
+        if (-not $sqlOk) { $filter += 'FullyQualifiedName!~SqlServerTests'; Write-Host 'LocalDB 不可用，排除 SqlServerTests' }
+
+        Add-Content -Path $env:GITHUB_ENV -Value ("TEST_FILTER=" + ($filter -join '&'))
+        Write-Host "TEST_FILTER=$($filter -join '&')"
+    - name: Test
+      run: dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "$env:TEST_FILTER" --blame-hang-timeout 20m --blame-hang-dump-type none --logger "trx;LogFileName=test-win-x64.trx" --results-directory TestResults
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-win-x64
+        path: TestResults/*.trx
+        if-no-files-found: ignore
+
+  # linux-x64：MySQL/PostgreSQL/SQL Server 三库服务容器，跑全量（除 NovaDb 网络组）
+  test-linux-x64:
+    name: test (linux-x64)
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     services:
       mysql:
@@ -59,20 +175,122 @@ jobs:
     - name: Setup dotNET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: |
-          6.x
-          7.x
-          8.x
-          9.x
-          10.x
-    - name: Build
-      run: |
-        dotnet build -c Release
+        dotnet-version: 10.x
     - name: Test
       env:
-        # ���ݿ������ַ�����������
         XCode_mysql: "Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=root"
         XCode_pgsql: "Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=postgres"
         XCode_sqlserver: "Server=127.0.0.1,1433;Database=master;Uid=sa;Pwd=Pass@word;TrustServerCertificate=true"
       run: |
-        dotnet test --no-build -c Release -- xunit.parallelizeAssembly=false xunit.parallelizeTestCollections=false
+        dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "FullyQualifiedName!~NovaDbNetworkTests" --blame-hang-timeout 20m --blame-hang-dump-type none --logger "trx;LogFileName=test-linux-x64.trx" --results-directory TestResults
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-linux-x64
+        path: TestResults/*.trx
+        if-no-files-found: ignore
+
+  # linux-arm64：MySQL/PostgreSQL 有 arm64 官方镜像；SQL Server 无 arm64 镜像，排除该组
+  test-linux-arm64:
+    name: test (linux-arm64)
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sys
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.x
+    - name: Test
+      env:
+        XCode_mysql: "Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=root"
+        XCode_pgsql: "Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=postgres"
+      run: |
+        dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "FullyQualifiedName!~NovaDbNetworkTests&FullyQualifiedName!~SqlServerTests" --blame-hang-timeout 20m --blame-hang-dump-type none --logger "trx;LogFileName=test-linux-arm64.trx" --results-directory TestResults
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-linux-arm64
+        path: TestResults/*.trx
+        if-no-files-found: ignore
+
+  # linux-la64（龙芯）：QEMU 用户态仿真 + 龙芯 SDK + loong64 Debian 容器；外部数据库组与 NovaDb 网络组排除
+  test-linux-la64:
+    name: test (linux-la64 / QEMU)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup dotNET (host，用于预热 NuGet 缓存)
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.x
+    - name: Warm NuGet cache
+      run: dotnet restore XUnitTest.XCode/XUnitTest.XCode.csproj
+    - name: Download Loongson .NET SDK (linux-loongarch64)
+      run: |
+        curl -fL --retry 3 -o "$RUNNER_TEMP/la64-sdk.tar.gz" \
+          https://github.com/loongson/dotnet/releases/download/v10.0.113-loongarch64/dotnet-sdk-10.0.113-linux-loongarch64.tar.gz
+        mkdir -p "$HOME/la64" && tar -xzf "$RUNNER_TEMP/la64-sdk.tar.gz" -C "$HOME/la64"
+        ls "$HOME/la64" | head -20
+    - name: Install QEMU loong64 binfmt
+      run: docker run --privileged --rm ghcr.io/loong64/binfmt --install all
+    - name: Unit Tests (loong64 container)
+      # 容器内安装 libsqlite3-0 并软链为 libe_sqlite3.so：SQLitePCLRaw 尚未提供 linux-loongarch64 原生库
+      run: |
+        docker run --rm --platform linux/loong64 \
+          -v "$PWD:/src" -v "$HOME/la64:/opt/dotnet:ro" -v "$HOME/.nuget:/home/runner/.nuget" \
+          -e HOME=/home/runner -e DOTNET_CLI_HOME=/home/runner -e NUGET_PACKAGES=/home/runner/.nuget/packages \
+          -e DOTNET_ROOT=/opt/dotnet -e PATH=/opt/dotnet:/usr/local/bin:/usr/bin:/bin \
+          -e DOTNET_CLI_TELEMETRY_OPTOUT=1 -e DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
+          ghcr.io/loong64/debian:trixie bash -c '
+            set -e
+            apt-get update -qq || true
+            apt-get install -y -qq ca-certificates libstdc++6 zlib1g libsqlite3-0 libunwind8 || true
+            apt-get install -y -qq libssl3t64 || apt-get install -y -qq libssl3 || true
+            SQLITE=$(ls /usr/lib/loongarch64-linux-gnu/libsqlite3.so.0* 2>/dev/null | head -1 || true)
+            if [ -n "$SQLITE" ]; then ln -sf "$(readlink -f "$SQLITE")" /usr/lib/loongarch64-linux-gnu/libe_sqlite3.so; ldconfig; fi
+            dotnet --info
+            timeout 300m dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-restore \
+              --filter "FullyQualifiedName!~NovaDbNetworkTests&FullyQualifiedName!~MySqlTests&FullyQualifiedName!~PostgreSQLTests&FullyQualifiedName!~SqlServerTests" \
+              --logger "trx;LogFileName=test-linux-la64.trx" --results-directory TestResults
+          '
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-linux-la64
+        path: TestResults/*.trx
+        if-no-files-found: ignore

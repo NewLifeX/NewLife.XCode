@@ -1,6 +1,6 @@
 // XCode NativeAOT 冒烟：16 场景逐项 PASS/FAIL，任一失败以非 0 退出码结束。
 // 同一工程双跑对照：JIT（dotnet run -c Release）与 NativeAOT（dotnet publish -c Release -r <rid> 后运行产物）。
-// 由 .github/workflows/aot.yml 的 analyzer/aot job 自动执行（win-x64 阻断基线，linux-x64 观察期）。
+// 由 .github/workflows/aot.yml 的 analyzer/aot job 自动执行（win-x64/linux-x64/linux-arm64 原生发布运行，linux-la64 QEMU JIT）。
 // 背景与实测结论见 Doc/AOT兼容性分析.md。
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;

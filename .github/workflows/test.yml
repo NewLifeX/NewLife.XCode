@@ -162,7 +162,12 @@ jobs:
         Add-Content -Path $env:GITHUB_ENV -Value ("TEST_FILTER=" + ($filter -join '&'))
         Write-Host "TEST_FILTER=$($filter -join '&')"
     - name: Test
-      run: dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "$env:TEST_FILTER" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-win-x64.trx" --results-directory TestResults
+      run: |
+        dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "$env:TEST_FILTER" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-win-x64.trx" --results-directory TestResults
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "::warning::首次测试运行失败，自动重试一次以规避偶发网络/驱动下载失败"
+          dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --filter "$env:TEST_FILTER" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-win-x64-retry.trx" --results-directory TestResults
+        }
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@v4
@@ -234,7 +239,7 @@ jobs:
       run: |
         if ! dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "FullyQualifiedName!~NovaDbNetworkTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-x64.trx" --results-directory TestResults; then
           echo "::warning::首次测试运行失败，自动重试一次以规避偶发原生崩溃（崩溃转储已上传制品，请留意 DataSimulationTests/ConnectionPoolTests）"
-          dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --filter "FullyQualifiedName!~NovaDbNetworkTests" --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-x64-retry.trx" --results-directory TestResults
+          dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --filter "FullyQualifiedName!~NovaDbNetworkTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-x64-retry.trx" --results-directory TestResults
         fi
     - name: Upload Test Results
       if: always()
@@ -289,7 +294,10 @@ jobs:
         XCode_mysql: "Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=root"
         XCode_pgsql: "Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=postgres"
       run: |
-        dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "FullyQualifiedName!~NovaDbNetworkTests&FullyQualifiedName!~SqlServerTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-arm64.trx" --results-directory TestResults
+        if ! dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "FullyQualifiedName!~NovaDbNetworkTests&FullyQualifiedName!~SqlServerTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-arm64.trx" --results-directory TestResults; then
+          echo "::warning::首次测试运行失败，自动重试一次以规避偶发网络/驱动下载失败"
+          dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --filter "FullyQualifiedName!~NovaDbNetworkTests&FullyQualifiedName!~SqlServerTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-arm64-retry.trx" --results-directory TestResults
+        fi
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@v4

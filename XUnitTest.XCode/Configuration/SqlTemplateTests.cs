@@ -167,7 +167,7 @@ select * from userx where id=@id
         Assert.Equal(2, st.Sqls.Count);
 
         var sql = st.Sqls["MySql"];
-        Assert.Equal("select * from menu2 where 'visible'=1", sql);
+        Assert.Equal("select * from Menu2 where 'visible'=1", sql);
 
         sql = st.Sqls["Sqlite"];
         Assert.Equal("select * from menu2 where 'visible'=2", sql);
@@ -228,16 +228,16 @@ select * from userx where id=@id
         DAL.LocalFilter = s => { if (!s.Contains("Create Table") && !s.Contains("information_schema") && !s.Contains("SHOW TABLE")) sql = s; };
 
         var count = Menu3.Meta.Count;
-        Assert.Equal("[mysql_member] Select Count(*) From (select * from menu2 where 'visible'=1) SourceTable", sql);
+        Assert.Equal("[mysql_member] Select Count(*) From (select * from Menu2 where 'visible'=1) SourceTable", sql);
 
         var menu = Menu3.FindByID(1234);
-        Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable", sql);
+        Assert.Equal("[mysql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable", sql);
 
         var menu2 = Menu3.FindByKey(1234);
-        Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable Where ID=1234", sql);
+        Assert.Equal("[mysql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable Where ID=1234", sql);
 
         var date = DateTime.Today;
         var list = Menu3.Search(date, date, "stone", new PageParameter { PageIndex = 2, PageSize = 30 });
-        Assert.Equal("[mysql_member] Select * From (select * from menu2 where 'visible'=1) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') limit 30, 30", sql);
+        Assert.Equal("[mysql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') limit 30, 30", sql);
     }
 }

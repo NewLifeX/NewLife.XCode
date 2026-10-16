@@ -324,7 +324,7 @@ jobs:
           -e HOME=/home/runner -e DOTNET_CLI_HOME=/home/runner -e NUGET_PACKAGES=/home/runner/.nuget/packages \
           -e DOTNET_ROOT=/opt/dotnet -e PATH=/opt/dotnet:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
           -e DOTNET_CLI_TELEMETRY_OPTOUT=1 -e DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
-          -e DOTNET_ROLL_FORWARD=LatestMajor \
+          -e DOTNET_ROLL_FORWARD=LatestMajor -e DOTNET_EnableWriteXorExecute=0 \
           ghcr.io/loong64/debian:trixie bash -c '
             set -e
             apt-get update -qq || true
@@ -343,6 +343,7 @@ jobs:
             mkdir -p /src/TestResults
             cd /src/Bin/UnitTest
             timeout 300m dotnet xunit.console.dll XUnitTest.XCode.dll \
+              -parallel none \
               -noclass XUnitTest.XCode.DataAccessLayer.NovaDbNetworkTests \
               -noclass XUnitTest.XCode.DataAccessLayer.MySqlTests \
               -noclass XUnitTest.XCode.DataAccessLayer.PostgreSQLTests \

@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -222,6 +223,7 @@ internal class SonnetDBSession : RemoteDbSession
     public SonnetDBSession(IDatabase database) : base(database) { }
 
     /// <inheritdoc/>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "SonnetDB驱动不提供DataAdapter，采用DataReader装配单结果集；仅在裁剪下需要DataTable相关成员，数据库访问本身依赖运行时驱动加载，不承诺裁剪后可用")]
     public override DataSet Query(DbCommand cmd) => Execute(cmd, true, command =>
     {
         using var reader = command.ExecuteReader();

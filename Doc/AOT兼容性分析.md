@@ -1,7 +1,7 @@
 # NewLife.XCode AOT 兼容性分析
 
-> 基线：v12.2（依赖 NewLife.Core 12.0.2026.1013-beta0732）｜更新：2026-10-15
-> 验证方式：分析器（net8.0/net10.0 常驻 `IsAotCompatible`）+ NativeAOT 真实发布 + 原生运行冒烟（win-x64，.NET 10）
+> 基线：v12.2（依赖 NewLife.Core 12.0.2026.1013-beta0732）｜更新：2026-10-16
+> 验证方式：分析器（net8.0/net10.0 常驻 `IsAotCompatible`）+ NativeAOT 真实发布 + 原生运行冒烟（win-x64/linux-x64/linux-arm64，.NET 10；linux-la64 QEMU JIT）
 > 冒烟工程：`AotSmoke/`（16 场景 JIT/AOT 双跑，`.github/workflows/aot.yml` 自动执行）
 
 ---
@@ -41,7 +41,7 @@
 
 | 功能 | 现状 | 方向 |
 |------|------|------|
-| 驱动矩阵 AOT 验证 | 已验证：NovaDb、SQLite（Microsoft.Data.Sqlite）、MySQL（MySql.Data）、SqlServer（System.Data.SqlClient，本机 LocalDB 实测）；MySQL/SqlServer 场景连接串分别经 `XCode_mysql`/`XCode_sqlserver` 环境变量提供，未设置时冒烟自动跳过；其余 `XCode.*` 提供者需外部服务器，未验证；瀚高内置 `Nhgdb.dll` 为 .NET Framework 4.5.1 构建，现代 .NET 需厂商提供新驱动 | 具备服务器环境时逐个验证（PostgreSQL/Oracle/达梦/DB2/人大金仓/瀚高） |
+| 驱动矩阵 AOT 验证 | 已验证：NovaDb、SQLite（Microsoft.Data.Sqlite）、MySQL（MySql.Data）、SqlServer（System.Data.SqlClient，本机 LocalDB 实测、CI MySQL/SqlServer 服务容器常态化验证）；MySQL/SqlServer 场景连接串分别经 `XCode_mysql`/`XCode_sqlserver` 环境变量提供，未设置时冒烟自动跳过；其余 `XCode.*` 提供者需外部服务器，未验证；瀚高内置 `Nhgdb.dll` 为 .NET Framework 4.5.1 构建，现代 .NET 需厂商提供新驱动 | 具备服务器环境时逐个验证（PostgreSQL/Oracle/达梦/DB2/人大金仓/瀚高） |
 | 静态化通道（可选增强） | 未实施（暂缓，待真实诉求） | XCodeTool 生成静态元数据表与工厂注册；配套全实体扫描的注册表替代 |
 | 驱动私有反射优化入口 | 受阻于驱动侧：`NewLife.MySql 1.4.2026.801` 与 Core 12.0.2026.1013 二进制不兼容（`OwnerPacket.Slice(Int32,Int32)` 已改为显式接口实现，任意操作即抛 `MissingMethodException`）；该入口需待上游重编译发版后再验证 | 改为公共 API 直调（MySql 零拷贝读取/批量执行） |
 
@@ -73,5 +73,42 @@ dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/ao
 ```
 
 > 判真探针：原生发布件 `IsDynamicCodeSupported=False` 且 `Assembly.Location` 为空。
-> CI：`.github/workflows/aot.yml`（IL 告警 `-warnaserror` 阻断 + win-x64 冒烟阻断 + linux-x64 观察期）。
+> CI：`.github/workflows/aot.yml`（`aot-analyzer` IL 告警 `-warnaserror` 阻断 + 四 RID 原生发布矩阵：win-x64/linux-arm64 基础场景、linux-x64 附 MySQL/SqlServer 真库场景、linux-la64 QEMU JIT 冒烟；均随 push/PR 触发）。
+
+---
+
+## 6. 多 RID 支持矩阵与 CI
+
+> 目标：单元测试与 AOT 冒烟覆盖 **win-x64 / linux-x64 / linux-arm64 / linux-la64（龙芯）**。
+> 前提：**NativeAOT 官方不支持跨 OS 编译**，每个 RID 均使用原生 runner 发布运行；linux-la64 无托管 runner、无 NativeAOT 后端，采用 QEMU 用户态仿真跑 JIT 冒烟与单元测试。
+
+### 6.1 覆盖分层
+
+| 目标 RID | 单元测试（test.yml） | AOT 冒烟（aot.yml） | runner / 载体 | 排除项 |
+|---|---|---|---|---|
+| win-x64 | 全量（镜像自带 MySQL 8.0/PostgreSQL 17 + LocalDB 支撑真库组） | JIT + NativeAOT | windows-latest | NovaDb 网络组 |
+| linux-x64 | 全量（services：MySQL/PostgreSQL/SQL Server） | JIT + NativeAOT（真库场景含 MySQL/SqlServer） | ubuntu-latest | NovaDb 网络组 |
+| linux-arm64 | 全量（services：MySQL/PostgreSQL，均有 arm64 官方镜像） | JIT + NativeAOT | ubuntu-24.04-arm | SQL Server 无 arm64 镜像；NovaDb 网络组 |
+| linux-la64 | 全量（除外部数据库组） | JIT 冒烟 | ubuntu-latest + QEMU（ghcr.io/loong64/debian:trixie 容器） | 外部数据库四组（MySQL/PostgreSQL/SQL Server/NovaDb 网络） |
+
+- **NovaDb 网络组**需要外部 `NewLife.NovaServer` 服务，CI 中统一排除；本地以 NovaServer（源码构建）实测 **22/22 通过**。
+- win-x64 的三类真库为**尽力启用**：任一不可用时自动降级为排除该组，不阻塞任务。
+
+### 6.2 LA64（linux-loongarch64，社区支持平台）
+
+- **现状**：官方不发 runtime pack、无 NativeAOT 支持；龙芯 [loongson/dotnet](https://github.com/loongson/dotnet) 提供 .NET 8/9/10 SDK（当前 v10.0.113）。
+- **CI 方案**：`ghcr.io/loong64/binfmt` 注册 QEMU 用户态仿真 + `ghcr.io/loong64/debian:trixie`（loong64 社区官方镜像移植）容器内运行龙芯 SDK；
+  - 原生库缺口：SQLitePCLRaw 未提供 linux-loongarch64 包，容器内安装 `libsqlite3-0` 并软链为 `libe_sqlite3.so` 供 Microsoft.Data.Sqlite 使用；
+  - 无 LA64 原生 ICU，以 `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1` 运行；
+  - 单元测试 `timeout 300m` 守护（QEMU 较慢，实测时长以 CI 日志为准）。
+- **自托管接入（有真机后升级为原生阻断）**：龙芯机器接入 GitHub Actions self-hosted runner 后，替换容器步骤并去掉仿真环境变量即可。
+
+### 6.3 明确排除（避免反复讨论）
+
+| 目标 | 排除理由 |
+|---|---|
+| Android / iOS / tvOS / WASM | 应用模型类目标，无法用 `dotnet test` 在本仓验证 |
+| win-arm64 / osx-x64 / osx-arm64 / linux-musl | 非本仓要求范围；需要时按同一配方扩展 |
+| Windows x64→Linux 交叉 NativeAOT | 官方不支持跨 OS 编译 |
+
 

@@ -144,8 +144,17 @@ jobs:
             sqllocaldb info MSSQLLocalDB *> $null
             if ($LASTEXITCODE -ne 0) { sqllocaldb create MSSQLLocalDB *> $null }
             sqllocaldb start MSSQLLocalDB *> $null
-            $sqlOk = $true
-            Add-Content -Path $env:GITHUB_ENV -Value 'XCode_sqlserver=Server=(localdb)\MSSQLLocalDB;Database=master;Trusted_Connection=True;Connection Timeout=5'
+            # 预热并验证真实可连（冷启动/post-login 阶段较慢，避免用例内首次连接超时）
+            for ($i = 0; $i -lt 6 -and -not $sqlOk; $i++) {
+              try {
+                $conn = New-Object System.Data.SqlClient.SqlConnection 'Server=(localdb)\MSSQLLocalDB;Database=master;Trusted_Connection=True;Connection Timeout=30'
+                $conn.Open(); $conn.Close()
+                $sqlOk = $true
+              } catch { Start-Sleep -Seconds 5 }
+            }
+            if ($sqlOk) {
+              Add-Content -Path $env:GITHUB_ENV -Value 'XCode_sqlserver=Server=(localdb)\MSSQLLocalDB;Database=master;Trusted_Connection=True;Connection Timeout=30'
+            }
           } catch { }
         }
         if (-not $sqlOk) { $filter += 'FullyQualifiedName!~SqlServerTests'; Write-Host 'LocalDB 不可用，排除 SqlServerTests' }

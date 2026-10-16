@@ -41,9 +41,10 @@ public class HanaTests
         {
             factory = db.Factory;
         }
-        catch (XCodeException)
+        catch (Exception)
         {
-            // 未引入 Sap.Data.Hana.Core 驱动时无法创建工厂，视为跳过（CI 环境无法联网下载驱动）
+            // 未引入 Sap.Data.Hana.Core 驱动时无法创建工厂，视为跳过（CI 环境无法联网下载驱动；
+            // 缺失插件目录时抛 FileNotFoundException，而非 XCodeException）
             return;
         }
         Assert.NotNull(factory);

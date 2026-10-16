@@ -123,6 +123,10 @@ public class SqlServerTests
         Role.Meta.ConnName = "SqlServer_Select";
         Area.Meta.ConnName = "SqlServer_Select";
 
+        // LocalDB 较慢，Area.FetchAndSave 批量写入可能超过默认30秒命令超时
+        Role.Meta.Session.Dal.Db.CommandTimeout = 120;
+        Area.Meta.Session.Dal.Db.CommandTimeout = 120;
+
         Role.Meta.Session.InitData();
 
         //// 创建数据库后，等待一段时间，否则可能出现找不到数据库的情况

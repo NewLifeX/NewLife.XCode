@@ -93,6 +93,7 @@ dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/ao
 
 - **NovaDb 网络组**需要外部 `NewLife.NovaServer` 服务，CI 中统一排除；本地以 NovaServer（源码构建）实测 **22/22 通过**。
 - win-x64 的三类真库为**尽力启用**：任一不可用时自动降级为排除该组，不阻塞任务。
+- **SQLite 驱动分层**：x86/x64（win/linux）由 `XCode.SQLite` 适配包提供 System.Data.SQLite；arm64/loongarch64 缺少该驱动原生库，自动降级为 Microsoft.Data.Sqlite（SQLitePCLRaw），单元测试按驱动分支断言连接串与 DataAdapter 能力。
 
 ### 6.2 LA64（linux-loongarch64，社区支持平台）
 

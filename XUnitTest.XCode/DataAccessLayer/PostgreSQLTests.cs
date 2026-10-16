@@ -250,15 +250,15 @@ public class PostgreSQLTests
         Assert.DoesNotContain(table.TableName, tableNames);
     }
 
-    /// <summary>验证 CreateDatabaseSQL 生成的 SQL 包含 IF NOT EXISTS</summary>
-    [Fact(DisplayName = "CreateDatabaseSQL应包含IF NOT EXISTS确保幂等")]
-    public void CreateDatabaseSQL_ShouldContain_IfNotExists()
+    /// <summary>验证 CreateDatabaseSQL 生成正确的建库SQL（PostgreSQL不支持IF NOT EXISTS，幂等性由存在性检查保障）</summary>
+    [Fact(DisplayName = "CreateDatabaseSQL应生成正确的PostgreSQL建库SQL")]
+    public void CreateDatabaseSQL_ShouldBeValid()
     {
         var db = DbFactory.Create(DatabaseType.PostgreSQL);
         var meta = db.CreateMetaData();
 
         var sql = meta.GetSchemaSQL(DDLSchema.CreateDatabase, "test_db", null);
         Assert.NotNull(sql);
-        Assert.Contains("IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("Create Database \"test_db\" ENCODING \"UTF8\"", sql);
     }
 }

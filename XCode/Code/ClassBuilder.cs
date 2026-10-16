@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
@@ -34,6 +35,7 @@ public class ClassBuilder
     /// <param name="atts">扩展属性字典</param>
     /// <param name="log"></param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "option 为模型构建配置对象，AOT 下由应用侧保证其属性保留")]
     public static IList<IDataTable> LoadModels(String? xmlFile, BuilderOption option, out IDictionary<String, String> atts, ILog? log = null)
     {
         if (xmlFile.IsNullOrEmpty())

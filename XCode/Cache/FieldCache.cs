@@ -1,13 +1,14 @@
 ﻿using System.ComponentModel;
 using NewLife;
 using XCode.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.Cache;
 
 /// <summary>统计字段缓存</summary>
 /// <typeparam name="TEntity"></typeparam>
 [DisplayName("统计字段")]
-public class FieldCache<TEntity> : EntityCache<TEntity> where TEntity : Entity<TEntity>, new()
+public class FieldCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : EntityCache<TEntity> where TEntity : Entity<TEntity>, new()
 {
     /// <summary>最大行数。默认50</summary>
     public Int32 MaxRows { get; set; } = 50;

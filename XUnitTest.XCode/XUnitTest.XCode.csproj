@@ -19,8 +19,6 @@
     <Compile Remove="Code\entity_user_normal.cs" />
     <Compile Remove="Code\entity_user_normal_biz.cs" />
     <Compile Remove="DataAccessLayer\DAL_EnvironmentVariable.cs" />
-    <Compile Remove="Navigation\IncludeTests.cs" />
-    <Compile Remove="Navigation\NavigationRegistryTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Configuration\AreaX.sql" />
@@ -87,14 +85,17 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="InterSystems.Data.IRISClient" Version="2.6.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
-    <PackageReference Include="NewLife.Core" Version="11.19.2026.901" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1013-beta0732" />
     <PackageReference Include="NewLife.IP" Version="2.5.2026.804" />
     <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.901" />
-    <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.102" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.11" />
+    <!-- NovaDb 1.0.2026.901 传递依赖的 Remoting 3.9.2026.901 与 Core 12 二进制不兼容，直引已适配版本（与 AotSmoke 对齐） -->
+    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1015-beta1355" />
+    <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.301-beta0617" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.12" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

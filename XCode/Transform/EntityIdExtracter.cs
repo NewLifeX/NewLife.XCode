@@ -44,8 +44,8 @@ public class EntityIdExtracter
     {
         while (true)
         {
-            // 分割数据页，自增
-            var exp = IdField >= Row;
+            // 分割数据页，自增。严格大于上一页最后编号，避免重复抽取
+            var exp = IdField > Row;
 
             // 查询数据
             var list = Factory.FindAll(exp, IdField.Asc(), null, 0, BatchSize);
@@ -54,14 +54,14 @@ public class EntityIdExtracter
             // 返回数据
             yield return list;
 
-            // 下一页
-            if (list.Count < BatchSize) break;
-
-            // 自增分割时，取最后一行
+            // 自增分割时，取最后一行。必须在退出前推进，避免下次抽取重复最后一页
             var rs = list.Last()[IdField.Name];
             if (rs == null) break;
 
             Row = (Int64)rs;
+
+            // 下一页
+            if (list.Count < BatchSize) break;
         }
     }
     #endregion

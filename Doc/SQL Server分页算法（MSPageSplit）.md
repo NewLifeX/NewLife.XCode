@@ -2,6 +2,8 @@
 
 `MSPageSplit` 是 XCode 专为 MS 体系数据库（SQL Server 2000～2019+）实现的四种分页算法，根据查询特征自动选择最优方案。
 
+> **状态说明（2026-10）**：`MSPageSplit.cs` 已排除编译（重构中），当前 SQL Server 分页实现位于 `SqlServer.cs`：SQL Server 2012+ 且带排序时优先 `OFFSET/FETCH`（`PageSplitFor2012`），低版本使用 `PageSplitByTopNotIn`/`PageSplitMaxMin` 方案。本文档保留四种经典分页算法的原理解析作为历史参考，第 5 节调用关系为旧版实现描述。
+
 > `isSql2005` 参数为 `true` 时代表 SQL Server 2005+ 及支持 `ROW_NUMBER()` 的现代数据库。
 
 ---

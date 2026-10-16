@@ -312,8 +312,8 @@ public class CubeBuilder : ClassBuilder
         if (Table.Columns.Any(c => c.Name.EqualIgnoreCase("TraceId")))
             code = code.Replace("//ListFields.TraceUrl(", "ListFields.TraceUrl(");
 
-        var ss = BuildSearch(out var enumList);
-        code = code.Replace("{EnumList}", enumList);
+        var ss = BuildSearch(out var enumAliases);
+        code = code.Replace("{EnumList}", enumAliases);
         if (!ss.IsNullOrEmpty())
         {
             var p1 = code.IndexOf("        //var deviceId = p[\"deviceId\"].ToInt(-1);");
@@ -333,12 +333,12 @@ public class CubeBuilder : ClassBuilder
     #endregion
 
     #region 辅助
-    /// <summary>构建搜索参数和枚举字典</summary>
-    /// <remarks>该方法用于生成高级查询模板，并收集枚举类型的命名空间信息，将枚举命名空间加入到using位置</remarks>
+    /// <summary>构建搜索参数和枚举引用</summary>
+    /// <remarks>该方法用于生成高级查询模板，并收集枚举类型的引用信息，以类型别名方式加入到using位置</remarks>
     /// <returns></returns>
-    private String BuildSearch(out string enumNameSpaceStr)
+    private String BuildSearch(out String enumAliasStr)
     {
-        enumNameSpaceStr = "";
+        enumAliasStr = "";
         // 收集索引信息，索引中的所有字段都参与，构造一个高级查询模板
         var builder = new SearchBuilder(Table) { Nullable = Option.Nullable };
         var cs = builder.GetColumns();
@@ -347,54 +347,85 @@ public class CubeBuilder : ClassBuilder
         var ps = builder.GetParameters(cs);
         var pdic = ps.ToDictionary(e => e.Name);
 
+        // 预解析枚举列的类型引用。同名不同类型时全部退化为全局全名，避免类型别名冲突
+        var enumRefs = new Dictionary<String, (String Name, String FullPath)>();
+        foreach (var dc in cs)
+        {
+            if (!dc.DataType.IsInt()) continue;
+
+            var er = ResolveEnumReference(dc);
+            if (er != null) enumRefs[dc.Name] = er.Value;
+        }
+        var conflicts = new HashSet<String>();
+        foreach (var gp in enumRefs.Values.Where(e => !e.FullPath.IsNullOrEmpty()).GroupBy(e => e.Name))
+        {
+            if (gp.Select(e => e.FullPath).Distinct().Count() > 1) conflicts.Add(gp.Key);
+        }
+
         var sb = Pool.StringBuilder.Get();
 
         var pis = new List<String>();
-        var enumList = new List<String>();
+        var aliases = new List<(String Name, String FullPath)>();
         foreach (var dc in cs)
         {
             //var name = dc.CamelName();
             if (!pdic.TryGetValue(dc.Name, out var pi)) continue;
             var name = pi.ParameterName;
 
-            if (dc.DataType.IsInt())
+            if (enumRefs.TryGetValue(dc.Name, out var er))
             {
-                if (dc.DataType.IsEnum)
+                // 枚举列。完整路径可用类型别名缩短，其余保持原样
+                var cast = er.Name;
+                if (!er.FullPath.IsNullOrEmpty())
                 {
-                    enumList.Add($"using {dc.DataType.Namespace};");
-                    sb.AppendLine($"        var {name} = ({dc.DataType.Name})p[\"{name}\"].ToInt(-1);");
+                    if (conflicts.Contains(er.Name))
+                        // 内联转换位于类体内，外层命名空间中的同名类型会抢占首段，必须用 global:: 从根解析
+                        cast = $"global::{er.FullPath}";
+                    else
+                        aliases.Add(er);
                 }
-                else if (!dc.Properties["Type"].IsNullOrEmpty())
-                {
-                    var tt = dc.Properties["Type"];
-                    var tempNamespace = tt.CutEnd(".");
-                    var trueType = tt.CutStart(tempNamespace + ".");
-                    enumList.Add($"using {tempNamespace};");
-                    sb.AppendLine($"        var {name} = ({trueType})p[\"{name}\"].ToInt(-1);");
-                }
-                else if (dc.DataType == typeof(Int64))
-                    sb.AppendLine($"        var {name} = p[\"{name}\"].ToLong(-1);");
-                else
-                    sb.AppendLine($"        var {name} = p[\"{name}\"].ToInt(-1);");
-            }
-            else if (dc.DataType == typeof(Boolean))
-                sb.AppendLine($"        var {name} = p[\"{name}\"]?.ToBoolean();");
-            else if (dc.DataType == typeof(DateTime))
-                sb.AppendLine($"        var {name} = p[\"{name}\"].ToDateTime();");
-            else if (dc.DataType == typeof(Double) || dc.DataType == typeof(Single))
-                sb.AppendLine($"        var {name} = p[\"{name}\"].ToDouble();");
-            else if (dc.DataType == typeof(String))
-                sb.AppendLine($"        var {name} = p[\"{name}\"];");
-            else
-                // 不支持的类型，跳过
-                continue;
 
-            if (enumList.Any()) enumNameSpaceStr = enumList.Distinct().Join($"{Environment.NewLine}");
+                sb.AppendLine($"        var {name} = ({cast})p[\"{name}\"].ToInt(-1);");
+            }
+            else
+            {
+                var type = dc.DataType;
+                var underlying = type == null ? null : Nullable.GetUnderlyingType(type);
+                if (underlying != null) type = underlying;
+
+                if (type == typeof(Int32))
+                    sb.AppendLine($"        var {name} = p[\"{name}\"].ToInt(-1);");
+                else if (type == typeof(Int64))
+                    sb.AppendLine($"        var {name} = p[\"{name}\"].ToLong(-1);");
+                else if (type == typeof(UInt64))
+                    sb.AppendLine($"        var {name} = (UInt64)p[\"{name}\"].ToLong(-1);");
+                else if (type != null && type.IsInt())
+                    sb.AppendLine($"        var {name} = ({type.Name})p[\"{name}\"].ToInt(-1);");
+                else if (type == typeof(Boolean))
+                    sb.AppendLine($"        var {name} = p[\"{name}\"]?.ToBoolean();");
+                else if (type == typeof(DateTime))
+                    sb.AppendLine($"        var {name} = p[\"{name}\"].ToDateTime();");
+                else if (type == typeof(Double))
+                    sb.AppendLine($"        var {name} = p[\"{name}\"].ToDouble();");
+                else if (type == typeof(Single))
+                    sb.AppendLine($"        var {name} = (Single)p[\"{name}\"].ToDouble();");
+                else if (type == typeof(Decimal))
+                    sb.AppendLine($"        var {name} = p[\"{name}\"].ToDecimal();");
+                else if (type == typeof(String))
+                    sb.AppendLine($"        var {name} = p[\"{name}\"];");
+                else
+                    // 不支持的类型，跳过（正常情况下已被 SearchBuilder 过滤，这里兜底）
+                    continue;
+            }
 
             // 该字段参与查询，必须加入参数列表，顺序与实体 Search 方法保持一致
             pis.Add(name);
 
         }
+
+        // 枚举类型别名，每个类型一行，自动去重。别名位于文件级，右侧名字优先绑定全局命名空间，无需 global::
+        if (aliases.Count > 0)
+            enumAliasStr = aliases.DistinctBy(e => e.Name).Select(e => $"using {e.Name} = {e.FullPath};").Join(Environment.NewLine);
 
         if (builder.DataTime != null)
         {
@@ -410,6 +441,34 @@ public class CubeBuilder : ClassBuilder
         sb.AppendLine($"        return {Table.Name}.Search({pis.Join(", ")}, p[\"Q\"], p);");
 
         return sb.Return(true).TrimEnd();
+    }
+
+    /// <summary>解析枚举列的类型引用。有点号的完整路径可用类型别名缩短，无点号的短名保持原样</summary>
+    /// <param name="column">数据列</param>
+    /// <returns>枚举短名与完整路径；完整路径为空表示无法确定，按原样文本使用；非枚举列返回 null</returns>
+    private static (String Name, String FullPath)? ResolveEnumReference(IDataColumn column)
+    {
+        var type = column.DataType;
+
+        // DataType 直接是枚举类型
+        if (type != null && type.IsEnum)
+        {
+            var full = type.FullName?.Replace('+', '.');
+            if (!full.IsNullOrEmpty() && full.Contains('.')) return (type.Name, full);
+
+            return (type.Name, null);
+        }
+
+        // XML 模型显式指定的类型字符串
+        var str = column.Properties["Type"]?.Trim();
+        if (str.IsNullOrEmpty()) return null;
+
+        // 无点号视为短名，原样保留，能否解析取决于生成文件自身的using
+        if (!str.Contains('.')) return (str, null);
+
+        // 有点号视为完整路径。最后一个点号之前是命名空间或外层类型，嵌套类型同样适用
+        var prefix = str.CutEnd(".");
+        return (str.CutStart(prefix + "."), str);
     }
     #endregion
 }

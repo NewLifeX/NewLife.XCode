@@ -960,7 +960,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         #endregion
 
         // 列出用户表
-        var rows = dt.Select($"(TABLE_TYPE='BASE TABLE' Or TABLE_TYPE='VIEW') AND TABLE_NAME<>'Sysdiagrams'");
+        var rows = dt.SelectRows($"(TABLE_TYPE='BASE TABLE' Or TABLE_TYPE='VIEW') AND TABLE_NAME<>'Sysdiagrams'");
         if (rows == null || rows.Length <= 0) return [];
 
         var list = GetTables(rows, names);
@@ -969,7 +969,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         // 修正备注
         foreach (var item in list)
         {
-            var drs = DescriptionTable?.Select("n='" + item.TableName + "'");
+            var drs = DescriptionTable?.SelectRows("n='" + item.TableName + "'");
             item.Description = drs == null || drs.Length <= 0 ? "" : drs[0][1].ToString();
         }
 
@@ -988,7 +988,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         if (dt?.Rows == null || dt.Rows.Count <= 0) return list;
 
         // 默认列出所有字段
-        var rows = dt.Select($"(TABLE_TYPE='BASE TABLE' Or TABLE_TYPE='VIEW') AND TABLE_NAME<>'Sysdiagrams'");
+        var rows = dt.SelectRows($"(TABLE_TYPE='BASE TABLE' Or TABLE_TYPE='VIEW') AND TABLE_NAME<>'Sysdiagrams'");
         foreach (var dr in rows)
         {
             var tn = GetDataRowValue<String>(dr, _.TalbeName);
@@ -1041,7 +1041,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
         base.FixField(field, dr);
 
-        var rows = AllFields?.Select("表名='" + field.Table.TableName + "' And 字段名='" + field.ColumnName + "'", null);
+        var rows = AllFields?.SelectRows("表名='" + field.Table.TableName + "' And 字段名='" + field.ColumnName + "'", null);
         if (rows != null && rows.Length > 0)
         {
             var dr2 = rows[0];
@@ -1061,7 +1061,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
         foreach (var item in list)
         {
-            var drs = AllIndexes?.Select("name='" + item.Name + "'");
+            var drs = AllIndexes?.SelectRows("name='" + item.Name + "'");
             if (drs != null && drs.Length > 0)
             {
                 item.Unique = GetDataRowValue<Boolean>(drs[0], "is_unique");
@@ -1285,6 +1285,20 @@ internal class SqlServerMetaData : RemoteDbMetaData
         sb.AppendLine();
 
         return sb.ToString();
+    }
+
+    /// <summary>数据库是否存在</summary>
+    /// <remarks>目标数据库可能尚未创建而无法连接，不能直接执行 DatabaseExistSQL（sysdatabases 查询需要先连接目标库）；
+    /// 改用架构查询路径，连接失败时由 RemoteDbSession 自动切换到 master 重试</remarks>
+    /// <param name="databaseName">数据库名。为空时使用当前连接字符串中的数据库名</param>
+    /// <returns></returns>
+    public override Boolean DatabaseExist(String? databaseName)
+    {
+        databaseName ??= Database.DatabaseName;
+        if (databaseName.IsNullOrEmpty()) return false;
+
+        var dt = GetSchema(_.Databases, [databaseName]);
+        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
     }
 
     public override String DatabaseExistSQL(String dbname) => $"SELECT * FROM sysdatabases WHERE name = N'{dbname}'";

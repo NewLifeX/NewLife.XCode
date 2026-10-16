@@ -1,4 +1,5 @@
 ﻿using XCode.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.Membership;
 
@@ -70,7 +71,7 @@ public static class TenantSourceHelper
     /// }
     /// </code>
     /// </remarks>
-    public static WhereExpression ApplyTenant<TEntity>(this WhereExpression where) where TEntity : Entity<TEntity>, new()
+    public static WhereExpression ApplyTenant<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity>(this WhereExpression where) where TEntity : Entity<TEntity>, new()
     {
         // 检查实体是否实现租户接口
         if (!typeof(ITenantScope).IsAssignableFrom(typeof(TEntity))) return where;

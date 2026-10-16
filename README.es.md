@@ -5,9 +5,11 @@
 [![Nuget Downloads](https://img.shields.io/nuget/dt/newlife.xcode?logo=nuget)](https://www.nuget.org/packages/NewLife.XCode)
 [![Nuget](https://img.shields.io/nuget/v/newlife.xcode?logo=nuget)](https://www.nuget.org/packages/NewLife.XCode)
 
-Middleware de datos .NET de alto rendimiento (Super ORM), enfocado en CRUD + rendimiento extremo + datos masivos. Caché multinivel integrado, migración automática, fragmentación, consultas fuertemente tipadas, migración entre bases de datos. Compatible con MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB.
+Middleware de datos .NET de alto rendimiento (Super ORM), enfocado en CRUD + rendimiento extremo + datos masivos. Caché multinivel integrado, migración automática, fragmentación, consultas fuertemente tipadas, migración entre bases de datos. Compatible con MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / base de datos virtual Network / NovaDb.
 
 [中文](Readme.MD) | [English](README.en.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Français](README.fr.md)
+
+> ⚠️ Esta es una traducción resumida y puede quedar desactualizada; el [README en chino](Readme.MD) es la fuente autoritativa.
 
 ## Novedades v12.0 (2026-07-02)
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using NewLife.Log;
 using NewLife.Reflection;
@@ -117,6 +118,8 @@ public static class EntityFactory
     /// var factory = typeof(User).AsFactory();
     /// var users = factory.FindAll();
     /// </code></example>
+    [UnconditionalSuppressMessage("AOT", "IL3050", Justification = "反射兜底路径服务于非标准实体继承的历史场景，AOT 下常规实体走静态工厂 GetFactory<TEntity>")]
+    [UnconditionalSuppressMessage("Trimming", "IL2071", Justification = "反射兜底路径的场景与裁剪前置条件由应用侧保证实体类型成员保留")]
     public static IEntityFactory CreateFactory(Type type)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
@@ -152,6 +155,33 @@ public static class EntityFactory
         return factory;
     }
 
+    /// <summary>获取实体工厂。默认工厂使用静态构造路径，规避运行时泛型实例化，AOT 友好</summary>
+    /// <typeparam name="TEntity">实体类型</typeparam>
+    /// <returns>实体工厂实例，保证非 null</returns>
+    public static IEntityFactory GetFactory<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity>() where TEntity : Entity<TEntity>, new()
+    {
+        var type = typeof(TEntity);
+        if (_factories.TryGetValue(type, out var factory)) return factory;
+
+        // 读取特性中指定的自定义工厂，若未指定，则使用默认工厂
+        var att = type.GetCustomAttribute<EntityFactoryAttribute>();
+        if (att?.Type != null)
+        {
+            // 自定义工厂的反射实例化属 AOT 边界，需保证该类型已被静态引用或注册
+            factory = att.Type.CreateInstance() as IEntityFactory;
+            if (factory == null) throw new XCodeException("无法创建[{0}]的实体工厂！", type.FullName);
+        }
+        else
+        {
+            factory = new Entity<TEntity>.DefaultEntityFactory();
+        }
+
+        //!!! 有可能多线程同时初始化相同实体类的实体工厂，需要避免返回不同的工厂实例，确保工厂成员的唯一性，例如雪花实例
+        factory = _factories.GetOrAdd(type, factory);
+
+        return factory;
+    }
+
     /// <summary>扩展方法：根据实体类型获取工厂实例</summary>
     /// <param name="type">实体类型</param>
     /// <returns>实体工厂实例</returns>
@@ -160,6 +190,10 @@ public static class EntityFactory
     /// var entity = factory.Create();
     /// </code></example>
     public static IEntityFactory AsFactory(this Type type) => CreateFactory(type);
+
+    [UnconditionalSuppressMessage("Trimming", "IL2072", Justification = "实体类型来自 IEntity 全子类扫描，AOT/裁剪下由应用侧保证实体类型成员被保留")]
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "实体类型来自 IEntity 全子类扫描，AOT/裁剪下由应用侧保证实体类型成员被保留")]
+    private static TableItem CreateTableItem(Type type) => TableItem.Create(type);
 
     /// <summary>注册自定义实体工厂实例</summary>
     /// <remarks>
@@ -200,7 +234,7 @@ public static class EntityFactory
             // 实体类的基类必须是泛型，避免多级继承导致误判
             if (!type.BaseType.IsGenericType) continue;
 
-            var ti = TableItem.Create(type);
+            var ti = CreateTableItem(type);
             var name = ti.ConnName;
             if (name == null)
                 XTrace.WriteLine("实体类[{0}]无法创建TableItem", type.FullName);
@@ -232,7 +266,7 @@ public static class EntityFactory
             list.Add(type.Name);
 
             // 过滤掉第一次使用才加载的
-            var ti = TableItem.Create(type);
+            var ti = CreateTableItem(type);
             if (checkMode && ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
             list2.Add(type.Name);
 
@@ -301,7 +335,7 @@ public static class EntityFactory
             var connNames = new List<String>();
             foreach (var type in types)
             {
-                var ti = TableItem.Create(type);
+                var ti = CreateTableItem(type);
                 if (ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
 
                 var name = ti.ConnName;
@@ -368,7 +402,7 @@ public static class EntityFactory
             var connNames = new List<String>();
             foreach (var type in types)
             {
-                var ti = TableItem.Create(type);
+                var ti = CreateTableItem(type);
                 if (ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
 
                 var name = ti.ConnName;
@@ -465,7 +499,7 @@ public static class EntityFactory
             var facts = new List<IEntityFactory>();
             foreach (var type in types)
             {
-                var ti = TableItem.Create(type);
+                var ti = CreateTableItem(type);
                 if (ti.ModelCheckMode != ModelCheckModes.CheckAllTablesWhenInit) continue;
 
                 var name = ti.ConnName;

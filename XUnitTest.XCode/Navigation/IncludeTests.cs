@@ -18,6 +18,8 @@ public class IncludeTests : IDisposable
 {
     private static readonly String _connName;
     private static readonly String _dbFile;
+    private static readonly String _origRoleConn;
+    private static readonly String _origDeptConn;
 
     static IncludeTests()
     {
@@ -27,6 +29,10 @@ public class IncludeTests : IDisposable
         DAL.AddConnStr(_connName, $"Data Source={_dbFile}", null, "SQLite");
         DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS Role (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
         DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS Department (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
+
+        // 记录原始连接名，退出时恢复，避免污染其它用例
+        _origRoleConn = Role.Meta.ConnName;
+        _origDeptConn = Department.Meta.ConnName;
     }
 
     public IncludeTests()
@@ -37,6 +43,8 @@ public class IncludeTests : IDisposable
 
     public void Dispose()
     {
+        Role.Meta.ConnName = _origRoleConn;
+        Department.Meta.ConnName = _origDeptConn;
     }
 
     // ====== Include(Type) ======

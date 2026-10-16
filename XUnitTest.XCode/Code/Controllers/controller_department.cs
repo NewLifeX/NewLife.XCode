@@ -8,7 +8,7 @@ using NewLife.Log;
 using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Department;
-using XCode.Membership;
+using DepartmentTypes = XCode.Membership.DepartmentTypes;
 namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>部门。组织机构，多级树状结构，支持多租户</summary>

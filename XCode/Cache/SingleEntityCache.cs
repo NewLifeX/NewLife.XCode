@@ -8,6 +8,7 @@ using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Threading;
 using XCode.DataAccessLayer;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.Cache;
 
@@ -17,7 +18,7 @@ namespace XCode.Cache;
 /// </remarks>
 /// <typeparam name="TKey">键值类型</typeparam>
 /// <typeparam name="TEntity">实体类型</typeparam>
-public class SingleEntityCache<TKey, TEntity> : CacheBase<TEntity>, ISingleEntityCache<TKey, TEntity>
+public class SingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : CacheBase<TEntity>, ISingleEntityCache<TKey, TEntity>
     where TKey : notnull
     where TEntity : Entity<TEntity>, new()
 {

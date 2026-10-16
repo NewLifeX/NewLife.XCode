@@ -10,7 +10,7 @@ public interface IEntityInterceptor
     // 初始化：判断是否支持指定实体类型，返回 false 则跳过该实体
     Boolean Init(Type entityType);
 
-    // 创建实体对象时（new 或 FindForEdit）
+    // 创建实体对象时（new 或 forEdit 模式）
     void Create(IEntity entity, Boolean forEdit);
 
     // 调用 Insert/Update/Delete 前的验证
@@ -64,13 +64,11 @@ public abstract class EntityInterceptor : IEntityInterceptor
 ```csharp
 static MyEntity()
 {
-    // 推荐新写法
-    Meta.Modules.Add<TimeInterceptor>();
-
-    // 旧写法（仍可用，内部等价）
-    Meta.Modules.Add<TimeModule>();
+    Meta.Interceptors.Add<TimeInterceptor>();
 }
 ```
+
+> 旧写法 `Meta.Modules.Add<TimeModule>()` 仍可编译：`Modules` 已标注 `[Obsolete]`，`TimeModule` 等为兼容子类；新代码一律使用 `Meta.Interceptors`。
 
 **触发条件**：实体有 `DateTime` 类型字段且名称匹配 `CreateTime` / `UpdateTime`。
 
@@ -79,7 +77,7 @@ static MyEntity()
 自动从 `ManageProvider.Provider.Current` 填充创建人/更新人。
 
 ```csharp
-Meta.Modules.Add<UserInterceptor>();
+Meta.Interceptors.Add<UserInterceptor>();
 ```
 
 **填充字段**：
@@ -98,7 +96,7 @@ Meta.Modules.Add<UserInterceptor>();
 自动填充客户端 IP。
 
 ```csharp
-Meta.Modules.Add<IPInterceptor>();
+Meta.Interceptors.Add<IPInterceptor>();
 ```
 
 **填充字段**：
@@ -113,7 +111,7 @@ Meta.Modules.Add<IPInterceptor>();
 填充链路追踪 ID。
 
 ```csharp
-Meta.Modules.Add<TraceInterceptor>();
+Meta.Interceptors.Add<TraceInterceptor>();
 ```
 
 填充 `TraceId` 字段（`String`），值来自当前 `DefaultTracer` 的活跃 Span。
@@ -129,8 +127,8 @@ public partial class Order : Entity<Order>
 {
     static Order()
     {
-        Meta.Modules.Add<TimeInterceptor>();
-        Meta.Modules.Add<UserInterceptor>();
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add<UserInterceptor>();
     }
 }
 ```
@@ -188,7 +186,7 @@ public class SoftDeleteInterceptor : EntityInterceptor
 ```csharp
 static Order()
 {
-    Meta.Modules.Add<SoftDeleteInterceptor>();
+    Meta.Interceptors.Add<SoftDeleteInterceptor>();
 }
 ```
 
@@ -203,7 +201,7 @@ static Order()
 
 | 操作 | 触发的拦截器方法 |
 |------|----------------|
-| `new T()` / `FindForEdit` | `Create` |
+| `new T()` / `Create(forEdit: true)` | `Create` |
 | `Insert()` | `Valid(Insert)` |
 | `Update()` | `Valid(Update)` |
 | `Delete()` | `Valid(Delete)` |

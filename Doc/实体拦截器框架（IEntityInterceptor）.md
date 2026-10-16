@@ -40,8 +40,8 @@ public interface IEntityInterceptor
 ```csharp
 static Order()
 {
-    Meta.Interceptors.Add<DataScopeInterceptor>();    // 数据权限
-    Meta.Interceptors.Add<SoftDeleteInterceptor>();   // 软删除
+    Meta.Interceptors.Add<DataScopeInterceptor>();    // 数据权限（框架内置）
+    Meta.Interceptors.Add<CreatorInterceptor>();      // 自定义拦截器（见 §5.1）
 }
 ```
 
@@ -77,7 +77,9 @@ Meta.Interceptors.Add(new MyInterceptor());
 | 拦截器 | 功能 |
 |--------|------|
 | `DataScopeInterceptor` | 自动填充 UserId/DepartmentId；权限校验 |
-| `SoftDeleteInterceptor` | 软删除（Delete 改写为 Update IsDeleted=true，Query 追加 IsDeleted=false） |
+| `TenantInterceptor` | 查询自动附加租户过滤，写入校验/补充租户标识 |
+
+> 表中仅列框架内置拦截器；软删除等业务逻辑拦截器需自行实现，可参考《实体拦截器》中的 `SoftDeleteInterceptor` 示例。
 
 ---
 

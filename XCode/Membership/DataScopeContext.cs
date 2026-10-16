@@ -2,6 +2,7 @@
 using NewLife.Data;
 using NewLife.Log;
 using XCode.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.Membership;
 
@@ -403,7 +404,7 @@ public static class DataScopeHelper
     /// <typeparam name="TEntity">实体类型，需实现 IDataScope 接口</typeparam>
     /// <param name="context">数据权限上下文，为 null 时尝试使用 DataScopeContext.Current</param>
     /// <returns>过滤表达式，null 表示不需要过滤</returns>
-    public static Expression? GetFilter<TEntity>(DataScopeContext? context = null) where TEntity : Entity<TEntity>, new() => GetFilter(Entity<TEntity>.Meta.Factory, context);
+    public static Expression? GetFilter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity>(DataScopeContext? context = null) where TEntity : Entity<TEntity>, new() => GetFilter(Entity<TEntity>.Meta.Factory, context);
 
     /// <summary>构建过滤表达式</summary>
     private static Expression? BuildFilter(DataScopeContext context, FieldItem? userField, FieldItem? deptField)
@@ -565,7 +566,7 @@ public static class DataScopeHelper
     /// }
     /// </code>
     /// </remarks>
-    public static WhereExpression ApplyScope<TEntity>(this WhereExpression where, DataScopeContext? context = null) where TEntity : Entity<TEntity>, new() => ApplyScope(where, Entity<TEntity>.Meta.Factory, context);
+    public static WhereExpression ApplyScope<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity>(this WhereExpression where, DataScopeContext? context = null) where TEntity : Entity<TEntity>, new() => ApplyScope(where, Entity<TEntity>.Meta.Factory, context);
 
     /// <summary>同时应用租户和数据权限过滤（通过实体工厂）</summary>
     /// <param name="where">现有条件</param>

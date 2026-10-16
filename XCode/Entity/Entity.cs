@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using NewLife.Collections;
 using NewLife.Data;
@@ -17,7 +19,7 @@ namespace XCode;
 
 /// <summary>数据实体类基类。所有数据实体类都必须继承该类。</summary>
 [Serializable]
-public partial class Entity<TEntity> : EntityBase, IAccessor where TEntity : Entity<TEntity>, new()
+public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : EntityBase, IAccessor where TEntity : Entity<TEntity>, new()
 {
     #region 构造函数
     /// <summary>静态构造</summary>

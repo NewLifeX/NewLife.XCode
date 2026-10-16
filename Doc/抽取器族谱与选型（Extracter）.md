@@ -1,5 +1,7 @@
 # 抽取器族谱与选型（Extracter）
 
+> ⚠️ **部分已过时**：第 2 节的 `IdentityExtracter`、`TimeSpanExtracter` 已于 2026-07-15 随 ETL 引擎清理移除；IEntity 级抽取现由 `EntityIdExtracter`（自增/雪花 Id）承担。第 1 节 DbTable 级抽取器（`IdExtracter`/`TimeExtracter`/`PagingExtracter`）仍在使用。
+
 XCode 在数据迁移与 ETL 中提供了两类抽取器体系：
 
 1. `DbTable` 级抽取（常用于 `DbPackage` 备份/恢复/同步）

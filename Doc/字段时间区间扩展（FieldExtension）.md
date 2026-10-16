@@ -75,11 +75,7 @@ Order.FindAll(_.CreateTime.LastDays(7))  // 近7天
 
 ### 2.5 年
 
-| 方法 | 范围 |
-|------|------|
-| `ThisYear()` | 本年 |
-| `LastYear()` | 去年 |
-| `NextYear()` | 明年 |
+框架暂未提供 `ThisYear/LastYear/NextYear` 年度快捷方法，可用 `Between` 手工组合年度区间（见 §3 组合示例）。
 
 ---
 

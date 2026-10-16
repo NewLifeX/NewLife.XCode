@@ -1,9 +1,11 @@
-﻿namespace XCode.Membership;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace XCode.Membership;
 
 /// <summary>日志实体类基类</summary>
 /// <typeparam name="TEntity"></typeparam>
 [Serializable]
-public class LogEntity<TEntity> : Entity<TEntity> where TEntity : LogEntity<TEntity>, new()
+public class LogEntity<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : Entity<TEntity> where TEntity : LogEntity<TEntity>, new()
 {
     #region 改动时写日志
     /// <summary>添加时写日志</summary>

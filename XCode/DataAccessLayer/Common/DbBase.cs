@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using NewLife.Collections;
@@ -543,6 +544,8 @@ abstract class DbBase : DisposeBase, IDatabase
     /// </summary>
     /// <param name="type"></param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("SingleFile", "IL3000", Justification = "单文件发布下 Location 为空字符串，仅用于调试日志")]
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "提供程序工厂类型由驱动类型字符串解析得到，AOT 下由应用侧保证工厂类型保留")]
     public static DbProviderFactory? GetProviderFactory(Type? type)
     {
         if (type == null) return null;

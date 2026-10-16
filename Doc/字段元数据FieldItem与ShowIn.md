@@ -39,7 +39,7 @@
 
 `FieldExtension` 提供了面向业务的扩展：
 
-- 时间区间：`Between/Tody/LastDays/ThisMonth/ThisQuarter...`
+- 时间区间：`Between/Today/LastDays/ThisMonth/ThisQuarter...`
 - 分组聚合：`GroupBy/Count/Sum/Avg/CountDistinct`
 - 排序：`Asc/Desc/Sort`
 - 文本检索：`ContainsAll/ContainsAny`

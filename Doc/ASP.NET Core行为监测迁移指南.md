@@ -1,6 +1,8 @@
 # ASP.NET Core 行为监测迁移指南
 
-当前仓库 `XCode.Web` 中的 `DbRunTimeModule` 与 `UserBehaviorModule` 使用的是经典 `HttpModule`（`#if !__CORE__`）。本文给出在 ASP.NET Core 中等价落地的迁移方案。
+> ⚠️ **部分过时**：迁移源 `XCode.Web`（`DbRunTimeModule`/`UserBehaviorModule`）已于 2026-07-15（v12.1 清理，提交 `f033bd45b`）从仓库移除；示例中的 `VisitStat`/`VisitStatModel`（原内置访问统计实体）同期移除，需替换为自建统计实体。中间件设计思路仍可参考。
+
+原 `XCode.Web`（已移除）中的 `DbRunTimeModule` 与 `UserBehaviorModule` 使用的是经典 `HttpModule`（`#if !__CORE__`）。本文给出在 ASP.NET Core 中等价落地的迁移方案。
 
 ## 1. 迁移目标
 

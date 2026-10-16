@@ -87,7 +87,7 @@ Meta.Interceptors.Add(new UserInterceptor(myProvider));
 2. 若为空且是 Insert，改用 `NetHelper.MyIP()`（本机 IP）
 3. 自动清理 `://` 协议前缀，保留纯 IP 字符串
 
-**扩展字段**：可通过 `[IPField]` 特性标记非约定名字段，也会自动填充。
+**字段约定**：仅按名称匹配 `CreateIP` / `UpdateIP`，其他命名的字段不会被自动填充；如需处理自定义字段，可在业务代码中手动赋值。
 
 ---
 

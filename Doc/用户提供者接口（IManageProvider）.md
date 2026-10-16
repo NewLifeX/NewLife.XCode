@@ -138,7 +138,7 @@ public class AppManageProvider : ManageProvider
 ManageProvider.Provider = new AppManageProvider();
 ```
 
-Cube 框架已提供完整实现（`WebManageProvider`），不需要手动注册。
+宿主框架（如 NewLife.Cube）通常已提供实现并自动注册，此类应用不需要手动设置 `ManageProvider.Provider`。
 
 ---
 

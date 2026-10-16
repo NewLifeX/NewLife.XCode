@@ -8,7 +8,8 @@ using NewLife.Log;
 using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Role;
-using XCode.Membership;
+using RoleTypes = XCode.Membership.RoleTypes;
+using DataScopes = XCode.Membership.DataScopes;
 namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>角色。业务场景中的岗位，功能权限的集合。不管是用户还是租户，都以角色来管理权限</summary>

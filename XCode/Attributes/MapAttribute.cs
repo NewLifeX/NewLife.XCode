@@ -1,5 +1,6 @@
 ﻿using NewLife;
 using NewLife.Reflection;
+using System.Diagnostics.CodeAnalysis;
 using XCode.Configuration;
 
 namespace XCode;
@@ -41,6 +42,7 @@ public class MapAttribute : Attribute
     #endregion
 
     #region 方法
+    [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "映射提供者类型由 Map 特性字符串解析得到，AOT 下由应用侧保证提供者类型成员保留")]
     private MapProvider? GetProvider(Type? type, String? key)
     {
         if (type == null) return null;

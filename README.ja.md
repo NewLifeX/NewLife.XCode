@@ -5,9 +5,11 @@
 [![Nuget Downloads](https://img.shields.io/nuget/dt/newlife.xcode?logo=nuget)](https://www.nuget.org/packages/NewLife.XCode)
 [![Nuget](https://img.shields.io/nuget/v/newlife.xcode?logo=nuget)](https://www.nuget.org/packages/NewLife.XCode)
 
-高性能 .NET データミドルウェア（スーパーORM）。CRUD + 極限パフォーマンス + 大規模データに特化。マルチレベルキャッシュ、自動マイグレーション、シャーディング、型付きクエリ、クロスデータベース移行を内蔵。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB に対応。
+高性能 .NET データミドルウェア（スーパーORM）。CRUD + 極限パフォーマンス + 大規模データに特化。マルチレベルキャッシュ、自動マイグレーション、シャーディング、型付きクエリ、クロスデータベース移行を内蔵。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network 仮想データベース / NovaDb に対応。
 
 [中文](Readme.MD) | [English](README.en.md) | [한국어](README.ko.md) | [Español](README.es.md) | [Français](README.fr.md)
+
+> ⚠️ 本ページは簡易翻訳のため、更新が遅れる場合があります。正式な内容は[中文 README](Readme.MD) を参照してください。
 
 ## v12.0 ハイライト (2026-07-02)
 

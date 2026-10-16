@@ -221,10 +221,12 @@ public IList<IDataTable> GetTables()
 |------|------|--------|--------|--------|--------|--------|---------|
 | Off | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | 生产环境（手工管理） |
 | ReadOnly | 📝 | 📝 | 📝 | 📝 | 📝 | 📝 | 生产环境（审核 SQL） |
-| OnlyCreate | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 生产环境（安全模式） |
+| On | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | 默认。仅新建（安全模式） |
 | Full | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 开发环境 |
 
 *📝 = 仅输出 SQL，不执行*
+
+> **表级覆盖**：单表可在模型 `<Table Migration="On">`、实体特性 `[BindTable(..., Migration = "On")]` 或启动时 `User.Meta.Table.Migration = Migration.On` 指定；表级配置只能收紧、不能放大全局模式（如全局 `On`、表级 `Full` 不生效），置 `null` 恢复继承。
 
 ### 4.3 DDL 操作类型
 
@@ -316,8 +318,8 @@ var tableName = $"Log_{DateTime.Now:yyyyMM}";  // Log_202602
 var dt = TableItem.Create(typeof(Log)).DataTable;
 dt.TableName = tableName;
 
-// 确保表存在
-DAL.Create("Main").SetTables(Migration.OnlyCreate, dt);
+// 确保表存在（按全局 Migration 模式，表级配置可进一步收紧）
+DAL.Create("Main").SetTables(dt);
 ```
 
 ### 5.3 分库示例

@@ -113,7 +113,33 @@ public class SearchBuilder(IDataTable table)
 
         DataTime = dcSnow ?? dcTime;
 
+        // 仅保留可生成搜索参数的列，确保实体类与魔方控制器两侧的代码生成口径一致
+        cs.RemoveAll(e => !IsSearchable(e));
+
         return cs;
+    }
+
+    /// <summary>判断数据列是否可生成搜索参数。仅支持能安全转换的类型，供实体类与魔方控制器两侧代码生成共用</summary>
+    /// <param name="column">数据列</param>
+    /// <returns>是否可搜索</returns>
+    public static Boolean IsSearchable(IDataColumn column)
+    {
+        var type = column.DataType;
+        if (type == null) return false;
+
+        // 解包可空类型
+        var underlying = System.Nullable.GetUnderlyingType(type);
+        if (underlying != null) type = underlying;
+
+        // 枚举，或显式指定类型（通常是枚举）
+        if (type.IsEnum) return true;
+        if (!column.Properties["Type"].IsNullOrEmpty()) return true;
+
+        if (type == typeof(String) || type == typeof(Boolean) || type == typeof(DateTime)) return true;
+        if (type == typeof(Double) || type == typeof(Single) || type == typeof(Decimal)) return true;
+
+        // 全部整数族（含 Byte、Int16、UInt 等）
+        return type.IsInt();
     }
 
     ///// <summary>获取参数列表。名称+类型</summary>

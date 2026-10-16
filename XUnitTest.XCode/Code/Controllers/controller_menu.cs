@@ -8,7 +8,8 @@ using NewLife.Log;
 using NewLife.Web;
 using XCode.Membership;
 using static XCode.Membership.Menu;
-using XCode.Membership;
+using MenuTypes = XCode.Membership.MenuTypes;
+using DataScopes = XCode.Membership.DataScopes;
 namespace Membership.Web.Areas.Admin.Controllers;
 
 /// <summary>菜单。功能权限，大多数时候也是可见页面</summary>

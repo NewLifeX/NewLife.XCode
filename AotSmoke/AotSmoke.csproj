@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>AotSmoke</RootNamespace>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\XCode\XCode.csproj" />
+    <!-- NovaDb 作为嵌入式真库验证对象（阶段 5：实体 CRUD/缓存覆盖） -->
+    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.901" />
+    <!-- NovaDb 1.0.2026.901 传递依赖的 Remoting 3.9.2026.901 引用了已被新版 Core 删除的 NewLife.Model.IPipelineHandler（JIT 惰性解析可过，ILC 急切解析失败），直接升至已适配版本 -->
+    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1015-beta1355" />
+    <!-- SQLite 嵌入式真库验证对象：AOT 路线为 Microsoft.Data.Sqlite（SQLitePCLRaw 原生库），System.Data.SQLite 为混合编译不支持 AOT -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
+    <!-- MySQL 真库验证对象（官方连接器）：连接串来自环境变量 XCode_mysql，未设置时跳过该场景 -->
+    <PackageReference Include="MySql.Data" Version="26.7.0" />
+    <!-- SqlServer 真库验证对象（与 XCode.SqlServer 适配包同版本）：连接串来自环境变量 XCode_sqlserver，未设置时跳过该场景 -->
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- 静态引用驱动裁剪根：配合 XCode 驱动加载器的"程序集限定名"降级路径，在 AOT 下无需动态加载即可命中驱动 -->
+    <TrimmerRootAssembly Include="NewLife.NovaDb" />
+    <TrimmerRootAssembly Include="Microsoft.Data.Sqlite" />
+    <!-- 程序集名注意：bundle_e_sqlite3 包内的程序集名为 SQLitePCLRaw.batteries_v2 -->
+    <TrimmerRootAssembly Include="SQLitePCLRaw.batteries_v2" />
+    <TrimmerRootAssembly Include="SQLitePCLRaw.provider.e_sqlite3" />
+    <TrimmerRootAssembly Include="SQLitePCLRaw.core" />
+    <TrimmerRootAssembly Include="MySql.Data" />
+    <!-- MySql.Data 读取 ConfigurationManager（Activator 创建 ClientConfigurationHost），裁剪后会 MissingMethodException -->
+    <TrimmerRootAssembly Include="System.Configuration.ConfigurationManager" />
+    <TrimmerRootAssembly Include="System.Data.SqlClient" />
+  </ItemGroup>
+
+</Project>

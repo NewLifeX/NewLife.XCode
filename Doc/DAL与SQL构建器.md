@@ -86,7 +86,7 @@ var totalQuery = DAL.QueryTimes;
 var totalExec  = DAL.ExecuteTimes;
 ```
 
-常用于在请求拦截器中记录单次请求的 SQL 消耗数量（参见 `DbRuntimeModule` 思路）。
+常用于在请求拦截器中记录单次请求的 SQL 消耗数量（原 Web 模块 `DbRuntimeModule` 即此思路，该模块已于 v12.1 移除）。
 
 ---
 

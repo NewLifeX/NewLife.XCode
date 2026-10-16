@@ -3,6 +3,7 @@ using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Threading;
 using XCode.DataAccessLayer;
+using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.Cache;
 
@@ -16,7 +17,7 @@ namespace XCode.Cache;
 /// </remarks>
 /// <typeparam name="TEntity">实体类型</typeparam>
 [DisplayName("实体缓存")]
-public class EntityCache<TEntity> : CacheBase<TEntity>, IEntityCache where TEntity : Entity<TEntity>, new()
+public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : CacheBase<TEntity>, IEntityCache where TEntity : Entity<TEntity>, new()
 {
     #region 基础属性
     /// <summary>缓存过期时间</summary>

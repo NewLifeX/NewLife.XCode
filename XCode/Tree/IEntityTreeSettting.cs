@@ -1,4 +1,6 @@
-﻿namespace XCode;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace XCode;
 
 /// <summary>实体树设置</summary>
 public interface IEntityTreeSetting
@@ -29,7 +31,7 @@ public interface IEntityTreeSetting
 }
 
 /// <summary>实体树设置</summary>
-public class EntityTreeSetting<TEntity> : IEntityTreeSetting where TEntity : Entity<TEntity>, new()
+public class EntityTreeSetting<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TEntity> : IEntityTreeSetting where TEntity : Entity<TEntity>, new()
 {
     #region 属性
     private IEntityFactory _Factory = Entity<TEntity>.Meta.Factory;
@@ -107,11 +109,8 @@ public class EntityTreeSetting<TEntity> : IEntityTreeSetting where TEntity : Ent
     /// <summary>文本键名</summary>
     public virtual String Text
     {
-        get
-        {
-            return Factory.FieldNames.Where(f => f.EqualIgnoreCase("Text", "Display", "DisplayName")).FirstOrDefault();
-        }
-        set { _Text = value; }
+        get => _Text ??= Factory.FieldNames.Where(f => f.EqualIgnoreCase("Text", "Display", "DisplayName")).FirstOrDefault();
+        set => _Text = value;
     }
 
     /// <summary>是否大排序，较大排序值在前面</summary>

@@ -305,6 +305,9 @@ public class AreaTests
     {
         Area.Meta.Session.Dal.Db.ShowSQL = false;
 
+        // 全新数据库环境下数据表可能尚未创建，Truncate 不会自动建表，先用反向工程建表
+        Area.Meta.Session.Dal.SetTables(Area.Meta.Table.DataTable);
+
         Area.Meta.Session.Truncate();
         var rs = Area.FetchAndSave();
         //Assert.Equal(3208, rs);

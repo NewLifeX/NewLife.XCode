@@ -15,7 +15,7 @@ public class SearchBuilderTests
     public SearchBuilderTests()
     {
         var option = new BuilderOption();
-        _tables = ClassBuilder.LoadModels(@"..\..\XUnitTest.XCode\Code\Member.xml", option, out _);
+        _tables = ClassBuilder.LoadModels(@"../../XUnitTest.XCode/Code/Member.xml", option, out _);
     }
 
     [Fact]

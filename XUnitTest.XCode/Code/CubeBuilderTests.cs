@@ -18,13 +18,13 @@ public class CubeBuilderTests
     public CubeBuilderTests()
     {
         _option = new CubeBuilderOption();
-        _tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
+        _tables = ClassBuilder.LoadModels(@"../../XCode/Membership/Member.xml", _option, out _);
     }
 
     private String ReadTarget(String file, String text)
     {
         var target = "";
-        var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
+        var file2 = @"../../XUnitTest.XCode/".CombinePath(file);
         if (File.Exists(file2)) target = File.ReadAllText(file2.GetFullPath());
 
         file2.EnsureDirectory(true);
@@ -61,8 +61,8 @@ public class CubeBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget($"Code\\Controllers\\controller_{table.Name.ToLower()}.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget($"Code/Controllers/controller_{table.Name.ToLower()}.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -90,8 +90,8 @@ public class CubeBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget($"Code\\Controllers\\controller_{table.Name.ToLower()}.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget($"Code/Controllers/controller_{table.Name.ToLower()}.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -119,8 +119,8 @@ public class CubeBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget($"Code\\Controllers\\controller_{table.Name.ToLower()}.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget($"Code/Controllers/controller_{table.Name.ToLower()}.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -148,8 +148,8 @@ public class CubeBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget($"Code\\Controllers\\controller_{table.Name.ToLower()}.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget($"Code/Controllers/controller_{table.Name.ToLower()}.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -177,8 +177,8 @@ public class CubeBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget($"Code\\Controllers\\controller_{table.Name.ToLower()}.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget($"Code/Controllers/controller_{table.Name.ToLower()}.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -206,8 +206,8 @@ public class CubeBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget($"Code\\Controllers\\controller_{table.Name.ToLower()}.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget($"Code/Controllers/controller_{table.Name.ToLower()}.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -235,8 +235,8 @@ public class CubeBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget($"Code\\Controllers\\controller_{table.Name.ToLower()}.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget($"Code/Controllers/controller_{table.Name.ToLower()}.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -264,8 +264,8 @@ public class CubeBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget($"Code\\Controllers\\controller_{table.Name.ToLower()}.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget($"Code/Controllers/controller_{table.Name.ToLower()}.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -293,8 +293,8 @@ public class CubeBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget($"Code\\Controllers\\controller_{table.Name.ToLower()}.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget($"Code/Controllers/controller_{table.Name.ToLower()}.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]

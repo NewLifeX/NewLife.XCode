@@ -119,7 +119,9 @@ public class ModelHelperTests
     private String ReadTarget(String file, String text, Boolean overwrite = true)
     {
         var target = "";
-        var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
+        // 统一转换分隔符，避免 Windows 风格路径在 Linux 等平台失效
+        var dir = @"..\..\XUnitTest.XCode\".Replace('\\', Path.DirectorySeparatorChar);
+        var file2 = dir.CombinePath(file.Replace('\\', Path.DirectorySeparatorChar));
         if (File.Exists(file2)) target = File.ReadAllText(file2.GetFullPath());
 
         //File.WriteAllText(file2, text);
@@ -174,7 +176,7 @@ public class ModelHelperTests
         };
 
         // 读取Biz文件加载已有方法
-        builder.LoadCodeFile(@"..\..\XUnitTest.XCode\Model\Code\entity_city_biz.cs");
+        builder.LoadCodeFile(@"..\..\XUnitTest.XCode\Model\Code\entity_city_biz.cs".Replace('\\', Path.DirectorySeparatorChar));
 
         // 数据类
         builder.Execute();
@@ -182,8 +184,8 @@ public class ModelHelperTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget("Model\\Code\\entity_city.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget("Model/Code/entity_city.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
 
         // 业务类
         builder.Clear();
@@ -193,15 +195,15 @@ public class ModelHelperTests
         rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        target = ReadTarget("Model\\Code\\entity_city_biz.cs", rs, false);
+        target = ReadTarget("Model/Code/entity_city_biz.cs", rs, false);
         //Assert.Equal(target, rs);
         // 存在部分扩展查询方法，不完全相等
         var str1 = target.Substring(null, "#region 扩展属性");
         var str2 = rs.Substring(null, "#region 扩展属性");
-        Assert.Equal(str1, str2);
+        Assert.Equal(str1.NormalizeNewLine(), str2.NormalizeNewLine());
 
         str1 = target.Substring("#region 高级查询", null);
         str2 = rs.Substring("#region 高级查询", null);
-        Assert.Equal(str1, str2);
+        Assert.Equal(str1.NormalizeNewLine(), str2.NormalizeNewLine());
     }
 }

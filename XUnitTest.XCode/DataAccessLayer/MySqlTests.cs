@@ -191,6 +191,9 @@ public class MySqlTests
         User.Meta.ConnName = "MySql_member";
         Role.Meta.ConnName = "MySql_member";
 
+        // 全新数据库环境下数据表可能尚未创建，Truncate 不会自动建表，先用反向工程建表
+        Role.Meta.Session.Dal.SetTables(Role.Meta.Table.DataTable);
+
         Role.Meta.Session.Truncate();
         User.Meta.Session.InitData();
         Role.Meta.Session.InitData();
@@ -366,8 +369,14 @@ public class MySqlTests
     [Fact]
     public void GetTables()
     {
-        DAL.AddConnStr("member_mysql", _ConnStr.Replace("Database=sys", "Database=membership"), null, "MySql");
+        // MySQL 在 Linux 下表名大小写敏感，统一使用与其它用例一致的 Membership 数据库
+        DAL.AddConnStr("member_mysql", _ConnStr.Replace("Database=sys", "Database=Membership"), null, "MySql");
         var dal = DAL.Create("member_mysql");
+
+        // 全新环境下库表可能尚未创建，先确保有表结构可供读取
+        dal.SetTables(User.Meta.Table.DataTable);
+        dal.Tables = null;
+
         var tables = dal.Tables;
 
         Assert.NotEmpty(tables);
@@ -515,6 +524,8 @@ public class MySqlTests
 
         dal.SetTables(table);
 
+        // 清除元数据缓存后重新读取，确保拿到刚创建的表
+        dal.Tables = null;
         Assert.Contains(dal.Tables, t => t.TableName == table.TableName);
 
         // Log表自带压缩表能力
@@ -552,6 +563,8 @@ public class MySqlTests
 
         dal.SetTables(table);
 
+        // 清除元数据缓存后重新读取，确保拿到刚创建的表
+        dal.Tables = null;
         Assert.Contains(dal.Tables, t => t.TableName == table.TableName);
     }
 
@@ -847,7 +860,7 @@ public class MySqlTests
         Role.Meta.Session.InitData();
 
         // QueryAsync<T> 对 object 类型走 QueryModelsAsync 路径
-        var list = (await dal.QueryAsync<MyMySqlRole>("select * from role")).ToList();
+        var list = (await dal.QueryAsync<MyMySqlRole>("select * from Role")).ToList();
         Assert.True(list.Count > 0);
 
         var admin = list.FirstOrDefault(r => r.Name == "管理员");

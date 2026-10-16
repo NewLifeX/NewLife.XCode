@@ -17,13 +17,13 @@ public class ClassBuilderTests
     public ClassBuilderTests()
     {
         _option = new BuilderOption();
-        _tables = ClassBuilder.LoadModels(@"..\..\XCode\Membership\Member.xml", _option, out _);
+        _tables = ClassBuilder.LoadModels(@"../../XCode/Membership/Member.xml", _option, out _);
         _table = _tables.FirstOrDefault(e => e.Name == "User");
     }
 
     private String ReadTarget(String file, String text)
     {
-        var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
+        var file2 = @"../../XUnitTest.XCode/".CombinePath(file);
         File.WriteAllText(file2, text);
 
         var target = File.ReadAllText(file.GetFullPath());
@@ -47,8 +47,8 @@ public class ClassBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget("Code\\class_user_normal.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget("Code/class_user_normal.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -67,8 +67,8 @@ public class ClassBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget("Code\\class_user_baseclass.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget("Code/class_user_baseclass.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -95,8 +95,8 @@ public class ClassBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget("Code\\class_user_pure.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget("Code/class_user_pure.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -125,8 +125,8 @@ public class ClassBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget("Code\\class_user_interface.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget("Code/class_user_interface.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -152,8 +152,8 @@ public class ClassBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget("Code\\class_user_extend.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget("Code/class_user_extend.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -183,8 +183,8 @@ public class ClassBuilderTests
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
 
-        var target = ReadTarget("Code\\class_user_extend2.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget("Code/class_user_extend2.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -196,36 +196,36 @@ public class ClassBuilderTests
         };
         var option = builder.Option;
         //option.Pure = true;
-        option.Output = ".\\Output\\Save";
+        option.Output = "./Output/Save";
 
         if (Directory.Exists(option.Output.GetFullPath())) Directory.Delete(option.Output.GetFullPath(), true);
 
         builder.Execute();
 
-        var file = (option.Output + "\\" + builder.Table.DisplayName + ".cs").GetFullPath();
+        var file = (option.Output + "/" + builder.Table.DisplayName + ".cs").GetFullPath();
         if (File.Exists(file)) File.Delete(file);
 
         builder.Save();
         Assert.True(File.Exists(file));
 
         var rs = File.ReadAllText(file);
-        var target = ReadTarget("Code\\class_user_save.cs", rs);
-        Assert.Equal(target, rs);
+        var target = ReadTarget("Code/class_user_save.cs", rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
 
-        file = (option.Output + "\\" + builder.Table.Name + ".xs").GetFullPath();
+        file = (option.Output + "/" + builder.Table.Name + ".xs").GetFullPath();
         if (File.Exists(file)) File.Delete(file);
 
         builder.Save(".xs", false, false);
         Assert.True(File.Exists(file));
 
         rs = File.ReadAllText(file);
-        Assert.Equal(target, rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
     public void BuildModels()
     {
-        var dir = ".\\Output\\Models\\";
+        var dir = "./Output/Models/";
         if (Directory.Exists(dir.GetFullPath())) Directory.Delete(dir.GetFullPath(), true);
 
         var option = new BuilderOption
@@ -249,8 +249,8 @@ public class ClassBuilderTests
             if (item.Name == "User")
             {
                 var rs = File.ReadAllText(file);
-                var target = ReadTarget("Code\\Models\\UserModel.cs", rs);
-                Assert.Equal(target, rs);
+                var target = ReadTarget("Code/Models/UserModel.cs", rs);
+                Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
             }
 
             file = dir.CombinePath("I" + item.Name + "Model.cs").GetFullPath();
@@ -259,8 +259,8 @@ public class ClassBuilderTests
             if (item.Name == "User")
             {
                 var rs = File.ReadAllText(file);
-                var target = ReadTarget("Code\\Models\\IUserModel.cs", rs);
-                Assert.Equal(target, rs);
+                var target = ReadTarget("Code/Models/IUserModel.cs", rs);
+                Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
             }
         }
     }
@@ -268,7 +268,7 @@ public class ClassBuilderTests
     [Fact]
     public void BuildDtos()
     {
-        var dir = ".\\Output\\Dtos\\";
+        var dir = "./Output/Dtos/";
         if (Directory.Exists(dir.GetFullPath())) Directory.Delete(dir.GetFullPath(), true);
 
         var option = new BuilderOption
@@ -292,8 +292,8 @@ public class ClassBuilderTests
             if (item.Name == "User")
             {
                 var rs = File.ReadAllText(file);
-                var target = ReadTarget("Code\\Dtos\\UserDto.cs", rs);
-                Assert.Equal(target, rs);
+                var target = ReadTarget("Code/Dtos/UserDto.cs", rs);
+                Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
             }
 
             file = dir.CombinePath("I" + item.Name + ".cs").GetFullPath();
@@ -302,8 +302,8 @@ public class ClassBuilderTests
             if (item.Name == "User")
             {
                 var rs = File.ReadAllText(file);
-                var target = ReadTarget("Code\\Dtos\\IUser.cs", rs);
-                Assert.Equal(target, rs);
+                var target = ReadTarget("Code/Dtos/IUser.cs", rs);
+                Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
             }
         }
     }
@@ -311,7 +311,7 @@ public class ClassBuilderTests
     [Fact]
     public void BuildTT()
     {
-        var dir = ".\\Output\\BuildTT\\";
+        var dir = "./Output/BuildTT/";
         if (Directory.Exists(dir.GetFullPath())) Directory.Delete(dir.GetFullPath(), true);
 
         var option = new BuilderOption
@@ -341,8 +341,8 @@ public class ClassBuilderTests
             if (item.Name == "User")
             {
                 var rs = File.ReadAllText(file);
-                var target = ReadTarget("Code\\BuildTT\\UserTT.cs", rs);
-                Assert.Equal(target, rs);
+                var target = ReadTarget("Code/BuildTT/UserTT.cs", rs);
+                Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
             }
         }
 

@@ -13,7 +13,10 @@ public class NegativeTests
     private String ReadTarget(String file, String text, Boolean overwrite = true)
     {
         var target = "";
-        var file2 = @"..\..\XUnitTest.XCode\".CombinePath(file);
+
+        // 统一转换分隔符，避免 Windows 风格路径在 Linux 等平台失效
+        var dir = @"..\..\XUnitTest.XCode\".Replace('\\', Path.DirectorySeparatorChar);
+        var file2 = dir.CombinePath(file.Replace('\\', Path.DirectorySeparatorChar));
         if (File.Exists(file2)) target = File.ReadAllText(file2.GetFullPath());
 
         File.WriteAllText(file2, text);
@@ -31,7 +34,7 @@ public class NegativeTests
 
         var rs = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, table);
         var target = ReadTarget(@"DataAccessLayer\Sqls\sqlite_upper.sql", rs);
-        Assert.Equal(target, rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -44,7 +47,7 @@ public class NegativeTests
 
         var rs = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, table);
         var target = ReadTarget(@"DataAccessLayer\Sqls\sqlite_lower.sql", rs);
-        Assert.Equal(target, rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -57,7 +60,7 @@ public class NegativeTests
 
         var rs = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, table);
         var target = ReadTarget(@"DataAccessLayer\Sqls\sqlite_underline.sql", rs);
-        Assert.Equal(target, rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
 
         table = table.Clone() as IDataTable;
         table.TableName = db.FormatName(table);
@@ -82,7 +85,7 @@ public class NegativeTests
 
         var rs = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, table);
         var target = ReadTarget(@"DataAccessLayer\Sqls\msyql_upper.sql", rs);
-        Assert.Equal(target, rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -95,7 +98,7 @@ public class NegativeTests
 
         var rs = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, table);
         var target = ReadTarget(@"DataAccessLayer\Sqls\msyql_lower.sql", rs);
-        Assert.Equal(target, rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -108,7 +111,7 @@ public class NegativeTests
 
         var rs = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, table);
         var target = ReadTarget(@"DataAccessLayer\Sqls\msyql_underline.sql", rs);
-        Assert.Equal(target, rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -121,7 +124,7 @@ public class NegativeTests
 
         var rs = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, table);
         var target = ReadTarget(@"DataAccessLayer\Sqls\sqlserver_upper.sql", rs);
-        Assert.Equal(target, rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -134,7 +137,7 @@ public class NegativeTests
 
         var rs = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, table);
         var target = ReadTarget(@"DataAccessLayer\Sqls\sqlserver_lower.sql", rs);
-        Assert.Equal(target, rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 
     [Fact]
@@ -147,6 +150,6 @@ public class NegativeTests
 
         var rs = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, table);
         var target = ReadTarget(@"DataAccessLayer\Sqls\sqlserver_underline.sql", rs);
-        Assert.Equal(target, rs);
+        Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());
     }
 }

@@ -25,6 +25,14 @@ public class SqlTemplateTests
 
     public SqlTemplateTests()
     {
+        // 优先使用环境变量（CI环境），与 MySqlTests 保持一致
+        var envConnStr = Environment.GetEnvironmentVariable("XCode_mysql");
+        if (!envConnStr.IsNullOrEmpty())
+        {
+            _mysql_ConnStr = envConnStr;
+            return;
+        }
+
         var f = "Config\\mysql.config".GetFullPath();
         if (File.Exists(f))
             _mysql_ConnStr = File.ReadAllText(f);

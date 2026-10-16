@@ -214,10 +214,10 @@ select * from userx where id=@id
     [Fact]
     public void EntityTestWithMySql()
     {
-        DAL.AddConnStr("mysql_member", _mysql_ConnStr, null, "mysql");
+        DAL.AddConnStr("MySql_member", _mysql_ConnStr, null, "mysql");
 
-        Menu2.Meta.ConnName = "mysql_member";
-        Menu3.Meta.ConnName = "mysql_member";
+        Menu2.Meta.ConnName = "MySql_member";
+        Menu3.Meta.ConnName = "MySql_member";
 
         // 全新数据库下先初始化实体完成建表，避免建表语句混入后续SQL断言
         EntityFactory.InitEntity(typeof(Menu2));
@@ -228,16 +228,16 @@ select * from userx where id=@id
         DAL.LocalFilter = s => { if (!s.Contains("Create Table") && !s.Contains("information_schema") && !s.Contains("SHOW TABLE")) sql = s; };
 
         var count = Menu3.Meta.Count;
-        Assert.Equal("[mysql_member] Select Count(*) From (select * from Menu2 where 'visible'=1) SourceTable", sql);
+        Assert.Equal("[MySql_member] Select Count(*) From (select * from Menu2 where 'visible'=1) SourceTable", sql);
 
         var menu = Menu3.FindByID(1234);
-        Assert.Equal("[mysql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable", sql);
+        Assert.Equal("[MySql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable", sql);
 
         var menu2 = Menu3.FindByKey(1234);
-        Assert.Equal("[mysql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable Where ID=1234", sql);
+        Assert.Equal("[MySql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable Where ID=1234", sql);
 
         var date = DateTime.Today;
         var list = Menu3.Search(date, date, "stone", new PageParameter { PageIndex = 2, PageSize = 30 });
-        Assert.Equal("[mysql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') limit 30, 30", sql);
+        Assert.Equal("[MySql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable Where (Name Like '%stone%' Or DisplayName Like '%stone%' Or FullName Like '%stone%' Or Url Like '%stone%' Or Icon Like '%stone%' Or Permission Like '%stone%' Or Remark Like '%stone%') limit 30, 30", sql);
     }
 }

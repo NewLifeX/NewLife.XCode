@@ -125,6 +125,40 @@ public class SqlTests
     }
 
     [TestOrder(30)]
+    [Fact(DisplayName = "更新语句原样保留值中的And和or")]
+    public void UpdateClauseKeepValueTestSQLite()
+    {
+        var user = new User
+        {
+            Name = Rand.NextString(16),
+            Remark = "seed",
+        };
+        user.Insert();
+
+        try
+        {
+            // 值中的 And 是普通数据，不能被替换成逗号
+            var value = "data:image/png;base64,AAAndBBAndCC";
+            Assert.Equal(1, User.Update([nameof(User.Remark)], [value], [nameof(User.ID)], [user.ID]));
+            Assert.Equal(value, User.FindByKey(user.ID)!.Remark);
+
+            // 值中的 or 同样是普通数据，不能触发参数异常
+            value = "data:image/png;base64,AA or BB";
+            Assert.Equal(1, User.Update([nameof(User.Remark)], [value], [nameof(User.ID)], [user.ID]));
+            Assert.Equal(value, User.FindByKey(user.ID)!.Remark);
+
+            // 原始子句路径同样按原文执行
+            value = "AAAndBB or CC";
+            Assert.Equal(1, User.Update($"Remark='{value}'", $"ID={user.ID}"));
+            Assert.Equal(value, User.FindByKey(user.ID)!.Remark);
+        }
+        finally
+        {
+            user.Delete();
+        }
+    }
+
+    [TestOrder(30)]
     [Fact]
     public void DeleteTestSQLite()
     {

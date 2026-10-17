@@ -64,7 +64,7 @@ public interface IEntityPersistence
 
     /// <summary>更新一批实体数据</summary>
     /// <param name="session">实体会话</param>
-    /// <param name="setClause">要更新的项和数据</param>
+    /// <param name="setClause">要更新的项和数据，按原文拼入SQL，调用方负责转义</param>
     /// <param name="whereClause">指定要更新的实体</param>
     /// <returns></returns>
     Int32 Update(IEntitySession session, String setClause, String whereClause);
@@ -384,14 +384,14 @@ public class EntityPersistence : IEntityPersistence
 
     /// <summary>更新一批实体数据</summary>
     /// <param name="session">实体会话</param>
-    /// <param name="setClause">要更新的项和数据</param>
+    /// <param name="setClause">要更新的项和数据，按原文拼入SQL，调用方负责转义，不得对内容做文本替换</param>
     /// <param name="whereClause">指定要更新的实体</param>
     /// <returns></returns>
     public virtual Int32 Update(IEntitySession session, String setClause, String whereClause)
     {
-        if (setClause.IsNullOrEmpty() || !setClause.Contains("=") || setClause.ToLower().Contains(" or ")) throw new ArgumentException("非法参数");
+        if (setClause.IsNullOrEmpty() || !setClause.Contains("=")) throw new ArgumentException("非法参数");
 
-        var sql = $"Update {session.FormatedTableName} Set {setClause.Replace("And", ",")}";
+        var sql = $"Update {session.FormatedTableName} Set {setClause}";
         if (!String.IsNullOrEmpty(whereClause)) sql += " Where " + whereClause;
 
         return session.Execute(sql);

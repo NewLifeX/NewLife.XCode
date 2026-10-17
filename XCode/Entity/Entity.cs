@@ -1813,7 +1813,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     public static Int32 Insert(String[] names, Object[] values) => Persistence.Insert(Meta.Session, names, values);
 
     /// <summary>更新一批实体数据</summary>
-    /// <param name="setClause">要更新的项和数据</param>
+    /// <param name="setClause">要更新的项和数据，按原文拼入SQL，调用方负责转义</param>
     /// <param name="whereClause">指定要更新的实体</param>
     /// <returns></returns>
     [EditorBrowsable(EditorBrowsableState.Advanced)]

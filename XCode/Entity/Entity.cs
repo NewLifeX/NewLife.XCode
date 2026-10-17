@@ -2269,7 +2269,8 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     /// <returns></returns>
     public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, Boolean, TEntity?> findWithCache, Func<TKey, TEntity> create)
     {
-        //if (key == null) return null;
+        // 业务主键不允许为空，此处仅作防御性短路，避免后续 ToString 空引用
+        if (key == null) return null!;
 
         var entity = findWithCache != null ? findWithCache(key, true) : FindByKey(key!);
         if (entity != null) return entity;
@@ -2317,7 +2318,8 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     /// <returns></returns>
     public static TEntity GetOrAdd<TKey>(TKey key, Func<TKey, TEntity?> find, Func<TKey, TEntity> create)
     {
-        //if (key == null) return null;
+        // 业务主键不允许为空，此处仅作防御性短路，避免后续 ToString 空引用
+        if (key == null) return null!;
         //if (find == null) throw new ArgumentNullException(nameof(find));
 
         var entity = find != null ? find(key) : FindByKey(key!);

@@ -74,6 +74,24 @@ public class UserTests
         user.Delete();
     }
 
+    [Fact(DisplayName = "空键返回空，不抛空引用异常")]
+    public void GetOrAdd_NullKey()
+    {
+        String key = null!;
+
+        // 普通查找重载
+        var user = User.GetOrAdd(key!, k => User.FindByName(k), k => new User { Name = k });
+        Assert.Null(user);
+
+        // 带缓存查找重载
+        var user2 = User.GetOrAdd(key!, (k, b) => User.FindByName(k), k => new User { Name = k });
+        Assert.Null(user2);
+
+        // 字段重载
+        var user3 = User.GetOrAdd("name", key!);
+        Assert.Null(user3);
+    }
+
     [Fact]
     public void GetOrAdd3()
     {

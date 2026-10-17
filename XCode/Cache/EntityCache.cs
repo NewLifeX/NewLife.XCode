@@ -58,10 +58,28 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
 
     #region 缓存核心
     private TEntity[] _Entities = [];
-    /// <summary>缓存变更同步锁。保护缓存集合交换与刷新期间的变更日志，避免刷新旧快照覆盖并发添删改</summary>
+    /// <summary>缓存同步锁。保护快照交换与刷新期间的变更日志，避免刷新旧快照覆盖并发添删改</summary>
     private readonly Object _sync = new();
-    /// <summary>刷新期间发生的添删改日志。刷新完成后回放到新快照，避免被读库旧快照覆盖</summary>
-    private List<Action<List<TEntity>>>? _journal;
+    /// <summary>刷新期间的变更日志。刷新完成后按顺序回放到新快照，避免被读库旧快照覆盖</summary>
+    private List<CacheChange>? _journal;
+    /// <summary>刷新锁。串行化缓存刷新，避免同步刷新与异步刷新并发时相互覆盖</summary>
+    private readonly Object _refresh = new();
+
+    /// <summary>缓存变更类型</summary>
+    private enum CacheChangeKind
+    {
+        /// <summary>新增或更新</summary>
+        Upsert,
+
+        /// <summary>删除</summary>
+        Remove,
+    }
+
+    /// <summary>缓存变更记录</summary>
+    /// <param name="Kind">变更类型</param>
+    /// <param name="Entity">目标实体</param>
+    private readonly record struct CacheChange(CacheChangeKind Kind, TEntity Entity);
+
     /// <summary>实体集合。无数据返回空集合而不是null</summary>
     public IList<TEntity> Entities
     {
@@ -100,14 +118,14 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
         {
             if (WaitFirst)
             {
-                lock (this)
+                lock (_refresh)
                 {
                     if (_Times == 0) UpdateCache("第一次");
                 }
             }
             else
             {
-                if (Monitor.TryEnter(this, 5000))
+                if (Monitor.TryEnter(_refresh, 5000))
                 {
                     try
                     {
@@ -115,7 +133,7 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
                     }
                     finally
                     {
-                        Monitor.Exit(this);
+                        Monitor.Exit(_refresh);
                     }
                 }
             }
@@ -189,7 +207,7 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
     void UpdateCache(String reason, Boolean isAsync = false)
     {
         // 串行化缓存刷新，避免同步刷新与异步刷新并发时相互覆盖
-        lock (this)
+        lock (_refresh)
         {
             Interlocked.Increment(ref _updating);
 
@@ -209,17 +227,9 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
             DAL.SetSpanTag($"{LogPrefix}更新（第{ts + 1}次） 原因：{reason}");
 
             IList<TEntity>? loaded = null;
-
-            // 开始记录刷新期间发生的添删改，稍后回放到新快照，避免被读库旧快照覆盖
-            lock (_sync) _journal ??= [];
-
             try
             {
-                loaded = Invoke<Object, IList<TEntity>>(s => FillListMethod(), null!);
-            }
-            catch (Exception ex)
-            {
-                XTrace.WriteLine($"[{TableName}/{ConnName}]" + ex.GetTrue());
+                loaded = LoadSnapshot();
             }
             finally
             {
@@ -227,27 +237,57 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
                 DAL.SetSpanTag(null);
             }
 
-            lock (_sync)
-            {
-                if (loaded != null)
-                {
-                    var list = loaded.ToList();
-
-                    // 回放刷新期间的添删改，确保并发写入不被旧快照覆盖
-                    if (_journal != null)
-                    {
-                        foreach (var act in _journal) act(list);
-                    }
-
-                    _Entities = list.ToArray();
-                }
-
-                _journal = null;
-            }
+            ApplySnapshot(loaded);
 
             ts = Interlocked.Increment(ref _Times);
             ExpiredTime = TimerX.Now.AddSeconds(Expire);
             WriteLog("完成[{0}]（第{1}次）", _Entities.Length, ts);
+        }
+    }
+
+    /// <summary>读库加载新快照，同时开始记录刷新期间的添删改</summary>
+    /// <returns>新快照，加载失败时返回空</returns>
+    private IList<TEntity>? LoadSnapshot()
+    {
+        // 刷新期间发生的添删改记录到日志，稍后回放到新快照，避免被读库旧快照覆盖
+        lock (_sync) _journal ??= [];
+
+        try
+        {
+            return Invoke<Object, IList<TEntity>>(s => FillListMethod(), null!);
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine($"[{TableName}/{ConnName}]" + ex.GetTrue());
+            return null;
+        }
+    }
+
+    /// <summary>回放变更日志并原子替换快照</summary>
+    /// <param name="loaded">读库得到的新快照</param>
+    private void ApplySnapshot(IList<TEntity>? loaded)
+    {
+        lock (_sync)
+        {
+            try
+            {
+                if (loaded == null) return;
+
+                var list = loaded.ToList();
+
+                // 回放刷新期间的添删改，确保并发写入不被旧快照覆盖
+                if (_journal != null)
+                {
+                    foreach (var change in _journal) Apply(list, change);
+                }
+
+                _Entities = list.ToArray();
+            }
+            finally
+            {
+                // 无论成功失败都要结束日志，避免后续写入记录到过期日志
+                _journal = null;
+            }
         }
     }
 
@@ -282,131 +322,98 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
 
     private readonly IEntityFactory _factory = Entity<TEntity>.Meta.Factory;
     /// <summary>添加对象到缓存</summary>
-    /// <param name="entity"></param>
+    /// <param name="entity">实体对象</param>
     public void Add(TEntity entity)
     {
         if (!Using) return;
 
-        lock (_sync)
-        {
-            var list = _Entities.ToList();
-            list.Add(entity);
-            _Entities = list.ToArray();
-
-            // 刷新期间的变更需要记录，随后回放到新快照，避免被旧快照覆盖
-            _journal?.Add(e =>
-            {
-                if (!ContainsEntity(e, entity)) e.Add(entity);
-            });
-        }
+        Mutate(CacheChangeKind.Upsert, entity);
     }
 
     /// <summary>从缓存中删除对象</summary>
-    /// <param name="entity"></param>
-    /// <returns></returns>
+    /// <param name="entity">实体对象</param>
+    /// <returns>被删除的实体，不存在时返回空</returns>
     public TEntity? Remove(TEntity entity)
     {
         if (!Using) return null;
 
-        lock (_sync)
-        {
-            var e = FindEntity(_Entities, entity);
-            if (e == null) return null;
-
-            var list = _Entities.ToList();
-            list.Remove(e);
-            _Entities = list.ToArray();
-
-            // 刷新期间的变更需要记录，随后回放到新快照（按唯一键匹配，兼容重建后的实例）
-            _journal?.Add(l =>
-            {
-                var idx = IndexOfUnique(l, e);
-                if (idx >= 0) l.RemoveAt(idx);
-            });
-
-            return e;
-        }
+        return Mutate(CacheChangeKind.Remove, entity);
     }
 
     internal TEntity? Update(TEntity entity)
     {
         if (!Using) return null;
 
+        return Mutate(CacheChangeKind.Upsert, entity);
+    }
+
+    /// <summary>在快照副本上执行变更并原子替换，刷新期间同步记录变更日志</summary>
+    /// <param name="kind">变更类型</param>
+    /// <param name="entity">目标实体</param>
+    /// <returns>被替换或删除的旧实体</returns>
+    private TEntity? Mutate(CacheChangeKind kind, TEntity entity)
+    {
         lock (_sync)
         {
-            var es = _Entities;
+            var change = new CacheChange(kind, entity);
 
-            // 如果对象本身就在缓存里面，啥也不用做
-            var e = es.FirstOrDefault(x => x == entity);
-            if (e != null) return e;
-
-            var idx = -1;
-            var fi = _factory.Unique;
-            if (fi != null)
-            {
-                var v = entity[fi.Name];
-                idx = Array.FindIndex(es, x => Equals(x[fi.Name], v));
-            }
-
-            // 更新实体缓存时，不做拷贝，避免产生脏数据，如果恰巧又使用单对象缓存，那会导致自动保存
             var list = _Entities.ToList();
-            if (idx >= 0)
-                list[idx] = entity;
-            else
-                list.Add(entity);
+            var old = Apply(list, change);
             _Entities = list.ToArray();
 
-            // 刷新期间的变更需要记录，随后回放到新快照
-            _journal?.Add(l =>
-            {
-                var i = IndexOfUnique(l, entity);
-                if (i >= 0)
-                    l[i] = entity;
-                else
-                    l.Add(entity);
-            });
+            // 刷新期间的变更需要记录，随后回放到新快照，避免被旧快照覆盖
+            _journal?.Add(change);
 
-            return e;
+            return old;
         }
     }
 
-    /// <summary>在集合中查找与目标同引用或同唯一键的实体</summary>
-    private TEntity? FindEntity(IList<TEntity> list, TEntity entity)
+    /// <summary>把一条变更应用到集合，返回被替换或删除的旧实体</summary>
+    /// <param name="list">目标集合</param>
+    /// <param name="change">变更</param>
+    /// <returns>被替换或删除的旧实体</returns>
+    private TEntity? Apply(List<TEntity> list, CacheChange change)
     {
-        foreach (var item in list)
+        var index = IndexOf(list, change.Entity);
+        if (index < 0)
         {
-            if (item == entity) return item;
+            // 删除不存在的实体无需处理，新增和更新则追加
+            if (change.Kind != CacheChangeKind.Remove) list.Add(change.Entity);
+
+            return null;
         }
 
-        var fi = _factory.Unique;
-        if (fi == null) return null;
+        var old = list[index];
+        if (change.Kind == CacheChangeKind.Remove)
+            list.RemoveAt(index);
+        else
+            list[index] = change.Entity;
 
-        var v = entity[fi.Name];
-        foreach (var item in list)
-        {
-            if (Equals(item[fi.Name], v)) return item;
-        }
-
-        return null;
+        return old;
     }
 
-    /// <summary>按唯一键查找实体下标</summary>
-    private Int32 IndexOfUnique(IList<TEntity> list, TEntity entity)
+    /// <summary>按同引用或唯一键查找实体下标</summary>
+    /// <param name="list">目标集合</param>
+    /// <param name="entity">目标实体</param>
+    /// <returns>下标，未找到返回-1</returns>
+    private Int32 IndexOf(IList<TEntity> list, TEntity entity)
     {
+        for (var i = 0; i < list.Count; i++)
+        {
+            if (ReferenceEquals(list[i], entity)) return i;
+        }
+
         var fi = _factory.Unique;
         if (fi == null) return -1;
 
-        var v = entity[fi.Name];
+        var value = entity[fi.Name];
         for (var i = 0; i < list.Count; i++)
         {
-            if (Equals(list[i][fi.Name], v)) return i;
+            if (Equals(list[i][fi.Name], value)) return i;
         }
 
         return -1;
     }
-
-    /// <summary>判断集合是否已包含目标实体（同引用或同唯一键）</summary>
-    private Boolean ContainsEntity(IList<TEntity> list, TEntity entity) => FindEntity(list, entity) != null;
     #endregion
 
     #region 统计

@@ -1,0 +1,49 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="iPhone" />
+    <Platform Name="iPhoneSimulator" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Others/">
+    <File Path=".editorconfig" />
+    <File Path=".github/instructions/xcode.instructions.md" />
+    <File Path=".github/workflows/publish-beta.yml" />
+    <File Path=".github/workflows/publish.yml" />
+    <File Path=".github/workflows/test.yml" />
+    <File Path=".gitignore" />
+    <File Path="ChangeLog.md" />
+    <File Path="Readme.MD" />
+    <File Path="XCode/Readme.MD" />
+  </Folder>
+  <Folder Name="/UnitTest/">
+    <Project Path="XUnitTest.XCode/XUnitTest.XCode.csproj">
+      <Build Solution="*|iPhone" Project="false" />
+      <Build Solution="*|iPhoneSimulator" Project="false" />
+    </Project>
+  </Folder>
+  <Folder Name="/驱动包/">
+    <Project Path="XCode.DaMeng/XCode.DaMeng.csproj" />
+    <Project Path="XCode.DB2/XCode.DB2.csproj" />
+    <Project Path="XCode.HighGo/XCode.HighGo.csproj" />
+    <Project Path="XCode.KingBase/XCode.KingBase.csproj" />
+    <Project Path="XCode.MySql/XCode.MySql.csproj" />
+    <Project Path="XCode.Oracle/XCode.Oracle.csproj" />
+    <Project Path="XCode.PostgreSQL/XCode.PostgreSQL.csproj" />
+    <Project Path="XCode.SonnetDB/XCode.SonnetDB.csproj">
+      <BuildType Solution="*|x64" Project="?" />
+      <BuildType Solution="*|x86" Project="?" />
+      <Platform Solution="*|x64" Project="?" />
+      <Platform Solution="*|x86" Project="?" />
+      <Build Solution="*|x64" Project="false" />
+      <Build Solution="*|x86" Project="false" />
+    </Project>
+    <Project Path="XCode.SQLite/XCode.SQLite.csproj" />
+    <Project Path="XCode.SqlServer/XCode.SqlServer.csproj" />
+  </Folder>
+  <Project Path="AotSmoke/AotSmoke.csproj" />
+  <Project Path="Test/Test.csproj" />
+  <Project Path="XCode/XCode.csproj" />
+  <Project Path="XCodeTool/XCodeTool.csproj" />
+</Solution>

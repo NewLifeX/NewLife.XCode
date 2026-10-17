@@ -1,7 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using NewLife.Log;
 using XCode.Cache;
 using XCode.Membership;
@@ -171,6 +173,57 @@ namespace XUnitTest.XCode.Caching
             Assert.True(list != list4);
             Assert.True(list2 != list4);
             Assert.Equal(list.Count, list4.Count);
+        }
+
+        [Fact(DisplayName = "刷新期间新增实体不被旧快照覆盖")]
+        public void Add_DuringRefresh_NotLost()
+        {
+            var entities = new List<Role>
+            {
+                new() { ID = 1, Name = "cache_race_1" },
+                new() { ID = 2, Name = "cache_race_2" },
+            };
+
+            var blockNext = false;
+            var loading = new ManualResetEventSlim();
+            var proceed = new ManualResetEventSlim();
+
+            var cache = new EntityCache<Role>
+            {
+                Expire = 2,
+                FillListMethod = () =>
+                {
+                    var snapshot = entities.ToList();
+                    if (blockNext)
+                    {
+                        // 模拟读库期间发生并发新增
+                        loading.Set();
+                        proceed.Wait(5000);
+                    }
+                    return snapshot;
+                },
+            };
+
+            // 首次加载
+            var list = cache.Entities;
+            Assert.Equal(2, list.Count);
+
+            // 强制过期，下一次访问同步刷新；刷新线程读取旧快照后阻塞
+            blockNext = true;
+            cache.Clear("测试刷新期间新增", true);
+            var task = Task.Run(() => cache.Entities);
+            Assert.True(loading.Wait(5000), "刷新未按预期启动");
+
+            // 刷新进行中新增实体（模拟数据库写入后更新缓存）
+            var added = new Role { ID = 100, Name = "cache_race_added" };
+            cache.Add(added);
+
+            proceed.Set();
+            Assert.True(task.Wait(5000), "刷新未按预期完成");
+
+            // 旧快照不包含新增实体，刷新完成后仍须保留
+            var list2 = cache.Entities;
+            Assert.Contains(list2, e => e.ID == added.ID);
         }
     }
 }

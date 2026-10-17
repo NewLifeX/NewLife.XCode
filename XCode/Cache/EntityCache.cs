@@ -58,6 +58,10 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
 
     #region 缓存核心
     private TEntity[] _Entities = [];
+    /// <summary>缓存变更同步锁。保护缓存集合交换与刷新期间的变更日志，避免刷新旧快照覆盖并发添删改</summary>
+    private readonly Object _sync = new();
+    /// <summary>刷新期间发生的添删改日志。刷新完成后回放到新快照，避免被读库旧快照覆盖</summary>
+    private List<Action<List<TEntity>>>? _journal;
     /// <summary>实体集合。无数据返回空集合而不是null</summary>
     public IList<TEntity> Entities
     {
@@ -184,40 +188,67 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
 
     void UpdateCache(String reason, Boolean isAsync = false)
     {
-        Interlocked.Increment(ref _updating);
-
-        //var act = LogPrefix;
-        //var p = act.IndexOf("<");
-        //if (p > 0) act = act[..p];
-        //if (isAsync) act += "Async";
-        //using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:{act}:{TableName}", reason);
-
-        var ts = _Times;
-
-        // 这里直接计算有效期，避免每次判断缓存有效期时进行的时间相加而带来的性能损耗
-        // 设置时间放在获取缓存之前，让其它线程不要空等
-        if (ts > 0) ExpiredTime = TimerX.Now.AddSeconds(Expire);
-
-        WriteLog("更新（第{0}次） 原因：{1}", ts + 1, reason);
-        DAL.SetSpanTag($"{LogPrefix}更新（第{ts + 1}次） 原因：{reason}");
-
-        try
+        // 串行化缓存刷新，避免同步刷新与异步刷新并发时相互覆盖
+        lock (this)
         {
-            _Entities = Invoke<Object, IList<TEntity>>(s => FillListMethod(), null!)?.ToArray() ?? [];
-        }
-        catch (Exception ex)
-        {
-            XTrace.WriteLine($"[{TableName}/{ConnName}]" + ex.GetTrue());
-        }
-        finally
-        {
-            _updating = 0;
-            DAL.SetSpanTag(null);
-        }
+            Interlocked.Increment(ref _updating);
 
-        ts = Interlocked.Increment(ref _Times);
-        ExpiredTime = TimerX.Now.AddSeconds(Expire);
-        WriteLog("完成[{0}]（第{1}次）", _Entities.Length, ts);
+            //var act = LogPrefix;
+            //var p = act.IndexOf("<");
+            //if (p > 0) act = act[..p];
+            //if (isAsync) act += "Async";
+            //using var span = DAL.GlobalTracer?.NewSpan($"cache:{ConnName}:{act}:{TableName}", reason);
+
+            var ts = _Times;
+
+            // 这里直接计算有效期，避免每次判断缓存有效期时进行的时间相加而带来的性能损耗
+            // 设置时间放在获取缓存之前，让其它线程不要空等
+            if (ts > 0) ExpiredTime = TimerX.Now.AddSeconds(Expire);
+
+            WriteLog("更新（第{0}次） 原因：{1}", ts + 1, reason);
+            DAL.SetSpanTag($"{LogPrefix}更新（第{ts + 1}次） 原因：{reason}");
+
+            IList<TEntity>? loaded = null;
+
+            // 开始记录刷新期间发生的添删改，稍后回放到新快照，避免被读库旧快照覆盖
+            lock (_sync) _journal ??= [];
+
+            try
+            {
+                loaded = Invoke<Object, IList<TEntity>>(s => FillListMethod(), null!);
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteLine($"[{TableName}/{ConnName}]" + ex.GetTrue());
+            }
+            finally
+            {
+                _updating = 0;
+                DAL.SetSpanTag(null);
+            }
+
+            lock (_sync)
+            {
+                if (loaded != null)
+                {
+                    var list = loaded.ToList();
+
+                    // 回放刷新期间的添删改，确保并发写入不被旧快照覆盖
+                    if (_journal != null)
+                    {
+                        foreach (var act in _journal) act(list);
+                    }
+
+                    _Entities = list.ToArray();
+                }
+
+                _journal = null;
+            }
+
+            ts = Interlocked.Increment(ref _Times);
+            ExpiredTime = TimerX.Now.AddSeconds(Expire);
+            WriteLog("完成[{0}]（第{1}次）", _Entities.Length, ts);
+        }
     }
 
     /// <summary>清除缓存</summary>
@@ -256,12 +287,17 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
     {
         if (!Using) return;
 
-        var es = _Entities;
-        lock (es)
+        lock (_sync)
         {
             var list = _Entities.ToList();
             list.Add(entity);
             _Entities = list.ToArray();
+
+            // 刷新期间的变更需要记录，随后回放到新快照，避免被旧快照覆盖
+            _journal?.Add(e =>
+            {
+                if (!ContainsEntity(e, entity)) e.Add(entity);
+            });
         }
     }
 
@@ -272,64 +308,105 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
     {
         if (!Using) return null;
 
-        var es = _Entities;
-
-        var e = es.Find(x => x == entity);
-        if (e == null)
+        lock (_sync)
         {
-            var fi = _factory.Unique;
-            if (fi != null)
-            {
-                var v = entity[fi.Name];
-                e = es.Find(x => Equals(x[fi.Name], v));
-            }
-        }
-        if (e == null) return null;
+            var e = FindEntity(_Entities, entity);
+            if (e == null) return null;
 
-        // 更新实体缓存时，不做拷贝，避免产生脏数据，如果恰巧又使用单对象缓存，那会导致自动保存
-        lock (es)
-        {
             var list = _Entities.ToList();
             list.Remove(e);
             _Entities = list.ToArray();
-        }
 
-        return e;
+            // 刷新期间的变更需要记录，随后回放到新快照（按唯一键匹配，兼容重建后的实例）
+            _journal?.Add(l =>
+            {
+                var idx = IndexOfUnique(l, e);
+                if (idx >= 0) l.RemoveAt(idx);
+            });
+
+            return e;
+        }
     }
 
     internal TEntity? Update(TEntity entity)
     {
         if (!Using) return null;
 
-        var es = _Entities;
-
-        // 如果对象本身就在缓存里面，啥也不用做
-        var e = es.FirstOrDefault(x => x == entity);
-        if (e != null) return e;
-
-        var idx = -1;
-        var fi = _factory.Unique;
-        if (fi != null)
+        lock (_sync)
         {
-            var v = entity[fi.Name];
-            idx = Array.FindIndex(es, x => Equals(x[fi.Name], v));
-        }
+            var es = _Entities;
 
-        // 更新实体缓存时，不做拷贝，避免产生脏数据，如果恰巧又使用单对象缓存，那会导致自动保存
-        if (idx >= 0)
-            es[idx] = entity;
-        else
-        {
-            lock (es)
+            // 如果对象本身就在缓存里面，啥也不用做
+            var e = es.FirstOrDefault(x => x == entity);
+            if (e != null) return e;
+
+            var idx = -1;
+            var fi = _factory.Unique;
+            if (fi != null)
             {
-                var list = _Entities.ToList();
-                list.Add(entity);
-                _Entities = list.ToArray();
+                var v = entity[fi.Name];
+                idx = Array.FindIndex(es, x => Equals(x[fi.Name], v));
             }
+
+            // 更新实体缓存时，不做拷贝，避免产生脏数据，如果恰巧又使用单对象缓存，那会导致自动保存
+            var list = _Entities.ToList();
+            if (idx >= 0)
+                list[idx] = entity;
+            else
+                list.Add(entity);
+            _Entities = list.ToArray();
+
+            // 刷新期间的变更需要记录，随后回放到新快照
+            _journal?.Add(l =>
+            {
+                var i = IndexOfUnique(l, entity);
+                if (i >= 0)
+                    l[i] = entity;
+                else
+                    l.Add(entity);
+            });
+
+            return e;
+        }
+    }
+
+    /// <summary>在集合中查找与目标同引用或同唯一键的实体</summary>
+    private TEntity? FindEntity(IList<TEntity> list, TEntity entity)
+    {
+        foreach (var item in list)
+        {
+            if (item == entity) return item;
         }
 
-        return e;
+        var fi = _factory.Unique;
+        if (fi == null) return null;
+
+        var v = entity[fi.Name];
+        foreach (var item in list)
+        {
+            if (Equals(item[fi.Name], v)) return item;
+        }
+
+        return null;
     }
+
+    /// <summary>按唯一键查找实体下标</summary>
+    private Int32 IndexOfUnique(IList<TEntity> list, TEntity entity)
+    {
+        var fi = _factory.Unique;
+        if (fi == null) return -1;
+
+        var v = entity[fi.Name];
+        for (var i = 0; i < list.Count; i++)
+        {
+            if (Equals(list[i][fi.Name], v)) return i;
+        }
+
+        return -1;
+    }
+
+    /// <summary>判断集合是否已包含目标实体（同引用或同唯一键）</summary>
+    private Boolean ContainsEntity(IList<TEntity> list, TEntity entity) => FindEntity(list, entity) != null;
     #endregion
 
     #region 统计

@@ -46,11 +46,11 @@ public class ClassBuilder
             xmlFile = di.GetFiles("*.xml", SearchOption.TopDirectoryOnly).FirstOrDefault()?.FullName;
         }
 
-        if (xmlFile.IsNullOrEmpty()) throw new Exception("找不到任何模型文件！");
+        if (xmlFile.IsNullOrEmpty()) throw new Exception(L.T("No model file was found."));
 
         var dir = Path.GetDirectoryName(xmlFile);
         xmlFile = xmlFile.GetBasePath();
-        if (!File.Exists(xmlFile)) throw new FileNotFoundException("指定模型文件不存在！", xmlFile);
+        if (!File.Exists(xmlFile)) throw new FileNotFoundException(L.T("The specified model file does not exist."), xmlFile);
 
         // 导入模型
         var xmlContent = File.ReadAllText(xmlFile);

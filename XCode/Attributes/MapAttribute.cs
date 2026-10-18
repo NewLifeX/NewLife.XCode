@@ -82,8 +82,8 @@ public class MapProvider
         var mst = fact.Master?.Name;
 
         if (key.IsNullOrEmpty()) key = fact.Unique?.Name;
-        if (key.IsNullOrEmpty()) throw new ArgumentNullException("没有设置关联键", nameof(Key));
-        if (mst.IsNullOrEmpty()) throw new ArgumentNullException("没有设置主要字段");
+        if (key.IsNullOrEmpty()) throw new ArgumentNullException(L.T("No relation key is set."), nameof(Key));
+        if (mst.IsNullOrEmpty()) throw new ArgumentNullException(L.T("No master field is set."));
 
         // 修正字段大小写，用户书写Map特性时，可能把字段名大小写写错
         if (fact.Table.FindByName(key) is FieldItem fi)

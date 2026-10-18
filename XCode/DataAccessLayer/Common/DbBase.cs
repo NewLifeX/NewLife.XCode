@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using NewLife.Collections;
 using NewLife.Log;
 using NewLife.Reflection;
+using NewLife;
 
 namespace XCode.DataAccessLayer;
 
@@ -177,7 +178,7 @@ abstract class DbBase : DisposeBase, IDatabase
     protected void CheckConnStr()
     {
         if (ConnectionString.IsNullOrWhiteSpace())
-            throw new XCodeException("[{0}]未指定连接字符串！", ConnName);
+            throw new XCodeException(L.T("[{0}] no connection string is specified!"), ConnName);
     }
 
     private String? _newStr;
@@ -527,7 +528,7 @@ abstract class DbBase : DisposeBase, IDatabase
 
             factory = GetProviderFactory(type);
 
-            if (factory == null) throw new XCodeException("无法加载驱动[{0}]，请从nuget正确引入数据库驱动！", assemblyFile);
+            if (factory == null) throw new XCodeException(L.T("Unable to load driver [{0}]; add the database driver package from NuGet."), assemblyFile);
 
             return factory;
         }

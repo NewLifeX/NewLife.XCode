@@ -1,0 +1,8 @@
+# 简体中文译文。键为英文源文，缺失时运行期回退英文。
+"No relation key is set.": "没有设置关联键"
+"No master field is set.": "没有设置主要字段"
+"Entity class [{0}] must implement [{1}].": "实体类[{0}]需要实现[{1}]接口"
+"No model file was found.": "找不到任何模型文件！"
+"The specified model file does not exist.": "指定模型文件不存在！"
+"[{0}] no connection string is specified!": "[{0}]未指定连接字符串！"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "无法加载驱动[{0}]，请从nuget正确引入数据库驱动！"

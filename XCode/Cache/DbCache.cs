@@ -5,6 +5,7 @@ using XCode;
 using XCode.Configuration;
 using XCode.DataAccessLayer;
 using XCode.Extension;
+using NewLife;
 
 namespace NewLife.Caching;
 
@@ -34,7 +35,7 @@ public class DbCache : Cache
     {
         factory ??= MyDbCache.Meta.Factory;
         if (factory.Default is not IDbCache)
-            throw new XCodeException("实体类[{0}]需要实现[{1}]接口", factory.EntityType.FullName, typeof(IDbCache).FullName);
+            throw new XCodeException(L.T("Entity class [{0}] must implement [{1}]."), factory.EntityType.FullName, typeof(IDbCache).FullName);
 
         var name = factory.EntityType.Name;
 

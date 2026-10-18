@@ -1,0 +1,8 @@
+# 繁體中文譯文。鍵為英文源文，缺失時執行期回退英文。
+"No relation key is set.": "沒有設置關聯鍵"
+"No master field is set.": "沒有設置主要字段"
+"Entity class [{0}] must implement [{1}].": "實體類[{0}]需要實現[{1}]接口"
+"No model file was found.": "找不到任何模型文件！"
+"The specified model file does not exist.": "指定模型文件不存在！"
+"[{0}] no connection string is specified!": "[{0}]未指定連接字符串！"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "無法加載驅動[{0}]，請從nuget正確引入數據庫驅動！"

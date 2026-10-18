@@ -87,11 +87,11 @@
     <PackageReference Include="InterSystems.Data.IRISClient" Version="2.6.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
-    <PackageReference Include="NewLife.Core" Version="12.0.2026.1013-beta0732" />
-    <PackageReference Include="NewLife.IP" Version="2.5.2026.804" />
-    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.901" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1018-beta1517" />
+    <PackageReference Include="NewLife.IP" Version="2.5.2026.1017-beta1408" />
+    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.1017-beta0946" />
     <!-- NovaDb 1.0.2026.901 传递依赖的 Remoting 3.9.2026.901 与 Core 12 二进制不兼容，直引已适配版本（与 AotSmoke 对齐） -->
-    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1015-beta1355" />
+    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1017-beta1444" />
     <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.301-beta0617" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.12" />
     <PackageReference Include="xunit" Version="2.9.3" />

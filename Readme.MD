@@ -1,14 +1,22 @@
 # NewLife.XCode - 数据中间件 / 超级ORM
 
 ![GitHub top language](https://img.shields.io/github/languages/top/newlifex/newlife.xcode?logo=github)
-![GitHub License](https://img.shields.io/github/license/newlifex/newlife.xcode?logo=github)
-![Nuget Downloads](https://img.shields.io/nuget/dt/newlife.xcode?logo=nuget)
-![Nuget](https://img.shields.io/nuget/v/newlife.xcode?logo=nuget)
-![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/newlife.xcode?label=dev%20nuget&logo=nuget)
+
+
+![GitHub License](https://img.shields.io/github/license/NewLifeX/NewLife.XCode?logo=github)
+![NuGet Downloads](https://img.shields.io/nuget/dt/NewLife.XCode?logo=nuget)
+![NuGet](https://img.shields.io/nuget/v/NewLife.XCode?logo=nuget)
+![NuGet prerelease](https://img.shields.io/nuget/vpre/NewLife.XCode?label=dev%20nuget&logo=nuget)
+[![test](https://github.com/NewLifeX/NewLife.XCode/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/NewLifeX/NewLife.XCode/actions/workflows/test.yml)
+![platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
+[![contributors](https://img.shields.io/github/contributors/NewLifeX/NewLife.XCode?logo=github)](https://github.com/NewLifeX/NewLife.XCode/graphs/contributors)
+
+<!-- lang:start -->
+🌐 [繁體中文](README.zh-TW.md) | [English](README.en.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
+<!-- lang:end -->
 
 高性能 .NET 数据中间件，聚焦"添删改查 + 极致性能 + 海量数据"，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / 达梦 / 金仓 / 瀚高 / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network 网络虚拟数据库 / NovaDb 自研数据库等，并提供 [SonnetDB 适配与能力验收](Doc/SonnetDB.md)。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
 
-[English](README.en.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Español](README.es.md) | [Français](README.fr.md)
 
 > 多语言版为精简摘要，更新可能滞后；完整内容以中文版为准。
 

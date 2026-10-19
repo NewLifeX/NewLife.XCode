@@ -14,9 +14,9 @@
   <ItemGroup>
     <ProjectReference Include="..\XCode\XCode.csproj" />
     <!-- NovaDb 作为嵌入式真库验证对象（阶段 5：实体 CRUD/缓存覆盖） -->
-    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.1017-beta0946" />
+    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.1019-beta0435" />
     <!-- NovaDb 1.0.2026.901 传递依赖的 Remoting 3.9.2026.901 引用了已被新版 Core 删除的 NewLife.Model.IPipelineHandler（JIT 惰性解析可过，ILC 急切解析失败），直接升至已适配版本 -->
-    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1017-beta1444" />
+    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1019-beta0326" />
     <!-- SQLite 嵌入式真库验证对象：AOT 路线为 Microsoft.Data.Sqlite（SQLitePCLRaw 原生库），System.Data.SQLite 为混合编译不支持 AOT -->
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
     <!-- MySQL 真库验证对象（官方连接器）：连接串来自环境变量 XCode_mysql，未设置时跳过该场景 -->

@@ -36,8 +36,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <!-- 注意：NewLife.MySql 1.4.2026.801 与 NewLife.Core 12.x 二进制不兼容（OwnerPacket.Slice(Int32,Int32) 已改为显式接口实现），任意操作抛 MissingMethodException；待上游重编译发版后升级 -->
-    <PackageReference Include="NewLife.MySql" Version="1.4.2026.1016-beta0206" />
+    <PackageReference Include="NewLife.MySql" Version="1.4.2026.1019-beta0440" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XCode\XCode.csproj" />

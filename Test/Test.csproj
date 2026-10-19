@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net10.0</TargetFrameworks>
@@ -36,9 +36,9 @@
     <Folder Include="Model\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Redis" Version="6.6.2026.1017-beta1441" />
-    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1017-beta1444" />
-    <PackageReference Include="NewLife.Stardust" Version="3.10.2026.1017-beta1056" />
+    <PackageReference Include="NewLife.Redis" Version="6.6.2026.1019-beta0424" />
+    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1019-beta0326" />
+    <PackageReference Include="NewLife.Stardust" Version="3.10.2026.1018-beta1738" />
     <PackageReference Include="SourceGear.sqlite3" Version="3.53.4" />
     <PackageReference Include="System.Data.SQLite" Version="2.0.4" />
   </ItemGroup>

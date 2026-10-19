@@ -55,3 +55,5 @@
 "Cannot modify data of another tenant [{0}].": "Cannot modify data of another tenant [{0}]."
 "Cannot delete data of another tenant [{0}].": "Cannot delete data of another tenant [{0}]."
 "The token is not authorized to access database [{0}].": "The token is not authorized to access database [{0}]."
+"Table [{0}] field [{1}] does not specify a DataType.": "Table [{0}] field [{1}] does not specify a DataType."
+"Type {0} does not have the [{1}] attribute!": "Type {0} does not have the [{1}] attribute!"

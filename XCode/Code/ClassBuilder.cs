@@ -160,7 +160,7 @@ public class ClassBuilder
         foreach (var dc in dt.Columns)
         {
             if (dc.DataType == null && dc.Properties["Type"].IsNullOrEmpty())
-                throw new XCodeException($"表[{dt.Name}]的字段[{dc.Name}]未指定DataType类型");
+                throw new XCodeException("Table [{0}] field [{1}] does not specify a DataType.", dt.Name, dc.Name);
         }
 
         var option = Option;

@@ -55,3 +55,5 @@
 "Cannot modify data of another tenant [{0}].": "不能修改其他租户[{0}]的数据"
 "Cannot delete data of another tenant [{0}].": "不能删除其他租户[{0}]的数据"
 "The token is not authorized to access database [{0}].": "令牌无权访问数据库[{0}]"
+"Table [{0}] field [{1}] does not specify a DataType.": "表[{0}]的字段[{1}]未指定DataType类型"
+"Type {0} does not have the [{1}] attribute!": "类型{0}没有[{1}]特性！"

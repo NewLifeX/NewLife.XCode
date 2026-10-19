@@ -179,7 +179,7 @@ public class TableItem
     {
         EntityType = type;
         _Table = type.GetCustomAttribute<BindTableAttribute>(true);
-        if (_Table == null) throw new ArgumentOutOfRangeException(nameof(type), "类型" + type + "没有" + typeof(BindTableAttribute).Name + "特性！");
+        if (_Table == null) throw new ArgumentOutOfRangeException(nameof(type), L.T("Type {0} does not have the [{1}] attribute!", type, typeof(BindTableAttribute).Name));
 
         _Indexes = type.GetCustomAttributes<BindIndexAttribute>(true).ToArray();
         //_Relations = type.GetCustomAttributes<BindRelationAttribute>(true).ToArray();

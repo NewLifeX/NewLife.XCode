@@ -190,7 +190,7 @@ public partial class TDengineConnection : DbConnection
             Min = 1,
             Max = 1000,
             IdleTime = 20,
-            AllIdleTime = 120,
+            // AllIdleTime 已废弃，现为 IdleTime 的读写代理，重复设置会覆盖 IdleTime
 #if DEBUG
             //Log = XTrace.Log,
 #endif

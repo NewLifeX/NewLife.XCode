@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: αύξηση της έκδοσης προσωρινής μνήμης του [{0}], {1} => {2}, αιτία={3}"
 "No string primary key is defined for [{0}].": "Δεν έχει οριστεί πρωτεύον κλειδί συμβολοσειράς για το [{0}]."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "Ο πίνακας [{0}] δεν έχει μοναδικό πρωτεύον κλειδί και δεν μπορεί να χρησιμοποιηθεί για προσωρινή αποθήκευση."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Ουρά οντοτήτων [{0}/{1}] αποθήκευση {2:n0}, εκτίμηση {3:n0}ms"

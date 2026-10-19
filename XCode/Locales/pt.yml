@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: incrementando a versão do cache de [{0}], {1} => {2}, motivo={3}"
 "No string primary key is defined for [{0}].": "Nenhuma chave primária de string está definida para [{0}]."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "A tabela [{0}] não tem uma chave primária exclusiva e não pode ser usada para cache."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Fila de entidades [{0}/{1}] salvando {2:n0}, estimado {3:n0}ms"

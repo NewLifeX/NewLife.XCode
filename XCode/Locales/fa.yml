@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: افزایش نسخه حافظه نهان [{0}]، {1} => {2}، دلیل={3}"
 "No string primary key is defined for [{0}].": "هیچ کلید اصلی رشته‌ای برای [{0}] تعریف نشده است."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "جدول [{0}] کلید اصلی یکتا ندارد و نمی‌تواند برای حافظه نهان استفاده شود."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "صف موجودیت [{0}/{1}] در حال ذخیره {2:n0}، تخمین {3:n0}ms"

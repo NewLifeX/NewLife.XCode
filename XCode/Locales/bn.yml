@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: [{0}] এর ক্যাশে সংস্করণ {1} => {2} এ বৃদ্ধি করা হচ্ছে, কারণ={3}"
 "No string primary key is defined for [{0}].": "[{0}] এর জন্য কোনো স্ট্রিং প্রাইমারি কী সংজ্ঞায়িত করা হয়নি।"
 "Table [{0}] has no unique primary key and cannot be used for caching.": "টেবিল [{0}] এ কোনো অনন্য প্রাইমারি কী নেই এবং এটি ক্যাশিংয়ের জন্য ব্যবহার করা যাবে না।"
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "সত্তা সারি [{0}/{1}] সংরক্ষণ করছে {2:n0}, আনুমানিক {3:n0}ms"

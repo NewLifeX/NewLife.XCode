@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: [{0}]의 캐시 버전을 {1} => {2}(으)로 증가, 이유={3}"
 "No string primary key is defined for [{0}].": "[{0}]에 문자열 형식의 기본 키가 정의되어 있지 않습니다."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "테이블 [{0}]에는 고유 기본 키가 없어 캐싱에 사용할 수 없습니다."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "엔터티 큐 [{0}/{1}] 저장 {2:n0}, 예상 {3:n0}ms"

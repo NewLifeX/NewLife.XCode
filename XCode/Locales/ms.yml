@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: menambah versi cache bagi [{0}], {1} => {2}, sebab={3}"
 "No string primary key is defined for [{0}].": "Tiada kunci primer rentetan ditentukan untuk [{0}]."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "Jadual [{0}] tiada kunci primer unik dan tidak boleh digunakan untuk cache."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Baris gilir entiti [{0}/{1}] menyimpan {2:n0}, anggaran {3:n0}ms"

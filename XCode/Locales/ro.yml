@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: se incrementează versiunea cache-ului pentru [{0}], {1} => {2}, motiv={3}"
 "No string primary key is defined for [{0}].": "Nu este definită nicio cheie primară de tip șir pentru [{0}]."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "Tabelul [{0}] nu are o cheie primară unică și nu poate fi folosit pentru cache."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Coada de entități [{0}/{1}] salvează {2:n0}, estimat {3:n0}ms"

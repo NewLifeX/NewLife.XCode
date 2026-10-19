@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator：正在递增[{0}]的缓存版本号，{1} => {2}，原因={3}"
 "No string primary key is defined for [{0}].": "[{0}]未定义字符串类型的主键。"
 "Table [{0}] has no unique primary key and cannot be used for caching.": "数据表[{0}]没有唯一主键，无法用于缓存。"
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "实体队列[{0}/{1}] 保存 {2:n0}，预计耗时 {3:n0}ms"

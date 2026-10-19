@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: מגדיל את גרסת המטמון של [{0}], {1} => {2}, סיבה={3}"
 "No string primary key is defined for [{0}].": "לא הוגדר מפתח ראשי מסוג מחרוזת עבור [{0}]."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "לטבלה [{0}] אין מפתח ראשי ייחודי ולא ניתן להשתמש בה לשמירה במטמון."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "תור ישויות [{0}/{1}] שומר {2:n0}, משוער {3:n0}ms"

@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: zwiększanie wersji pamięci podręcznej [{0}], {1} => {2}, powód={3}"
 "No string primary key is defined for [{0}].": "Dla [{0}] nie zdefiniowano klucza głównego typu string."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "Tabela [{0}] nie ma unikalnego klucza głównego i nie może być używana do buforowania."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Kolejka encji [{0}/{1}] zapisuje {2:n0}, szacowano {3:n0}ms"

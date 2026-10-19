@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: [{0}] のキャッシュバージョンを {1} => {2} に増加、理由={3}"
 "No string primary key is defined for [{0}].": "[{0}] に文字列型の主キーが定義されていません。"
 "Table [{0}] has no unique primary key and cannot be used for caching.": "テーブル[{0}]には一意の主キーがないため、キャッシュに使用できません。"
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "エンティティキュー[{0}/{1}] 保存 {2:n0}、推定 {3:n0}ms"

@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: [{0}] öğesinin önbellek sürümü artırılıyor, {1} => {2}, neden={3}"
 "No string primary key is defined for [{0}].": "[{0}] için dize türünde bir birincil anahtar tanımlanmamış."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "[{0}] tablosunun benzersiz bir birincil anahtarı yok ve önbellekleme için kullanılamaz."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Varlık kuyruğu [{0}/{1}] kaydediyor {2:n0}, tahmini {3:n0}ms"

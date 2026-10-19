@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: زيادة إصدار ذاكرة التخزين المؤقت لـ [{0}]، {1} => {2}، السبب={3}"
 "No string primary key is defined for [{0}].": "لم يتم تعريف مفتاح أساسي من نوع السلسلة لـ [{0}]."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "لا يحتوي الجدول [{0}] على مفتاح أساسي فريد ولا يمكن استخدامه للتخزين المؤقت."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "قائمة انتظار الكيانات [{0}/{1}] تحفظ {2:n0}، المتوقع {3:n0} مللي ثانية"

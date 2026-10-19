@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: збільшення версії кешу для [{0}], {1} => {2}, причина={3}"
 "No string primary key is defined for [{0}].": "Для [{0}] не визначено рядковий первинний ключ."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "Таблиця [{0}] не має унікального первинного ключа й не може використовуватися для кешування."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Черга сутностей [{0}/{1}] зберігає {2:n0}, оцінка {3:n0}мс"

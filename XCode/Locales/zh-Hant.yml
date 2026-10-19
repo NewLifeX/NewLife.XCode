@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator：正在遞增[{0}]的快取版本號，{1} => {2}，原因={3}"
 "No string primary key is defined for [{0}].": "[{0}]未定義字串類型的主鍵。"
 "Table [{0}] has no unique primary key and cannot be used for caching.": "資料表[{0}]沒有唯一主鍵，無法用於快取。"
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "實體佇列[{0}/{1}] 儲存 {2:n0}，預計耗時 {3:n0}ms"

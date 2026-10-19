@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: đang tăng phiên bản bộ đệm của [{0}], {1} => {2}, lý do={3}"
 "No string primary key is defined for [{0}].": "Chưa định nghĩa khóa chính kiểu chuỗi cho [{0}]."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "Bảng [{0}] không có khóa chính duy nhất và không thể dùng để lưu vào bộ đệm."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Hàng đợi thực thể [{0}/{1}] đang lưu {2:n0}, ước tính {3:n0}ms"

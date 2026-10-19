@@ -197,7 +197,7 @@ public class EntityQueue(IEntitySession session) : DisposeBase
         if (Debug || list.Count > 100_000)
         {
             var cost = speed == 0 ? 0 : list.Count * 1000 / speed;
-            XTrace.WriteLine($"实体队列[{ss.TableName}/{ss.ConnName}]\t保存 {list.Count:n0}\t预测耗时 {cost:n0}ms");
+            XTrace.WriteLine("Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms", ss.TableName, ss.ConnName, list.Count, cost);
         }
 
         var dss = ss.Dal.Session;

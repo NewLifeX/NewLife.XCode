@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: øker cacheversjonen for [{0}], {1} => {2}, årsak={3}"
 "No string primary key is defined for [{0}].": "Det er ikke definert en strengprimærnøkkel for [{0}]."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "Tabellen [{0}] har ingen unik primærnøkkel og kan ikke brukes til caching."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Entitetskø [{0}/{1}] lagrer {2:n0}, anslått {3:n0}ms"

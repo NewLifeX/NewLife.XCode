@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: kasvatetaan kohteen [{0}] välimuistiversiota, {1} => {2}, syy={3}"
 "No string primary key is defined for [{0}].": "Kohteelle [{0}] ei ole määritetty merkkijonopääavainta."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "Taululla [{0}] ei ole yksilöllistä pääavainta, eikä sitä voi käyttää välimuistiin."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Entiteettijono [{0}/{1}] tallentaa {2:n0}, arvio {3:n0}ms"

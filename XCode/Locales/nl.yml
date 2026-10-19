@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: cacheversie van [{0}] verhogen, {1} => {2}, reden={3}"
 "No string primary key is defined for [{0}].": "Er is geen tekenreeks-primaire sleutel gedefinieerd voor [{0}]."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "Tabel [{0}] heeft geen unieke primaire sleutel en kan niet voor caching worden gebruikt."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Entiteitswachtrij [{0}/{1}] opslaan {2:n0}, geschat {3:n0}ms"

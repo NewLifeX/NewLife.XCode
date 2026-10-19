@@ -16,3 +16,4 @@
 "CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}": "CacheInvalidator: zvyšování verze mezipaměti [{0}], {1} => {2}, důvod={3}"
 "No string primary key is defined for [{0}].": "Pro [{0}] není definován řetězcový primární klíč."
 "Table [{0}] has no unique primary key and cannot be used for caching.": "Tabulka [{0}] nemá jedinečný primární klíč a nelze ji použít pro ukládání do mezipaměti."
+"Entity queue [{0}/{1}] saving {2:n0}, estimated {3:n0}ms": "Fronta entit [{0}/{1}] ukládá {2:n0}, odhad {3:n0} ms"

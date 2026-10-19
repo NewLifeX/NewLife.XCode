@@ -107,26 +107,24 @@ public class PrefixedLogTests
                 }
             }
 
-            // 会员/权限词条已补齐 8 种主要语言译文
-            const String membershipKey = "Incorrect username or password!";
-            foreach (var culture in new[] { "de", "es", "fr", "ja", "ko", "pt", "ru", "ar" })
+            // 8 种主要语言已全量翻译，抽查会员、备份恢复、驱动与数据访问日志词条
+            var majorCultures = new[] { "de", "es", "fr", "ja", "ko", "pt", "ru", "ar" };
+            var majorKeys = new[]
             {
-                Localization.LogCulture = CultureInfo.GetCultureInfo(culture);
-                Assert.NotEqual(membershipKey, Localization.TranslateForLog(membershipKey));
-            }
-
-            // 俄语词表已全量翻译，覆盖备份恢复、驱动与数据访问日志
-            Localization.LogCulture = CultureInfo.GetCultureInfo("ru");
-            foreach (var key in new[]
-            {
+                "Incorrect username or password!",
                 "Backup of [{0}/{1}] completed; total [{2:n0}] rows, elapsed {3:n0}ms, speed {4:n0}tps",
                 "Slow SQL [{0:n0}ms] {1}",
                 "The current database does not support batch operations!",
                 "Data connection [{0}] is read-only; {1} is not allowed.",
                 "Found a legacy-format Boolean field in Hana: {0} {1}",
-            })
+            };
+            foreach (var culture in majorCultures)
             {
-                Assert.NotEqual(key, Localization.TranslateForLog(key));
+                Localization.LogCulture = CultureInfo.GetCultureInfo(culture);
+                foreach (var key in majorKeys)
+                {
+                    Assert.NotEqual(key, Localization.TranslateForLog(key));
+                }
             }
         }
         finally

@@ -92,7 +92,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                 // 如果重试次数用完，或者不应该在该异常上重试，则直接向上抛出异常
                 if (i == retry || !ShouldRetryOn(ex)) throw;
 
-                Log?.Debug("retry {0}，delay {1}", i + 1, delay);
+                Log?.Debug("retry {0}, delay {1}", i + 1, delay);
                 Thread.Sleep(delay);
 
                 // 间隔时间倍增，最大30秒
@@ -128,7 +128,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                 // 如果重试次数用完，或者不应该在该异常上重试，则直接向上抛出异常
                 if (i == retry || !ShouldRetryOn(ex)) throw;
 
-                Log?.Debug("retry {0}，delay {1}", i + 1, delay);
+                Log?.Debug("retry {0}, delay {1}", i + 1, delay);
                 Thread.Sleep(delay);
 
                 // 间隔时间倍增，最大30秒
@@ -165,7 +165,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                 // 如果重试次数用完，或者不应该在该异常上重试，则直接向上抛出异常
                 if (i == retry || !ShouldRetryOn(ex)) throw;
 
-                Log?.Debug("retry {0}，delay {1}", i + 1, delay);
+                Log?.Debug("retry {0}, delay {1}", i + 1, delay);
                 // 异步路径使用 Task.Delay 而非 Thread.Sleep，避免阻塞线程池线程
                 await Task.Delay(delay).ConfigureAwait(false);
 
@@ -202,7 +202,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                 // 如果重试次数用完，或者不应该在该异常上重试，则直接向上抛出异常
                 if (i == retry || !ShouldRetryOn(ex)) throw;
 
-                Log?.Debug("retry {0}，delay {1}", i + 1, delay);
+                Log?.Debug("retry {0}, delay {1}", i + 1, delay);
                 // 异步路径使用 Task.Delay 而非 Thread.Sleep，避免阻塞线程池线程
                 await Task.Delay(delay).ConfigureAwait(false);
 

@@ -244,9 +244,9 @@ public class SingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAcce
         {
             var sb = Pool.StringBuilder.Get();
             var name = $"<{typeof(TEntity).Name}>({Entities.Count:n0})";
-            sb.AppendFormat(L.T("Object cache {0,-20}"), name);
-            sb.AppendFormat(L.T("Total {0,11:n0}"), Total);
-            if (Success > 0) sb.AppendFormat(L.T(", hits {0,11:n0} ({1,6:P02})"), Success, (Double)Success / Total);
+            sb.Append(Localization.TranslateForLog("Object cache {0,-20}", name));
+            sb.Append(Localization.TranslateForLog("Total {0,11:n0}", Total));
+            if (Success > 0) sb.Append(Localization.TranslateForLog(", hits {0,11:n0} ({1,6:P02})", Success, (Double)Success / Total));
             sb.AppendFormat("\t[{0}]", typeof(TEntity).FullName);
 
             XTrace.WriteLine(sb.Return(true));

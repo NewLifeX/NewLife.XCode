@@ -83,7 +83,7 @@ public class CustomBuilder : EntityBuilder
 
         var output = option.Output;
         if (output.IsNullOrEmpty()) output = ".";
-        log?.Info("生成实体类 {0}", output.GetBasePath());
+        log?.Info("Generating entity class {0}", output.GetBasePath());
 
         var count = 0;
         foreach (var item in tables)

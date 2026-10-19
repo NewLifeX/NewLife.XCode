@@ -99,7 +99,7 @@ public class InfluxDBDataReader : DbDataReader
     public override Object GetValue(Int32 ordinal)
     {
         if (_currentRow < 0 || _currentRow >= _rows.Length)
-            throw new InvalidOperationException("Invalid row position.");
+            throw new InvalidOperationException(L.T("Invalid row position."));
 
         var value = _rows[_currentRow][ordinal];
         return String.IsNullOrEmpty(value) ? DBNull.Value : value;

@@ -373,12 +373,12 @@ schema.measurements(bucket: v.bucket)
     public override String CreateDatabaseSQL(String dbname, String? file)
     {
         // InfluxDB 2.x 不支持通过 SQL/Flux 创建 bucket，需要使用 HTTP API
-        throw new NotSupportedException("InfluxDB does not support creating buckets via SQL. Use HTTP API or CLI.");
+        throw new NotSupportedException(L.T("InfluxDB does not support creating buckets via SQL. Use HTTP API or CLI."));
     }
 
     public override String DropDatabaseSQL(String dbname)
     {
-        throw new NotSupportedException("InfluxDB does not support dropping buckets via SQL. Use HTTP API or CLI.");
+        throw new NotSupportedException(L.T("InfluxDB does not support dropping buckets via SQL. Use HTTP API or CLI."));
     }
 
     public override String CreateTableSQL(IDataTable table)
@@ -392,7 +392,7 @@ schema.measurements(bucket: v.bucket)
     public override String AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
     {
         // InfluxDB 不支持修改字段
-        throw new NotSupportedException("InfluxDB does not support altering columns.");
+        throw new NotSupportedException(L.T("InfluxDB does not support altering columns."));
     }
 
     public override String AddColumnDescriptionSQL(IDataColumn field) => String.Empty;

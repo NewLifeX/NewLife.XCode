@@ -655,7 +655,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     /// <inheritdoc/>
     public override String? DropColumnDescriptionSQL(IDataColumn field) => throw CommentsUnsupported();
 
-    private static NotSupportedException CommentsUnsupported() => new("SonnetDB尚未支持表和字段注释的持久化。参见SonnetDB issue #237，尚需实现对应能力并正式发布。");
+    private static NotSupportedException CommentsUnsupported() => new(L.T("SonnetDB does not yet support persisting table and column comments. See SonnetDB issue #237; the capability must be implemented and released."));
 
     protected override Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
     {

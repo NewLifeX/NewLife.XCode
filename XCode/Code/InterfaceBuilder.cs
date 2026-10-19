@@ -22,7 +22,7 @@ public class InterfaceBuilder : ClassBuilder
 
         //option.Partial = true;
 
-        log?.Info("生成简易接口 {0}", option.Output?.GetBasePath());
+        log?.Info("Generating simple interface {0}", option.Output?.GetBasePath());
 
         var count = 0;
         foreach (var item in tables)

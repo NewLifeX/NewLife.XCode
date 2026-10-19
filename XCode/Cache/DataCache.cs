@@ -19,7 +19,7 @@ public class DataCache
 
     #region 属性
     /// <summary>名称</summary>
-    public String Name { get; set; } = "XCode数据缓存，用于加速各实体类启动";
+    public String Name { get; set; } = L.T("XCode data cache, used to speed up entity initialization");
     #endregion
 
     #region 方法

@@ -61,7 +61,7 @@ public class ClassBuilder
             ["xs:schemaLocation"] = "https://newlifex.com https://newlifex.com/Model202309.xsd"
         };
 
-        log?.Info("导入模型：{0}", xmlFile);
+        log?.Info("Importing model: {0}", xmlFile);
 
         // 导入模型
         var tables = ModelHelper.FromXml(xmlContent, DAL.CreateTable, option, atts);

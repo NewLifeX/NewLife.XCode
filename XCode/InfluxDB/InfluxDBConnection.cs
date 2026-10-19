@@ -99,7 +99,7 @@ public class InfluxDBConnection : DbConnection
     /// <returns></returns>
     protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
     {
-        throw new NotSupportedException("InfluxDB does not support transactions.");
+        throw new NotSupportedException(L.T("InfluxDB does not support transactions."));
     }
 
     /// <summary>改变数据库</summary>
@@ -140,11 +140,11 @@ public class InfluxDBConnection : DbConnection
         _database = Bucket;
 
         if (String.IsNullOrEmpty(Token))
-            throw new ArgumentException("Token is required in connection string.");
+            throw new ArgumentException(L.T("Token is required in connection string."));
         if (String.IsNullOrEmpty(Organization))
-            throw new ArgumentException("Organization is required in connection string.");
+            throw new ArgumentException(L.T("Organization is required in connection string."));
         if (String.IsNullOrEmpty(Bucket))
-            throw new ArgumentException("Bucket is required in connection string.");
+            throw new ArgumentException(L.T("Bucket is required in connection string."));
     }
     #endregion
 }

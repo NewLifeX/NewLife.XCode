@@ -96,7 +96,7 @@ public class EntityBuilder : ClassBuilder
         //if (Enum.TryParse<NameFormats>(atts["NameFormat"], true, out var format) && format > NameFormats.Default)
         if (option is EntityBuilderOption opt && opt.NameFormat > NameFormats.Default)
         {
-            log?.Info("处理表名字段名为：{0}", opt.NameFormat);
+            log?.Info("Naming table fields: {0}", opt.NameFormat);
 
             var resolve = ModelResolver.Current;
             foreach (var dt in tables)
@@ -195,7 +195,7 @@ public class EntityBuilder : ClassBuilder
         var xml2 = ModelHelper.ToXml(tables, option, atts);
         if (xmlContent != xml2)
         {
-            log?.Info("修正模型：{0}", xmlFile);
+            log?.Info("Fixing model: {0}", xmlFile);
 
             File.WriteAllText(xmlFile, xml2, Encoding.UTF8);
         }
@@ -217,14 +217,14 @@ public class EntityBuilder : ClassBuilder
 
         var output = option.Output;
         if (output.IsNullOrEmpty()) output = ".";
-        log?.Info("生成实体类 {0}", output.GetBasePath());
+        log?.Info("Generating entity class {0}", output.GetBasePath());
 
         // 检测XCode版本，自动决定是否启用模块名称升级
         var version = DetectXCodeVersion(output.GetBasePath());
         var needUpgrade = NeedUpgradeModuleNames(version);
         if (needUpgrade)
         {
-            log?.Info("检测到XCode版本 {0}，启用模块名称升级", version);
+            log?.Info("Detected XCode version {0}; enabling module name upgrade.", version);
         }
 
         var displayNames = new HashSet<String>();
@@ -687,7 +687,7 @@ public class EntityBuilder : ClassBuilder
         if (content != oldContent)
         {
             File.WriteAllText(fileName, content);
-            Log?.Info("升级模块类名：{0}", fileName);
+            Log?.Info("Upgrading module class name: {0}", fileName);
             return true;
         }
 

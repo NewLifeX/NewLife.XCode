@@ -28,7 +28,7 @@ public class ModelBuilder : ClassBuilder
         //option.Pure = true;
         //option.Partial = true;
 
-        log?.Info("生成简易模型类 {0}", option.Output?.GetBasePath());
+        log?.Info("Generating simple model class {0}", option.Output?.GetBasePath());
 
         var count = 0;
         foreach (var item in tables)

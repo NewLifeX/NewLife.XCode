@@ -141,7 +141,7 @@ public class CubeBuilder : ClassBuilder
         var root = FindProjectRootNamespace(option.Output);
         if (root.IsNullOrEmpty()) root = option.ConnName + "Web";
 
-        log?.Info("生成魔方区域 {0} {1}", areaName, file);
+        log?.Info("Generating Cube area {0} {1}", areaName, file);
 
         var builder = new CubeBuilder
         {
@@ -185,7 +185,7 @@ public class CubeBuilder : ClassBuilder
 
         option.Output = option.Output.CombinePath("Controllers");
 
-        log?.Info("生成控制器 {0}", option.Output.GetBasePath());
+        log?.Info("Generating controller {0}", option.Output.GetBasePath());
 
         var count = 0;
         var n = tables.Count;

@@ -64,7 +64,7 @@ public class HtmlBuilder : ClassBuilder
         file += ".htm";
         file = file.GetBasePath();
 
-        log?.Info("生成数据字典 {0}", file);
+        log?.Info("Generating data dictionary {0}", file);
 
         var count = 0;
         var writer = new StringWriter();

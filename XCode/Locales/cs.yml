@@ -345,3 +345,7 @@
 "Total models: {0}": "Celkem modelů: {0}"
 "Execute({0} {1})": "Spustit ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "Datová mezipaměť XCode pro zrychlení inicializace entit"
+"Usage: xcode model.xml": "Použití: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "Instalace: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "Aktualizace: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "Soubor neexistuje: {0}"

@@ -345,3 +345,7 @@
 "Total models: {0}": "Toplam model: {0}"
 "Execute({0} {1})": "Yürüt ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "Varlık başlatmayı hızlandırmak için XCode veri önbelleği"
+"Usage: xcode model.xml": "Kullanım: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "Kurulum: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "Yükseltme: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "Dosya mevcut değil: {0}"

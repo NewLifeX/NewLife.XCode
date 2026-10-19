@@ -23,9 +23,9 @@ class Program
         //if (args.Length == 0)
         {
             Console.WriteLine("NewLife.XCode v{0}", Assembly.GetExecutingAssembly().GetName().Version);
-            Console.WriteLine("Usage: xcode model.xml");
-            Console.WriteLine("Install: dotnet tool install -g xcodetool");
-            Console.WriteLine("Upgrade: http://x.newlifex.com/xcodetool.exe");
+            Console.WriteLine(Localization.Translate("Usage: xcode model.xml"));
+            Console.WriteLine(Localization.Translate("Install: dotnet tool install -g xcodetool"));
+            Console.WriteLine(Localization.Translate("Upgrade: http://x.newlifex.com/xcodetool.exe"));
             Console.WriteLine();
         }
 
@@ -65,7 +65,7 @@ class Program
             }
             if (!File.Exists(file))
             {
-                Console.WriteLine("File does not exist: {0}", file);
+                Console.WriteLine(Localization.Translate("File does not exist: {0}", file));
                 return;
             }
 

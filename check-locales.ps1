@@ -182,7 +182,8 @@ if (!$SkipMessageCheck) {
         '(?:Info|Error|Warn|Debug|Fatal)Prefixed\([^,]*,\s*"((?:[^"\\]|\\.)*)"',
         'XTrace\.WriteLine\(\s*"((?:[^"\\]|\\.)*)"',
         '[\w]*[Ll]og\??\.(?:Info|Error|Warn|Debug|Fatal)\(\s*"((?:[^"\\]|\\.)*)"',
-        'WriteLog\(\s*"((?:[^"\\]|\\.)*)"'
+        'WriteLog\(\s*"((?:[^"\\]|\\.)*)"',
+        'Localization\.Translate\(\s*"((?:[^"\\]|\\.)*)"'
     )
     $sourceDirs = @($SourceDir | ForEach-Object {
         if ([IO.Path]::IsPathRooted($_)) { $_ } else { Join-Path $root $_ }
@@ -206,6 +207,15 @@ if (!$SkipMessageCheck) {
                         $missingMessages[$key] = $rel
                     }
                 }
+            }
+
+            # 空前缀没有翻译收益：*Prefixed 的意义是前缀不参与查表，空前缀应直接用 XTrace.WriteLine
+            foreach ($m in [regex]::Matches($text, '(?:Info|Error|Warn|Debug|Fatal)Prefixed\(\s*(?:prefix\s*:\s*)?(?:null|String\.Empty|"")\s*,')) {
+                $lineNo = ($text.Substring(0, $m.Index) -split "`n").Count
+                $rel = if ($file.FullName.StartsWith($root, [StringComparison]::OrdinalIgnoreCase)) {
+                    $file.FullName.Substring($root.Length).TrimStart("\", "/")
+                } else { $file.FullName }
+                $allErrors += "空前缀日志应使用 XTrace.WriteLine：$rel`:$lineNo"
             }
         }
     }

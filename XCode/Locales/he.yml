@@ -345,3 +345,7 @@
 "Total models: {0}": "סך המודלים: {0}"
 "Execute({0} {1})": "הפעל ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "מטמון נתונים של XCode להאצת אתחול ישויות"
+"Usage: xcode model.xml": "שימוש: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "התקנה: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "שדרוג: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "הקובץ אינו קיים: {0}"

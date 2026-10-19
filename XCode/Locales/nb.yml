@@ -345,3 +345,7 @@
 "Total models: {0}": "Totalt antall modeller: {0}"
 "Execute({0} {1})": "Kjør ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "XCode-databuffer for å fremskynde initialisering av entiteter"
+"Usage: xcode model.xml": "Bruk: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "Installasjon: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "Oppgradering: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "Filen finnes ikke: {0}"

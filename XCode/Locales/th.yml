@@ -345,3 +345,7 @@
 "Total models: {0}": "จำนวนโมเดลทั้งหมด: {0}"
 "Execute({0} {1})": "เรียกใช้ ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "แคชข้อมูล XCode เพื่อเร่งการเริ่มต้นเอนทิตี"
+"Usage: xcode model.xml": "การใช้งาน: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "การติดตั้ง: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "การอัปเกรด: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "ไฟล์ไม่มีอยู่: {0}"

@@ -345,3 +345,7 @@
 "Total models: {0}": "Σύνολο μοντέλων: {0}"
 "Execute({0} {1})": "Εκτέλεση ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "Προσωρινή μνήμη δεδομένων XCode για επιτάχυνση της αρχικοποίησης οντοτήτων"
+"Usage: xcode model.xml": "Χρήση: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "Εγκατάσταση: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "Αναβάθμιση: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "Το αρχείο δεν υπάρχει: {0}"

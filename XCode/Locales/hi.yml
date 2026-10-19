@@ -345,3 +345,7 @@
 "Total models: {0}": "कुल मॉडल: {0}"
 "Execute({0} {1})": "निष्पादित करें ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "एंटिटी आरंभीकरण को गति देने के लिए XCode डेटा कैश"
+"Usage: xcode model.xml": "उपयोग: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "इंस्टॉल: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "अपग्रेड: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "फ़ाइल मौजूद नहीं है: {0}"

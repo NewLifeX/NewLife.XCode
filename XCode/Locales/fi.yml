@@ -345,3 +345,7 @@
 "Total models: {0}": "Malleja yhteensä: {0}"
 "Execute({0} {1})": "Suorita ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "XCode-tietovälimuisti entiteettien alustuksen nopeuttamiseksi"
+"Usage: xcode model.xml": "Käyttö: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "Asennus: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "Päivitys: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "Tiedostoa ei ole: {0}"

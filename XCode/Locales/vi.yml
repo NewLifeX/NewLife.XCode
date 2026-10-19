@@ -345,3 +345,7 @@
 "Total models: {0}": "Tổng số mô hình: {0}"
 "Execute({0} {1})": "Thực thi ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "Bộ đệm dữ liệu XCode để tăng tốc khởi tạo thực thể"
+"Usage: xcode model.xml": "Cách dùng: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "Cài đặt: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "Nâng cấp: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "Tệp không tồn tại: {0}"

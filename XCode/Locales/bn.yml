@@ -345,3 +345,7 @@
 "Total models: {0}": "মোট মডেল: {0}"
 "Execute({0} {1})": "সম্পাদনা করুন ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "এন্টিটি আরম্ভ দ্রুত করতে XCode ডেটা ক্যাশ"
+"Usage: xcode model.xml": "ব্যবহার: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "ইনস্টল: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "আপগ্রেড: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "ফাইলটি নেই: {0}"

@@ -345,3 +345,7 @@
 "Total models: {0}": "إجمالي النماذج: {0}"
 "Execute({0} {1})": "تنفيذ ({0} {1})"
 "XCode data cache, used to speed up entity initialization": "ذاكرة تخزين مؤقت لبيانات XCode لتسريع تهيئة الكيانات"
+"Usage: xcode model.xml": "الاستخدام: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "التثبيت: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "الترقية: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "الملف غير موجود: {0}"

@@ -345,3 +345,7 @@
 "Total models: {0}": "총 모델 수: {0}"
 "Execute({0} {1})": "실행({0} {1})"
 "XCode data cache, used to speed up entity initialization": "엔터티 초기화를 가속하는 XCode 데이터 캐시"
+"Usage: xcode model.xml": "사용법: xcode model.xml"
+"Install: dotnet tool install -g xcodetool": "설치: dotnet tool install -g xcodetool"
+"Upgrade: http://x.newlifex.com/xcodetool.exe": "업그레이드: http://x.newlifex.com/xcodetool.exe"
+"File does not exist: {0}": "파일이 없습니다: {0}"

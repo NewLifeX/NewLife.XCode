@@ -31,14 +31,7 @@
     <Project Path="XCode.MySql/XCode.MySql.csproj" />
     <Project Path="XCode.Oracle/XCode.Oracle.csproj" />
     <Project Path="XCode.PostgreSQL/XCode.PostgreSQL.csproj" />
-    <Project Path="XCode.SonnetDB/XCode.SonnetDB.csproj">
-      <BuildType Solution="*|x64" Project="?" />
-      <BuildType Solution="*|x86" Project="?" />
-      <Platform Solution="*|x64" Project="?" />
-      <Platform Solution="*|x86" Project="?" />
-      <Build Solution="*|x64" Project="false" />
-      <Build Solution="*|x86" Project="false" />
-    </Project>
+    <Project Path="XCode.SonnetDB/XCode.SonnetDB.csproj" />
     <Project Path="XCode.SQLite/XCode.SQLite.csproj" />
     <Project Path="XCode.SqlServer/XCode.SqlServer.csproj" />
   </Folder>

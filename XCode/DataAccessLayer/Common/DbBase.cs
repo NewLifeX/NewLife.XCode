@@ -381,7 +381,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <returns></returns>
     public virtual DbConnection OpenConnection()
     {
-        if (Factory == null) throw new InvalidOperationException($"无法找到{Type}的ADO.NET驱动，需要从Nuget引用！");
+        if (Factory == null) throw new InvalidOperationException(L.T("The ADO.NET driver for {0} was not found; reference it from NuGet.", Type));
 
         var conn = Factory.CreateConnection();
         conn.ConnectionString = GetConnectionString();
@@ -394,7 +394,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <returns></returns>
     public virtual async Task<DbConnection> OpenConnectionAsync()
     {
-        if (Factory == null) throw new InvalidOperationException($"无法找到{Type}的ADO.NET驱动，需要从Nuget引用！");
+        if (Factory == null) throw new InvalidOperationException(L.T("The ADO.NET driver for {0} was not found; reference it from NuGet.", Type));
 
         var conn = Factory.CreateConnection();
         conn.ConnectionString = GetConnectionString();
@@ -498,7 +498,7 @@ abstract class DbBase : DisposeBase, IDatabase
             if (type == null)
             {
                 if (assemblyFile.IsNullOrEmpty()) return null;
-                if (!File.Exists(file)) throw new FileNotFoundException("缺少文件" + file + "！", file);
+                if (!File.Exists(file)) throw new FileNotFoundException(L.T("File [{0}] is missing!", file), file);
             }
 
             if (type == null)
@@ -523,7 +523,7 @@ abstract class DbBase : DisposeBase, IDatabase
                 type = DriverLoader.Load(className, null!, assemblyFile, links.Join(","), urls2.Join(";"), minVersion);
 
                 // 如果还没有，就写异常
-                if (!File.Exists(file)) throw new FileNotFoundException("缺少文件" + file + "！", file);
+                if (!File.Exists(file)) throw new FileNotFoundException(L.T("File [{0}] is missing!", file), file);
             }
 
             factory = GetProviderFactory(type);
@@ -1045,7 +1045,7 @@ abstract class DbBase : DisposeBase, IDatabase
         }
         catch (Exception ex)
         {
-            throw new Exception($"创建字段{name}/{type?.Name}的参数时出错", ex);
+            throw new Exception(L.T("An error occurred while creating the parameter for field {0}/{1}.", name, type?.Name), ex);
         }
 
         return dp;

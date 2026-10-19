@@ -31,7 +31,7 @@ public partial class DAL
     /// <returns></returns>
     public IEnumerable<T> Query<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param = null)
     {
-        if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
+        if (IsValueTuple(typeof(T))) throw new InvalidOperationException(L.T("ValueTuple type [{0}] is not supported.", typeof(T).FullName));
 
         //var ps = param?.ToDictionary();
         var dt = QueryWrap(sql, param, "", (ss, s, p, k3) => ss.Query(s, Db.CreateParameters(p)), nameof(Query));
@@ -54,7 +54,7 @@ public partial class DAL
     /// <returns></returns>
     public IEnumerable<T> Query<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param, Int64 startRowIndex, Int64 maximumRows)
     {
-        if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
+        if (IsValueTuple(typeof(T))) throw new InvalidOperationException(L.T("ValueTuple type [{0}] is not supported.", typeof(T).FullName));
 
         // SqlServer的分页需要知道主键
         var sql2 =
@@ -73,7 +73,7 @@ public partial class DAL
     /// <returns></returns>
     public IEnumerable<T> Query<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param, PageParameter page)
     {
-        if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
+        if (IsValueTuple(typeof(T))) throw new InvalidOperationException(L.T("ValueTuple type [{0}] is not supported.", typeof(T).FullName));
 
         // 查询总行数
         if (page.RetrieveTotalCount)
@@ -104,7 +104,7 @@ public partial class DAL
     /// <returns></returns>
     public async Task<IEnumerable<T>> QueryAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param = null)
     {
-        if (IsValueTuple(typeof(T))) throw new InvalidOperationException($"不支持ValueTuple类型[{typeof(T).FullName}]");
+        if (IsValueTuple(typeof(T))) throw new InvalidOperationException(L.T("ValueTuple type [{0}] is not supported.", typeof(T).FullName));
 
         var type = typeof(T);
         var utype = Nullable.GetUnderlyingType(type);
@@ -354,7 +354,7 @@ public partial class DAL
 
             if (dic != null)
             {
-                if (!dic.TryGetValue(name, out var val)) throw new XCodeException($"更新实体对象时未标记主键且未设置where");
+                if (!dic.TryGetValue(name, out var val)) throw new XCodeException("Cannot update the entity because no primary key is marked and no where condition is specified.");
 
                 sb.Append(" Where ");
 
@@ -365,7 +365,7 @@ public partial class DAL
             else
             {
                 var pi = data.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-                if (pi == null) throw new XCodeException($"更新实体对象时未标记主键且未设置where");
+                if (pi == null) throw new XCodeException("Cannot update the entity because no primary key is marked and no where condition is specified.");
 
                 sb.Append(" Where ");
 
@@ -538,7 +538,7 @@ public partial class DAL
             if (name.IsNullOrEmpty()) name = "Id";
 
             var pi = data.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            if (pi == null) throw new XCodeException($"更新实体对象时未标记主键且未设置where");
+            if (pi == null) throw new XCodeException("Cannot update the entity because no primary key is marked and no where condition is specified.");
 
             sb.Append(" Where ");
 

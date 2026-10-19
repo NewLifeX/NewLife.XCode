@@ -359,7 +359,7 @@ partial class DAL
 #endif
     private TResult ExecuteWrap<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<IDbSession, T1, T2, T3, TResult> callback, String action)
     {
-        if (Db.Readonly) throw new InvalidOperationException($"数据连接[{ConnName}]只读，禁止执行{k1}");
+        if (Db.Readonly) throw new InvalidOperationException(L.T("Data connection [{0}] is read-only; {1} is not allowed.", ConnName, k1));
 
         //CheckDatabase();
 
@@ -522,7 +522,7 @@ partial class DAL
 #endif
     private async Task<TResult> ExecuteAsyncWrap<T1, T2, T3, TResult>(T1 k1, T2 k2, T3 k3, Func<IAsyncDbSession, T1, T2, T3, Task<TResult>> callback, String action)
     {
-        if (Db.Readonly) throw new InvalidOperationException($"数据连接[{ConnName}]只读，禁止执行{k1}");
+        if (Db.Readonly) throw new InvalidOperationException(L.T("Data connection [{0}] is read-only; {1} is not allowed.", ConnName, k1));
 
         //CheckDatabase();
 

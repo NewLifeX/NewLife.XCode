@@ -408,7 +408,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
                 var column = table.CreateColumn();
                 column.ColumnName = (String)item["COLUMN_NAME"];
                 column.RawType = (String)item["DATA_TYPE"];
-                column.DataType = GetDataType(column) ?? throw new NotSupportedException($"SonnetDB字段类型尚未映射：{column.RawType}");
+                column.DataType = GetDataType(column) ?? throw new NotSupportedException(L.T("SonnetDB field type has not been mapped: {0}", column.RawType));
                 column.Identity = (Boolean)item["IS_AUTO_INCREMENT"];
                 column.PrimaryKey = (Boolean)item["IS_PRIMARY_KEY"];
                 column.Nullable = (Boolean)item["IS_NULLABLE"];
@@ -443,14 +443,14 @@ internal class SonnetDBMetaData : RemoteDbMetaData
         using var command = connection.CreateCommand();
         command.CommandText = $"SELECT * FROM {Database.FormatName(table.TableName)} LIMIT 0";
         using var reader = command.ExecuteReader();
-        var schema = reader.GetSchemaTable() ?? throw new NotSupportedException($"SonnetDB视图{table.TableName}未提供字段元数据。");
+        var schema = reader.GetSchemaTable() ?? throw new NotSupportedException(L.T("SonnetDB view [{0}] did not provide field metadata.", table.TableName));
         foreach (var row in schema.Rows.Cast<DataRow>().OrderBy(row => (Int32)row[SchemaTableColumn.ColumnOrdinal]))
         {
             var column = table.CreateColumn();
             column.ColumnName = (String)row[SchemaTableColumn.ColumnName];
             column.DataType = (Type)row[SchemaTableColumn.DataType];
             if (column.DataType.FullName == "System.TimeOnly") column.DataType = typeof(TimeSpan);
-            column.RawType = GetFieldType(column) ?? throw new NotSupportedException($"SonnetDB视图{table.TableName}字段{column.ColumnName}未提供可映射的声明类型。参见SonnetDB issue #261，尚需补齐视图声明元数据并正式发布。");
+            column.RawType = GetFieldType(column) ?? throw new NotSupportedException(L.T("SonnetDB view [{0}] field [{1}] did not provide a mappable declared type. See SonnetDB issue #261; view declaration metadata still needs to be completed and released.", table.TableName, column.ColumnName));
             column.Nullable = (Boolean)row[SchemaTableColumn.AllowDBNull];
             column.PrimaryKey = (Boolean)row[SchemaTableColumn.IsKey];
             column.Identity = (Boolean)row[SchemaTableOptionalColumn.IsAutoIncrement];
@@ -493,7 +493,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     {
         ReportLength(field);
         CheckDefaultValue(field);
-        var sql = $"{FormatName(field)} {GetFieldType(field) ?? throw new NotSupportedException($"SonnetDB不支持字段类型{field.DataType}")}";
+        var sql = $"{FormatName(field)} {GetFieldType(field) ?? throw new NotSupportedException(L.T("SonnetDB does not support field type {0}.", field.DataType))}";
         if (field.Identity) return sql + " AUTO_INCREMENT";
         sql += field.Nullable && !field.PrimaryKey ? " NULL" : " NOT NULL";
         return sql + GetDefault(field, onlyDefine);

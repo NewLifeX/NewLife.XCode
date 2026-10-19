@@ -83,7 +83,7 @@ partial class DAL
 
     /// <summary>建立数据表对象</summary>
     /// <returns></returns>
-    public static IDataTable CreateTable() => ObjectContainer.Current.GetService<IDataTable>() ?? throw new InvalidDataException($"未注册[IDataTable]");
+    public static IDataTable CreateTable() => ObjectContainer.Current.GetService<IDataTable>() ?? throw new InvalidDataException(L.T("IDataTable is not registered."));
 
     /// <summary>批量操作能力。不同数据库支持不同批量操作</summary>
     public BatchCapability BatchCapabilities => Db.BatchCapability;

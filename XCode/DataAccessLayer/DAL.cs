@@ -115,7 +115,7 @@ public partial class DAL
             {
                 // 如果连接名不在预期之内，则需要严格检查名字，才能创建默认的SQLite数据库
                 if (connName.Any(c => !Char.IsLetterOrDigit(c) && !_symbols.Contains(c)))
-                    throw new XCodeException($"非法连接名[{connName}]");
+                    throw new XCodeException("Invalid connection name [{0}].", connName);
 
                 var cfg = NewLife.Setting.Current;
                 var set = XCodeSetting.Current;

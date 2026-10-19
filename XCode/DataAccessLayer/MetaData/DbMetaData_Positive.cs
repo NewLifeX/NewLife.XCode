@@ -453,7 +453,7 @@ partial class DbMetaData
         if (isArrayField)
         {
             var postfix = ArrayTypePostfix;
-            if (String.IsNullOrWhiteSpace(postfix)) throw new XCodeException($"数据库不支持数组类型");
+            if (String.IsNullOrWhiteSpace(postfix)) throw new XCodeException("The database does not support array types.");
             typeName += postfix;
         }
 

@@ -206,7 +206,7 @@ internal class SqlServer : RemoteDb
             return builder;
         }
         // 修复无主键分页报错的情况
-        if (builder.Key.IsNullOrEmpty() && builder.OrderBy.IsNullOrEmpty()) throw new XCodeException("分页算法要求指定排序列！" + builder.ToString());
+        if (builder.Key.IsNullOrEmpty() && builder.OrderBy.IsNullOrEmpty()) throw new XCodeException("The paging algorithm requires a sort column! {0}", builder);
 
         // 如果包含分组，则必须作为子查询
         var builder1 = builder.CloneWithGroupBy("XCode_T0", true);

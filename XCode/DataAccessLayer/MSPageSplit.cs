@@ -38,7 +38,7 @@ namespace XCode.DataAccessLayer
         //        }
         //    }
 
-        //    if (builder.Keys == null || builder.Keys.Length < 1) throw new XCodeException("分页算法要求指定排序列！" + builder.ToString());
+        //    if (builder.Keys == null || builder.Keys.Length < 1) throw new XCodeException("The paging algorithm requires a sort column! {0}", builder);
 
         //    //ms sql 2012 分页算法的写法
         //    //var str = $"select * from {builder.Table} where type = 'p' order by {builder.OrderBy} offset {startRowIndex} rows fetch next {maximumRows} rows only";
@@ -79,7 +79,7 @@ namespace XCode.DataAccessLayer
                 }
             }
 
-            if (builder.Keys == null || builder.Keys.Length < 1) throw new XCodeException("分页算法要求指定排序列！" + builder.ToString());
+            if (builder.Keys == null || builder.Keys.Length < 1) throw new XCodeException("The paging algorithm requires a sort column! {0}", builder);
 
             // 其实，一般数据都是按照聚集索引排序，而聚集索引刚好也就是主键
             // 所以，只要设置的Key顺序跟主键顺序一致，就没有问题
@@ -110,7 +110,7 @@ namespace XCode.DataAccessLayer
         /// <returns>分页SQL</returns>
         static SelectBuilder TopNotIn(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
         {
-            if (builder.Keys == null || builder.Keys.Length != 1) throw new ArgumentNullException("Key", "TopNotIn分页算法要求指定单一主键列！" + builder.ToString());
+            if (builder.Keys == null || builder.Keys.Length != 1) throw new ArgumentNullException("Key", L.T("The TopNotIn paging algorithm requires a single primary key column! {0}", builder));
 
             // 分页标准 Select (20,10,ID)
             // 1，取目标页之前的20行
@@ -146,7 +146,7 @@ namespace XCode.DataAccessLayer
         /// <returns></returns>
         static SelectBuilder DoubleTop(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows, Func<SelectBuilder, Int64> queryCountCallback)
         {
-            if (builder.Keys == null) throw new ArgumentNullException("Key", "DoubleTop分页算法要求指定排序列！" + builder.ToString());
+            if (builder.Keys == null) throw new ArgumentNullException("Key", L.T("The DoubleTop paging algorithm requires a sort column! {0}", builder));
 
             // 采用DoubleTop分页，最后一页可能有问题，需要特殊处理
             if (queryCountCallback != null)
@@ -211,7 +211,7 @@ namespace XCode.DataAccessLayer
         /// <returns>分页SQL</returns>
         static SelectBuilder MaxMin(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
         {
-            if (builder.Keys == null || builder.Keys.Length != 1) throw new ArgumentNullException("Key", "TopNotIn分页算法要求指定单一主键列！" + builder.ToString());
+            if (builder.Keys == null || builder.Keys.Length != 1) throw new ArgumentNullException("Key", L.T("The TopNotIn paging algorithm requires a single primary key column! {0}", builder));
 
             // 分页标准 Select (20,10,ID Desc)
             // Select Top 10 * From Table Where ID>(Select max(ID) From (Select Top 20 ID From Table Order By ID) Order By ID Desc) Order By ID Desc

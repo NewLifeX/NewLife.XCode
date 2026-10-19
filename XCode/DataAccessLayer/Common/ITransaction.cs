@@ -142,7 +142,7 @@ class Transaction : DisposeBase, ITransaction
     public ITransaction Begin()
     {
         var n = Interlocked.Increment(ref _Count);
-        if (n <= 0) throw new ArgumentOutOfRangeException(nameof(Count), $"事务[{ID}]不能重新开始");
+        if (n <= 0) throw new ArgumentOutOfRangeException(nameof(Count), L.T("Transaction [{0}] cannot be restarted.", ID));
 
         if (n == 1)
         {
@@ -158,7 +158,7 @@ class Transaction : DisposeBase, ITransaction
     public ITransaction Commit()
     {
         var n = Interlocked.Decrement(ref _Count);
-        if (n <= -1) throw new ArgumentOutOfRangeException(nameof(Count), $"事务[{ID}]未开始或已结束");
+        if (n <= -1) throw new ArgumentOutOfRangeException(nameof(Count), L.T("Transaction [{0}] has not started or has already ended.", ID));
 
         if (n == 0)
         {
@@ -196,7 +196,7 @@ class Transaction : DisposeBase, ITransaction
     public ITransaction Rollback()
     {
         var n = Interlocked.Decrement(ref _Count);
-        if (n <= -1) throw new ArgumentOutOfRangeException(nameof(Count), $"事务[{ID}]未开始或已结束");
+        if (n <= -1) throw new ArgumentOutOfRangeException(nameof(Count), L.T("Transaction [{0}] has not started or has already ended.", ID));
 
         if (n == 0)
         {

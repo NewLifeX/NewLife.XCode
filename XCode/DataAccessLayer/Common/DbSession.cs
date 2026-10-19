@@ -834,7 +834,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                     {
                         var idx = dt.GetColumn(dc.Name);
                         if (idx < 0) idx = dt.GetColumn(dc.ColumnName);
-                        if (idx < 0) throw new XCodeException($"DbTable中不存在名为[{dc.Name}/{dc.ColumnName}]的字段");
+                        if (idx < 0) throw new XCodeException("Field [{0}/{1}] does not exist in DbTable.", dc.Name, dc.ColumnName);
 
                         cs.Add(idx);
                     }
@@ -977,11 +977,11 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     protected static Object CalcAdditionDiff(IModel model, String fieldName, Type targetType)
     {
         if (model is not IEntity entity)
-            throw new InvalidOperationException($"批量累加更新字段 [{fieldName}] 要求实体实现 IEntity 接口");
+            throw new InvalidOperationException(L.T("Bulk incremental update of field [{0}] requires the entity to implement IEntity.", fieldName));
 
         var dfs = entity.Addition?.Get();
         if (dfs == null || !dfs.TryGetValue(fieldName, out var vs))
-            throw new InvalidOperationException($"实体字段 [{fieldName}] 未找到累加快照，请确保实体已从数据库加载");
+            throw new InvalidOperationException(L.T("No incremental snapshot was found for entity field [{0}]; ensure the entity was loaded from the database.", fieldName));
 
         var cur = vs[0];
         var old = vs[1];

@@ -878,7 +878,7 @@ internal class SQLiteMetaData : FileDbMetaData
             else if (mi1 != null)
                 mi1.Invoke(conn2, new Object?[] { conn });
             else
-                throw new NotSupportedException($"当前SQLite驱动不支持BackupDatabase：{type.FullName}");
+                throw new NotSupportedException(L.T("The current SQLite driver does not support BackupDatabase: {0}", type.FullName));
         }
 
         // 压缩

@@ -80,7 +80,7 @@ public class InsertBuilder
             SaveModes.Upsert => "Upsert",
             SaveModes.InsertIgnore => "Insert Ignore",
             SaveModes.Replace => "Replace",
-            _ => throw new NotSupportedException($"未支持[{Mode}]"),
+            _ => throw new NotSupportedException(L.T("Unsupported mode [{0}].", Mode)),
         };
 
         return $"{action} Into {database.FormatName(table)}({ns}) Values({vs})";

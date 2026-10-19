@@ -51,7 +51,7 @@ class Program
         manager.Load();
         manager.Init();
 
-        XTrace.WriteLine("代码插件[{0}]：{1}", manager.Plugins.Length, manager.Plugins.Join(",", e => e.GetType().Name));
+        XTrace.WriteLine("Code plugins [{0}]: {1}", manager.Plugins.Length, manager.Plugins.Join(",", e => e.GetType().Name));
 
         // 在当前目录查找模型文件
         var file = "";
@@ -65,7 +65,7 @@ class Program
             }
             if (!File.Exists(file))
             {
-                Console.WriteLine("文件不存在：{0}", file);
+                Console.WriteLine("File does not exist: {0}", file);
                 return;
             }
 
@@ -110,7 +110,7 @@ class Program
     /// <param name="modelFile"></param>
     static void Build(String modelFile, ILog log, PluginManager manager)
     {
-        XTrace.WriteLine("正在处理：{0}", modelFile);
+        XTrace.WriteLine("Processing: {0}", modelFile);
 
         //EntityBuilder.Debug = true;
 
@@ -137,14 +137,14 @@ class Program
                 if (option.ModelVersion < targetVersion)
                 {
                     needUpgrade = true;
-                    XTrace.WriteLine("检测到旧版本({0})模型文件，自动启用中文文件名", option.ModelVersion);
+                    XTrace.WriteLine("Detected an old model file version ({0}); enabling Chinese file names automatically.", option.ModelVersion);
                 }
             }
             else
             {
                 // 没有版本号，说明是旧文件，需要升级
                 needUpgrade = true;
-                XTrace.WriteLine("检测到旧版本模型文件(无版本号)，自动启用中文文件名");
+                XTrace.WriteLine("Detected an old model file without a version; enabling Chinese file names automatically.");
             }
 
             if (needUpgrade)
@@ -153,7 +153,7 @@ class Program
 
         try
         {
-            XTrace.WriteLine("修正模型：{0}", modelFile);
+            XTrace.WriteLine("Fixing model: {0}", modelFile);
             foreach (var item in manager.Plugins)
             {
                 if (item is ICodePlugin plugin)
@@ -176,7 +176,7 @@ class Program
             XTrace.WriteException(ex);
         }
 
-        XTrace.WriteLine("共有模型：{0}", tables.Count);
+        XTrace.WriteLine("Total models: {0}", tables.Count);
 
         // 是否使用中文名
         //option.ChineseFileName = true;

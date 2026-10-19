@@ -120,7 +120,7 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
             {
                 lock (_refresh)
                 {
-                    if (_Times == 0) UpdateCache("第一次");
+                    if (_Times == 0) UpdateCache("first time");
                 }
             }
             else
@@ -129,7 +129,7 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
                 {
                     try
                     {
-                        if (_Times == 0) UpdateCache("第一次");
+                        if (_Times == 0) UpdateCache("first time");
                     }
                     finally
                     {
@@ -140,8 +140,8 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
         }
         else
         {
-            var s = ExpiredTime == DateTime.MinValue ? "已强制过期" : $"已过期{sec:n2}秒";
-            var msg = $"有效期{Expire}秒，{s}";
+            var s = ExpiredTime == DateTime.MinValue ? "forcibly expired" : $"expired for {sec:n2}s";
+            var msg = $"validity {Expire}s, {s}";
 
             // 频繁更新下，采用异步更新缓存，以提升吞吐。非频繁访问时（2倍超时），同步更新
             if (sec < Expire)
@@ -164,7 +164,7 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
         {
             _distributedVersion = remoteVer;
             ExpiredTime = DateTime.MinValue;
-            WriteLog("检测到二级缓存版本变化 {0} => {1}，强制过期本地缓存", _distributedVersion, remoteVer);
+            WriteLog("Detected secondary cache version change {0} => {1}; expiring local cache", _distributedVersion, remoteVer);
         }
     }
 
@@ -199,7 +199,7 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
         // 控制只有一个线程能更新
         if (Interlocked.CompareExchange(ref _updating, 1, 0) != 0) return;
 
-        reason = $"异步更新缓存，{reason}";
+        reason = $"asynchronous cache refresh, {reason}";
         WriteLog(reason);
         Consumer.Run(() => UpdateCache(reason, true));
     }
@@ -223,8 +223,8 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
             // 设置时间放在获取缓存之前，让其它线程不要空等
             if (ts > 0) ExpiredTime = TimerX.Now.AddSeconds(Expire);
 
-            WriteLog("更新（第{0}次） 原因：{1}", ts + 1, reason);
-            DAL.SetSpanTag($"{LogPrefix}更新（第{ts + 1}次） 原因：{reason}");
+            WriteLog("Updating (#{0}), reason: {1}", ts + 1, reason);
+            DAL.SetSpanTag($"{LogPrefix}Updating (#{ts + 1}), reason: {reason}");
 
             IList<TEntity>? loaded = null;
             try
@@ -241,7 +241,7 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
 
             ts = Interlocked.Increment(ref _Times);
             ExpiredTime = TimerX.Now.AddSeconds(Expire);
-            WriteLog("完成[{0}]（第{1}次）", _Entities.Length, ts);
+            WriteLog("Completed [{0}] (#{1})", _Entities.Length, ts);
         }
     }
 
@@ -308,12 +308,12 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
         if (force)
         {
             ExpiredTime = DateTime.MinValue;
-            WriteLog("强制清除缓存，下次访问时同步更新阻塞等待");
+            WriteLog("Cache forcibly cleared; the next access blocks and waits for a synchronous update");
         }
         else
         {
             ExpiredTime = DateTime.Now;
-            WriteLog("非强制清除缓存，下次访问时异步更新无需阻塞等待");
+            WriteLog("Cache cleared without force; the next access updates asynchronously without blocking");
         }
 
         // 通知分布式缓存其它进程

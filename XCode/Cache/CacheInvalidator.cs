@@ -35,7 +35,7 @@ public static class CacheInvalidator
             cache.Set(key, ver + 1);
 
             if (DAL.Debug)
-                DAL.WriteLog("CacheInvalidator: 递增 [{0}] 缓存版本号 {1} => {2}，原因={3}", entityType.Name, ver, ver + 1, reason);
+                DAL.WriteLog("CacheInvalidator: incrementing cache version of [{0}], {1} => {2}, reason={3}", entityType.Name, ver, ver + 1, reason);
         }
         catch (Exception ex)
         {

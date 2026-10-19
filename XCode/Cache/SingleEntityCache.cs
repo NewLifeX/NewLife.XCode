@@ -153,7 +153,7 @@ public class SingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAcce
                     }
                 }
 
-                XTrace.WriteLine("对象缓存<{0}>满，{1:n0}>{2:n0}，删除[{3:n0}]个", typeof(TEntity).Name, es.Count, MaxEntity, list.Count);
+                XTrace.WriteLine("Object cache <{0}> is full, {1:n0}>{2:n0}, removed [{3:n0}]", typeof(TEntity).Name, es.Count, MaxEntity, list.Count);
             }
         }
 
@@ -468,7 +468,7 @@ public class SingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAcce
     {
         if (!Using) return;
 
-        WriteLog("清空单对象缓存 原因：{0} Using = false", reason);
+        WriteLog("Clearing single-object cache, reason: {0}, Using = false", reason);
 
         var es = Entities;
         if (es == null) return;

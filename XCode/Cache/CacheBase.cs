@@ -78,7 +78,8 @@ public abstract class CacheBase : DisposeBase
 
     internal void WriteLog(String format, params Object?[] args)
     {
-        if (Debug) XTrace.WriteLine(LogPrefix + format, args);
+        // 先翻译并格式化消息，再拼接实例前缀；整串带前缀查表永远匹配不到词条
+        if (Debug) XTrace.Log?.InfoPrefixed(LogPrefix, format, args);
     }
 
     /// <summary>检查并显示统计信息</summary>

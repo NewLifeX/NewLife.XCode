@@ -53,7 +53,7 @@ public class FieldCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTyp
             var tb = _field.Table;
             var id = tb.Identity;
             if (id == null && tb.PrimaryKeys.Length == 1) id = tb.PrimaryKeys[0];
-            _Unique = id ?? throw new Exception($"{tb.TableName}缺少唯一主键，无法使用缓存");
+            _Unique = id ?? throw new XCodeException("Table [{0}] has no unique primary key and cannot be used for caching.", tb.TableName);
         }
 
         // 数据量较小时，缓存时间较短

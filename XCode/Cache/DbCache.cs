@@ -40,7 +40,7 @@ public class DbCache : Cache
         var name = factory.EntityType.Name;
 
         var key = !keyName.IsNullOrEmpty() ? factory.Table.FindByName(keyName) : factory.Unique;
-        if (key == null || key.Type != typeof(String)) throw new XCodeException($"[{name}]没有字符串类型的主键");
+        if (key == null || key.Type != typeof(String)) throw new XCodeException("No string primary key is defined for [{0}].", name);
 
         TimeField = (!timeName.IsNullOrEmpty() ? factory.Table.FindByName(timeName) : factory.MasterTime) as Field ??
             throw new ArgumentNullException(nameof(timeName));

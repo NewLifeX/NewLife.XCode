@@ -1,0 +1,8 @@
+# Français 词表（fr）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Aucune clé de relation n'est définie."
+"No master field is set.": "Aucun champ maître n'est défini."
+"Entity class [{0}] must implement [{1}].": "La classe d'entité [{0}] doit implémenter [{1}]."
+"No model file was found.": "Aucun fichier de modèle n'a été trouvé."
+"The specified model file does not exist.": "Le fichier de modèle spécifié n'existe pas."
+"[{0}] no connection string is specified!": "[{0}] aucune chaîne de connexion n'est spécifiée !"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Impossible de charger le pilote [{0}] ; ajoutez le package de pilote de base de données depuis NuGet."

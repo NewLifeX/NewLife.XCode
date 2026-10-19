@@ -1,0 +1,8 @@
+# Suomi 词表（fi）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Suhdeavainta ei ole asetettu."
+"No master field is set.": "Pääkenttää ei ole asetettu."
+"Entity class [{0}] must implement [{1}].": "Entiteettiluokan [{0}] on toteutettava [{1}]."
+"No model file was found.": "Mallitiedostoa ei löytynyt."
+"The specified model file does not exist.": "Määritettyä mallitiedostoa ei ole."
+"[{0}] no connection string is specified!": "[{0}] yhteysmerkkijonoa ei ole määritetty!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Ohjainta [{0}] ei voitu ladata; lisää tietokantaohjaimen paketti NuGetista."

@@ -1,0 +1,8 @@
+# বাংলা 词表（bn）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "কোনো সম্পর্ক কী সেট করা হয়নি।"
+"No master field is set.": "কোনো মাস্টার ফিল্ড সেট করা হয়নি।"
+"Entity class [{0}] must implement [{1}].": "এন্টিটি ক্লাস [{0}] কে [{1}] বাস্তবায়ন করতে হবে।"
+"No model file was found.": "কোনো মডেল ফাইল পাওয়া যায়নি।"
+"The specified model file does not exist.": "নির্দিষ্ট মডেল ফাইলটির অস্তিত্ব নেই।"
+"[{0}] no connection string is specified!": "[{0}] কোনো সংযোগ স্ট্রিং নির্দিষ্ট করা হয়নি!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "[{0}] ড্রাইভার লোড করা যায়নি; NuGet থেকে ডাটাবেস ড্রাইভার প্যাকেজ যোগ করুন।"

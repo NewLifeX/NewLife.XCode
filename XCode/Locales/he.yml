@@ -1,0 +1,8 @@
+# עברית 词表（he）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "לא הוגדר מפתח קשר."
+"No master field is set.": "לא הוגדר שדה ראשי."
+"Entity class [{0}] must implement [{1}].": "מחלקת הישות [{0}] חייבת לממש את [{1}]."
+"No model file was found.": "לא נמצא קובץ מודל."
+"The specified model file does not exist.": "קובץ המודל שצוין אינו קיים."
+"[{0}] no connection string is specified!": "[{0}] לא צוינה מחרוזת חיבור!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "לא ניתן לטעון את ההתקן [{0}]; הוסף את חבילת התקן מסד הנתונים מ-NuGet."

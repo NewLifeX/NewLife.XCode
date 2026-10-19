@@ -1,0 +1,8 @@
+# Deutsch 词表（de）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Es ist kein Beziehungsschlüssel festgelegt."
+"No master field is set.": "Es ist kein Hauptfeld festgelegt."
+"Entity class [{0}] must implement [{1}].": "Die Entitätsklasse [{0}] muss [{1}] implementieren."
+"No model file was found.": "Es wurde keine Modelldatei gefunden."
+"The specified model file does not exist.": "Die angegebene Modelldatei existiert nicht."
+"[{0}] no connection string is specified!": "[{0}] Es ist keine Verbindungszeichenfolge angegeben!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Treiber [{0}] konnte nicht geladen werden; fügen Sie das Datenbanktreiber-Paket aus NuGet hinzu."

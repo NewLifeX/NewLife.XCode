@@ -1,0 +1,8 @@
+# 日本語 词表（ja）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "リレーションキーが設定されていません。"
+"No master field is set.": "マスターフィールドが設定されていません。"
+"Entity class [{0}] must implement [{1}].": "エンティティクラス [{0}] は [{1}] を実装する必要があります。"
+"No model file was found.": "モデルファイルが見つかりませんでした。"
+"The specified model file does not exist.": "指定されたモデルファイルが存在しません。"
+"[{0}] no connection string is specified!": "[{0}] 接続文字列が指定されていません！"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "ドライバー [{0}] を読み込めません。NuGet からデータベースドライバーパッケージを追加してください。"

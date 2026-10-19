@@ -1,0 +1,8 @@
+# Magyar 词表（hu）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Nincs beállítva kapcsolatkulcs."
+"No master field is set.": "Nincs beállítva mestermező."
+"Entity class [{0}] must implement [{1}].": "A(z) [{0}] entitásosztálynak implementálnia kell a(z) [{1}] interfészt."
+"No model file was found.": "Nem található modellfájl."
+"The specified model file does not exist.": "A megadott modellfájl nem létezik."
+"[{0}] no connection string is specified!": "[{0}] nincs megadva kapcsolati karakterlánc!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "A(z) [{0}] illesztőprogram nem tölthető be; adja hozzá az adatbázis-illesztőprogram csomagot a NuGetről."

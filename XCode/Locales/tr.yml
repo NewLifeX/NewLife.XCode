@@ -1,0 +1,8 @@
+# Türkçe 词表（tr）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "İlişki anahtarı ayarlanmamış."
+"No master field is set.": "Ana alan ayarlanmamış."
+"Entity class [{0}] must implement [{1}].": "Varlık sınıfı [{0}], [{1}] arabirimini uygulamalıdır."
+"No model file was found.": "Model dosyası bulunamadı."
+"The specified model file does not exist.": "Belirtilen model dosyası mevcut değil."
+"[{0}] no connection string is specified!": "[{0}] bağlantı dizesi belirtilmemiş!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "[{0}] sürücüsü yüklenemiyor; NuGet'ten veritabanı sürücüsü paketini ekleyin."

@@ -1,0 +1,8 @@
+# Nederlands 词表（nl）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Er is geen relatiefsleutel ingesteld."
+"No master field is set.": "Er is geen hoofdveld ingesteld."
+"Entity class [{0}] must implement [{1}].": "De entiteitsklasse [{0}] moet [{1}] implementeren."
+"No model file was found.": "Er is geen modelbestand gevonden."
+"The specified model file does not exist.": "Het opgegeven modelbestand bestaat niet."
+"[{0}] no connection string is specified!": "[{0}] er is geen verbindingsreeks opgegeven!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Kan stuurprogramma [{0}] niet laden; voeg het database-stuurprogrammapakket toe vanuit NuGet."

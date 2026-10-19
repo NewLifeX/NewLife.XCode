@@ -1,0 +1,8 @@
+# Tiếng Việt 词表（vi）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Chưa đặt khóa quan hệ."
+"No master field is set.": "Chưa đặt trường chính."
+"Entity class [{0}] must implement [{1}].": "Lớp thực thể [{0}] phải triển khai [{1}]."
+"No model file was found.": "Không tìm thấy tệp mô hình."
+"The specified model file does not exist.": "Tệp mô hình được chỉ định không tồn tại."
+"[{0}] no connection string is specified!": "[{0}] chưa chỉ định chuỗi kết nối!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Không thể tải trình điều khiển [{0}]; hãy thêm gói trình điều khiển cơ sở dữ liệu từ NuGet."

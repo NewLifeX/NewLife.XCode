@@ -1,0 +1,8 @@
+# Bahasa Melayu 词表（ms）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Tiada kunci hubungan ditetapkan."
+"No master field is set.": "Tiada medan induk ditetapkan."
+"Entity class [{0}] must implement [{1}].": "Kelas entiti [{0}] mesti melaksanakan [{1}]."
+"No model file was found.": "Tiada fail model ditemui."
+"The specified model file does not exist.": "Fail model yang ditentukan tidak wujud."
+"[{0}] no connection string is specified!": "[{0}] tiada rentetan sambungan ditentukan!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Tidak dapat memuatkan pemacu [{0}]; tambah pakej pemacu pangkalan data daripada NuGet."

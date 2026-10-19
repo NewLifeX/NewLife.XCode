@@ -1,0 +1,8 @@
+# ไทย 词表（th）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "ยังไม่ได้ตั้งค่าคีย์ความสัมพันธ์"
+"No master field is set.": "ยังไม่ได้ตั้งค่าฟิลด์หลัก"
+"Entity class [{0}] must implement [{1}].": "คลาสเอนทิตี [{0}] ต้องใช้งาน [{1}]"
+"No model file was found.": "ไม่พบไฟล์โมเดล"
+"The specified model file does not exist.": "ไฟล์โมเดลที่ระบุไม่มีอยู่"
+"[{0}] no connection string is specified!": "[{0}] ไม่ได้ระบุสตริงการเชื่อมต่อ!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "ไม่สามารถโหลดไดรเวอร์ [{0}] ได้ โปรดเพิ่มแพ็กเกจไดรเวอร์ฐานข้อมูลจาก NuGet"

@@ -1,0 +1,8 @@
+# Italiano 词表（it）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Nessuna chiave di relazione impostata."
+"No master field is set.": "Nessun campo master impostato."
+"Entity class [{0}] must implement [{1}].": "La classe di entità [{0}] deve implementare [{1}]."
+"No model file was found.": "Nessun file di modello trovato."
+"The specified model file does not exist.": "Il file di modello specificato non esiste."
+"[{0}] no connection string is specified!": "[{0}] nessuna stringa di connessione specificata!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Impossibile caricare il driver [{0}]; aggiungere il pacchetto del driver di database da NuGet."

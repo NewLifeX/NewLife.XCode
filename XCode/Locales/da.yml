@@ -1,0 +1,8 @@
+# Dansk 词表（da）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Der er ikke angivet nogen relationsnøgle."
+"No master field is set.": "Der er ikke angivet noget masterfelt."
+"Entity class [{0}] must implement [{1}].": "Entitetsklassen [{0}] skal implementere [{1}]."
+"No model file was found.": "Der blev ikke fundet nogen modelfil."
+"The specified model file does not exist.": "Den angivne modelfil findes ikke."
+"[{0}] no connection string is specified!": "[{0}] der er ikke angivet en forbindelsesstreng!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Kan ikke indlæse driveren [{0}]; tilføj database-driverpakken fra NuGet."

@@ -1,0 +1,8 @@
+# Svenska 词表（sv）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Ingen relationsnyckel är angiven."
+"No master field is set.": "Inget huvudfält är angivet."
+"Entity class [{0}] must implement [{1}].": "Entitetsklassen [{0}] måste implementera [{1}]."
+"No model file was found.": "Ingen modellfil hittades."
+"The specified model file does not exist.": "Den angivna modellfilen finns inte."
+"[{0}] no connection string is specified!": "[{0}] ingen anslutningssträng är angiven!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Det gick inte att läsa in drivrutinen [{0}]; lägg till databasdrivrutinspaketet från NuGet."

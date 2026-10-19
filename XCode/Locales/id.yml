@@ -1,0 +1,8 @@
+# Bahasa Indonesia 词表（id）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Tidak ada kunci relasi yang ditetapkan."
+"No master field is set.": "Tidak ada bidang master yang ditetapkan."
+"Entity class [{0}] must implement [{1}].": "Kelas entitas [{0}] harus mengimplementasikan [{1}]."
+"No model file was found.": "Tidak ada berkas model yang ditemukan."
+"The specified model file does not exist.": "Berkas model yang ditentukan tidak ada."
+"[{0}] no connection string is specified!": "[{0}] tidak ada string koneksi yang ditentukan!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Tidak dapat memuat driver [{0}]; tambahkan paket driver basis data dari NuGet."

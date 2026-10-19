@@ -1,0 +1,8 @@
+# Čeština 词表（cs）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Není nastaven klíč relace."
+"No master field is set.": "Není nastaveno hlavní pole."
+"Entity class [{0}] must implement [{1}].": "Třída entity [{0}] musí implementovat [{1}]."
+"No model file was found.": "Nebyl nalezen žádný soubor modelu."
+"The specified model file does not exist.": "Zadaný soubor modelu neexistuje."
+"[{0}] no connection string is specified!": "[{0}] není zadán připojovací řetězec!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Nelze načíst ovladač [{0}]; přidejte balíček ovladače databáze z NuGet."

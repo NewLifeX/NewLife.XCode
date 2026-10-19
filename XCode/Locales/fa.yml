@@ -1,0 +1,8 @@
+# فارسی 词表（fa）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "هیچ کلید رابطه‌ای تنظیم نشده است."
+"No master field is set.": "هیچ فیلد اصلی تنظیم نشده است."
+"Entity class [{0}] must implement [{1}].": "کلاس موجودیت [{0}] باید [{1}] را پیاده‌سازی کند."
+"No model file was found.": "هیچ فایل مدلی یافت نشد."
+"The specified model file does not exist.": "فایل مدل مشخص‌شده وجود ندارد."
+"[{0}] no connection string is specified!": "[{0}] رشته اتصال مشخص نشده است!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "بارگذاری درایور [{0}] ممکن نشد؛ بسته درایور پایگاه داده را از NuGet اضافه کنید."

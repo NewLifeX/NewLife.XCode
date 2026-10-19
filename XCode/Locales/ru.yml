@@ -1,0 +1,8 @@
+# Русский 词表（ru）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Ключ связи не задан."
+"No master field is set.": "Главное поле не задано."
+"Entity class [{0}] must implement [{1}].": "Класс сущности [{0}] должен реализовывать [{1}]."
+"No model file was found.": "Файл модели не найден."
+"The specified model file does not exist.": "Указанный файл модели не существует."
+"[{0}] no connection string is specified!": "[{0}] не задана строка подключения!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Не удалось загрузить драйвер [{0}]; добавьте пакет драйвера базы данных из NuGet."

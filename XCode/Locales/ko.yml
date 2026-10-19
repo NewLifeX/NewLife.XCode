@@ -1,0 +1,8 @@
+# 한국어 词表（ko）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "관계 키가 설정되지 않았습니다."
+"No master field is set.": "마스터 필드가 설정되지 않았습니다."
+"Entity class [{0}] must implement [{1}].": "엔터티 클래스 [{0}]은(는) [{1}]을(를) 구현해야 합니다."
+"No model file was found.": "모델 파일을 찾지 못했습니다."
+"The specified model file does not exist.": "지정한 모델 파일이 존재하지 않습니다."
+"[{0}] no connection string is specified!": "[{0}] 연결 문자열이 지정되지 않았습니다!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "드라이버 [{0}]을(를) 로드할 수 없습니다. NuGet에서 데이터베이스 드라이버 패키지를 추가하세요."

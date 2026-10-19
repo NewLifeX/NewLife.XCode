@@ -1,0 +1,8 @@
+# Norsk bokmål 词表（nb）。键为英文源文，与源码字符串逐字一致；缺少的键运行时回退英文。
+"No relation key is set.": "Ingen relasjonsnøkkel er angitt."
+"No master field is set.": "Ingen hovedfelt er angitt."
+"Entity class [{0}] must implement [{1}].": "Entitetsklassen [{0}] må implementere [{1}]."
+"No model file was found.": "Ingen modellfil ble funnet."
+"The specified model file does not exist.": "Den angitte modellfilen finnes ikke."
+"[{0}] no connection string is specified!": "[{0}] ingen tilkoblingsstreng er angitt!"
+"Unable to load driver [{0}]; add the database driver package from NuGet.": "Kan ikke laste inn driveren [{0}]; legg til database-driverpakken fra NuGet."

@@ -539,7 +539,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             String? name = null;
             for (var i = 0; i < names.Length; i++)
             {
-                if (sb.Length > 0) sb.Append('，');
+                if (sb.Length > 0) sb.Append(", ");
 
                 FieldItem? field = Meta.Table.FindByName(names[i]);
                 if (field != null) name = field.Description;
@@ -555,7 +555,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
                 if (p > 0) name = name[..p];
             }
             if (name.IsNullOrEmpty()) name = typeof(TEntity).Name;
-            sb.AppendFormat(" 的{0}已存在！", name);
+            sb.Append(" ").Append(L.T("{0} already exists!", name));
 
             throw new ArgumentOutOfRangeException(String.Join(",", names), this[names[0]], sb.Return(true));
         }
@@ -850,9 +850,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
 
             String msg;
             if (Helper.IsNullKey(key, field.Type))
-                msg = $"参数错误！无法取得编号为{key}的{des}！可能未设置自增主键！";
+                msg = L.T("Invalid argument! Unable to get {0} with key {1}! The identity primary key may not be set!", des, key);
             else
-                msg = $"参数错误！无法取得编号为{key}的{des}！";
+                msg = L.T("Invalid argument! Unable to get {0} with key {1}!", des, key);
 
             throw new XCodeException(msg);
         }
@@ -2224,7 +2224,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         else if (fs.Contains("ID"))
             return this["ID"] + "";
         else
-            return "实体" + typeof(TEntity).Name;
+            return L.T("Entity {0}", typeof(TEntity).Name);
     }
     #endregion
 

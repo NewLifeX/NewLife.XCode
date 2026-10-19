@@ -275,7 +275,7 @@ public static class EntityFactory
             if (dic.TryGetValue(table.TableName, out var oldType))
             {
                 // 两个都不是，报错吧！
-                var msg = $"设计错误！发现表{table.TableName}同时被两个实体类（{oldType.FullName}和{type.FullName}）使用！";
+                var msg = L.T("Design error! Table {0} is used by two entity classes ({1} and {2})!", table.TableName, oldType.FullName, type.FullName);
                 XTrace.WriteLine(msg);
                 throw new XCodeException(msg);
             }

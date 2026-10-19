@@ -48,8 +48,8 @@ public class DbController
     /// <returns></returns>
     public LoginInfo Login(String db, String token)
     {
-        if (db.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, "数据库名称不能为空");
-        if (token.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, "令牌不能为空");
+        if (db.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, L.T("The database name cannot be empty."));
+        if (token.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, L.T("The token cannot be empty."));
 
         ValidateToken(token, db);
         var dal = DAL.Create(db);
@@ -152,7 +152,7 @@ public class DbController
     /// <returns></returns>
     private DAL GetDal(String? token, String? db)
     {
-        if (db.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, "数据库名称不能为空");
+        if (db.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, L.T("The database name cannot be empty."));
 
         ValidateToken(token, db);
 
@@ -164,7 +164,7 @@ public class DbController
     /// <param name="db">数据库名</param>
     private void ValidateToken(String? token, String db)
     {
-        if (token.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, "未登录或令牌无效");
+        if (token.IsNullOrEmpty()) throw new ApiException(ApiCode.Unauthorized, L.T("Not logged in or the token is invalid."));
 
         var key = $"db:token:{token}:{db}";
         if (TokenCache.TryGetValue<Boolean>(key, out var ok) && ok) return;
@@ -175,7 +175,7 @@ public class DbController
         }
         catch (UnauthorizedAccessException)
         {
-            throw new ApiException(ApiCode.Unauthorized, "未登录或令牌无效");
+            throw new ApiException(ApiCode.Unauthorized, L.T("Not logged in or the token is invalid."));
         }
 
         TokenCache.Set(key, true, TokenCacheExpire);

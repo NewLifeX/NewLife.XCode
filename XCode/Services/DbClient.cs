@@ -100,7 +100,7 @@ public class DbClient : DisposeBase, ILogFeature
         {
             Info = rs;
             Logined = true;
-            Log?.Info("登录成功！DbType={0} Version={1}", rs.DbType, rs.Version);
+            Log?.Info(L.T("Login succeeded! DbType={0} Version={1}"), rs.DbType, rs.Version);
         }
 
         return rs;

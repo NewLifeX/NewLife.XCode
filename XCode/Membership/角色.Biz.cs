@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -164,7 +164,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
 
         if (Meta.Count <= 1 && FindCount() <= 1)
         {
-            var msg = $"至少保留一个角色[{name}]禁止删除！";
+            var msg = L.T("At least one role must be kept; deleting [{0}] is not allowed!", name);
             WriteLog(LogActions.Delete, true, msg);
 
             throw new XException(msg);
@@ -172,7 +172,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
 
         if (entity!.IsSystem)
         {
-            var msg = $"系统角色[{name}]禁止删除！";
+            var msg = L.T("System role [{0}] cannot be deleted!", name);
             WriteLog(LogActions.Delete, true, msg);
 
             throw new XException(msg);

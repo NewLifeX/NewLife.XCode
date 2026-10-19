@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Data.Common;
 using NewLife.Collections;
 using NewLife.Log;
@@ -40,9 +40,9 @@ public class ConnectionPool : ObjectPool<DbConnection>
         var conn = Factory?.CreateConnection();
         if (conn == null)
         {
-            var msg = $"连接创建失败！请检查驱动是否正常";
+            var msg = L.T("Failed to create a connection! Check that the driver is working properly.");
 
-            XTrace.WriteLine("CreateConnection failure " + msg);
+            XTrace.WriteLine(msg);
 
             throw new Exception(Name + " " + msg);
         }
@@ -70,8 +70,8 @@ public class ConnectionPool : ObjectPool<DbConnection>
         var conn = Factory?.CreateConnection();
         if (conn == null)
         {
-            var msg = "连接创建失败！请检查驱动是否正常";
-            XTrace.WriteLine("CreateConnection failure " + msg);
+            var msg = L.T("Failed to create a connection! Check that the driver is working properly.");
+            XTrace.WriteLine(msg);
             throw new Exception(Name + " " + msg);
         }
 

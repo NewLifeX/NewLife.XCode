@@ -432,8 +432,8 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
             var type = GetType();
             var name = $"{type.GetDisplayName() ?? type.Name}<{typeof(TEntity).Name}>({_Entities.Length:n0})";
             sb.AppendFormat("{0,-24}", name);
-            sb.AppendFormat("总次数{0,11:n0}", Total);
-            if (Success > 0) sb.AppendFormat("，命中{0,11:n0}（{1,6:P02}）", Success, (Double)Success / Total);
+            sb.AppendFormat(L.T("Total {0,11:n0}"), Total);
+            if (Success > 0) sb.AppendFormat(L.T(", hits {0,11:n0} ({1,6:P02})"), Success, (Double)Success / Total);
             sb.AppendFormat("\t[{0}]", typeof(TEntity).FullName);
 
             XTrace.WriteLine(sb.Return(true));

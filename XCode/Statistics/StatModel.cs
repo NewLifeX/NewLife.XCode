@@ -116,7 +116,7 @@ public class StatModel
         var dt = Time;
         return Level switch
         {
-            StatLevels.All => "全局",
+            StatLevels.All => L.T("All"),
             StatLevels.Year => $"{dt:yyyy}",
             StatLevels.Month => $"{dt:yyyy-MM}",
             StatLevels.Day => $"{dt:yyyy-MM-dd}",

@@ -167,7 +167,7 @@ public abstract partial class EntityTree<TKey, [DynamicallyAccessedMembers(Dynam
             if (!String.IsNullOrEmpty(key)) v = this[key] + "";
 
             var d = Deepth;
-            if (d <= 0) return "|- 根";
+            if (d <= 0) return L.T("|- Root");
 
             return new String('　', d) + "|- " + v;
         }
@@ -189,7 +189,7 @@ public abstract partial class EntityTree<TKey, [DynamicallyAccessedMembers(Dynam
             }
 
             var d = Deepth;
-            if (d <= 0) return "|- 根";
+            if (d <= 0) return L.T("|- Root");
 
             return new String('　', d) + "|- " + v;
         }

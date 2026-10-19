@@ -270,7 +270,7 @@ class TDengine
             var result = json.ToJsonEntity<TDengineResult>();
             if (result == null)
             {
-                result = new TDengineResult { code = -1, desc = "解析响应失败" };
+                result = new TDengineResult { code = -1, desc = L.T("Failed to parse the response.") };
             }
             
             var resId = System.Threading.Interlocked.Increment(ref _resultIdSeed);

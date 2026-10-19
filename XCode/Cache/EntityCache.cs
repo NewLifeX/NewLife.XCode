@@ -258,7 +258,7 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
         }
         catch (Exception ex)
         {
-            XTrace.WriteLine($"[{TableName}/{ConnName}]" + ex.GetTrue());
+            XTrace.Log?.InfoPrefixed(LogPrefix, "[{0}/{1}] {2}", TableName, ConnName, ex.GetTrue());
             return null;
         }
     }

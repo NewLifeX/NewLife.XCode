@@ -37,6 +37,24 @@ public class PrefixedLogTests
         }
     }
 
+    [Fact(DisplayName = "运行时日志与提示词条在中文环境下翻译")]
+    public void RuntimeKeysTranslate()
+    {
+        var savedCulture = Localization.LogCulture;
+        try
+        {
+            Localization.LogCulture = CultureInfo.GetCultureInfo("zh-Hans");
+
+            Assert.Contains("总次数", Localization.TranslateForLog("Total {0,11:n0}", 5));
+            Assert.Equal("连接创建失败！请检查驱动是否正常。", Localization.TranslateForLog("Failed to create a connection! Check that the driver is working properly."));
+            Assert.Equal("未登录或令牌无效。", Localization.TranslateForLog("Not logged in or the token is invalid."));
+        }
+        finally
+        {
+            Localization.LogCulture = savedCulture;
+        }
+    }
+
     [Fact(DisplayName = "未提供译文时带前缀日志回退英文")]
     public void FallbackToEnglish()
     {

@@ -95,7 +95,7 @@ public class TimeShardPolicy : IShardPolicy
             return Shard(time);
         }
 
-        throw new XCodeException($"分表策略无法识别数据[{value}]");
+        throw new XCodeException("The shard policy cannot recognize data [{0}].", value);
     }
 
     /// <summary>为实体对象计算分表分库</summary>
@@ -124,7 +124,7 @@ public class TimeShardPolicy : IShardPolicy
             return Shard(time);
         }
 
-        throw new XCodeException($"时间分表策略不支持[{fi.Type.FullName}]类型字段");
+        throw new XCodeException("The time shard policy does not support fields of type [{0}].", fi.Type.FullName);
     }
 
     /// <summary>为时间计算分表分库</summary>

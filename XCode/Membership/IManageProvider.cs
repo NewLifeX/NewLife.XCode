@@ -200,14 +200,14 @@ public abstract class ManageProvider : IManageProvider
     {
         try
         {
-            if (String.IsNullOrEmpty(username)) throw new ArgumentNullException(nameof(username), $"用户名或密码不正确！");
+            if (String.IsNullOrEmpty(username)) throw new ArgumentNullException(nameof(username), L.T("Incorrect username or password!"));
 
             // 过滤帐号中的空格，防止出现无操作无法登录的情况
             var account = username.Trim();
             // 登录时必须从数据库查找用户，缓存中的用户对象密码字段可能为空
             var user = Membership.User.FindForLogin(account);
-            if (user == null) throw new EntityException("用户名或密码不正确！");
-            if (!user.Enable) throw new EntityException("账号{0}被禁用！", account);
+            if (user == null) throw new EntityException("Incorrect username or password!");
+            if (!user.Enable) throw new EntityException("Account {0} is disabled.", account);
 
             var prv = PasswordProvider;
             if (prv == null) throw new ArgumentNullException(nameof(PasswordProvider));
@@ -215,7 +215,7 @@ public abstract class ManageProvider : IManageProvider
             // 数据库为空密码，任何密码均可登录
             if (!user.Password.IsNullOrEmpty())
             {
-                if (!prv.Verify(password, user.Password)) throw new EntityException("用户名或密码不正确！");
+                if (!prv.Verify(password, user.Password)) throw new EntityException("Incorrect username or password!");
 
                 // 旧式密码更新为新格式，更安全
                 if (!user.Password.Contains("$"))
@@ -228,13 +228,13 @@ public abstract class ManageProvider : IManageProvider
 
             user.SaveLoginInfo();
 
-            Membership.User.WriteLog("登录", true, $"用户[{user}]使用[{username}]登录成功");
+            Membership.User.WriteLog("登录", true, L.T("User [{0}] logged in with account [{1}].", user, username));
 
             return user;
         }
         catch (Exception ex)
         {
-            Membership.User.WriteLog("登录", false, username + "登录失败！" + ex.Message);
+            Membership.User.WriteLog("登录", false, L.T("Login failed for account [{0}]! {1}", username, ex.Message));
             throw;
         }
     }
@@ -259,7 +259,7 @@ public abstract class ManageProvider : IManageProvider
         {
             // 去重判断
             var user = Membership.User.FindForLogin(username);
-            if (user != null) throw new ArgumentException(nameof(username), $"用户[{username}]已存在！");
+            if (user != null) throw new ArgumentException(nameof(username), L.T("User [{0}] already exists!", username));
 
             var pass = PasswordProvider.Hash(password);
 
@@ -273,13 +273,13 @@ public abstract class ManageProvider : IManageProvider
 
             user.Register();
 
-            Membership.User.WriteLog("注册", true, $"用户[{user}]使用[{username}]注册成功");
+            Membership.User.WriteLog("注册", true, L.T("User [{0}] registered with account [{1}].", user, username));
 
             return user;
         }
         catch (Exception ex)
         {
-            Membership.User.WriteLog("注册", false, username + "注册失败！" + ex.Message);
+            Membership.User.WriteLog("注册", false, L.T("Registration failed for account [{0}]! {1}", username, ex.Message));
             throw;
         }
     }
@@ -299,7 +299,7 @@ public abstract class ManageProvider : IManageProvider
             var account = username.Trim();
             var user = Membership.User.Find(Membership.User.__.Name, account);
             if (user == null) throw new EntityException("帐号{0}不存在！", account);
-            if (!user.Enable) throw new EntityException("账号{0}被禁用！", account);
+            if (!user.Enable) throw new EntityException("Account {0} is disabled.", account);
 
             var prv = PasswordProvider;
 
@@ -318,7 +318,7 @@ public abstract class ManageProvider : IManageProvider
         }
         catch (Exception ex)
         {
-            Membership.User.WriteLog("修改密码", false, username + "修改密码失败！" + ex.Message);
+            Membership.User.WriteLog("修改密码", false, L.T("Password change failed for account [{0}]! {1}", username, ex.Message));
             throw;
         }
     }

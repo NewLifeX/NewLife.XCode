@@ -103,7 +103,7 @@ public class DataScopeInterceptor : EntityInterceptor
                 // 检查是否有权为该用户创建数据
                 if (!DataScopeHelper.CanAccess(userScope, ctx))
                 {
-                    throw new InvalidOperationException($"无权为用户[{userScope.UserId}]创建数据");
+                    throw new InvalidOperationException(L.T("No permission to create data for user [{0}].", userScope.UserId));
                 }
             }
         }
@@ -122,7 +122,7 @@ public class DataScopeInterceptor : EntityInterceptor
                 var deptIds = ctx.AccessibleDepartmentIds;
                 if (deptIds != null && !deptIds.Contains(deptScope.DepartmentId))
                 {
-                    throw new InvalidOperationException($"无权在部门[{deptScope.DepartmentId}]下创建数据");
+                    throw new InvalidOperationException(L.T("No permission to create data under department [{0}].", deptScope.DepartmentId));
                 }
             }
         }
@@ -141,7 +141,7 @@ public class DataScopeInterceptor : EntityInterceptor
         {
             if (!DataScopeHelper.CanAccess(dataScope, ctx))
             {
-                throw new InvalidOperationException($"无权{action}此数据（数据归属不匹配）");
+                throw new InvalidOperationException(L.T("No permission to {0} this data (data ownership mismatch).", action));
             }
             return true;
         }
@@ -151,7 +151,7 @@ public class DataScopeInterceptor : EntityInterceptor
         {
             if (!DataScopeHelper.CanAccess(userScope, ctx))
             {
-                throw new InvalidOperationException($"无权{action}此数据（非本人数据）");
+                throw new InvalidOperationException(L.T("No permission to {0} this data (not the owner).", action));
             }
             return true;
         }
@@ -161,7 +161,7 @@ public class DataScopeInterceptor : EntityInterceptor
         {
             if (!DataScopeHelper.CanAccess(deptScope, ctx))
             {
-                throw new InvalidOperationException($"无权{action}此数据（部门权限不足）");
+                throw new InvalidOperationException(L.T("No permission to {0} this data (insufficient department permission).", action));
             }
             return true;
         }

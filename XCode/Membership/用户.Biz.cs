@@ -525,7 +525,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         }
         catch (Exception ex)
         {
-            WriteLog("登录", false, username + "登录失败！" + ex.Message);
+            WriteLog("登录", false, L.T("Login failed for account [{0}]! {1}", username, ex.Message));
             throw;
         }
     }
@@ -546,7 +546,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         }
         catch (Exception ex)
         {
-            WriteLog("登录", false, username + "登录失败！" + ex.Message);
+            WriteLog("登录", false, L.T("Login failed for account [{0}]! {1}", username, ex.Message));
             throw;
         }
     }

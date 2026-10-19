@@ -41,7 +41,7 @@ public class DbService
             throw new UnauthorizedAccessException("无效令牌");
 
         if (dbs != null && dbs.Length > 0 && !dbs.Contains(db, StringComparer.OrdinalIgnoreCase))
-            throw new UnauthorizedAccessException($"令牌无权访问数据库[{db}]");
+            throw new UnauthorizedAccessException(L.T("The token is not authorized to access database [{0}].", db));
     }
 
     /// <summary>验证令牌并获取 DAL 实例</summary>

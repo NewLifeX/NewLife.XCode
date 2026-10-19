@@ -84,7 +84,7 @@ public class TDengineCommand : DbCommand
         var handler = task.Result;
         var code = TD.ErrorNo(handler);
         if (handler == IntPtr.Zero) code = TD.ErrorNo(conn._handler);
-        if (code != 0) throw new XCodeException(TD.Error(handler) ?? $"执行出错[{code}]。");
+        if (code != 0) throw new XCodeException(TD.Error(handler) ?? L.T("Execution error [{0}].", code));
 
         return new TDengineDataReader(this, behavior, handler);
     }

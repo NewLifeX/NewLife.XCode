@@ -632,7 +632,7 @@ public abstract partial class EntityTree<TKey, [DynamicallyAccessedMembers(Dynam
         {
             var list = AllChilds;
             if (list != null && list.Any(e => Equals(e[Setting.Key], pkey)))
-                throw new XException("上级[" + pkey + "]是当前节点的子孙节点！");
+                throw new XException(L.T("Parent [{0}] is a descendant of the current node!", pkey));
         }
 
         return true;

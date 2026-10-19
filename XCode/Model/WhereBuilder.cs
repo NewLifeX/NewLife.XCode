@@ -111,7 +111,7 @@ public class WhereBuilder
             }
         }
 
-        throw new XCodeException($"无法解析表达式[{exp}]");
+        throw new XCodeException("Unable to parse expression [{0}].", exp);
     }
 
     private Object GetValue(String exp)
@@ -267,7 +267,7 @@ public class WhereBuilder
                 var name = exp[..p].Trim();
                 var value = exp[(p + item.Length)..].Trim();
 
-                if (Factory.Table.FindByName(name) is not FieldItem fi) throw new XCodeException($"无法识别表达式[{exp}]中的字段[{name}]，实体类[{Factory.EntityType.FullName}]中没有该字段");
+                if (Factory.Table.FindByName(name) is not FieldItem fi) throw new XCodeException("Field [{0}] in expression [{1}] was not recognized; entity class [{2}] does not contain this field.", name, exp, Factory.EntityType.FullName);
 
                 var val = GetValue(value);
 

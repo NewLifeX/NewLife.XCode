@@ -165,20 +165,20 @@ public class TenantInterceptor : EntityInterceptor
                     if (tenant.TenantId == 0)
                         tenant.TenantId = ctx.TenantId;
                     else if (tenant.TenantId != ctx.TenantId)
-                        throw new InvalidOperationException($"不能为其他租户[{tenant.TenantId}]创建数据");
+                        throw new InvalidOperationException(L.T("Cannot create data for another tenant [{0}].", tenant.TenantId));
                     break;
 
                 case DataMethod.Update:
                     // 更新：校验租户归属
                     if (!entity.HasDirty) return true;
                     if (tenant.TenantId != ctx.TenantId)
-                        throw new InvalidOperationException($"不能修改其他租户[{tenant.TenantId}]的数据");
+                        throw new InvalidOperationException(L.T("Cannot modify data of another tenant [{0}].", tenant.TenantId));
                     break;
 
                 case DataMethod.Delete:
                     // 删除：校验租户归属
                     if (tenant.TenantId != ctx.TenantId)
-                        throw new InvalidOperationException($"不能删除其他租户[{tenant.TenantId}]的数据");
+                        throw new InvalidOperationException(L.T("Cannot delete data of another tenant [{0}].", tenant.TenantId));
                     break;
             }
         }

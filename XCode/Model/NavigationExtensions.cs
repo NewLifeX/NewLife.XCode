@@ -224,7 +224,7 @@ public static class NavigationExtensions
         if (body is MemberExpression memberExpr)
             return memberExpr;
 
-        throw new ArgumentException($"表达式必须是成员访问表达式，当前为 {body.NodeType}");
+        throw new ArgumentException(L.T("The expression must be a member access expression; the current node is {0}.", body.NodeType));
     }
 
     /// <summary>获取类型上指定名称的 FieldItem（数据字段）</summary>
@@ -232,11 +232,11 @@ public static class NavigationExtensions
     {
         var factory = entityType.AsFactory();
         if (factory == null)
-            throw new InvalidOperationException($"无法获取实体工厂: {entityType.FullName}");
+            throw new InvalidOperationException(L.T("Unable to obtain the entity factory: {0}", entityType.FullName));
 
         var field = factory.Table.FindByName(propertyName);
         if (field is null)
-            throw new InvalidOperationException($"实体 {entityType.Name} 中未找到字段: {propertyName}");
+            throw new InvalidOperationException(L.T("Field [{0}] was not found on entity {1}.", propertyName, entityType.Name));
 
         return field;
     }

@@ -228,13 +228,13 @@ public abstract class ManageProvider : IManageProvider
 
             user.SaveLoginInfo();
 
-            Membership.User.WriteLog("登录", true, L.T("User [{0}] logged in with account [{1}].", user, username));
+            Membership.User.WriteLog(LogActions.Login, true, L.T("User [{0}] logged in with account [{1}].", user, username));
 
             return user;
         }
         catch (Exception ex)
         {
-            Membership.User.WriteLog("登录", false, L.T("Login failed for account [{0}]! {1}", username, ex.Message));
+            Membership.User.WriteLog(LogActions.Login, false, L.T("Login failed for account [{0}]! {1}", username, ex.Message));
             throw;
         }
     }
@@ -273,13 +273,13 @@ public abstract class ManageProvider : IManageProvider
 
             user.Register();
 
-            Membership.User.WriteLog("注册", true, L.T("User [{0}] registered with account [{1}].", user, username));
+            Membership.User.WriteLog(LogActions.Register, true, L.T("User [{0}] registered with account [{1}].", user, username));
 
             return user;
         }
         catch (Exception ex)
         {
-            Membership.User.WriteLog("注册", false, L.T("Registration failed for account [{0}]! {1}", username, ex.Message));
+            Membership.User.WriteLog(LogActions.Register, false, L.T("Registration failed for account [{0}]! {1}", username, ex.Message));
             throw;
         }
     }
@@ -293,12 +293,12 @@ public abstract class ManageProvider : IManageProvider
     {
         try
         {
-            if (username.IsNullOrEmpty()) throw new ArgumentNullException(nameof(username), "该帐号不存在！");
+            if (username.IsNullOrEmpty()) throw new ArgumentNullException(nameof(username), L.T("The account does not exist!"));
 
             // 过滤帐号中的空格，防止出现误操作无法登录的情况
             var account = username.Trim();
             var user = Membership.User.Find(Membership.User.__.Name, account);
-            if (user == null) throw new EntityException("帐号{0}不存在！", account);
+            if (user == null) throw new EntityException("Account {0} does not exist!", account);
             if (!user.Enable) throw new EntityException("Account {0} is disabled.", account);
 
             var prv = PasswordProvider;
@@ -306,19 +306,19 @@ public abstract class ManageProvider : IManageProvider
             // 数据库为空密码，任何密码均可登录
             if (!oldPassword.IsNullOrEmpty() && !user.Password.IsNullOrEmpty())
             {
-                if (!prv.Verify(oldPassword, user.Password)) throw new EntityException("用户名或密码不正确！");
+                if (!prv.Verify(oldPassword, user.Password)) throw new EntityException("Incorrect username or password!");
             }
 
             user.Password = prv.Hash(newPassword);
             user.Update();
 
-            Membership.User.WriteLog("修改密码", true, username);
+            Membership.User.WriteLog(LogActions.ChangePassword, true, username);
 
             return user;
         }
         catch (Exception ex)
         {
-            Membership.User.WriteLog("修改密码", false, L.T("Password change failed for account [{0}]! {1}", username, ex.Message));
+            Membership.User.WriteLog(LogActions.ChangePassword, false, L.T("Password change failed for account [{0}]! {1}", username, ex.Message));
             throw;
         }
     }

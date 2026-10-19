@@ -39,14 +39,14 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
                 role.IsSystem = true;
                 role.Type = RoleTypes.系统;
 
-                XTrace.WriteLine("必须有至少一个可用的系统角色，修改{0}为系统角色！", role.Name);
+                XTrace.WriteLine("There must be at least one available system role; setting {0} as a system role!", role.Name);
 
                 role.Save();
             }
         }
         else
         {
-            if (XTrace.Debug) XTrace.WriteLine("开始初始化{0}角色数据……", typeof(Role).Name);
+            if (XTrace.Debug) XTrace.WriteLine("Initializing {0} role data...", typeof(Role).Name);
 
             Add("管理员", true, RoleTypes.系统, DataScopes.全部, "默认拥有全部最高权限，由系统工程师使用，安装配置整个系统");
             //Add("租户管理员", false, "SAAS平台租户管理员");
@@ -54,7 +54,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
             Add("普通用户", false, RoleTypes.普通, DataScopes.本部门, "普通业务人员，可以使用系统常规业务模块功能");
             Add("游客", false, RoleTypes.普通, DataScopes.仅本人, "新注册默认属于游客");
 
-            if (XTrace.Debug) XTrace.WriteLine("完成初始化{0}角色数据！", typeof(Role).Name);
+            if (XTrace.Debug) XTrace.WriteLine("Finished initializing {0} role data!", typeof(Role).Name);
         }
 
         //CheckRole();
@@ -73,7 +73,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
         var ids = menus.Select(e => e.ID).ToArray();
         foreach (var role in list)
         {
-            if (!role.CheckValid(ids)) XTrace.WriteLine("删除[{0}]中的无效资源权限！", role);
+            if (!role.CheckValid(ids)) XTrace.WriteLine("Removing invalid resource permissions from [{0}]!", role);
         }
 
         // 所有角色都有权进入管理平台，否则无法使用后台
@@ -101,12 +101,12 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
                 count++;
                 sys.Set(item.ID, PermissionFlags.All);
 
-                XTrace.WriteLine("没有任何角色拥有菜单[{0}]的权限", item.Name);
+                XTrace.WriteLine("No role has permission for menu [{0}].", item.Name);
             }
         }
         if (count > 0)
         {
-            XTrace.WriteLine("共有{0}个菜单，没有任何角色拥有权限，准备授权第一系统角色[{1}]拥有其完全管理权！", count, sys);
+            XTrace.WriteLine("There are {0} menus and no role has permission; granting full management rights to the first system role [{1}]!", count, sys);
             sys.Save();
 
             // 更新缓存
@@ -120,7 +120,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
     {
         if (method == DataMethod.Delete) return true;
 
-        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, _.Name.DisplayName + "不能为空！");
+        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, L.T("{0} cannot be empty!", _.Name.DisplayName));
 
         if (Type == 0)
         {
@@ -165,7 +165,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
         if (Meta.Count <= 1 && FindCount() <= 1)
         {
             var msg = $"至少保留一个角色[{name}]禁止删除！";
-            WriteLog("删除", true, msg);
+            WriteLog(LogActions.Delete, true, msg);
 
             throw new XException(msg);
         }
@@ -173,7 +173,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
         if (entity!.IsSystem)
         {
             var msg = $"系统角色[{name}]禁止删除！";
-            WriteLog("删除", true, msg);
+            WriteLog(LogActions.Delete, true, msg);
 
             throw new XException(msg);
         }

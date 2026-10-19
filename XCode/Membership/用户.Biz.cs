@@ -519,13 +519,13 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
 
             user.SaveLoginInfo();
 
-            WriteLog("登录", true, username);
+            WriteLog(LogActions.Login, true, username);
 
             return user;
         }
         catch (Exception ex)
         {
-            WriteLog("登录", false, L.T("Login failed for account [{0}]! {1}", username, ex.Message));
+            WriteLog(LogActions.Login, false, L.T("Login failed for account [{0}]! {1}", username, ex.Message));
             throw;
         }
     }
@@ -546,7 +546,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         }
         catch (Exception ex)
         {
-            WriteLog("登录", false, L.T("Login failed for account [{0}]! {1}", username, ex.Message));
+            WriteLog(LogActions.Login, false, L.T("Login failed for account [{0}]! {1}", username, ex.Message));
             throw;
         }
     }
@@ -611,9 +611,9 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         user.SaveLoginInfo();
 
         if (hashTimes == -1)
-            WriteLog("自动登录", true, username);
+            WriteLog(LogActions.AutoLogin, true, username);
         else
-            WriteLog("登录", true, username);
+            WriteLog(LogActions.Login, true, username);
 
         return user;
     }

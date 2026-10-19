@@ -24,7 +24,7 @@ public class LogEntity<[DynamicallyAccessedMembers(DynamicallyAccessedMemberType
         }
         finally
         {
-            LogProvider.Provider.WriteLog("添加", this, err);
+            LogProvider.Provider.WriteLog(LogActions.Add, this, err);
         }
     }
 
@@ -33,7 +33,7 @@ public class LogEntity<[DynamicallyAccessedMembers(DynamicallyAccessedMemberType
     public override Int32 Update()
     {
         // 必须提前写修改日志，否则修改后脏数据失效，保存的日志为空
-        if (HasDirty) LogProvider.Provider.WriteLog("修改", this);
+        if (HasDirty) LogProvider.Provider.WriteLog(LogActions.Update, this);
 
         try
         {
@@ -41,7 +41,7 @@ public class LogEntity<[DynamicallyAccessedMembers(DynamicallyAccessedMemberType
         }
         catch (Exception ex)
         {
-            LogProvider.Provider.WriteLog("修改", this, ex.Message);
+            LogProvider.Provider.WriteLog(LogActions.Update, this, ex.Message);
             throw;
         }
     }
@@ -62,7 +62,7 @@ public class LogEntity<[DynamicallyAccessedMembers(DynamicallyAccessedMemberType
         }
         finally
         {
-            LogProvider.Provider.WriteLog("删除", this, err);
+            LogProvider.Provider.WriteLog(LogActions.Delete, this, err);
         }
     }
     #endregion

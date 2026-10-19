@@ -679,7 +679,7 @@ public partial class Area : Entity<Area>
     /// <summary>扫描预热数据</summary>
     public static Int32 Preload()
     {
-        XTrace.WriteLine("Area.Preload 地区数据预热");
+        XTrace.WriteLine("Area.Preload area data warm-up");
 
         var layer = 2;
         var count = 0;
@@ -731,7 +731,7 @@ public partial class Area : Entity<Area>
 
         ss.ShowSQL = old;
 
-        XTrace.WriteLine("共扫描发现{0}个层级为0的地区，修正{1}个", count, success);
+        XTrace.WriteLine("Scanned {0} areas at level 0; corrected {1}.", count, success);
 
         return count;
     }
@@ -877,7 +877,7 @@ public partial class Area : Entity<Area>
                     }
                     else
                     {
-                        XTrace.WriteLine("无法识别地区的父级 {0} {1}", item.ID, item.Name);
+                        XTrace.WriteLine("Unable to recognize the parent of area {0} {1}.", item.ID, item.Name);
                     }
                 }
 
@@ -975,7 +975,7 @@ public partial class Area : Entity<Area>
     /// <returns></returns>
     public static Int32 MergeLevel3(IList<Area> list, Boolean addLose, Boolean enable)
     {
-        XTrace.WriteLine("合并三级地址：{0:n0}", list.Count);
+        XTrace.WriteLine("Merging third-level addresses: {0:n0}", list.Count);
 
         // 一次性加载三级地址
         var rs = FindAll(_.ID < 99_99_99);
@@ -1023,8 +1023,8 @@ public partial class Area : Entity<Area>
                     r.Enable = enable || r.ParentID == 460300 || r.ParentID > 700000 || r.Name.StartsWith("直辖");
                 }
 
-                XTrace.Log.Debug("新增 {0} {1} {2}", r.ID, r.Name, r.FullName);
-                if (r.ParentID > 0 && !rs.Any(e => e.ID == r.ParentID)) XTrace.Log.Debug("未知父级 {0}", r.ParentID);
+                XTrace.Log.Debug("Added {0} {1} {2}", r.ID, r.Name, r.FullName);
+                if (r.ParentID > 0 && !rs.Any(e => e.ID == r.ParentID)) XTrace.Log.Debug("Unknown parent {0}", r.ParentID);
 
                 r.PinYin = null;
                 r.JianPin = null;
@@ -1042,7 +1042,8 @@ public partial class Area : Entity<Area>
             else
             {
                 if (r.FullName != r2.FullName) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
-                if (r.Name != r2.Name && r.Name.TrimSuffix("市", "矿区", "林区", "区", "县") != r2.Name) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
+                if (r.Name != r2.Name && r.Name.TrimSuffix("市", "矿区", "林区", "区", "县") != r2.Name)
+                    XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
 
                 // 合并字段
                 if (!r.English.IsNullOrEmpty()) r2.English = r.English;
@@ -1071,7 +1072,7 @@ public partial class Area : Entity<Area>
         //count = bs.Save(true);
         count = bs.BatchUpsert(new BatchOption { FullInsert = true });
 
-        XTrace.WriteLine("合并三级地址成功：{0:n0}", count);
+        XTrace.WriteLine("Successfully merged third-level addresses: {0:n0}", count);
 
         return count;
     }
@@ -1083,7 +1084,7 @@ public partial class Area : Entity<Area>
     /// <returns></returns>
     public static Int32 MergeLevel4(IList<Area> list, Boolean addLose, Boolean enable)
     {
-        XTrace.WriteLine("合并四级地址：{0:n0}", list.Count);
+        XTrace.WriteLine("Merging fourth-level addresses: {0:n0}", list.Count);
 
         // 一次性加载四级地址
         var rs = FindAll(_.ID < 99_99_99_999);
@@ -1101,7 +1102,7 @@ public partial class Area : Entity<Area>
                 if (!addLose) continue;
 
                 //XTrace.WriteLine("新增 {0} {1} {2}", r.ID, r.Name, r.FullName);
-                if (r.ParentID > 0 && !rs.Any(e => e.ID == r.ParentID)) XTrace.Log.Debug("未知父级 {0}", r.ParentID);
+                if (r.ParentID > 0 && !rs.Any(e => e.ID == r.ParentID)) XTrace.Log.Debug("Unknown parent {0}", r.ParentID);
 
                 r.PinYin = null;
                 r.JianPin = null;
@@ -1117,7 +1118,8 @@ public partial class Area : Entity<Area>
             else
             {
                 if (r.FullName != r2.FullName) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
-                if (r.Name != r2.Name && r.Name.TrimSuffix("街道") != r2.Name) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
+                if (r.Name != r2.Name && r.Name.TrimSuffix("街道") != r2.Name)
+                    XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
 
                 // 合并字段
                 if (!r.English.IsNullOrEmpty()) r2.English = r.English;
@@ -1146,7 +1148,7 @@ public partial class Area : Entity<Area>
         //count = bs.Save(true);
         count = bs.BatchUpsert(new BatchOption { FullInsert = true });
 
-        XTrace.WriteLine("合并四级地址成功：{0:n0}", count);
+        XTrace.WriteLine("Successfully merged fourth-level addresses: {0:n0}", count);
 
         return count;
     }

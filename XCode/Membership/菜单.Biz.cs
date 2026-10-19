@@ -109,7 +109,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
         }
         finally
         {
-            LogProvider.Provider.WriteLog("删除", this, err);
+            LogProvider.Provider.WriteLog(LogActions.Delete, this, err);
         }
     }
 

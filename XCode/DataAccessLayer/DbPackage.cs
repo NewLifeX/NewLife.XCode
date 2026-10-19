@@ -97,7 +97,7 @@ public class DbPackage
 
         // 总行数
         writeFile.Total = Dal.SelectCount(sb);
-        WriteLog("备份[{0}/{1}]开始，共[{2:n0}]行，抽取器{3}", table, connName, writeFile.Total, extracer);
+        WriteLog("Backup of [{0}/{1}] started; total [{2:n0}] rows, extractor {3}", table, connName, writeFile.Total, extracer);
         writeFile.Start(cancellationToken);
 
         // 临时关闭日志
@@ -115,7 +115,7 @@ public class DbPackage
 
                 var row = extracer.TotalCount;
                 var count = dt.Rows.Count;
-                WriteLog("备份[{0}/{1}]数据 {2:n0} + {3:n0}", table, connName, row, count);
+                WriteLog("Backup of [{0}/{1}] data {2:n0} + {3:n0}", table, connName, row, count);
                 if (count == 0) break;
 
                 // 字段名更换为属性名
@@ -148,7 +148,7 @@ public class DbPackage
 
         sw.Stop();
         var ms = sw.Elapsed.TotalMilliseconds;
-        WriteLog("备份[{0}/{1}]完成，共[{2:n0}]行，耗时{3:n0}ms，速度{4:n0}tps", table, connName, total, ms, total * 1000L / ms);
+        WriteLog("Backup of [{0}/{1}] completed; total [{2:n0}] rows, elapsed {3:n0}ms, speed {4:n0}tps", table, connName, total, ms, total * 1000L / ms);
 
         // 返回总行数
         return total;
@@ -233,7 +233,7 @@ public class DbPackage
         var file2 = file.GetFullPath();
         file2.EnsureDirectory(true);
 
-        WriteLog("备份[{0}/{1}]到文件 {2}", table, Dal.ConnName, file2);
+        WriteLog("Backup of [{0}/{1}] to file {2}", table, Dal.ConnName, file2);
 
         using var fs = new FileStream(file2, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
         var rs = 0;
@@ -277,7 +277,7 @@ public class DbPackage
             var file2 = file.GetFullPath();
             file2.EnsureDirectory(true);
 
-            WriteLog("备份[{0}]到文件 {1}。{2}", connName, file2, tables.Join(",", e => e.Name));
+            WriteLog("Backup of [{0}] to file {1}. {2}", connName, file2, tables.Join(",", e => e.Name));
 
             using var fs = new FileStream(file2, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
             using var zip = new ZipArchive(fs, ZipArchiveMode.Create, true, Encoding.UTF8);
@@ -370,7 +370,7 @@ public class DbPackage
 
             var dt = new DbTable();
             dt.ReadHeader(binary);
-            WriteLog("恢复[{0}/{1}]开始，共[{2:n0}]行", table.Name, connName, dt.Total);
+            WriteLog("Restore of [{0}/{1}] started; total [{2:n0}] rows", table.Name, connName, dt.Total);
 
             // 输出日志
             var cs = dt.Columns;
@@ -383,8 +383,8 @@ public class DbPackage
                     if (dc != null) ts[i] = dc.DataType;
                 }
             }
-            WriteLog("字段[{0}]：{1}", cs.Length, cs.Join());
-            WriteLog("类型[{0}]：{1}", ts.Length, ts.Join(",", e => e?.Name));
+            WriteLog("Fields [{0}]: {1}", cs.Length, cs.Join());
+            WriteLog("Types [{0}]: {1}", ts.Length, ts.Join(",", e => e?.Name));
 
             var row = 0;
             var pageSize = BatchSize;
@@ -399,7 +399,7 @@ public class DbPackage
                 var rs = dt.Rows;
                 if (rs == null || rs.Count == 0) break;
 
-                WriteLog("恢复[{0}/{1}]数据 {2:n0} + {3:n0}", table.Name, connName, row, rs.Count);
+                WriteLog("Restore of [{0}/{1}] data {2:n0} + {3:n0}", table.Name, connName, row, rs.Count);
 
                 // 进度报告，批量写入数据库
                 OnProcess(table, row, dt, writeDb);
@@ -428,7 +428,7 @@ public class DbPackage
 
         sw.Stop();
         var ms = sw.Elapsed.TotalMilliseconds;
-        WriteLog("恢复[{0}/{1}]完成，共[{2:n0}]行，耗时{3:n0}ms，速度{4:n0}tps", table.Name, connName, total, ms, total * 1000L / ms);
+        WriteLog("Restore of [{0}/{1}] completed; total [{2:n0}] rows, elapsed {3:n0}ms, speed {4:n0}tps", table.Name, connName, total, ms, total * 1000L / ms);
 
         // 返回总行数
         return total;
@@ -448,7 +448,7 @@ public class DbPackage
         if (!File.Exists(file2)) return 0;
         file2.EnsureDirectory(true);
 
-        WriteLog("恢复[{2}]到[{0}/{1}]", table, Dal.ConnName, file);
+        WriteLog("Restore [{2}] to [{0}/{1}]", table, Dal.ConnName, file);
 
         if (setSchema) Dal.SetTables(table);
 
@@ -491,7 +491,7 @@ public class DbPackage
         }
         if (tables == null) throw new ArgumentNullException(nameof(tables));
 
-        WriteLog("恢复[{0}]从文件 {1}。数据表：{2}", Dal.ConnName, file2, tables.Join(",", e => e.Name));
+        WriteLog("Restore [{0}] from file {1}. Tables: {2}", Dal.ConnName, file2, tables.Join(",", e => e.Name));
 
         if (setSchema) Dal.SetTables(tables);
 
@@ -587,7 +587,7 @@ public class DbPackage
 
                 var row = extracer.TotalCount;
                 var count = dt.Rows.Count;
-                WriteLog("同步[{0}/{1}]数据 {2:n0} + {3:n0}", table.Name, Dal.ConnName, row, count);
+                WriteLog("Sync of [{0}/{1}] data {2:n0} + {3:n0}", table.Name, Dal.ConnName, row, count);
 
                 ////修复表的列名带下划线的会出现问题
                 //for (var i=0;i< dt.Columns.Length;i++)
@@ -618,7 +618,7 @@ public class DbPackage
 
         sw.Stop();
         var ms = sw.Elapsed.TotalMilliseconds;
-        WriteLog("同步[{0}/{1}]完成，共[{2:n0}]行，耗时{3:n0}ms，速度{4:n0}tps", table.Name, Dal.ConnName, total, ms, total * 1000L / ms);
+        WriteLog("Sync of [{0}/{1}] completed; total [{2:n0}] rows, elapsed {3:n0}ms, speed {4:n0}tps", table.Name, Dal.ConnName, total, ms, total * 1000L / ms);
 
         // 返回总行数
         return total;

@@ -102,7 +102,7 @@ internal partial class DbMetaData
         {
             if (mode > Migration.ReadOnly)
             {
-                WriteLog("创建数据库：{0}", ConnName);
+                WriteLog("Creating database: {0}", ConnName);
                 CreateDatabase(Database.DatabaseName);
 
                 dbExist = true;
@@ -111,9 +111,9 @@ internal partial class DbMetaData
             {
                 var sql = GetSchemaSQL(DDLSchema.CreateDatabase, [null, null]);
                 if (String.IsNullOrEmpty(sql))
-                    WriteLog("请为连接{0}创建数据库！", ConnName);
+                    WriteLog("Please create the database for connection {0}!", ConnName);
                 else
-                    WriteLog("请为连接{0}创建数据库，使用以下语句：{1}", ConnName, Environment.NewLine + sql);
+                    WriteLog("Please create the database for connection {0} using the following statement: {1}", ConnName, Environment.NewLine + sql);
             }
         }
 
@@ -127,7 +127,7 @@ internal partial class DbMetaData
         if (dbExit)
         {
             var tableNames = tables.Select(e => FormatName(e, false)).ToArray();
-            WriteLog("[{0}]待检查数据表：{1}", Database.ConnName, tableNames.Join());
+            WriteLog("[{0}] tables pending check: {1}", Database.ConnName, tableNames.Join());
             dbtables = OnGetTables(tableNames);
         }
 
@@ -177,7 +177,7 @@ internal partial class DbMetaData
             // 没有字段的表不创建
             if (entitytable.Columns.Count <= 0) return;
 
-            WriteLog("创建表：{0}({1})", entitytable.TableName, entitytable.Description);
+            WriteLog("Creating table: {0}({1})", entitytable.TableName, entitytable.Description);
 
             var sb = new StringBuilder();
             // 建表，如果不是onlySql，执行时DAL会输出SQL日志
@@ -301,7 +301,7 @@ internal partial class DbMetaData
             // 对于修改列，只读或者只创建，都只要sql
             if (IsColumnTypeChanged(item, dbf))
             {
-                WriteLog("字段[{0}.{1}]类型需要由数据库的[{2}]改变为实体的[{3}]，RawType={4}", entitytable.Name, item.Name, dbf.DataType?.Name, item.DataType?.FullName.TrimPrefix("System."), dbf.RawType);
+                WriteLog("The type of field [{0}.{1}] needs to change from database type [{2}] to entity type [{3}], RawType={4}", entitytable.Name, item.Name, dbf.DataType?.Name, item.DataType?.FullName.TrimPrefix("System."), dbf.RawType);
                 PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
             }
             else if (IsColumnLengthChanged(item, dbf, entityDb))
@@ -409,7 +409,7 @@ internal partial class DbMetaData
                 // 索引不能重复，不缺分大小写，但字段相同而顺序不同，算作不同索引
                 var key = item.Columns.Join(",").ToLower();
                 if (ids.Contains(key))
-                    WriteLog("[{0}]索引重复 {1}({2})", entitytable.TableName, item.Name, item.Columns.Join(","));
+                    WriteLog("[{0}] duplicate index {1}({2})", entitytable.TableName, item.Name, item.Columns.Join(","));
                 else
                 {
                     ids.Add(key);
@@ -762,10 +762,10 @@ internal partial class DbMetaData
                     WriteLog("{0}({1})", schema, dc.ColumnName);
                     break;
                 default:
-                    WriteLog("修改表：{0} {1}", schema.ToString(), s.ToString());
+                    WriteLog("Altering table: {0} {1}", schema.ToString(), s.ToString());
                     break;
             }
-            //WriteLog("修改表：{0} {1}", schema.ToString(), s.ToString());
+            //WriteLog("Altering table: {0} {1}", schema.ToString(), s.ToString());
         }
 
         if (onlySql)
@@ -784,7 +784,7 @@ internal partial class DbMetaData
             }
             catch (Exception ex)
             {
-                WriteLog("修改表{0}失败！{1}", schema.ToString(), ex.Message);
+                WriteLog("Failed to alter table {0}! {1}", schema.ToString(), ex.Message);
                 return false;
             }
         }
@@ -832,7 +832,7 @@ internal partial class DbMetaData
                 // 索引不能重复，不缺分大小写，但字段相同而顺序不同，算作不同索引
                 var key = item.Columns.Join(",").ToLower();
                 if (ids.Contains(key))
-                    WriteLog("[{0}]索引重复 {1}({2})", table.TableName, item.Name, item.Columns.Join(","));
+                    WriteLog("[{0}] duplicate index {1}({2})", table.TableName, item.Name, item.Columns.Join(","));
                 else
                 {
                     ids.Add(key);
@@ -868,7 +868,7 @@ internal partial class DbMetaData
             DDLSchema.CreateIndex => CreateIndexSQL((IDataIndex)values[0]!),
             DDLSchema.DropIndex => DropIndexSQL((IDataIndex)values[0]!),
             DDLSchema.CompactDatabase => CompactDatabaseSQL(),
-            _ => throw new NotSupportedException("不支持该操作！"),
+            _ => throw new NotSupportedException(L.T("This operation is not supported!")),
         };
     }
 
@@ -897,7 +897,7 @@ internal partial class DbMetaData
             DDLSchema.BackupDatabase => BackupDatabase(values?.Length > 0 ? (String?)values[0] : null, values?.Length > 1 ? (String?)values[1] : null),
             DDLSchema.RestoreDatabase => RestoreDatabase((String)values[0]!, values?.Length > 1 ? (String?)values[1] : null),
             DDLSchema.CompactDatabase => CompactDatabase(),
-            _ => throw new NotSupportedException("不支持该操作！"),
+            _ => throw new NotSupportedException(L.T("This operation is not supported!")),
         };
     }
 

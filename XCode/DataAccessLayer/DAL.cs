@@ -61,10 +61,10 @@ public partial class DAL
             {
                 if (_Db != null) return _Db;
 
-                var type = ProviderType ?? throw new XCodeException("无法识别{0}的数据提供者！", ConnName);
+                var type = ProviderType ?? throw new XCodeException("Unable to recognize the data provider for {0}!", ConnName);
 
                 //!!! 重量级更新：经常出现链接字符串为127/master的连接错误，非常有可能是因为这里线程冲突，A线程创建了实例但未来得及赋值连接字符串，就被B线程使用了
-                var db = type.CreateInstance() as IDatabase ?? throw new XCodeException("[{0}]提供者类型异常", ConnName);
+                var db = type.CreateInstance() as IDatabase ?? throw new XCodeException("The provider type for [{0}] is invalid.", ConnName);
                 if (!ConnName.IsNullOrEmpty()) db.ConnName = ConnName;
                 if (_infos!.TryGetValue(ConnName, out var info)) db.Provider = info.Provider;
                 if (db is DbBase dbBase) dbBase.Tracer = Tracer;
@@ -121,7 +121,7 @@ public partial class DAL
                 var set = XCodeSetting.Current;
                 var connstr = "Data Source=" + cfg.DataPath.CombinePath(connName + ".db");
                 if (set.Migration <= Migration.On) connstr += ";Migration=On";
-                WriteLog("自动为[{0}]设置SQLite连接字符串：{1}", connName, connstr);
+                WriteLog("Automatically configured SQLite connection string for [{0}]: {1}", connName, connstr);
                 AddConnStr(connName, connstr, null, "SQLite");
             }
 
@@ -176,7 +176,7 @@ public partial class DAL
             }
 
             if (_reads != null && _reads.Count > 0)
-                WriteLog("[{0}]读写分离到：{1}", this, _reads.Join());
+                WriteLog("[{0}] read/write separation to: {1}", this, _reads.Join());
 
             _inited = true;
         }
@@ -236,7 +236,7 @@ public partial class DAL
         }
         catch (Exception ex)
         {
-            WriteLog("LoadConfig 失败。{0}", ex.Message);
+            WriteLog("LoadConfig failed. {0}", ex.Message);
         }
 
         // 联合使用 appsettings.json
@@ -246,7 +246,7 @@ public partial class DAL
         }
         catch (Exception ex)
         {
-            WriteLog("LoadAppSettings 失败。{0}", ex.Message);
+            WriteLog("LoadAppSettings failed. {0}", ex.Message);
         }
         // 读取环境变量:ASPNETCORE_ENVIRONMENT=Development
         var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
@@ -257,7 +257,7 @@ public partial class DAL
         }
         catch (Exception ex)
         {
-            WriteLog("LoadAppSettings 失败。{0}", ex.Message);
+            WriteLog("LoadAppSettings failed. {0}", ex.Message);
         }
 
         // 从环境变量加载连接字符串，优先级最高
@@ -267,7 +267,7 @@ public partial class DAL
         }
         catch (Exception ex)
         {
-            WriteLog("LoadEnvironmentVariable 失败。{0}", ex.Message);
+            WriteLog("LoadEnvironmentVariable failed. {0}", ex.Message);
         }
 
         var cs = new ConcurrentDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
@@ -322,7 +322,7 @@ public partial class DAL
                     if (name.IsNullOrEmpty() || connstr.IsNullOrWhiteSpace()) continue;
 
                     var type = DbFactory.GetProviderType(connstr, provider);
-                    if (type == null) XTrace.WriteLine("无法识别{0}的提供者{1}！", name, provider);
+                    if (type == null) XTrace.WriteLine("Unable to recognize the provider [{1}] of {0}!", name, provider);
 
                     ds[name] = new DbInfo
                     {
@@ -364,7 +364,7 @@ public partial class DAL
                         if (connstr.IsNullOrWhiteSpace()) continue;
 
                         var type = DbFactory.GetProviderType(connstr, provider);
-                        if (type == null) XTrace.WriteLine("无法识别{0}的提供者{1}！", name, provider);
+                        if (type == null) XTrace.WriteLine("Unable to recognize the provider [{1}] of {0}!", name, provider);
 
                         ds[name] = new DbInfo
                         {
@@ -383,7 +383,7 @@ public partial class DAL
                         var provider = builder.TryGetValue("provider", out var prv) ? prv : null;
 
                         var type = DbFactory.GetProviderType(connstr, provider);
-                        if (type == null) XTrace.WriteLine("无法识别{0}的提供者{1}！", name, provider);
+                        if (type == null) XTrace.WriteLine("Unable to recognize the provider [{1}] of {0}!", name, provider);
 
                         ds[name] = new DbInfo
                         {
@@ -409,7 +409,7 @@ public partial class DAL
                 var type = DbFactory.GetProviderType(value, null);
                 if (type == null)
                 {
-                    WriteLog("环境变量[{0}]设置连接[{1}]时，未通过provider指定数据库类型，使用默认类型SQLite", key, connName);
+                    WriteLog("When setting connection [{1}] from environment variable [{0}], the database type was not specified via provider; using the default type SQLite.", key, connName);
                     type = DbFactory.Create(DatabaseType.SQLite)?.GetType();
                 }
 
@@ -453,7 +453,7 @@ public partial class DAL
             }
 
             if (type == null) type = DbFactory.GetProviderType(connStr, provider);
-            if (type == null) throw new XCodeException("无法识别{0}的提供者{1}！", connName, provider);
+            if (type == null) throw new XCodeException("Unable to recognize the provider [{1}] of {0}!", connName, provider);
 
             // 允许后来者覆盖前面设置过了的
             //var set = new ConnectionStringSettings(connName, connStr, provider);
@@ -468,7 +468,7 @@ public partial class DAL
             // 如果连接字符串改变，则重置所有
             if (!oldConnStr.IsNullOrEmpty() && !oldConnStr.EqualIgnoreCase(connStr))
             {
-                WriteLog("[{0}]的连接字符串改变，准备重置！", connName);
+                WriteLog("The connection string of [{0}] has changed; preparing to reset!", connName);
 
                 var dal = _dals.GetOrAdd(connName, k => new DAL(k));
                 dal.ConnStr = connStr;
@@ -489,7 +489,7 @@ public partial class DAL
     /// <param name="configProvider"></param>
     public static void SetConfig(IConfigProvider configProvider)
     {
-        WriteLog("DAL绑定配置提供者 {0}", configProvider);
+        WriteLog("DAL bound configuration provider {0}", configProvider);
 
         configProvider.Bind(new MyDAL());
         _configProvider = configProvider;
@@ -514,7 +514,7 @@ public partial class DAL
                     var prv = ServiceProvider?.GetService<IConfigProvider>();
                     if (prv != null)
                     {
-                        WriteLog("DAL自动绑定配置提供者 {0}", prv);
+                        WriteLog("DAL automatically bound configuration provider {0}", prv);
 
                         prv.Bind(new MyDAL());
                         _configProvider = prv;
@@ -789,7 +789,7 @@ public partial class DAL
     public void CheckTables()
     {
         var name = ConnName;
-        WriteLog("开始检查连接[{0}/{1}]的数据库架构……", name, DbType);
+        WriteLog("Starting to check the database schema of connection [{0}/{1}]...", name, DbType);
 
         var sw = Stopwatch.StartNew();
 
@@ -806,7 +806,7 @@ public partial class DAL
 
                 if (list != null && list.Count > 0)
                 {
-                    WriteLog("[{0}]待检查表架构的实体个数：{1}", name, list.Count);
+                    WriteLog("[{0}] number of entities whose table schema is pending check: {1}", name, list.Count);
 
                     SetTables(list.ToArray());
                 }
@@ -816,7 +816,7 @@ public partial class DAL
         {
             sw.Stop();
 
-            WriteLog("检查连接[{0}/{1}]的数据库架构耗时{2:n0}ms", name, DbType, sw.Elapsed.TotalMilliseconds);
+            WriteLog("Checking the database schema of connection [{0}/{1}] took {2:n0}ms", name, DbType, sw.Elapsed.TotalMilliseconds);
         }
     }
 

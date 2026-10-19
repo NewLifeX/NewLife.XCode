@@ -65,10 +65,10 @@ public class DataSimulation
         fact.AutoIdentity = false;
 
         Console.WriteLine();
-        WriteLog("数据模拟 Count={0:n0} Threads={1} BatchSize={2} UseSql={3}", count, Threads, BatchSize, UseSql);
+        WriteLog("Data simulation Count={0:n0} Threads={1} BatchSize={2} UseSql={3}", count, Threads, BatchSize, UseSql);
 
         // 预热数据表
-        WriteLog("{0} 已有数据：{1:n0}", fact.TableName, session.Count);
+        WriteLog("{0} already has data: {1:n0}", fact.TableName, session.Count);
 
         // 准备数据
         var list = new List<IEntity>();
@@ -79,7 +79,7 @@ public class DataSimulation
         var sw = Stopwatch.StartNew();
         Parallel.For(0, cpu, n =>
         {
-            WriteLog("正在准备数据[CPU={0}]：", n);
+            WriteLog("Preparing data [CPU={0}]:", n);
             //fact.ConnName = conn + n;
 
             var k = 0;
@@ -111,7 +111,7 @@ public class DataSimulation
         sw.Stop();
         Console.WriteLine();
         var ms = sw.Elapsed.TotalMilliseconds;
-        WriteLog("耗时：{0:n0}ms / {1:n0}", ms, list.Count * 1000L / ms);
+        WriteLog("Elapsed: {0:n0}ms / {1:n0}", ms, list.Count * 1000L / ms);
 
         sw.Restart();
 
@@ -120,7 +120,7 @@ public class DataSimulation
         //WriteLog("正在准备写入[Threads={0}]：", ths);
         Parallel.For(0, ths, n =>
         {
-            WriteLog("正在准备写入[Thread={0}]：", n);
+            WriteLog("Preparing to write [Thread={0}]:", n);
             //fact.ConnName = conn + n;
 
             var k = 0;
@@ -146,17 +146,17 @@ public class DataSimulation
 
         sw.Stop();
         Console.WriteLine();
-        WriteLog("数据写入完毕！");
+        WriteLog("Data writing completed!");
         ms = sw.Elapsed.TotalMilliseconds;
         var speed = list.Count * 1000L / ms;
-        WriteLog("{2}插入{3:n0}行数据，耗时：{0:n0}ms 速度：{1:n0}tps", ms, speed, session.Dal.DbType, list.Count);
+        WriteLog("{2} inserted {3:n0} rows, elapsed: {0:n0}ms, speed: {1:n0}tps", ms, speed, session.Dal.DbType, list.Count);
 
         Score = (Int32)speed;
 
         session.ClearCache("SqlInsert", false);
         var t = session.Count;
         Thread.Sleep(100);
-        WriteLog("{0} 共有数据：{1:n0}", fact.TableName, session.Count);
+        WriteLog("{0} total rows: {1:n0}", fact.TableName, session.Count);
     }
     #endregion
 

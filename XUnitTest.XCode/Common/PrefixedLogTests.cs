@@ -83,6 +83,28 @@ public class PrefixedLogTests
         }
     }
 
+    [Fact(DisplayName = "普通日志经内置日志器自动翻译")]
+    public void PlainWriteLineTranslates()
+    {
+        var savedCulture = Localization.LogCulture;
+        var savedLog = XTrace.Log;
+        try
+        {
+            Localization.LogCulture = CultureInfo.GetCultureInfo("zh-Hans");
+            var log = new LoggerProbe();
+            XTrace.Log = log;
+
+            XTrace.WriteLine("Failed to create a connection! Check that the driver is working properly.");
+
+            Assert.Equal("连接创建失败！请检查驱动是否正常。", log.Last);
+        }
+        finally
+        {
+            XTrace.Log = savedLog;
+            Localization.LogCulture = savedCulture;
+        }
+    }
+
     [Fact(DisplayName = "未提供译文时带前缀日志回退英文")]
     public void FallbackToEnglish()
     {
@@ -205,5 +227,12 @@ public class PrefixedLogTests
         public void Error(String format, params Object?[] args) => Write(LogLevel.Error, format, args);
 
         public void Fatal(String format, params Object?[] args) => Write(LogLevel.Fatal, format, args);
+    }
+
+    private sealed class LoggerProbe : Logger
+    {
+        public String? Last { get; private set; }
+
+        protected override void OnWrite(LogLevel level, String format, params Object?[] args) => Last = Format(format, args);
     }
 }

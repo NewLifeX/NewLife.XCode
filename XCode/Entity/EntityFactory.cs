@@ -275,7 +275,7 @@ public static class EntityFactory
             if (dic.TryGetValue(table.TableName, out var oldType))
             {
                 // 两个都不是，报错吧！
-                XTrace.Log?.InfoPrefixed(null, "Design error! Table {0} is used by two entity classes ({1} and {2})!", table.TableName, oldType.FullName, type.FullName);
+                XTrace.WriteLine("Design error! Table {0} is used by two entity classes ({1} and {2})!", table.TableName, oldType.FullName, type.FullName);
                 throw new XCodeException("Design error! Table {0} is used by two entity classes ({1} and {2})!", table.TableName, oldType.FullName, type.FullName);
             }
             else

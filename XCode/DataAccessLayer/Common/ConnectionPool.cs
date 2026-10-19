@@ -40,7 +40,7 @@ public class ConnectionPool : ObjectPool<DbConnection>
         var conn = Factory?.CreateConnection();
         if (conn == null)
         {
-            XTrace.Log?.InfoPrefixed(null, "Failed to create a connection! Check that the driver is working properly.");
+            XTrace.WriteLine("Failed to create a connection! Check that the driver is working properly.");
 
             throw new Exception(Name + " " + L.T("Failed to create a connection! Check that the driver is working properly."));
         }
@@ -68,7 +68,7 @@ public class ConnectionPool : ObjectPool<DbConnection>
         var conn = Factory?.CreateConnection();
         if (conn == null)
         {
-            XTrace.Log?.InfoPrefixed(null, "Failed to create a connection! Check that the driver is working properly.");
+            XTrace.WriteLine("Failed to create a connection! Check that the driver is working properly.");
             throw new Exception(Name + " " + L.T("Failed to create a connection! Check that the driver is working properly."));
         }
 

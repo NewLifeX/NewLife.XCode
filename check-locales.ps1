@@ -5,10 +5,13 @@
 #   pwsh -File check-locales.ps1                                      # Core 默认目录
 #   pwsh -File check-locales.ps1 -LocaleDir src\Lib\Locales -SourceDir src\Lib
 #   pwsh -File check-locales.ps1 -LocaleDir src\Lib\Locales -SkipOrphan   # 下游只想校验词表内部一致性
+#   pwsh -File check-locales.ps1 -LocaleDir XCode\Locales -SourceDir XCode -RequireTranslated   # 要求所有语言均已翻译
 param(
     [String]$LocaleDir = "NewLife.Core\Locales",
     [String]$Baseline = "zh-Hans.yml",
     [String[]]$SourceDir = @("NewLife.Core", "NewLife.Core.SourceGenerator"),
+    [Switch]$RequireTranslated,
+    [String[]]$AllowSameValue = @("{0} format {1}"),
     [Switch]$SkipOrphan
 )
 
@@ -121,6 +124,11 @@ foreach ($file in Get-ChildItem $localeDir -Filter *.yml | Sort-Object Name) {
                 $allWarnings += "$($file.Name): 格式说明符不一致 → $key"
                 break
             }
+        }
+
+        # 值与英文源文完全相同视为未翻译（少数语言的同形词见 AllowSameValue）
+        if ($RequireTranslated -and [String]::Equals($value, $key, [StringComparison]::Ordinal) -and !$AllowSameValue.Contains($key)) {
+            $allErrors += "$($file.Name): 未翻译（值与英文源文相同）→ $key"
         }
     }
 }

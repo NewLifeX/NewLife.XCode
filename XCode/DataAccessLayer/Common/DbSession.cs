@@ -299,7 +299,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <returns>剩下的事务计数</returns>
     public virtual Int32 Commit()
     {
-        var tr = Transaction ?? throw new XDbSessionException(this, "当前并未开始事务，请用BeginTransaction方法开始新事务！");
+        var tr = Transaction ?? throw new XDbSessionException(this, L.T("No transaction is active; use BeginTransaction to start a new transaction!"));
         using var span = Tracer?.NewSpan($"db:{Database.ConnName}:DbSession:Commit");
         try
         {
@@ -323,7 +323,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <returns>剩下的事务计数</returns>
     public Int32 Rollback(Boolean ignoreException = true)
     {
-        var tr = Transaction ?? throw new XDbSessionException(this, "当前并未开始事务，请用BeginTransaction方法开始新事务！");
+        var tr = Transaction ?? throw new XDbSessionException(this, L.T("No transaction is active; use BeginTransaction to start a new transaction!"));
         using var span = Tracer?.NewSpan($"db:{Database.ConnName}:DbSession:Rollback");
         try
         {
@@ -920,7 +920,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         if (columns == null || columns.Length == 0) return null;
 
         // WHERE 主键条件
-        if (!columns.Any(e => e.PrimaryKey)) throw new InvalidOperationException("未指定用于更新的主键");
+        if (!columns.Any(e => e.PrimaryKey)) throw new InvalidOperationException(L.T("No primary key was specified for the update."));
 
         if ((updateColumns == null || updateColumns.Count == 0)
             && (addColumns == null || addColumns.Count == 0)) return null;
@@ -1101,7 +1101,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
         sw.Stop();
         // 耗时超过多少秒输出错误日志
-        if (sw.ElapsedMilliseconds > 1000) DAL.WriteLog("GetSchema耗时 {0:n0}ms", sw.ElapsedMilliseconds);
+        if (sw.ElapsedMilliseconds > 1000) DAL.WriteLog("GetSchema took {0:n0}ms", sw.ElapsedMilliseconds);
 
         return dt;
     }
@@ -1278,7 +1278,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         //    _trace_sqls.Add(sql);
         //}
 
-        XTrace.WriteLine("慢SQL[{0:n0}ms] {1}", _swSql.ElapsedMilliseconds, sql);
+        XTrace.WriteLine("Slow SQL [{0:n0}ms] {1}", _swSql.ElapsedMilliseconds, sql);
     }
     #endregion
 }

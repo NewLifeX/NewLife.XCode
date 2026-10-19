@@ -167,12 +167,12 @@ public class EntityQueryProvider : IQueryProvider
                     // 触发整表缓存加载（适合 <1000 行的小表）
                     var list = factory.FindAllWithCache();
                     if (DAL.Debug)
-                        DAL.WriteLog("Include 预加载 [{0}] 缓存，共 {1} 条", entityType.Name, list.Count);
+                        DAL.WriteLog("Include preloading [{0}] from cache, total {1} items", entityType.Name, list.Count);
                 }
             }
             catch (Exception ex)
             {
-                DAL.WriteLog("Include 预加载 [{0}] 失败: {1}", entityType.Name, ex.Message);
+                DAL.WriteLog("Include preloading [{0}] failed: {1}", entityType.Name, ex.Message);
             }
         }
     }
@@ -219,13 +219,13 @@ public class EntityQueryProvider : IQueryProvider
                 if (list.Count > 0)
                 {
                     if (isSingle && list.Count > 1)
-                        throw new InvalidOperationException("序列包含多个元素");
+                        throw new InvalidOperationException(L.T("The sequence contains more than one element."));
 
                     return list[0];
                 }
 
                 if (throwIfNotFound)
-                    throw new InvalidOperationException("序列不包含任何元素");
+                    throw new InvalidOperationException(L.T("The sequence contains no elements."));
 
                 return null;
             }
@@ -271,7 +271,7 @@ public class EntityQueryProvider : IQueryProvider
             }
             catch (Exception ex)
             {
-                DAL.WriteLog("导航批量加载 [{0}.{1}] 失败: {2}", Factory.EntityType.Name, path.NavigationName, ex.Message);
+                DAL.WriteLog("Bulk navigation loading [{0}.{1}] failed: {2}", Factory.EntityType.Name, path.NavigationName, ex.Message);
             }
         }
     }

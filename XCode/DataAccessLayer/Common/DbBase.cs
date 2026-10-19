@@ -151,7 +151,7 @@ abstract class DbBase : DisposeBase, IDatabase
         set
         {
 #if DEBUG
-            XTrace.WriteLine("{0} 设定 {1}", ConnName, value);
+            XTrace.WriteLine("{0} set to {1}", ConnName, value);
 #endif
             var builder = new ConnectionStringBuilder(value);
 
@@ -160,7 +160,7 @@ abstract class DbBase : DisposeBase, IDatabase
             // 只有连接字符串改变，才释放会话
             var connStr = builder.ConnectionString;
 #if DEBUG
-            XTrace.WriteLine("{0} 格式 {1}", ConnName, connStr);
+            XTrace.WriteLine("{0} format {1}", ConnName, connStr);
 #endif
             if (_ConnectionString != connStr)
             {
@@ -503,7 +503,7 @@ abstract class DbBase : DisposeBase, IDatabase
 
             if (type == null)
             {
-                XTrace.WriteLine("驱动文件[{0}]无效或不适用于当前环境，准备删除后重新加载[{1}]！", assemblyFile, file);
+                XTrace.WriteLine("Driver file [{0}] is invalid or unsuitable for the current environment; deleting and reloading [{1}]!", assemblyFile, file);
 
                 try
                 {
@@ -552,7 +552,7 @@ abstract class DbBase : DisposeBase, IDatabase
         if (type == null) return null;
 
         var asm = type.Assembly;
-        if (DAL.Debug) DAL.WriteLog("[{2}]驱动 {0} 版本v{1}", asm.Location, asm.GetName().Version, type.FullName.TrimSuffix("Client", "Factory"));
+        if (DAL.Debug) DAL.WriteLog("[{2}] driver {0} version v{1}", asm.Location, asm.GetName().Version, type.FullName.TrimSuffix("Client", "Factory"));
 
         DbProviderFactory? factory = null;
         try

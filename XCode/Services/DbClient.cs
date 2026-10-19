@@ -75,7 +75,7 @@ public class DbClient : DisposeBase, ILogFeature
         if (Client != null) return;
 
         var server = Server;
-        if (server.IsNullOrEmpty()) throw new InvalidOperationException("未设置服务端地址Server");
+        if (server.IsNullOrEmpty()) throw new InvalidOperationException(L.T("The server address is not configured."));
 
         var client = new ApiHttpClient(server)
         {
@@ -94,7 +94,7 @@ public class DbClient : DisposeBase, ILogFeature
     {
         Open();
 
-        var client = Client ?? throw new InvalidOperationException("客户端未初始化");
+        var client = Client ?? throw new InvalidOperationException(L.T("The client has not been initialized."));
         var rs = await client.PostAsync<LoginInfo>("Db/Login", new { db = Db, token = Token }).ConfigureAwait(false);
         if (rs != null)
         {
@@ -123,7 +123,7 @@ public class DbClient : DisposeBase, ILogFeature
     {
         await EnsureLogin().ConfigureAwait(false);
 
-        var client = Client ?? throw new InvalidOperationException("客户端未初始化");
+        var client = Client ?? throw new InvalidOperationException(L.T("The client has not been initialized."));
 
         var args = BuildArgs(sql, ps);
         var packet = await client.PostAsync<IPacket>("Db/Query", args).ConfigureAwait(false);
@@ -143,7 +143,7 @@ public class DbClient : DisposeBase, ILogFeature
     {
         await EnsureLogin().ConfigureAwait(false);
 
-        var client = Client ?? throw new InvalidOperationException("客户端未初始化");
+        var client = Client ?? throw new InvalidOperationException(L.T("The client has not been initialized."));
 
         var args = BuildArgs(sql, ps);
         return await client.PostAsync<Int64>("Db/Execute", args).ConfigureAwait(false);
@@ -157,7 +157,7 @@ public class DbClient : DisposeBase, ILogFeature
     {
         await EnsureLogin().ConfigureAwait(false);
 
-        var client = Client ?? throw new InvalidOperationException("客户端未初始化");
+        var client = Client ?? throw new InvalidOperationException(L.T("The client has not been initialized."));
 
         var args = BuildArgs(sql, ps);
         return await client.PostAsync<Int64>("Db/InsertAndGetIdentity", args).ConfigureAwait(false);
@@ -170,7 +170,7 @@ public class DbClient : DisposeBase, ILogFeature
     {
         await EnsureLogin().ConfigureAwait(false);
 
-        var client = Client ?? throw new InvalidOperationException("客户端未初始化");
+        var client = Client ?? throw new InvalidOperationException(L.T("The client has not been initialized."));
 
         return await client.GetAsync<Int64>("Db/QueryCount", new { tableName, db = Db, token = Token }).ConfigureAwait(false);
     }
@@ -181,7 +181,7 @@ public class DbClient : DisposeBase, ILogFeature
     {
         await EnsureLogin().ConfigureAwait(false);
 
-        var client = Client ?? throw new InvalidOperationException("客户端未初始化");
+        var client = Client ?? throw new InvalidOperationException(L.T("The client has not been initialized."));
 
         var json = await client.GetAsync<String>("Db/GetTables", new { db = Db, token = Token }).ConfigureAwait(false);
         if (json.IsNullOrEmpty()) return null;

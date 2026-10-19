@@ -348,9 +348,9 @@ public class EntityPersistence : IEntityPersistence
     /// <returns>返回受影响的行数</returns>
     public virtual Int32 Insert(IEntitySession session, String[] names, Object[] values)
     {
-        if (names == null) throw new ArgumentNullException(nameof(names), "属性列表和值列表不能为空");
-        if (values == null) throw new ArgumentNullException(nameof(values), "属性列表和值列表不能为空");
-        if (names.Length != values.Length) throw new ArgumentException("属性列表必须和值列表一一对应");
+        if (names == null) throw new ArgumentNullException(nameof(names), L.T("The property list and value list cannot be empty."));
+        if (values == null) throw new ArgumentNullException(nameof(values), L.T("The property list and value list cannot be empty."));
+        if (names.Length != values.Length) throw new ArgumentException(L.T("The property list must correspond one-to-one with the value list."));
 
         var factory = Factory;
         var db = session.Dal.Db;
@@ -389,7 +389,7 @@ public class EntityPersistence : IEntityPersistence
     /// <returns></returns>
     public virtual Int32 Update(IEntitySession session, String setClause, String whereClause)
     {
-        if (setClause.IsNullOrEmpty() || !setClause.Contains("=")) throw new ArgumentException("非法参数");
+        if (setClause.IsNullOrEmpty() || !setClause.Contains("=")) throw new ArgumentException(L.T("Invalid argument."));
 
         var sql = $"Update {session.FormatedTableName} Set {setClause}";
         if (!String.IsNullOrEmpty(whereClause)) sql += " Where " + whereClause;

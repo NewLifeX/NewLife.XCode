@@ -32,13 +32,13 @@ public class DbService
     /// <param name="db">数据库连接名</param>
     public void ValidateToken(String token, String db)
     {
-        if (token.IsNullOrEmpty()) throw new ArgumentException("令牌不能为空", nameof(token));
-        if (db.IsNullOrEmpty()) throw new ArgumentException("数据库名称不能为空", nameof(db));
+        if (token.IsNullOrEmpty()) throw new ArgumentException(L.T("The token cannot be empty."), nameof(token));
+        if (db.IsNullOrEmpty()) throw new ArgumentException(L.T("The database name cannot be empty."), nameof(db));
 
         if (Tokens.Count <= 0) return;
 
         if (!Tokens.TryGetValue(token, out var dbs))
-            throw new UnauthorizedAccessException("无效令牌");
+            throw new UnauthorizedAccessException(L.T("Invalid token."));
 
         if (dbs != null && dbs.Length > 0 && !dbs.Contains(db, StringComparer.OrdinalIgnoreCase))
             throw new UnauthorizedAccessException(L.T("The token is not authorized to access database [{0}].", db));
@@ -67,7 +67,7 @@ public class DbService
     public DbTable? Query(DAL dal, String sql, IDictionary<String, Object?>? parameters)
     {
         if (dal == null) throw new ArgumentNullException(nameof(dal));
-        if (sql.IsNullOrEmpty()) throw new ArgumentException("SQL不能为空", nameof(sql));
+        if (sql.IsNullOrEmpty()) throw new ArgumentException(L.T("SQL cannot be empty."), nameof(sql));
 
         var ps = ConvertToDictionary(parameters);
 
@@ -82,7 +82,7 @@ public class DbService
     public Int64 Execute(DAL dal, String sql, IDictionary<String, Object?>? parameters)
     {
         if (dal == null) throw new ArgumentNullException(nameof(dal));
-        if (sql.IsNullOrEmpty()) throw new ArgumentException("SQL不能为空", nameof(sql));
+        if (sql.IsNullOrEmpty()) throw new ArgumentException(L.T("SQL cannot be empty."), nameof(sql));
 
         var ps = ConvertToDictionary(parameters);
         var dps = ps != null ? dal.Db.CreateParameters(ps) : null;
@@ -98,7 +98,7 @@ public class DbService
     public Int64 InsertAndGetIdentity(DAL dal, String sql, IDictionary<String, Object?>? parameters)
     {
         if (dal == null) throw new ArgumentNullException(nameof(dal));
-        if (sql.IsNullOrEmpty()) throw new ArgumentException("SQL不能为空", nameof(sql));
+        if (sql.IsNullOrEmpty()) throw new ArgumentException(L.T("SQL cannot be empty."), nameof(sql));
 
         var ps = ConvertToDictionary(parameters);
         var dps = ps != null ? dal.Db.CreateParameters(ps) : null;
@@ -113,7 +113,7 @@ public class DbService
     public Int64 QueryCount(DAL dal, String tableName)
     {
         if (dal == null) throw new ArgumentNullException(nameof(dal));
-        if (tableName.IsNullOrEmpty()) throw new ArgumentException("表名不能为空", nameof(tableName));
+        if (tableName.IsNullOrEmpty()) throw new ArgumentException(L.T("The table name cannot be empty."), nameof(tableName));
 
         return dal.Session.QueryCountFast(tableName);
     }

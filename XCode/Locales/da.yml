@@ -176,7 +176,7 @@
 "{0} set to {1}": "{0} sat til {1}"
 "{0} format {1}": "{0} format {1}"
 "Driver file [{0}] is invalid or unsuitable for the current environment; deleting and reloading [{1}]!": "Driverfilen [{0}] er ugyldig eller uegnet til det aktuelle miljø; sletter og genindlæser [{1}]!"
-"[{2}] driver {0} version v{1}": "[{2}] driver {0} version v{1}"
+"[{2}] driver {0} version v{1}": "[{2}] driver {0}, version v{1}"
 "The property list and value list cannot be empty.": "Egenskabslisten og værdilisten må ikke være tomme."
 "The property list must correspond one-to-one with the value list.": "Egenskabslisten skal svare en-til-en til værdilisten."
 "Invalid argument.": "Ugyldigt argument."

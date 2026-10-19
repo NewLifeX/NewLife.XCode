@@ -9,7 +9,7 @@ param(
     [String]$Root = $PSScriptRoot,
     [String[]]$Dir,
     [String[]]$Exclude = @(),
-    [String]$MessageCall = 'throw new|: base\(|Console\.Write|MessageBox\.Show|AppendTag\(|NewError\(|NewSpan\(|Debug\.Fail\(|WriteLog\(|OnWrite\(|XTrace\.|Log\.(Write|Error|Info|Debug|Warn|Fatal)|(Info|Error|Warn|Debug|Fatal)Prefixed\(|WritePrefixed\(|L\.T\(|Localization\.Translate|ApiException\(|HttpException\(|msg = |Message = |desc = |AppendFormat\(',
+    [String]$MessageCall = 'throw new|: base\(|Console\.Write|MessageBox\.Show|AppendTag\(|NewError\(|NewSpan\(|Debug\.Fail\(|WriteLog\(|OnWrite\(|XTrace\.|Log\.(Write|Error|Info|Debug|Warn|Fatal)|(Info|Error|Warn|Debug|Fatal)Prefixed\(|WritePrefixed\(|L\.T\(|Localization\.Translate|ApiException\(|HttpException\(|msg = |Message = |desc = |AppendFormat\(|new\s*\(\s*"',
     [Switch]$List,
     [String]$Csv
 )
@@ -58,6 +58,22 @@ foreach ($dir in $dirs) {
             if ($code -match "^\s*\[") { continue }
             if ($code -match $MessageCall -and $code -match "[\u4e00-\u9fa5]") {
                 $hits += [pscustomobject]@{ File = $rel; Line = $i + 1; Text = $code }
+            }
+        }
+
+        # 跨行消息：throw new 换行后出现中文，或目标类型 new("中文")
+        $raw = [IO.File]::ReadAllText($file.FullName)
+        $codeAll = [regex]::Replace($raw, '/\*.*?\*/', '', 'Singleline')
+        $codeAll = [regex]::Replace($codeAll, '(?m)^\s*//.*$', '')
+        foreach ($m in [regex]::Matches($codeAll, 'throw new [\w.<>]+\([^;]{0,600}?[\u4e00-\u9fa5]')) {
+            $lineNo = ($codeAll.Substring(0, $m.Index) -split "`n").Count
+            $exists = $false
+            foreach ($h in $hits) {
+                if ($h.File -eq $rel -and $h.Line -eq $lineNo) { $exists = $true; break }
+            }
+            if (!$exists) {
+                $text = ($codeAll.Substring($m.Index, [Math]::Min(160, $codeAll.Length - $m.Index)) -replace "\s+", " ")
+                $hits += [pscustomobject]@{ File = $rel; Line = $lineNo; Text = $text }
             }
         }
     }

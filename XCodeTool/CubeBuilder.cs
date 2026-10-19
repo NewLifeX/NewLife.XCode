@@ -36,7 +36,7 @@ public class CubeBuilder : ClassBuilder
         [DisplayName("{DisplayName}")]
         public class {Name}Area : AreaBase
         {
-            public {Name}Area() : base(nameof({Name}Area).TrimEnd("Area")) { }
+            public {Name}Area() : base(nameof({Name}Area).TrimSuffix("Area")) { }
         }
         """;
 
@@ -237,7 +237,7 @@ public class CubeBuilder : ClassBuilder
             var str = txt.Substring("public class", "AreaBase")?.Trim(' ', ':');
             if (!str.IsNullOrEmpty())
             {
-                return str.TrimEnd("Area");
+                return str.TrimSuffix("Area");
             }
         }
 

@@ -860,7 +860,7 @@ public class EntityBuilder : ClassBuilder
         {
             var dis = Table.DisplayName;
             if (!dis.IsNullOrEmpty())
-                des = des?.TrimStart(dis, "。");
+                des = des?.TrimPrefix(dis, "。");
             des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
         }
         WriteLine("/// <summary>{0}</summary>", des);
@@ -1188,7 +1188,7 @@ public class EntityBuilder : ClassBuilder
             }
 
             // 属性名
-            var name = column.Name.TrimEnd("Id", "ID", "code", "Code", "num", "Num", "guid", "Guid", mapIdName);
+            var name = column.Name.TrimSuffix("Id", "ID", "code", "Code", "num", "Num", "guid", "Guid", mapIdName);
             if (name.IsNullOrEmpty()) name = mapIdName;
             if (Table.Columns.Any(e => e.Name.EqualIgnoreCase(name))) name = "My" + name;
 
@@ -1206,7 +1206,7 @@ public class EntityBuilder : ClassBuilder
             var myName = ss.Length > 3 ? ss[3] : null;
             if (myName.IsNullOrEmpty())
             {
-                myName = column.Name.TrimEnd("Id", "ID", "code", "Code", "num", "Num", "guid", "Guid", mapIdName);
+                myName = column.Name.TrimSuffix("Id", "ID", "code", "Code", "num", "Num", "guid", "Guid", mapIdName);
                 if (mapName != null && mapName.Name != "$") myName += mapName.Name;
             }
 

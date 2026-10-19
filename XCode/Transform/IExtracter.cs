@@ -51,7 +51,7 @@ public abstract class ExtracterBase
 
     #region 构造
     /// <summary>实例化时基抽取算法</summary>
-    public ExtracterBase() => Name = GetType().Name.TrimEnd("Extracter");
+    public ExtracterBase() => Name = GetType().Name.TrimSuffix("Extracter");
     #endregion
 
     #region 方法

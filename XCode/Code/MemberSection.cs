@@ -138,7 +138,7 @@ internal class MemberSection
         // 去掉修饰符
         var p2 = str.IndexOf(' ');
         if (p2 > 0) str = str.Substring(p2 + 1);
-        str = str.TrimStart("static ", "readonly ");
+        str = str.TrimPrefix("static ", "readonly ");
 
         // 去掉参数
         p2 = str.IndexOfAny(['{', '=']);

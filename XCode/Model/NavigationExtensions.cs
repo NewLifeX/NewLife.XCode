@@ -54,7 +54,7 @@ public static class NavigationExtensions
         }
 
         // 自动推导导航名称：外键名去掉 Id/ID 后缀
-        var navName = fkMember.Member.Name.TrimEnd("Id", "ID");
+        var navName = fkMember.Member.Name.TrimSuffix("Id", "ID");
         if (navName.IsNullOrEmpty()) navName = typeof(TTarget).Name;
 
         var nav = new NavigationProperty
@@ -148,7 +148,7 @@ public static class NavigationExtensions
         var navName = navigationName;
         if (navName.IsNullOrEmpty())
         {
-            navName = foreignKeyName.TrimEnd("Id", "ID");
+            navName = foreignKeyName.TrimSuffix("Id", "ID");
             if (navName.IsNullOrEmpty()) navName = targetType.Name;
         }
 

@@ -406,7 +406,7 @@ partial class DAL
 
     private String GetTraceName(String sql, String action)
     {
-        var act = (action + "").TrimEnd("Async");
+        var act = (action + "").TrimSuffix("Async");
         if (act.EqualIgnoreCase("InsertAndGetIdentity"))
         {
             act = "Insert";

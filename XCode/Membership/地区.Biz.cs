@@ -470,7 +470,7 @@ public partial class Area : Entity<Area>
         // 三级搜索
         foreach (var item in dic)
         {
-            var addr3 = address.TrimStart(item.Key.FullName!, item.Key.Name);
+            var addr3 = address.TrimPrefix(item.Key.FullName!, item.Key.Name);
             var dic3 = SearchLike(item.Key.ID, addr3, true, count);
             foreach (var elm in dic3)
             {
@@ -484,7 +484,7 @@ public partial class Area : Entity<Area>
                 else
                 {
                     // 四级搜索
-                    var addr4 = addr3.TrimStart(item.Key.FullName!, item.Key.Name);
+                    var addr4 = addr3.TrimPrefix(item.Key.FullName!, item.Key.Name);
                     var dic4 = SearchLike(r3.ID, addr4, true, count);
                     foreach (var elm4 in dic4)
                     {
@@ -526,7 +526,7 @@ public partial class Area : Entity<Area>
         if (_GetIp != null)
         {
             var (area, addr) = _GetIp(ip);
-            area = area?.TrimStart("中国\u2013");
+            area = area?.TrimPrefix("中国\u2013");
             if (area.IsNullOrEmpty()) return [];
 
             var ss = area.Split("\u2013");
@@ -617,7 +617,7 @@ public partial class Area : Entity<Area>
             // 找到地区，如果层次足够，继续递归
             if (maxLevel <= 1) return r;
 
-            address = address.TrimStart(r.FullName!, r.Name, name);
+            address = address.TrimPrefix(r.FullName!, r.Name, name);
             var r2 = FindAddress(r, address, maxLevel - 1);
 
             return r2 ?? r;
@@ -807,7 +807,7 @@ public partial class Area : Entity<Area>
             var ss = html[s..e].Split("'>", "</a>");
             if (ss.Length > 4)
             {
-                var id = ss[2].Trim().TrimEnd("000");
+                var id = ss[2].Trim().TrimSuffix("000");
                 var name = ss[4].Trim();
                 if (!id.IsNullOrEmpty() && id.ToInt() > 10_00_00 && !name.IsNullOrEmpty())
                 {
@@ -919,7 +919,7 @@ public partial class Area : Entity<Area>
         //if (url.IsNullOrEmpty()) url = "https://www.mca.gov.cn/mzsj/xzqh/2022/202201xzqh.html";
         //if (url.IsNullOrEmpty()) url = "http://x.newlifex.com/202301xzqh.html";
         //if (url.IsNullOrEmpty()) url = "http://x.newlifex.com/data/202401xzqh.html";
-        if (url.IsNullOrEmpty()) url = NewLife.Setting.Current.PluginServer.TrimEnd("/") + "/data/202401xzqh.html";
+        if (url.IsNullOrEmpty()) url = NewLife.Setting.Current.PluginServer.TrimSuffix("/") + "/data/202401xzqh.html";
 
         // Task.Run 避免同步上下文死锁；低版本框架无同步 GetString，用 using 确保释放 HttpClient
         using var http = new HttpClient();
@@ -1042,7 +1042,7 @@ public partial class Area : Entity<Area>
             else
             {
                 if (r.FullName != r2.FullName) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
-                if (r.Name != r2.Name && r.Name.TrimEnd("市", "矿区", "林区", "区", "县") != r2.Name) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
+                if (r.Name != r2.Name && r.Name.TrimSuffix("市", "矿区", "林区", "区", "县") != r2.Name) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
 
                 // 合并字段
                 if (!r.English.IsNullOrEmpty()) r2.English = r.English;
@@ -1117,7 +1117,7 @@ public partial class Area : Entity<Area>
             else
             {
                 if (r.FullName != r2.FullName) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
-                if (r.Name != r2.Name && r.Name.TrimEnd("街道") != r2.Name) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
+                if (r.Name != r2.Name && r.Name.TrimSuffix("街道") != r2.Name) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
 
                 // 合并字段
                 if (!r.English.IsNullOrEmpty()) r2.English = r.English;
@@ -1341,17 +1341,17 @@ public partial class Area : Entity<Area>
         {
             if (ParentID == 0)
             {
-                name = name.TrimEnd("省", "市", "自治区", "壮族", "回族", "维吾尔", "特别行政区");
+                name = name.TrimSuffix("省", "市", "自治区", "壮族", "回族", "维吾尔", "特别行政区");
             }
             else if (Level <= 3)
             {
-                if (name.Length > 8) name = name.TrimEnd("经济技术开发区");
-                if (name.Length > 6) name = name.TrimEnd("技术开发区", "经济开发区", "产业开发区", "旅游开发区");
-                if (name.Length > 4) name = name.TrimEnd("开发区", "管理区", "风景区");
-                if (name.Length > 3) name = name.TrimEnd("地区", "林区", "矿区", "新区");
+                if (name.Length > 8) name = name.TrimSuffix("经济技术开发区");
+                if (name.Length > 6) name = name.TrimSuffix("技术开发区", "经济开发区", "产业开发区", "旅游开发区");
+                if (name.Length > 4) name = name.TrimSuffix("开发区", "管理区", "风景区");
+                if (name.Length > 3) name = name.TrimSuffix("地区", "林区", "矿区", "新区");
                 if (name.Length > 2) name = name.TrimName("县", "市", "区", "盟", "旗", "州");
 
-                if (name.Length > 3) name = name.TrimEnd("自治", "联合", "各族");
+                if (name.Length > 3) name = name.TrimSuffix("自治", "联合", "各族");
 
                 for (var i = 0; i < minzu.Length; i++)
                 {
@@ -1359,7 +1359,7 @@ public partial class Area : Entity<Area>
                     // 去掉结尾的民族名称
                     if (name.Length > item.Length + 1 && name.EndsWith(item))
                     {
-                        name = name.TrimEnd(item);
+                        name = name.TrimSuffix(item);
                         i = -1;
                     }
                     else if (item.Length >= 3 && item.EndsWith("族"))
@@ -1367,21 +1367,21 @@ public partial class Area : Entity<Area>
                         item = item.TrimEnd('族');
                         if (name.Length > item.Length + 1 && name.EndsWith(item))
                         {
-                            name = name.TrimEnd(item);
+                            name = name.TrimSuffix(item);
                             i = -1;
                         }
                     }
                 }
 
                 // 数据错误导致多一个字
-                if (name.Length > 2) name = name.TrimEnd("自");
+                if (name.Length > 2) name = name.TrimSuffix("自");
             }
             else if (Level == 4)
             {
                 if (name.Length > 3)
-                    name = name.TrimEnd("街道");
+                    name = name.TrimSuffix("街道");
                 else if (name.Length > 2)
-                    name = name.TrimEnd("乡", "镇");
+                    name = name.TrimSuffix("乡", "镇");
             }
         }
 
@@ -1398,7 +1398,7 @@ internal static class FixHelper
         {
             if (name.Length <= 2) break;
 
-            name = name.TrimEnd(item);
+            name = name.TrimSuffix(item);
         }
 
         return name;

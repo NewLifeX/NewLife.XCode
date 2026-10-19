@@ -169,7 +169,7 @@ public class HtmlBuilder : ClassBuilder
         {
             WriteLine("<td>{0}</td>", column.ColumnName);
             WriteLine("<td>{0}</td>", column.DisplayName);
-            WriteLine("<td>{0}</td>", column.RawType ?? column.DataType?.FullName.TrimStart("System."));
+            WriteLine("<td>{0}</td>", column.RawType ?? column.DataType?.FullName.TrimPrefix("System."));
 
             if (column.Length > 0)
                 WriteLine("<td>{0}</td>", column.Length);
@@ -192,7 +192,7 @@ public class HtmlBuilder : ClassBuilder
                 WriteLine("<td></td>");
 
             WriteLine("<td>{0}</td>", column.Nullable ? "" : "N");
-            WriteLine("<td>{0}</td>", column.Description?.TrimStart(column.DisplayName!).TrimStart("。", "，"));
+            WriteLine("<td>{0}</td>", column.Description?.TrimPrefix(column.DisplayName!).TrimPrefix("。", "，"));
         }
         WriteLine("</tr>");
     }

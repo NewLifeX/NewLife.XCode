@@ -47,7 +47,7 @@ internal class Oracle : RemoteDb
                 var uri = new Uri(str);
                 var type = uri.Scheme.IsNullOrEmpty() ? "TCP" : uri.Scheme.ToUpper();
                 var port = uri.Port > 0 ? uri.Port : 1521;
-                var name = uri.PathAndQuery.TrimStart("/");
+                var name = uri.PathAndQuery.TrimPrefix("/");
                 if (name.IsNullOrEmpty()) name = "ORCL";
 
                 str = $"(DESCRIPTION=(ADDRESS_LIST=(ADDRESS=(PROTOCOL={type})(HOST={uri.Host})(PORT={port})))(CONNECT_DATA=(SERVICE_NAME={name})))";

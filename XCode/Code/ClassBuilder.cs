@@ -262,8 +262,8 @@ public class ClassBuilder
             var dis = Table.DisplayName;
             if (!des.IsNullOrEmpty())
             {
-                if (!dis.IsNullOrEmpty()) des = des.TrimStart(dis);
-                des = des.TrimStart("。");
+                if (!dis.IsNullOrEmpty()) des = des.TrimPrefix(dis);
+                des = des.TrimPrefix("。");
             }
             des = Option.DisplayNameTemplate.Replace("{displayName}", dis) + "。" + des;
         }

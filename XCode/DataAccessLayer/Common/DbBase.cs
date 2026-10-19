@@ -552,7 +552,7 @@ abstract class DbBase : DisposeBase, IDatabase
         if (type == null) return null;
 
         var asm = type.Assembly;
-        if (DAL.Debug) DAL.WriteLog("[{2}]驱动 {0} 版本v{1}", asm.Location, asm.GetName().Version, type.FullName.TrimEnd("Client", "Factory"));
+        if (DAL.Debug) DAL.WriteLog("[{2}]驱动 {0} 版本v{1}", asm.Location, asm.GetName().Version, type.FullName.TrimSuffix("Client", "Factory"));
 
         DbProviderFactory? factory = null;
         try
@@ -1106,7 +1106,7 @@ abstract class DbBase : DisposeBase, IDatabase
         var cfg = NewLife.Setting.Current;
         file = file.Replace("|DataDirectory|", cfg.DataPath);
         file = file.Replace(@"~\App_Data", cfg.DataPath);
-        file = file.TrimStart("~");
+        file = file.TrimPrefix("~");
 
         // 过滤掉不必要的符号
         file = new FileInfo(file.GetBasePath()).FullName;

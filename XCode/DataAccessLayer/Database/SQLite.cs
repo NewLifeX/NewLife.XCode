@@ -886,7 +886,7 @@ internal class SQLiteMetaData : FileDbMetaData
         if (compressed)
         {
             var zipfile = Path.ChangeExtension(bf, "zip");
-            if (bakfile.IsNullOrEmpty()) zipfile = zipfile.TrimEnd(".zip") + $"_{DateTime.Now:yyyyMMddHHmmss}.zip";
+            if (bakfile.IsNullOrEmpty()) zipfile = zipfile.TrimSuffix(".zip") + $"_{DateTime.Now:yyyyMMddHHmmss}.zip";
 
             var fi = bf.AsFile();
             fi.Compress(zipfile);

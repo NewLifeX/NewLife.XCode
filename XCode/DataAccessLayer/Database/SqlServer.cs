@@ -154,7 +154,7 @@ internal class SqlServer : RemoteDb
 
             return $"{sql} offset 1 rows fetch next {maximumRows} rows only";
         }
-        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
 
         return $"{sql} offset {startRowIndex} rows fetch next {maximumRows} rows only";
     }
@@ -279,7 +279,7 @@ internal class SqlServer : RemoteDb
         if (startRowIndex <= 0 && maximumRows > 0)
             return $"Select Top {maximumRows} * From {sql}";
 
-        if (String.IsNullOrEmpty(keyColumn)) throw new ArgumentNullException(nameof(keyColumn), "这里用的not in分页算法要求指定主键列！");
+        if (String.IsNullOrEmpty(keyColumn)) throw new ArgumentNullException(nameof(keyColumn), L.T("The not-in paging algorithm requires a primary key column!"));
 
         if (maximumRows < 1)
             sql = $"Select * From {sql} Where {keyColumn} Not In(Select Top {startRowIndex} {keyColumn} From {sql})";
@@ -840,7 +840,7 @@ internal class SqlServerSession : RemoteDbSession
         {
             if (IsStarted) return;
             if (_init == null || _add == null || _exe == null || _clear == null)
-                throw new InvalidOperationException("当前数据库不支持批处理操作！");
+                throw new InvalidOperationException(L.T("The current database does not support batch operations!"));
 
             var cmd = _factory.CreateCommand();
             cmd.Connection = connection;
@@ -868,7 +868,7 @@ internal class SqlServerSession : RemoteDbSession
         public void AddToBatch(IDbCommand command)
         {
             if (!IsStarted) throw new InvalidOperationException();
-            if (_addToBatch == null) throw new InvalidOperationException("当前数据库不支持AddToBatch操作！");
+            if (_addToBatch == null) throw new InvalidOperationException(L.T("The current database does not support AddToBatch!"));
 
             //mAdapter.Invoke("AddToBatch", new Object[] { command });
             _addToBatch(command);
@@ -881,7 +881,7 @@ internal class SqlServerSession : RemoteDbSession
         public Int32 ExecuteBatch()
         {
             if (!IsStarted) throw new InvalidOperationException();
-            if (_executeBatch == null) throw new InvalidOperationException("当前数据库不支持ExecuteBatch操作！");
+            if (_executeBatch == null) throw new InvalidOperationException(L.T("The current database does not support ExecuteBatch!"));
 
             //return (Int32)mAdapter.Invoke("ExecuteBatch");
             return _executeBatch();
@@ -907,7 +907,7 @@ internal class SqlServerSession : RemoteDbSession
         public void ClearBatch()
         {
             if (!IsStarted) throw new InvalidOperationException();
-            if (_clearBatch == null) throw new InvalidOperationException("当前数据库不支持ClearBatch操作！");
+            if (_clearBatch == null) throw new InvalidOperationException(L.T("The current database does not support ClearBatch!"));
 
             //mAdapter.Invoke("ClearBatch");
             _clearBatch();
@@ -1370,7 +1370,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
         bf = bf.EnsureDirectory(true);
 
-        WriteLog("{0}备份SqlServer数据库 {1} 到 {2}", Database.ConnName, name, bf);
+        WriteLog("{0} backing up SqlServer database {1} to {2}", Database.ConnName, name, bf);
 
         var sw = Stopwatch.StartNew();
 
@@ -1380,7 +1380,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         base.Database.CreateSession().Execute($"USE master;BACKUP DATABASE {name} TO disk = '{bf}'");
 
         // 压缩
-        WriteLog("备份文件大小：{0:n0}字节", bf.AsFile().Length);
+        WriteLog("Backup file size: {0:n0} bytes", bf.AsFile().Length);
         if (compressed)
         {
             var zipfile = Path.ChangeExtension(bf, "zip");
@@ -1388,7 +1388,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
             var fi = bf.AsFile();
             fi.Compress(zipfile);
-            WriteLog("压缩后大小：{0:n0}字节，{1}", zipfile.AsFile().Length, zipfile);
+            WriteLog("Compressed size: {0:n0} bytes, {1}", zipfile.AsFile().Length, zipfile);
 
             // 删除未备份
             File.Delete(bf);
@@ -1397,7 +1397,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         }
 
         sw.Stop();
-        WriteLog("备份完成，耗时{0:n0}ms", sw.ElapsedMilliseconds);
+        WriteLog("Backup completed in {0:n0}ms", sw.ElapsedMilliseconds);
 
         return bf;
     }
@@ -1435,7 +1435,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         }
 
 
-        WriteLog("{0}还原SqlServer数据库 备份文件为{1}", Database.ConnName, bakfile);
+        WriteLog("{0} restoring SqlServer database from backup file {1}", Database.ConnName, bakfile);
 
         var sw = Stopwatch.StartNew();
 
@@ -1463,7 +1463,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         }
 
         sw.Stop();
-        WriteLog("还原完成，耗时{0:n0}ms", sw.ElapsedMilliseconds);
+        WriteLog("Restore completed in {0:n0}ms", sw.ElapsedMilliseconds);
 
         return result;
     }

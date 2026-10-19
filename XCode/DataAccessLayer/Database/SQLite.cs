@@ -842,7 +842,7 @@ internal class SQLiteMetaData : FileDbMetaData
 
         bf = bf.EnsureDirectory(true);
 
-        WriteLog("{0}备份SQLite数据库 {1} 到 {2}", Database.ConnName, dbfile, bf);
+        WriteLog("{0} backing up SQLite database {1} to {2}", Database.ConnName, dbfile, bf);
 
         var sw = Stopwatch.StartNew();
 
@@ -882,7 +882,7 @@ internal class SQLiteMetaData : FileDbMetaData
         }
 
         // 压缩
-        WriteLog("备份文件大小：{0:n0}字节", bf.AsFile().Length);
+        WriteLog("Backup file size: {0:n0} bytes", bf.AsFile().Length);
         if (compressed)
         {
             var zipfile = Path.ChangeExtension(bf, "zip");
@@ -890,7 +890,7 @@ internal class SQLiteMetaData : FileDbMetaData
 
             var fi = bf.AsFile();
             fi.Compress(zipfile);
-            WriteLog("压缩后大小：{0:n0}字节，{1}", zipfile.AsFile().Length, zipfile);
+            WriteLog("Compressed size: {0:n0} bytes, {1}", zipfile.AsFile().Length, zipfile);
 
             // 删除未备份
             File.Delete(bf);
@@ -899,7 +899,7 @@ internal class SQLiteMetaData : FileDbMetaData
         }
 
         sw.Stop();
-        WriteLog("备份完成，耗时{0:n0}ms", sw.ElapsedMilliseconds);
+        WriteLog("Backup completed in {0:n0}ms", sw.ElapsedMilliseconds);
 
         return bf;
     }
@@ -989,7 +989,7 @@ internal class SQLiteMetaData : FileDbMetaData
         if (sql.IsNullOrEmpty() || onlySql) return sql;
 
         // 输出日志，说明重建表的理由
-        WriteLog("SQLite需要重建表，因无法执行：{0}", sql2);
+        WriteLog("SQLite requires rebuilding the table because the following cannot be executed: {0}", sql2);
 
         span?.SetTag(sql);
 

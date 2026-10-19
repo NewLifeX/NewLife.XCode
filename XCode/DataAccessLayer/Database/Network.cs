@@ -85,8 +85,8 @@ internal class NetworkDb : DbBase
         {
             if (_Client != null) return _Client;
 
-            if (_serverUrl.IsNullOrEmpty()) throw new InvalidOperationException("网络数据库未设置Server地址");
-            if (_database.IsNullOrEmpty()) throw new InvalidOperationException("网络数据库未设置Database名称");
+            if (_serverUrl.IsNullOrEmpty()) throw new InvalidOperationException(L.T("The network database has no Server address configured."));
+            if (_database.IsNullOrEmpty()) throw new InvalidOperationException(L.T("The network database has no Database name configured."));
 
             var client = new DbClient(_serverUrl, _database, _token)
             {
@@ -135,7 +135,7 @@ internal class NetworkDb : DbBase
             if (maximumRows < 1) return sql;
             return $"{sql} limit {maximumRows}";
         }
-        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
         return $"{sql} limit {startRowIndex}, {maximumRows}";
     }
 
@@ -339,7 +339,7 @@ internal class NetworkSession(IDatabase db) : DbSession(db)
     #region 辅助
     /// <summary>获取网络客户端</summary>
     /// <returns></returns>
-    private DbClient GetClient() => (Database as NetworkDb)?.GetClient() ?? throw new InvalidOperationException("网络数据库未初始化");
+    private DbClient GetClient() => (Database as NetworkDb)?.GetClient() ?? throw new InvalidOperationException(L.T("The network database has not been initialized."));
 
     /// <summary>将IDataParameter数组转换为字典</summary>
     /// <param name="ps">参数数组</param>

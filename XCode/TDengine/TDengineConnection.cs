@@ -27,7 +27,7 @@ public partial class TDengineConnection : DbConnection
     {
         get
         {
-            if (_handler == IntPtr.Zero) throw new XCodeException("连接未打开");
+            if (_handler == IntPtr.Zero) throw new XCodeException("The connection is not open.");
 
             if (_version.IsNullOrEmpty())
                 _version = TD.GetServerInfo(_handler);
@@ -94,7 +94,7 @@ public partial class TDengineConnection : DbConnection
         if (State == ConnectionState.Open) return;
 
         var connStr = ConnectionString;
-        if (connStr.IsNullOrEmpty()) throw new InvalidOperationException("未设置连接字符串");
+        if (connStr.IsNullOrEmpty()) throw new InvalidOperationException(L.T("The connection string is not set."));
 
         if (_DataSource.IsNullOrEmpty() || _Database.IsNullOrEmpty())
         {
@@ -148,7 +148,7 @@ public partial class TDengineConnection : DbConnection
         protected override IntPtr OnCreate()
         {
             var connStr = ConnectionString;
-            if (connStr.IsNullOrEmpty()) throw new InvalidOperationException("未设置连接字符串");
+            if (connStr.IsNullOrEmpty()) throw new InvalidOperationException(L.T("The connection string is not set."));
 
             var builder = new ConnectionStringBuilder(connStr);
             var dataSource = builder["DataSource"] ?? builder["Server"];
@@ -162,11 +162,11 @@ public partial class TDengineConnection : DbConnection
             var uri = new NetUri(dataSource);
             if (port > 0) uri.Port = port;
 #if DEBUG
-            XTrace.WriteLine("连接TDengine：server={0};user={1};pass={2};db={3}", dataSource, user, pass, db);
+            XTrace.WriteLine("Connecting to TDengine: server={0};user={1};pass={2};db={3}", dataSource, user, pass, db);
 #endif
 
             var handler = TD.Connect(uri.Address + "", user, pass, db, (Int16)uri.Port);
-            if (handler == IntPtr.Zero) throw new XCodeException("打开数据库连接失败！");
+            if (handler == IntPtr.Zero) throw new XCodeException("Failed to open the database connection!");
 
             return handler;
         }
@@ -174,7 +174,7 @@ public partial class TDengineConnection : DbConnection
         protected override void OnDispose(IntPtr value)
         {
 #if DEBUG
-            XTrace.WriteLine("断开TDengine");
+            XTrace.WriteLine("Disconnecting from TDengine");
 #endif
             TD.Close(value);
         }

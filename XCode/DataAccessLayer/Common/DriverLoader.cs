@@ -92,8 +92,8 @@ public static class DriverLoader
             // 如果本地没有数据库，则从网络下载
             if (!File.Exists(file))
             {
-                XTrace.WriteLine("{0}不存在或平台版本不正确，准备联网获取 {1}", !disname.IsNullOrEmpty() ? disname : dll, urls);
-                if (minVersion != null) XTrace.WriteLine("要求最低版本：{0}", minVersion);
+                XTrace.WriteLine("{0} does not exist or has the wrong platform version; fetching {1} from the network.", !disname.IsNullOrEmpty() ? disname : dll, urls);
+                if (minVersion != null) XTrace.WriteLine("Minimum version required: {0}", minVersion);
 
                 using var client = CreateClient(linkName);
                 client.MinVersion = minVersion;
@@ -103,7 +103,7 @@ public static class DriverLoader
             }
             if (!File.Exists(file))
             {
-                XTrace.WriteLine("未找到 {0} {1}", disname, dll);
+                XTrace.WriteLine("{0} {1} was not found.", disname, dll);
                 return null;
             }
 

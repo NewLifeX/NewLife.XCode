@@ -43,7 +43,7 @@ internal class VastBase : RemoteDb
         // VastBase 必须指定 Search Path
         if (!builder.TryGetValue("Search Path", out var searchPath) && !builder.TryGetValue("SearchPath", out searchPath))
         {
-            throw new ArgumentException("VastBase 连接字符串中必须包含 Search Path 参数,例如: Search Path=public");
+            throw new ArgumentException(L.T("The VastBase connection string must include the Search Path parameter, for example: Search Path=public"));
         }
 
         // 保存 Search Path,用于后续查询表结构
@@ -292,7 +292,7 @@ internal class VastBase : RemoteDb
 
             return $"{sql} limit {maximumRows}";
         }
-        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
 
         return $"{sql} offset {startRowIndex} limit {maximumRows}";
     }
@@ -310,7 +310,7 @@ internal class VastBase : RemoteDb
             if (maximumRows > 0) builder.Limit = $"limit {maximumRows}";
             return builder;
         }
-        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
 
         builder.Limit = $"offset {startRowIndex} limit {maximumRows}";
         return builder;
@@ -611,7 +611,7 @@ internal class VastBaseMetaData : RemoteDbMetaData
         // Byte (0-255) 使用 smallint (Int16) 存储
         if (field.DataType == typeof(Byte))
         {
-            WriteLog("字段[{0}]类型为Byte,VastBase不支持该类型,自动使用smallint(Int16)替代", field.Name);
+            WriteLog("Field [{0}] is of type Byte; VastBase does not support this type and automatically uses smallint (Int16) instead.", field.Name);
             return "smallint";
         }
 
@@ -883,7 +883,7 @@ internal class VastBaseMetaData : RemoteDbMetaData
             searchPath = vb._searchPath;
         }
 
-        DAL.WriteLog("[{0}]VastBase 查询表结构,使用 Schema: {1}", Database.ConnName, searchPath);
+        DAL.WriteLog("[{0}] VastBase querying table schema using schema: {1}", Database.ConnName, searchPath);
 
         // 查询表列表和列信息
         var sql = $@"
@@ -910,7 +910,7 @@ ORDER BY
         var ds = session.Query(sql);
         if (ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0)
         {
-            DAL.WriteLog("[{0}]VastBase 在 Schema '{1}' 中未找到任何表", Database.ConnName, searchPath);
+            DAL.WriteLog("[{0}] VastBase found no tables in schema '{1}'", Database.ConnName, searchPath);
             return list;
         }
 
@@ -1075,7 +1075,7 @@ ORDER BY
             list.Add(table);
         }
 
-        DAL.WriteLog("[{0}]VastBase 在 Schema '{1}' 中找到 {2} 个表", Database.ConnName, searchPath, list.Count);
+        DAL.WriteLog("[{0}] VastBase found {2} tables in schema '{1}'", Database.ConnName, searchPath, list.Count);
         return list;
     }
     #endregion

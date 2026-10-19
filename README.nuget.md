@@ -4,7 +4,6 @@
 
 ![GitHub top language](https://img.shields.io/github/languages/top/newlifex/newlife.xcode?logo=github)
 
-
 ![GitHub License](https://img.shields.io/github/license/NewLifeX/NewLife.XCode?logo=github)
 ![NuGet Downloads](https://img.shields.io/nuget/dt/NewLife.XCode?logo=nuget)
 ![NuGet](https://img.shields.io/nuget/v/NewLife.XCode?logo=nuget)
@@ -19,136 +18,35 @@
 🌐 [简体中文](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.zh-CN.md) | [繁體中文](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.zh-TW.md) | [Español](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.es.md) | [Deutsch](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.de.md) | [日本語](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ja.md) | [Français](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.fr.md) | [Português](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.pt.md) | [Русский](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ru.md) | [한국어](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ko.md) | [العربية](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ar.md)
 <!-- lang:end -->
 
-High-performance .NET data middleware focused on "CRUD + extreme performance + massive data". It includes multi-level caching, automatic modeling/migration, sharding, strongly-typed queries and cross-database migration. It supports MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb and more, and provides [SonnetDB adaptation and capability verification](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/SonnetDB.md). Production deployments reach tens of billions of rows per table, and query throughput can reach billions of QPS (with caching strategies).
-
+**NewLife.XCode** is a high-performance .NET data middleware focused on "CRUD + extreme performance + massive data". It includes multi-level caching, automatic modeling/migration, sharding, strongly-typed queries and cross-database migration. It supports MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb and more, and provides [SonnetDB adaptation and capability verification](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/SonnetDB.md). Production deployments reach tens of billions of rows per table, and query throughput can reach billions of QPS (with caching strategies).
 
 Docs: https://newlifex.com/xcode   Community QQ groups: 1600800 / 1600838
 
----
-## Contents
-- 1. Why XCode
-- 2. Installation and Quick Start
-- 3. Architecture and Core Concepts
-  - 3.1 Model and Code Generation
-  - 3.2 Entity Runtime (Meta / Session / Operate)
-  - 3.3 DAL Abstraction Layer
-  - 3.4 Query DSL (IQueryable LINQ / WhereExpression / Window Functions)
-  - 3.5 Multi-level Cache System (Meta.Count / EntityCache / SingleCache / distributed second-level cache)
-  - 3.6 Reverse Engineering & Migration
-  - 3.7 Sharding (ShardPolicy)
-  - 3.8 Transactions and Cache Consistency
-  - 3.9 Performance Optimizations at a Glance
-  - 3.10 Data Scope and Multi-Tenancy (DataScope / Tenant)
-- 4. Quick Start (Model → Code → CRUD)
-- 5. Advanced Usage Examples
-- 6. Indexes / Auto-generated Methods
-- 7. Sharding Example
-- 8. Multi-database Configuration and Containerization
-- 9. Benchmarks / Production Metrics
-- 10. FAQ Highlights
-- 11. Ecosystem Matrix
-- 12. Contributing
-- 13. License
+**Contents**: [Quick Start](#quick-start) · [Why XCode](#why-xcode) · [Main Features](#main-features) · [Ecosystem Map](#ecosystem-map) · [Documentation](#documentation) · [Contributing](#contributing) · [Team](#team) · [License](#license)
 
----
-## 1. Why XCode
-- **Homegrown and original**: fully developed in China with no third-party components, self-controlled and backed by long-term maintenance.
-- **Simplicity**: 90% of business scenarios need only single-table entity operations, with no hand-written SQL.
-- **Dapper compatible**: executes arbitrary SQL queries and maps them to any entity model; fully compatible with Dapper usage while adding caching, read/write splitting and tracing.
-- **Extreme performance**: multi-level caching on the core path + batch optimization + in-memory joins; query speed can be far higher than raw SQL.
-- **Massive data**: native paging and sharding strategies; production projects reach tens of billions of rows per table; paging algorithms adapt to multiple databases.
-- **Stable and mature**: 20+ years of evolution and broad production validation; keeps compatibility with older .NET Framework versions (from net45).
-- **Automatic migration**: model/entity is the schema; new fields are synchronized automatically on deployment, with no extra SQL scripts.
-- **Distributed evolution**: native table-level / time / primary-key sharding strategies for smooth splitting and scaling.
-- **Pluggable**: DAL abstraction + separated providers; custom database adapters are supported.
+## Quick Start
 
----
-## 2. Installation and Quick Start
+### Install
+
 NuGet reference (any project):
+
 ```
 dotnet add package NewLife.XCode
 ```
+
 Or use the template scaffold:
+
 ```
 dotnet new install NewLife.Templates
 dotnet new xcode --name Demo.Data
 cd Demo.Data
 dotnet build
 ```
+
 > The strong-name certificate is built in (newlife.snk); you can recompile for a private enterprise framework.
 
----
-## 3. Architecture and Core Concepts
-XCode uses a layered architecture of "model-driven + runtime metadata + multi-level cache + optional sharding".
+### Define the model (db.xml)
 
-### 3.1 Model and Code Generation
-XML model (Tables/Columns/Indexes) → code generator (xcodetool or VS T4) → entity data class (.cs) + business partial class (.Biz.cs).
-- Data class: overwritten on every generation; holds fields and basic queries.
-- Business class: not overwritten after the first generation; place custom logic here.
-- Supports: indexes, unique constraints, default values, descriptions, extended properties, auto-generated methods (FindByXxx / Search).
-
-### 3.2 Entity Runtime
-Core interfaces/types:
-- IEntity / Entity: rich domain model encapsulating fields, validation and lifecycle.
-- IEntityOperate: static operation entry point (Find / FindAll / Query, etc.).
-- EntityFactory: entity metadata cache factory.
-- EntitySession (Meta.Session): context of an entity on a specific connection/table, with session-level cache/statistics.
-- Meta: entity static context (table schema, fields, caches, sharding policy, etc.).
-
-### 3.3 DAL Abstraction Layer
-- DAL / IDatabase / IDbSession: unified database access and metadata operations.
-- Migration support (Off / ReadOnly / On / Full) controls automatic creation of databases, tables and columns.
-- CheckTables(): checks and synchronizes the schema on startup/first access, asynchronously or synchronously as needed.
-
-### 3.4 Query DSL
-- **IQueryable&lt;T&gt; LINQ queries (new in v12.0)**: `Entity<T>.Query` returns `IQueryable<T>`, supporting standard LINQ operations such as `Where/OrderBy/Skip/Take/Count/First/ToList`.
-- **DAL.Select&lt;T&gt;() fluent queries (new in v12.1)**: `DAL.Select<T>()` returns `IQueryable<T>` bound to the current connection, supporting fully chained fluent calls `WhereIf/Where/OrderBy/Skip/Take/Page/Count/FirstOrDefault/ToList`.
-- **Navigation properties (new in v12.1)**: `HasOne`/`HasMany` Fluent API configures navigation relationships; `Include` builds paths and batch-loads; `SelectBuilder` supports JOINs across navigation relationships.
-- **WhereIf inline conditions**: `Query.WhereIf(condition, predicate)` and `FindAllWhereIf` enable dynamic filtering.
-- WhereExpression: chainable & / | / Contains / Between / Like expression composition.
-- Find / FindAll / Query / PageFindAll paging.
-- Pager / PageParameter: carries paging, sorting, TotalCount statistics and data-scope extensions.
-- **Window functions (new in v12.0)**: `SelectBuilder.Window` + `WindowFunction` supports ROW_NUMBER/RANK/DENSE_RANK and aggregate window functions.
-
-### 3.5 Multi-level Cache System
-Designed for read-heavy, write-light workloads:
-- Meta.Count: fast row-count cache (uses system indexes when >1000; SQLite uses Max(identity) plus asynchronous exact compensation).
-- EntityCache (Meta.Cache.Entities): full-table cache (recommended for small tables <1000 rows; forbidden above 10000 rows).
-- SingleCache (Meta.SingleCache[key]): dictionary-level single-object cache by primary/alternate key; suitable for frequent point lookups such as users.
-- Expiration policy: 60s by default. Expired reads return stale data immediately + refresh asynchronously. Writes invalidate/update caches immediately.
-- Transaction support: changes accumulate inside a transaction; caches are cleared or rolled back consistently after commit/rollback.
-- **Second-level cache (new in v12.0)**: `CacheInvalidator.Provider` injects Redis and coordinates entity cache invalidation across processes through a version mechanism.
-
-### 3.6 Reverse Engineering & Migration
-- Creates/modifies table schemas and indexes from entities in reverse, keeping them consistent automatically.
-- Table-level `Migration` configuration (model `Table` attribute / `[BindTable]` / `TableItem` startup override) controls the reverse-engineering strategy per entity (Off / ReadOnly / On / Full).
-- Supports model extraction from any database + cross-database data migration (with the DataMigration companion tool).
-
-### 3.7 Sharding (ShardPolicy)
-- ShardPolicy abstraction; TimeShardPolicy example (table name Table_yyyyMMdd by date).
-- Transparent routing: business code still calls Find / Insert / Update and does not care about the actual table name.
-- Customizable primary-key hash / time / range strategies.
-
-### 3.8 Transactions and Cache Consistency
-- Non-transactional: writes immediately expire related caches and rebuild them asynchronously, while attempting to update in-memory objects directly for read/write consistency.
-- Inside a transaction: full-table caches are not cleared; only hit objects are changed locally; after commit they are cleared or refreshed uniformly, and on rollback changes are reverted.
-
-### 3.9 Performance Optimizations at a Glance
-- Multi-level caching: keeps hot queries off the database.
-- Batch writes: merges multi-field and multi-record operations (internal optimization).
-- Paging algorithms: chooses the optimal strategy per database/version.
-- Lazy/asynchronous: row counts, model checks and cache refreshes can all run asynchronously.
-- Reflection cache / delegate acceleration: pre-warms entity property accessors.
-- In-memory association: caches the main table first, then performs "pseudo joins" in memory.
-
-### 3.10 Data Scope and Multi-Tenancy
-- **Data Scope**: row-level data access control supporting five scopes: "All / Department and sub-departments / Department / Self only / Custom". `DataScopeContext` + `DataScopeInterceptor` automatically apply query filters, default ownership on insert, and validation on update/delete. Entities opt in by implementing `IUserScope` / `IDepartmentScope` / `IDataScope`; department managers are automatically included in the visible scope, and one's own data is always accessible.
-- **Multi-tenancy**: after an entity implements `ITenantScope`, `TenantInterceptor` automatically appends tenant filters on queries and validates/fills the tenant identifier on writes; EntityBuilder automatically implements `ITenantScope` for business classes that contain a `TenantId` column.
-- See `Doc/数据权限.md` and `Doc/权限管理.md` for details.
-
----
-## 4. Quick Start
-### 4.1 Creating a Model (db.xml)
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <Tables Version="1.0" Output="MyEntity" NameSpace="Model" BaseClass="Entity" ConnName="DB">
@@ -162,29 +60,181 @@ Designed for read-heavy, write-light workloads:
   </Table>
 </Tables>
 ```
-### 4.2 Code Generation
+
+### Generate entity classes
+
 - Download xcodetool.exe into the directory and double-click it, or run: `dotnet tool install xcodetool -g --prerelease` → `xcode db.xml`.
 - Generates: 用户信息.cs (data class, overwritten) + 用户信息.Biz.cs (business class, not overwritten).
 
-### 4.3 CRUD Example
+### CRUD
+
 ```csharp
 using XCode;
 
-var user = new UserInfo { UserName="Zhang San", ******, Age=18 };
+var user = new UserInfo { UserName = "Zhang San", Password = "123456", Age = 18 };
 user.Insert();
+Console.WriteLine("Inserted a new record, user id: " + user.Id);
 
 var u2 = UserInfo.FindById(user.Id);
-u2.Age = 19; 
+u2.Age = 19;
 u2.Update();
 
 var list = UserInfo.FindAll(UserInfo._.Age > 10 & UserInfo._.UserName == "Zhang San");
 UserInfo.FindById(user.Id)?.Delete();
 ```
+
 > When using caches: fewer than 1000 entities → full-table cache; otherwise use regular queries / single-object cache.
 
----
-## 5. Advanced Usage
-### 5.1 Dynamic Conditions / Paging
+## Why XCode
+
+- **Homegrown and original**: fully developed in China with no third-party components, self-controlled and backed by long-term maintenance.
+- **Simplicity**: 90% of business scenarios need only single-table entity operations, with no hand-written SQL.
+- **Dapper compatible**: executes arbitrary SQL queries and maps them to any entity model; fully compatible with Dapper usage while adding caching, read/write splitting and tracing.
+- **Extreme performance**: multi-level caching on the core path + batch optimization + in-memory joins; query speed can be far higher than raw SQL.
+- **Massive data**: native paging and sharding strategies; production projects reach tens of billions of rows per table; paging algorithms adapt to multiple databases.
+- **Stable and mature**: 20+ years of evolution and broad production validation; keeps compatibility with older .NET Framework versions (from net45).
+- **Automatic migration**: model/entity is the schema; new fields are synchronized automatically on deployment, with no extra SQL scripts.
+- **Distributed evolution**: native table-level / time / primary-key sharding strategies for smooth splitting and scaling.
+- **Pluggable**: DAL abstraction + separated providers; custom database adapters are supported.
+
+## Main Features
+
+<details>
+<summary><b>Modeling &amp; Code Generation</b> (5)</summary>
+
+| Feature | Key Characteristics |
+| --- | --- |
+| XML model (Tables/Columns/Indexes) | The model is the single source of truth; attributes cover indexes, unique constraints, default values, descriptions and extended properties. |
+| Code generator | `xcodetool` (global tool / exe) or the VS T4 template turns the XML model into entity classes. |
+| Data class (`.cs`) | Overwritten on every generation; holds fields and basic queries. |
+| Business class (`.Biz.cs`) | Not overwritten after the first generation; place custom logic here. |
+| Auto-generated methods | Indexes and columns produce `FindByXxx` / `Search` helper methods and templates automatically. |
+
+</details>
+
+<details>
+<summary><b>Entity Runtime &amp; DAL</b> (7)</summary>
+
+| Component | Responsibility |
+| --- | --- |
+| `IEntity` / `Entity` | Rich domain model encapsulating fields, validation and lifecycle. |
+| `IEntityOperate` | Static operation entry point (Find / FindAll / Query, etc.). |
+| `EntityFactory` | Entity metadata cache factory. |
+| `EntitySession` (`Meta.Session`) | Context of an entity on a specific connection/table, with session-level cache/statistics. |
+| `Meta` | Entity static context (table schema, fields, caches, sharding policy, etc.). |
+| `DAL` / `IDatabase` / `IDbSession` | Unified database access and metadata operations. |
+| `CheckTables()` | Checks and synchronizes the schema on startup/first access, asynchronously or synchronously as needed. |
+
+</details>
+
+<details>
+<summary><b>Query DSL</b> (8)</summary>
+
+| Capability | Key Characteristics |
+| --- | --- |
+| `IQueryable<T>` LINQ (v12.0) | `Entity<T>.Query` returns `IQueryable<T>`, supporting standard LINQ operations such as `Where/OrderBy/Skip/Take/Count/First/ToList`. |
+| `DAL.Select<T>()` fluent queries (v12.1) | `DAL.Select<T>()` returns `IQueryable<T>` bound to the current connection, supporting fully chained fluent calls `WhereIf/Where/OrderBy/Skip/Take/Page/Count/FirstOrDefault/ToList`. |
+| Navigation properties (v12.1) | `HasOne`/`HasMany` Fluent API configures navigation relationships; `Include` builds paths and batch-loads; `SelectBuilder` supports JOINs across navigation relationships. |
+| `WhereIf` inline conditions | `Query.WhereIf(condition, predicate)` and `FindAllWhereIf` enable dynamic filtering. |
+| `WhereExpression` | Chainable `&` / `\|` / `Contains` / `Between` / `Like` expression composition. |
+| `Find` / `FindAll` / `Query` / `PageFindAll` | Query entry points, with paging built into `PageFindAll`. |
+| `Pager` / `PageParameter` | Carries paging, sorting, `TotalCount` statistics and data-scope extensions. |
+| Window functions (v12.0) | `SelectBuilder.Window` + `WindowFunction` supports ROW_NUMBER/RANK/DENSE_RANK and aggregate window functions. |
+
+</details>
+
+<details>
+<summary><b>Multi-level Cache System</b> (6)</summary>
+
+Designed for read-heavy, write-light workloads:
+
+| Cache | Key Characteristics |
+| --- | --- |
+| `Meta.Count` | Fast row-count cache (uses system indexes when >1000; SQLite uses Max(identity) plus asynchronous exact compensation). |
+| `EntityCache` (`Meta.Cache.Entities`) | Full-table cache (recommended for small tables <1000 rows; forbidden above 10000 rows). |
+| `SingleCache` (`Meta.SingleCache[key]`) | Dictionary-level single-object cache by primary/alternate key; suitable for frequent point lookups such as users. |
+| Expiration policy | 60s by default. Expired reads return stale data immediately + refresh asynchronously. Writes invalidate/update caches immediately. |
+| Transaction awareness | Inside a transaction, modifications accumulate; caches are cleared or rolled back uniformly after commit/rollback. |
+| Second-level cache (v12.0) | `CacheInvalidator.Provider` injects Redis and coordinates entity cache invalidation across processes through a version mechanism. |
+
+</details>
+
+<details>
+<summary><b>Reverse Engineering &amp; Migration</b> (3)</summary>
+
+| Capability | Key Characteristics |
+| --- | --- |
+| Schema reverse engineering | Creates/modifies table schemas and indexes from entities in reverse, keeping them consistent automatically. |
+| Per-entity migration policy | Table-level `Migration` configuration (model `Table` attribute / `[BindTable]` / `TableItem` startup override) controls the reverse-engineering strategy per entity (Off / ReadOnly / On / Full). |
+| Model extraction & cross-database migration | Supports model extraction from any database + cross-database data migration (with the DataMigration companion tool). |
+
+</details>
+
+<details>
+<summary><b>Sharding (ShardPolicy)</b> (3)</summary>
+
+| Capability | Key Characteristics |
+| --- | --- |
+| `ShardPolicy` abstraction | `TimeShardPolicy` example: table name Table_yyyyMMdd by date. |
+| Transparent routing | Business code still calls Find / Insert / Update and does not care about the actual table name. |
+| Custom strategies | Customizable primary-key hash / time / range strategies. |
+
+</details>
+
+<details>
+<summary><b>Transactions &amp; Cache Consistency</b> (3)</summary>
+
+| Scenario | Key Characteristics |
+| --- | --- |
+| Non-transactional writes | Writes immediately expire related caches and rebuild them asynchronously, while attempting to update in-memory objects directly for read/write consistency. |
+| Commit | Inside a transaction, full-table caches are not cleared; only hit objects are changed locally; after commit they are cleared or refreshed uniformly. |
+| Rollback | On rollback, changes made inside the transaction are reverted. |
+
+</details>
+
+<details>
+<summary><b>Performance Optimizations</b> (6)</summary>
+
+| Technique | Key Characteristics |
+| --- | --- |
+| Multi-level caching | Keeps hot queries off the database. |
+| Batch writes | Merges multi-field and multi-record operations (internal optimization). |
+| Paging algorithms | Chooses the optimal strategy per database/version. |
+| Lazy/asynchronous | Row counts, model checks and cache refreshes can all run asynchronously. |
+| Reflection cache / delegate acceleration | Pre-warms entity property accessors. |
+| In-memory association | Caches the main table first, then performs "pseudo joins" in memory. |
+
+</details>
+
+<details>
+<summary><b>Data Scope &amp; Multi-Tenancy</b> (5)</summary>
+
+| Capability | Key Characteristics |
+| --- | --- |
+| Data scope | Row-level data access control supporting five scopes: "All / Department and sub-departments / Department / Self only / Custom". |
+| Scope wiring | `DataScopeContext` + `DataScopeInterceptor` automatically apply query filters, default ownership on insert, and validation on update/delete. |
+| Entity opt-in | Entities implement `IUserScope` / `IDepartmentScope` / `IDataScope`; department managers are automatically included in the visible scope, and one's own data is always accessible. |
+| Multi-tenancy | After an entity implements `ITenantScope`, `TenantInterceptor` automatically appends tenant filters on queries and validates/fills the tenant identifier on writes; EntityBuilder automatically implements `ITenantScope` for business classes that contain a `TenantId` column. |
+| Details | See `Doc/数据权限.md` and `Doc/权限管理.md` for details. |
+
+</details>
+
+<details>
+<summary><b>Multi-database Configuration</b> (4)</summary>
+
+| Capability | Key Characteristics |
+| --- | --- |
+| SQLite by default | SQLite is the default for development (zero configuration). |
+| Connection settings | At deployment, configure `XCode_{ConnName}` in the configuration file or environment variables. |
+| Provider identifier | The connection string must include the provider identifier (for example: `provider=MySql;server=...;user=...;******;database=...;`). |
+| Multiple connections | Multiple database connection names (ConnName) can be used together in the same process. |
+
+</details>
+
+### Usage examples
+
+#### Dynamic conditions and paging
+
 ```csharp
 public static IList<UserInfo> Search(String name, Int32 age, Pager p)
 {
@@ -194,30 +244,46 @@ public static IList<UserInfo> Search(String name, Int32 age, Pager p)
     return UserInfo.FindAll(exp, p);
 }
 ```
-### 5.2 Updating Specified Fields (bypasses cache; not recommended for regular use)
+
+#### Updating specified fields (bypasses cache; not recommended for regular use)
+
 ```csharp
 UserInfo.Update(UserInfo._.UserName == "Li Si" & UserInfo._.Age == 18, UserInfo._.Id == 1);
 ```
-### 5.3 Custom Sorting and Column Projection
+
+#### Custom sorting and column projection
+
 ```csharp
 var list = UserInfo.FindAll(UserInfo._.Age > 10, " Age DESC,Id ASC",
     string.Join(",", UserInfo._.UserName, UserInfo._.Age), 0, 20);
 ```
 
----
-## 6. Indexes / Auto-generated Methods
-Add to the model:
+#### Indexes and generated methods
+
+Add indexes to the model:
+
 ```xml
 <Indexes>
   <Index Columns="UserName" Unique="True" />
   <Index Columns="UserName,Age" />
 </Indexes>
 ```
+
 After regeneration, `FindByUserName`, combined-condition helper methods / Search templates appear automatically.
+
 Entity cache strategy: when `Meta.Session.Count < 1000`, use in-memory collection lookups; otherwise go to the database or single-object cache.
 
----
-## 7. Sharding Example
+```csharp
+public static UserInfo FindByUserName(String userName)
+{
+    if (userName.IsNullOrEmpty()) return null;
+    if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserName.EqualIgnoreCase(userName));
+    return Find(_.UserName == userName);
+}
+```
+
+#### Sharding example
+
 ```csharp
 Meta.ShardPolicy = new TimeShardPolicy(nameof(UserInfo.Id), Meta.Factory)
 {
@@ -226,64 +292,16 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(UserInfo.Id), Meta.Factory)
     Step = TimeSpan.FromDays(1)
 };
 ```
+
 All other code such as Insert / Query stays unchanged and is routed to the corresponding date table automatically.
 
----
-## 8. Multi-database Configuration and Containerization
-- SQLite is the default for development (zero configuration).
-- At deployment, configure `XCode_{ConnName}` in the configuration file or environment variables.
-- The connection string must include the provider identifier (for example: `provider=MySql;server=...;user=...;******;database=...;`).
-- Multiple database connection names (ConnName) can be used together in the same process.
+#### Original examples (retained)
 
----
-## 9. Benchmarks / Production Metrics (Excerpt)
-| Capability | Metric (typical environment) | Notes |
-| ---- | ---------------- | ---- |
-| Single-machine Insert | up to ~890k TPS | batch / cache + SQLite / RAM disk combination tests |
-| Single-machine Query | up to ~1.8 billion QPS | small tables + entity cache / single-object cache scenarios |
-| Data volume per table | tens of billions in production | paging + sharding strategies |
-> Actual performance depends on database type / hardware / sharding strategy / cache hit rate.
+<details>
+<summary><b>Original CRUD and complex query examples</b></summary>
 
----
-## 10. FAQ Highlights
-- Why is the first Count fast? Meta.Count uses system indexes; SQLite may first take the identity maximum and then refine asynchronously.
-- How soon is the cache consistent after an update? Writes in the current process are reflected immediately; across processes, wait for cache expiration or use an active invalidation strategy.
-- Can automatic migration be disabled? Set Migration=Off (globally or per table), or use ReadOnly/On/Full as needed.
-- Complex multi-table queries? Multiple single-table queries + in-memory association are recommended (faster with cache hits and clearer structure).
+##### Create, read, update, delete
 
----
-## 11. Ecosystem Matrix (Excerpt)
-| Component | Description |
-| ---- | ---- |
-| NewLife.Core | Foundation: logging / configuration / caching / serialization / APM / networking |
-| NewLife.Cube | Rapid development platform + admin backend (built-in code generation + permissions) |
-| NewLife.Redis | High-performance Redis client and multi-purpose message queue |
-| Stardust | Distributed service platform: registry / configuration / tracing / release center |
-| AntJob | Distributed jobs & big-data offline/real-time processing |
-| ... | See the project matrix below |
-
----
-## 12. Contributing
-Issues / PRs are welcome:
-- Performance optimization / new database providers / documentation improvements.
-- Please follow the coding standards in the repository's .github/copilot-instructions (strong naming, multi-TFM, XML comments, conditional compilation).
-- Public API changes require a migration strategy (Obsolete → removal).
-
-Development build:
-```
-dotnet restore
-dotnet build -c Release
-```
-Add cases under Test / XUnitTest.XCode; performance-related suggestions should include benchmarks or explanations.
-
----
-## 13. License
-MIT, fully open. Commercial use / modification / redistribution are allowed (you may replace "NewLife" with your enterprise brand for private deployments).
-
----
-## Appendix: Original Quick Examples (Retained)
-
-### Create, Read, Update, Delete (Original Example)
 ```csharp
 var user = new UserInfo();
 user.UserName = "Zhang San";
@@ -302,69 +320,134 @@ u = UserInfo.FindById(1);
 Console.WriteLine($"User ID={u.Id} age updated to: {u.Age}");
 ```
 
-### Complex Query (Original Example)
+##### Complex query
+
 ```csharp
 var list = UserInfo.FindAll(UserInfo._.UserName == "Zhang San" & UserInfo._.Age == 19, UserInfo._.UserName.Desc(), string.Join(",", UserInfo._.UserName, UserInfo._.Age), 0, 0);
 ```
 
-### Index Query (Original Example)
-```csharp
-public static UserInfo FindByUserName(String userName)
-{
-    if (userName.IsNullOrEmpty()) return null;
-    if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserName.EqualIgnoreCase(userName));
-    return Find(_.UserName == userName);
-}
+</details>
+
+### Benchmarks
+
+| Capability | Metric (typical environment) | Notes |
+| ---- | ---------------- | ---- |
+| Single-machine Insert | up to ~890k TPS | batch / cache + SQLite / RAM disk combination tests |
+| Single-machine Query | up to ~1.8 billion QPS | small tables + entity cache / single-object cache scenarios |
+| Data volume per table | tens of billions in production | paging + sharding strategies |
+
+> Actual performance depends on database type / hardware / sharding strategy / cache hit rate.
+
+### FAQ
+
+- Why is the first Count fast? `Meta.Count` uses system indexes; SQLite may first take the identity maximum and then refine asynchronously.
+- How soon is the cache consistent after an update? Writes in the current process are reflected immediately; across processes, wait for cache expiration or use an active invalidation strategy.
+- Can automatic migration be disabled? Set `Migration=Off` (globally or per table), or use ReadOnly/On/Full as needed.
+- Complex multi-table queries? Multiple single-table queries + in-memory association are recommended (faster with cache hits and clearer structure).
+
+## Ecosystem Map
+
+NewLife is a layered ecosystem of independently versioned open-source projects. The map below is shared verbatim by every NewLife repository; each project links to its repository and its primary NuGet package.
+
+| Project | What it does | Downloads |
+| --- | --- | --- |
+| **Foundation** | | |
+| [NewLife.Core](https://github.com/NewLifeX/X) | Logging, configuration, caching, networking, serialization, scheduling and APM tracing. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Data middleware: single tables at the tens-of-billions scale, automatic sharding, read-write splitting, 10+ databases. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | High-performance network library: 1.77M pps / 14.5 Gbps on a single machine (TCP 1KB, 2026-10), 4M long-lived TCP connections. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
+| [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | Protocol communication and RPC framework for client/server applications and IoT devices. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
+| [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | Installs .NET applications as OS daemons: Windows services and Linux systemd. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |
+| [NewLife.Templates](https://github.com/NewLifeX/NewLife.Zero) | `dotnet new` project templates for console, web, API, service, data and IoT projects. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Templates?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Templates) |
+| **Data & Messaging** | | |
+| [NewLife.Redis](https://github.com/NewLifeX/NewLife.Redis) | Redis client with microsecond latency, millions of ops/s and built-in message queues. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Redis?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Redis) |
+| [NewLife.RocketMQ](https://github.com/NewLifeX/NewLife.RocketMQ) | Pure managed RocketMQ client for Apache RocketMQ and Alibaba Cloud Message Queue. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.RocketMQ?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.RocketMQ) |
+| [NewLife.MQTT](https://github.com/NewLifeX/NewLife.MQTT) | MQTT client and server, including Alibaba Cloud IoT connectivity. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.MQTT?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.MQTT) |
+| [NewLife.NovaDb](https://github.com/NewLifeX/NewLife.NovaDb) | Hybrid database in C#: embedded or networked, relational, time-series, message queue and KV in one. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.NovaDb?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.NovaDb) |
+| [NewLife.MySql](https://github.com/NewLifeX/NewLife.MySql) | MySql driver and helper layer built on the NewLife data stack. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.MySql?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.MySql) |
+| **Web, AI & Distributed** | | |
+| [NewLife.Cube](https://github.com/NewLifeX/NewLife.Cube) | Rapid admin-platform framework: permissions, SSO, OAuth server and CRUD scaffolding. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Cube?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Cube) |
+| [Stardust](https://github.com/NewLifeX/Stardust) | Distributed service platform: node management, APM, configuration center, registry and release center. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Stardust?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Stardust) |
+| [AntJob](https://github.com/NewLifeX/AntJob) | Distributed task and real-time data scheduling platform with sharding, retries and backfill. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.AntJob?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.AntJob) |
+| [NewLife.AI](https://github.com/NewLifeX/NewLife.AI) | Unified client for 46 LLM providers plus ChatAI, a ready-to-run web chat application. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.AI?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.AI) |
+| **Industrial & IoT** | | |
+| [NewLife.IoT](https://github.com/NewLifeX/NewLife.IoT) | IoT standard library defining protocol contracts and device abstractions. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.IoT?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.IoT) |
+| [NewLife.Modbus](https://github.com/NewLifeX/NewLife.Modbus) | Modbus TCP/RTU/ASCII implementation on top of NewLife.IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Modbus?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Modbus) |
+| [NewLife.Siemens](https://github.com/NewLifeX/NewLife.Siemens) | Siemens PLC protocol on top of NewLife.IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Siemens?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Siemens) |
+| [NewLife.Omron](https://github.com/NewLifeX/NewLife.Omron) | Omron PLC protocol on top of NewLife.IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Omron?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Omron) |
+| [NewLife.Melsec](https://github.com/NewLifeX/NewLife.Melsec) | Mitsubishi Melsec PLC protocol on top of NewLife.IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Melsec?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Melsec) |
+| [NewLife.OPC](https://github.com/NewLifeX/NewLife.OPC) | OPC client for industrial data access. | — |
+| [NewLife.BACnet](https://github.com/NewLifeX/NewLife.BACnet) | BACnet building-automation protocol stack. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.BACnet?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.BACnet) |
+| [ZeroIoT](https://github.com/NewLifeX/ZeroIoT) | Lightweight open-source IoT platform with gateway and device management. | — |
+| **Vehicle Telematics** | | |
+| [NewLife.JT808](https://github.com/NewLifeX/NewLife.JT808) | JT/T 808 vehicle positioning protocol: 70+ message bodies, 2011/2013/2019. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.JT808?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.JT808) |
+| [NewLife.JT809](https://github.com/NewLifeX/NewLife.JT809) | JT/T 809 platform-to-platform protocol for transport authorities. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.JT809?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.JT809) |
+| [NewLife.JT1078](https://github.com/NewLifeX/NewLife.JT1078) | JT/T 1078 in-vehicle video: RTP parsing, FLV/fMP4 remuxing and live streaming. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.JT1078?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.JT1078) |
+| **Domain Components** | | |
+| [NewLife.Office](https://github.com/NewLifeX/NewLife.Office) | One package for Excel, Word, PPT, PDF and 15+ document formats. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Office?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Office) |
+| [NewLife.Audio](https://github.com/NewLifeX/NewLife.Audio) | Cross-platform audio: codecs, device I/O, DSP, containers and streaming. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Audio?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Audio) |
+| [NewLife.Video](https://github.com/NewLifeX/NewLife.Video) | Video codecs, container formats, frame processing and streaming. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Video?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Video) |
+| [NewLife.Map](https://github.com/NewLifeX/NewLife.Map) | Unified interface over Baidu, AMap, Tencent and Tianditu with geocoding and coordinate conversion. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Map?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Map) |
+| [NewLife.IP](https://github.com/NewLifeX/NewLife.IP) | IPv4 geolocation with an offline memory-mapped database and an online API fallback. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.IP?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.IP) |
+| **Tools & Products** | | |
+| [CrazyCoder](https://github.com/NewLifeX/XCoder) | Developer toolbox: network, serial port, crypto, regex, Modbus and MQTT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCoder?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCoder) |
+| [GitCandy](https://github.com/NewLifeX/GitCandy) | Self-hosted Git source code management system. | — |
+| [LuckyClover](https://github.com/NewLifeX/LuckyClover) | Installs the matching .NET runtime automatically when launched from an older host. | — |
+
+> Badges show the primary package of each project; theme, extension and satellite packages are listed on their NuGet pages.The 30+ packages not listed here (FTP, LoRa, Office extensions, protocol drivers and more) are available under the [NewLifeX organization](https://github.com/NewLifeX) and on [newlifex.com](https://newlifex.com). This table is maintained in the NewLife.Core README.
+
+## Documentation
+
+- [XCode documentation navigation](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/XCode文档导航.md): complete document index grouped by module
+- [XCode user manual](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/XCode使用手册.md): end-to-end usage walkthrough
+- [Architecture design](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/架构设计.md): layering, components and key design decisions
+- [Multi-language localization](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/多语言本地化.md): message model, language tables and runtime overrides
+- [SonnetDB adaptation](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/SonnetDB.md): SonnetDB provider and capability verification
+- Online documentation: https://newlifex.com/xcode
+- [ChangeLog.md](https://github.com/NewLifeX/NewLife.XCode/blob/master/ChangeLog.md): version history
+
+## Contributing
+
+### Build and test
+
+```
+dotnet restore
+dotnet build -c Release
+dotnet test XUnitTest.XCode -c Release
 ```
 
----
-# NewLife Project Matrix
+- Add cases under `XUnitTest.XCode`; performance-related suggestions should include benchmarks or explanations.
+- Follow the repository conventions (strong naming, multi-TFM, XML comments, conditional compilation).
+- Public API changes require a migration strategy (Obsolete → removal).
 
-All projects support net8.0/netstandard2.1/netstandard2.0/net4.61/net4.5 by default; older versions (2023.0308) support net4.0/net2.0.
+### Release
 
-|                               Project                               | Year  | Description                                                                                   |
-| :--------------------------------------------------------------: | :---: | -------------------------------------------------------------------------------------- |
-|                             Foundation Components                             |       | Supports other middleware and product projects                                                             |
-|          [NewLife.Core](https://github.com/NewLifeX/X)           | 2002  | Core library: logging, configuration, caching, networking, serialization, APM performance tracing                                    |
-|    [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode)    | 2005  | Big-data middleware, tens of billions of rows per table, MySql/SQLite/SqlServer/Oracle/TDengine/DaMeng, automatic sharding        |
-|      [NewLife.Net](https://github.com/NewLifeX/NewLife.Net)      | 2005  | Networking library, 22.66 million tps single-machine throughput, 4 million TCP connections per machine                      |
-| [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | 2011  | RPC communication framework for high-throughput intranet or IoT hardware scenarios                                            |
-|     [NewLife.Cube](https://github.com/NewLifeX/NewLife.Cube)     | 2010  | Cube rapid development platform with user permissions, SSO login and OAuth server; validated on projects with 10 billion rows per table          |
-|    [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent)    | 2008  | Service management component that installs applications as OS daemons: Windows services, Linux Systemd              |
-|     [NewLife.Zero](https://github.com/NewLifeX/NewLife.Zero)     | 2020  | Zero-generation scaffold, project templates based on the NewLife ecosystem: Web, WebApi, Service                    |
-|                              Middleware                              |       | Integrates with well-known middleware platforms                                                                     |
-|    [NewLife.Redis](https://github.com/NewLifeX/NewLife.Redis)    | 2017  | Redis client, microsecond latency, million-level throughput, rich message queues, validated on 10-billion-scale data projects              |
-| [NewLife.RocketMQ](https://github.com/NewLifeX/NewLife.RocketMQ) | 2018  | Pure managed RocketMQ client supporting Apache RocketMQ and Alibaba Cloud Message Queue, validated on billion-scale projects                |
-|     [NewLife.MQTT](https://github.com/NewLifeX/NewLife.MQTT)     | 2019  | IoT messaging protocol, MqttClient/MqttServer, client supports Alibaba Cloud IoT                          |
-|      [NewLife.IoT](https://github.com/NewLifeX/NewLife.IoT)      | 2022  | IoT standard library defining communication protocol standards for the IoT domain                                        |
-|   [NewLife.Modbus](https://github.com/NewLifeX/NewLife.Modbus)   | 2022  | ModbusTcp/ModbusRTU/ModbusASCII based on the IoT standard library, supports IoT platforms and IoTEdge               |
-|  [NewLife.Siemens](https://github.com/NewLifeX/NewLife.Siemens)  | 2022  | Siemens PLC protocol based on the IoT standard library, supports IoT platforms and IoTEdge                                 |
-|      [NewLife.Map](https://github.com/NewLifeX/NewLife.Map)      | 2022  | Map component library wrapping Baidu Maps, Amap and Tencent Maps                                           |
-|       [NewLife.IP](https://github.com/NewLifeX/NewLife.IP)       | 2022  | IP address library, IP address to physical location                                                             |
-|                             Product Platforms                             |       | Product-platform level, ready to compile and deploy, with customization                                                 |
-|           [AntJob](https://github.com/NewLifeX/AntJob)           | 2019  | Ant scheduling, distributed big-data computing platform (real-time/offline), ant-movement sharding idea, validated on trillion-scale data projects    |
-|         [Stardust](https://github.com/NewLifeX/Stardust)         | 2018  | Stardust, distributed service platform: node management, APM monitoring center, configuration center, registry, release center              |
-|      [NewLife.ERP](https://github.com/NewLifeX/NewLife.ERP)      | 2021  | Enterprise ERP: product management, customer management, sales management, supplier management                                      |
-|         [CrazyCoder](https://github.com/NewLifeX/XCoder)         | 2006  | Code god tool, many developer utilities: network, serial port, encryption/decryption, regular expressions, Modbus                       |
-|           [XProxy](https://github.com/NewLifeX/XProxy)           | 2005  | Product-grade reverse proxy: NAT proxy, Http proxy                                                      |
-|        [HttpMeter](https://github.com/NewLifeX/HttpMeter)        | 2022  | HTTP stress testing tool                                                                       |
-|         [GitCandy](https://github.com/NewLifeX/GitCandy)         | 2015  | Git source code management system                                                                      |
-|          [SmartOS](https://github.com/NewLifeX/SmartOS)          | 2014  | Embedded operating system, fully independent, supports ARM Cortex-M chips                                 |
-|          [SmartA2](https://github.com/NewLifeX/SmartA2)          | 2019  | Embedded industrial computer, IoT edge gateway, high-performance .NET6 host, used in industry, agriculture, transportation and healthcare        |
-|                           菲凡物联FIoT                           | 2020  | Complete IoT solution for buildings, environmental protection and agriculture; integrated software, hardware and big-data analytics; validated on 100k-point single-machine projects |
-|                           NewLife.UWB                            | 2020  | Centimeter-level (10~20cm) high-precision indoor positioning, integrated hardware and software, interoperates with other systems, validated in large exhibition halls        |
+Push a `v`-prefixed tag (for example `v2026.1018`) to trigger `.github/workflows/publish.yml`. The workflow packs XCode, XCodeTool and the provider packages (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.SonnetDB`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) and pushes them to NuGet.org and GitHub Packages.
 
----
-# NewLife Development Team
-![XCode](https://newlifex.com/logo.png)
+### Feedback
 
-The NewLife team was founded in 2002 and is an IoT industry solution provider in the new era. We are dedicated to software/hardware application consulting, system architecture planning and development services. NuGet cumulative downloads: 4.13 million+. Core components (XCode / Redis / Stardust / AntJob / IoT, etc.) have been widely deployed at scale in power, industry, transportation, environmental protection, healthcare, cultural heritage and other industries.
+- Issues / PRs are welcome: performance optimization / new database providers / documentation improvements.
+- Before submitting, make sure `dotnet build` and the relevant unit tests pass; follow the repository conventions for code style and commit messages.
+- Report bugs and suggestions via [Issue](https://github.com/NewLifeX/NewLife.XCode/issues); Stars and PRs are welcome.
 
-We keep improving, striving to be a long-term trusted .NET / IoT / distributed technology partner.
+## Team
 
-Website: https://newlifex.com   Open-source organization: https://github.com/NewLifeX  
-WeChat official account:  
+<img src="https://newlifex.com/logo.png" width="48" align="right" alt="NewLife" />
+
+Founded in 2002, the NewLife team has spent more than two decades on the .NET and IoT ecosystem, maintains nearly 100 open-source projects (34 of them core to this map), and delivers integrated software and hardware solutions for power, logistics, healthcare, industrial control and internet industries. We live by the motto "learning has no seniority — mastery earns respect".
+
+Open-source components have been downloaded <!--nuget-total:start-->6.48M<!--nuget-total:end--> times from NuGet (ecosystem-wide, as of 2026-10).
+
+Website: https://newlifex.com · Open source organization: https://github.com/NewLifeX
+
+<details>
+<summary>WeChat Official Account: 智能大石头 (scan to follow)</summary>
+
 ![智能大石头](https://newlifex.com/stone.jpg)
 
----
+</details>
+
+## License
+
+MIT, fully open. Commercial use / modification / redistribution are allowed (you may replace "NewLife" with your enterprise brand for private deployments). The strong-name certificate `newlife.snk` is built in.
+
 > If this project helps you, please Star it, share it with your team, or send improvement suggestions via Issue/PR.

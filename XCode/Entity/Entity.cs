@@ -220,9 +220,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             switch (method)
             {
                 case DataMethod.Update:
-                    throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止修改！");
+                    throw new XCodeException("Write-only log data [{0}] cannot be modified.", Meta.ThisType.FullName);
                 case DataMethod.Delete:
-                    throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止删除！");
+                    throw new XCodeException("Write-only log data [{0}] cannot be deleted.", Meta.ThisType.FullName);
             }
         }
 
@@ -403,9 +403,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             switch (method)
             {
                 case DataMethod.Update:
-                    throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止修改！");
+                    throw new XCodeException("Write-only log data [{0}] cannot be modified.", Meta.ThisType.FullName);
                 case DataMethod.Delete:
-                    throw new XCodeException($"只写的日志型数据[{Meta.ThisType.FullName}]禁止删除！");
+                    throw new XCodeException("Write-only log data [{0}] cannot be deleted.", Meta.ThisType.FullName);
             }
         }
 
@@ -484,9 +484,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
                     if (uk == null || this[uk.Name] is String str2 && str2.Length > 50) uk = Meta.Unique;
 
                     if (uk != null)
-                        throw new ArgumentOutOfRangeException(fi.Name, $"[{fi.Name}/{fi.DisplayName}@{factory.TableName}]长度限制{fi.Length}字符[{uk.Name}={this[uk.Name]}]");
+                        throw new ArgumentOutOfRangeException(fi.Name, L.T("[{0}/{1}@{2}] is limited to {3} characters [{4}={5}]", fi.Name, fi.DisplayName, factory.TableName, fi.Length, uk.Name, this[uk.Name]));
                     else
-                        throw new ArgumentOutOfRangeException(fi.Name, $"[{fi.Name}/{fi.DisplayName}@{factory.TableName}]长度限制{fi.Length}字符");
+                        throw new ArgumentOutOfRangeException(fi.Name, L.T("[{0}/{1}@{2}] is limited to {3} characters", fi.Name, fi.DisplayName, factory.TableName, fi.Length));
                 }
             }
         }
@@ -767,7 +767,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     /// <returns></returns>
     public static TEntity? FindByKey(Object key, String? selects)
     {
-        var field = Meta.Unique ?? throw new ArgumentNullException(nameof(Meta.Unique), "FindByKey方法要求" + typeof(TEntity).FullName + "有唯一主键！");
+        var field = Meta.Unique ?? throw new ArgumentNullException(nameof(Meta.Unique), L.T("FindByKey requires [{0}] to have a unique key.", typeof(TEntity).FullName));
 
         // 查询时可能传入IModel，为了分表查询，主要解决分表字段不是主键的场景
         var model = key as IModel;
@@ -1038,7 +1038,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         else
         {
             var ss = Meta.Session;
-            using var span = DAL.GlobalTracer?.NewSpan($"db:{ss.ConnName}:{ss.TableName}:AutoShard", "自动分页查询", shards.Length);
+            using var span = DAL.GlobalTracer?.NewSpan($"db:{ss.ConnName}:{ss.TableName}:AutoShard", "Automatic paged query", shards.Length);
 
             // 先生成查询语句
             var builder = CreateBuilder(where, order, selects, QueryAction.FindAll);
@@ -1046,7 +1046,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
 
             // 根据分页字段排序分页表
             shards = FixOrder(shards, order);
-            span?.AppendTag($"分库分表：{shards.Join(", ", e => $"[{e.ConnName}]{e.TableName}")}");
+            span?.AppendTag($"Sharding: {shards.Join(", ", e => $"[{e.ConnName}]{e.TableName}")}");
 
             // 分表查询，需要跳过前面的表
             var row = startRowIndex;
@@ -1064,7 +1064,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
 
                 // 分表查询
                 session = EntitySession<TEntity>.Create(connName, tableName);
-                span?.AppendTag($"使用 [{connName}]{tableName} 查询({row}, {max})");
+                span?.AppendTag($"Querying [{connName}]{tableName} ({row}, {max})");
 
                 builder.Table = session.FormatedTableName;
                 var list2 = LoadData(session.Query(builder, row, max));
@@ -1072,14 +1072,14 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
 
                 // 总数已满足要求，返回
                 if (maximumRows > 0 && rs.Count >= maximumRows) return rs;
-                span?.AppendTag($"当前表[{rs.Count}]无法凑齐数据[{maximumRows}]，需要使用下一分表");
+                span?.AppendTag($"Current table has [{rs.Count}] rows, fewer than the requested [{maximumRows}]; moving to the next shard");
 
                 // 避免最后一张表没有查询到相关数据还继续进行查询，减少不必要查询
                 var skipCount = 0;
                 if (row > 0 && i < shards.Length - 1)
                 {
                     skipCount = session.QueryCount(builder);
-                    span?.AppendTag($"当前表满足条件总行数[{skipCount}]，将在下一分表中跳过");
+                    span?.AppendTag($"Current table has [{skipCount}] matching rows; skipping them in the next shard");
                 }
 
                 max -= list2.Count;

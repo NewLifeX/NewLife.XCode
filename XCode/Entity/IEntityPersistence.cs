@@ -364,7 +364,7 @@ public class EntityPersistence : IEntityPersistence
         var sbv = Pool.StringBuilder.Get();
         for (var i = 0; i < names.Length; i++)
         {
-            if (!fs.ContainsKey(names[i])) throw new ArgumentException("类[" + factory.EntityType.FullName + "]中不存在[" + names[i] + "]属性");
+            if (!fs.ContainsKey(names[i])) throw new ArgumentException(L.T("Property [{0}] does not exist on class [{1}].", names[i], factory.EntityType.FullName));
             // 同时构造SQL语句。names是属性列表，必须转换成对应的字段列表
             if (i > 0)
             {
@@ -477,7 +477,7 @@ public class EntityPersistence : IEntityPersistence
         var sb = Pool.StringBuilder.Get();
         for (var i = 0; i < names.Length; i++)
         {
-            if (!fs.ContainsKey(names[i])) throw new ArgumentException("类[" + factory.EntityType.FullName + "]中不存在[" + names[i] + "]属性");
+            if (!fs.ContainsKey(names[i])) throw new ArgumentException(L.T("Property [{0}] does not exist on class [{1}].", names[i], factory.EntityType.FullName));
 
             if (i > 0) sb.AppendFormat(" {0} ", split);
 

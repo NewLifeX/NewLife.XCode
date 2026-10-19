@@ -69,7 +69,7 @@ public static class SqlBuilder
 
             // 严格要求排序字段必须是数据字段
             if (field is null)
-                throw new XCodeException($"实体类[{factory.EntityType.Name}]不包含排序字段[{name}]");
+                throw new XCodeException("Entity class [{0}] does not contain sort field [{1}].", factory.EntityType.Name, name);
 
             name = factory.Session.Dal.Db.FormatName(field);
             sb.Append(name);

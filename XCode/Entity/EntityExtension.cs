@@ -925,7 +925,7 @@ public static class EntityExtension
                 if (list2.All(e => e[uk.Name].ToLong() == 0))
                     columns = columns.Where(e => !e.Identity).ToArray();
                 else if (list2.Any(e => e[uk.Name].ToLong() == 0))
-                    throw new NotSupportedException($"Upsert遇到自增字段，且部分为0部分不为0，无法同时支持Insert和Update");
+                    throw new NotSupportedException(L.T("Upsert encountered an identity field with mixed zero and non-zero values and cannot support both Insert and Update."));
             }
 
             option.Columns = columns;

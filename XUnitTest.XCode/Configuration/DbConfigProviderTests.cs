@@ -46,7 +46,10 @@ public class DbConfigProviderTests
 
         Assert.Equal("全局调试。XTrace.Debug", prv.GetSection("Debug").Comment);
         Assert.Equal("系统配置", prv.GetSection("Sys").Comment);
-        Assert.Equal("用于标识系统的英文名，不能有空格", prv.GetSection("Sys:Name").Comment);
+        // 描述文字来自 NewLife.Core 的 DescriptionAttribute，随包版本可能调整语言，按实际特性值断言
+        var nameProperty = typeof(SysConfig).GetProperty(nameof(SysConfig.Name))!;
+        var nameDescription = (System.ComponentModel.DescriptionAttribute?)System.Attribute.GetCustomAttribute(nameProperty, typeof(System.ComponentModel.DescriptionAttribute));
+        Assert.Equal(nameDescription?.Description, prv.GetSection("Sys:Name").Comment);
 
         var sys = set.Sys;
         Assert.Equal(sys.Name, prv["Sys:Name"]);
@@ -68,7 +71,7 @@ public class DbConfigProviderTests
 
         Assert.Equal("全局调试。XTrace.Debug", prv2.GetSection("Debug").Comment);
         //Assert.Equal("系统配置", prv2.GetSection("Sys").Comment);
-        Assert.Equal("用于标识系统的英文名，不能有空格", prv2.GetSection("Sys:Name").Comment);
+        Assert.Equal(nameDescription?.Description, prv2.GetSection("Sys:Name").Comment);
 
         var sys2 = set2.Sys;
         Assert.NotNull(sys2);

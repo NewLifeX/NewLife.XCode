@@ -86,12 +86,12 @@ dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/ao
 
 | 目标 RID | 单元测试（test.yml） | AOT 冒烟（aot.yml） | runner / 载体 | 排除项 |
 |---|---|---|---|---|
-| win-x64 | 全量（镜像自带 MySQL 8.0/PostgreSQL 17 + LocalDB 支撑真库组） | JIT + NativeAOT | windows-latest | NovaDb 网络组 |
-| linux-x64 | 全量（services：MySQL/PostgreSQL/SQL Server） | JIT + NativeAOT（真库场景含 MySQL/SqlServer） | ubuntu-latest | NovaDb 网络组 |
-| linux-arm64 | 全量（services：MySQL/PostgreSQL，均有 arm64 官方镜像） | JIT + NativeAOT | ubuntu-24.04-arm | SQL Server 无 arm64 镜像；NovaDb 网络组 |
-| linux-la64 | 全量（除外部数据库组） | JIT 冒烟 | ubuntu-latest + QEMU（ghcr.io/loong64/debian:trixie 容器） | 外部数据库四组（MySQL/PostgreSQL/SQL Server/NovaDb 网络） |
+| win-x64 | 全量（镜像自带 MySQL 8.0/PostgreSQL 17 + LocalDB 支撑真库组） | JIT + NativeAOT | windows-latest | 无 |
+| linux-x64 | 全量（services：MySQL/PostgreSQL/SQL Server） | JIT + NativeAOT（真库场景含 MySQL/SqlServer） | ubuntu-latest | 无 |
+| linux-arm64 | 全量（services：MySQL/PostgreSQL，均有 arm64 官方镜像） | JIT + NativeAOT | ubuntu-24.04-arm | SQL Server 无 arm64 镜像 |
+| linux-la64 | 全量（除外部数据库组） | JIT 冒烟 | ubuntu-latest + QEMU（ghcr.io/loong64/debian:trixie 容器） | 外部数据库三组（MySQL/PostgreSQL/SQL Server） |
 
-- **NovaDb 网络组**需要外部 `NewLife.NovaServer` 服务，CI 中统一排除；本地以 NovaServer（源码构建）实测 **22/22 通过**。
+- **NovaDb 网络组**在测试进程内启动 `NewLife.NovaServer`（随机端口、临时目录），无需外部服务；也可用环境变量 `XCode_novadb` 指向外部实例。
 - win-x64 的三类真库为**尽力启用**：任一不可用时自动降级为排除该组，不阻塞任务。
 - **SQLite 驱动分层**：x86/x64（win/linux）由 `XCode.SQLite` 适配包提供 System.Data.SQLite；arm64/loongarch64 缺少该驱动原生库，自动降级为 Microsoft.Data.Sqlite（SQLitePCLRaw），单元测试按驱动分支断言连接串与 DataAdapter 能力。
 

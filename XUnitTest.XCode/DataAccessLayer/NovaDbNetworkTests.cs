@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using NewLife;
 using NewLife.Log;
+using NewLife.NovaDb.Server;
 using NewLife.Security;
 using NewLife.Serialization;
 using XCode;
@@ -14,29 +15,19 @@ using XUnitTest.XCode.TestEntity;
 
 namespace XUnitTest.XCode.DataAccessLayer;
 
-/// <summary>NovaDb网络模式测试。连接字符串格式：Server=localhost;Port=3306;Database=mydb</summary>
+/// <summary>NovaDb网络模式测试。默认启动进程内 NovaServer（随机端口，临时目录），
+/// 也可通过环境变量 XCode_novadb 指向外部服务</summary>
 [Collection("Database")]
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
-public class NovaDbNetworkTests
+public class NovaDbNetworkTests : IClassFixture<NovaDbServerFixture>
 {
-    private static String _ConnStr = "Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=root";
+    private readonly String _ConnStr;
 
-    public NovaDbNetworkTests()
+    public NovaDbNetworkTests(NovaDbServerFixture fixture)
     {
-        // 优先使用环境变量（CI环境）
+        // 优先使用环境变量（CI环境或外部服务）
         var envConnStr = Environment.GetEnvironmentVariable("XCode_novadb");
-        if (!envConnStr.IsNullOrEmpty())
-        {
-            _ConnStr = envConnStr;
-            return;
-        }
-
-        // 本地开发使用配置文件
-        var f = "Config\\novadb.config".GetFullPath();
-        if (File.Exists(f))
-            _ConnStr = File.ReadAllText(f);
-        else
-            File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
+        _ConnStr = !envConnStr.IsNullOrEmpty() ? envConnStr : fixture.ConnectionString;
     }
 
     [Fact(DisplayName = "网络模式驱动初始化")]
@@ -637,5 +628,47 @@ public class NovaDbNetworkTests
         var db = DbFactory.Create(DatabaseType.NovaDb);
         Assert.NotNull(db);
         Assert.Equal(DatabaseType.NovaDb, db.Type);
+    }
+}
+
+/// <summary>NovaDb 服务端夹具。未指定外部服务时启动进程内服务器，避免全量测试依赖本机服务而挂起</summary>
+public sealed class NovaDbServerFixture : IDisposable
+{
+    private readonly String? _dbPath;
+
+    /// <summary>服务端实例。使用外部服务时为空</summary>
+    public NovaServer? Server { get; }
+
+    /// <summary>网络模式连接字符串</summary>
+    public String ConnectionString { get; } = String.Empty;
+
+    public NovaDbServerFixture()
+    {
+        // 外部服务优先，便于对真实部署做联调
+        if (!Environment.GetEnvironmentVariable("XCode_novadb").IsNullOrEmpty()) return;
+
+        _dbPath = Path.Combine(Path.GetTempPath(), $"XCode_NovaDb_{Guid.NewGuid():N}");
+        Server = new NovaServer(0) { DbPath = _dbPath };
+        Server.Start();
+
+        ConnectionString = $"Server=127.0.0.1;Port={Server.Port};Database=sys;Uid=root;Pwd=root";
+    }
+
+    /// <summary>停止服务端并清理临时数据</summary>
+    public void Dispose()
+    {
+        Server.TryDispose();
+
+        if (!_dbPath.IsNullOrEmpty() && Directory.Exists(_dbPath))
+        {
+            try
+            {
+                Directory.Delete(_dbPath, true);
+            }
+            catch
+            {
+                // 忽略文件占用导致的清理失败
+            }
+        }
     }
 }

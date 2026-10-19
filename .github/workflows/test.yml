@@ -4,7 +4,7 @@ name: test
 # 触发：push / pull_request / 手动（workflow_dispatch）；不采用夜间定时。
 # linux-la64 无托管 runner，使用 QEMU 用户态仿真 + 龙芯 .NET SDK（github.com/loongson/dotnet），
 # 载体为 ghcr.io/loong64/debian:trixie 容器（loong64 社区官方镜像移植），详见 Doc/AOT兼容性分析.md。
-# NovaDbNetworkTests 依赖外部 NovaDb 服务（NewLife.NovaServer），CI 中统一排除；本地已验证 22/22 通过。
+# NovaDbNetworkTests 默认在进程内启动 NovaServer（随机端口/临时目录），无需外部服务；也可用环境变量 XCode_novadb 指向外部实例。
 
 on:
   push:
@@ -49,7 +49,7 @@ jobs:
       shell: pwsh
       # 尽力启用三类真库；任一不可用则把对应测试组加入排除过滤器，保证任务不因环境残缺而失败
       run: |
-        $filter = @('FullyQualifiedName!~NovaDbNetworkTests')
+        $filter = @()
 
         # ---- MySQL 8.0（镜像自带数据库工具；无服务时手动初始化并启动）----
         $mysqlOk = $false
@@ -176,7 +176,7 @@ jobs:
         path: TestResults/**
         if-no-files-found: ignore
 
-  # linux-x64：MySQL/PostgreSQL/SQL Server 三库服务容器，跑全量（除 NovaDb 网络组）
+  # linux-x64：MySQL/PostgreSQL/SQL Server 三库服务容器，跑全量
   test-linux-x64:
     name: test (linux-x64)
     runs-on: ubuntu-latest
@@ -237,9 +237,9 @@ jobs:
         XCode_pgsql: "Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=postgres"
         XCode_sqlserver: "Server=127.0.0.1,1433;Database=master;Uid=sa;Pwd=Pass@word;TrustServerCertificate=true"
       run: |
-        if ! dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "FullyQualifiedName!~NovaDbNetworkTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-x64.trx" --results-directory TestResults; then
+        if ! dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-x64.trx" --results-directory TestResults; then
           echo "::warning::首次测试运行失败，自动重试一次以规避偶发原生崩溃（崩溃转储已上传制品，请留意 DataSimulationTests/ConnectionPoolTests）"
-          dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --filter "FullyQualifiedName!~NovaDbNetworkTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-x64-retry.trx" --results-directory TestResults
+          dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-x64-retry.trx" --results-directory TestResults
         fi
     - name: Upload Test Results
       if: always()
@@ -294,9 +294,9 @@ jobs:
         XCode_mysql: "Server=127.0.0.1;Port=3306;Database=sys;Uid=root;Pwd=root"
         XCode_pgsql: "Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=postgres"
       run: |
-        if ! dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "FullyQualifiedName!~NovaDbNetworkTests&FullyQualifiedName!~SqlServerTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-arm64.trx" --results-directory TestResults; then
+        if ! dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --filter "FullyQualifiedName!~SqlServerTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-arm64.trx" --results-directory TestResults; then
           echo "::warning::首次测试运行失败，自动重试一次以规避偶发网络/驱动下载失败"
-          dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --filter "FullyQualifiedName!~NovaDbNetworkTests&FullyQualifiedName!~SqlServerTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-arm64-retry.trx" --results-directory TestResults
+          dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --filter "FullyQualifiedName!~SqlServerTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-arm64-retry.trx" --results-directory TestResults
         fi
     - name: Upload Test Results
       if: always()
@@ -306,7 +306,7 @@ jobs:
         path: TestResults/**
         if-no-files-found: ignore
 
-  # linux-la64（龙芯）：QEMU 用户态仿真 + 龙芯 SDK + loong64 Debian 容器；外部数据库组与 NovaDb 网络组排除
+  # linux-la64（龙芯）：QEMU 用户态仿真 + 龙芯 SDK + loong64 Debian 容器；外部数据库组排除
   test-linux-la64:
     name: test (linux-la64 / QEMU)
     runs-on: ubuntu-latest
@@ -364,7 +364,6 @@ jobs:
             cd /src/Bin/UnitTest
             timeout 300m dotnet xunit.console.dll XUnitTest.XCode.dll \
               -parallel none \
-              -noclass XUnitTest.XCode.DataAccessLayer.NovaDbNetworkTests \
               -noclass XUnitTest.XCode.DataAccessLayer.MySqlTests \
               -noclass XUnitTest.XCode.DataAccessLayer.PostgreSQLTests \
               -noclass XUnitTest.XCode.DataAccessLayer.SqlServerTests \

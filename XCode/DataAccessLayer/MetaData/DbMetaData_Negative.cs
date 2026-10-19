@@ -184,7 +184,7 @@ internal partial class DbMetaData
             CreateTable(sb, entitytable, @readonly);
 
             // 仅获取语句
-            if (@readonly) WriteLog($"DDL模式[{mode}]，请手工创建表：{entitytable.TableName}{Environment.NewLine}{sb}");
+            if (@readonly) WriteLog("DDL mode [{0}]; create table [{1}] manually:{2}{3}", mode, entitytable.TableName, Environment.NewLine, sb);
         }
         else
         {
@@ -216,7 +216,7 @@ internal partial class DbMetaData
                 if (!sql.IsNullOrEmpty()) Append(sb, ";" + Environment.NewLine, sql);
             }
 
-            if (sb.Length > 0) WriteLog($"DDL模式[{mode}]，请手工修改表[{dbtable.TableName}]：{Environment.NewLine}{sb}");
+            if (sb.Length > 0) WriteLog("DDL mode [{0}]; alter table [{1}] manually:{2}{3}", mode, dbtable.TableName, Environment.NewLine, sb);
         }
     }
 

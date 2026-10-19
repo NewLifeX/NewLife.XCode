@@ -65,7 +65,7 @@ public class EntityQueue(IEntitySession session) : DisposeBase
             var task = Task.Run(() => Work(null));
             if (!task.Wait(3_000))
             {
-                using var span = DefaultTracer.Instance?.NewError($"db:EntityQueueNotEmptyOnDispose", $"{Session.TableName}实体队列退出时，稍有[{count:n0}]条数据没有保存");
+                using var span = DefaultTracer.Instance?.NewError("db:EntityQueueNotEmptyOnDispose", L.T("Entity queue of [{0}] still has [{1:n0}] items unsaved on dispose.", Session.TableName, count));
             }
         }
     }
@@ -106,7 +106,7 @@ public class EntityQueue(IEntitySession session) : DisposeBase
         // 超过最大值时，堵塞一段时间，等待消费完成
         if (_count >= MaxEntity)
         {
-            using var span2 = DefaultTracer.Instance?.NewError($"db:MaxQueueOverflow", $"{ss.TableName}实体队列溢出，超过最大值{MaxEntity:n0}", _count);
+            using var span2 = DefaultTracer.Instance?.NewError("db:MaxQueueOverflow", L.T("Entity queue of [{0}] overflowed; exceeded the maximum of {1:n0}.", ss.TableName, MaxEntity), _count);
 
             // 最多等待15秒，避免死等阻塞业务处理
             var times = 150;
@@ -253,9 +253,8 @@ public class EntityQueue(IEntitySession session) : DisposeBase
         Speed = ms == 0 ? 0 : (Int32)(list.Count * 1000 / ms);
         if (Debug || list.Count > 10000)
         {
-            var msg = $"实体队列[{ss.TableName}/{ss.ConnName}]\t保存 {list.Count:n0}\t耗时 {ms:n0}ms\t速度 {speed:n0}tps\t周期 {p:n0}ms";
             DefaultSpan.Current?.AppendTag($"Cost: {ms}ms");
-            XTrace.WriteLine(msg);
+            XTrace.WriteLine("Entity queue [{0}/{1}] saved {2:n0}, elapsed {3:n0}ms, speed {4:n0}tps, period {5:n0}ms", ss.TableName, ss.ConnName, list.Count, ms, speed, p);
         }
 
         // 马上再来一次，以便于连续处理数据

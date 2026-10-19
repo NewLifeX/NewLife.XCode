@@ -126,7 +126,7 @@ public partial class DAL
             }
 
             var connStr = ConnStr = css[connName];
-            if (connStr.IsNullOrEmpty()) throw new XCodeException("请在使用数据库前设置[" + connName + "]连接字符串");
+            if (connStr.IsNullOrEmpty()) throw new XCodeException("Set the connection string for [{0}] before using the database.", connName);
 
             // 连接映射
             var vs = connStr.SplitAsDictionary("=", ";", true);
@@ -295,7 +295,7 @@ public partial class DAL
         // 2020-10-22 阴 fname可能是特殊情况，要特殊处理 "TestSourceHost: Enumerating source (E:\projects\bin\Debug\project.dll)"
         if (!File.Exists(fname) && fname.StartsWith("TestSourceHost: Enumerating"))
         {
-            XTrace.WriteLine($"AppDomain.CurrentDomain.FriendlyName不太友好，处理一下：{fname}");
+            XTrace.WriteLine("AppDomain.CurrentDomain.FriendlyName is awkward; normalized to: {0}", fname);
             fname = fname[fname.IndexOf(AppDomain.CurrentDomain.BaseDirectory, StringComparison.Ordinal)..].TrimEnd(')');
         }
         if (!File.Exists(file)) file = "app.config".GetFullPath();

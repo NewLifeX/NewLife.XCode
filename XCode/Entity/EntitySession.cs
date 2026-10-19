@@ -230,7 +230,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
             }
             catch (Exception ex)
             {
-                if (XTrace.Debug) XTrace.WriteLine("初始化数据出错！" + ex.ToString());
+                if (XTrace.Debug) XTrace.WriteLine("Failed to initialize data! {0}", ex);
             }
 
             return true;

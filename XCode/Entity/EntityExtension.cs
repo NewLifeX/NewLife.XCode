@@ -37,7 +37,7 @@ public static class EntityExtension
 
         if (!valueField.IsNullOrEmpty())
         {
-            if (fact.Table.FindByName(valueField) is not FieldItem fi) throw new XException("无法找到名为{0}的字段", valueField);
+            if (fact.Table.FindByName(valueField) is not FieldItem fi) throw new XException("Unable to find field named {0}.", valueField);
 
             type = fi.Type;
         }

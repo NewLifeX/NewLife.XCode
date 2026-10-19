@@ -128,7 +128,7 @@ public class WhereBuilder
                 source = "Data2";
             }
 
-            if (dt == null) throw new ArgumentException("缺少数据源", source);
+            if (dt == null) throw new ArgumentException(L.T("The data source is missing."), source);
 
             var key = exp[2..^1];
             if (!key.Contains("."))

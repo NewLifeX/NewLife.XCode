@@ -155,7 +155,7 @@ internal class DuckDB : FileDbBase
 
             return $"{sql} limit {maximumRows}";
         }
-        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
 
         return $"{sql} offset {startRowIndex} limit {maximumRows}";
     }
@@ -173,7 +173,7 @@ internal class DuckDB : FileDbBase
             if (maximumRows > 0) builder.Limit = $"limit {maximumRows}";
             return builder;
         }
-        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
 
         builder.Limit = $"offset {startRowIndex} limit {maximumRows}";
         return builder;

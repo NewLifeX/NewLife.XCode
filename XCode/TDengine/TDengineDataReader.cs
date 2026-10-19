@@ -74,7 +74,7 @@ namespace XCode.TDengine
         /// <returns></returns>
         public override Boolean Read()
         {
-            if (_handler == IntPtr.Zero) throw new InvalidOperationException("读取器已关闭");
+            if (_handler == IntPtr.Zero) throw new InvalidOperationException(L.T("The reader is closed."));
 
             var result = TD.FetchRows(_handler);
             if (result != IntPtr.Zero)

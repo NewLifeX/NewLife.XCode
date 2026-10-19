@@ -83,7 +83,7 @@ namespace XCode.DataAccessLayer
                     return String.Format("{0} rows 1 to {1}", sql, maximumRows);
             }
             if (maximumRows < 1)
-                throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+                throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
             else
                 sql = String.Format("{0} rows {1} to {2}", sql, startRowIndex + 1, maximumRows);
             return sql;
@@ -107,7 +107,7 @@ namespace XCode.DataAccessLayer
                 if (maximumRows > 0) builder.OrderBy += String.Format(" rows 1 to {0}", maximumRows);
                 return builder;
             }
-            if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+            if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
 
             builder.OrderBy += String.Format(" rows {0} to {1}", startRowIndex, maximumRows);
             return builder;
@@ -284,7 +284,7 @@ namespace XCode.DataAccessLayer
         {
             if (String.IsNullOrEmpty(FileName) || File.Exists(FileName)) return true;
 
-            DAL.WriteLog("创建数据库：{0}", FileName);
+            DAL.WriteLog("Creating database: {0}", FileName);
 
             var conn = Database.Factory.CreateConnection();
             var method = conn.GetType().GetMethodEx("CreateDatabase", typeof(String));

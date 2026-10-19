@@ -56,7 +56,7 @@ partial class DAL
         System.Reflection.Assembly.GetExecutingAssembly().WriteVersion();
 
         if (XCodeSetting.Current.ShowSQL)
-            XTrace.WriteLine("当前配置为输出SQL日志，如果觉得日志过多，可以修改配置关闭[Config/XCode.config:ShowSQL=false]。");
+            XTrace.WriteLine("SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].");
     }
     #endregion
 

@@ -740,7 +740,7 @@ public static class ModelHelper
                 else
                 {
                     // 其它的不支持，跳过
-                    if (XTrace.Debug) XTrace.WriteLine("不支持的类型[{0} {1}]！", pi.PropertyType.Name, pi.Name);
+                    if (XTrace.Debug) XTrace.WriteLine("Unsupported type [{0} {1}]!", pi.PropertyType.Name, pi.Name);
 
                     continue;
                 }

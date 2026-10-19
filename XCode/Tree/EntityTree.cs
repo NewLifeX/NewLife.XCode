@@ -624,7 +624,7 @@ public abstract partial class EntityTree<TKey, [DynamicallyAccessedMembers(Dynam
         else
         {
             // 更新状态，且pkey不为空时，判断两者是否相等
-            if (!pisnull && Equals(pkey, key)) throw new XException("上级不能是当前节点！");
+            if (!pisnull && Equals(pkey, key)) throw new XException(L.T("The parent cannot be the current node!"));
         }
 
         // 编辑状态且设置了父节点时才处理

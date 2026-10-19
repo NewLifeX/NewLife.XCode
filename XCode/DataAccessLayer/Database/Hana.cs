@@ -470,7 +470,7 @@ internal class HanaMetaData : RemoteDbMetaData
                 {
                     es.Add(table.TableName);
 
-                    WriteLog("发现Hana中旧格式的布尔型字段 {0} {1}", table.TableName, dc);
+                    WriteLog("Found a legacy-format Boolean field in Hana: {0} {1}", table.TableName, dc);
                 }
             }
         }

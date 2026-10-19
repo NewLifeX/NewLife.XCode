@@ -33,7 +33,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
         // 如果没有脏数据，则不需要进行任何处理
         if (!HasDirty) return true;
 
-        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, _.Name.DisplayName + "不能为空！");
+        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, L.T("{0} cannot be empty!", _.Name.DisplayName));
 
         if (Icon == "&#xe63f;") Icon = null;
 

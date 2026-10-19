@@ -33,7 +33,7 @@ public partial class Tenant : Entity<Tenant>, ITenantScope
         if (!HasDirty) return true;
 
         if (Code.IsNullOrEmpty()) Code = PinYin.GetFirst(Name);
-        if (Code.IsNullOrEmpty()) throw new ArgumentNullException(__.Code, _.Code.DisplayName + "不能为空！");
+        if (Code.IsNullOrEmpty()) throw new ArgumentNullException(__.Code, L.T("{0} cannot be empty!", _.Code.DisplayName));
 
         // 管理者
         if (method == DataMethod.Insert && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
@@ -56,7 +56,7 @@ public partial class Tenant : Entity<Tenant>, ITenantScope
         }
         if (Meta.Count > 0) return;
 
-        if (XTrace.Debug) XTrace.WriteLine("开始初始化{0}数据……", typeof(Tenant).Name);
+        if (XTrace.Debug) XTrace.WriteLine("Initializing {0} data...", typeof(Tenant).Name);
 
         var entity = new Tenant
         {
@@ -67,7 +67,7 @@ public partial class Tenant : Entity<Tenant>, ITenantScope
         };
         entity.Insert();
 
-        if (XTrace.Debug) XTrace.WriteLine("完成初始化{0}数据！", typeof(Tenant).Name);
+        if (XTrace.Debug) XTrace.WriteLine("Finished initializing {0} data!", typeof(Tenant).Name);
     }
 
     #endregion 对象操作

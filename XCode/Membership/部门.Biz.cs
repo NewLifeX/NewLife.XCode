@@ -44,7 +44,7 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
         if (!HasDirty) return true;
 
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
-        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
+        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), L.T("The name cannot be empty!"));
 
         if (Code.IsNullOrEmpty()) Code = PinYin.GetFirst(Name);
 
@@ -76,7 +76,7 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
     {
         if (Meta.Count > 0) return;
 
-        if (XTrace.Debug) XTrace.WriteLine("开始初始化{0}数据……", typeof(Department).Name);
+        if (XTrace.Debug) XTrace.WriteLine("Initializing {0} data...", typeof(Department).Name);
 
         var root = Add("总公司", "001", 0);
         Add("行政部", "011", root.ID);
@@ -87,7 +87,7 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
         Add("行政部", "111", root.ID);
         Add("市场部", "112", root.ID);
 
-        if (XTrace.Debug) XTrace.WriteLine("完成初始化{0}数据！", typeof(Department).Name);
+        if (XTrace.Debug) XTrace.WriteLine("Finished initializing {0} data!", typeof(Department).Name);
     }
 
     /// <summary>添加用户，如果存在则直接返回</summary>

@@ -127,7 +127,7 @@ class Access : FileDbBase
         var module = typeof(Object).Module;
         module.GetPEKind(out var _, out var machine);
 
-        if (machine != ImageFileMachine.I386) throw new NotSupportedException("64位平台不支持OLEDB驱动！");
+        if (machine != ImageFileMachine.I386) throw new NotSupportedException(L.T("The OLEDB driver is not supported on 64-bit platforms!"));
     }
     #endregion
 }

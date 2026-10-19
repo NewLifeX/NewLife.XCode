@@ -102,7 +102,7 @@ abstract class FileDbMetaData : DbMetaData
 
         if (!File.Exists(FileName))
         {
-            DAL.WriteLog("创建数据库：{0}", FileName);
+            DAL.WriteLog("Creating database: {0}", FileName);
 
             File.Create(FileName).Dispose();
         }

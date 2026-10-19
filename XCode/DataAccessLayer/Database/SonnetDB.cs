@@ -77,7 +77,7 @@ internal class SonnetDB : RemoteDb
     private static String Pagination(Int64 startRowIndex, Int64 maximumRows)
     {
         if (startRowIndex > Int32.MaxValue || maximumRows > Int32.MaxValue)
-            throw new NotSupportedException("SonnetDB LIMIT/OFFSET目前不能超过Int32.MaxValue。参见SonnetDB issue #256。");
+            throw new NotSupportedException(L.T("SonnetDB LIMIT/OFFSET currently cannot exceed Int32.MaxValue. See SonnetDB issue #256."));
         var sql = maximumRows > 0 ? $" LIMIT {maximumRows}" : String.Empty;
         if (startRowIndex > 0) sql += $" OFFSET {startRowIndex}";
         return sql;
@@ -153,7 +153,7 @@ internal class SonnetDB : RemoteDb
                 if (Convert.ToDecimal((Double)number) == number) return;
             }
             catch (OverflowException) { }
-            throw new NotSupportedException("SonnetDB 4.0.0无法精确保留此Decimal值，已拒绝写入。参见SonnetDB issue #235，尚需实现精确十进制参数支持并正式发布。");
+            throw new NotSupportedException(L.T("SonnetDB 4.0.0 cannot preserve this Decimal value exactly and rejected the write. See SonnetDB issue #235; precise decimal parameter support still needs to be implemented and released."));
         }
         if (value is DateTimeOffset offset)
         {
@@ -164,13 +164,13 @@ internal class SonnetDB : RemoteDb
             CheckTime(Convert.ToDateTime(value, CultureInfo.InvariantCulture).Ticks);
         }
         if ((type == typeof(UInt64) || value is UInt64) && Convert.ToUInt64(value, CultureInfo.InvariantCulture) > Int64.MaxValue)
-            throw new NotSupportedException("SonnetDB INT使用有符号Int64，仅支持不超过Int64.MaxValue的UInt64值。");
+            throw new NotSupportedException(L.T("SonnetDB INT uses signed Int64 and supports only UInt64 values up to Int64.MaxValue."));
     }
 
     internal static void CheckTime(Int64 ticks)
     {
         if (ticks % TimeSpan.TicksPerMillisecond != 0)
-            throw new NotSupportedException("SonnetDB 4.0.0 DATETIME只能保留毫秒精度，已拒绝亚毫秒时间。参见SonnetDB issue #236，尚需实现完整时间精度支持并正式发布。");
+            throw new NotSupportedException(L.T("SonnetDB 4.0.0 DATETIME can preserve only millisecond precision and rejected sub-millisecond times. See SonnetDB issue #236; full time precision support still needs to be implemented and released."));
     }
 
     /// <inheritdoc/>
@@ -224,7 +224,7 @@ internal class SonnetDB : RemoteDb
         var name = tableName.Trim('"').Replace("\"\"", "\"");
         var table = ((SonnetDBMetaData)CreateMetaData()).FindTable(name);
         if (table == null || table.PrimaryKeys.Length != 1)
-            throw new NotSupportedException("SonnetDB有界批量删除目前需要单列主键，复合主键或无主键表不能降级为无界删除。参见SonnetDB issue #243。");
+            throw new NotSupportedException(L.T("Bounded bulk delete in SonnetDB currently requires a single-column primary key; tables with composite or no primary keys cannot fall back to unbounded delete. See SonnetDB issue #243."));
         var primaryKey = FormatName(table.PrimaryKeys[0]);
         var condition = String.IsNullOrWhiteSpace(where) ? String.Empty : " WHERE " + where;
         var tableSql = FormatName(tableName);
@@ -253,7 +253,7 @@ internal class SonnetDBSession : RemoteDbSession
     public override Int32 BeginTransaction(IsolationLevel level)
     {
         if (level != IsolationLevel.Unspecified && level != IsolationLevel.ReadCommitted)
-            throw new NotSupportedException("SonnetDB尚未满足此事务隔离级别的完整语义，请使用ReadCommitted。参见SonnetDB issue #225。");
+            throw new NotSupportedException(L.T("SonnetDB does not yet provide the full semantics of this transaction isolation level; use ReadCommitted. See SonnetDB issue #225."));
         return base.BeginTransaction(level);
     }
 
@@ -300,7 +300,7 @@ internal class SonnetDBSession : RemoteDbSession
                 if (row[SchemaTableOptionalColumn.IsAutoIncrement] is Boolean identity && identity)
                     return Convert.ToInt32(row[SchemaTableColumn.ColumnOrdinal], CultureInfo.InvariantCulture);
         }
-        throw new NotSupportedException("SonnetDB返回结果未标识自增列，无法安全取得自动编号。请升级包含RETURNING列元数据的SonnetDB版本。");
+        throw new NotSupportedException(L.T("The SonnetDB result does not identify identity columns, so the generated number cannot be obtained safely. Upgrade to a SonnetDB version that includes RETURNING column metadata."));
     }
 
     /// <inheritdoc/>
@@ -310,7 +310,7 @@ internal class SonnetDBSession : RemoteDbSession
     public override Int32 InsertIgnore(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list) => ExecuteBatch(table, columns, list, null, null, true);
 
     /// <inheritdoc/>
-    public override Int32 Replace(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list) => throw new NotSupportedException("SonnetDB尚未支持删除冲突行后插入新行的Replace语义。参见SonnetDB issue #242。");
+    public override Int32 Replace(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list) => throw new NotSupportedException(L.T("SonnetDB does not yet support the Replace semantics of deleting conflicting rows and then inserting new rows. See SonnetDB issue #242."));
 
     /// <inheritdoc/>
     public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list) => ExecuteBatch(table, columns, list, updateColumns, addColumns, false);
@@ -320,7 +320,7 @@ internal class SonnetDBSession : RemoteDbSession
         var rows = list.ToArray();
         if (rows.Length == 0) return 0;
         columns ??= table.Columns.ToArray();
-        if (columns.Length == 0) throw new ArgumentException("批量写入必须包含字段。", nameof(columns));
+        if (columns.Length == 0) throw new ArgumentException(L.T("Bulk write must contain at least one field."), nameof(columns));
 
         var db = (SonnetDB)Database;
         var sql = new StringBuilder();
@@ -352,7 +352,7 @@ internal class SonnetDBSession : RemoteDbSession
                 .Select(item => item.Resolved.Select(column => column.ColumnName).ToArray())
                 .FirstOrDefault();
             var keys = indexColumns ?? table.PrimaryKeys.Select(column => column.ColumnName).ToArray();
-            if (keys.Length == 0) throw new NotSupportedException("SonnetDB Upsert需要主键或完整的唯一索引冲突目标。");
+            if (keys.Length == 0) throw new NotSupportedException(L.T("SonnetDB Upsert requires a primary key or a complete unique-index conflict target."));
             var setters = new List<String>();
             foreach (var column in columns)
             {
@@ -503,7 +503,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     {
         if (field.DataType == typeof(String) && field.Length > 0 && field.Length < Int32.MaxValue
             && _reportedLengths.Add($"{field.Table.TableName}.{field.ColumnName}:{field.Length}"))
-            WriteLog("[SonnetDB]字段{0}.{1}声明长度{2}，当前STRING不支持长度约束；未完成，参见SonnetDB issue #240。", field.Table.TableName, field.ColumnName, field.Length);
+            WriteLog("[SonnetDB] Field {0}.{1} declares length {2}, but STRING does not currently support length constraints; pending, see SonnetDB issue #240.", field.Table.TableName, field.ColumnName, field.Length);
     }
 
     protected override String? GetDefault(IDataColumn field, Boolean onlyDefine)
@@ -560,11 +560,11 @@ internal class SonnetDBMetaData : RemoteDbMetaData
         // 数据库的STRING长度元数据不可用（Int32.MaxValue）时不算长度变更，模型Length未变时仍允许修改可空性与默认值
         if (oldfield != null && field.DataType == typeof(String) && field.Length > 0 && field.Length < Int32.MaxValue
             && oldfield.Length > 0 && oldfield.Length < Int32.MaxValue && field.Length != oldfield.Length)
-            throw new NotSupportedException("SonnetDB STRING尚未支持长度约束变更。参见SonnetDB issue #240，尚需实现对应能力并正式发布。");
+            throw new NotSupportedException(L.T("SonnetDB STRING does not yet support changing length constraints. See SonnetDB issue #240; the capability still needs to be implemented and released."));
         CheckDecimalMigration(field);
         CheckDefaultValue(field);
         if (oldfield != null && (field.Identity != oldfield.Identity || field.PrimaryKey != oldfield.PrimaryKey))
-            throw new NotSupportedException("SonnetDB现有列的自增或主键变更需要单独迁移，不能通过ALTER COLUMN完成。");
+            throw new NotSupportedException(L.T("Changing identity or primary key on existing SonnetDB columns requires a separate migration and cannot be done through ALTER COLUMN."));
         var sql = $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
         sql += field.Nullable && !field.PrimaryKey && !field.Identity ? " DROP NOT NULL" : " SET NOT NULL";
         if (!field.Identity)
@@ -585,7 +585,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     private static void CheckDecimalMigration(IDataColumn field)
     {
         if (field.DataType == typeof(Decimal) && field.Precision > 0 && (field.Precision != 38 || field.Scale != 28))
-            throw new NotSupportedException("SonnetDB 4.0.0的DECIMAL ADD/ALTER会丢失显式精度，已拒绝执行以保留模型语义。参见SonnetDB issue #241，尚需修复并正式发布。");
+            throw new NotSupportedException(L.T("SonnetDB 4.0.0 DECIMAL ADD/ALTER would lose explicit precision and was rejected to preserve model semantics. See SonnetDB issue #241; it still needs to be fixed and released."));
     }
 
     /// <inheritdoc/>
@@ -627,7 +627,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
             Database.CreateSession().Execute(CreateDatabaseSQL(databaseName, file));
             return true;
         }
-        if (databaseName != Database.DatabaseName) throw new NotSupportedException("嵌入式SonnetDB通过Data Source目录创建数据库，请为目标目录配置独立连接。");
+        if (databaseName != Database.DatabaseName) throw new NotSupportedException(L.T("Embedded SonnetDB creates databases through the Data Source directory; configure a separate connection for the target directory."));
         using var connection = Database.OpenConnection();
         return connection.State == ConnectionState.Open;
     }
@@ -635,7 +635,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     /// <inheritdoc/>
     public override Boolean DropDatabase(String databaseName)
     {
-        if (!((SonnetDB)Database).IsRemote) throw new NotSupportedException("嵌入式SonnetDB不支持通过SQL删除数据库目录。");
+        if (!((SonnetDB)Database).IsRemote) throw new NotSupportedException(L.T("Embedded SonnetDB does not support deleting the database directory via SQL."));
         if (!DatabaseExist(databaseName)) return true;
         Database.CreateSession().Execute(DropDatabaseSQL(databaseName));
         return true;
@@ -661,7 +661,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     {
         if (schema is DDLSchema.AddTableDescription or DDLSchema.DropTableDescription or DDLSchema.AddColumnDescription or DDLSchema.DropColumnDescription)
         {
-            WriteLog("[SonnetDB]未完成{0}：尚未支持表和字段注释持久化，需要SonnetDB实现并正式发布，参见issue #237。", schema);
+            WriteLog("[SonnetDB] Unfinished {0}: table and column comment persistence is not yet supported; SonnetDB must implement and release it, see issue #237.", schema);
             return false;
         }
         return base.PerformSchema(sb, onlySql, schema, values);

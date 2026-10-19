@@ -218,7 +218,7 @@ class DataRowEntityAccessor : IDataRowEntityAccessor
                     else if (Array.IndexOf(FalseString, vs.ToLower()) >= 0)
                         value = false;
                     else if (DAL.Debug)
-                        DAL.WriteLog("无法把字符串{0}转为布尔型！", vs);
+                        DAL.WriteLog("Unable to convert string {0} to Boolean!", vs);
                 }
             }
         }

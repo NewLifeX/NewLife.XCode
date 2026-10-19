@@ -53,11 +53,11 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
 
     /// <summary></summary>
     /// <returns></returns>
-    protected override Int32 OnUpdate() => throw new Exception("禁止修改日志！");
+    protected override Int32 OnUpdate() => throw new Exception(L.T("Modifying logs is prohibited!"));
 
     /// <summary></summary>
     /// <returns></returns>
-    protected override Int32 OnDelete() => throw new Exception("禁止删除日志！");
+    protected override Int32 OnDelete() => throw new Exception(L.T("Deleting logs is prohibited!"));
     #endregion
 
     #region 扩展属性

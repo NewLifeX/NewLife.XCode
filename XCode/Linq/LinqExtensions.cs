@@ -70,8 +70,8 @@ public static class LinqExtensions
     public static IQueryable<T> Page<T>(this IQueryable<T> source, Int32 page, Int32 size)
     {
         if (source == null) throw new ArgumentNullException(nameof(source));
-        if (page < 1) throw new ArgumentOutOfRangeException(nameof(page), "页码必须大于等于 1");
-        if (size < 0) throw new ArgumentOutOfRangeException(nameof(size), "每页大小不能为负数");
+        if (page < 1) throw new ArgumentOutOfRangeException(nameof(page), L.T("The page number must be at least 1."));
+        if (size < 0) throw new ArgumentOutOfRangeException(nameof(size), L.T("The page size cannot be negative."));
 
         return source.Skip((page - 1) * size).Take(size);
     }

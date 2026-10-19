@@ -53,7 +53,7 @@ public partial class Log : Entity<Log>
         if (!HasDirty) return true;
 
         // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
-        if (Action.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Action), "操作不能为空！");
+        if (Action.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Action), "Action cannot be empty!");
 
         // 建议先调用基类方法，基类方法会做一些统一处理
         if (!base.Valid(method)) return false;

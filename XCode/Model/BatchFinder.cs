@@ -66,7 +66,7 @@ public class BatchFinder<TKey, TEntity> where TEntity : Entity<TEntity>, new()
         if (key is String str && str.IsNullOrEmpty()) return null;
         if (!_Keys.Contains(key)) throw new ArgumentOutOfRangeException(nameof(key), key, "error");
 
-        var uk = Factory.Table.FindByName(Factory.Unique) ?? throw new ArgumentNullException(nameof(Factory.Unique), "没有唯一主键");
+        var uk = Factory.Table.FindByName(Factory.Unique) ?? throw new ArgumentNullException(nameof(Factory.Unique), L.T("There is no unique primary key."));
 
         // 向前查询
         while (_index < _Keys.Count)

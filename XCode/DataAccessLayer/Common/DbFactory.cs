@@ -86,7 +86,7 @@ public static class DbFactory
                 if (item.Value.Support(provider)) return item.Value.GetType();
             }
 
-            if (DAL.Debug) DAL.WriteLog("无法从{0}个默认数据库提供者中识别到{1}！", n, provider);
+            if (DAL.Debug) DAL.WriteLog("Unable to recognize {1} among {0} default database providers!", n, provider);
 
             // 注册外部提供者
             var type = provider.GetTypeEx();

@@ -1519,9 +1519,9 @@ public class EntityBuilder : ClassBuilder
                 foreach (var item in cs)
                 {
                     if (ds.Contains(item.Name))
-                        WriteLine("if ({0}.IsNullOrEmpty()) throw new ArgumentNullException({1}, \"{2}不能为空！\");", item.Name, NameOf(item.Name), item.DisplayName ?? item.Name);
+                        WriteLine("if ({0}.IsNullOrEmpty()) throw new ArgumentNullException({1}, \"{2} cannot be empty!\");", item.Name, NameOf(item.Name), item.Name);
                     else
-                        WriteLine("if ({0} == null) throw new ArgumentNullException({1}, \"{2}不能为空！\");", item.Name, NameOf(item.Name), item.DisplayName ?? item.Name);
+                        WriteLine("if ({0} == null) throw new ArgumentNullException({1}, \"{2} cannot be empty!\");", item.Name, NameOf(item.Name), item.Name);
                 }
             }
 

@@ -71,7 +71,7 @@ abstract class RemoteDb : DbBase
 
             return $"{sql} limit {maximumRows}";
         }
-        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
 
         return $"{sql} limit {startRowIndex}, {maximumRows}";
     }
@@ -89,7 +89,7 @@ abstract class RemoteDb : DbBase
             if (maximumRows > 0) builder.Limit = $"limit {maximumRows}";
             return builder;
         }
-        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
 
         builder.Limit = $"limit {startRowIndex}, {maximumRows}";
         return builder;
@@ -118,7 +118,7 @@ abstract class RemoteDbSession : DbSession
         }
         catch (Exception ex)
         {
-            DAL.WriteLog("[{2}]GetSchema({0})异常重试！{1}", collectionName, ex.Message, Database.ConnName);
+            DAL.WriteLog("[{2}]GetSchema({0}) failed; retrying! {1}", collectionName, ex.Message, Database.ConnName);
 
             // 如果没有数据库，登录会失败，需要切换到系统数据库再试试
             return (ProcessWithSystem((s, c) => base.GetSchema(c, collectionName, restrictionValues)) as DataTable)!;

@@ -27,7 +27,7 @@ namespace XCode.Extension
             if (!HasDirty) return;
 
             // 这里验证参数范围，建议抛出参数异常，指定参数名，前端用户界面可以捕获参数异常并聚焦到对应的参数输入框
-            if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), "名称不能为空！");
+            if (Name.IsNullOrEmpty()) throw new ArgumentNullException(nameof(Name), L.T("The name cannot be empty!"));
 
             // 在新插入数据或者修改了指定字段时进行修正
             if (isNew && !IsDirty(nameof(CreateTime))) CreateTime = DateTime.Now;

@@ -796,7 +796,7 @@ internal class MySqlMetaData : RemoteDbMetaData
                 {
                     es.Add(table.TableName);
 
-                    WriteLog("发现MySql中旧格式的布尔型字段 {0} {1}", table.TableName, dc);
+                    WriteLog("Found a legacy-format Boolean field in MySql: {0} {1}", table.TableName, dc);
                 }
             }
         }

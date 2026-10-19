@@ -52,7 +52,7 @@ partial class DbMetaData
         }
         catch (DbException ex)
         {
-            throw new XDbMetaDataException(this, "取得所有表构架出错！", ex);
+            throw new XDbMetaDataException(this, L.T("Failed to obtain all table schemas!"), ex);
         }
     }
 
@@ -241,7 +241,7 @@ partial class DbMetaData
 
             // 检查是否已正确识别类型
             if (field.DataType == null)
-                WriteLog("无法识别{0}.{1}的类型{2}！", table.TableName, field.ColumnName, field.RawType);
+                WriteLog("Unable to recognize type {2} of {0}.{1}!", table.TableName, field.ColumnName, field.RawType);
             // 非字符串字段，长度没有意义
             //else if (field.DataType != typeof(String))
             //    field.Length = 0;
@@ -303,7 +303,7 @@ partial class DbMetaData
                     {
                         if (TryGetDataRowValue(item, _.ColumnName, out String? dcname) && !dcname.IsNullOrEmpty() && !ns.Contains(dcname)) ns.Add(dcname);
                     }
-                    if (ns.Count <= 0) DAL.WriteLog("表{0}的索引{1}无法取得字段列表！", table, di.Name);
+                    if (ns.Count <= 0) DAL.WriteLog("Unable to obtain the field list for index {1} of table {0}!", table, di.Name);
                     di.Columns = ns.ToArray();
                 }
             }

@@ -164,7 +164,7 @@ public class ClassBuilder
         }
 
         var option = Option;
-        WriteLog("生成 {0} {1} {2}", Table.Name, Table.DisplayName, new { option.ClassNameTemplate, option.BaseClass, option.ModelNameForCopy, option.Namespace }.ToJson(false, false, false));
+        WriteLog("Generated {0} {1} {2}", Table.Name, Table.DisplayName, new { option.ClassNameTemplate, option.BaseClass, option.ModelNameForCopy, option.Namespace }.ToJson(false, false, false));
 
         //Clear();
         Writer ??= new StringWriter();

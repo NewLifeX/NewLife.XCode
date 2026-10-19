@@ -55,7 +55,7 @@ public class ConnectionPool : ObjectPool<DbConnection>
         }
         catch (DbException ex)
         {
-            DAL.WriteLog("Open错误：[{0}]{1}", ex?.GetTrue()?.Message, conn.ConnectionString);
+            DAL.WriteLog("Open error: [{0}]{1}", ex?.GetTrue()?.Message, conn.ConnectionString);
             throw;
         }
 
@@ -83,7 +83,7 @@ public class ConnectionPool : ObjectPool<DbConnection>
         }
         catch (DbException ex)
         {
-            DAL.WriteLog("Open错误：[{0}]{1}", ex?.GetTrue()?.Message, conn.ConnectionString);
+            DAL.WriteLog("Open error: [{0}]{1}", ex?.GetTrue()?.Message, conn.ConnectionString);
             throw;
         }
 

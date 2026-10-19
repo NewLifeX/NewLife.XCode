@@ -141,7 +141,7 @@ class SqlCeSession : FileDbSession
         if (String.IsNullOrEmpty(FileName) || File.Exists(FileName)) return;
 
         //FileSource.ReleaseFile(Assembly.GetExecutingAssembly(), "SqlCe.sdf", FileName, true);
-        DAL.WriteLog("创建数据库：{0}", FileName);
+        DAL.WriteLog("Creating database: {0}", FileName);
 
         var sce = SqlCeEngine.Create(Database.ConnectionString);
         if (sce != null) sce.CreateDatabase().Dispose();
@@ -429,7 +429,7 @@ public static class SqlCeHelper
         if (versionDictionary.ContainsKey(versionLONGWORD))
             return versionDictionary[versionLONGWORD];
         else
-            throw new ApplicationException("不能确定该sdf的版本！");
+            throw new ApplicationException(L.T("Unable to determine the version of this SDF file!"));
     }
 
     /// <summary>检测SqlServerCe3.5是否安装</summary>

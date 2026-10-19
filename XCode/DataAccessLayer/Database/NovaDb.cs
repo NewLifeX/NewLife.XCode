@@ -162,7 +162,7 @@ internal class NovaDb : RemoteDb
 
             return $"{sql} limit {maximumRows}";
         }
-        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
 
         return $"{sql} limit {maximumRows} offset {startRowIndex}";
     }
@@ -174,7 +174,7 @@ internal class NovaDb : RemoteDb
             if (maximumRows > 0) builder.Limit = $"limit {maximumRows}";
             return builder;
         }
-        if (maximumRows < 1) throw new NotSupportedException("不支持取第几条数据之后的所有数据！");
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
 
         builder.Limit = $"limit {maximumRows} offset {startRowIndex}";
         return builder;

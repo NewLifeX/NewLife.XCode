@@ -42,9 +42,9 @@ public class TDengineCommand : DbCommand
     public override void Prepare()
     {
         var conn = DbConnection;
-        if (conn?.State != ConnectionState.Open) throw new InvalidOperationException("数据库连接未打开");
+        if (conn?.State != ConnectionState.Open) throw new InvalidOperationException(L.T("The database connection is not open."));
 
-        if (CommandText.IsNullOrEmpty()) throw new InvalidOperationException("未设置命令文本");
+        if (CommandText.IsNullOrEmpty()) throw new InvalidOperationException(L.T("The command text is not set."));
     }
 
     /// <summary>执行查询</summary>
@@ -79,7 +79,7 @@ public class TDengineCommand : DbCommand
         }
 
         var task = Task.Factory.StartNew(() => TD.Query(conn._handler, sql));
-        if (!task.Wait(TimeSpan.FromSeconds(CommandTimeout))) throw new XCodeException("执行超时");
+        if (!task.Wait(TimeSpan.FromSeconds(CommandTimeout))) throw new XCodeException("Execution timed out.");
 
         var handler = task.Result;
         var code = TD.ErrorNo(handler);

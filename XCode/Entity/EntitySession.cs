@@ -188,7 +188,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
 
         if (!Monitor.TryEnter(_wait_lock, ms))
         {
-            if (DAL.Debug) DAL.WriteLog("等待初始化{0}数据{1:n0}ms失败 initThread={2}", ThisType.Name, ms, initThread);
+            if (DAL.Debug) DAL.WriteLog("Timed out after waiting {1:n0}ms for initialization of {0} data, initThread={2}", ThisType.Name, ms, initThread);
             return false;
         }
         try
@@ -221,7 +221,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
                         if (task != null && !task.Wait(5_000))
                         {
                             // 表不存在，强制同步创建表
-                            if (DAL.Debug) DAL.WriteLog("InitData前检测到表[{0}]不存在", TableName);
+                            if (DAL.Debug) DAL.WriteLog("Table [{0}] was not found before InitData", TableName);
                         }
                     }
 
@@ -295,7 +295,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
             // CheckTableWhenFirstUse的实体类，在这里检查，有点意思，记下来
             var mode = Table.ModelCheckMode;
             if (DAL.Debug && mode == ModelCheckModes.CheckTableWhenFirstUse)
-                DAL.WriteLog("检查实体{0}的数据表架构，模式：{1}", ThisType.FullName, mode);
+                DAL.WriteLog("Checking the data table schema of entity {0}, mode: {1}", ThisType.FullName, mode);
 
             // 第一次使用才检查的，此时检查
             var ck = false;
@@ -438,7 +438,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
                     if (DataCache.Current.Counts.TryGetValue(CacheKey, out var c)) n = c;
                 }
 
-                if (DAL.Debug) DAL.WriteLog("{0}.Count 快速计算表记录数（非精确）[{1}/{2}] 参考值 {3:n0}", ThisType.Name, TableName, ConnName, n);
+                if (DAL.Debug) DAL.WriteLog("{0}.Count fast row count (approximate) [{1}/{2}] reference value {3:n0}", ThisType.Name, TableName, ConnName, n);
 
                 LongCount = GetCount(n);
 
@@ -542,7 +542,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
                 catch (Exception ex)
                 {
                     // 建表失败,记录日志但不中断流程
-                    if (DAL.Debug) DAL.WriteLog("创建表[{0}]失败: {1}", TableName, ex.Message);
+                    if (DAL.Debug) DAL.WriteLog("Failed to create table [{0}]: {1}", TableName, ex.Message);
                 }
 
                 // 建表后返回0,后续访问会重新获取真实记录数
@@ -863,7 +863,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     /// <returns></returns>
     public virtual Int32 Insert(IEntity entity)
     {
-        if (DataTable.IsView) throw new NotSupportedException("视图无法添删改！");
+        if (DataTable.IsView) throw new NotSupportedException(L.T("Views cannot be inserted, updated, or deleted!"));
 
         var rs = Factory.Persistence.Insert(this, entity);
 
@@ -887,7 +887,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     /// <returns></returns>
     public virtual Int32 Update(IEntity entity)
     {
-        if (DataTable.IsView) throw new NotSupportedException("视图无法添删改！");
+        if (DataTable.IsView) throw new NotSupportedException(L.T("Views cannot be inserted, updated, or deleted!"));
 
         var rs = Factory.Persistence.Update(this, entity);
 
@@ -910,7 +910,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     /// <returns></returns>
     public virtual Int32 Delete(IEntity entity)
     {
-        if (DataTable.IsView) throw new NotSupportedException("视图无法添删改！");
+        if (DataTable.IsView) throw new NotSupportedException(L.T("Views cannot be inserted, updated, or deleted!"));
 
         var rs = Factory.Persistence.Delete(this, entity);
 
@@ -936,7 +936,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     /// <returns></returns>
     public virtual async Task<Int32> InsertAsync(IEntity entity)
     {
-        if (DataTable.IsView) throw new NotSupportedException("视图无法添删改！");
+        if (DataTable.IsView) throw new NotSupportedException(L.T("Views cannot be inserted, updated, or deleted!"));
 
         var rs = await Factory.Persistence.InsertAsync(this, entity).ConfigureAwait(false);
 
@@ -956,7 +956,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     /// <returns></returns>
     public virtual Task<Int32> UpdateAsync(IEntity entity)
     {
-        if (DataTable.IsView) throw new NotSupportedException("视图无法添删改！");
+        if (DataTable.IsView) throw new NotSupportedException(L.T("Views cannot be inserted, updated, or deleted!"));
 
         var rs = Factory.Persistence.UpdateAsync(this, entity);
 
@@ -976,7 +976,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     /// <returns></returns>
     public virtual Task<Int32> DeleteAsync(IEntity entity)
     {
-        if (DataTable.IsView) throw new NotSupportedException("视图无法添删改！");
+        if (DataTable.IsView) throw new NotSupportedException(L.T("Views cannot be inserted, updated, or deleted!"));
 
         var rs = Factory.Persistence.DeleteAsync(this, entity);
 

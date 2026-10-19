@@ -137,7 +137,7 @@ public class TableItem
                     dic.Add(item.Name, item.Name);
                 }
                 else
-                    DAL.WriteLog("数据表{0}发现同名但不同大小写的字段{1}和{2}，违反设计原则！", TableName, dic[item.Name], item.Name);
+                    DAL.WriteLog("Data table {0} has fields [{1}] and [{2}] with the same name but different case; this violates the design principle!", TableName, dic[item.Name], item.Name);
             }
             //_FieldNames = new ReadOnlyCollection<String>(list);
             _FieldNames = list;
@@ -314,7 +314,7 @@ public class TableItem
                     {
                         var cs = di.Columns.Length == count ? di.Columns : di2.Columns;
                         var cs2 = di.Columns.Length == count ? di2.Columns : di.Columns;
-                        XTrace.WriteLine("实体类[{0}]/数据表[{1}]的索引重复，可去除({2})，保留({3})", EntityType.FullName, TableName, cs.Join(), cs2.Join());
+                        XTrace.WriteLine("Duplicate index on entity class [{0}]/data table [{1}], can remove ({2}) and keep ({3}).", EntityType.FullName, TableName, cs.Join(), cs2.Join());
                     }
                 }
             }

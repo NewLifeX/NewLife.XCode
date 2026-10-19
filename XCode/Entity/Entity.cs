@@ -723,7 +723,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
 
         if (list.Count > 1 && DAL.Debug)
         {
-            DAL.WriteLog("调用FindUnique(\"{0}\")不合理，只有返回唯一记录的查询条件才允许调用！", wh);
+            DAL.WriteLog("Calling FindUnique(\"{0}\") is inappropriate; only query conditions that return a single record are allowed!", wh);
         }
 
         var entity = list[0];
@@ -800,7 +800,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     /// <returns></returns>
     public static TEntity? FindByKeyForEdit(Object key)
     {
-        var field = Meta.Unique ?? throw new ArgumentNullException("Meta.Unique", "FindByKeyForEdit方法要求该表有唯一主键！");
+        var field = Meta.Unique ?? throw new ArgumentNullException("Meta.Unique", L.T("FindByKeyForEdit requires the table to have a unique primary key!"));
 
         // 查询时可能传入IModel，为了分表查询，主要解决分表字段不是主键的场景
         var model = key as IModel;
@@ -814,7 +814,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         // 唯一键为自增且参数小于等于0时，返回新实例
         if (Helper.IsNullKey(key, type))
         {
-            if (type.IsInt() && !field.IsIdentity && DAL.Debug) DAL.WriteLog("{0}的{1}字段是整型主键，你是否忘记了设置自增？", Meta.TableName, field.ColumnName);
+            if (type.IsInt() && !field.IsIdentity && DAL.Debug) DAL.WriteLog("{0} field {1} is an integer primary key; did you forget to set identity?", Meta.TableName, field.ColumnName);
 
             return Meta.Factory.Create(true) as TEntity;
         }
@@ -1705,7 +1705,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     public static SelectBuilder FindSQLWithKey(String? where = null)
     {
         var uk = Meta.Unique?.Field;
-        if (uk == null) throw new XCodeException("实体类缺少唯一主键字段，无法生成SQL语句！");
+        if (uk == null) throw new XCodeException("The entity class lacks a unique primary key field and cannot generate SQL!");
 
         var columnName = Meta.Session.Dal.Db.FormatName(uk);
         return FindSQL(where, null, columnName, 0, 0);
@@ -2237,7 +2237,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     /// <returns></returns>
     public Int32 ResetDirty()
     {
-        var key = Meta.Unique ?? throw new InvalidOperationException("要求有唯一主键");
+        var key = Meta.Unique ?? throw new InvalidOperationException(L.T("A unique primary key is required."));
         var k = this[key.Name];
         if (k == null) return 0;
 

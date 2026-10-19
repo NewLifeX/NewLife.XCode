@@ -61,7 +61,7 @@ public class DbConfigProvider : ConfigProvider
 
         if ((Root == null || Root.Childs == null || Root.Childs.Count == 0) && CacheLevel > ConfigCacheLevel.NoCache && File.Exists(file))
         {
-            XTrace.WriteLine("[{0}/{1}]加载缓存配置：{2}", Category, UserId, file);
+            XTrace.WriteLine("[{0}/{1}] loading cached configuration: {2}", Category, UserId, file);
             var txt = File.ReadAllText(file);
 
             // 删除旧版
@@ -175,7 +175,7 @@ public class DbConfigProvider : ConfigProvider
                 // 首次加载，且配置文件存在，需要保存一份回去数据库。可能是从配置文件迁移为数据库配置
                 if (Root != null && Root.Childs != null && Root.Childs.Count > 0)
                 {
-                    XTrace.WriteLine("[{0}/{1}]从文件保存配置到数据库", Category, UserId);
+                    XTrace.WriteLine("[{0}/{1}] saving configuration from file to database", Category, UserId);
 
                     SaveAll();
                 }
@@ -327,7 +327,7 @@ public class DbConfigProvider : ConfigProvider
 
         if (changed.Count > 0)
         {
-            XTrace.WriteLine("[{0}/{1}]配置改变，重新加载如下键：{2}", Category, UserId, changed.ToJson());
+            XTrace.WriteLine("[{0}/{1}] configuration changed; reloading keys: {2}", Category, UserId, changed.ToJson());
 
             Root = Build(dic);
 

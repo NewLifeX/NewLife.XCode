@@ -137,7 +137,7 @@ public static class EntityFactory
         //// 先实例化，在锁里面添加到列表但不实例化，避免实体类的实例化过程中访问CreateFactory导致死锁产生
         //type.CreateInstance();
 
-        //if (!_factories.TryGetValue(type, out factory)) throw new XCodeException("无法创建[{0}]的实体工厂！", type.FullName);
+        //if (!_factories.TryGetValue(type, out factory)) throw new XCodeException("Unable to create the entity factory for [{0}]!", type.FullName);
 
         // 读取特性中指定的自定义工程，若未指定，则使用默认工厂
         var att = type.GetCustomAttribute<EntityFactoryAttribute>();
@@ -146,7 +146,7 @@ public static class EntityFactory
         factoryType ??= typeof(Entity<>.DefaultEntityFactory).MakeGenericType(type);
 
         factory = factoryType?.CreateInstance() as IEntityFactory;
-        if (factory == null) throw new XCodeException("无法创建[{0}]的实体工厂！", type.FullName);
+        if (factory == null) throw new XCodeException("Unable to create the entity factory for [{0}]!", type.FullName);
 
         //!!! 有可能多线程同时初始化相同实体类的实体工厂，需要避免返回不同的工厂实例，确保工厂成员的唯一性，例如雪花实例
         //_factories.TryAdd(type, factory);
@@ -169,7 +169,7 @@ public static class EntityFactory
         {
             // 自定义工厂的反射实例化属 AOT 边界，需保证该类型已被静态引用或注册
             factory = att.Type.CreateInstance() as IEntityFactory;
-            if (factory == null) throw new XCodeException("无法创建[{0}]的实体工厂！", type.FullName);
+            if (factory == null) throw new XCodeException("Unable to create the entity factory for [{0}]!", type.FullName);
         }
         else
         {
@@ -237,7 +237,7 @@ public static class EntityFactory
             var ti = CreateTableItem(type);
             var name = ti.ConnName;
             if (name == null)
-                XTrace.WriteLine("实体类[{0}]无法创建TableItem", type.FullName);
+                XTrace.WriteLine("Entity class [{0}] cannot create a TableItem.", type.FullName);
             else if (name == connName)
                 yield return type;
         }
@@ -289,8 +289,8 @@ public static class EntityFactory
 
         if (DAL.Debug)
         {
-            DAL.WriteLog("[{0}]的所有实体类（{1}个）：{2}", connName, list.Count, String.Join(",", list.ToArray()));
-            DAL.WriteLog("[{0}]需要检查架构的实体类（{1}个）：{2}", connName, list2.Count, String.Join(",", list2.ToArray()));
+            DAL.WriteLog("All entity classes of [{0}] ({1}): {2}", connName, list.Count, String.Join(",", list.ToArray()));
+            DAL.WriteLog("Entity classes of [{0}] that need schema check ({1}): {2}", connName, list2.Count, String.Join(",", list2.ToArray()));
         }
 
         return tables;
@@ -328,7 +328,7 @@ public static class EntityFactory
         using var span = DefaultTracer.Instance?.NewSpan("db:InitAll");
         try
         {
-            DAL.WriteLog("初始化所有数据库连接的实体类和数据表");
+            DAL.WriteLog("Initializing entity classes and data tables for all database connections");
 
             // 加载所有实体类
             var types = typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType.IsGenericType).ToList();
@@ -393,7 +393,7 @@ public static class EntityFactory
         using var span = DefaultTracer.Instance?.NewSpan("db:InitAll");
         try
         {
-            DAL.WriteLog("异步初始化所有数据库连接的实体类和数据表");
+            DAL.WriteLog("Asynchronously initializing entity classes and data tables for all database connections");
 
             var ts = new List<Task>();
 
@@ -510,7 +510,7 @@ public static class EntityFactory
             }
 
             var dal = DAL.Create(connName);
-            DAL.WriteLog("初始化数据库：{0}/{1} 实体类[{3}]：{2}", connName, dal.DbType, facts.Join(",", e => e.EntityType.Name), facts.Count);
+            DAL.WriteLog("Initializing database: {0}/{1}, entity classes [{3}]: {2}", connName, dal.DbType, facts.Join(",", e => e.EntityType.Name), facts.Count);
 
             // 反向工程检查
             if (dal.Db.Migration > Migration.Off)
@@ -602,7 +602,7 @@ public static class EntityFactory
         using var span = DefaultTracer.Instance?.NewSpan("db:InitEntity", entityType.FullName);
         try
         {
-            DAL.WriteLog("初始化实体类：{0}", entityType.FullName);
+            DAL.WriteLog("Initializing entity class: {0}", entityType.FullName);
 
             var factory = entityType.AsFactory();
 

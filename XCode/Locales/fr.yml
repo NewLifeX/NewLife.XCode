@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "Champ booléen au format hérité détecté dans Hana : {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "Champ booléen au format hérité détecté dans IRIS : {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "Champ booléen au format hérité détecté dans MySql : {0} {1}"
+"Connection must be open.": "La connexion doit être ouverte."
+"HttpClient is not initialized.": "HttpClient n'est pas initialisé."
+"InfluxDB write failed: {0}": "Échec de l'écriture InfluxDB : {0}"
+"InfluxDB query failed: {0}": "Échec de la requête InfluxDB : {0}"

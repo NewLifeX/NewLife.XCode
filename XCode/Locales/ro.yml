@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "Câmp Boolean în format vechi găsit în Hana: {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "Câmp Boolean în format vechi găsit în IRIS: {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "Câmp Boolean în format vechi găsit în MySql: {0} {1}"
+"Connection must be open.": "Conexiunea trebuie să fie deschisă."
+"HttpClient is not initialized.": "HttpClient nu este inițializat."
+"InfluxDB write failed: {0}": "Scrierea în InfluxDB a eșuat: {0}"
+"InfluxDB query failed: {0}": "Interogarea InfluxDB a eșuat: {0}"

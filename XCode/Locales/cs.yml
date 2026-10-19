@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "V Hana nalezeno pole Boolean staršího formátu: {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "V IRIS nalezeno pole Boolean staršího formátu: {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "V MySql nalezeno pole Boolean staršího formátu: {0} {1}"
+"Connection must be open.": "Připojení musí být otevřené."
+"HttpClient is not initialized.": "HttpClient není inicializován."
+"InfluxDB write failed: {0}": "Zápis do InfluxDB se nezdařil: {0}"
+"InfluxDB query failed: {0}": "Dotaz InfluxDB se nezdařil: {0}"

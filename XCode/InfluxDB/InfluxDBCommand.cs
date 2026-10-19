@@ -50,12 +50,12 @@ public class InfluxDBCommand : DbCommand
     {
         var conn = Connection;
         if (conn == null || conn.State != ConnectionState.Open)
-            throw new InvalidOperationException("Connection must be open.");
+            throw new InvalidOperationException(L.T("Connection must be open."));
 
         // InfluxDB 写入操作使用 Line Protocol
         var httpClient = conn.HttpClient;
         if (httpClient == null)
-            throw new InvalidOperationException("HttpClient is not initialized.");
+            throw new InvalidOperationException(L.T("HttpClient is not initialized."));
 
         var baseUrl = conn.DataSource.TrimEnd('/');
         var url = $"{baseUrl}/api/v2/write?org={conn.Organization}&bucket={conn.Bucket}&precision=ns";
@@ -68,7 +68,7 @@ public class InfluxDBCommand : DbCommand
         if (!response.IsSuccessStatusCode)
         {
             var error = response.Content.ReadAsStringAsync().Result;
-            throw new Exception($"InfluxDB write failed: {error}");
+            throw new Exception(L.T("InfluxDB write failed: {0}", error));
         }
 
         return 1; // 假设写入成功
@@ -98,11 +98,11 @@ public class InfluxDBCommand : DbCommand
     {
         var conn = Connection;
         if (conn == null || conn.State != ConnectionState.Open)
-            throw new InvalidOperationException("Connection must be open.");
+            throw new InvalidOperationException(L.T("Connection must be open."));
 
         var httpClient = conn.HttpClient;
         if (httpClient == null)
-            throw new InvalidOperationException("HttpClient is not initialized.");
+            throw new InvalidOperationException(L.T("HttpClient is not initialized."));
 
         // InfluxDB 查询使用 Flux 语言
         var baseUrl = conn.DataSource.TrimEnd('/');
@@ -124,7 +124,7 @@ public class InfluxDBCommand : DbCommand
         if (!response.IsSuccessStatusCode)
         {
             var error = response.Content.ReadAsStringAsync().Result;
-            throw new Exception($"InfluxDB query failed: {error}");
+            throw new Exception(L.T("InfluxDB query failed: {0}", error));
         }
 
         var csv = response.Content.ReadAsStringAsync().Result;

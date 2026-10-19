@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "Hana에서 레거시 형식의 Boolean 필드를 찾았습니다: {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "IRIS에서 레거시 형식의 Boolean 필드를 찾았습니다: {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "MySql에서 레거시 형식의 Boolean 필드를 찾았습니다: {0} {1}"
+"Connection must be open.": "연결이 열려 있어야 합니다."
+"HttpClient is not initialized.": "HttpClient가 초기화되지 않았습니다."
+"InfluxDB write failed: {0}": "InfluxDB 쓰기 실패: {0}"
+"InfluxDB query failed: {0}": "InfluxDB 쿼리 실패: {0}"

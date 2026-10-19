@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "Hana-তে পুরনো বিন্যাসের Boolean ফিল্ড পাওয়া গেছে: {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "IRIS-এ পুরনো বিন্যাসের Boolean ফিল্ড পাওয়া গেছে: {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "MySql-এ পুরনো বিন্যাসের Boolean ফিল্ড পাওয়া গেছে: {0} {1}"
+"Connection must be open.": "সংযোগ খোলা থাকতে হবে।"
+"HttpClient is not initialized.": "HttpClient শুরু করা হয়নি।"
+"InfluxDB write failed: {0}": "InfluxDB-এ লেখা ব্যর্থ: {0}"
+"InfluxDB query failed: {0}": "InfluxDB কুয়েরি ব্যর্থ: {0}"

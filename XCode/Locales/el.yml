@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "Βρέθηκε πεδίο Boolean παλαιού τύπου στη Hana: {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "Βρέθηκε πεδίο Boolean παλαιού τύπου στην IRIS: {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "Βρέθηκε πεδίο Boolean παλαιού τύπου στη MySql: {0} {1}"
+"Connection must be open.": "Η σύνδεση πρέπει να είναι ανοιχτή."
+"HttpClient is not initialized.": "Το HttpClient δεν έχει αρχικοποιηθεί."
+"InfluxDB write failed: {0}": "Η εγγραφή στο InfluxDB απέτυχε: {0}"
+"InfluxDB query failed: {0}": "Το ερώτημα InfluxDB απέτυχε: {0}"

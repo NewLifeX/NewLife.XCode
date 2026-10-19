@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "Medan Boolean format lama ditemui dalam Hana: {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "Medan Boolean format lama ditemui dalam IRIS: {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "Medan Boolean format lama ditemui dalam MySql: {0} {1}"
+"Connection must be open.": "Sambungan mesti dibuka."
+"HttpClient is not initialized.": "HttpClient belum dimulakan."
+"InfluxDB write failed: {0}": "Penulisan ke InfluxDB gagal: {0}"
+"InfluxDB query failed: {0}": "Kueri InfluxDB gagal: {0}"

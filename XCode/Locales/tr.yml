@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "Hana'da eski biçimli Boolean alanı bulundu: {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "IRIS'te eski biçimli Boolean alanı bulundu: {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "MySql'de eski biçimli Boolean alanı bulundu: {0} {1}"
+"Connection must be open.": "Bağlantı açık olmalıdır."
+"HttpClient is not initialized.": "HttpClient başlatılmadı."
+"InfluxDB write failed: {0}": "InfluxDB yazma başarısız: {0}"
+"InfluxDB query failed: {0}": "InfluxDB sorgusu başarısız: {0}"

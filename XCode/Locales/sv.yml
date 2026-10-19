@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "Gammalt format på Boolean-fält hittades i Hana: {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "Gammalt format på Boolean-fält hittades i IRIS: {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "Gammalt format på Boolean-fält hittades i MySql: {0} {1}"
+"Connection must be open.": "Anslutningen måste vara öppen."
+"HttpClient is not initialized.": "HttpClient är inte initierad."
+"InfluxDB write failed: {0}": "Skrivning till InfluxDB misslyckades: {0}"
+"InfluxDB query failed: {0}": "InfluxDB-fråga misslyckades: {0}"

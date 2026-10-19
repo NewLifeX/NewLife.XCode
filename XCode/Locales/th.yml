@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "พบฟิลด์ Boolean รูปแบบเก่าใน Hana: {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "พบฟิลด์ Boolean รูปแบบเก่าใน IRIS: {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "พบฟิลด์ Boolean รูปแบบเก่าใน MySql: {0} {1}"
+"Connection must be open.": "ต้องเปิดการเชื่อมต่ออยู่"
+"HttpClient is not initialized.": "ยังไม่ได้เริ่มต้น HttpClient"
+"InfluxDB write failed: {0}": "เขียนไปยัง InfluxDB ล้มเหลว: {0}"
+"InfluxDB query failed: {0}": "คิวรี InfluxDB ล้มเหลว: {0}"

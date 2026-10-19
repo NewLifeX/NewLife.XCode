@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "Régi formátumú Boolean mező található a Hanában: {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "Régi formátumú Boolean mező található az IRISben: {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "Régi formátumú Boolean mező található a MySqlban: {0} {1}"
+"Connection must be open.": "A kapcsolatnak nyitottnak kell lennie."
+"HttpClient is not initialized.": "A HttpClient nincs inicializálva."
+"InfluxDB write failed: {0}": "Az InfluxDB írása sikertelen: {0}"
+"InfluxDB query failed: {0}": "Az InfluxDB lekérdezése sikertelen: {0}"

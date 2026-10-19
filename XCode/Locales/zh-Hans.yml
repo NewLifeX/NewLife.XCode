@@ -238,3 +238,7 @@
 "Found a legacy-format Boolean field in Hana: {0} {1}": "发现Hana中旧格式的布尔型字段 {0} {1}"
 "Found a legacy-format Boolean field in IRIS: {0} {1}": "发现IRIS中旧格式的布尔型字段 {0} {1}"
 "Found a legacy-format Boolean field in MySql: {0} {1}": "发现MySql中旧格式的布尔型字段 {0} {1}"
+"Connection must be open.": "连接必须处于打开状态。"
+"HttpClient is not initialized.": "HttpClient 未初始化。"
+"InfluxDB write failed: {0}": "InfluxDB 写入失败：{0}"
+"InfluxDB query failed: {0}": "InfluxDB 查询失败：{0}"

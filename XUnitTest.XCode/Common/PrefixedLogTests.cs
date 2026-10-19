@@ -81,6 +81,38 @@ public class PrefixedLogTests
         }
     }
 
+    [Fact(DisplayName = "31 种语言的词表均已注册")]
+    public void AllCulturesAreRegistered()
+    {
+        var savedCulture = Localization.LogCulture;
+        var cultures = new[]
+        {
+            "zh-Hans", "zh-Hant", "es", "de", "ja", "fr", "pt", "ru", "ko", "ar", "bn", "cs", "da", "el", "fa", "fi",
+            "he", "hi", "hu", "id", "it", "ms", "nb", "nl", "pl", "ro", "sv", "th", "tr", "uk", "vi",
+        };
+        var keys = new[]
+        {
+            "No relation key is set.",
+            "Detected secondary cache version change {0} => {1}; expiring local cache",
+            "Updating (#{0}), reason: {1}",
+        };
+        try
+        {
+            foreach (var culture in cultures)
+            {
+                Localization.LogCulture = CultureInfo.GetCultureInfo(culture);
+                foreach (var key in keys)
+                {
+                    Assert.NotEqual(key, Localization.TranslateForLog(key));
+                }
+            }
+        }
+        finally
+        {
+            Localization.LogCulture = savedCulture;
+        }
+    }
+
     private sealed class ProbeCache : CacheBase
     {
         public ProbeCache() => LogPrefix = "ProbeCache";

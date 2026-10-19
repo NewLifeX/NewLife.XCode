@@ -48,10 +48,38 @@ public class PrefixedLogTests
             Assert.Contains("总次数", Localization.TranslateForLog("Total {0,11:n0}", 5));
             Assert.Equal("连接创建失败！请检查驱动是否正常。", Localization.TranslateForLog("Failed to create a connection! Check that the driver is working properly."));
             Assert.Equal("未登录或令牌无效。", Localization.TranslateForLog("Not logged in or the token is invalid."));
+            Assert.Equal("导入模型：X.xml", Localization.TranslateForLog("Importing model: {0}", "X.xml"));
+            Assert.Equal("事务[t1]无法重新启动。", Localization.TranslateForLog("Transaction [{0}] cannot be restarted.", "t1"));
+            Assert.Equal("InfluxDB 不支持事务。", Localization.TranslateForLog("InfluxDB does not support transactions."));
+            Assert.Contains("SonnetDB", Localization.TranslateForLog("SonnetDB does not yet support persisting table and column comments. See SonnetDB issue #237; the capability must be implemented and released."));
         }
         finally
         {
             Localization.LogCulture = savedCulture;
+        }
+    }
+
+    [Fact(DisplayName = "日志语言与界面语言相互独立")]
+    public void LogCultureSeparateFromUiCulture()
+    {
+        var savedCulture = Localization.Culture;
+        var savedLogCulture = Localization.LogCulture;
+        try
+        {
+            Localization.Culture = CultureInfo.GetCultureInfo("zh-Hans");
+            Localization.LogCulture = CultureInfo.GetCultureInfo("en");
+
+            var english = Localization.TranslateForLog("Total {0,11:n0}", 5);
+            Assert.Contains("Total", english);
+            Assert.DoesNotContain("总次数", english);
+
+            Localization.LogCulture = CultureInfo.GetCultureInfo("zh-Hans");
+            Assert.Contains("总次数", Localization.TranslateForLog("Total {0,11:n0}", 5));
+        }
+        finally
+        {
+            Localization.Culture = savedCulture;
+            Localization.LogCulture = savedLogCulture;
         }
     }
 

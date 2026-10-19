@@ -106,6 +106,14 @@ public class PrefixedLogTests
                     Assert.NotEqual(key, Localization.TranslateForLog(key));
                 }
             }
+
+            // 会员/权限词条已补齐 8 种主要语言译文
+            const String membershipKey = "Incorrect username or password!";
+            foreach (var culture in new[] { "de", "es", "fr", "ja", "ko", "pt", "ru", "ar" })
+            {
+                Localization.LogCulture = CultureInfo.GetCultureInfo(culture);
+                Assert.NotEqual(membershipKey, Localization.TranslateForLog(membershipKey));
+            }
         }
         finally
         {

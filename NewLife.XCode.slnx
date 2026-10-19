@@ -14,7 +14,7 @@
     <File Path=".github/workflows/test.yml" />
     <File Path=".gitignore" />
     <File Path="ChangeLog.md" />
-    <File Path="Readme.MD" />
+    <File Path="README.md" />
     <File Path="XCode/Readme.MD" />
   </Folder>
   <Folder Name="/UnitTest/">

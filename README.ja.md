@@ -14,13 +14,13 @@
 [![contributors](https://img.shields.io/github/contributors/NewLifeX/NewLife.XCode?logo=github)](https://github.com/NewLifeX/NewLife.XCode/graphs/contributors)
 
 <!-- lang:start -->
-🌐 [中文](Readme.MD) | [繁體中文](README.zh-TW.md) | [English](README.en.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
+🌐 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
 <!-- lang:end -->
 
 高性能 .NET データミドルウェア（スーパーORM）。CRUD + 極限パフォーマンス + 大規模データに特化。マルチレベルキャッシュ、自動マイグレーション、シャーディング、型付きクエリ、クロスデータベース移行を内蔵。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network 仮想データベース / NovaDb に対応。
 
 
-> ⚠️ 本ページは簡易翻訳のため、更新が遅れる場合があります。正式な内容は[中文 README](Readme.MD) を参照してください。
+> ⚠️ 本翻訳は更新が遅れる場合があります。正式な内容は[英語 README](README.md)を参照してください。
 
 ## v12.0 ハイライト (2026-07-02)
 

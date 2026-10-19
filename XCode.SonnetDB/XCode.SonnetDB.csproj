@@ -20,11 +20,11 @@
     <PackageTags>新生命团队;X组件;NewLife;SonnetDB;ORM</PackageTags>
     <PackageReleaseNotes>新增 SonnetDB 4.0.0 驱动接入。能力验收与数据库缺口见 Doc/SonnetDB.md。</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReadmeFile>Readme.MD</PackageReadmeFile>
+    <PackageReadmeFile>README.nuget.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\Doc\leaf.png" Link="leaf.png" PackagePath="\" />
-    <None Include="..\Readme.MD" Pack="true" PackagePath="\" />
+    <None Include="..\README.nuget.md" Pack="true" PackagePath="\" />
     <PackageReference Include="SonnetDB" Version="4.0.0" />
     <ProjectReference Include="..\XCode\XCode.csproj" />
   </ItemGroup>

@@ -14,13 +14,13 @@
 [![contributors](https://img.shields.io/github/contributors/NewLifeX/NewLife.XCode?logo=github)](https://github.com/NewLifeX/NewLife.XCode/graphs/contributors)
 
 <!-- lang:start -->
-🌐 [中文](Readme.MD) | [繁體中文](README.zh-TW.md) | [English](README.en.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
+🌐 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
 <!-- lang:end -->
 
 Middleware de données .NET haute performance (Super ORM), axé sur CRUD + performance extrême + données massives. Cache multi-niveaux intégré, migration automatique, partitionnement, requêtes fortement typées, migration inter-bases. Compatible avec MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / base de données virtuelle Network / NovaDb.
 
 
-> ⚠️ Cette traduction est condensée et peut être en retard ; le [README chinois](Readme.MD) fait foi.
+> ⚠️ Cette traduction peut être en retard ; la version de référence est le [README anglais](README.md).
 
 ## Nouveautés v12.0 (2026-07-02)
 

@@ -270,7 +270,7 @@ public class FieldItem
     public Expression StartsWith(String value)
     {
         if (value.IsNullOrEmpty()) throw new ArgumentNullException(nameof(value));
-        if (Type != typeof(String)) throw new NotSupportedException($"[{nameof(StartsWith)}]函数仅支持字符串字段！");
+        if (Type != typeof(String)) throw new NotSupportedException(L.T("[{0}] supports only string fields.", nameof(StartsWith)));
 
         if (value == null || value + "" == "") return new Expression();
 
@@ -284,7 +284,7 @@ public class FieldItem
     public Expression EndsWith(String value)
     {
         if (value.IsNullOrEmpty()) throw new ArgumentNullException(nameof(value));
-        if (Type != typeof(String)) throw new NotSupportedException($"[{nameof(EndsWith)}]函数仅支持字符串字段！");
+        if (Type != typeof(String)) throw new NotSupportedException(L.T("[{0}] supports only string fields.", nameof(EndsWith)));
 
         if (value == null || value + "" == "") return new Expression();
 
@@ -298,7 +298,7 @@ public class FieldItem
     public Expression Contains(String value)
     {
         if (value.IsNullOrEmpty()) throw new ArgumentNullException(nameof(value));
-        if (Type != typeof(String)) throw new NotSupportedException($"[{nameof(Contains)}]函数仅支持字符串字段！");
+        if (Type != typeof(String)) throw new NotSupportedException(L.T("[{0}] supports only string fields.", nameof(Contains)));
 
         if (value == null || value + "" == "") return new Expression();
 
@@ -312,7 +312,7 @@ public class FieldItem
     public Expression NotContains(String value)
     {
         if (value.IsNullOrEmpty()) throw new ArgumentNullException(nameof(value));
-        if (Type != typeof(String)) throw new NotSupportedException($"[{nameof(NotContains)}]函数仅支持字符串字段！");
+        if (Type != typeof(String)) throw new NotSupportedException(L.T("[{0}] supports only string fields.", nameof(NotContains)));
 
         if (value == null || value + "" == "") return new Expression();
 
@@ -417,7 +417,7 @@ public class FieldItem
     /// <returns></returns>
     public Expression IsNullOrEmpty()
     {
-        if (Type != typeof(String)) throw new NotSupportedException($"[{nameof(IsNullOrEmpty)}]函数仅支持字符串字段！");
+        if (Type != typeof(String)) throw new NotSupportedException(L.T("[{0}] supports only string fields.", nameof(IsNullOrEmpty)));
 
         return IsNull() | Equal("");
     }
@@ -426,7 +426,7 @@ public class FieldItem
     /// <returns></returns>
     public Expression NotIsNullOrEmpty()
     {
-        if (Type != typeof(String)) throw new NotSupportedException($"[{nameof(NotIsNullOrEmpty)}]函数仅支持字符串字段！");
+        if (Type != typeof(String)) throw new NotSupportedException(L.T("[{0}] supports only string fields.", nameof(NotIsNullOrEmpty)));
 
         return NotIsNull() & NotEqual("");
     }
@@ -436,7 +436,7 @@ public class FieldItem
     /// <returns></returns>
     public Expression? IsTrue(Boolean? flag)
     {
-        if (Type != typeof(Boolean)) throw new NotSupportedException($"[{nameof(IsTrue)}]函数仅支持布尔型字段！");
+        if (Type != typeof(Boolean)) throw new NotSupportedException(L.T("[{0}] supports only Boolean fields.", nameof(IsTrue)));
 
         if (flag == null) return null;
 
@@ -454,7 +454,7 @@ public class FieldItem
     /// <returns></returns>
     public Expression? IsFalse(Boolean? flag)
     {
-        if (Type != typeof(Boolean)) throw new NotSupportedException($"[{nameof(IsFalse)}]函数仅支持布尔型字段！");
+        if (Type != typeof(Boolean)) throw new NotSupportedException(L.T("[{0}] supports only Boolean fields.", nameof(IsFalse)));
 
         if (flag == null) return null;
 

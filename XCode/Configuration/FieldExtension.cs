@@ -62,7 +62,7 @@ public static class FieldExtension
             }
         }
 
-        throw new NotSupportedException($"[{nameof(Between)}]函数不支持字段类型 {type?.Name}，仅支持 DateTime/String 字段！整数或小数字段请使用 Between(Int64/Double) 重载。");
+        throw new NotSupportedException(L.T("[{0}] does not support field type {1}; only DateTime/String fields are supported. Use the Between(Int64/Double) overload for integer or decimal fields.", nameof(Between), type?.Name));
     }
 
     /// <summary>将时间格式化为字符串字段的比较值。ItemType 为 date 时使用 yyyyMMdd 格式，否则使用 ToFullString 标准格式</summary>
@@ -85,7 +85,7 @@ public static class FieldExtension
     {
         var type = fi?.Type;
         if (type != typeof(Int16) && type != typeof(Int32) && type != typeof(Int64))
-            throw new NotSupportedException($"[{nameof(Between)}]函数仅支持 Int16/Int32/Int64 字段，当前类型为 {type?.Name}！");
+            throw new NotSupportedException(L.T("[{0}] supports only Int16/Int32/Int64 fields; the current type is {1}.", nameof(Between), type?.Name));
 
         var exp = new WhereExpression();
         if (fi == null) return exp;
@@ -115,7 +115,7 @@ public static class FieldExtension
     {
         var type = fi?.Type;
         if (type != typeof(Single) && type != typeof(Double) && type != typeof(Decimal))
-            throw new NotSupportedException($"[{nameof(Between)}]函数仅支持 Single/Double/Decimal 字段，当前类型为 {type?.Name}！");
+            throw new NotSupportedException(L.T("[{0}] supports only Single/Double/Decimal fields; the current type is {1}.", nameof(Between), type?.Name));
 
         var exp = new WhereExpression();
         if (fi == null) return exp;
@@ -139,7 +139,7 @@ public static class FieldExtension
     {
         var type = fi?.Type;
         if (type != typeof(Single) && type != typeof(Double) && type != typeof(Decimal))
-            throw new NotSupportedException($"[{nameof(Between)}]函数仅支持 Single/Double/Decimal 字段，当前类型为 {type?.Name}！");
+            throw new NotSupportedException(L.T("[{0}] supports only Single/Double/Decimal fields; the current type is {1}.", nameof(Between), type?.Name));
 
         var exp = new WhereExpression();
         if (fi == null) return exp;
@@ -160,7 +160,7 @@ public static class FieldExtension
     /// <returns></returns>
     public static Expression Between(this FieldItem fi, DateTime start, DateTime end, Snowflake snow)
     {
-        if (fi.Type != typeof(Int64)) throw new NotSupportedException($"[{nameof(Between)}]函数仅支持Int64字段！");
+        if (fi.Type != typeof(Int64)) throw new NotSupportedException(L.T("[{0}] supports only Int64 fields.", nameof(Between)));
 
         var exp = new WhereExpression();
         if (fi == null) return exp;
@@ -395,7 +395,7 @@ public static class FieldExtension
     /// <returns></returns>
     public static Expression ContainsAll(this FieldItem field, String keys)
     {
-        if (field.Type != typeof(String)) throw new NotSupportedException($"[{nameof(ContainsAll)}]函数仅支持字符串字段！");
+        if (field.Type != typeof(String)) throw new NotSupportedException(L.T("[{0}] supports only string fields.", nameof(ContainsAll)));
 
         var exp = new WhereExpression();
         if (String.IsNullOrEmpty(keys)) return exp;
@@ -416,7 +416,7 @@ public static class FieldExtension
     /// <returns></returns>
     public static Expression ContainsAny(this FieldItem field, String keys)
     {
-        if (field.Type != typeof(String)) throw new NotSupportedException($"[{nameof(ContainsAny)}]函数仅支持字符串字段！");
+        if (field.Type != typeof(String)) throw new NotSupportedException(L.T("[{0}] supports only string fields.", nameof(ContainsAny)));
 
         var exp = new WhereExpression();
         if (String.IsNullOrEmpty(keys)) return exp;

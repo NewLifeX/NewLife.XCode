@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "Системну роль [{0}] не можна видалити!"
 "Failed to create a connection! Check that the driver is working properly.": "Не вдалося створити підключення! Перевірте, чи драйвер працює належним чином."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Помилка проєктування! Таблиця {0} використовується двома класами сутностей ({1} і {2})!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "Ведення журналу SQL увімкнено. Щоб зменшити обсяг журналу, задайте [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "Виявлено старий файл моделі без версії; китайські імена файлів вмикаються автоматично."

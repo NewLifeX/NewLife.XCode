@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "ไม่สามารถลบบทบาทระบบ [{0}] ได้!"
 "Failed to create a connection! Check that the driver is working properly.": "ไม่สามารถสร้างการเชื่อมต่อได้! ตรวจสอบว่าไดรเวอร์ทำงานถูกต้อง"
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "ข้อผิดพลาดในการออกแบบ! ตาราง {0} ถูกใช้โดยสองคลาสเอนทิตี ({1} และ {2})!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "เปิดใช้งานการบันทึก SQL อยู่ หากต้องการลดปริมาณบันทึก ให้ตั้งค่า [Config/XCode.config:ShowSQL=false]"
+"Detected an old model file without a version; enabling Chinese file names automatically.": "ตรวจพบไฟล์โมเดลเก่าที่ไม่มีเวอร์ชัน ระบบจะเปิดใช้ชื่อไฟล์ภาษาจีนโดยอัตโนมัติ"

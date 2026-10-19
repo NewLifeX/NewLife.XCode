@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "لا يمكن حذف دور النظام [{0}]!"
 "Failed to create a connection! Check that the driver is working properly.": "فشل إنشاء اتصال! تحقق من أن برنامج التشغيل يعمل بشكل صحيح."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "خطأ في التصميم! الجدول {0} مستخدم بواسطة فئتي كيان ({1} و{2})!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "تسجيل SQL ممكّن. لتقليل حجم السجلات، اضبط [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "تم اكتشاف ملف نموذج قديم بدون إصدار؛ يتم تمكين أسماء الملفات الصينية تلقائيًا."

@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "نقش سیستمی [{0}] قابل حذف نیست!"
 "Failed to create a connection! Check that the driver is working properly.": "ایجاد اتصال ممکن نشد! بررسی کنید که درایور به‌درستی کار می‌کند."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "خطای طراحی! جدول {0} توسط دو کلاس موجودیت ({1} و {2}) استفاده می‌شود!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "ثبت SQL فعال است. برای کاهش حجم گزارش‌ها، [Config/XCode.config:ShowSQL=false] را تنظیم کنید."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "یک فایل مدل قدیمی بدون نسخه شناسایی شد؛ نام فایل‌های چینی به‌طور خودکار فعال می‌شوند."

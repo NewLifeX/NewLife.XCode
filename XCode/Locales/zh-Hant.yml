@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "系統角色[{0}]禁止刪除！"
 "Failed to create a connection! Check that the driver is working properly.": "連線建立失敗！請檢查驅動是否正常。"
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "設計錯誤！發現表{0}同時被兩個實體類（{1}和{2}）使用！"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "目前已啟用 SQL 日誌。為減少日誌量，請設定 [Config/XCode.config:ShowSQL=false]。"
+"Detected an old model file without a version; enabling Chinese file names automatically.": "偵測到無版本號的舊模型檔，自動啟用中文檔案名稱。"

@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "Peranan sistem [{0}] tidak boleh dipadam!"
 "Failed to create a connection! Check that the driver is working properly.": "Gagal mencipta sambungan! Semak sama ada pemacu berfungsi dengan betul."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Ralat reka bentuk! Jadual {0} digunakan oleh dua kelas entiti ({1} dan {2})!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "Pengelogan SQL didayakan. Untuk mengurangkan jumlah log, tetapkan [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "Fail model lama tanpa versi dikesan; nama fail Cina didayakan secara automatik."

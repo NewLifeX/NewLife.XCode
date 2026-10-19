@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "De systeemrol [{0}] kan niet worden verwijderd!"
 "Failed to create a connection! Check that the driver is working properly.": "Kan geen verbinding maken! Controleer of het stuurprogramma correct werkt."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Ontwerpfout! Tabel {0} wordt gebruikt door twee entiteitsklassen ({1} en {2})!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "SQL-logboekregistratie is ingeschakeld. Stel [Config/XCode.config:ShowSQL=false] in om het logvolume te beperken."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "Een oud modelbestand zonder versie gedetecteerd; Chinese bestandsnamen worden automatisch ingeschakeld."

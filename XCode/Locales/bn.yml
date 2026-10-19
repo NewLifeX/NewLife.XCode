@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "সিস্টেম ভূমিকা [{0}] মুছে ফেলা যায় না!"
 "Failed to create a connection! Check that the driver is working properly.": "সংযোগ তৈরি করা যায়নি! ড্রাইভার ঠিকভাবে কাজ করছে কিনা পরীক্ষা করুন।"
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "ডিজাইন ত্রুটি! টেবিল {0} দুটি এনটিটি ক্লাস ({1} এবং {2}) ব্যবহার করছে!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "SQL লগিং সক্ষম আছে। লগের পরিমাণ কমাতে [Config/XCode.config:ShowSQL=false] সেট করুন।"
+"Detected an old model file without a version; enabling Chinese file names automatically.": "সংস্করণহীন পুরনো মডেল ফাইল পাওয়া গেছে; চীনা ফাইলের নাম স্বয়ংক্রিয়ভাবে সক্ষম করা হচ্ছে।"

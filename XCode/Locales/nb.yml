@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "Systemrollen [{0}] kan ikke slettes!"
 "Failed to create a connection! Check that the driver is working properly.": "Kunne ikke opprette en tilkobling! Kontroller at driveren fungerer som den skal."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Designfeil! Tabellen {0} brukes av to enhetsklasser ({1} og {2})!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "SQL-logging er aktivert. For å redusere loggvolumet, angi [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "Fant en gammel modellfil uten versjon; kinesiske filnavn aktiveres automatisk."

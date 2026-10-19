@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "לא ניתן למחוק את תפקיד המערכת [{0}]!"
 "Failed to create a connection! Check that the driver is working properly.": "יצירת חיבור נכשלה! בדוק שההתקן פועל כראוי."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "שגיאת תכנון! הטבלה {0} משמשת שתי מחלקות ישות ({1} ו-{2})!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "רישום SQL מופעל. כדי לצמצם את נפח הלוגים, הגדר [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "זוהה קובץ מודל ישן ללא גרסה; שמות קבצים בסינית מופעלים אוטומטית."

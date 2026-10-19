@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "Rolul de sistem [{0}] nu poate fi șters!"
 "Failed to create a connection! Check that the driver is working properly.": "Crearea unei conexiuni a eșuat! Verificați dacă driverul funcționează corect."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Eroare de proiectare! Tabelul {0} este folosit de două clase de entitate ({1} și {2})!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "Jurnalizarea SQL este activată. Pentru a reduce volumul jurnalelor, setați [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "S-a detectat un fișier de model vechi fără versiune; numele de fișiere chinezești sunt activate automat."

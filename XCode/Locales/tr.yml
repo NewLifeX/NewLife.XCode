@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "Sistem rolü [{0}] silinemez!"
 "Failed to create a connection! Check that the driver is working properly.": "Bağlantı oluşturulamadı! Sürücünün düzgün çalıştığını kontrol edin."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Tasarım hatası! {0} tablosu iki varlık sınıfı ({1} ve {2}) tarafından kullanılıyor!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "SQL günlüğü etkin. Günlük hacmini azaltmak için [Config/XCode.config:ShowSQL=false] ayarlayın."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "Sürümü olmayan eski bir model dosyası algılandı; Çince dosya adları otomatik olarak etkinleştiriliyor."

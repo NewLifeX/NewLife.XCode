@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "Ο ρόλος συστήματος [{0}] δεν μπορεί να διαγραφεί!"
 "Failed to create a connection! Check that the driver is working properly.": "Δεν ήταν δυνατή η δημιουργία σύνδεσης! Ελέγξτε ότι το πρόγραμμα οδήγησης λειτουργεί σωστά."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Σφάλμα σχεδίασης! Ο πίνακας {0} χρησιμοποιείται από δύο κλάσεις οντοτήτων ({1} και {2})!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "Η καταγραφή SQL είναι ενεργοποιημένη. Για να μειώσετε τον όγκο των αρχείων καταγραφής, ορίστε [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "Εντοπίστηκε παλιό αρχείο μοντέλου χωρίς έκδοση· τα κινεζικά ονόματα αρχείων ενεργοποιούνται αυτόματα."

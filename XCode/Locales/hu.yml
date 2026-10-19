@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "A(z) [{0}] rendszerszerepkör nem törölhető!"
 "Failed to create a connection! Check that the driver is working properly.": "Nem sikerült kapcsolatot létrehozni! Ellenőrizze, hogy az illesztőprogram megfelelően működik-e."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Tervezési hiba! A(z) {0} táblát két entitásosztály ({1} és {2}) használja!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "Az SQL-naplózás engedélyezve van. A naplómennyiség csökkentéséhez állítsa be: [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "Verzió nélküli régi modellfájlt észleltünk; a kínai fájlnevek automatikusan engedélyezve lesznek."

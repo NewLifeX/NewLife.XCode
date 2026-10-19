@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "Die Systemrolle [{0}] kann nicht gelöscht werden!"
 "Failed to create a connection! Check that the driver is working properly.": "Verbindung konnte nicht erstellt werden! Prüfen Sie, ob der Treiber ordnungsgemäß funktioniert."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Designfehler! Tabelle {0} wird von zwei Entitätsklassen ({1} und {2}) verwendet!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "SQL-Protokollierung ist derzeit aktiviert. Um das Protokollvolumen zu reduzieren, setzen Sie [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "Eine alte Modelldatei ohne Versionsnummer wurde erkannt; chinesische Dateinamen werden automatisch aktiviert."

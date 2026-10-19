@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "Systémovou roli [{0}] nelze smazat!"
 "Failed to create a connection! Check that the driver is working properly.": "Připojení se nepodařilo vytvořit! Zkontrolujte, zda ovladač funguje správně."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Chyba návrhu! Tabulku {0} používají dvě třídy entit ({1} a {2})!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "Protokolování SQL je zapnuto. Chcete-li snížit objem protokolů, nastavte [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "Byl zjištěn starý soubor modelu bez verze; čínské názvy souborů se zapnou automaticky."

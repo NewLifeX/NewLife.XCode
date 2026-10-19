@@ -263,3 +263,5 @@
 "System role [{0}] cannot be deleted!": "Không thể xóa vai trò hệ thống [{0}]!"
 "Failed to create a connection! Check that the driver is working properly.": "Không thể tạo kết nối! Kiểm tra xem trình điều khiển có hoạt động đúng không."
 "Design error! Table {0} is used by two entity classes ({1} and {2})!": "Lỗi thiết kế! Bảng {0} được hai lớp thực thể ({1} và {2}) sử dụng!"
+"SQL logging is currently enabled. To reduce log volume, set [Config/XCode.config:ShowSQL=false].": "Ghi nhật ký SQL đang được bật. Để giảm lượng nhật ký, hãy đặt [Config/XCode.config:ShowSQL=false]."
+"Detected an old model file without a version; enabling Chinese file names automatically.": "Phát hiện tệp mô hình cũ không có phiên bản; tự động bật tên tệp tiếng Trung."

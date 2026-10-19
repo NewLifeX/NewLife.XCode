@@ -54,7 +54,7 @@ public class DbService
 
         var dal = DAL.Create(db);
 
-        Log?.Info(L.T("Login succeeded db={0} type={1} version={2}"), db, dal.DbType, dal.Db.ServerVersion);
+        Log?.Info("Login succeeded db={0} type={1} version={2}", db, dal.DbType, dal.Db.ServerVersion);
 
         return dal;
     }

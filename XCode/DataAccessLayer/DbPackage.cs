@@ -735,8 +735,8 @@ public class DbPackage
                 // 输出日志
                 var cs = dt.Columns;
                 var ts = dt.Types;
-                Log?.Info(L.T("Fields [{0}]: {1}"), cs.Length, cs.Join());
-                Log?.Info(L.T("Types [{0}]: {1}"), ts.Length, ts.Join(",", e => e.Name));
+                Log?.Info("Fields [{0}]: {1}", cs.Length, cs.Join());
+                Log?.Info("Types [{0}]: {1}", ts.Length, ts.Join(",", e => e.Name));
 
                 _writeHeader = true;
 
@@ -826,8 +826,8 @@ public class DbPackage
                 _Columns = columns.ToArray();
 
                 // 这里的匹配列是目标表字段名，而DbTable数据取值是Name，两者可能不同
-                Host.Log?.Info(L.T("Data table: {0}/{1}"), Table.Name, Table);
-                Host.Log?.Info(L.T("Matched columns: {0}"), _Columns.Join(",", e => e.ColumnName));
+                Host.Log?.Info("Data table: {0}/{1}", Table.Name, Table);
+                Host.Log?.Info("Matched columns: {0}", _Columns.Join(",", e => e.ColumnName));
             }
 
             // 批量插入

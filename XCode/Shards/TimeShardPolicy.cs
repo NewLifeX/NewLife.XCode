@@ -87,10 +87,10 @@ public class TimeShardPolicy : IShardPolicy
         if (value is DateTime dt) return Shard(dt);
         if (value is Int64 id)
         {
-            if (Factory == null) throw new XCodeException("分表策略要求指定实体工厂！");
+            if (Factory == null) throw new XCodeException("The shard policy requires an entity factory!");
 
             if (!Factory.Snow.TryParse(id, out var time, out _, out _) || time.Year <= 1970)
-                throw new XCodeException("雪花Id解析时间失败，无法用于分表");
+                throw new XCodeException("Failed to parse time from the snowflake ID; it cannot be used for sharding.");
 
             return Shard(time);
         }
@@ -104,22 +104,22 @@ public class TimeShardPolicy : IShardPolicy
     public virtual ShardModel? Shard(IModel entity)
     {
         var fi = GetField();
-        if (fi == null) throw new XCodeException("分表策略要求指定时间字段！");
+        if (fi == null) throw new XCodeException("The shard policy requires a time field!");
 
         if (fi.Type == typeof(DateTime))
         {
             var time = entity[fi.Name].ToDateTime();
-            if (time.Year <= 1970) throw new XCodeException("实体对象时间字段为空，无法用于分表");
+            if (time.Year <= 1970) throw new XCodeException("The entity time field is empty and cannot be used for sharding.");
 
             return Shard(time);
         }
         else if (fi.Type == typeof(Int64))
         {
-            if (Factory == null) throw new XCodeException("分表策略要求指定实体工厂！");
+            if (Factory == null) throw new XCodeException("The shard policy requires an entity factory!");
 
             var id = entity[fi.Name].ToLong();
             if (!Factory.Snow.TryParse(id, out var time, out _, out _) || time.Year <= 1970)
-                throw new XCodeException("雪花Id解析时间失败，无法用于分表");
+                throw new XCodeException("Failed to parse time from the snowflake ID; it cannot be used for sharding.");
 
             return Shard(time);
         }
@@ -132,13 +132,13 @@ public class TimeShardPolicy : IShardPolicy
     /// <returns></returns>
     public virtual ShardModel? Shard(DateTime time)
     {
-        if (time.Year <= 1) throw new ArgumentNullException(nameof(time), "分表策略要求指定时间！");
+        if (time.Year <= 1) throw new ArgumentNullException(nameof(time), L.T("The shard policy requires a time value!"));
 
-        var fi = GetField() ?? throw new XCodeException("分表策略要求指定时间字段！");
+        var fi = GetField() ?? throw new XCodeException("The shard policy requires a time field!");
 
         if (ConnPolicy.IsNullOrEmpty() && TablePolicy.IsNullOrEmpty()) return null;
 
-        if (Factory == null) throw new XCodeException("分表策略要求指定实体工厂！");
+        if (Factory == null) throw new XCodeException("The shard policy requires an entity factory!");
         var table = Factory.Table;
 
         // 这里不区分时区，而是直接使用时间
@@ -156,8 +156,8 @@ public class TimeShardPolicy : IShardPolicy
     /// <returns></returns>
     public virtual ShardModel[] Shards(DateTime start, DateTime end)
     {
-        if (start.Year <= 1) throw new ArgumentNullException(nameof(start), "分表策略要求指定时间！");
-        if (end.Year <= 1) throw new ArgumentNullException(nameof(end), "分表策略要求指定时间！");
+        if (start.Year <= 1) throw new ArgumentNullException(nameof(start), L.T("The shard policy requires a time value!"));
+        if (end.Year <= 1) throw new ArgumentNullException(nameof(end), L.T("The shard policy requires a time value!"));
 
         if (start <= end) return GetModels(start, end);
 
@@ -174,7 +174,7 @@ public class TimeShardPolicy : IShardPolicy
         //if (expression is not WhereExpression where) return null;
 
         // 时间范围查询，用户可能自己写分表查询
-        var fi = GetField() ?? throw new XCodeException("分表策略要求指定时间字段！");
+        var fi = GetField() ?? throw new XCodeException("The shard policy requires a time field!");
 
         var exps = new List<FieldExpression>();
         if (expression is WhereExpression where)
@@ -232,7 +232,7 @@ public class TimeShardPolicy : IShardPolicy
         }
         else if (fi.Type == typeof(Int64))
         {
-            if (Factory == null) throw new XCodeException("分表策略要求指定实体工厂！");
+            if (Factory == null) throw new XCodeException("The shard policy requires an entity factory!");
 
             var sf = exps.FirstOrDefault(e => e.Action is ">" or ">=");
             var ef = exps.FirstOrDefault(e => e.Action is "<" or "<=");
@@ -273,7 +273,7 @@ public class TimeShardPolicy : IShardPolicy
             }
         }
 
-        throw new XCodeException("分表策略因条件不足无法执行分表查询操作！");
+        throw new XCodeException("The shard policy cannot perform a sharded query because the conditions are insufficient.");
     }
 
     private ShardModel[] GetModels(DateTime start, DateTime end)

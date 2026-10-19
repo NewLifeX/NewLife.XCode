@@ -50,13 +50,13 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     {
         if (Meta.Count > 0) return;
 
-        if (XTrace.Debug) XTrace.WriteLine("开始初始化{0}用户数据……", typeof(User).Name);
+        if (XTrace.Debug) XTrace.WriteLine("Initializing {0} user data...", typeof(User).Name);
 
         Add("admin", null, 1, "管理员");
         //Add("poweruser", null, 2, "高级用户");
         //Add("user", null, 3, "普通用户");
 
-        if (XTrace.Debug) XTrace.WriteLine("完成初始化{0}用户数据！", typeof(User).Name);
+        if (XTrace.Debug) XTrace.WriteLine("Finished initializing {0} user data!", typeof(User).Name);
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
@@ -71,7 +71,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         // 如果没有脏数据，则不需要进行任何处理
         if (!HasDirty) return true;
 
-        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, "用户名不能为空！");
+        if (Name.IsNullOrEmpty()) throw new ArgumentNullException(__.Name, L.T("Username cannot be empty!"));
 
         // 新用户默认角色。仅当没有任何角色时生效，避免干扰下方对 RoleIds 的角色整理；
         // 不依赖数据库默认值3（可能因角色删除或顺序变化而失效）
@@ -127,7 +127,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <returns></returns>
     protected override Int32 OnDelete()
     {
-        if (Meta.Count <= 1 && FindCount() <= 1) throw new Exception("必须保留至少一个可用账号！");
+        if (Meta.Count <= 1 && FindCount() <= 1) throw new Exception(L.T("At least one enabled account must be retained!"));
 
         return base.OnDelete();
     }
@@ -510,9 +510,9 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
             //var user = FindByName(account);
             // 登录时必须从数据库查找用户，缓存中的用户对象密码字段可能为空
             var user = Find(__.Name, account);
-            if (user == null) throw new EntityException("帐号{0}不存在！", account);
+            if (user == null) throw new EntityException("Account {0} does not exist!", account);
 
-            if (!user.Enable) throw new EntityException("账号{0}被禁用！", account);
+            if (!user.Enable) throw new EntityException("Account {0} is disabled.", account);
 
             // 验证用户
             onValid(user);
@@ -553,16 +553,16 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
 
     static User Login(String username, String password, Int32 hashTimes)
     {
-        if (String.IsNullOrEmpty(username)) throw new ArgumentNullException(nameof(username), "该帐号不存在！");
+        if (String.IsNullOrEmpty(username)) throw new ArgumentNullException(nameof(username), L.T("The account does not exist!"));
 
         // 过滤帐号中的空格，防止出现无操作无法登录的情况
         var account = username.Trim();
         //var user = FindByName(account);
         // 登录时必须从数据库查找用户，缓存中的用户对象密码字段可能为空
         var user = Find(__.Name, account);
-        if (user == null) throw new EntityException("帐号{0}不存在！", account);
+        if (user == null) throw new EntityException("Account {0} does not exist!", account);
 
-        if (!user.Enable) throw new EntityException("账号{0}被禁用！", account);
+        if (!user.Enable) throw new EntityException("Account {0} is disabled.", account);
 
         // 数据库为空密码，任何密码均可登录
         if (!String.IsNullOrEmpty(user.Password))
@@ -577,7 +577,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
                         p = p.MD5();
                     }
                 }
-                if (!p.EqualIgnoreCase(user.Password)) throw new EntityException("密码不正确！");
+                if (!p.EqualIgnoreCase(user.Password)) throw new EntityException("Incorrect password!");
             }
             else
             {
@@ -586,7 +586,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
                 {
                     p = p?.MD5();
                 }
-                if (!p.EqualIgnoreCase(password)) throw new EntityException("密码不正确！");
+                if (!p.EqualIgnoreCase(password)) throw new EntityException("Incorrect password!");
             }
         }
         else

@@ -11,7 +11,8 @@ param(
     [String]$Baseline = "zh-Hans.yml",
     [String[]]$SourceDir = @("NewLife.Core", "NewLife.Core.SourceGenerator"),
     [Switch]$RequireTranslated,
-    [String[]]$AllowSameValue = @("{0} format {1}"),
+    # Cache 在法语、意大利语、荷兰语、北欧语言与印尼语/马来语中本身就是原生写法
+    [String[]]$AllowSameValue = @("{0} format {1}", "Cache"),
     [Switch]$SkipOrphan,
     [Switch]$SkipMessageCheck,
     [String[]]$AllowMissingMessage = @(

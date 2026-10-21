@@ -27,6 +27,8 @@ public class SettingLocalizationTests : IDisposable
     [Fact(DisplayName = "XCode 设置描述支持中文与繁体翻译")]
     public void XCodeSettingDescriptions()
     {
+        if (LocalizationTestHelper.IsInvariantGlobalization) return;
+
         LoadAssemblies();
 
         Localization.Culture = new CultureInfo("zh-Hans");
@@ -40,6 +42,8 @@ public class SettingLocalizationTests : IDisposable
     [Fact(DisplayName = "XCode 设置分类与描述支持全部语言")]
     public void XCodeSettingLanguages()
     {
+        if (LocalizationTestHelper.IsInvariantGlobalization) return;
+
         LoadAssemblies();
 
         Localization.Culture = new CultureInfo("de");
@@ -60,6 +64,8 @@ public class SettingLocalizationTests : IDisposable
     [Fact(DisplayName = "XCode 设置词条在 31 种语言下均有译文")]
     public void AllCulturesHaveSettingsTranslations()
     {
+        if (LocalizationTestHelper.IsInvariantGlobalization) return;
+
         LoadAssemblies();
 
         var cultures = new[]

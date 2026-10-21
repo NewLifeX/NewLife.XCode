@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using NewLife;
 using XCode.Statistics;
 using Xunit;
 
 namespace XUnitTest.XCode.Statistics;
 
 /// <summary>StatModel统计模型测试</summary>
+[Collection("Localization")]
 public class StatModelTests
 {
     #region GetDate
@@ -87,7 +90,22 @@ public class StatModelTests
     {
         var model = new StatModel { Level = StatLevels.All, Time = DateTime.Now };
 
-        Assert.Equal("全局", model.ToString());
+        if (LocalizationTestHelper.IsInvariantGlobalization)
+        {
+            Assert.Equal("All", model.ToString());
+            return;
+        }
+
+        var savedCulture = Localization.Culture;
+        try
+        {
+            Localization.Culture = CultureInfo.GetCultureInfo("zh-Hans");
+            Assert.Equal("全局", model.ToString());
+        }
+        finally
+        {
+            Localization.Culture = savedCulture;
+        }
     }
 
     [Fact(DisplayName = "ToString_Year格式化年")]

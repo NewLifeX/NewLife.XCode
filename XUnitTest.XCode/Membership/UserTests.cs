@@ -53,7 +53,10 @@ public class UserTests
         var user = new User { Name = Rand.NextString(64) };
         var ex = Assert.Throws<ArgumentOutOfRangeException>(() => user.Insert());
         Assert.Equal("Name", ex.ParamName);
-        Assert.Equal("[Name/名称@User]长度限制50字符[ID=0] (Parameter 'Name')", ex.Message);
+
+        // 不依赖当前语言：字段标识与长度限制在英文源文和译文中都保留
+        Assert.Contains("Name/名称@User", ex.Message);
+        Assert.Contains("50", ex.Message);
     }
 
     [Fact]

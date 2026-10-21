@@ -14,6 +14,8 @@ public class PrefixedLogTests
     [Fact(DisplayName = "带前缀日志先翻译消息再拼接前缀")]
     public void TranslateBeforePrefix()
     {
+        if (LocalizationTestHelper.IsInvariantGlobalization) return;
+
         var savedCulture = Localization.LogCulture;
         var savedLog = XTrace.Log;
         var savedDebug = CacheBase.Debug;
@@ -40,6 +42,8 @@ public class PrefixedLogTests
     [Fact(DisplayName = "运行时日志与提示词条在中文环境下翻译")]
     public void RuntimeKeysTranslate()
     {
+        if (LocalizationTestHelper.IsInvariantGlobalization) return;
+
         var savedCulture = Localization.LogCulture;
         try
         {
@@ -62,6 +66,8 @@ public class PrefixedLogTests
     [Fact(DisplayName = "日志语言与界面语言相互独立")]
     public void LogCultureSeparateFromUiCulture()
     {
+        if (LocalizationTestHelper.IsInvariantGlobalization) return;
+
         var savedCulture = Localization.Culture;
         var savedLogCulture = Localization.LogCulture;
         try
@@ -86,6 +92,8 @@ public class PrefixedLogTests
     [Fact(DisplayName = "普通日志经内置日志器自动翻译")]
     public void PlainWriteLineTranslates()
     {
+        if (LocalizationTestHelper.IsInvariantGlobalization) return;
+
         var savedCulture = Localization.LogCulture;
         var savedLog = XTrace.Log;
         try
@@ -108,6 +116,8 @@ public class PrefixedLogTests
     [Fact(DisplayName = "未提供译文时带前缀日志回退英文")]
     public void FallbackToEnglish()
     {
+        if (LocalizationTestHelper.IsInvariantGlobalization) return;
+
         var savedCulture = Localization.LogCulture;
         var savedLog = XTrace.Log;
         var savedDebug = CacheBase.Debug;
@@ -134,6 +144,8 @@ public class PrefixedLogTests
     [Fact(DisplayName = "异常消息按界面语言翻译")]
     public void ExceptionUsesCulture()
     {
+        if (LocalizationTestHelper.IsInvariantGlobalization) return;
+
         var savedCulture = Localization.Culture;
         try
         {
@@ -152,6 +164,8 @@ public class PrefixedLogTests
     [Fact(DisplayName = "31 种语言的词表均已注册")]
     public void AllCulturesAreRegistered()
     {
+        if (LocalizationTestHelper.IsInvariantGlobalization) return;
+
         var savedCulture = Localization.LogCulture;
         var cultures = new[]
         {

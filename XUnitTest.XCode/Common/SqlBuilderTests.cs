@@ -1,10 +1,13 @@
-﻿using NewLife.Data;
+using System.Globalization;
+using NewLife;
+using NewLife.Data;
 using XCode;
 using XCode.Membership;
 using Xunit;
 
 namespace XUnitTest.XCode;
 
+[Collection("Localization")]
 public class SqlBuilderTests
 {
     [Fact]
@@ -43,7 +46,19 @@ public class SqlBuilderTests
 
         page = new PageParameter { Sort = "name2 asc\n,\ncode", Desc = true };
         var ex = Assert.Throws<XCodeException>(() => SqlBuilder.BuildOrder(page, factory));
-        Assert.Equal("实体类[User]不包含排序字段[name2]", ex.Message);
+        if (!LocalizationTestHelper.IsInvariantGlobalization)
+        {
+            var savedCulture = Localization.Culture;
+            try
+            {
+                Localization.Culture = CultureInfo.GetCultureInfo("zh-Hans");
+                Assert.Equal("实体类[User]不包含排序字段[name2]", ex.Message);
+            }
+            finally
+            {
+                Localization.Culture = savedCulture;
+            }
+        }
     }
 
     [Fact]

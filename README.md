@@ -16,7 +16,7 @@
 🌐 [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
 <!-- lang:end -->
 
-**NewLife.XCode** is a high-performance .NET data middleware focused on "CRUD + extreme performance + massive data". It includes multi-level caching, automatic modeling/migration, sharding, strongly-typed queries and cross-database migration. It supports MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb and more, and provides [SonnetDB adaptation and capability verification](Doc/SonnetDB.md). Production deployments reach tens of billions of rows per table, and query throughput can reach billions of QPS (with caching strategies).
+**NewLife.XCode** is a high-performance .NET data middleware focused on "CRUD + extreme performance + massive data". It includes multi-level caching, automatic modeling/migration, sharding, strongly-typed queries and cross-database migration. It supports MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb and more. Production deployments reach tens of billions of rows per table, and query throughput can reach billions of QPS (with caching strategies).
 
 Docs: https://newlifex.com/xcode   Community QQ groups: 1600800 / 1600838
 
@@ -399,7 +399,6 @@ NewLife is a layered ecosystem of independently versioned open-source projects. 
 - [XCode user manual](Doc/XCode使用手册.md): end-to-end usage walkthrough
 - [Architecture design](Doc/架构设计.md): layering, components and key design decisions
 - [Multi-language localization](Doc/多语言本地化.md): message model, language tables and runtime overrides
-- [SonnetDB adaptation](Doc/SonnetDB.md): SonnetDB provider and capability verification
 - Online documentation: https://newlifex.com/xcode
 - [ChangeLog.md](ChangeLog.md): version history
 
@@ -419,7 +418,7 @@ dotnet test XUnitTest.XCode -c Release
 
 ### Release
 
-Push a `v`-prefixed tag (for example `v2026.1018`) to trigger `.github/workflows/publish.yml`. The workflow packs XCode, XCodeTool and the provider packages (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.SonnetDB`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) and pushes them to NuGet.org and GitHub Packages.
+Push a `v`-prefixed tag (for example `v2026.1018`) to trigger `.github/workflows/publish.yml`. The workflow packs XCode, XCodeTool and the provider packages (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) and pushes them to NuGet.org and GitHub Packages.
 
 ### Feedback
 

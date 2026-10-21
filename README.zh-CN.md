@@ -16,7 +16,7 @@
 🌐 [English](README.md) | [繁體中文](README.zh-TW.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
 <!-- lang:end -->
 
-高性能 .NET 数据中间件，聚焦"添删改查 + 极致性能 + 海量数据"，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / 达梦 / 金仓 / 瀚高 / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network 网络虚拟数据库 / NovaDb 自研数据库等，并提供 [SonnetDB 适配与能力验收](Doc/SonnetDB.md)。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
+高性能 .NET 数据中间件，聚焦"添删改查 + 极致性能 + 海量数据"，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / 达梦 / 金仓 / 瀚高 / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network 网络虚拟数据库 / NovaDb 自研数据库等。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
 
 文档：https://newlifex.com/xcode   社区交流QQ群：1600800 / 1600838
 
@@ -401,7 +401,6 @@ NewLife 生态按依赖分层，各项目独立版本、独立发版。下面的
 - [XCode 使用手册](Doc/XCode使用手册.md)：端到端使用流程
 - [架构设计](Doc/架构设计.md)：分层、模块组件与关键设计决策
 - [多语言本地化](Doc/多语言本地化.md)：消息模型、语言表与运行时覆盖
-- [SonnetDB 适配](Doc/SonnetDB.md)：SonnetDB 提供者与能力验收
 - 在线文档：https://newlifex.com/xcode
 - [ChangeLog.md](ChangeLog.md)：版本记录
 
@@ -421,7 +420,7 @@ dotnet test XUnitTest.XCode -c Release
 
 ### 发版
 
-推送 `v` 前缀 tag（如 `v2026.1018`）触发 `.github/workflows/publish.yml`。工作流打包 XCode、XCodeTool 与各数据库提供者（`XCode.MySql`、`XCode.SQLite`、`XCode.SqlServer`、`XCode.Oracle`、`XCode.PostgreSQL`、`XCode.SonnetDB`、`XCode.DaMeng`、`XCode.DB2`、`XCode.KingBase`、`XCode.HighGo`），并推送到 NuGet.org 与 GitHub Packages。
+推送 `v` 前缀 tag（如 `v2026.1018`）触发 `.github/workflows/publish.yml`。工作流打包 XCode、XCodeTool 与各数据库提供者（`XCode.MySql`、`XCode.SQLite`、`XCode.SqlServer`、`XCode.Oracle`、`XCode.PostgreSQL`、`XCode.DaMeng`、`XCode.DB2`、`XCode.KingBase`、`XCode.HighGo`），并推送到 NuGet.org 与 GitHub Packages。
 
 ### 反馈
 

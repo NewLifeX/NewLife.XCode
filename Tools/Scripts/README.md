@@ -22,7 +22,7 @@
 ## 常用命令
 
 ```powershell
-pwsh -File Tools/Scripts/check-locales.ps1 -LocaleDir XCode/Locales -SourceDir "XCode,XCodeTool" -RequireTranslated -MetadataSourceDir XCode
+pwsh -File Tools/Scripts/check-locales.ps1 -LocaleDir XCode/Locales -SourceDir "XCode,XCodeTool" -RequireTranslated -RequireMetadataTranslated -MetadataSourceDir XCode
 pwsh -File Tools/Scripts/check-english-exceptions.ps1
 pwsh -File Tools/Scripts/collect-metadata-keys.ps1 -Model XCode/Membership/Member.xml -All -OutFile metadata-coverage.csv
 pwsh -File Tools/Scripts/sync-readme-package.ps1 -Check

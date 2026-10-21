@@ -18,7 +18,7 @@
 🌐 [简体中文](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.zh-CN.md) | [繁體中文](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.zh-TW.md) | [Español](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.es.md) | [Deutsch](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.de.md) | [日本語](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ja.md) | [Français](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.fr.md) | [Português](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.pt.md) | [Русский](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ru.md) | [한국어](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ko.md) | [العربية](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ar.md)
 <!-- lang:end -->
 
-**NewLife.XCode** is a high-performance .NET data middleware focused on "CRUD + extreme performance + massive data". It includes multi-level caching, automatic modeling/migration, sharding, strongly-typed queries and cross-database migration. It supports MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb and more, and provides [SonnetDB adaptation and capability verification](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/SonnetDB.md). Production deployments reach tens of billions of rows per table, and query throughput can reach billions of QPS (with caching strategies).
+**NewLife.XCode** is a high-performance .NET data middleware focused on "CRUD + extreme performance + massive data". It includes multi-level caching, automatic modeling/migration, sharding, strongly-typed queries and cross-database migration. It supports MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb and more. Production deployments reach tens of billions of rows per table, and query throughput can reach billions of QPS (with caching strategies).
 
 Docs: https://newlifex.com/xcode   Community QQ groups: 1600800 / 1600838
 
@@ -401,7 +401,6 @@ NewLife is a layered ecosystem of independently versioned open-source projects. 
 - [XCode user manual](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/XCode使用手册.md): end-to-end usage walkthrough
 - [Architecture design](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/架构设计.md): layering, components and key design decisions
 - [Multi-language localization](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/多语言本地化.md): message model, language tables and runtime overrides
-- [SonnetDB adaptation](https://github.com/NewLifeX/NewLife.XCode/blob/master/Doc/SonnetDB.md): SonnetDB provider and capability verification
 - Online documentation: https://newlifex.com/xcode
 - [ChangeLog.md](https://github.com/NewLifeX/NewLife.XCode/blob/master/ChangeLog.md): version history
 
@@ -421,7 +420,7 @@ dotnet test XUnitTest.XCode -c Release
 
 ### Release
 
-Push a `v`-prefixed tag (for example `v2026.1018`) to trigger `.github/workflows/publish.yml`. The workflow packs XCode, XCodeTool and the provider packages (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.SonnetDB`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) and pushes them to NuGet.org and GitHub Packages.
+Push a `v`-prefixed tag (for example `v2026.1018`) to trigger `.github/workflows/publish.yml`. The workflow packs XCode, XCodeTool and the provider packages (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) and pushes them to NuGet.org and GitHub Packages.
 
 ### Feedback
 

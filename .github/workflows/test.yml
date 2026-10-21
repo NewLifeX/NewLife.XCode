@@ -395,8 +395,9 @@ jobs:
           if (Test-Path (Join-Path $_.FullName 'zh-Hans.yml')) {
             $src = Split-Path $_.FullName -Parent
             # 元数据键允许部分语言缺失，缺失回退源文；metadata-keys.json 由脚本自动识别，
-            # -MetadataSourceDir 补充扫描 [DisplayName]/[Description]/[Category] 特性
-            pwsh -File Tools/Scripts/check-locales.ps1 -LocaleDir $_.FullName -Baseline zh-Hans.yml -SourceDir "$src,XCodeTool" -RequireTranslated -MetadataSourceDir $src
+                        # -MetadataSourceDir 补充扫描 [DisplayName]/[Description]/[Category] 特性；
+                        # -RequireMetadataTranslated 要求清单内的元数据键覆盖全部译文语言
+            pwsh -File Tools/Scripts/check-locales.ps1 -LocaleDir $_.FullName -Baseline zh-Hans.yml -SourceDir "$src,XCodeTool" -RequireTranslated -RequireMetadataTranslated -MetadataSourceDir $src
             if ($LASTEXITCODE -ne 0) { $failed = $true }
           }
         }

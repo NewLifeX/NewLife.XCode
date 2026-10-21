@@ -13,11 +13,13 @@ param(
     [String[]]$SourceDir = @("NewLife.Core", "NewLife.Core.SourceGenerator"),
     # 元数据键清单，允许部分语言缺失（缺失回退源文），并免于孤儿键检查
     [String]$MetadataKeys,
-    # 从生成实体/控制器的 [DisplayName]/[Description] 特性中收集元数据键
+    # 从生成实体/控制器的 [DisplayName]/[Description]/[Category] 特性中收集元数据键
     [String[]]$MetadataSourceDir = @(),
     [Switch]$RequireTranslated,
-    # Cache 在法语、意大利语、荷兰语、北欧语言与印尼语/马来语中本身就是原生写法
-    [String[]]$AllowSameValue = @("{0} format {1}", "Cache"),
+    # 要求清单内的元数据键覆盖全部译文语言（不缺、不留英文占位）
+    [Switch]$RequireMetadataTranslated,
+    # 同形词：目标语言与源文写法一致（简繁同形、中日同形、法/意/荷/北欧语的原生写法）
+    [String[]]$AllowSameValue = @("{0} format {1}", "Cache", "必要", "操作", "成功", "更新者", "管理者", "角色", "角色。主要角色", "描述", "排序", "拼音", "全名", "生日", "修改", "整数", "年", "月", "日", "季度"),
     [Switch]$SkipOrphan,
     [Switch]$SkipMessageCheck,
     [String[]]$AllowMissingMessage = @(
@@ -135,6 +137,8 @@ foreach ($key in $reference.Entries.Keys) {
 
 # 元数据键：来自显式清单或实体/控制器特性。允许部分语言缺失，并免于孤儿键检查
 $metadataKeySet = [System.Collections.Generic.HashSet[String]]::new([StringComparer]::Ordinal)
+# 清单内声明的元数据键：-RequireMetadataTranslated 要求它们覆盖全部译文语言
+$declaredMetadata = [System.Collections.Generic.HashSet[String]]::new([StringComparer]::Ordinal)
 if (!$MetadataKeys) {
     # 与 NewLife.Core 一致：词表目录下存在 metadata-keys.json 时自动启用
     $candidate = Join-Path $localeDir "metadata-keys.json"
@@ -150,7 +154,12 @@ if ($MetadataKeys) {
     if ($metaJson -is [array]) { $metaItems = $metaJson }
     elseif ($null -ne $metaJson.keys) { $metaItems = $metaJson.keys }
     else { $metaItems = @() }
-    foreach ($item in @($metaItems)) { if ($item) { [void]$metadataKeySet.Add([String]$item) } }
+    foreach ($item in @($metaItems)) {
+        if ($item) {
+            [void]$metadataKeySet.Add([String]$item)
+            [void]$declaredMetadata.Add([String]$item)
+        }
+    }
 }
 foreach ($dir in @($MetadataSourceDir | Where-Object { $_ })) {
     $dirPath = if ([IO.Path]::IsPathRooted($dir)) { $dir } else { Join-Path $root $dir }
@@ -216,6 +225,30 @@ foreach ($file in Get-ChildItem $localeDir -Filter *.yml | Sort-Object Name) {
 
         if (!(Test-LanguageCodeList $key $value)) {
             $allErrors += "$($file.Name): 语言代码清单不一致 → $key"
+        }
+    }
+
+    # 清单内的元数据键必须覆盖全部译文语言：不缺、不留英文占位
+    if ($RequireMetadataTranslated) {
+        foreach ($key in $declaredMetadata) {
+            $hasCjk = $key -match '[\u4e00-\u9fff]'
+
+            # en 只承载中文源文的英文译文，英文源文的键（如程序集标题）无需收录
+            if ($lang -eq "en") {
+                if ($hasCjk -and !$locale.Entries.Contains($key)) { $allErrors += "$($file.Name): 缺少元数据键 $key" }
+                continue
+            }
+
+            if (!$locale.Entries.Contains($key)) {
+                $allErrors += "$($file.Name): 缺少元数据键 $key"
+                continue
+            }
+
+            $value = $locale.Entries[$key]
+            if (!$RequireTranslated) { continue }
+            if (!$AllowSameValue.Contains($key) -and [String]::Equals($value, $key, [StringComparison]::Ordinal)) {
+                $allErrors += "$($file.Name): 元数据键未翻译 → $key"
+            }
         }
     }
 }

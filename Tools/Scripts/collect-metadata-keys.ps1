@@ -177,7 +177,7 @@ else {
 foreach ($key in $existing) { [void]$list.Add($key) }
 
 $json = [ordered]@{
-    "comment" = "允许只出现在部分语言的可选键（实体元数据、程序集标题/描述等）。由 Tools/Scripts/collect-metadata-keys.ps1 生成，缺失时回退源文。"
+    "comment" = "允许只出现在部分语言的可选键（实体元数据、程序集标题/描述等）。由 Tools/Scripts/collect-metadata-keys.ps1 生成，缺失时回退源文；XCode 要求清单内全部键覆盖 31 种译文语言。"
     "updated" = (Get-Date -Format "yyyy-MM-dd")
     "keys"    = @($list)
 }

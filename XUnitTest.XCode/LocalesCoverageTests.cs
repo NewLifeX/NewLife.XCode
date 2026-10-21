@@ -81,44 +81,43 @@ public class LocalesCoverageTests
         }
     }
 
-    [Fact(DisplayName = "已翻译的元数据键在 31 个词表中保持一致")]
+    [Fact(DisplayName = "元数据键覆盖全部 31 种语言且无英文占位")]
     public void MetadataKeysCovered()
     {
         var dir = FindLocaleDirectory();
         var metaPath = Path.Combine(dir, "metadata-keys.json");
         Assert.True(File.Exists(metaPath), "缺少实体元数据键清单");
 
-        // 可选键清单登记全部元数据键（含尚未翻译的模型/生成器描述），
-        // 这里只要求「已翻译的部分」不缺不漏：任一语言收录的可选键，其余 30 个语言也必须收录
         var keys = ReadMetadataKeys(dir);
         Assert.NotEmpty(keys);
 
-        HashSet<String>? reference = null;
         foreach (var lang in _cultures.Where(e => e != "zh-Hans"))
         {
             var entries = ReadLocale(Path.Combine(dir, lang + ".yml"));
-            var translated = new HashSet<String>(keys.Where(entries.ContainsKey), StringComparer.Ordinal);
-
-            if (reference == null)
+            foreach (var key in keys)
             {
-                reference = translated;
-                Assert.True(reference.Count >= 170, $"已翻译的元数据键过少：{reference.Count}");
-                continue;
-            }
+                Assert.True(entries.ContainsKey(key), $"[{lang}] 缺少元数据键：{key}");
 
-            var missing = reference.Where(e => !translated.Contains(e)).ToList();
-            var extra = translated.Where(e => !reference.Contains(e)).ToList();
-            Assert.True(missing.Count == 0, $"[{lang}] 缺少元数据键：{String.Join(" | ", missing)}");
-            Assert.True(extra.Count == 0, $"[{lang}] 多出元数据键：{String.Join(" | ", extra)}");
+                // 同形词（简繁/中日同形、法/意/荷/北欧语原生写法）允许与源文一致
+                if (_allowSameMetadata.Contains(key)) continue;
+
+                Assert.False(String.Equals(entries[key], key, StringComparison.Ordinal), $"[{lang}] 元数据键未翻译：{key}");
+            }
         }
 
         // en 承载中文源文的英文译文；英文源文的键（如程序集标题）无需收录
         var en = ReadLocale(Path.Combine(dir, "en.yml"));
-        foreach (var key in reference!.Where(e => e.Any(IsCjk)))
+        foreach (var key in keys.Where(e => e.Any(IsCjk)))
         {
             Assert.True(en.ContainsKey(key), $"[en] 缺少元数据键：{key}");
         }
     }
+
+    // 与 Tools/Scripts/check-locales.ps1 的 -AllowSameValue 保持一致
+    private static readonly String[] _allowSameMetadata =
+    [
+        "必要", "操作", "成功", "更新者", "管理者", "角色", "角色。主要角色", "描述", "排序", "拼音", "全名", "生日", "修改", "整数", "年", "月", "日", "季度",
+    ];
 
     /// <summary>是否为中日韩统一表意文字</summary>
     /// <param name="ch">字符</param>

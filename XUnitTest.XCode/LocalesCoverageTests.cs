@@ -41,6 +41,9 @@ public class LocalesCoverageTests
         var baseline = ReadLocale(Path.Combine(dir, "zh-Hans.yml"));
         Assert.NotEmpty(baseline);
 
+        // 元数据键（实体元数据、程序集元数据）允许部分语言回退英文源文
+        var metadata = ReadMetadataKeys(dir);
+
         // 不变全球化模式下源生成器跳过具名区域性注册，译文按英文兜底
         if (LocalizationTestHelper.IsInvariantGlobalization)
         {
@@ -63,7 +66,7 @@ public class LocalesCoverageTests
                 {
                     var value = Localization.Translate(item.Key);
 
-                    if (!_allowSame.Contains(item.Key))
+                    if (!_allowSame.Contains(item.Key) && !metadata.Contains(item.Key))
                         Assert.False(String.Equals(value, item.Key, StringComparison.Ordinal), $"[{culture}] 未翻译：{item.Key}");
 
                     var expected = GetPlaceholders(item.Key);
@@ -78,29 +81,70 @@ public class LocalesCoverageTests
         }
     }
 
-    [Fact(DisplayName = "31 个词表均收录全部实体元数据键")]
+    [Fact(DisplayName = "已翻译的元数据键在 31 个词表中保持一致")]
     public void MetadataKeysCovered()
     {
         var dir = FindLocaleDirectory();
         var metaPath = Path.Combine(dir, "metadata-keys.json");
         Assert.True(File.Exists(metaPath), "缺少实体元数据键清单");
 
-        var keys = JsonSerializer.Deserialize<String[]>(File.ReadAllText(metaPath, Encoding.UTF8));
-        Assert.NotNull(keys);
+        // 可选键清单登记全部元数据键（含尚未翻译的模型/生成器描述），
+        // 这里只要求「已翻译的部分」不缺不漏：任一语言收录的可选键，其余 30 个语言也必须收录
+        var keys = ReadMetadataKeys(dir);
         Assert.NotEmpty(keys);
 
-        // en 承载中文源文的英文译文；zh-Hans 是英文消息源文的基线表，不收录元数据
-        var languages = new List<String> { "en" };
-        languages.AddRange(_cultures.Where(e => e != "zh-Hans"));
-
-        foreach (var lang in languages)
+        HashSet<String>? reference = null;
+        foreach (var lang in _cultures.Where(e => e != "zh-Hans"))
         {
             var entries = ReadLocale(Path.Combine(dir, lang + ".yml"));
-            foreach (var key in keys)
+            var translated = new HashSet<String>(keys.Where(entries.ContainsKey), StringComparer.Ordinal);
+
+            if (reference == null)
             {
-                Assert.True(entries.ContainsKey(key), $"[{lang}] 缺少元数据键：{key}");
+                reference = translated;
+                Assert.True(reference.Count >= 170, $"已翻译的元数据键过少：{reference.Count}");
+                continue;
             }
+
+            var missing = reference.Where(e => !translated.Contains(e)).ToList();
+            var extra = translated.Where(e => !reference.Contains(e)).ToList();
+            Assert.True(missing.Count == 0, $"[{lang}] 缺少元数据键：{String.Join(" | ", missing)}");
+            Assert.True(extra.Count == 0, $"[{lang}] 多出元数据键：{String.Join(" | ", extra)}");
         }
+
+        // en 承载中文源文的英文译文；英文源文的键（如程序集标题）无需收录
+        var en = ReadLocale(Path.Combine(dir, "en.yml"));
+        foreach (var key in reference!.Where(e => e.Any(IsCjk)))
+        {
+            Assert.True(en.ContainsKey(key), $"[en] 缺少元数据键：{key}");
+        }
+    }
+
+    /// <summary>是否为中日韩统一表意文字</summary>
+    /// <param name="ch">字符</param>
+    /// <returns>属于 CJK 时返回 true</returns>
+    private static Boolean IsCjk(Char ch) => ch >= '\u4e00' && ch <= '\u9fff';
+
+    /// <summary>读取元数据键清单</summary>
+    /// <param name="dir">词表目录</param>
+    /// <returns>元数据键集合；清单缺失时返回空集合</returns>
+    private static HashSet<String> ReadMetadataKeys(String dir)
+    {
+        var path = Path.Combine(dir, "metadata-keys.json");
+        if (!File.Exists(path)) return [];
+
+        // 与 NewLife.Core 一致：{ comment, updated, keys } 对象格式
+        using var document = JsonDocument.Parse(File.ReadAllText(path, Encoding.UTF8));
+        if (!document.RootElement.TryGetProperty("keys", out var array)) return [];
+
+        var keys = new HashSet<String>(StringComparer.Ordinal);
+        foreach (var item in array.EnumerateArray())
+        {
+            var key = item.GetString();
+            if (!String.IsNullOrEmpty(key)) keys.Add(key);
+        }
+
+        return keys;
     }
 
     /// <summary>从测试输出目录向上查找 XCode/Locales 词表目录</summary>

@@ -50,4 +50,41 @@ public class EntityMetadataLocalizationTests
             Localization.Culture = saved;
         }
     }
+
+    [Fact(DisplayName = "实体分组与程序集元数据按词表翻译")]
+    public void CategoryAndAssemblyMetadata()
+    {
+        RuntimeHelpers.RunModuleConstructor(typeof(XCodeSetting).Module.ModuleHandle);
+
+        try
+        {
+            if (CultureInfo.GetCultureInfo("zh-Hans").Name != "zh-Hans") return;
+        }
+        catch (CultureNotFoundException)
+        {
+            return;
+        }
+
+        var saved = Localization.Culture;
+        try
+        {
+            Localization.Culture = CultureInfo.GetCultureInfo("en-US");
+            Assert.Equal("Extended", Localization.Translate("扩展"));
+            Assert.Equal("Login Info", Localization.Translate("登录信息"));
+            Assert.Equal("XCode Super ORM Middleware", Localization.Translate("XCode Super ORM Middleware"));
+            Assert.Equal("XCode Entity Generator", Localization.Translate("XCode Entity Generator"));
+
+            Localization.Culture = CultureInfo.GetCultureInfo("de");
+            Assert.Equal("Erweitert", Localization.Translate("扩展"));
+
+            Localization.Culture = CultureInfo.GetCultureInfo("zh-CN");
+            Assert.Equal("扩展", Localization.Translate("扩展"));
+            Assert.Equal("XCode超级ORM中间件", Localization.Translate("XCode Super ORM Middleware"));
+            Assert.Equal("XCode实体生成工具", Localization.Translate("XCode Entity Generator"));
+        }
+        finally
+        {
+            Localization.Culture = saved;
+        }
+    }
 }

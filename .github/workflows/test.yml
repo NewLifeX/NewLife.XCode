@@ -394,7 +394,11 @@ jobs:
         Get-ChildItem -Path . -Recurse -Directory -Filter Locales | ForEach-Object {
           if (Test-Path (Join-Path $_.FullName 'zh-Hans.yml')) {
             $src = Split-Path $_.FullName -Parent
-            pwsh -File ./check-locales.ps1 -LocaleDir $_.FullName -Baseline zh-Hans.yml -SourceDir "$src,XCodeTool" -RequireTranslated
+            # 元数据键允许部分语言缺失，缺失回退源文；清单存在时放宽孤儿键与 Strict 校验
+            $meta = Join-Path $_.FullName 'metadata-keys.json'
+            $metaArgs = @()
+            if (Test-Path $meta) { $metaArgs = @('-MetadataKeys', $meta, '-MetadataSourceDir', $src) }
+            pwsh -File ./check-locales.ps1 -LocaleDir $_.FullName -Baseline zh-Hans.yml -SourceDir "$src,XCodeTool" -RequireTranslated @metaArgs
             if ($LASTEXITCODE -ne 0) { $failed = $true }
           }
         }

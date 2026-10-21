@@ -6,10 +6,15 @@
 #   pwsh -File check-locales.ps1 -LocaleDir src\Lib\Locales -SourceDir src\Lib
 #   pwsh -File check-locales.ps1 -LocaleDir src\Lib\Locales -SkipOrphan   # 下游只想校验词表内部一致性
 #   pwsh -File check-locales.ps1 -LocaleDir XCode\Locales -SourceDir XCode -RequireTranslated   # 要求所有语言均已翻译
+#   pwsh -File check-locales.ps1 -MetadataKeys XCode\Locales\metadata-keys.json -MetadataSourceDir XCode\Membership  # 元数据键允许部分语言缺失
 param(
     [String]$LocaleDir = "NewLife.Core\Locales",
     [String]$Baseline = "zh-Hans.yml",
     [String[]]$SourceDir = @("NewLife.Core", "NewLife.Core.SourceGenerator"),
+    # 元数据键清单，允许部分语言缺失（缺失回退源文），并免于孤儿键检查
+    [String]$MetadataKeys,
+    # 从生成实体/控制器的 [DisplayName]/[Description] 特性中收集元数据键
+    [String[]]$MetadataSourceDir = @(),
     [Switch]$RequireTranslated,
     # Cache 在法语、意大利语、荷兰语、北欧语言与印尼语/马来语中本身就是原生写法
     [String[]]$AllowSameValue = @("{0} format {1}", "Cache"),
@@ -113,18 +118,54 @@ $reference = Read-Locale $referencePath
 $allErrors = @($reference.Errors | ForEach-Object { "$($Baseline): $_" })
 $allWarnings = @()
 
+# 元数据键：来自显式清单或实体/控制器特性。允许部分语言缺失，并免于孤儿键检查
+$metadataKeySet = [System.Collections.Generic.HashSet[String]]::new([StringComparer]::Ordinal)
+if ($MetadataKeys) {
+    $metaPath = if ([IO.Path]::IsPathRooted($MetadataKeys)) { $MetadataKeys } else { Join-Path $root $MetadataKeys }
+    if (!(Test-Path -LiteralPath $metaPath)) {
+        Write-Host "未找到元数据键清单：$metaPath" -ForegroundColor Red
+        exit 1
+    }
+    $metaJson = Get-Content -LiteralPath $metaPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($metaJson -is [array]) { $metaItems = $metaJson }
+    elseif ($null -ne $metaJson.keys) { $metaItems = $metaJson.keys }
+    else { $metaItems = @() }
+    foreach ($item in @($metaItems)) { if ($item) { [void]$metadataKeySet.Add([String]$item) } }
+}
+foreach ($dir in @($MetadataSourceDir | Where-Object { $_ })) {
+    $dirPath = if ([IO.Path]::IsPathRooted($dir)) { $dir } else { Join-Path $root $dir }
+    if (!(Test-Path $dirPath)) { continue }
+    foreach ($file in Get-ChildItem $dirPath -Recurse -Filter *.cs -File) {
+        $text = [IO.File]::ReadAllText($file.FullName)
+        foreach ($m in [regex]::Matches($text, '\[(?:DisplayName|Description)\("((?:[^"\\]|\\.)*)"\)\]')) {
+            $key = $m.Groups[1].Value.Replace('\"', '"').Replace('\\', '\')
+            if ($key) { [void]$metadataKeySet.Add($key) }
+        }
+    }
+}
+
 foreach ($file in Get-ChildItem $localeDir -Filter *.yml | Sort-Object Name) {
     if ($file.Name -eq $Baseline) { continue }
+    $lang = [IO.Path]::GetFileNameWithoutExtension($file.Name)
     $locale = Read-Locale $file.FullName
     foreach ($e in $locale.Errors) { $allErrors += "$($file.Name): $e" }
 
     foreach ($key in $reference.Entries.Keys) {
-        if (!$locale.Entries.Contains($key)) {
+        # en 是源文语言，允许只提供元数据译文，其余消息回退英文源文
+        if (!$locale.Entries.Contains($key) -and !$metadataKeySet.Contains($key) -and $lang -ne "en") {
             $allErrors += "$($file.Name): 缺少键 $key"
         }
     }
     foreach ($key in $locale.Entries.Keys) {
         if (!$reference.Entries.Contains($key)) {
+            # 元数据键允许只出现在部分语言；但仍需校验占位符
+            if ($metadataKeySet.Contains($key)) {
+                $value = $locale.Entries[$key]
+                $expected = Get-Placeholders $key
+                $actual = Get-Placeholders $value
+                if (!$expected.SetEquals($actual)) { $allErrors += "$($file.Name): 占位符不一致 → $key" }
+                continue
+            }
             $allErrors += "$($file.Name): 多余键 $key"
             continue
         }
@@ -148,7 +189,7 @@ foreach ($file in Get-ChildItem $localeDir -Filter *.yml | Sort-Object Name) {
         }
 
         # 值与英文源文完全相同视为未翻译（少数语言的同形词见 AllowSameValue）
-        if ($RequireTranslated -and [String]::Equals($value, $key, [StringComparison]::Ordinal) -and !$AllowSameValue.Contains($key)) {
+        if ($RequireTranslated -and $lang -ne "en" -and !$metadataKeySet.Contains($key) -and [String]::Equals($value, $key, [StringComparison]::Ordinal) -and !$AllowSameValue.Contains($key)) {
             $allErrors += "$($file.Name): 未翻译（值与英文源文相同）→ $key"
         }
     }
@@ -166,6 +207,8 @@ if (!$SkipOrphan) {
         ForEach-Object { [IO.File]::ReadAllText($_.FullName) }) -join "`n"
 
     foreach ($key in $reference.Entries.Keys) {
+        if ($metadataKeySet.Contains($key)) { continue }
+
         # 源码中的字面量形式：制表符写作 \t，引号写作 \"
         $escaped = $key.Replace('\', '\\').Replace('"', '\"').Replace("`t", '\t').Replace("`r", '\r').Replace("`n", '\n')
         if (!$sourceText.Contains($key) -and !$sourceText.Contains($escaped)) {

@@ -4,8 +4,8 @@
     <TargetFrameworks>net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>xcodetool</AssemblyName>
     <RootNamespace>XCode</RootNamespace>
-    <AssemblyTitle>XCode实体生成工具</AssemblyTitle>
-    <Description>XCode 官方命令行工具，基于 Model.xml 生成实体数据类与业务类，支持快速建模与持续迭代。</Description>
+    <AssemblyTitle>XCode Entity Generator</AssemblyTitle>
+    <Description>Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration.</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>11.25</VersionPrefix>
@@ -21,6 +21,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <PackageId>$(AssemblyName)</PackageId>
+    <PackageDescription>Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration. XCode 官方命令行工具，基于 Model.xml 生成实体数据类与业务类，支持快速建模与持续迭代。</PackageDescription>
     <Authors>$(Company)</Authors>
     <PackageProjectUrl>https://newlifex.com/xcode</PackageProjectUrl>
     <PackageIcon>content\leaf.png</PackageIcon>

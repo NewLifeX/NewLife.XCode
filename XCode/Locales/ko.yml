@@ -545,3 +545,15 @@
 "租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权": "테넌트 관계. 사용자가 테넌트를 선택해 시스템에 들어간 후 테넌트 관계 역할 그룹으로 자신의 역할 그룹을 대체하여 권한을 부여합니다"
 "最后登录": "마지막 로그인"
 "最后登录IP": "마지막 로그인 IP"
+
+# 程序集标题与描述（英文源文 → 韩文）
+"XCode Super ORM Middleware": "XCode Super ORM Middleware"
+"High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration.": "High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration."
+"XCode Entity Generator": "XCode Entity Generator"
+"Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration.": "Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration."
+
+# 实体分组与补充字段（简体中文源文 → 韩文）
+"扩展": "확장"
+"登录信息": "로그인 정보"
+"键值": "값"
+"数据缓存": "데이터 캐시"

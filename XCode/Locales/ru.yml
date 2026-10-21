@@ -545,3 +545,15 @@
 "租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权": "Связь с клиентом. После входа в систему с выбранным клиентом группа ролей связи с клиентом заменяет собственную группу ролей пользователя при авторизации"
 "最后登录": "Последний вход"
 "最后登录IP": "IP последнего входа"
+
+# 程序集标题与描述（英文源文 → 俄语）
+"XCode Super ORM Middleware": "XCode Super ORM Middleware"
+"High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration.": "High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration."
+"XCode Entity Generator": "XCode Entity Generator"
+"Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration.": "Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration."
+
+# 实体分组与补充字段（简体中文源文 → 俄语）
+"扩展": "Расширенные"
+"登录信息": "Данные для входа"
+"键值": "Значение"
+"数据缓存": "Кэш данных"

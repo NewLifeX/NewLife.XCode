@@ -547,3 +547,15 @@
 "租户。多租户SAAS平台，用于隔离业务数据": "租戶。多租戶SAAS平台，用於隔離業務資料"
 "租户。角色所属组合，0表示全局角色": "租戶。角色所屬組合，0表示全域角色"
 "租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权": "租戶關係。使用者選擇租戶進入系統後，以租戶關係角色群組替代自有角色群組來進行鑑權"
+
+# 程序集标题与描述（英文源文 → 繁體中文）
+"XCode Super ORM Middleware": "XCode超級ORM中介層"
+"High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration.": "高效能 .NET 資料中介層（超級ORM），聚焦添刪改查與海量資料，內建多層快取、自動移轉、分表分庫、強型別查詢與跨庫移轉。"
+"XCode Entity Generator": "XCode實體產生工具"
+"Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration.": "XCode 官方命令列工具，基於 Model.xml 產生實體資料類別與業務類別，支援快速建模與持續迭代。"
+
+# 实体分组与补充字段（简体中文源文 → zh-Hant）
+"扩展": "擴充"
+"登录信息": "登入資訊"
+"键值": "鍵值"
+"数据缓存": "資料快取"

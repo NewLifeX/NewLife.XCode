@@ -545,3 +545,15 @@
 "租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权": "Kiracı İlişkisi. Kullanıcı bir kiracı seçerek sisteme girdikten sonra yetkilendirme için kendi rol grubu yerine kiracı ilişkisi rol grubu kullanılır"
 "最后登录": "Son Oturum Açma"
 "最后登录IP": "Son Oturum Açma IP"
+
+# 程序集标题与描述（英文源文 → 土耳其文）
+"XCode Super ORM Middleware": "XCode Super ORM Middleware"
+"High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration.": "High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration."
+"XCode Entity Generator": "XCode Entity Generator"
+"Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration.": "Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration."
+
+# 实体分组与补充字段（简体中文源文 → 土耳其文）
+"扩展": "Genişletilmiş"
+"登录信息": "Oturum bilgileri"
+"键值": "Değer"
+"数据缓存": "Veri önbelleği"

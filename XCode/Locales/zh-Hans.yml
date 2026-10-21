@@ -375,3 +375,9 @@
 "Field cache expiration. Caches grouped values of category fields, default 3600 seconds": "字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒"
 "Cache statistics period. Interval in seconds for logging cache statistics, 0 disables, default 3600": "缓存统计周期。在日志中定期输出各个缓存的统计数据，用于分析性能问题，单位秒，0表示不输出，默认3600秒"
 "XCode settings": "XCode设置"
+
+# 程序集标题与描述（英文源文 → 简体中文）
+"XCode Super ORM Middleware": "XCode超级ORM中间件"
+"High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration.": "高性能 .NET 数据中间件（超级ORM），聚焦添删改查与海量数据，内置多级缓存、自动迁移、分表分库、强类型查询与跨库迁移。"
+"XCode Entity Generator": "XCode实体生成工具"
+"Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration.": "XCode 官方命令行工具，基于 Model.xml 生成实体数据类与业务类，支持快速建模与持续迭代。"

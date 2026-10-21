@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <AssemblyTitle>XCode SonnetDB适配包</AssemblyTitle>
-    <Description>为 XCode 提供 SonnetDB 嵌入式和远程数据库驱动接入、SQL方言与自动建模支持。</Description>
+    <AssemblyTitle>XCode SonnetDB Adapter</AssemblyTitle>
+    <Description>Provides embedded and remote SonnetDB driver integration, SQL dialect and automatic modeling support for XCode.</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
     <VersionPrefix>11.25</VersionPrefix>
@@ -12,6 +12,7 @@
     <AssemblyVersion>$(VersionPrefix).$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</AssemblyVersion>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>$(AssemblyName)</PackageId>
+    <PackageDescription>Provides embedded and remote SonnetDB driver integration, SQL dialect and automatic modeling support for XCode. 为 XCode 提供 SonnetDB 嵌入式和远程数据库驱动接入、SQL方言与自动建模支持。</PackageDescription>
     <Authors>$(Company)</Authors>
     <PackageProjectUrl>https://newlifex.com/xcode</PackageProjectUrl>
     <PackageIcon>leaf.png</PackageIcon>

@@ -545,3 +545,15 @@
 "租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权": "टेनेंट संबंध। उपयोगकर्ता द्वारा टेनेंट चुनकर सिस्टम में प्रवेश करने के बाद, अनुमति के लिए टेनेंट संबंध भूमिका समूह उपयोगकर्ता के अपने भूमिका समूह को प्रतिस्थापित करता है"
 "最后登录": "अंतिम लॉगिन"
 "最后登录IP": "अंतिम लॉगिन IP"
+
+# 程序集标题与描述（英文源文 → 印地语）
+"XCode Super ORM Middleware": "XCode Super ORM Middleware"
+"High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration.": "High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration."
+"XCode Entity Generator": "XCode Entity Generator"
+"Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration.": "Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration."
+
+# 实体分组与补充字段（简体中文源文 → 印地语）
+"扩展": "विस्तारित"
+"登录信息": "लॉगिन जानकारी"
+"键值": "मान"
+"数据缓存": "डेटा कैश"

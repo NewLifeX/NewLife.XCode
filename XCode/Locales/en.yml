@@ -170,3 +170,9 @@
 "租户。多租户SAAS平台，用于隔离业务数据": "Tenant. Multi-tenant SaaS platform used to isolate business data"
 "租户。角色所属组合，0表示全局角色": "Tenant. Group the role belongs to, 0 means global role"
 "租户关系。用户选择租户进入系统后，以租户关系角色组替代自有角色组来进行鉴权": "Tenant Relation. After the user enters the system with a tenant, the tenant role group replaces the user's own role group for authorization"
+
+# 实体分组与补充字段（简体中文源文 → en）
+"扩展": "Extended"
+"登录信息": "Login Info"
+"键值": "Value"
+"数据缓存": "Data cache"

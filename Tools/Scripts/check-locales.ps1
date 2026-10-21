@@ -2,11 +2,11 @@
 # 以基准语言文件（默认 zh-Hans.yml）为准，所有语言必须提供完全相同的键集合
 #
 # 用法：
-#   pwsh -File check-locales.ps1                                      # Core 默认目录
-#   pwsh -File check-locales.ps1 -LocaleDir src\Lib\Locales -SourceDir src\Lib
-#   pwsh -File check-locales.ps1 -LocaleDir src\Lib\Locales -SkipOrphan   # 下游只想校验词表内部一致性
-#   pwsh -File check-locales.ps1 -LocaleDir XCode\Locales -SourceDir XCode -RequireTranslated   # 要求所有语言均已翻译
-#   pwsh -File check-locales.ps1 -MetadataKeys XCode\Locales\metadata-keys.json -MetadataSourceDir XCode\Membership  # 元数据键允许部分语言缺失
+#   pwsh -File Tools/Scripts/check-locales.ps1                                      # Core 默认目录
+#   pwsh -File Tools/Scripts/check-locales.ps1 -LocaleDir src\Lib\Locales -SourceDir src\Lib
+#   pwsh -File Tools/Scripts/check-locales.ps1 -LocaleDir src\Lib\Locales -SkipOrphan   # 下游只想校验词表内部一致性
+#   pwsh -File Tools/Scripts/check-locales.ps1 -LocaleDir XCode\Locales -SourceDir XCode -RequireTranslated   # 要求所有语言均已翻译
+#   pwsh -File Tools/Scripts/check-locales.ps1 -MetadataKeys XCode\Locales\metadata-keys.json -MetadataSourceDir XCode/Membership  # 元数据键允许部分语言缺失
 param(
     [String]$LocaleDir = "NewLife.Core\Locales",
     [String]$Baseline = "zh-Hans.yml",
@@ -43,7 +43,7 @@ $ErrorActionPreference = "Stop"
 # pwsh -File 会把 "XCode,XCodeTool" 当成单个参数，这里统一拆成多个目录
 $SourceDir = @($SourceDir | ForEach-Object { $_ -split '[,;]' } | Where-Object { $_ })
 
-$root = $PSScriptRoot
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $localeDir = if ([IO.Path]::IsPathRooted($LocaleDir)) { $LocaleDir } else { Join-Path $root $LocaleDir }
 if (!(Test-Path $localeDir)) {
     Write-Host "未找到语言目录：$localeDir" -ForegroundColor Red
@@ -52,6 +52,15 @@ if (!(Test-Path $localeDir)) {
 
 $pattern = '^\s*"((?:[^"\\]|\\.)*)"\s*:\s*"((?:[^"\\]|\\.)*)"\s*$'
 $placeholder = '\{(\d+)(?:,-?\d+)?(:[^}]*)?\}'
+$languageCode = '\b[a-z]{2}-[A-Za-z]{2,4}\b'
+
+# 语言清单条目：译文中的语言代码集合必须与英文 key 一致，防止译者漏码
+function Test-LanguageCodeList([string]$key, [string]$value) {
+    if (!$key.StartsWith("UI language. Values:")) { return $true }
+    $expected = @([regex]::Matches($key, $languageCode) | ForEach-Object { $_.Value } | Sort-Object -Unique)
+    $actual = @([regex]::Matches($value, $languageCode) | ForEach-Object { $_.Value } | Sort-Object -Unique)
+    return !(Compare-Object $expected $actual)
+}
 
 function Unescape-Yaml([string]$text) {
     # 与源生成器保持一致：还原 \\ \" \n \r \t \uXXXX
@@ -118,8 +127,19 @@ $reference = Read-Locale $referencePath
 $allErrors = @($reference.Errors | ForEach-Object { "$($Baseline): $_" })
 $allWarnings = @()
 
+foreach ($key in $reference.Entries.Keys) {
+    if (!(Test-LanguageCodeList $key $reference.Entries[$key])) {
+        $allErrors += "$($Baseline): 语言代码清单不一致 → $key"
+    }
+}
+
 # 元数据键：来自显式清单或实体/控制器特性。允许部分语言缺失，并免于孤儿键检查
 $metadataKeySet = [System.Collections.Generic.HashSet[String]]::new([StringComparer]::Ordinal)
+if (!$MetadataKeys) {
+    # 与 NewLife.Core 一致：词表目录下存在 metadata-keys.json 时自动启用
+    $candidate = Join-Path $localeDir "metadata-keys.json"
+    if (Test-Path -LiteralPath $candidate) { $MetadataKeys = $candidate }
+}
 if ($MetadataKeys) {
     $metaPath = if ([IO.Path]::IsPathRooted($MetadataKeys)) { $MetadataKeys } else { Join-Path $root $MetadataKeys }
     if (!(Test-Path -LiteralPath $metaPath)) {
@@ -136,8 +156,9 @@ foreach ($dir in @($MetadataSourceDir | Where-Object { $_ })) {
     $dirPath = if ([IO.Path]::IsPathRooted($dir)) { $dir } else { Join-Path $root $dir }
     if (!(Test-Path $dirPath)) { continue }
     foreach ($file in Get-ChildItem $dirPath -Recurse -Filter *.cs -File) {
+        if ($file.FullName -match '[\\/](obj|bin)[\\/]') { continue }
         $text = [IO.File]::ReadAllText($file.FullName)
-        foreach ($m in [regex]::Matches($text, '\[(?:DisplayName|Description)\("((?:[^"\\]|\\.)*)"\)\]')) {
+        foreach ($m in [regex]::Matches($text, '\[(?:DisplayName|Description|Category)\("((?:[^"\\]|\\.)*)"\)\]')) {
             $key = $m.Groups[1].Value.Replace('\"', '"').Replace('\\', '\')
             if ($key) { [void]$metadataKeySet.Add($key) }
         }
@@ -192,18 +213,23 @@ foreach ($file in Get-ChildItem $localeDir -Filter *.yml | Sort-Object Name) {
         if ($RequireTranslated -and $lang -ne "en" -and !$metadataKeySet.Contains($key) -and [String]::Equals($value, $key, [StringComparison]::Ordinal) -and !$AllowSameValue.Contains($key)) {
             $allErrors += "$($file.Name): 未翻译（值与英文源文相同）→ $key"
         }
+
+        if (!(Test-LanguageCodeList $key $value)) {
+            $allErrors += "$($file.Name): 语言代码清单不一致 → $key"
+        }
     }
 }
 
 # 孤儿键：基准表中的键在源码里完全找不到（改文案后遗留的死条目）
+# 源文范围含 .cs 与 .csproj：程序集标题/描述等元数据写在 csproj 中，同样是词表源文
 $orphans = @()
 if (!$SkipOrphan) {
     $sourceDirs = @($SourceDir | ForEach-Object {
         if ([IO.Path]::IsPathRooted($_)) { $_ } else { Join-Path $root $_ }
     } | Where-Object { Test-Path $_ })
 
-    $sourceText = ($sourceDirs | ForEach-Object { Get-ChildItem $_ -Recurse -Filter *.cs } |
-        Where-Object { $_.FullName -notmatch '\\(obj|bin|Locales)\\' } |
+    $sourceText = ($sourceDirs | ForEach-Object { Get-ChildItem $_ -Recurse -Include *.cs, *.csproj } |
+        Where-Object { $_.FullName -notmatch '[\\/](obj|bin|Locales)[\\/]' } |
         ForEach-Object { [IO.File]::ReadAllText($_.FullName) }) -join "`n"
 
     foreach ($key in $reference.Entries.Keys) {
@@ -236,7 +262,7 @@ if (!$SkipMessageCheck) {
 
     foreach ($dir in $sourceDirs) {
         foreach ($file in Get-ChildItem $dir -Recurse -Filter *.cs) {
-            if ($file.FullName -match '\\(obj|bin|Locales)\\') { continue }
+            if ($file.FullName -match '[\\/](obj|bin|Locales)[\\/]') { continue }
             # 去掉注释，避免把示例代码当成真实调用
             $text = [regex]::Replace([IO.File]::ReadAllText($file.FullName), '/\*.*?\*/', '', 'Singleline')
             $text = [regex]::Replace($text, '(?m)^\s*//.*$', '')

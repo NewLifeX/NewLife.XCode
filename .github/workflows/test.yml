@@ -394,18 +394,16 @@ jobs:
         Get-ChildItem -Path . -Recurse -Directory -Filter Locales | ForEach-Object {
           if (Test-Path (Join-Path $_.FullName 'zh-Hans.yml')) {
             $src = Split-Path $_.FullName -Parent
-            # 元数据键允许部分语言缺失，缺失回退源文；清单存在时放宽孤儿键与 Strict 校验
-            $meta = Join-Path $_.FullName 'metadata-keys.json'
-            $metaArgs = @()
-            if (Test-Path $meta) { $metaArgs = @('-MetadataKeys', $meta, '-MetadataSourceDir', $src) }
-            pwsh -File ./check-locales.ps1 -LocaleDir $_.FullName -Baseline zh-Hans.yml -SourceDir "$src,XCodeTool" -RequireTranslated @metaArgs
+            # 元数据键允许部分语言缺失，缺失回退源文；metadata-keys.json 由脚本自动识别，
+            # -MetadataSourceDir 补充扫描 [DisplayName]/[Description]/[Category] 特性
+            pwsh -File Tools/Scripts/check-locales.ps1 -LocaleDir $_.FullName -Baseline zh-Hans.yml -SourceDir "$src,XCodeTool" -RequireTranslated -MetadataSourceDir $src
             if ($LASTEXITCODE -ne 0) { $failed = $true }
           }
         }
         if ($failed) { exit 1 }
     - name: Check English messages
       shell: pwsh
-      run: pwsh -File ./check-english-exceptions.ps1
+      run: pwsh -File Tools/Scripts/check-english-exceptions.ps1
     - name: Check README languages
       shell: pwsh
-      run: pwsh -File ./sync-readme-languages.ps1 -Check
+      run: pwsh -File Tools/Scripts/sync-readme-languages.ps1 -Check

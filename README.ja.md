@@ -1,6 +1,6 @@
 # NewLife.XCode - データミドルウェア / スーパーORM
 
-[![GitHub top language](https://img.shields.io/github/languages/top/newlifex/newlife.xcode?logo=github)](https://github.com/NewLifeX/newlife.xcode)
+![GitHub top language](https://img.shields.io/github/languages/top/newlifex/newlife.xcode?logo=github)
 
 ![GitHub License](https://img.shields.io/github/license/NewLifeX/NewLife.XCode?logo=github)
 ![NuGet Downloads](https://img.shields.io/nuget/dt/NewLife.XCode?logo=nuget)
@@ -16,21 +16,334 @@
 🌐 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
 <!-- lang:end -->
 
-高性能 .NET データミドルウェア（スーパーORM）。CRUD + 極限パフォーマンス + 大規模データに特化。マルチレベルキャッシュ、自動マイグレーション、シャーディング、型付きクエリ、クロスデータベース移行を内蔵。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network 仮想データベース / NovaDb に対応。
+> ⚠️ この翻訳は構成を含め古くなっている可能性があります。正式な版は[英語版 README](README.md)です。
 
-> ⚠️ 本翻訳は更新や構成が英語版より遅れる場合があります。正式な内容は[英語 README](README.md)を参照してください。
+**NewLife.XCode** は、「CRUD + 極限のパフォーマンス + 大規模データ」に特化した高性能な .NET データミドルウェアです。マルチレベルキャッシュ、自動モデリング/マイグレーション、シャーディング、型付きクエリ、データベース間移行を備えています。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb などに対応しています。本番環境では 1 テーブルあたり数百億行に達し、クエリのスループットは（キャッシュ戦略により）数十億 QPS に達することがあります。
+
+ドキュメント：https://newlifex.com/xcode   コミュニティ QQ グループ：1600800 / 1600838
+
+**目次**：[クイックスタート](#クイックスタート) · [XCode を選ぶ理由](#xcode-を選ぶ理由) · [主な機能](#主な機能) · [エコシステムマップ](#エコシステムマップ) · [ドキュメント](#ドキュメント) · [コントリビュート](#コントリビュート) · [チーム](#チーム) · [ライセンス](#ライセンス)
+
+## クイックスタート
+
+### インストール
+
+NuGet 参照（任意のプロジェクト）：
+
+```
+dotnet add package NewLife.XCode
+```
+
+またはテンプレートのスキャフォールドを使用します：
+
+```
+dotnet new install NewLife.Templates
+dotnet new xcode --name Demo.Data
+cd Demo.Data
+dotnet build
+```
+
+> 強名証明書は組み込み済みです（newlife.snk）。企業向けプライベートフレームワーク用に再コンパイルできます。
+
+### モデルの定義（db.xml）
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<Tables Version="1.0" Output="MyEntity" NameSpace="Model" BaseClass="Entity" ConnName="DB">
+  <Table Name="UserInfo" Description="ユーザー情報">
+    <Columns>
+      <Column Name="Id" DataType="Int32" Identity="True" PrimaryKey="True" Description="会員 ID" />
+      <Column Name="UserName" DataType="String" Nullable="False" Description="会員名" />
+      <Column Name="Password" DataType="String" Nullable="False" Description="会員パスワード" />
+      <Column Name="Age" DataType="Int32" Description="会員年齢" />
+    </Columns>
+  </Table>
+</Tables>
+```
+
+### エンティティクラスの生成
+
+- xcodetool.exe をディレクトリにダウンロードしてダブルクリックするか、次を実行します：`dotnet tool install xcodetool -g --prerelease` → `xcode db.xml`。
+- 生成されるファイル：用户信息.cs（データクラス、上書きされます）+ 用户信息.Biz.cs（ビジネスクラス、上書きされません）。
+
+### CRUD
+
+```csharp
+using XCode;
+
+var user = new UserInfo { UserName = "山田太郎", Password = "123456", Age = 18 };
+user.Insert();
+Console.WriteLine("新しいレコードを挿入しました。ユーザー ID: " + user.Id);
+
+var u2 = UserInfo.FindById(user.Id);
+u2.Age = 19;
+u2.Update();
+
+var list = UserInfo.FindAll(UserInfo._.Age > 10 & UserInfo._.UserName == "山田太郎");
+UserInfo.FindById(user.Id)?.Delete();
+```
+
+> キャッシュを使用する場合：エンティティ数が 1000 未満なら全テーブルキャッシュ、それ以外は通常のクエリ / 単一オブジェクトキャッシュを使用します。
+
+## XCode を選ぶ理由
+
+- **自社開発・独自実装**：中国で完全に開発され、サードパーティ製コンポーネントを一切使用していません。自ら管理でき、長期的な保守体制を備えています。
+- **シンプルさ**：ビジネスシナリオの 90% は単一テーブルのエンティティ操作だけで済み、SQL を手書きする必要はありません。
+- **Dapper 互換**：任意の SQL クエリを実行し、任意のエンティティモデルにマッピングできます。Dapper の使い方と完全に互換でありながら、キャッシュ、読み書き分離、トレーシングを追加しています。
+- **極限のパフォーマンス**：主要パスでのマルチレベルキャッシュ + バッチ最適化 + インメモリ結合により、クエリ速度は生の SQL を大きく上回る可能性があります。
+- **大規模データ**：ネイティブのページングとシャーディング戦略。本番プロジェクトでは 1 テーブルあたり数百億行に達し、ページングアルゴリズムは複数のデータベースに適応します。
+- **安定性と成熟**：20 年以上の進化と幅広い本番検証を経ており、古い .NET Framework バージョン（net45 以降）との互換性を維持しています。
+- **自動マイグレーション**：モデル/エンティティがそのままスキーマとなり、新しいフィールドはデプロイ時に自動同期されます。追加の SQL スクリプトは不要です。
+- **分散への進化**：テーブル単位 / 時間 / 主キーによるネイティブなシャーディング戦略を備え、スムーズな分割とスケーリングを実現します。
+- **プラグイン可能**：DAL 抽象化 + 分離されたプロバイダーにより、独自のデータベースアダプターをサポートします。
+
+## 主な機能
 
 <details>
-<summary><b>v12.0 ハイライト</b> (6)</summary>
+<summary><b>モデリング &amp; コード生成</b> (5)</summary>
 
-- **IQueryable LINQ**: `Entity<T>.Query` が `IQueryable<T>` を返し、Where/OrderBy/Skip/Take/Count/First/ToList を完全サポート
-- **WhereIf**: `WhereIf(condition, predicate)` と `FindAllWhereIf` による条件付きフィルタリング
-- **ウィンドウ関数**: `SelectBuilder.Window` + `WindowFunction` で ROW_NUMBER/RANK/DENSE_RANK/集計ウィンドウ
-- **二次キャッシュ**: `CacheInvalidator.Provider` で Redis によるプロセス間キャッシュ無効化
-- **新規プロバイダ**: ClickHouse、DuckDB、MongoDB
-- **Include**: `Include(Type)` で関連エンティティキャッシュの事前読込
+| 機能 | 主な特徴 |
+| --- | --- |
+| XML モデル（Tables/Columns/Indexes） | モデルが唯一の情報源であり、属性はインデックス、一意制約、既定値、説明、拡張プロパティをカバーします。 |
+| コードジェネレーター | `xcodetool`（グローバルツール / exe）または VS の T4 テンプレートが、XML モデルからエンティティクラスを生成します。 |
+| データクラス（`.cs`） | 生成のたびに上書きされます。フィールドと基本クエリを保持します。 |
+| ビジネスクラス（`.Biz.cs`） | 初回生成後は上書きされません。カスタムロジックはここに記述します。 |
+| 自動生成メソッド | インデックスと列から `FindByXxx` / `Search` ヘルパーメソッドとテンプレートが自動生成されます。 |
 
 </details>
+
+<details>
+<summary><b>エンティティランタイム &amp; DAL</b> (7)</summary>
+
+| コンポーネント | 役割 |
+| --- | --- |
+| `IEntity` / `Entity` | フィールド、検証、ライフサイクルをカプセル化したリッチなドメインモデル。 |
+| `IEntityOperate` | 静的操作用のエントリポイント（Find / FindAll / Query など）。 |
+| `EntityFactory` | エンティティメタデータキャッシュのファクトリ。 |
+| `EntitySession`（`Meta.Session`） | 特定の接続/テーブルにおけるエンティティのコンテキスト。セッションレベルのキャッシュ/統計を持ちます。 |
+| `Meta` | エンティティの静的コンテキスト（テーブルスキーマ、フィールド、キャッシュ、シャーディングポリシーなど）。 |
+| `DAL` / `IDatabase` / `IDbSession` | 統一されたデータベースアクセスとメタデータ操作。 |
+| `CheckTables()` | 起動時/初回アクセス時にスキーマを確認・同期します。必要に応じて非同期または同期で実行できます。 |
+
+</details>
+
+<details>
+<summary><b>クエリ DSL</b> (8)</summary>
+
+| 機能 | 主な特徴 |
+| --- | --- |
+| `IQueryable<T>` LINQ（v12.0） | `Entity<T>.Query` が `IQueryable<T>` を返し、`Where/OrderBy/Skip/Take/Count/First/ToList` などの標準 LINQ 操作をサポートします。 |
+| `DAL.Select<T>()` Fluent クエリ（v12.1） | `DAL.Select<T>()` が現在の接続にバインドされた `IQueryable<T>` を返し、`WhereIf/Where/OrderBy/Skip/Take/Page/Count/FirstOrDefault/ToList` の完全なチェーン呼び出しをサポートします。 |
+| ナビゲーションプロパティ（v12.1） | `HasOne`/`HasMany` Fluent API でナビゲーション関係を構成し、`Include` がパスを構築して一括読み込みし、`SelectBuilder` がナビゲーション関係をまたぐ JOIN をサポートします。 |
+| `WhereIf` インライン条件 | `Query.WhereIf(condition, predicate)` と `FindAllWhereIf` により動的フィルタリングが可能です。 |
+| `WhereExpression` | `&` / `\|` / `Contains` / `Between` / `Like` を連鎖させた式の合成。 |
+| `Find` / `FindAll` / `Query` / `PageFindAll` | クエリのエントリポイント。`PageFindAll` にはページングが組み込まれています。 |
+| `Pager` / `PageParameter` | ページング、並べ替え、`TotalCount` 統計、データスコープ拡張を保持します。 |
+| ウィンドウ関数（v12.0） | `SelectBuilder.Window` + `WindowFunction` が ROW_NUMBER/RANK/DENSE_RANK および集計ウィンドウ関数をサポートします。 |
+
+</details>
+
+<details>
+<summary><b>マルチレベルキャッシュシステム</b> (6)</summary>
+
+読み取りが多く書き込みが少ないワークロード向けに設計されています：
+
+| キャッシュ | 主な特徴 |
+| --- | --- |
+| `Meta.Count` | 高速な行数キャッシュ（1000 を超える場合はシステムインデックスを使用。SQLite は Max(identity) と非同期の正確な補正を使用）。 |
+| `EntityCache`（`Meta.Cache.Entities`） | 全テーブルキャッシュ（1000 行未満の小さなテーブルに推奨。10000 行を超える場合は禁止）。 |
+| `SingleCache`（`Meta.SingleCache[key]`） | 主キー/代替キーによる辞書レベルの単一オブジェクトキャッシュ。ユーザーのような頻繁なポイント参照に適しています。 |
+| 有効期限ポリシー | 既定では 60 秒。期限切れの読み取りは古いデータを即座に返し、非同期で更新します。書き込みはキャッシュを即座に無効化/更新します。 |
+| トランザクション認識 | トランザクション内では変更が蓄積され、コミット/ロールバック後にキャッシュが一律でクリアまたはロールバックされます。 |
+| 二次キャッシュ（v12.0） | `CacheInvalidator.Provider` が Redis を注入し、バージョン機構を通じてプロセス間でエンティティキャッシュの無効化を調整します。 |
+
+</details>
+
+<details>
+<summary><b>リバースエンジニアリング &amp; 移行</b> (3)</summary>
+
+| 機能 | 主な特徴 |
+| --- | --- |
+| スキーマのリバースエンジニアリング | エンティティからテーブルスキーマとインデックスを逆生成・変更し、自動的に整合性を保ちます。 |
+| エンティティ単位の移行ポリシー | テーブルレベルの `Migration` 設定（モデルの `Table` 属性 / `[BindTable]` / `TableItem` の起動時上書き）により、エンティティごとのリバースエンジニアリング戦略（Off / ReadOnly / On / Full）を制御します。 |
+| モデル抽出とデータベース間移行 | 任意のデータベースからのモデル抽出 + データベース間のデータ移行（DataMigration コンパニオンツール）をサポートします。 |
+
+</details>
+
+<details>
+<summary><b>シャーディング（ShardPolicy）</b> (3)</summary>
+
+| 機能 | 主な特徴 |
+| --- | --- |
+| `ShardPolicy` 抽象化 | `TimeShardPolicy` の例：日付ごとにテーブル名 Table_yyyyMMdd。 |
+| 透過的なルーティング | ビジネスコードは引き続き Find / Insert / Update を呼び出すだけで、実際のテーブル名を意識しません。 |
+| カスタム戦略 | 主キーハッシュ / 時間 / 範囲の戦略をカスタマイズできます。 |
+
+</details>
+
+<details>
+<summary><b>トランザクション &amp; キャッシュ整合性</b> (3)</summary>
+
+| シナリオ | 主な特徴 |
+| --- | --- |
+| 非トランザクション書き込み | 書き込みは関連キャッシュを即座に期限切れにし、非同期で再構築します。同時に読み書きの整合性のため、インメモリオブジェクトの直接更新を試みます。 |
+| コミット | トランザクション内では全テーブルキャッシュはクリアされず、ヒットしたオブジェクトのみローカルで変更されます。コミット後に一律でクリアまたは更新されます。 |
+| ロールバック | ロールバック時には、トランザクション内で行った変更が元に戻されます。 |
+
+</details>
+
+<details>
+<summary><b>パフォーマンス最適化</b> (6)</summary>
+
+| 手法 | 主な特徴 |
+| --- | --- |
+| マルチレベルキャッシュ | ホットなクエリをデータベースから遠ざけます。 |
+| バッチ書き込み | 複数フィールド・複数レコードの操作をマージします（内部最適化）。 |
+| ページングアルゴリズム | データベース/バージョンごとに最適な戦略を選択します。 |
+| 遅延/非同期 | 行数、モデルチェック、キャッシュ更新はすべて非同期で実行できます。 |
+| リフレクションキャッシュ / デリゲート高速化 | エンティティのプロパティアクセサーを事前にウォームアップします。 |
+| インメモリ関連付け | まずメインテーブルをキャッシュし、その後メモリ内で「疑似結合」を実行します。 |
+
+</details>
+
+<details>
+<summary><b>データスコープ &amp; マルチテナント</b> (5)</summary>
+
+| 機能 | 主な特徴 |
+| --- | --- |
+| データスコープ | 行レベルのデータアクセス制御。「すべて / 部門とサブ部門 / 部門 / 自分のみ / カスタム」の 5 つのスコープをサポートします。 |
+| スコープの組み込み | `DataScopeContext` + `DataScopeInterceptor` が、クエリフィルターの適用、挿入時の既定の所有権設定、更新/削除時の検証を自動で行います。 |
+| エンティティのオプトイン | エンティティが `IUserScope` / `IDepartmentScope` / `IDataScope` を実装します。部門管理者は自動的に可視スコープに含まれ、自分のデータには常にアクセスできます。 |
+| マルチテナント | エンティティが `ITenantScope` を実装すると、`TenantInterceptor` がクエリにテナントフィルターを自動付加し、書き込み時にテナント識別子を検証/補完します。`TenantId` 列を持つビジネスクラスでは、EntityBuilder が自動的に `ITenantScope` を実装します。 |
+| 詳細 | 詳細は `Doc/数据权限.md` と `Doc/权限管理.md` を参照してください。 |
+
+</details>
+
+<details>
+<summary><b>マルチデータベース構成</b> (4)</summary>
+
+| 機能 | 主な特徴 |
+| --- | --- |
+| 既定は SQLite | 開発時は SQLite が既定です（ゼロ構成）。 |
+| 接続設定 | デプロイ時は構成ファイルまたは環境変数で `XCode_{ConnName}` を構成します。 |
+| プロバイダー識別子 | 接続文字列にはプロバイダー識別子を含める必要があります（例：`provider=MySql;server=...;user=...;******;database=...;`）。 |
+| 複数接続 | 同一プロセス内で複数のデータベース接続名（ConnName）を併用できます。 |
+
+</details>
+
+### 使用例
+
+#### 動的な条件とページング
+
+```csharp
+public static IList<UserInfo> Search(String name, Int32 age, Pager p)
+{
+    var exp = new WhereExpression();
+    if (!name.IsNullOrEmpty()) exp &= UserInfo._.UserName == name;
+    if (age > 0) exp &= UserInfo._.Age == age;
+    return UserInfo.FindAll(exp, p);
+}
+```
+
+#### 指定フィールドの更新（キャッシュをバイパス。通常の使用には推奨しません）
+
+```csharp
+UserInfo.Update(UserInfo._.UserName == "山田太郎" & UserInfo._.Age == 18, UserInfo._.Id == 1);
+```
+
+#### カスタム並べ替えと列の射影
+
+```csharp
+var list = UserInfo.FindAll(UserInfo._.Age > 10, " Age DESC,Id ASC",
+    string.Join(",", UserInfo._.UserName, UserInfo._.Age), 0, 20);
+```
+
+#### インデックスと生成メソッド
+
+モデルにインデックスを追加します：
+
+```xml
+<Indexes>
+  <Index Columns="UserName" Unique="True" />
+  <Index Columns="UserName,Age" />
+</Indexes>
+```
+
+再生成後、`FindByUserName`、複合条件のヘルパーメソッド / Search テンプレートが自動的に生成されます。
+
+エンティティキャッシュ戦略：`Meta.Session.Count < 1000` の場合はインメモリコレクションの検索を使用し、それ以外はデータベースまたは単一オブジェクトキャッシュを使用します。
+
+```csharp
+public static UserInfo FindByUserName(String userName)
+{
+    if (userName.IsNullOrEmpty()) return null;
+    if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserName.EqualIgnoreCase(userName));
+    return Find(_.UserName == userName);
+}
+```
+
+#### シャーディングの例
+
+```csharp
+Meta.ShardPolicy = new TimeShardPolicy(nameof(UserInfo.Id), Meta.Factory)
+{
+    ConnPolicy = "{0}",           // カスタマイズ可能なデータベース名ポリシー
+    TablePolicy = "{0}_{1:yyyyMMdd}", // テーブル名テンプレート
+    Step = TimeSpan.FromDays(1)
+};
+```
+
+Insert / Query などの他のコードはすべて変更不要で、自動的に対応する日付テーブルへルーティングされます。
+
+#### 元のサンプル（保持）
+
+<details>
+<summary><b>元の CRUD と複雑なクエリのサンプル</b></summary>
+
+##### 作成・読み取り・更新・削除
+
+```csharp
+var user = new UserInfo();
+user.UserName = "山田太郎";
+user.Password = "123456";
+user.Age = 18;
+user.Insert();
+Console.WriteLine("新しいレコードを挿入しました。ユーザー ID: " + user.Id);
+
+var u = UserInfo.FindById(1);
+u.UserName = "山田太郎";
+u.Password = "123456";
+u.Age = 19;
+u.Update();
+
+u = UserInfo.FindById(1);
+Console.WriteLine($"ユーザー ID={u.Id} 年齢を更新しました: {u.Age}");
+```
+
+##### 複雑なクエリ
+
+```csharp
+var list = UserInfo.FindAll(UserInfo._.UserName == "山田太郎" & UserInfo._.Age == 19, UserInfo._.UserName.Desc(), string.Join(",", UserInfo._.UserName, UserInfo._.Age), 0, 0);
+```
+
+</details>
+
+### ベンチマーク
+
+| 機能 | 指標（一般的な環境） | 備考 |
+| ---- | ---------------- | ---- |
+| シングルマシン Insert | 最大約 890k TPS | バッチ / キャッシュ + SQLite / RAM ディスクの組み合わせテスト |
+| シングルマシン Query | 最大約 18 億 QPS | 小さなテーブル + エンティティキャッシュ / 単一オブジェクトキャッシュのシナリオ |
+| テーブルあたりのデータ量 | 本番で数百億行 | ページング + シャーディング戦略 |
+
+> 実際のパフォーマンスは、データベースの種類 / ハードウェア / シャーディング戦略 / キャッシュヒット率に依存します。
+
+### FAQ
+
+- 最初の Count が速いのはなぜですか？ `Meta.Count` はシステムインデックスを使用します。SQLite ではまず identity の最大値を取得し、その後非同期で精緻化する場合があります。
+- 更新後、キャッシュはどれくらいで整合しますか？ 現在のプロセス内の書き込みは即座に反映されます。プロセス間ではキャッシュの期限切れを待つか、アクティブな無効化戦略を使用してください。
+- 自動マイグレーションを無効にできますか？ `Migration=Off` を設定するか（グローバルまたはテーブル単位）、必要に応じて ReadOnly/On/Full を使用します。
+- 複雑な複数テーブルのクエリは？ 複数の単一テーブルクエリ + インメモリ関連付けを推奨します（キャッシュヒット時は高速で、構造も明確です）。
 
 ## エコシステムマップ
 
@@ -82,13 +395,44 @@ NewLife は、独立したバージョン管理を行うオープンソースプ
 
 > バッジは各プロジェクトの主要パッケージを示します。テーマ、拡張、サテライトパッケージは各 NuGet ページを参照してください。ここに記載していない 30 以上のパッケージ（FTP、LoRa、Office 拡張、各種プロトコルドライバーなど）は [NewLifeX 組織](https://github.com/NewLifeX) と [newlifex.com](https://newlifex.com) で公開しています。この表は NewLife.Core の README を保守元としています。
 
-ドキュメント: https://newlifex.com/xcode | QQ: 1600800 / 1600838 | ライセンス: MIT
+## ドキュメント
 
-## 新生命開発チーム
+- [XCode ドキュメントナビゲーション](Doc/XCode文档导航.md)：モジュール別に整理された完全なドキュメント索引
+- [XCode ユーザーマニュアル](Doc/XCode使用手册.md)：エンドツーエンドの利用手順
+- [アーキテクチャ設計](Doc/架构设计.md)：レイヤー、コンポーネント、主要な設計判断
+- [多言語ローカライズ](Doc/多语言本地化.md)：メッセージモデル、言語テーブル、実行時の上書き
+- オンラインドキュメント：https://newlifex.com/xcode
+- [ChangeLog.md](ChangeLog.md)：バージョン履歴
+
+## コントリビュート
+
+### ビルドとテスト
+
+```
+dotnet restore
+dotnet build -c Release
+dotnet test XUnitTest.XCode -c Release
+```
+
+- テストケースは `XUnitTest.XCode` に追加してください。パフォーマンスに関わる提案には、ベンチマークまたは説明を添えてください。
+- リポジトリの規約に従ってください（強名、マルチ TFM、XML コメント、条件付きコンパイル）。
+- 公開 API の変更には移行戦略（Obsolete → 削除）が必要です。
+
+### リリース
+
+`v` プレフィックスのタグ（例：`v2026.1018`）をプッシュすると `.github/workflows/publish.yml` がトリガーされます。ワークフローは XCode、XCodeTool、およびプロバイダーパッケージ（`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`）をパックし、NuGet.org と GitHub Packages にプッシュします。
+
+### フィードバック
+
+- Issue / PR を歓迎します：パフォーマンス最適化 / 新しいデータベースプロバイダー / ドキュメントの改善。
+- 提出前に `dotnet build` と関連するユニットテストが通ることを確認し、コードスタイルとコミットメッセージに関するリポジトリの規約に従ってください。
+- バグや提案は [Issue](https://github.com/NewLifeX/NewLife.XCode/issues) で報告してください。Star と PR を歓迎します。
+
+## チーム
 
 <img src="https://newlifex.com/logo.png" width="48" align="right" alt="NewLife" />
 
-新生命チームは 2002 年に設立され、20 年以上にわたり .NET と IoT の技術エコシステムに注力し、100 近いオープンソースプロジェクトを主導し（うち 34 が主要プロジェクト）、電力、物流、医療、産業制御、インターネットなどの業界にソフトウェアとハードウェアを一体化したソリューションを提供しています。「学問に先後なし、達する者が師である」を信条としています。
+2002 年に設立された NewLife チームは、20 年以上にわたり .NET と IoT のエコシステムに取り組み、100 近いオープンソースプロジェクトを維持し（うち 34 がこのマップの中核）、電力、物流、医療、産業制御、インターネットなどの業界にソフトウェアとハードウェアを一体化したソリューションを提供しています。「学問に先後なし、達する者が師である」を信条としています。
 
 オープンソースコンポーネントは NuGet で累計 <!--nuget-total:start-->6.48M<!--nuget-total:end--> 回ダウンロードされています（エコシステム全体、2026-10 時点）。
 
@@ -100,3 +444,9 @@ NewLife は、独立したバージョン管理を行うオープンソースプ
 ![智能大石头](https://newlifex.com/stone.jpg)
 
 </details>
+
+## ライセンス
+
+MIT、完全オープン。商用利用 / 改変 / 再配布が可能です（プライベートデプロイでは「NewLife」を自社ブランドに置き換えられます）。強名証明書 `newlife.snk` は組み込み済みです。
+
+> このプロジェクトが役に立ったら、Star を付けるか、チームで共有するか、Issue/PR で改善提案をお送りください。

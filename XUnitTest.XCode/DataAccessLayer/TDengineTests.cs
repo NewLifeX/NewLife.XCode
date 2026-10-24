@@ -229,13 +229,13 @@ public class TDengineTests
     private IDisposable CreateForBatch(String action)
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership_Batch;");
-        DAL.AddConnStr("Membership_Batch", connStr, null, "TDengine");
+        DAL.AddConnStr("Membership_Batch_TDengine", connStr, null, "TDengine");
 
         var dt = CarMeter.Meta.Table.DataTable.Clone() as IDataTable;
         dt.TableName = $"CarMeter_{action}";
 
         // 分表
-        var split = CarMeter.Meta.CreateSplit("Membership_Batch", dt.TableName);
+        var split = CarMeter.Meta.CreateSplit("Membership_Batch_TDengine", dt.TableName);
 
         var session = CarMeter.Meta.Session;
         session.Dal.SetTables(dt);

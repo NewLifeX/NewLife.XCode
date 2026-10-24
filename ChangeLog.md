@@ -1,10 +1,52 @@
 # NewLife.XCode 更新日志
 
-## [Unreleased]
+## v12.3.2026.1024 (2026-10-24)
 
-- 新增 SonnetDB 官方 ADO.NET 驱动适配和 net10.0 的 XCode.SonnetDB 依赖包，支持关系表元数据、常用 CRUD、自增、分页、批量 Insert/InsertIgnore/Upsert、单主键有界删除及基本迁移。
-- 对未完成的 Decimal/时间精度、长度、注释、Replace、复合主键删除和隔离等级明确保护或记录；能力与 SonnetDB issue/发布依赖见 `Doc/SonnetDB.md`，不宣称完整等价支持。
-- 修复实体表达式批量删除生成参数后未传给执行接口的问题，使用数据库方言生成可执行条件。
+### SonnetDB 数据库支持
+- **官方 ADO.NET 驱动适配**：新增 `XCode.SonnetDB`（net10.0）依赖包，支持关系表元数据、常用 CRUD、自增、分页、批量 Insert/InsertIgnore/Upsert、单主键有界删除及基本迁移
+- **能力边界明确**：对未完成的 Decimal/时间精度、长度、注释、Replace、复合主键删除和隔离等级明确保护或记录；能力与 SonnetDB issue/发布依赖见 `Doc/SonnetDB.md`，不宣称完整等价支持
+- **安全与迁移修复**：数值条件按列类型转换并拒绝非法文本；Upsert 将唯一索引列解析为物理列名；默认值与索引迁移按物理表名处理，嵌入模式剥离 `sonnetdb://` 前缀
+
+### 31 种语言本地化
+- **运行时消息全覆盖**：实体、DAL、会员、配置、服务层、数据库驱动与 XCodeTool 命令行提示统一改为可本地化模板，补齐 31 种语言词表
+- **实体元数据与设置页**：实体元数据纳入 31 种语言词表，设置页字段支持多语言，实体元数据保持项目母语
+- **日志语言独立**：修复日志误用界面语言的问题，日志语言与界面语言分离，并新增日志语言独立性断言
+- **质量门禁**：新增词表完整性、英文占位、元数据键覆盖与源码消息覆盖测试及 CI 门禁
+
+### NativeAOT 与多平台
+- **AOT 兼容**：net8.0/net10.0 启用 `IsAotCompatible`，实体核心链路、LINQ、驱动加载器与 SQLite/NovaDb 场景通过 NativeAOT 实测；新增 AotSmoke 16 场景冒烟
+- **驱动加载降级**：驱动加载器新增程序集限定名静态引用降级与 `GetCallingAssembly` 防护，适配 NativeAOT 裁剪
+- **泛型属性拷贝**：新增 `DataConversion.CopyProperty<TSource,TTarget>`，AOT/裁剪下自动保留属性
+- **多平台 CI**：单元测试扩展至 win-x64/linux-x64/linux-arm64/linux-la64 四 RID，新增 Android/iOS 移动端与 riscv64/s390x 指令集冒烟
+
+### 数据访问与缓存
+- **实体缓存并发修复**：刷新期间并发 Add/Remove/Update 不再被旧快照覆盖，刷新日志改为结构化变更记录，并补充确定性竞态测试
+- **SqlServer 批量超时**：批量操作继承命令超时，修复大批量写入沿用驱动默认 30 秒超时
+- **自动建库**：修复 PostgreSQL/SqlServer 数据库不存在时无法自动建库
+- **属性更新安全**：修复按属性更新时值中的 `And`/`or` 被误当作 SQL 片段或替换成逗号，避免 base64/JSON 数据被静默改写
+- **驱动兼容**：修复无 DataAdapter 驱动下的数据集查询与 SQLite 备份兼容；MySQL 参数支持 Boolean 数组自动转换为 Int16 数组
+
+### 实体与代码生成
+- **树形实体**：修复自定义文本键不生效、`FindAllParents` 在 `includeSelf=true` 时不返回自身、`Up()` 第二位节点无法上升等缺陷
+- **ETL 抽取器**：修复时间分片空分片不推进导致的死循环、主键抽取重复最后一行、末页提前退出等缺陷
+- **魔方控制器**：枚举列改用类型别名引用并自动去重，搜索参数补全 Decimal 与窄整型映射，统一实体类与控制器两侧搜索列名单
+- **代码生成**：修复枚举命名空间生成、`global::` 短名不可编译、Single 类型不匹配等缺陷
+
+### 测试与工程
+- **依赖升级**：NewLife.Core / IP / Remoting / Redis / Stardust / NovaDb / MySql / UnitTest 全部升级到最新正式版
+- **测试稳定性**：分表测试连接名按数据库隔离，PostgreSQL 分表用例可重复运行；EntityCache 异步清理断言兼容 1~2 次刷新；SqlServer 连接超时放宽到 30 秒
+- **Samples**：Android 冒烟改为 JIT 并加固启动等待、崩溃检测与干净安装；Test 控制台支持无头单次运行
+- **测试覆盖**：新增导航属性、树形实体、ETL 抽取器、自动迁移、多结果集、保存模式等测试；本地全量 1188 项（1088 通过、100 跳过、0 失败，PostgreSQL 与 LocalDB 就绪）
+- **CI**：发布工作流同时推送 GitHub Packages、NuGet.org 并创建 GitHub Release；新增四 RID、移动端与指令集兼容矩阵
+- **文档**：11 种语言 README 全文翻译，生态版图与团队介绍对齐 NewLife.Core；新增 SonnetDB、AOT 兼容性与多语言本地化文档
+
+### Bug 修复
+- **[fix] 实体表达式批量删除**：生成参数后未传给执行接口，改用数据库方言生成可执行条件
+- **[fix] GetOrAdd 空键**：恢复空业务主键返回空而非空引用异常，三个重载与接口语义保持一致
+- **[fix] NovaDb 分页**：分页语法适配 `LIMIT n OFFSET m`
+- **[fix] 空富文本备注**：用户/部门保存时自动清理 `<p><br></p>` 一类无内容 HTML
+
+---
 
 ## v12.2.2026.0901 (2026-09-01)
 

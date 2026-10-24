@@ -21,6 +21,9 @@
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <!-- 冒烟不评估裁剪体积，关闭链路裁剪以保证反射与 GetExportedTypes 可用 -->
     <AndroidLinkMode>None</AndroidLinkMode>
+    <!-- AOT 兼容性由 AotSmoke 覆盖；Android AOT 在 API 36 模拟器上触发 Mono class-init 断言，移动端冒烟改用 JIT -->
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.Contains('-ios'))">

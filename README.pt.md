@@ -18,7 +18,7 @@
 
 > ⚠️ Esta tradução pode ficar desatualizada, inclusive em sua estrutura; a versão autorizada é o [README em inglês](README.md).
 
-**NewLife.XCode** é um middleware de dados .NET de alto desempenho, focado em "CRUD + desempenho extremo + dados massivos". Inclui cache em múltiplos níveis, modelagem/migração automática, sharding, consultas fortemente tipadas e migração entre bancos de dados. Suporta MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / banco de dados virtual Network / NovaDb e muito mais. Implantações em produção alcançam dezenas de bilhões de linhas por tabela, e a taxa de transferência de consultas pode chegar a bilhões de QPS (com estratégias de cache).
+**NewLife.XCode** é um middleware de dados .NET de alto desempenho, focado em "CRUD + desempenho extremo + dados massivos". Inclui cache em múltiplos níveis, modelagem/migração automática, sharding, consultas fortemente tipadas e migração entre bancos de dados. Suporta MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / banco de dados virtual Network / NovaDb / SonnetDB e muito mais. Implantações em produção alcançam dezenas de bilhões de linhas por tabela, e a taxa de transferência de consultas pode chegar a bilhões de QPS (com estratégias de cache).
 
 Documentação: https://newlifex.com/xcode   Grupos QQ da comunidade: 1600800 / 1600838
 

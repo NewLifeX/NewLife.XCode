@@ -18,7 +18,7 @@
 
 > ⚠️ 本翻譯可能落後，包括其結構；以[英文 README](README.md)為準。
 
-高效能 .NET 資料中介層，聚焦「增刪改查 + 極致效能 + 海量資料」，內建多層快取、自動建模/移轉、分表分庫、強型別查詢、跨庫移轉，支援 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / 達夢 / 金倉 / 瀚高 / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network 網路虛擬資料庫 / NovaDb 自研資料庫等。單表生產實踐達百億級，查詢吞吐可達十億級 QPS（搭配快取策略）。
+高效能 .NET 資料中介層，聚焦「增刪改查 + 極致效能 + 海量資料」，內建多層快取、自動建模/移轉、分表分庫、強型別查詢、跨庫移轉，支援 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / 達夢 / 金倉 / 瀚高 / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network 網路虛擬資料庫 / NovaDb 自研資料庫 / SonnetDB 等。單表生產實踐達百億級，查詢吞吐可達十億級 QPS（搭配快取策略）。
 
 文件：https://newlifex.com/xcode   社群交流 QQ 群：1600800 / 1600838
 

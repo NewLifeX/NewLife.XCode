@@ -19,7 +19,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/NewLife.XCode</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;SonnetDB;ORM</PackageTags>
-    <PackageReleaseNotes>新增 SonnetDB 4.0.0 驱动接入。能力验收与数据库缺口见 Doc/SonnetDB.md。</PackageReleaseNotes>
+    <PackageReleaseNotes>新增 SonnetDB 4.0.0 官方 ADO.NET 驱动接入；支持关系表元数据、常用 CRUD、自增、分页、批量 Insert/InsertIgnore/Upsert、单主键有界删除与基本迁移；修正数值条件转换、唯一索引 Upsert、默认值与索引迁移缺陷；能力边界见 Doc/SonnetDB.md</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.nuget.md</PackageReadmeFile>
   </PropertyGroup>

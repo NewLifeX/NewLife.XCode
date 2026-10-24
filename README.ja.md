@@ -18,7 +18,7 @@
 
 > ⚠️ この翻訳は構成を含め古くなっている可能性があります。正式な版は[英語版 README](README.md)です。
 
-**NewLife.XCode** は、「CRUD + 極限のパフォーマンス + 大規模データ」に特化した高性能な .NET データミドルウェアです。マルチレベルキャッシュ、自動モデリング/マイグレーション、シャーディング、型付きクエリ、データベース間移行を備えています。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb などに対応しています。本番環境では 1 テーブルあたり数百億行に達し、クエリのスループットは（キャッシュ戦略により）数十億 QPS に達することがあります。
+**NewLife.XCode** は、「CRUD + 極限のパフォーマンス + 大規模データ」に特化した高性能な .NET データミドルウェアです。マルチレベルキャッシュ、自動モデリング/マイグレーション、シャーディング、型付きクエリ、データベース間移行を備えています。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb / SonnetDB などに対応しています。本番環境では 1 テーブルあたり数百億行に達し、クエリのスループットは（キャッシュ戦略により）数十億 QPS に達することがあります。
 
 ドキュメント：https://newlifex.com/xcode   コミュニティ QQ グループ：1600800 / 1600838
 

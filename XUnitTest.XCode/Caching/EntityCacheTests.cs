@@ -124,7 +124,8 @@ namespace XUnitTest.XCode.Caching
             // 再次访问
             var list2 = cache.Entities;
 
-            Assert.Equal(1, cache.Times);
+            // 非强制清理后异步刷新可能在本行前已完成，Times 为 1 或 2 均符合异步语义
+            Assert.InRange(cache.Times, 1, 2);
             Thread.Sleep(2000);
             Assert.Equal(2, cache.Times);
 

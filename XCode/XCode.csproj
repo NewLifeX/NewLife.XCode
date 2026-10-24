@@ -7,7 +7,7 @@
     <Description>High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration.</Description>
     <Company>新生命开发团队</Company>
     <Copyright>©2002-2026 NewLife</Copyright>
-    <VersionPrefix>12.2</VersionPrefix>
+    <VersionPrefix>12.3</VersionPrefix>
     <VersionSuffix>$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</VersionSuffix>
     <Version>$(VersionPrefix).$(VersionSuffix)</Version>
     <FileVersion>$(Version)</FileVersion>
@@ -36,7 +36,7 @@
     <RepositoryUrl>https://github.com/NewLifeX/X</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>新生命团队;X组件;NewLife;$(AssemblyName)</PackageTags>
-    <PackageReleaseNotes>数据权限（DataScope）增强：校验失败拒绝越权写入、缓存键含部门编号支持调岗即时生效、纯部门/纯用户实体过滤修正；多租户：TenantInterceptor 查询自动附加租户过滤，EntityBuilder 为含 TenantId 业务类自动实现 ITenantScope；修复 EntityDeferredQueue 自动分表 Flush 异常、NovaDb Truncate 表不存在静默返回、XCodeTool BuildMap 孤立 Map 特性</PackageReleaseNotes>
+    <PackageReleaseNotes>SonnetDB 官方 ADO.NET 驱动适配与 net10.0 依赖包；31 种语言运行时消息与实体元数据本地化；NativeAOT 兼容（net8/net10）与 16 场景冒烟；实体缓存并发刷新修复；SqlServer 批量超时、PostgreSQL/SqlServer 自动建库与属性更新 SQL 改写修复；依赖升级到 NewLife.Core 12.0.2026.1024 等最新正式版；新增导航、树形、ETL、迁移、多结果集测试</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -51,7 +51,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NewLife.Core" Version="12.0.2026.1021-beta0321" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1024" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="NewLife" />

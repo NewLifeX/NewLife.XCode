@@ -212,12 +212,12 @@ public class KingBaseTests
     private IDisposable CreateForBatch(String action)
     {
         var connStr = _ConnStr.Replace("Database=test;", "Database=Membership_Batch;");
-        DAL.AddConnStr("Membership_Batch", connStr, null, "KingBase");
+        DAL.AddConnStr("Membership_Batch_KingBase", connStr, null, "KingBase");
         var dt = Role2.Meta.Table.DataTable.Clone() as IDataTable;
         dt.TableName = $"Role2_{action}";
 
         // 分表
-        var split = Role2.Meta.CreateSplit("Membership_Batch", dt.TableName);
+        var split = Role2.Meta.CreateSplit("Membership_Batch_KingBase", dt.TableName);
 
         var session = Role2.Meta.Session;
         session.Dal.SetTables(dt);

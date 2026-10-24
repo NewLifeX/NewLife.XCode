@@ -11,6 +11,10 @@ on:
         - 'XCode/**'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-publish:
     runs-on: ubuntu-latest

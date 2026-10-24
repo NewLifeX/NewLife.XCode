@@ -21,7 +21,7 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class SqlServerTests
 {
-    private static String _ConnStr = "Server=127.0.0.1,1433;Database=master;Uid=sa;Pwd=Pass@word;TrustServerCertificate=true;Connection Timeout=5";
+    private static String _ConnStr = "Server=127.0.0.1,1433;Database=master;Uid=sa;Pwd=Pass@word;TrustServerCertificate=true;Connection Timeout=30";
 
     public SqlServerTests()
     {
@@ -214,13 +214,13 @@ public class SqlServerTests
     private IDisposable CreateForBatch(String action)
     {
         var connStr = _ConnStr.Replace("Database=master;", "Database=Membership_Batch;");
-        DAL.AddConnStr("Membership_Batch", connStr, null, "SqlServer");
+        DAL.AddConnStr("Membership_Batch_SqlServer", connStr, null, "SqlServer");
 
         var dt = Role2.Meta.Table.DataTable.Clone() as IDataTable;
         dt.TableName = $"Role2_{action}";
 
         // 分表
-        var split = Role2.Meta.CreateSplit("Membership_Batch", dt.TableName);
+        var split = Role2.Meta.CreateSplit("Membership_Batch_SqlServer", dt.TableName);
 
         var session = Role2.Meta.Session;
         session.Dal.SetTables(dt);

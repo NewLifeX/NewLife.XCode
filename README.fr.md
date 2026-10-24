@@ -18,7 +18,7 @@
 
 > ⚠️ Cette traduction peut être obsolète, y compris sa structure ; la version de référence est le [README anglais](README.md).
 
-**NewLife.XCode** est un intergiciel de données .NET hautes performances, axé sur « CRUD + performances extrêmes + données massives ». Il comprend le cache multi-niveaux, la modélisation/migration automatique, le partitionnement (sharding), les requêtes fortement typées et la migration inter-bases de données. Il prend en charge MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / base de données virtuelle Network / NovaDb et bien d'autres. Les déploiements en production atteignent des dizaines de milliards de lignes par table, et le débit de requêtes peut atteindre des milliards de QPS (avec des stratégies de cache).
+**NewLife.XCode** est un intergiciel de données .NET hautes performances, axé sur « CRUD + performances extrêmes + données massives ». Il comprend le cache multi-niveaux, la modélisation/migration automatique, le partitionnement (sharding), les requêtes fortement typées et la migration inter-bases de données. Il prend en charge MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / base de données virtuelle Network / NovaDb / SonnetDB et bien d'autres. Les déploiements en production atteignent des dizaines de milliards de lignes par table, et le débit de requêtes peut atteindre des milliards de QPS (avec des stratégies de cache).
 
 Documentation : https://newlifex.com/xcode   Groupes QQ de la communauté : 1600800 / 1600838
 

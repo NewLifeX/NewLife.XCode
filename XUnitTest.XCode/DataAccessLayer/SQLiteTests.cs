@@ -217,13 +217,13 @@ public class SQLiteTests
     private IDisposable CreateForBatch(String action)
     {
         var db = "Data\\Membership_Batch.db";
-        DAL.AddConnStr("Membership_Batch", $"Data Source={db}", null, "SQLite");
+        DAL.AddConnStr("Membership_Batch_SQLite", $"Data Source={db}", null, "SQLite");
 
         var dt = Role2.Meta.Table.DataTable.Clone() as IDataTable;
         dt.TableName = $"Role2_{action}";
 
         // 分表
-        var split = Role2.Meta.CreateSplit("Membership_Batch", dt.TableName);
+        var split = Role2.Meta.CreateSplit("Membership_Batch_SQLite", dt.TableName);
 
         var session = Role2.Meta.Session;
         session.Dal.SetTables(dt);

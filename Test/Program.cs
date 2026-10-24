@@ -76,6 +76,8 @@ public class Program
             //Thread.Sleep(5000);
             GC.Collect();
             GC.WaitForPendingFinalizers();
+            // 重定向输入时无法 ReadKey，按单次运行处理，便于无头冒烟
+            if (Console.IsInputRedirected) break;
             var key = Console.ReadKey(true);
             if (key.Key != ConsoleKey.C) break;
         }
@@ -126,11 +128,15 @@ public class Program
         XTrace.WriteLine("Roles: {0}", list.ToJson(new JsonOptions { WriteIndented = true, EnumString = true }));
 
         //var dal = Role.Meta.Session.Dal;
-        var f = "data/mb2.db".GetFullPath();
+        // 与空连接串的默认 SQLite 路径保持一致，避免重复运行时命中旧库
+        var f = Path.Combine(AppContext.BaseDirectory, "Data", "mb2.db");
         if (File.Exists(f)) File.Delete(f);
 
         DAL.AddConnStr("mb2", "", null, "sqlite");
         Role.Meta.ConnName = "mb2";
+        // 确保表已创建并清空，保证无头环境可重复运行
+        Role.Meta.Session.InitData();
+        Role.Meta.Session.Truncate();
         foreach (var item in list)
         {
             item.Name += "2";

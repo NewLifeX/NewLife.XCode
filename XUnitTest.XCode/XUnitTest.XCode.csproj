@@ -85,15 +85,15 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="InterSystems.Data.IRISClient" Version="2.6.1" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.11" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
-    <PackageReference Include="NewLife.Core" Version="12.0.2026.1021-beta0321" />
-    <PackageReference Include="NewLife.IP" Version="2.5.2026.1019-beta1510" />
-    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.1019-beta0435" />
-    <!-- 直引 Remoting 最新 beta，与 AotSmoke 对齐，避免传递依赖版本落后 -->
-    <PackageReference Include="NewLife.Remoting" Version="3.9.2026.1021-beta0410" />
-    <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.301-beta0617" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1024" />
+    <PackageReference Include="NewLife.IP" Version="2.6.2026.1024" />
+    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.901" />
+    <!-- 直引 Remoting 最新正式版，与 AotSmoke 对齐，避免传递依赖版本落后 -->
+    <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1024" />
+    <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.102" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.13" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
       <PrivateAssets>all</PrivateAssets>

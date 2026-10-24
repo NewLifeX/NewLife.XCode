@@ -18,7 +18,7 @@ while ((Get-Date) -lt $bootDeadline) {
 }
 if ($booted -ne "1") { throw "Android emulator did not finish booting" }
 
-dotnet build $project -c $Configuration -f net10.0-android --nologo
+dotnet build $project -c $Configuration -f net10.0-android -p:MobileSmokeTarget=android --nologo
 if ($LASTEXITCODE -ne 0) { throw "Android build failed" }
 
 $apk = Get-ChildItem (Join-Path $root "Bin/MobileSmoke") -Recurse -Filter *.apk |

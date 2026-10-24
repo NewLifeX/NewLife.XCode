@@ -45,19 +45,18 @@ public class SqlBuilderTests
         Assert.Equal("Name,Code Desc", orderby);
 
         page = new PageParameter { Sort = "name2 asc\n,\ncode", Desc = true };
-        var ex = Assert.Throws<XCodeException>(() => SqlBuilder.BuildOrder(page, factory));
-        if (!LocalizationTestHelper.IsInvariantGlobalization)
+        var savedCulture = Localization.Culture;
+        try
         {
-            var savedCulture = Localization.Culture;
-            try
-            {
-                Localization.Culture = CultureInfo.GetCultureInfo("zh-Hans");
-                Assert.Equal("实体类[User]不包含排序字段[name2]", ex.Message);
-            }
-            finally
-            {
-                Localization.Culture = savedCulture;
-            }
+            // 异常消息在构造时按当前语言翻译，必须在触发异常前切换语言
+            if (!LocalizationTestHelper.IsInvariantGlobalization) Localization.Culture = CultureInfo.GetCultureInfo("zh-Hans");
+
+            var ex = Assert.Throws<XCodeException>(() => SqlBuilder.BuildOrder(page, factory));
+            if (!LocalizationTestHelper.IsInvariantGlobalization) Assert.Equal("实体类[User]不包含排序字段[name2]", ex.Message);
+        }
+        finally
+        {
+            Localization.Culture = savedCulture;
         }
     }
 

@@ -183,7 +183,8 @@ public class SqlServerTests
 
         Role.Meta.Session.InitData();
 
-        var count = Role.Meta.Count;
+        // Meta.Count 为非精确缓存值，初始化后可能仍为 0，改查精确行数
+        var count = Role.FindCount();
         Assert.True(count > 0);
 
         var list = Role.FindAll();

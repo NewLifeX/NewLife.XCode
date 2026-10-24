@@ -3,6 +3,9 @@
   <!-- 移动端兼容冒烟：在主库之上运行核心 API，Android 跑模拟器、iOS 跑模拟器 -->
   <PropertyGroup>
     <TargetFrameworks>net10.0-android;net10.0-ios</TargetFrameworks>
+    <!-- CI 仅安装单一平台工作负载时，用 MobileSmokeTarget 收窄目标，避免另一个平台触发 NETSDK1178 -->
+    <TargetFrameworks Condition="'$(MobileSmokeTarget)' == 'android'">net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="'$(MobileSmokeTarget)' == 'ios'">net10.0-ios</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

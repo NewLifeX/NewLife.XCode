@@ -11,7 +11,7 @@ ARTIFACTS="$ROOT/Bin/MobileSmoke/artifacts"
 
 mkdir -p "$ARTIFACTS"
 
-dotnet build "$PROJECT" -c "$CONFIGURATION" -f net10.0-ios -p:RuntimeIdentifier="$RUNTIME" --nologo
+dotnet build "$PROJECT" -c "$CONFIGURATION" -f net10.0-ios -p:MobileSmokeTarget=ios -p:RuntimeIdentifier="$RUNTIME" --nologo
 
 APP="$(find "$ROOT/Bin/MobileSmoke" -maxdepth 6 -name "*.app" -print -quit)"
 if [ -z "$APP" ]; then

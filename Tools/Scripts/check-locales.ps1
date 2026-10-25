@@ -174,6 +174,14 @@ foreach ($dir in @($MetadataSourceDir | Where-Object { $_ })) {
     }
 }
 
+# 运行期组合键：菜单 menu:<类型全名>、实体 entity:<实体全名>、字段 field:<...> 由类型全名拼出，
+# 源码中没有字面量，按元数据键口径处理——允许部分语言缺失、免于孤儿检查
+foreach ($key in @($reference.Entries.Keys)) {
+    foreach ($prefix in @("menu:", "entity:", "field:")) {
+        if ($key.StartsWith($prefix, [StringComparison]::Ordinal)) { [void]$metadataKeySet.Add($key); break }
+    }
+}
+
 foreach ($file in Get-ChildItem $localeDir -Filter *.yml | Sort-Object Name) {
     if ($file.Name -eq $Baseline) { continue }
     $lang = [IO.Path]::GetFileNameWithoutExtension($file.Name)

@@ -253,6 +253,24 @@ internal class SQLite : FileDbBase
     /// <param name="right"></param>
     /// <returns></returns>
     public override String StringConcat(String left, String right) => (!left.IsNullOrEmpty() ? left : "\'\'") + "||" + (!right.IsNullOrEmpty() ? right : "\'\'");
+
+    /// <summary>格式化模糊搜索的字符串。SQLite 的 LIKE 没有默认转义字符，需要显式声明 ESCAPE</summary>
+    /// <remarks>
+    /// 基类把 % 和 _ 转义为 \% 和 \_，但只有 SQL Server/MySQL 等把反斜杠当作 LIKE 的默认转义字符。
+    /// SQLite 未声明 ESCAPE 时反斜杠是普通字符，导致含 _ 或 % 的关键字查不到数据。
+    /// </remarks>
+    /// <param name="column">字段</param>
+    /// <param name="format">格式化字符串</param>
+    /// <param name="value">数值</param>
+    /// <returns></returns>
+    public override String FormatLike(IDataColumn column, String format, String value)
+    {
+        var line = base.FormatLike(column, format, value);
+        if (line.IsNullOrEmpty() || value.IsNullOrEmpty()) return line;
+
+        // 只有值里含通配符时基类才会插入反斜杠转义，此时才需要 ESCAPE 声明
+        return value.IndexOfAny(['%', '_']) >= 0 ? line + " Escape '\\'" : line;
+    }
     #endregion
 }
 

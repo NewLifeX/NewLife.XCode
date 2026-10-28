@@ -84,6 +84,19 @@ public class SQLiteLikeEscapeTests : IDisposable
         Assert.Contains("abc", sql);
     }
 
+    /// <summary>格式未引用操作数时不加 ESCAPE 子句</summary>
+    [Fact(DisplayName = "SQLite_LIKE转义_未引用操作数不加ESCAPE")]
+    public void FormatLike_FormatWithoutValue_NoEscapeClause()
+    {
+        using var db = OpenSqlite();
+        var field = new XField { ColumnName = "Name" };
+
+        var sql = db.FormatLike(field, "{0} Is Null", "a_b");
+
+        Assert.DoesNotContain("Escape", sql);
+        Assert.Contains("Is Null", sql);
+    }
+
     /// <summary>参数化格式不转义操作数，% 与 _ 仍按通配符处理</summary>
     /// <remarks>与 DbBase.FormatLike 参数化重载的约定一致；此处锁定现状，避免后续改动悄悄改变语义</remarks>
     [Fact(DisplayName = "SQLite_LIKE转义_参数化格式不转义")]

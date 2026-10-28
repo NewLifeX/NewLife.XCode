@@ -269,7 +269,10 @@ internal class SQLite : FileDbBase
         if (line.IsNullOrEmpty() || value.IsNullOrEmpty()) return line;
 
         // 只有值里含通配符时基类才会插入反斜杠转义，此时才需要 ESCAPE 声明
-        return value.IndexOfAny(['%', '_']) >= 0 ? line + " Escape '\\'" : line;
+        if (value.IndexOfAny(['%', '_']) < 0) return line;
+
+        // 格式未引用操作数时（如“{0} Is Null”）不会产生转义，不加 ESCAPE
+        return format.Contains("{1}") ? line + " Escape '\\'" : line;
     }
     #endregion
 }

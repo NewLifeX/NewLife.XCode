@@ -26,7 +26,9 @@ public class LocalesCoverageTests
 
     // Cache 在法语、意大利语、荷兰语、北欧语言与印尼语/马来语中本身就是原生写法
     private static readonly String[] _allowSame = ["{0} format {1}", "Cache"];
-
+    // 运行期组合键：menu:<类型全名>、entity:<实体全名>、field:<...> 由类型全名拼出，源码中没有字面量
+    // 与 Tools/Scripts/check-locales.ps1 保持一致：允许部分语言缺失，缺失时回退源文
+    private static readonly String[] _runtimeKeyPrefixes = ["menu:", "entity:", "field:"];
     private static readonly Regex _entryPattern = new("^\\s*\"((?:[^\"\\\\]|\\\\.)*)\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"\\s*$");
     private static readonly Regex _escapePattern = new("\\\\(u[0-9a-fA-F]{4}|.)");
     private static readonly Regex _placeholderPattern = new("\\{(\\d+)(?:,-?\\d+)?(?::[^}]*)?\\}");
@@ -66,7 +68,7 @@ public class LocalesCoverageTests
                 {
                     var value = Localization.Translate(item.Key);
 
-                    if (!_allowSame.Contains(item.Key) && !metadata.Contains(item.Key))
+                    if (!_allowSame.Contains(item.Key) && !metadata.Contains(item.Key) && !IsRuntimeKey(item.Key))
                         Assert.False(String.Equals(value, item.Key, StringComparison.Ordinal), $"[{culture}] 未翻译：{item.Key}");
 
                     var expected = GetPlaceholders(item.Key);
@@ -123,6 +125,11 @@ public class LocalesCoverageTests
     /// <param name="ch">字符</param>
     /// <returns>属于 CJK 时返回 true</returns>
     private static Boolean IsCjk(Char ch) => ch >= '\u4e00' && ch <= '\u9fff';
+
+    /// <summary>是否为运行期组合键（menu:/entity:/field: 前缀，允许部分语言缺失）</summary>
+    /// <param name="key">词表键</param>
+    /// <returns>命中前缀时返回 true</returns>
+    private static Boolean IsRuntimeKey(String key) => _runtimeKeyPrefixes.Any(e => key.StartsWith(e, StringComparison.Ordinal));
 
     /// <summary>读取元数据键清单</summary>
     /// <param name="dir">词表目录</param>

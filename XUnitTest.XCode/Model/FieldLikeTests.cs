@@ -103,10 +103,15 @@ namespace XUnitTest.XCode.Model
         {
             var fi = User._.Name;
             var exp = fi.StartsWith("dmi/'[]()%&_end");
-            var where = exp.GetString(_dbUser, null);
-            Assert.Equal("Name Like 'dmi/''[]()\\%&\\_end%'", where);
 
-            Assert.Equal("Name Like 'dmi/''[]()\\%&\\_end%'", exp);
+            // SQLite 的 LIKE 没有默认转义字符，转义生效时必须显式声明 ESCAPE，否则反斜杠只是普通字符
+            var expected = "Name Like 'dmi/''[]()\\%&\\_end%'";
+            if (_dbUser.Type == DatabaseType.SQLite) expected += " Escape '\\'";
+
+            var where = exp.GetString(_dbUser, null);
+            Assert.Equal(expected, where);
+
+            Assert.Equal(expected, exp);
         }
 
         [Fact]

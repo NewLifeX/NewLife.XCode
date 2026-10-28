@@ -929,7 +929,8 @@ abstract class DbBase : DisposeBase, IDatabase
 
         return String.Format(format, FormatName(column), value);
     }
-    /// <summary>(参数化)格式化模糊搜索的字符串。处理转义字符</summary>
+    /// <summary>(参数化)格式化模糊搜索的字符串</summary>
+    /// <remarks>本重载不处理转义，也不声明 ESCAPE，操作数原样作为 LIKE 模式，其中的 % 与 _ 仍然按通配符处理</remarks>
     /// <param name="column">字段</param>
     /// <param name="format">格式化字符串</param>
     /// <returns></returns>

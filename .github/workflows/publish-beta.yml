@@ -12,6 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  id-token: write
   contents: read
   packages: write
 
@@ -36,9 +37,14 @@ jobs:
       run: |
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCode/XCode.csproj
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCodeTool/XCodeTool.csproj
+    - name: NuGet login (OIDC)
+      id: nuget-login
+      uses: NuGet/login@v1
+      with:
+        user: NewLife
     - name: Publish
       # 来自 fork 的 PR 不携带 Secrets（且 github.token 只读），发布推送会 403；仅在同仓库 push/workflow_dispatch 时执行
       if: github.event_name != 'pull_request'
       run: |
         dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://nuget.pkg.github.com/NewLifeX/index.json --api-key ${{ github.token }}
-        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.nugetKey }}
+        dotnet nuget push ./out/*.nupkg --skip-duplicate --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }}

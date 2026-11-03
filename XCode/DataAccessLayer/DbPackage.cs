@@ -568,7 +568,39 @@ public class DbPackage
         writeDb.TracerParent = span;
         writeDb.Start(cancellationToken);
 
-        var extracer = CreateExtracterCallback?.Invoke(table) ?? GetExtracter(table);
+        var createExtracter = CreateExtracterCallback;
+        var callbackExtracter = createExtracter?.Invoke(table);
+        var extracer = callbackExtracter ?? GetExtracter(table);
+        var hasCustomExtracter = callbackExtracter != null && createExtracter != GetExtracter;
+
+        // 构造函数设置的 GetExtracter 委托仍属默认路径。仅为本次内置抽取器配置查询，保留原抽取算法和外部 Fetch。
+        var queryCount = 0;
+        var queryDeadline = DateTime.UtcNow.AddHours(1);
+        Func<SelectBuilder, Int64, Int64, DbTable> NullableQuery(DAL source) => (builder, row, size) =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (++queryCount > 1000000) throw new InvalidOperationException("SonnetDB migration pagination exceeded one million queries.");
+            if (DateTime.UtcNow >= queryDeadline) throw new TimeoutException("SonnetDB migration pagination exceeded one hour.");
+            return source.QueryPreservingDbNull(builder, row, size);
+        };
+        if (!hasCustomExtracter)
+        {
+            switch (extracer)
+            {
+                case PagingExtracter paging when paging.GetType() == typeof(PagingExtracter)
+                    && (paging.Dal.DbType == DatabaseType.SonnetDB || dal.DbType == DatabaseType.SonnetDB):
+                    paging.QueryPage = NullableQuery(paging.Dal);
+                    break;
+                case IdExtracter id when id.GetType() == typeof(IdExtracter)
+                    && (id.Dal.DbType == DatabaseType.SonnetDB || dal.DbType == DatabaseType.SonnetDB):
+                    id.QueryPage = NullableQuery(id.Dal);
+                    break;
+                case TimeExtracter time when time.GetType() == typeof(TimeExtracter)
+                    && (time.Dal.DbType == DatabaseType.SonnetDB || dal.DbType == DatabaseType.SonnetDB):
+                    time.QueryPage = NullableQuery(time.Dal);
+                    break;
+            }
+        }
 
         // 临时关闭日志
         var old = Dal.Db.ShowSQL;

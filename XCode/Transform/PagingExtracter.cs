@@ -25,6 +25,9 @@ public class PagingExtracter : IExtracter<DbTable>
 
     /// <summary>总行数</summary>
     public Int32 TotalCount { get; set; }
+
+    // 迁移可为单个抽取器指定保留 NULL 的查询，不改变 DAL 会话的默认读取行为。
+    internal Func<SelectBuilder, Int64, Int64, DbTable>? QueryPage { get; set; }
     #endregion
 
     #region 构造
@@ -61,7 +64,7 @@ public class PagingExtracter : IExtracter<DbTable>
         while (true)
         {
             // 查询数据
-            var dt = Dal.Query(Builder, Row, BatchSize);
+            var dt = QueryPage != null ? QueryPage(Builder, Row, BatchSize) : Dal.Query(Builder, Row, BatchSize);
             if (dt == null || dt.Rows == null) break;
 
             var count = dt.Rows.Count;

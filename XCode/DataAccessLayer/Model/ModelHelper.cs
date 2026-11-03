@@ -673,6 +673,9 @@ public static class ModelHelper
             //ignoreNameCase = (value3.IgnoreNameCase).ToBoolean(true);
         }
 
+        // SonnetDB 的精确引用要求 XML 保留物理名称的原始拼写。
+        var preserveNameCase = value is IDataTable { DbType: DatabaseType.SonnetDB }
+            || value is IDataColumn { Table.DbType: DatabaseType.SonnetDB };
         String? name = null;
 
         // 基本类型，输出为特性
@@ -708,11 +711,11 @@ public static class ModelHelper
                 else if (pi.Name is "TableName" or "ColumnName")
                 {
                     if (name == str) continue;
-                    if (ignoreNameCase)
+                    if (!preserveNameCase && ignoreNameCase)
                     {
                         if (name.EqualIgnoreCase(str)) continue;
                     }
-                    else
+                    else if (!preserveNameCase)
                     {
                         // 如果全小写或者全大写，也不缺分大小写比较
                         if ((str == str.ToLower() || str == str.ToUpper()) && name.EqualIgnoreCase(str)) continue;

@@ -15,12 +15,12 @@ internal class SonnetDB : RemoteDb
     public override DatabaseType Type => DatabaseType.SonnetDB;
 
     /// <inheritdoc/>
-    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.InsertIgnore | BatchCapability.Upsert;
+    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.InsertIgnore | BatchCapability.Upsert | BatchCapability.Replace;
 
     /// <inheritdoc/>
     public override String SystemDatabaseName => String.Empty;
 
-    /// <summary>默认使用参数，并拒绝SonnetDB 4.0.0无法保真的数值与时间。</summary>
+    /// <summary>使用SonnetDB 5.0原生参数、精确数值与DATETIME2时间合同。</summary>
     public SonnetDB() => UseParameter = true;
 
     protected override DbProviderFactory? CreateFactory() => GetProviderFactory(null, "SonnetDB.Data.dll", "SonnetDB.Data.SndbProviderFactory");
@@ -76,8 +76,6 @@ internal class SonnetDB : RemoteDb
 
     private static String Pagination(Int64 startRowIndex, Int64 maximumRows)
     {
-        if (startRowIndex > Int32.MaxValue || maximumRows > Int32.MaxValue)
-            throw new NotSupportedException(L.T("SonnetDB LIMIT/OFFSET currently cannot exceed Int32.MaxValue. See SonnetDB issue #256."));
         var sql = maximumRows > 0 ? $" LIMIT {maximumRows}" : String.Empty;
         if (startRowIndex > 0) sql += $" OFFSET {startRowIndex}";
         return sql;
@@ -112,12 +110,12 @@ internal class SonnetDB : RemoteDb
         {
             var offset = value is DateTimeOffset dateOffset ? dateOffset : DateTimeOffset.Parse(value.ToString()!, CultureInfo.InvariantCulture);
             CheckValue(offset, typeof(DateTimeOffset));
-            return Quote(offset.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+            return "CAST(" + Quote(offset.ToString("O", CultureInfo.InvariantCulture)) + " AS DATETIMEOFFSET)";
         }
         if (type == typeof(TimeSpan) || value is TimeSpan)
         {
             var span = value is TimeSpan timeSpan ? timeSpan : TimeSpan.Parse(value.ToString()!, CultureInfo.InvariantCulture);
-            return Quote(span.ToString("c", CultureInfo.InvariantCulture));
+            return "CAST(" + Quote(span.ToString("c", CultureInfo.InvariantCulture)) + " AS DURATION)";
         }
         if (type == typeof(Guid) || value is Guid) return Quote(Guid.Parse(value.ToString()!).ToString("D"));
         if (type == typeof(String) || type == typeof(Char)) return Quote(Convert.ToString(value, CultureInfo.InvariantCulture)!);
@@ -138,39 +136,15 @@ internal class SonnetDB : RemoteDb
     public override String FormatDateTime(IDataColumn column, DateTime dateTime)
     {
         CheckValue(dateTime, typeof(DateTime));
-        return Quote(dateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffK", CultureInfo.InvariantCulture));
+        if (dateTime.Kind == DateTimeKind.Local) dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
+        return "CAST(" + Quote(dateTime.ToString("O", CultureInfo.InvariantCulture)) + " AS DATETIME2)";
     }
 
     internal static void CheckValue(Object value, Type? type)
     {
         if (value == DBNull.Value) return;
-        if (type == typeof(Decimal) || value is Decimal)
-        {
-            var number = Convert.ToDecimal(value, CultureInfo.InvariantCulture);
-            // 4.0.0参数与数字字面量先经Float64，再由Convert.ToDecimal恢复约15位有效数字。
-            try
-            {
-                if (Convert.ToDecimal((Double)number) == number) return;
-            }
-            catch (OverflowException) { }
-            throw new NotSupportedException(L.T("SonnetDB 4.0.0 cannot preserve this Decimal value exactly and rejected the write. See SonnetDB issue #235; precise decimal parameter support still needs to be implemented and released."));
-        }
-        if (value is DateTimeOffset offset)
-        {
-            CheckTime(offset.UtcDateTime.Ticks);
-        }
-        else if (type == typeof(DateTime) || value is DateTime)
-        {
-            CheckTime(Convert.ToDateTime(value, CultureInfo.InvariantCulture).Ticks);
-        }
         if ((type == typeof(UInt64) || value is UInt64) && Convert.ToUInt64(value, CultureInfo.InvariantCulture) > Int64.MaxValue)
             throw new NotSupportedException(L.T("SonnetDB INT uses signed Int64 and supports only UInt64 values up to Int64.MaxValue."));
-    }
-
-    internal static void CheckTime(Int64 ticks)
-    {
-        if (ticks % TimeSpan.TicksPerMillisecond != 0)
-            throw new NotSupportedException(L.T("SonnetDB 4.0.0 DATETIME can preserve only millisecond precision and rejected sub-millisecond times. See SonnetDB issue #236; full time precision support still needs to be implemented and released."));
     }
 
     /// <inheritdoc/>
@@ -200,19 +174,25 @@ internal class SonnetDB : RemoteDb
         }
         else if (type == typeof(DateTimeOffset))
         {
-            value = value is DateTimeOffset offset ? offset.UtcDateTime : value;
-            type = typeof(DateTime);
+            var parameter = Factory.CreateParameter()!;
+            parameter.ParameterName = FormatParameterName(name);
+            parameter.SourceColumn = name;
+            parameter.DbType = DbType.DateTimeOffset;
+            parameter.Value = value ?? DBNull.Value;
+            return parameter;
         }
         else if (type == typeof(TimeSpan))
         {
             var parameter = Factory.CreateParameter()!;
             parameter.ParameterName = FormatParameterName(name);
             parameter.SourceColumn = name;
-            parameter.DbType = DbType.Time;
+            parameter.DbType = DbType.Object;
             parameter.Value = value ?? DBNull.Value;
             return parameter;
         }
+        if (value is DateTime { Kind: DateTimeKind.Local } local) value = DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
         var result = base.CreateParameter(name, value, type);
+        if (type == typeof(DateTime)) result.DbType = DbType.DateTime2;
         if (value == null || value == DBNull.Value) result.Value = DBNull.Value;
         return result;
     }
@@ -221,14 +201,8 @@ internal class SonnetDB : RemoteDb
     public override String? BuildDeleteSql(String tableName, String where, Int32 batchSize)
     {
         if (batchSize <= 0) return base.BuildDeleteSql(tableName, where, batchSize);
-        var name = tableName.Trim('"').Replace("\"\"", "\"");
-        var table = ((SonnetDBMetaData)CreateMetaData()).FindTable(name);
-        if (table == null || table.PrimaryKeys.Length != 1)
-            throw new NotSupportedException(L.T("Bounded bulk delete in SonnetDB currently requires a single-column primary key; tables with composite or no primary keys cannot fall back to unbounded delete. See SonnetDB issue #243."));
-        var primaryKey = FormatName(table.PrimaryKeys[0]);
         var condition = String.IsNullOrWhiteSpace(where) ? String.Empty : " WHERE " + where;
-        var tableSql = FormatName(tableName);
-        return $"DELETE FROM {tableSql} WHERE {primaryKey} IN (SELECT {primaryKey} FROM {tableSql}{condition} LIMIT {batchSize})";
+        return $"DELETE FROM {FormatName(tableName)}{condition} LIMIT {batchSize}";
     }
 }
 
@@ -252,8 +226,8 @@ internal class SonnetDBSession : RemoteDbSession
     /// <inheritdoc/>
     public override Int32 BeginTransaction(IsolationLevel level)
     {
-        if (level != IsolationLevel.Unspecified && level != IsolationLevel.ReadCommitted)
-            throw new NotSupportedException(L.T("SonnetDB does not yet provide the full semantics of this transaction isolation level; use ReadCommitted. See SonnetDB issue #225."));
+        if (level != IsolationLevel.Unspecified && level != IsolationLevel.ReadCommitted && level != IsolationLevel.Serializable)
+            throw new NotSupportedException(L.T("SonnetDB supports ReadCommitted and Serializable transaction isolation levels; other levels require an explicit supported mapping."));
         return base.BeginTransaction(level);
     }
 
@@ -310,12 +284,12 @@ internal class SonnetDBSession : RemoteDbSession
     public override Int32 InsertIgnore(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list) => ExecuteBatch(table, columns, list, null, null, true);
 
     /// <inheritdoc/>
-    public override Int32 Replace(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list) => throw new NotSupportedException(L.T("SonnetDB does not yet support the Replace semantics of deleting conflicting rows and then inserting new rows. See SonnetDB issue #242."));
+    public override Int32 Replace(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list) => ExecuteBatch(table, columns, list, null, null, false, true);
 
     /// <inheritdoc/>
     public override Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list) => ExecuteBatch(table, columns, list, updateColumns, addColumns, false);
 
-    private Int32 ExecuteBatch(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list, ICollection<String>? updateColumns, ICollection<String>? addColumns, Boolean ignore)
+    private Int32 ExecuteBatch(IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list, ICollection<String>? updateColumns, ICollection<String>? addColumns, Boolean ignore, Boolean replace = false)
     {
         var rows = list.ToArray();
         if (rows.Length == 0) return 0;
@@ -324,7 +298,7 @@ internal class SonnetDBSession : RemoteDbSession
 
         var db = (SonnetDB)Database;
         var sql = new StringBuilder();
-        sql.Append("INSERT INTO ").Append(db.FormatName(table)).Append('(').Append(String.Join(",", columns.Select(db.FormatName))).Append(") VALUES ");
+        sql.Append(replace ? "REPLACE INTO " : "INSERT INTO ").Append(db.FormatName(table)).Append('(').Append(String.Join(",", columns.Select(db.FormatName))).Append(") VALUES ");
         var parameters = new List<IDataParameter>(rows.Length * columns.Length);
         for (var rowIndex = 0; rowIndex < rows.Length; rowIndex++)
         {
@@ -371,15 +345,13 @@ internal class SonnetDBSession : RemoteDbSession
 /// <summary>读取SonnetDB原生关系表元数据并生成建模SQL。</summary>
 internal class SonnetDBMetaData : RemoteDbMetaData
 {
-    private readonly HashSet<String> _reportedLengths = new(StringComparer.Ordinal);
-
     public SonnetDBMetaData() => Types = new Dictionary<Type, String[]>
     {
         [typeof(Int64)] = ["INT"], [typeof(Int32)] = ["INT"], [typeof(Int16)] = ["INT"],
         [typeof(Byte)] = ["INT"], [typeof(SByte)] = ["INT"], [typeof(UInt16)] = ["INT"], [typeof(UInt32)] = ["INT"], [typeof(UInt64)] = ["INT"],
         [typeof(Double)] = ["FLOAT"], [typeof(Single)] = ["FLOAT"], [typeof(Decimal)] = ["DECIMAL"],
         [typeof(Boolean)] = ["BOOL"], [typeof(String)] = ["STRING"], [typeof(Guid)] = ["STRING"], [typeof(Char)] = ["STRING"],
-        [typeof(DateTime)] = ["DATETIME"], [typeof(DateTimeOffset)] = ["DATETIME"], [typeof(TimeSpan)] = ["TIME"], [typeof(Byte[])] = ["BLOB"],
+        [typeof(DateTime)] = ["DATETIME2"], [typeof(DateTimeOffset)] = ["DATETIMEOFFSET"], [typeof(TimeSpan)] = ["DURATION"], [typeof(Byte[])] = ["BLOB"],
     };
 
     /// <inheritdoc/>
@@ -403,6 +375,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
             table.TableName = name;
             table.DbType = Database.Type;
             table.IsView = (String)row["TABLE_TYPE"] != "BASE TABLE";
+            if (tables.Columns.Contains("REMARKS") && !row.IsNull("REMARKS")) table.Description = (String)row["REMARKS"];
             foreach (var item in columns.Rows.Cast<DataRow>().Where(column => (String)column["TABLE_NAME"] == name).OrderBy(column => (Int32)column["ORDINAL_POSITION"]))
             {
                 var column = table.CreateColumn();
@@ -413,9 +386,10 @@ internal class SonnetDBMetaData : RemoteDbMetaData
                 column.PrimaryKey = (Boolean)item["IS_PRIMARY_KEY"];
                 column.Nullable = (Boolean)item["IS_NULLABLE"];
                 column.DefaultValue = item.IsNull("COLUMN_DEFAULT") ? null : (String)item["COLUMN_DEFAULT"];
-                column.Length = Math.Max(0, Convert.ToInt32(item["CHARACTER_MAXIMUM_LENGTH"], CultureInfo.InvariantCulture));
-                column.Precision = Convert.ToInt32(item["NUMERIC_PRECISION"], CultureInfo.InvariantCulture);
-                column.Scale = Convert.ToInt32(item["NUMERIC_SCALE"], CultureInfo.InvariantCulture);
+                if (columns.Columns.Contains("REMARKS") && !item.IsNull("REMARKS")) column.Description = (String)item["REMARKS"];
+                column.Length = item.IsNull("CHARACTER_MAXIMUM_LENGTH") ? 0 : Math.Max(0, Convert.ToInt32(item["CHARACTER_MAXIMUM_LENGTH"], CultureInfo.InvariantCulture));
+                column.Precision = item.IsNull("NUMERIC_PRECISION") ? 0 : Convert.ToInt32(item["NUMERIC_PRECISION"], CultureInfo.InvariantCulture);
+                column.Scale = item.IsNull("NUMERIC_SCALE") ? 0 : Convert.ToInt32(item["NUMERIC_SCALE"], CultureInfo.InvariantCulture);
                 column.Fix();
                 table.Columns.Add(column);
             }
@@ -450,13 +424,16 @@ internal class SonnetDBMetaData : RemoteDbMetaData
             column.ColumnName = (String)row[SchemaTableColumn.ColumnName];
             column.DataType = (Type)row[SchemaTableColumn.DataType];
             if (column.DataType.FullName == "System.TimeOnly") column.DataType = typeof(TimeSpan);
-            column.RawType = GetFieldType(column) ?? throw new NotSupportedException(L.T("SonnetDB view [{0}] field [{1}] did not provide a mappable declared type. See SonnetDB issue #261; view declaration metadata still needs to be completed and released.", table.TableName, column.ColumnName));
+            if (column.DataType == typeof(Object) || row.IsNull(SchemaTableColumn.AllowDBNull))
+                throw new NotSupportedException(L.T("SonnetDB view [{0}] field [{1}] does not provide a mappable declared type or nullability; do not infer it from the first row. See SonnetDB issue #261.", table.TableName, column.ColumnName));
             column.Nullable = (Boolean)row[SchemaTableColumn.AllowDBNull];
             column.PrimaryKey = (Boolean)row[SchemaTableColumn.IsKey];
             column.Identity = (Boolean)row[SchemaTableOptionalColumn.IsAutoIncrement];
-            column.Length = Math.Max(0, Convert.ToInt32(row[SchemaTableColumn.ColumnSize], CultureInfo.InvariantCulture));
-            column.Precision = Convert.ToInt32(row[SchemaTableColumn.NumericPrecision], CultureInfo.InvariantCulture);
-            column.Scale = Convert.ToInt32(row[SchemaTableColumn.NumericScale], CultureInfo.InvariantCulture);
+            // ADO.NET 以 DBNull 表示未知长度/精度；XCode 以 0 保存未声明值，不能伪造上限。
+            column.Length = row.IsNull(SchemaTableColumn.ColumnSize) ? 0 : Math.Max(0, Convert.ToInt32(row[SchemaTableColumn.ColumnSize], CultureInfo.InvariantCulture));
+            column.Precision = row.IsNull(SchemaTableColumn.NumericPrecision) ? 0 : Convert.ToInt32(row[SchemaTableColumn.NumericPrecision], CultureInfo.InvariantCulture);
+            column.Scale = row.IsNull(SchemaTableColumn.NumericScale) ? 0 : Convert.ToInt32(row[SchemaTableColumn.NumericScale], CultureInfo.InvariantCulture);
+            column.RawType = GetFieldType(column) ?? throw new NotSupportedException(L.T("SonnetDB view [{0}] field [{1}] does not provide a mappable declared type. See SonnetDB issue #261.", table.TableName, column.ColumnName));
             column.Fix();
             table.Columns.Add(column);
         }
@@ -467,6 +444,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     protected override String? GetFieldType(IDataColumn field)
     {
         if (field.RawType?.Equals("JSON", StringComparison.OrdinalIgnoreCase) == true && field.Table.DbType == Database.Type) return "JSON";
+        if (field.DataType == typeof(String) && field.Length > 0 && field.Length < Int32.MaxValue) return $"STRING({field.Length})";
         if (field.DataType == typeof(Decimal) && field.Precision > 0) return $"DECIMAL({field.Precision},{field.Scale})";
         return base.GetFieldType(field);
     }
@@ -474,8 +452,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     protected override Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn) => !String.Equals(GetFieldType(entityColumn), GetFieldType(dbColumn), StringComparison.OrdinalIgnoreCase);
     protected override Boolean IsColumnLengthChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
     {
-        ReportLength(entityColumn);
-        return false;
+        return entityColumn.DataType == typeof(String) && entityColumn.Length != dbColumn.Length;
     }
     protected override Boolean IsColumnChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
     {
@@ -491,19 +468,10 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     /// <inheritdoc/>
     public override String FieldClause(IDataColumn field, Boolean onlyDefine)
     {
-        ReportLength(field);
-        CheckDefaultValue(field);
         var sql = $"{FormatName(field)} {GetFieldType(field) ?? throw new NotSupportedException(L.T("SonnetDB does not support field type {0}.", field.DataType))}";
         if (field.Identity) return sql + " AUTO_INCREMENT";
         sql += field.Nullable && !field.PrimaryKey ? " NULL" : " NOT NULL";
         return sql + GetDefault(field, onlyDefine);
-    }
-
-    private void ReportLength(IDataColumn field)
-    {
-        if (field.DataType == typeof(String) && field.Length > 0 && field.Length < Int32.MaxValue
-            && _reportedLengths.Add($"{field.Table.TableName}.{field.ColumnName}:{field.Length}"))
-            WriteLog("[SonnetDB] Field {0}.{1} declares length {2}, but STRING does not currently support length constraints; pending, see SonnetDB issue #240.", field.Table.TableName, field.ColumnName, field.Length);
     }
 
     protected override String? GetDefault(IDataColumn field, Boolean onlyDefine)
@@ -515,35 +483,19 @@ internal class SonnetDBMetaData : RemoteDbMetaData
             if ((field.DataType == typeof(DateTime) || field.DataType == typeof(DateTimeOffset) || field.DataType == typeof(TimeSpan))
                 && !value.StartsWith("'") && value.IndexOf('(') < 0)
                 value = SonnetDB.Quote(value);
+            if (field.DataType == typeof(DateTime)) value = "CAST(" + value + " AS DATETIME2)";
+            else if (field.DataType == typeof(DateTimeOffset)) value = "CAST(" + value + " AS DATETIMEOFFSET)";
+            else if (field.DataType == typeof(TimeSpan)) value = "CAST(" + value + " AS DURATION)";
             return " DEFAULT " + value;
         }
         if (field.Nullable) return null;
         if (field.DataType == typeof(String) || field.DataType == typeof(Guid)) return " DEFAULT ''";
         if (field.DataType == typeof(Boolean)) return " DEFAULT FALSE";
-        if (field.DataType == typeof(DateTime) || field.DataType == typeof(DateTimeOffset)) return " DEFAULT '0001-01-01T00:00:00'";
-        if (field.DataType == typeof(TimeSpan)) return " DEFAULT '00:00:00'";
+        if (field.DataType == typeof(DateTime)) return " DEFAULT CAST('0001-01-01T00:00:00' AS DATETIME2)";
+        if (field.DataType == typeof(DateTimeOffset)) return " DEFAULT CAST('0001-01-01T00:00:00+00:00' AS DATETIMEOFFSET)";
+        if (field.DataType == typeof(TimeSpan)) return " DEFAULT CAST('00:00:00' AS DURATION)";
         if (field.DataType.IsEnum || field.DataType == typeof(Decimal) || field.DataType == typeof(Double) || field.DataType == typeof(Single) || field.DataType == typeof(Int64) || field.DataType == typeof(Int32) || field.DataType == typeof(Int16) || field.DataType == typeof(Byte) || field.DataType == typeof(SByte) || field.DataType == typeof(UInt16) || field.DataType == typeof(UInt32) || field.DataType == typeof(UInt64)) return " DEFAULT 0";
         return null;
-    }
-
-    /// <summary>校验字面量默认值，拒绝数据库无法保真的高精度值</summary>
-    private static void CheckDefaultValue(IDataColumn field)
-    {
-        var value = field.DefaultValue;
-        if (value.IsNullOrEmpty() || value.IndexOf('(') >= 0) return;
-
-        var text = value.Trim();
-        if (text.Length >= 2 && text[0] == '\'' && text[^1] == '\'') text = text[1..^1].Replace("''", "'");
-        if (text.Length == 0) return;
-
-        if (field.DataType == typeof(DateTime) || field.DataType == typeof(DateTimeOffset))
-        {
-            if (DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var time)) SonnetDB.CheckTime(time.Ticks);
-        }
-        else if (field.DataType == typeof(Decimal))
-        {
-            if (Decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out var number)) SonnetDB.CheckValue(number, typeof(Decimal));
-        }
     }
 
     /// <inheritdoc/>
@@ -557,12 +509,6 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     /// <inheritdoc/>
     public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
     {
-        // 数据库的STRING长度元数据不可用（Int32.MaxValue）时不算长度变更，模型Length未变时仍允许修改可空性与默认值
-        if (oldfield != null && field.DataType == typeof(String) && field.Length > 0 && field.Length < Int32.MaxValue
-            && oldfield.Length > 0 && oldfield.Length < Int32.MaxValue && field.Length != oldfield.Length)
-            throw new NotSupportedException(L.T("SonnetDB STRING does not yet support changing length constraints. See SonnetDB issue #240; the capability still needs to be implemented and released."));
-        CheckDecimalMigration(field);
-        CheckDefaultValue(field);
         if (oldfield != null && (field.Identity != oldfield.Identity || field.PrimaryKey != oldfield.PrimaryKey))
             throw new NotSupportedException(L.T("Changing identity or primary key on existing SonnetDB columns requires a separate migration and cannot be done through ALTER COLUMN."));
         var sql = $"ALTER TABLE {FormatName(field.Table)} ALTER COLUMN {FormatName(field)} TYPE {GetFieldType(field)}";
@@ -578,14 +524,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     /// <inheritdoc/>
     public override String? AddColumnSQL(IDataColumn field)
     {
-        CheckDecimalMigration(field);
         return base.AddColumnSQL(field);
-    }
-
-    private static void CheckDecimalMigration(IDataColumn field)
-    {
-        if (field.DataType == typeof(Decimal) && field.Precision > 0 && (field.Precision != 38 || field.Scale != 28))
-            throw new NotSupportedException(L.T("SonnetDB 4.0.0 DECIMAL ADD/ALTER would lose explicit precision and was rejected to preserve model semantics. See SonnetDB issue #241; it still needs to be fixed and released."));
     }
 
     /// <inheritdoc/>
@@ -647,23 +586,16 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     public override String DropDatabaseSQL(String dbname) => $"DROP DATABASE {Database.FormatName(dbname)}";
 
     /// <inheritdoc/>
-    public override String? AddTableDescriptionSQL(IDataTable table) => throw CommentsUnsupported();
+    public override String? AddTableDescriptionSQL(IDataTable table) => $"COMMENT ON TABLE {FormatName(table)} IS {SonnetDB.Quote(table.Description ?? String.Empty)}";
     /// <inheritdoc/>
-    public override String? DropTableDescriptionSQL(IDataTable table) => throw CommentsUnsupported();
+    public override String? DropTableDescriptionSQL(IDataTable table) => $"COMMENT ON TABLE {FormatName(table)} IS NULL";
     /// <inheritdoc/>
-    public override String? AddColumnDescriptionSQL(IDataColumn field) => throw CommentsUnsupported();
+    public override String? AddColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS {SonnetDB.Quote(field.Description ?? String.Empty)}";
     /// <inheritdoc/>
-    public override String? DropColumnDescriptionSQL(IDataColumn field) => throw CommentsUnsupported();
-
-    private static NotSupportedException CommentsUnsupported() => new(L.T("SonnetDB does not yet support persisting table and column comments. See SonnetDB issue #237; the capability must be implemented and released."));
+    public override String? DropColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS NULL";
 
     protected override Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
     {
-        if (schema is DDLSchema.AddTableDescription or DDLSchema.DropTableDescription or DDLSchema.AddColumnDescription or DDLSchema.DropColumnDescription)
-        {
-            WriteLog("[SonnetDB] Unfinished {0}: table and column comment persistence is not yet supported; SonnetDB must implement and release it, see issue #237.", schema);
-            return false;
-        }
         return base.PerformSchema(sb, onlySql, schema, values);
     }
 }

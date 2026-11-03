@@ -406,9 +406,38 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
 
     protected virtual DbTable OnFill(DbDataReader dr)
     {
+        if (Database.Type == DatabaseType.SonnetDB) return ReadPreservingDbNull(dr);
         var dt = new DbTable();
         dt.Read(dr);
         return dt;
+    }
+
+    // 迁移按本次查询选择 NULL 保留，不在共享会话上设置可变模式。
+    internal DbTable QueryPreservingDbNull(SelectBuilder builder)
+    {
+        using var cmd = OnCreateCommand(builder.ToString(), CommandType.Text, builder.Parameters.ToArray());
+        return Execute(cmd, true, command =>
+        {
+            using var reader = command.ExecuteReader();
+            return ReadPreservingDbNull(reader);
+        });
+    }
+
+    private static DbTable ReadPreservingDbNull(DbDataReader reader)
+    {
+        var table = new DbTable();
+        table.ReadHeader(reader);
+        while (reader.Read()) table.Rows.Add(ReadNullableRow(reader));
+        table.Total = table.Rows.Count;
+        return table;
+    }
+
+    private static Object?[] ReadNullableRow(DbDataReader reader)
+    {
+        var row = new Object?[reader.FieldCount];
+        for (var i = 0; i < row.Length; i++)
+            row[i] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+        return row;
     }
 
     private static readonly Regex reg_QueryCount = new(@"^\s*select\s+\*\s+from\s+([\w\W]+)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -609,6 +638,13 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         {
             using var dr = await cmd2.ExecuteReaderAsync().ConfigureAwait(false);
             var dt = new DbTable();
+            if (Database.Type == DatabaseType.SonnetDB)
+            {
+                dt.ReadHeader(dr);
+                while (await dr.ReadAsync().ConfigureAwait(false)) dt.Rows.Add(ReadNullableRow(dr));
+                dt.Total = dt.Rows.Count;
+                return dt;
+            }
             await dt.ReadAsync(dr).ConfigureAwait(false);
             return dt;
         });

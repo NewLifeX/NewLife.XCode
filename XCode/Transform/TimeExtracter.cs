@@ -30,6 +30,9 @@ public class TimeExtracter : IExtracter<DbTable>
 
     /// <summary>总行数</summary>
     public Int32 TotalCount { get; set; }
+
+    // 迁移可为单个抽取器指定保留 NULL 的查询，不改变 DAL 会话的默认读取行为。
+    internal Func<SelectBuilder, Int64, Int64, DbTable>? QueryPage { get; set; }
     #endregion
 
     #region 构造
@@ -67,7 +70,7 @@ public class TimeExtracter : IExtracter<DbTable>
         {
             // 查询数据
             var sb = Builder.Clone();
-            var dt = Dal.Query(sb, 0, 1);
+            var dt = QueryPage != null ? QueryPage(sb, 0, 1) : Dal.Query(sb, 0, 1);
 
             // 第一页都没有数据，直接返回
             if (dt == null || dt.Rows == null || dt.Rows.Count <= 0)
@@ -95,7 +98,7 @@ public class TimeExtracter : IExtracter<DbTable>
             while (true)
             {
                 // 分页查询数据
-                var dt = Dal.Query(sb, startRow, BatchSize);
+                var dt = QueryPage != null ? QueryPage(sb, startRow, BatchSize) : Dal.Query(sb, startRow, BatchSize);
                 if (dt == null || dt.Rows == null) break;
 
                 var count = dt.Rows.Count;

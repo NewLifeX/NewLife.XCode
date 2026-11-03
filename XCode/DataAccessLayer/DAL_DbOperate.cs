@@ -78,6 +78,13 @@ partial class DAL
         return QueryWrap(builder, "", "", (ss, sb, k2, k3) => ss.Query(sb), nameof(Query));
     }
 
+    // 单独的查询入口与缓存操作名，避免迁移取得普通 DbTable 查询的默认值结果。
+    internal DbTable QueryPreservingDbNull(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
+    {
+        builder = PageSplit(builder, startRowIndex, maximumRows);
+        return QueryWrap(builder, "", "", (ss, sb, k2, k3) => ((DbSession)ss).QueryPreservingDbNull(sb), nameof(QueryPreservingDbNull));
+    }
+
     /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>

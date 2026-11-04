@@ -511,6 +511,9 @@ public partial class Entity<TEntity>
                             list.Add(new(item, StatModes.Avg));
                         else if (name2.EndsWith("Rate") || name2.EndsWith("Ratio"))
                             list.Add(new(item, StatModes.Max));
+                        // 百分比字段求和没有业务含义（14 个节点内网质量 100% 求和得到 1,400%），取最大值
+                        else if (item.Field.ItemType.EqualIgnoreCase("percent", "Percentage"))
+                            list.Add(new(item, StatModes.Max));
                         else
                             list.Add(new(item, StatModes.Sum));
                     }

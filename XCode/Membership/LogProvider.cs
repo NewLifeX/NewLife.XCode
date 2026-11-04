@@ -104,7 +104,8 @@ public class LogProvider
         }
         if (cat.IsNullOrEmpty()) cat = type.GetDisplayName() ?? type.GetDescription() ?? type.Name;
 
-        var log = CreateLog(cat, action, success, remark, userid, name, ip);
+        // 类别是元数据，按当前语言翻译后再写入，避免日志永远停留在源文
+        var log = CreateLog(L.T(cat), action, success, remark, userid, name, ip);
         if (linkid > 0) log.LinkID = linkid;
 
         return log;
@@ -155,6 +156,46 @@ public class LogProvider
         var type = entity.GetType();
         var fact = EntityFactory.CreateFactory(type);
 
+        var remark = GetEntityRemark(action, entity, error);
+
+        // 对象链接
+        var linkId = 0L;
+        var uk = fact.Unique;
+        if (uk != null && uk.Type.IsInt()) linkId = entity[uk.Name].ToLong();
+
+        var userid = 0;
+        var name = "";
+        if (entity is IManageUser user)
+        {
+            userid = user.ID;
+            name = user + "";
+        }
+
+        //WriteLog(entity.GetType(), action, error.IsNullOrEmpty(), sb.Put(true), userid, name);
+        var category = fact.Table.DataTable.DisplayName;
+        if (category.IsNullOrEmpty()) category = type.GetDisplayName() ?? type.GetDescription() ?? type.Name;
+
+        // 类别是元数据，按当前语言翻译后再写入，避免日志永远停留在源文。
+        // 操作名由调用方决定（多为已本地化的文案），此处原样写入
+        var log = CreateLog(L.T(category), action, error.IsNullOrEmpty(), remark, userid, name);
+        log.LinkID = linkId;
+
+        log.SaveAsync();
+    }
+
+    /// <summary>构造实体变更明细文本</summary>
+    /// <remarks>
+    /// 修改操作输出字段修改前后的对比，其余操作输出字段快照。
+    /// 字段名取元数据显示名并按当前语言翻译；主键保留属性名（ID=xxx），便于机器检索与关联。
+    /// </remarks>
+    /// <param name="action">操作</param>
+    /// <param name="entity">实体对象</param>
+    /// <param name="error">错误信息</param>
+    /// <returns>可写入日志的明细文本</returns>
+    protected virtual String GetEntityRemark(String action, IEntity entity, String? error = null)
+    {
+        var fact = EntityFactory.CreateFactory(entity.GetType());
+
         // 构造字段数据的字符串表示形式
         var sb = Pool.StringBuilder.Get();
         if (error.IsNullOrEmpty()) sb.Append(error);
@@ -187,7 +228,7 @@ public class LogProvider
                     else if (v2 is IList list)
                         v2 = list.Join(",");
 
-                    sb.Separate(",").AppendFormat("{0}={1} -> {2}", fi.Name, v1, v2);
+                    sb.Separate(",").AppendFormat("{0}={1} -> {2}", L.T(fi.DisplayName), v1, v2);
                 }
             }
         }
@@ -213,31 +254,12 @@ public class LogProvider
                 else if (v is IList list)
                     v = list.Join(",");
 
-                sb.Separate(",").AppendFormat("{0}={1}", fi.Name, v);
+                var label = fi.PrimaryKey ? fi.Name : L.T(fi.DisplayName);
+                sb.Separate(",").AppendFormat("{0}={1}", label, v);
             }
         }
 
-        // 对象链接
-        var linkId = 0L;
-        var uk = fact.Unique;
-        if (uk != null && uk.Type.IsInt()) linkId = entity[uk.Name].ToLong();
-
-        var userid = 0;
-        var name = "";
-        if (entity is IManageUser user)
-        {
-            userid = user.ID;
-            name = user + "";
-        }
-
-        //WriteLog(entity.GetType(), action, error.IsNullOrEmpty(), sb.Put(true), userid, name);
-        var category = fact.Table.DataTable.DisplayName;
-        if (category.IsNullOrEmpty()) category = type.GetDisplayName() ?? type.GetDescription() ?? type.Name;
-
-        var log = CreateLog(category, action, error.IsNullOrEmpty(), sb.Return(true), userid, name);
-        log.LinkID = linkId;
-
-        log.SaveAsync();
+        return sb.Return(true);
     }
 
     /// <summary>是否使用日志</summary>

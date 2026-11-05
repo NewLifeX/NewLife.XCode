@@ -41,7 +41,7 @@ jobs:
       id: nuget-login
       uses: NuGet/login@v1
       with:
-        user: NewLife
+        user: BigStone
     - name: Publish
       # 来自 fork 的 PR 不携带 Secrets（且 github.token 只读），发布推送会 403；仅在同仓库 push/workflow_dispatch 时执行
       if: github.event_name != 'pull_request'

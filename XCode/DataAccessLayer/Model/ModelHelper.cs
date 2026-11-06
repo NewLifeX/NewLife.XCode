@@ -502,7 +502,7 @@ public static class ModelHelper
     {
         var ignoreNameCase = nameFormat <= NameFormats.Default;
 
-        WriteXml(writer, table, false, ignoreNameCase);
+        WriteXml(writer, table, false, ignoreNameCase, nameFormat == NameFormats.Exact);
 
         // 写字段
         if (table.Columns.Count > 0)
@@ -511,7 +511,7 @@ public static class ModelHelper
             foreach (var dc in table.Columns)
             {
                 writer.WriteStartElement("Column");
-                WriteXml(writer, dc, false, ignoreNameCase);
+                WriteXml(writer, dc, false, ignoreNameCase, nameFormat == NameFormats.Exact);
                 writer.WriteEndElement();
             }
             writer.WriteEndElement();
@@ -652,7 +652,16 @@ public static class ModelHelper
     /// <param name="value">数值</param>
     /// <param name="writeDefaultValueMember">是否写数值为默认值的成员。为了节省空间，默认不写。</param>
     /// <param name="ignoreNameCase">忽略名称大小写</param>
-    public static void WriteXml(XmlWriter writer, Object value, Boolean writeDefaultValueMember = false, Boolean ignoreNameCase = true)
+    public static void WriteXml(XmlWriter writer, Object value, Boolean writeDefaultValueMember = false, Boolean ignoreNameCase = true) =>
+        WriteXml(writer, value, writeDefaultValueMember, ignoreNameCase, false);
+
+    /// <summary>写入模型，可显式保留逻辑名与物理名之间仅大小写不同的映射</summary>
+    /// <param name="writer">XML写入器</param>
+    /// <param name="value">模型</param>
+    /// <param name="writeDefaultValueMember">是否写入默认值</param>
+    /// <param name="ignoreNameCase">是否忽略名称大小写</param>
+    /// <param name="preserveNameCase">是否精确保留物理名称，优先于忽略大小写选项</param>
+    public static void WriteXml(XmlWriter writer, Object value, Boolean writeDefaultValueMember, Boolean ignoreNameCase, Boolean preserveNameCase)
     {
         var type = value.GetType();
         var def = GetDefault(type);
@@ -708,11 +717,11 @@ public static class ModelHelper
                 else if (pi.Name is "TableName" or "ColumnName")
                 {
                     if (name == str) continue;
-                    if (ignoreNameCase)
+                    if (!preserveNameCase && ignoreNameCase)
                     {
                         if (name.EqualIgnoreCase(str)) continue;
                     }
-                    else
+                    else if (!preserveNameCase)
                     {
                         // 如果全小写或者全大写，也不缺分大小写比较
                         if ((str == str.ToLower() || str == str.ToUpper()) && name.EqualIgnoreCase(str)) continue;

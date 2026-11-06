@@ -1,5 +1,10 @@
 # NewLife.XCode 更新日志
 
+## [Unreleased]
+
+### Added
+- 为同步内置抽取器增加可选逐页查询回调，保留默认查询和外部抽取器合同；增加 `NameFormats.Exact` 与兼容 XML 重载，显式保留物理名称大小写。
+
 ## v12.3.2026.1024 (2026-10-24)
 
 ### SonnetDB 数据库支持

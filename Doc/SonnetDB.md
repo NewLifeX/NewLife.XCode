@@ -25,6 +25,8 @@ For a Server use `Data Source=sonnetdb+http://localhost:5080/demo;Token=YOUR_TOK
 | Empty views and model export | Declared column metadata without inferring types from data; NameFormats.Exact explicitly retains physical identifier spelling |
 | Nullable values and cross-database migration | Session overrides preserve numeric NULL; SonnetDBPackage explicitly enables exact NULL page reads; custom extraction callbacks keep their own source DAL |
 
+Reverse metadata also recognizes legacy `DATETIME` and `TIME` as DateTime/TimeSpan aliases. They do not replace the preferred types for new models or change the legacy precision contract. A compatible native temporal `CAST` default survives metadata/model replay without another `CAST` wrapper, so unchanged temporal defaults do not generate `ALTER COLUMN`; ordinary literals still receive the required native cast, and string-default comparison remains ordinal.
+
 SQL names preserve their declared spelling. Ordinary references are case insensitive and quoted references are exact; embedded quote characters are escaped. For exact XML, use `table.WriteXml(writer, NameFormats.Exact)` or `EntityBuilderOption.NameFormat = NameFormats.Exact` on complete model export. This is an explicit option; the ordinary compact XML contract stays unchanged.
 
 For a migration involving SonnetDB, opt in through the provider data package:

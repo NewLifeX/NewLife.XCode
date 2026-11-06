@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using NewLife;
 using XCode;
@@ -181,6 +182,30 @@ public class SonnetDBTests
         Assert.True(scope.Dal.Session.ExecuteScalar<Boolean>("SELECT Enabled FROM MetadataRows WHERE Name='default'"));
         Assert.True(meta.DropTable(table));
         Assert.DoesNotContain(table.TableName, meta.GetTableNames());
+    }
+
+    /// <summary>旧 DATETIME/TIME 列仍能反向识别，新列 SQL 继续优先使用 DATETIME2/DURATION。</summary>
+    [Fact]
+    public void LegacyTemporalColumnMetadataRoundTrips()
+    {
+        using var scope = new DatabaseScope();
+        scope.Dal.Execute("CREATE TABLE LegacyTemporalRows(Id INT NOT NULL DEFAULT 0, Created DATETIME NULL, Elapsed TIME NULL, PRIMARY KEY(Id))");
+        var metadata = scope.Dal.Db.CreateMetaData();
+
+        var actual = Assert.Single(metadata.GetTables(), table => table.TableName == "LegacyTemporalRows");
+        var created = Assert.Single(actual.Columns, column => column.ColumnName == "Created");
+        var elapsed = Assert.Single(actual.Columns, column => column.ColumnName == "Elapsed");
+        Assert.Equal("DATETIME", created.RawType);
+        Assert.Equal(typeof(DateTime), created.DataType);
+        Assert.Equal("TIME", elapsed.RawType);
+        Assert.Equal(typeof(TimeSpan), elapsed.DataType);
+
+        var newModel = (IDataTable)actual.Clone();
+        newModel.Name = newModel.TableName = "PreferredTemporalRows";
+        var createSql = metadata.GetSchemaSQL(DDLSchema.CreateTable, newModel)
+            ?? throw new InvalidOperationException("Expected native create-table SQL for the reverse-engineered model.");
+        Assert.Contains("\"Created\" DATETIME2", createSql);
+        Assert.Contains("\"Elapsed\" DURATION", createSql);
     }
 
     [Fact]
@@ -556,6 +581,37 @@ public class SonnetDBTests
         Assert.Equal(9007199254740993.123456789m, Convert.ToDecimal(record[1]));
     }
 
+    /// <summary>反向元数据中的原生 CAST 默认值重放时不产生 ALTER，并保留三个 temporal 类型的实际默认值。</summary>
+    [Fact]
+    public void TemporalDefaultsMetadataRoundTripDoesNotPlanAlter()
+    {
+        using var scope = new DatabaseScope();
+        scope.Dal.Execute("CREATE TABLE TemporalDefaultRows(Id INT NOT NULL DEFAULT 0,"
+            + " Created DATETIME2 NULL DEFAULT CAST('2026-11-07T01:02:03.0000001' AS DATETIME2),"
+            + " Occurred DATETIMEOFFSET NULL DEFAULT CAST('2026-11-07T01:02:03.0000001+08:00' AS DATETIMEOFFSET),"
+            + " Elapsed DURATION NULL DEFAULT CAST('1.02:03:04.0000001' AS DURATION), PRIMARY KEY(Id))");
+        var metadata = scope.Dal.Db.CreateMetaData();
+        var actual = Assert.Single(metadata.GetTables(), table => table.TableName == "TemporalDefaultRows");
+        Assert.Contains("CAST(", actual.Columns.Single(column => column.ColumnName == "Created").DefaultValue, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CAST(", actual.Columns.Single(column => column.ColumnName == "Occurred").DefaultValue, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CAST(", actual.Columns.Single(column => column.ColumnName == "Elapsed").DefaultValue, StringComparison.OrdinalIgnoreCase);
+        var model = (IDataTable)actual.Clone();
+
+        // 调用与 SetTables 相同的字段比较入口，但仅返回 DDL，不能被 CheckAllTables 的日志捕获掩盖。
+        Assert.Equal(String.Empty, GetReadOnlyColumnChangePlan(metadata, model, actual));
+        metadata.SetTables(Migration.Full, model);
+        var reloaded = Assert.Single(metadata.GetTables(), table => table.TableName == model.TableName);
+        Assert.Equal(String.Empty, GetReadOnlyColumnChangePlan(metadata, model, reloaded));
+
+        Assert.Equal(1, scope.Dal.Execute("INSERT INTO TemporalDefaultRows(Id) VALUES(1)"));
+        var row = Assert.Single(scope.Dal.Query("SELECT Created,Occurred,Elapsed FROM TemporalDefaultRows").Rows);
+        Assert.Equal(new DateTime(2026, 11, 7, 1, 2, 3).AddTicks(1), Assert.IsType<DateTime>(row[0]));
+        var occurred = Assert.IsType<DateTimeOffset>(row[1]);
+        Assert.Equal(new DateTimeOffset(2026, 11, 7, 1, 2, 3, TimeSpan.FromHours(8)).AddTicks(1).UtcTicks, occurred.UtcTicks);
+        Assert.Equal(TimeSpan.Zero, occurred.Offset);
+        Assert.Equal(new TimeSpan(1, 2, 3, 4).Add(TimeSpan.FromTicks(1)), Assert.IsType<TimeSpan>(row[2]));
+    }
+
     [Fact]
     public void EntityLinqUsesFilteringOrderingAndPaging()
     {
@@ -726,6 +782,14 @@ public class SonnetDBTests
             Assert.Equal(TimeSpan.Zero, actual.Offset);
             Assert.Equal(duration, Assert.IsType<TimeSpan>(row[1]));
         });
+    }
+
+    private static String GetReadOnlyColumnChangePlan(IMetaData metadata, IDataTable model, IDataTable actual)
+    {
+        var method = metadata.GetType().GetMethod("CheckColumnsChange", BindingFlags.Instance | BindingFlags.NonPublic,
+            null, new[] { typeof(IDataTable), typeof(IDataTable), typeof(Boolean), typeof(Boolean), typeof(XCodeSetting) }, null);
+        Assert.NotNull(method);
+        return Assert.IsType<String>(method.Invoke(metadata, new Object[] { model, actual, true, false, XCodeSetting.Current }));
     }
 
     private sealed class KeyRow : NewLife.Data.IModel

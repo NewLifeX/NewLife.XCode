@@ -384,7 +384,7 @@ internal class SonnetDBMetaData : RemoteDbMetaData
         [typeof(Byte)] = ["INT"], [typeof(SByte)] = ["INT"], [typeof(UInt16)] = ["INT"], [typeof(UInt32)] = ["INT"], [typeof(UInt64)] = ["INT"],
         [typeof(Double)] = ["FLOAT"], [typeof(Single)] = ["FLOAT"], [typeof(Decimal)] = ["DECIMAL"],
         [typeof(Boolean)] = ["BOOL"], [typeof(String)] = ["STRING"], [typeof(Guid)] = ["STRING"], [typeof(Char)] = ["STRING"],
-        [typeof(DateTime)] = ["DATETIME2"], [typeof(DateTimeOffset)] = ["DATETIMEOFFSET"], [typeof(TimeSpan)] = ["DURATION"], [typeof(Byte[])] = ["BLOB"],
+        [typeof(DateTime)] = ["DATETIME2", "DATETIME"], [typeof(DateTimeOffset)] = ["DATETIMEOFFSET"], [typeof(TimeSpan)] = ["DURATION", "TIME"], [typeof(Byte[])] = ["BLOB"],
     };
 
     /// <inheritdoc/>
@@ -511,8 +511,9 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     {
         if (field.Identity) return null;
         var value = field.DefaultValue;
-        if (!String.IsNullOrEmpty(value))
+        if (value != null && value.Length > 0)
         {
+            if (IsTypedTemporalDefault(value, field.DataType)) return " DEFAULT " + value;
             if ((field.DataType == typeof(DateTime) || field.DataType == typeof(DateTimeOffset) || field.DataType == typeof(TimeSpan))
                 && !value.StartsWith("'") && value.IndexOf('(') < 0)
                 value = SonnetDB.Quote(value);
@@ -529,6 +530,20 @@ internal class SonnetDBMetaData : RemoteDbMetaData
         if (field.DataType == typeof(TimeSpan)) return " DEFAULT CAST('00:00:00' AS DURATION)";
         if (field.DataType.IsEnum || field.DataType == typeof(Decimal) || field.DataType == typeof(Double) || field.DataType == typeof(Single) || field.DataType == typeof(Int64) || field.DataType == typeof(Int32) || field.DataType == typeof(Int16) || field.DataType == typeof(Byte) || field.DataType == typeof(SByte) || field.DataType == typeof(UInt16) || field.DataType == typeof(UInt32) || field.DataType == typeof(UInt64)) return " DEFAULT 0";
         return null;
+    }
+
+    private static Boolean IsTypedTemporalDefault(String value, Type? dataType)
+    {
+        var types = dataType == typeof(DateTime) ? "(?:DATETIME2|DATETIME)"
+            : dataType == typeof(DateTimeOffset) ? "DATETIMEOFFSET"
+            : dataType == typeof(TimeSpan) ? "(?:DURATION|TIME)" : null;
+        if (types == null) return false;
+
+        // 仅保留单个完整外层 CAST；字符串中的括号不计入内部括号深度。
+        var pattern = @"^\s*CAST\s*\((?:'(?:''|[^'])*'|[^'()]|\((?<nested>)|\)(?<-nested>))*\s+AS\s+"
+            + types + @"\s*\)(?(nested)(?!))\s*$";
+        return Regex.IsMatch(value, pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Singleline,
+            TimeSpan.FromSeconds(1));
     }
 
     /// <inheritdoc/>

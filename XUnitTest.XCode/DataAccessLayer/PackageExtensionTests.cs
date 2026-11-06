@@ -139,11 +139,13 @@ public class PackageExtensionTests
 
     private static DbTable ReadPage(DAL source, SelectBuilder builder, Int64 row, Int64 size)
     {
-        using var connection = new SqliteConnection(source.Db.ConnectionString);
+        using var connection = source.Db.Factory.CreateConnection()!;
+        connection.ConnectionString = source.Db.ConnectionString;
         connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = source.PageSplit(builder.Clone(), row, size).ToString();
-        command.Parameters.AddRange(builder.Parameters.Cast<SqliteParameter>().ToArray());
+        command.CommandTimeout = 30;
+        command.Parameters.AddRange(builder.Parameters.ToArray());
         using var reader = command.ExecuteReader();
         var result = new DbTable();
         result.ReadHeader(reader);

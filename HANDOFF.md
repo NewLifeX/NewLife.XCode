@@ -1,5 +1,11 @@
 # Provider extension contracts — 2026-11-06
 
+Provider continuation: `codex/sonnetdb5-provider-overrides-20261106` depends on architecture PR #104 / `d53442b65dc8bf80a3b16e095fe74225f7537c55`. Closed #103 / f21d0c7 is preserved. Provider changes use OnFill/QueryAsync overrides and an explicit SonnetDBPackage; no database-specific base-class branches were carried forward. Source dependency is public SonnetDB/Core/Protocol 5.0.0 / 84433f9e, with matching public NativeAOT Server SHA256 4c6cdee527f3f82c25945bbe5683cc92790e8daaf2b3b227c1b8adf2911f882e.
+
+The original 50 cases/assertions are retained with explicit migration/XML entry points. Initial new-source suite: 64/64 passed, 0 failed/skipped (50 + 10 generic + 4 NULL). Independent embedded/REST/Frame journeys passed 18 + 14 + 14 checks per protocol, with nine consumers and six actual Server starts/stops. DLL identities and hashes, fresh NuGet.org cache origins, raw TRX and failures remain in task-owned external validation evidence. Final commit/package-bound checks and PR receipts are reported separately in the Provider PR; these precommit results do not identify an already-published XCode package.
+
+Architecture CI at d53442b65 passes all four test jobs, solution build, localization, AOT analyzer and AOT/smoke jobs except s390x NovaDb. Remaining OIDC fork-PR, iOS Xcode/workload and s390x dependency failures are separate upstream concerns; never label the whole CI green. Next: maintainers review/merge #104 before Provider acceptance; release matching NewLife.XCode and XCode.SonnetDB, then run a fully public fresh-cache consumer. SonnetDB #404 remains OPEN until that external chain closes. No formal package/tag, secret changes, EF Provider publication or production deployment is performed here.
+
 This branch starts at upstream `512d8a434`. It responds to the architecture review in NewLifeX/NewLife.XCode#103; that closed PR remains unchanged.
 
 - Generic, opt-in `DbPackage.QueryCallback` configures only exact built-in extractors. Custom extractor callbacks and derived extractors retain their source and `Fetch`. A missing callback preserves the original DAL query path.

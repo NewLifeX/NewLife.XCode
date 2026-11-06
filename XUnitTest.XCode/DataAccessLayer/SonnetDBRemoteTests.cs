@@ -13,6 +13,32 @@ public class SonnetDBRemoteTests
 {
     [SonnetServerTheory]
     [InlineData("rest")]
+    [InlineData("auto")]
+    [InlineData("frame-http2")]
+    public async Task NumericNullQueries_PreserveNullThroughSyncAndAsyncOverrides(String protocol)
+    {
+        var setting = protocol == "frame-http2" ? "SONNETDB_TEST_HTTP2_CONNECTION" : "SONNETDB_TEST_CONNECTION";
+        var connection = "SonnetNull_" + Guid.NewGuid().ToString("N");
+        DAL.AddConnStr(connection, Environment.GetEnvironmentVariable(setting) + ";Protocol=" + protocol, null, "SonnetDB");
+        var dal = DAL.Create(connection);
+        var table = "NullValues_" + Guid.NewGuid().ToString("N");
+        try
+        {
+            dal.Execute($"CREATE TABLE {table}(Id INT NOT NULL, I INT NULL, D DECIMAL(28,8) NULL, F FLOAT NULL, B BOOL NULL, PRIMARY KEY(Id))");
+            dal.Execute($"INSERT INTO {table}(Id,I,D,F,B) VALUES(1,NULL,NULL,NULL,NULL)");
+            Assert.All(dal.Query($"SELECT I,D,F,B FROM {table}").Rows.Single(), Assert.Null);
+            Assert.All((await dal.QueryAsync($"SELECT I,D,F,B FROM {table}")).Rows.Single(), Assert.Null);
+            Assert.Equal(1, dal.Session.ExecuteScalar<Int32>($"SELECT COUNT(*) FROM {table} WHERE I IS NULL AND D IS NULL AND F IS NULL AND B IS NULL"));
+        }
+        finally
+        {
+            dal.Execute($"DROP TABLE IF EXISTS {table}");
+            dal.Db.Dispose();
+        }
+    }
+
+    [SonnetServerTheory]
+    [InlineData("rest")]
     public void DatabaseLifecycle(String protocol)
     {
         var connName = "SonnetDatabase_" + Guid.NewGuid().ToString("N");

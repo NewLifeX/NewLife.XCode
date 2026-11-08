@@ -439,6 +439,25 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <returns>总记录数</returns>
     public virtual Int64 QueryCount(SelectBuilder builder) => ExecuteScalar<Int64>(builder.SelectCount().ToString(), CommandType.Text, builder.Parameters.ToArray());
 
+    /// <summary>执行SQL查询，返回总记录数</summary>
+    /// <param name="builder">查询生成器</param>
+    /// <param name="commandTimeout">命令超时时间，单位秒</param>
+    /// <returns>总记录数</returns>
+    public virtual Int64 QueryCount(SelectBuilder builder, Int32 commandTimeout)
+    {
+        using var cmd = OnCreateCommand(builder.SelectCount().ToString(), CommandType.Text, builder.Parameters.ToArray());
+        if (commandTimeout > 0) cmd.CommandTimeout = commandTimeout;
+
+        return Execute(cmd, true, static cmd2 =>
+        {
+            var rs = cmd2.ExecuteScalar();
+            if (rs == null || rs == DBNull.Value) return 0L;
+            if (rs is Int64 value) return value;
+
+            return Convert.ToInt64(rs);
+        });
+    }
+
     /// <summary>快速查询单表记录数，稍有偏差</summary>
     /// <param name="tableName"></param>
     /// <returns></returns>

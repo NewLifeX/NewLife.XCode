@@ -55,7 +55,7 @@ public class ReadWriteStrategy
         //if (dal.ReadOnly == null) return false;
         if (dal.Session.Transaction != null) return false;
 
-        if (!action.EqualIgnoreCase("Select", "SelectCount", "Query")) return false;
+        if (!action.EqualIgnoreCase("Select", "SelectCount", "SelectCountLong", "Query")) return false;
         if (action == "ExecuteScalar" && !sql.TrimStart().StartsWithIgnoreCase("select ")) return false;
 
         // 判断是否忽略的时间区间

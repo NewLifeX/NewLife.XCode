@@ -93,9 +93,9 @@ public class XCodeSetting : Config<XCodeSetting>
     [Description("Table and column name case. Default: database decides; None: keep model casing; Upper: uppercase; Lower: lowercase; Underline: underscore")]
     public NameFormats NameFormat { get; set; } = NameFormats.Default;
 
-    /// <summary>全表查行数下限。在获取数据表行数时，先根据索引表进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。默认1000万</summary>
-    [Description("Full count threshold. Row counts are estimated from index statistics first; estimates above this value are used as-is, otherwise count(*) runs for an exact value. Lower it to avoid slow first visits on large tables, raise it for exact counts. Default 10 million")]
-    public Int32 FullCountFloor { get; set; } = 10_000_000;
+    /// <summary>全表查行数下限。在获取数据表行数时，先根据索引表进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。默认100万</summary>
+    [Description("Full count threshold. Row counts are estimated from index statistics first; estimates above this value are used as-is, otherwise count(*) runs for an exact value. Lower it to avoid slow first visits on large tables, raise it for exact counts. Default 1 million")]
+    public Int32 FullCountFloor { get; set; } = 1_000_000;
     #endregion
 
     #region 缓存

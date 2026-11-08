@@ -201,7 +201,7 @@ public partial class Entity<TEntity>
         //[EditorBrowsable(EditorBrowsableState.Never)]
         public static ISingleEntityCache<Object, TEntity> SingleCache => Session.SingleCache;
 
-        /// <summary>总记录数，小于1000时是精确的，大于1000时缓存10分钟</summary>
+        /// <summary>总记录数。10 万以下精确，10 万~100 万后台校准，100 万以上为估算值；需要精确值时使用 FindCount()</summary>
         //[Obsolete("=>Session")]
         //[EditorBrowsable(EditorBrowsableState.Never)]
         public static Int32 Count => (Int32)Session.LongCount;

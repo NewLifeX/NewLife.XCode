@@ -376,7 +376,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     IEntityCache IEntitySession.Cache => Cache;
     ISingleEntityCache IEntitySession.SingleCache => SingleCache;
 
-    /// <summary>总记录数，小于1000时是精确的，大于1000时缓存10秒</summary>
+    /// <summary>总记录数。10 万以下精确，10 万~100 万后台校准，100 万以上为估算值；需要精确值时使用 FindCount()</summary>
     public Int32 Count
     {
         get
@@ -391,7 +391,17 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     /// <summary>总记录数较小时，使用静态字段，较大时增加使用Cache</summary>
     private Int64 _Count = -2L;
     readonly Object _count_lock = new();
-    /// <summary>总记录数，小于100w时精确查询，否则取索引行数，缓存60秒</summary>
+
+    /// <summary>同步精确计数阈值。低于该值时直接 count(*)，不阻塞大表</summary>
+    private const Int32 SyncCountLimit = 100_000;
+    /// <summary>计数命令超时秒数</summary>
+    private const Int32 CountCommandTimeout = 5;
+    /// <summary>精确计数失败后的退避秒数</summary>
+    private const Int32 CountRetrySeconds = 30 * 60;
+
+    private Int32 _exactCountRunning;
+
+    /// <summary>总记录数。10万以下精确，10万~100万后台校准，100万以上取索引行数并缓存</summary>
     public Int64 LongCount
     {
         get
@@ -405,7 +415,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
                 var now = TimerX.Now;
                 if (_NextCount < now)
                 {
-                    _NextCount = now.AddSeconds(60);
+                    _NextCount = now.AddSeconds(GetCountRefreshSeconds(n));
                     // 异步更新
                     Task.Run(() =>
                     {
@@ -423,7 +433,14 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
                 return n;
             }
 
-            var ck = Monitor.TryEnter(_count_lock, 3_000);
+            if (!Monitor.TryEnter(_count_lock, 3_000))
+            {
+                // 另一个线程正在首次计数，返回已有缓存，避免重复慢查询
+                if (_Count >= 0) return _Count;
+                if (DataCache.Current.Counts.TryGetValue(CacheKey, out var cached)) return cached;
+                return 0;
+            }
+
             try
             {
                 n = _Count;
@@ -450,13 +467,13 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
             }
             finally
             {
-                if (ck) Monitor.Exit(_count_lock);
+                Monitor.Exit(_count_lock);
             }
         }
         private set
         {
             _Count = value;
-            _NextCount = TimerX.Now.AddSeconds(60);
+            _NextCount = TimerX.Now.AddSeconds(GetCountRefreshSeconds(value));
 
             var dc = DataCache.Current;
             dc.Counts[CacheKey] = value;
@@ -465,34 +482,151 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     }
 
     /// <summary>获取总行数，基于参考值采取不同策略</summary>
-    /// <param name="count"></param>
+    /// <param name="count">上次缓存值，负数表示未知</param>
     /// <returns></returns>
     private Int64 GetCount(Int64 count)
     {
         var dal = Dal;
+        var floor = XCodeSetting.Current.FullCountFloor;
+        if (floor < 0) floor = 0;
+        var syncLimit = Math.Min(SyncCountLimit, floor);
 
-        // 第一次访问，SQLite的Select Count非常慢，数据大于阀值时，使用最大ID作为表记录数
-        if (count < 0 && dal.DbType == DatabaseType.SQLite && Table.Identity != null)
+        // 视图只能按模板 SQL 精确统计，保持原有行为
+        if (DataTable.IsView)
         {
+            if (TimerX.Now < _NextFullCount) return count >= 0 ? count : 0;
+
+            return ExecuteExactCount(count);
+        }
+
+        // 先取快速统计值。已缓存且未超过阈值的表交给精确计数或后台校准
+        var fast = count;
+        if (count <= 0 || count >= floor || dal.DbType == DatabaseType.SQLite)
+            fast = QueryFastCount();
+
+        // 快速统计不可用时，用自增主键区间兜底（SQLite 已经在 QueryFastCount 中使用区间）
+        var unknown = dal.DbType == DatabaseType.SQLite ? fast < 0 : fast <= 0;
+        if (unknown && dal.DbType != DatabaseType.SQLite)
+        {
+            var range = QueryIdentityRange();
+            if (range >= 0)
+            {
+                fast = range;
+                unknown = false;
+            }
+        }
+
+        // 仍然未知时保留已有缓存值，避免把大表降级成同步精确计数
+        if (unknown) fast = count > 0 ? count : 0;
+
+        if (DAL.Debug) DAL.WriteLog("{0}.Count fast row count (approximate) [{1}/{2}] value {3:n0}, floor {4:n0}", ThisType.Name, TableName, ConnName, fast, floor);
+
+        // 小表同步精确；中表后台精确；大表只估算
+        if (fast <= syncLimit)
+        {
+            if (TimerX.Now < _NextFullCount) return fast;
+
+            return ExecuteExactCount(fast);
+        }
+
+        if (fast < floor && TimerX.Now >= _NextFullCount)
+        {
+            _NextFullCount = TimerX.Now.AddSeconds(GetExactRefreshSeconds(fast));
+            ScheduleExactCount();
+        }
+
+        return fast;
+    }
+
+    /// <summary>快速获取表行数。失败时返回 -1，由调用方决定是否使用主键区间兜底</summary>
+    /// <returns></returns>
+    private Int64 QueryFastCount()
+    {
+        var dal = Dal;
+
+        // SQLite 的 Select Count 很慢，用自增主键区间估算
+        if (dal.DbType == DatabaseType.SQLite) return QueryIdentityRange();
+
+        using var span = dal.Tracer?.NewSpan($"db:{ConnName}:QueryCountFast:{DAL.TrimTableName(TableName)}", TableName);
+        try
+        {
+            var count = dal.Session.QueryCountFast(FormatedTableName);
+            if (span != null) span.Value = count;
+            return count;
+        }
+        catch (Exception ex)
+        {
+            span?.SetError(ex, null);
+            if (DAL.Debug) DAL.WriteLog("Failed to get fast row count for [{0}]: {1}", TableName, ex.Message);
+            return -1;
+        }
+    }
+
+    /// <summary>用自增主键的 MIN/MAX 区间估算行数。仅适用于有索引的单列自增主键，失败返回 -1</summary>
+    /// <returns></returns>
+    private Int64 QueryIdentityRange()
+    {
+        var fi = Table.Identity;
+        if (fi == null || DataTable.IsView) return -1;
+
+        var columnName = fi.ColumnName ?? fi.Name;
+
+        // 必须有索引，避免 MIN/MAX 全表扫描
+        var indexed = fi.PrimaryKey || Table.DataTable.Indexes.Any(ix => ix.Columns.Any(c => c.EqualIgnoreCase(columnName)));
+        if (!indexed) return -1;
+
+        try
+        {
+            var name = Dal.Db.FormatName(columnName);
             var builder = new SelectBuilder
             {
                 Table = FormatedTableName,
-                OrderBy = Table.Identity.Desc()
+                Column = $"MIN({name}), MAX({name})"
+            };
+            var ds = Dal.Query(builder, 0, 0);
+            if (ds.Columns.Length < 2 || ds.Rows.Count == 0) return -1;
+
+            var row = ds.Rows[0];
+            if (row[0] == null || row[0] == DBNull.Value || row[1] == null || row[1] == DBNull.Value) return 0;
+
+            var min = Convert.ToInt64(row[0]);
+            var max = Convert.ToInt64(row[1]);
+            if (max < min) return 0;
+
+            var range = max - min;
+            return range < Int64.MaxValue ? range + 1 : range;
+        }
+        catch (Exception ex)
+        {
+            if (DAL.Debug) DAL.WriteLog("Failed to get identity range for [{0}]: {1}", TableName, ex.Message);
+            return -1;
+        }
+    }
+
+    /// <summary>执行精确计数。失败时保留参考值，并按退避周期重试</summary>
+    /// <param name="reference">失败时保留的估算值</param>
+    /// <returns></returns>
+    private Int64 ExecuteExactCount(Int64 reference)
+    {
+        var now = TimerX.Now;
+        _NextFullCount = now.AddSeconds(GetExactRefreshSeconds(reference));
+
+        try
+        {
+            var builder = new SelectBuilder
+            {
+                Table = FormatedTableName
             };
             FixBuilder(builder);
-            var ds = dal.Query(builder, 0, 1);
-            if (ds.Columns.Length > 0 && ds.Rows.Count > 0)
-                count = Convert.ToInt64(ds.Rows[0][0]);
-        }
 
-        // 100w数据时，没有预热Select Count需要3000ms，预热后需要500ms
-        if (dal.DbType != DatabaseType.SQLite && (count <= 0 || count >= 1_000_000) && !DataTable.IsView)
-        {
-            using var span = dal.Tracer?.NewSpan($"db:{ConnName}:QueryCountFast:{DAL.TrimTableName(TableName)}", TableName);
+            using var span = Dal.Tracer?.NewSpan($"db:{ConnName}:QueryCountExact:{DAL.TrimTableName(TableName)}", TableName);
             try
             {
-                count = dal.Session.QueryCountFast(FormatedTableName);
+                var count = Dal.SelectCountLong(builder, GetCountTimeout());
                 if (span != null) span.Value = count;
+
+                _NextFullCount = now.AddSeconds(GetExactRefreshSeconds(count));
+                return count;
             }
             catch (Exception ex)
             {
@@ -500,58 +634,89 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
                 throw;
             }
         }
-
-        var now = TimerX.Now;
-
-        // 查真实记录数，修正FastCount不够准确的情况
-        var floor = XCodeSetting.Current.FullCountFloor;
-        if (count < floor && now >= _NextFullCount)
+        catch (Exception ex)
         {
-            // 根据数据量大小不同，使用不同的缓存时间
-            var exp = count switch
+            // 只有确认表不存在时才触发建表；超时/权限等错误保留估算值
+            if (!DataTable.IsView && IsTableMissing())
             {
-                >= 1_000_000 => 3600,
-                >= 100_000 => 600,
-                >= 10_000 => 60,
-                _ => 60,
-            };
-            _NextFullCount = now.AddSeconds(exp);
-
-            try
-            {
-                var builder = new SelectBuilder
-                {
-                    Table = FormatedTableName
-                };
-                FixBuilder(builder);
-                count = dal.SelectCount(builder);
-            }
-            catch
-            {
-                // 表可能尚未创建,主动触发建表
-                // CheckAndAdd机制会将表名加入HasCheckTables列表
-                // 这样后续的CheckTables()就会自动跳过此表,避免重复检查
                 try
                 {
-                    if (!dal.CheckAndAdd(TableName))
-                    {
-                        // 表名还未在检查列表中,立即创建表
-                        CheckTable();
-                    }
+                    if (!Dal.CheckAndAdd(TableName)) CheckTable();
                 }
-                catch (Exception ex)
+                catch (Exception ex2)
                 {
-                    // 建表失败,记录日志但不中断流程
-                    if (DAL.Debug) DAL.WriteLog("Failed to create table [{0}]: {1}", TableName, ex.Message);
+                    if (DAL.Debug) DAL.WriteLog("Failed to create table [{0}]: {1}", TableName, ex2.Message);
                 }
 
-                // 建表后返回0,后续访问会重新获取真实记录数
-                count = 0;
+                _NextFullCount = now.AddSeconds(60);
+                return 0;
             }
+
+            _NextFullCount = now.AddSeconds(CountRetrySeconds);
+            DAL.WriteLog("Failed to get exact row count for [{0}], keep {1:n0}: {2}", TableName, reference, ex.Message);
         }
 
-        return count;
+        return reference >= 0 ? reference : 0;
     }
+
+    private Boolean IsTableMissing()
+    {
+        try
+        {
+            return !Dal.TableNames.Contains(TableName);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>后台精确计数</summary>
+    private void ScheduleExactCount()
+    {
+        if (Interlocked.CompareExchange(ref _exactCountRunning, 1, 0) != 0) return;
+
+        Task.Run(() =>
+        {
+            try
+            {
+                // 首次访问时可能尚未完成初始化
+                WaitForInitData(3_000);
+
+                var count = ExecuteExactCount(_Count);
+                LongCount = count;
+            }
+            catch (Exception ex)
+            {
+                _NextFullCount = TimerX.Now.AddSeconds(CountRetrySeconds);
+                XTrace.WriteException(ex);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _exactCountRunning, 0);
+            }
+        });
+    }
+
+    private static Int32 GetCountTimeout()
+    {
+        var timeout = XCodeSetting.Current.CommandTimeout;
+        return timeout > 0 && timeout < CountCommandTimeout ? timeout : CountCommandTimeout;
+    }
+
+    private static Int32 GetCountRefreshSeconds(Int64 count) => count switch
+    {
+        >= 1_000_000 => 600,
+        >= 100_000 => 300,
+        _ => 60,
+    };
+
+    private static Int32 GetExactRefreshSeconds(Int64 count) => count switch
+    {
+        >= 1_000_000 => 3600,
+        >= 100_000 => 600,
+        _ => 60,
+    };
 
     /// <summary>清除缓存</summary>
     /// <param name="reason">清除原因</param>

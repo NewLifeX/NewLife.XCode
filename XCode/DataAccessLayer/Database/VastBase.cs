@@ -330,6 +330,31 @@ internal class VastBaseSession : RemoteDbSession
 
     #endregion 构造函数
 
+    #region 快速查询单表记录数
+
+    /// <summary>快速查询单表记录数。VastBase通过pg_class.reltuples估算</summary>
+    /// <param name="tableName"></param>
+    /// <returns></returns>
+    public override Int64 QueryCountFast(String tableName)
+    {
+        if (tableName.IsNullOrEmpty()) return 0;
+
+        tableName = tableName.Replace("'", "''");
+        var sql = $"select greatest(reltuples, 0)::bigint from pg_class where oid = to_regclass('{tableName}')";
+        return ExecuteScalar<Int64>(sql);
+    }
+
+    public override Task<Int64> QueryCountFastAsync(String tableName)
+    {
+        if (tableName.IsNullOrEmpty()) return Task.FromResult(0L);
+
+        tableName = tableName.Replace("'", "''");
+        var sql = $"select greatest(reltuples, 0)::bigint from pg_class where oid = to_regclass('{tableName}')";
+        return ExecuteScalarAsync<Int64>(sql);
+    }
+
+    #endregion
+
     #region 基本方法 查询/执行
 
     /// <summary>执行SQL查询，返回记录集</summary>

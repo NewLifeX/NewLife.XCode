@@ -422,8 +422,24 @@ internal class MySqlSession : RemoteDbSession
             var openDef = _readModelsAsyncDef ??= dr.GetType().GetMethod("ReadModelsAsync");
             if (openDef != null)
             {
-                var method = openDef.MakeGenericMethod(typeof(T));
-                return (IEnumerable<T>)await method.As<Func<CancellationToken, Task<IEnumerable<T>>>>(dr)!(CancellationToken.None).ConfigureAwait(false);
+                // 驱动返回 Task<IList<T>>，按实际返回类型绑定委托；签名不符或 AOT 下无法创建委托时回退常规路径
+                Func<CancellationToken, Task<IList<T>>>? func = null;
+                Func<CancellationToken, Task<IEnumerable<T>>>? func2 = null;
+                try
+                {
+                    var method = openDef.MakeGenericMethod(typeof(T));
+                    if (method.ReturnType == typeof(Task<IList<T>>))
+                        func = method.As<Func<CancellationToken, Task<IList<T>>>>(dr);
+                    else if (method.ReturnType == typeof(Task<IEnumerable<T>>))
+                        func2 = method.As<Func<CancellationToken, Task<IEnumerable<T>>>>(dr);
+                }
+                catch (Exception ex) when (ex is ArgumentException or NotSupportedException or InvalidOperationException)
+                {
+                    // 忽略绑定失败，走下方常规映射
+                }
+
+                if (func != null) return await func(CancellationToken.None).ConfigureAwait(false);
+                if (func2 != null) return await func2(CancellationToken.None).ConfigureAwait(false);
             }
             var dt = new DbTable();
             await dt.ReadAsync(dr).ConfigureAwait(false);

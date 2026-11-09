@@ -89,7 +89,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <PackageReference Include="NewLife.Core" Version="12.0.2026.1024" />
     <PackageReference Include="NewLife.IP" Version="2.6.2026.1024" />
-    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.901" />
+    <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.1024" />
     <!-- 直引 Remoting 最新正式版，与 AotSmoke 对齐，避免传递依赖版本落后 -->
     <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1024" />
     <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.102" />

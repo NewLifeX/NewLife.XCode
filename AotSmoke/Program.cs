@@ -1,4 +1,4 @@
-// XCode NativeAOT 冒烟：16 场景逐项 PASS/FAIL，任一失败以非 0 退出码结束。
+// XCode NativeAOT 冒烟：17 场景逐项 PASS/FAIL，任一失败以非 0 退出码结束。
 // 同一工程双跑对照：JIT（dotnet run -c Release）与 NativeAOT（dotnet publish -c Release -r <rid> 后运行产物）。
 // 由 .github/workflows/aot.yml 的 analyzer/aot job 自动执行（win-x64/linux-x64/linux-arm64 原生发布运行，linux-la64 QEMU JIT）。
 // 背景与实测结论见 Doc/AOT兼容性分析.md。
@@ -244,8 +244,8 @@ Run("14.泛型属性拷贝 CopyProperty<TSource,TTarget>", () =>
     return dst.ID == 7 && dst.Name == "copy";
 });
 
-// 15. MySQL 真库（官方 MySql.Data 连接器；连接串来自环境变量 XCode_mysql，未设置时跳过）
-Run("15.MySQL 真库（环境变量 XCode_mysql）", () =>
+// 15. MySQL 真库（NewLife.MySql 驱动，XCode.MySql 适配包默认驱动；连接串来自环境变量 XCode_mysql，未设置时跳过）
+Run("15.MySQL 真库（NewLife.MySql 驱动）", () =>
 {
     var connStr = Environment.GetEnvironmentVariable("XCode_mysql");
     if (connStr.IsNullOrEmpty())
@@ -257,6 +257,8 @@ Run("15.MySQL 真库（环境变量 XCode_mysql）", () =>
     DAL.AddConnStr("aot_mysql", connStr, null, "MySql");
 
     var dal = DAL.Create("aot_mysql");
+    var factory = dal.Db.Factory;
+    var ok0 = factory?.GetType().FullName?.StartsWith("NewLife.MySql", StringComparison.OrdinalIgnoreCase) == true;
     dal.Execute("Create Table if not exists smoke_mysql_user (ID Int Auto_Increment Primary Key, Name Varchar(50))");
     dal.Execute("Delete From smoke_mysql_user");
 
@@ -272,14 +274,22 @@ Run("15.MySQL 真库（环境变量 XCode_mysql）", () =>
     var list = SmokeMySqlUser.FindAll(SmokeMySqlUser._.Name == "mysql2");
     var ok4 = list.Count == 1;
 
-    // DAL 层查询（走驱动 OnFill）
+    // DAL 层查询（走驱动 OnFill 零拷贝入口）
     var dt = dal.Query("select * from smoke_mysql_user");
     var ok5 = dt != null && dt.Rows.Count == 1;
 
-    var ok6 = q.Delete() > 0;
+    // 实体映射零拷贝入口（反射探测 ReadModelsAsync<T>）
+    var models = dal.QueryAsync<SmokeMySqlUser>("select * from smoke_mysql_user").GetAwaiter().GetResult().ToList();
+    var ok6 = models.Count == 1 && models[0].Name == "mysql2";
 
-    Console.WriteLine($"    (factory={dal.Db.Factory?.GetType().FullName} insert={ok1} find={ok2} update={ok3} query={ok4} dalQuery={ok5} delete={ok6})");
-    return ok1 && ok2 && ok3 && ok4 && ok5 && ok6;
+    // 数组参数批量更新（反射探测 ExecuteArrayBatch）
+    foreach (var item in models) item.Name = "mysql3";
+    var ok7 = models.BatchUpdate() > 0 && SmokeMySqlUser.Find(SmokeMySqlUser._.Name == "mysql3") != null;
+
+    var ok8 = q.Delete() > 0;
+
+    Console.WriteLine($"    (factory={factory?.GetType().FullName} insert={ok1} find={ok2} update={ok3} query={ok4} dalQuery={ok5} modelQuery={ok6} batchUpdate={ok7} delete={ok8})");
+    return ok0 && ok1 && ok2 && ok3 && ok4 && ok5 && ok6 && ok7 && ok8;
 });
 
 // 16. SqlServer 真库（官方 System.Data.SqlClient 连接器，与 XCode.SqlServer 适配包同版本；连接串来自环境变量 XCode_sqlserver，未设置时跳过。本机可用 LocalDB：(localdb)\MSSQLLocalDB）
@@ -318,6 +328,33 @@ Run("16.SqlServer 真库（环境变量 XCode_sqlserver）", () =>
 
     Console.WriteLine($"    (factory={dal.Db.Factory?.GetType().FullName} insert={ok1} find={ok2} update={ok3} query={ok4} dalQuery={ok5} delete={ok6})");
     return ok1 && ok2 && ok3 && ok4 && ok5 && ok6;
+});
+
+// 17. MySQL 官方 MySql.Data 连接器（原始 ADO.NET 路径，与 NewLife.MySql 对照；连接串来自环境变量 XCode_mysql，未设置时跳过）
+Run("17.MySQL 官方 MySql.Data 连接器", () =>
+{
+    var connStr = Environment.GetEnvironmentVariable("XCode_mysql");
+    if (connStr.IsNullOrEmpty())
+    {
+        Console.WriteLine("    (skip: 未设置 XCode_mysql)");
+        return true;
+    }
+
+    using var conn = new MySql.Data.MySqlClient.MySqlConnection(connStr);
+    conn.Open();
+
+    using var cmd = conn.CreateCommand();
+    cmd.CommandText = "Create Table if not exists smoke_mysql_user (ID Int Auto_Increment Primary Key, Name Varchar(50))";
+    cmd.ExecuteNonQuery();
+
+    cmd.CommandText = "select * from smoke_mysql_user limit 1";
+    using var dr = cmd.ExecuteReader();
+    var columns = dr.FieldCount;
+    var rows = 0;
+    while (dr.Read()) rows++;
+
+    Console.WriteLine($"    (connector=MySql.Data columns={columns} rows={rows})");
+    return columns >= 2;
 });
 
 Console.WriteLine(failures.Count == 0 ? "全部通过" : $"失败 {failures.Count}：{String.Join("、", failures)}");

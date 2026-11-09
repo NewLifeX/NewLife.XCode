@@ -61,7 +61,7 @@ jobs:
       if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
     - name: JIT Baseline
-      # 同一冒烟工程以 JIT 运行（16 场景），为 AOT 结果提供对照
+      # 同一冒烟工程以 JIT 运行（17 场景），为 AOT 结果提供对照
       run: dotnet run -c Release --project AotSmoke/AotSmoke.csproj
     - name: Publish NativeAOT Smoke
       run: dotnet publish AotSmoke/AotSmoke.csproj -c Release -r ${{ matrix.rid }} -o AotSmoke/bin/aot-out
@@ -70,7 +70,7 @@ jobs:
       shell: bash
       run: ./AotSmoke/bin/aot-out/${{ matrix.bin }}
 
-  # linux-x64：提供 MySQL/SqlServer 服务，场景 15/16 以真库验证 AOT（JIT 与原生发布双跑）
+  # linux-x64：提供 MySQL/SqlServer 服务，场景 15/16/17 以真库验证 AOT（JIT 与原生发布双跑）
   aot-linux-x64:
     name: aot (linux-x64)
     runs-on: ubuntu-latest

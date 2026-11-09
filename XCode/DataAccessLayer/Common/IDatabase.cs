@@ -35,6 +35,9 @@ public enum NameFormats
 
     /// <summary>下划线</summary>
     Underline,
+
+    /// <summary>保持原样，XML模型同时保留物理名称的精确大小写</summary>
+    Exact,
 }
 
 /// <summary>批量操作能力。Flags枚举，不同数据库支持不同批量操作</summary>

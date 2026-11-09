@@ -25,6 +25,9 @@ public class PagingExtracter : IExtracter<DbTable>
 
     /// <summary>总行数</summary>
     public Int32 TotalCount { get; set; }
+
+    /// <summary>可选的逐页查询回调。参数为查询、起始行、最大行数；未设置时使用原DAL查询</summary>
+    public Func<SelectBuilder, Int64, Int64, DbTable>? QueryPage { get; set; }
     #endregion
 
     #region 构造
@@ -61,7 +64,7 @@ public class PagingExtracter : IExtracter<DbTable>
         while (true)
         {
             // 查询数据
-            var dt = Dal.Query(Builder, Row, BatchSize);
+            var dt = QueryPage != null ? QueryPage(Builder, Row, BatchSize) : Dal.Query(Builder, Row, BatchSize);
             if (dt == null || dt.Rows == null) break;
 
             var count = dt.Rows.Count;

@@ -1,5 +1,14 @@
 # NewLife.XCode 更新日志
 
+## [Unreleased]
+
+### Added
+- 为同步内置抽取器增加可选逐页查询回调，保留默认查询和外部抽取器合同；增加 `NameFormats.Exact` 与兼容 XML 重载，显式保留物理名称大小写。
+- SonnetDB 5.0.0 原生类型、元数据、分页、事务和批量语义映射；普通 NULL 读取使用下游 override，跨库迁移通过显式 `SonnetDBPackage` 保真，不向基础类加入数据库特判。
+
+### Fixed
+- SonnetDB 元数据继续识别旧 DATETIME/TIME 列，新模型仍优先使用 DATETIME2/DURATION；保留兼容类型的原生 CAST 默认值，避免反向模型重放时重复包装并产生冗余 ALTER。增加实际旧表映射和只读 DDL 计划/默认值读回回归，不修改通用数据库基类或正式 SonnetDB 5.0 依赖。
+
 ## v12.3.2026.1024 (2026-10-24)
 
 ### SonnetDB 数据库支持

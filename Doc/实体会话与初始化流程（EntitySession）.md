@@ -93,6 +93,10 @@ private static readonly ConcurrentDictionary<String, EntitySession<TEntity>> _es
 
 这让大表避免频繁 `COUNT(*)`，小表又能保持较高准确性。
 
+### 4.2 诊断日志
+
+批量添删改（`BatchInsert`/`BatchUpdate`/`Upsert` 等）会清空实体缓存并把 `_NextCount` 重置为最小值，下一次读取 `Count` 便重新计算计数。为避免高频写入场景刷屏，计数过程的两条诊断消息（`{0}.Count fast row count (approximate) ...`）使用 Debug 级别输出，默认 Info 级别下不可见；排查计数偏差时把日志等级调到 Debug 即可查看。
+
 ---
 
 ## 5. 缓存管理与数据变更

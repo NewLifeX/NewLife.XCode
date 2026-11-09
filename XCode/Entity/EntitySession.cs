@@ -455,7 +455,8 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
                     if (DataCache.Current.Counts.TryGetValue(CacheKey, out var c)) n = c;
                 }
 
-                if (DAL.Debug) DAL.WriteLog("{0}.Count fast row count (approximate) [{1}/{2}] reference value {3:n0}", ThisType.Name, TableName, ConnName, n);
+                // 计数诊断属于调试细节，走 Debug 级别，避免默认 Info 级别下刷屏
+                if (DAL.Debug) XTrace.Log.Debug("{0}.Count fast row count (approximate) [{1}/{2}] reference value {3:n0}", ThisType.Name, TableName, ConnName, n);
 
                 LongCount = GetCount(n);
 
@@ -519,7 +520,8 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
         // 仍然未知时保留已有缓存值，避免把大表降级成同步精确计数
         if (unknown) fast = count > 0 ? count : 0;
 
-        if (DAL.Debug) DAL.WriteLog("{0}.Count fast row count (approximate) [{1}/{2}] value {3:n0}, floor {4:n0}", ThisType.Name, TableName, ConnName, fast, floor);
+        // 数据表频繁写入会重置刷新时间，计数可能被反复计算，调试级别输出以免刷屏
+        if (DAL.Debug) XTrace.Log.Debug("{0}.Count fast row count (approximate) [{1}/{2}] value {3:n0}, floor {4:n0}", ThisType.Name, TableName, ConnName, fast, floor);
 
         // 小表同步精确；中表后台精确；大表只估算
         if (fast <= syncLimit)

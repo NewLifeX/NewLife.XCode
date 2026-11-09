@@ -41,6 +41,9 @@ public class DbPackage
     /// <summary>数据抽取器的创建回调，支持外部自定义</summary>
     public Func<IDataTable, IExtracter<DbTable>>? CreateExtracterCallback { get; set; }
 
+    /// <summary>同步时内置抽取器的可选查询回调。参数为实际来源、查询、起始行、最大行数及本次取消令牌；自定义抽取器不受影响</summary>
+    public Func<DAL, SelectBuilder, Int64, Int64, CancellationToken, DbTable>? QueryCallback { get; set; }
+
     /// <summary>写文件Actor的创建回调，支持外部自定义</summary>
     public Func<WriteFileActor>? WriteFileCallback { get; set; }
 
@@ -569,6 +572,27 @@ public class DbPackage
         writeDb.Start(cancellationToken);
 
         var extracer = CreateExtracterCallback?.Invoke(table) ?? GetExtracter(table);
+        var query = QueryCallback;
+        if (query != null && (CreateExtracterCallback == null || CreateExtracterCallback == GetExtracter))
+        {
+            DbTable QueryPage(DAL source, SelectBuilder builder, Int64 row, Int64 size)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return query(source, builder, row, size, cancellationToken);
+            }
+            switch (extracer)
+            {
+                case IdExtracter id when id.GetType() == typeof(IdExtracter):
+                    id.QueryPage = (builder, row, size) => QueryPage(id.Dal, builder, row, size);
+                    break;
+                case TimeExtracter time when time.GetType() == typeof(TimeExtracter):
+                    time.QueryPage = (builder, row, size) => QueryPage(time.Dal, builder, row, size);
+                    break;
+                case PagingExtracter paging when paging.GetType() == typeof(PagingExtracter):
+                    paging.QueryPage = (builder, row, size) => QueryPage(paging.Dal, builder, row, size);
+                    break;
+            }
+        }
 
         // 临时关闭日志
         var old = Dal.Db.ShowSQL;

@@ -354,6 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "Nâng cấp: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "Tệp không tồn tại: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
+"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "Che dấu nhật ký. Che dấu mật khẩu, bí mật và mã thông báo trong ghi chú nhật ký kiểm toán, được bật theo mặc định"
 "XCode settings": "Cài đặt XCode"
 "Debug": "Gỡ lỗi"
 "Output SQL. Whether to output SQL statements, enabled by default": "Đầu ra SQL. Có xuất câu lệnh SQL hay không, mặc định bật"

@@ -354,6 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "アップグレード: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "ファイルが存在しません: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
+"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "ログのマスク。監査ログの備考に含まれるパスワード、シークレット、トークンをマスクします。既定で有効"
 "XCode settings": "XCode 設定"
 "Debug": "デバッグ"
 "Output SQL. Whether to output SQL statements, enabled by default": "SQL 出力。SQL ステートメントを出力するかどうか。既定で有効"

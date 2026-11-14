@@ -98,6 +98,12 @@ public class XCodeSetting : Config<XCodeSetting>
     public Int32 FullCountFloor { get; set; } = 1_000_000;
     #endregion
 
+    #region 日志
+    /// <summary>日志脱敏。是否对审计日志备注中的密钥、口令与令牌进行掩码，默认启用</summary>
+    [Description("Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default")]
+    public Boolean LogMaskSensitive { get; set; } = true;
+    #endregion
+
     #region 缓存
     /// <summary>数据层缓存。根据sql做缓存，默认0秒</summary>
     [Category("Cache")]

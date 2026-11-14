@@ -354,6 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "שדרוג: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "הקובץ אינו קיים: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
+"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "מיסוך יומנים. מסתיר סיסמאות, סודות ואסימונים בהערות יומן הביקורת, מופעל כברירת מחדל"
 "XCode settings": "הגדרות XCode"
 "Debug": "איתור באגים"
 "Output SQL. Whether to output SQL statements, enabled by default": "פלט SQL. האם להפיק פקודות SQL, מופעל כברירת מחדל"

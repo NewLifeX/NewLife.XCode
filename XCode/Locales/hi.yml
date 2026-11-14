@@ -354,6 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "अपग्रेड: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "फ़ाइल मौजूद नहीं है: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
+"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "लॉग मास्किंग। ऑडिट लॉग टिप्पणियों में पासवर्ड, गोपनीय जानकारी और टोकन को मास्क करता है, डिफ़ॉल्ट रूप से सक्षम"
 "XCode settings": "XCode सेटिंग्स"
 "Debug": "डीबगिंग"
 "Output SQL. Whether to output SQL statements, enabled by default": "SQL आउटपुट। क्या SQL कथन आउटपुट करें, डिफ़ॉल्ट रूप से सक्षम"

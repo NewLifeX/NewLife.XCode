@@ -77,6 +77,7 @@ public class LogProvider
         if (log.CreateIP.IsNullOrEmpty()) log.CreateIP = ManageProvider.UserHost;
 
         //log.TraceId = DefaultSpan.Current?.TraceId;
+        if (remark != null && XCodeSetting.Current.LogMaskSensitive) remark = SensitiveDataMasker.Redact(remark);
         log.Remark = remark;
         log.CreateTime = DateTime.Now;
 
@@ -215,8 +216,8 @@ public class LogProvider
 
                     var v2 = entity[fi.Name];
 
-                    // 日志里面不要出现密码
-                    if (fi.Name.EqualIgnoreCase("pass", "password")) v1 = v2 = null;
+                    // 日志里面不要出现密码、密钥与令牌
+                    if (SensitiveDataMasker.IsSensitiveField(fi)) v1 = v2 = null;
 
                     if (v1 is DateTime dt1)
                         v1 = dt1.ToFullString();
@@ -246,8 +247,8 @@ public class LogProvider
                     if (v is DateTime dt && dt == DateTime.MinValue) continue;
                 }
 
-                // 日志里面不要出现密码
-                if (fi.Name.EqualIgnoreCase("pass", "password")) v = null;
+                // 日志里面不要出现密码、密钥与令牌
+                if (SensitiveDataMasker.IsSensitiveField(fi)) v = null;
 
                 if (v is DateTime dt2)
                     v = dt2.ToFullString();

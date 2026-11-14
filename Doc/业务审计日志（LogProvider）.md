@@ -44,9 +44,18 @@ LogProvider.Provider.WriteLog("修改", this);
 
 - **"添加"/"删除"**：记录所有非空、非零字段
 - **"修改"**：对比 `Dirtys`（脏数据字典，记录旧值）和当前值，输出 `字段=旧值 -> 新值`
-- **密码字段**（名称含 `pass`/`password`）：自动脱敏，记录为空值
+- **凭据字段**（`SensitiveDataMasker.IsSensitiveName`，如 `Password`/`AppSecret`/`AccessToken`）以及显式 `ItemType=password` 的只写字段：自动脱敏，记录为空值
 
-### 2.4 自动填充用户信息
+### 2.4 备注文本脱敏
+
+`CreateLog` 写入前统一调用 `SensitiveDataMasker.Redact`，掩码备注中的密钥、口令与令牌，适配两类形态：
+
+- JSON 报文：`{"Secret":"$md5$..."}` → `{"Secret":"***"}`
+- 查询串/键值文本：`secret=abc123&clientId=...` → `secret=***&clientId=...`
+
+只识别“凭据字段名 + 分隔符 + 值”，普通叙述文本（如 `Secret validation failed`）原样保留。实体字段日志还会跳过显式标记为只写（`ItemType=password`）的字段。掩码只作用于新写入的日志，历史数据不变；默认启用，可通过 `XCode:LogMaskSensitive=false` 关闭。
+
+### 2.5 自动填充用户信息
 
 `CreateLog` 内部会调用：
 

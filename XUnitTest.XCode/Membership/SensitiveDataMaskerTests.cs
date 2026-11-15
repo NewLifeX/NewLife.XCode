@@ -92,6 +92,14 @@ public class SensitiveDataMaskerTests
     [InlineData("Remark", false)]
     public void IsSensitiveName_Cases(String name, Boolean expected) => Assert.Equal(expected, SensitiveDataMasker.IsSensitiveName(name));
 
+    [Theory(DisplayName = "口令字段名识别")]
+    [InlineData("Password", true)]
+    [InlineData("old_pwd", true)]
+    [InlineData("pass", true)]
+    [InlineData("bypass", false)]
+    [InlineData("AppSecret", false)]
+    public void IsPasswordName_Cases(String name, Boolean expected) => Assert.Equal(expected, SensitiveDataMasker.IsPasswordName(name));
+
     [Fact(DisplayName = "实体字段按名称与只写标记识别")]
     public void IsSensitiveField_Cases()
     {
@@ -101,10 +109,62 @@ public class SensitiveDataMaskerTests
         Assert.False(SensitiveDataMasker.IsSensitiveField(fields.First(e => e.Name == "Name")));
     }
 
-    [Fact(DisplayName = "日志脱敏配置默认启用")]
-    public void Setting_LogMaskSensitiveByDefault() => Assert.True(new XCodeSetting().LogMaskSensitive);
+    [Fact(DisplayName = "部分模式下密钥保留头尾")]
+    public void Redact_PartialKeepsHeadAndTail()
+    {
+        var rs = SensitiveDataMasker.Redact("{\"Secret\":\"$md5$1793198435$93FCA6D1E7CF4C414E776F6B785EFCE6\"}", LogMaskModes.Partial);
 
-    [Fact(DisplayName = "实体日志明细中的口令字段被清空")]
+        Assert.Contains("\"Secret\":\"$md5****FCE6\"", rs);
+    }
+
+    [Fact(DisplayName = "部分模式下查询串密钥保留头尾")]
+    public void Redact_PartialQueryString()
+    {
+        var rs = SensitiveDataMasker.Redact("secret=abcdefghijkl&code=node01", LogMaskModes.Partial);
+
+        Assert.Contains("secret=abcd****ijkl", rs);
+        Assert.Contains("code=node01", rs);
+    }
+
+    [Fact(DisplayName = "部分模式下的短值与口令仍然全掩")]
+    public void Redact_PartialShortValueAndPassword()
+    {
+        var rs = SensitiveDataMasker.Redact("{\"token\":\"abc12345\",\"password\":\"abcdefghijkl\"}", LogMaskModes.Partial);
+
+        Assert.Contains("\"token\":\"***\"", rs);
+        Assert.Contains("\"password\":\"***\"", rs);
+    }
+
+    [Fact(DisplayName = "部分模式下含转义序列的密钥全掩")]
+    public void Redact_PartialJsonEscape()
+    {
+        var rs = SensitiveDataMasker.Redact("{\"Secret\":\"abc\\\"defghijklmn\"}", LogMaskModes.Partial);
+
+        Assert.Contains("\"Secret\":\"***\"", rs);
+    }
+
+    [Fact(DisplayName = "仅口令模式不掩码密钥与令牌")]
+    public void Redact_PasswordOnly()
+    {
+        var rs = SensitiveDataMasker.Redact("{\"Secret\":\"plain-secret-value\",\"access_token\":\"plain-token\",\"Password\":\"p@ssw0rd\"}", LogMaskModes.PasswordOnly);
+
+        Assert.Contains("\"plain-secret-value\"", rs);
+        Assert.Contains("\"plain-token\"", rs);
+        Assert.Contains("\"Password\":\"***\"", rs);
+    }
+
+    [Fact(DisplayName = "关闭脱敏时备注原样返回")]
+    public void Redact_Off()
+    {
+        const String remark = "{\"Secret\":\"abc\",\"Password\":\"p@ss\"}";
+
+        Assert.Equal(remark, SensitiveDataMasker.Redact(remark, LogMaskModes.Off));
+    }
+
+    [Fact(DisplayName = "日志脱敏配置默认完全掩码")]
+    public void Setting_LogMaskModeByDefault() => Assert.Equal(LogMaskModes.Full, new XCodeSetting().LogMaskMode);
+
+    [Fact(DisplayName = "实体日志明细中的口令字段被掩码")]
     public void EntityRemark_MasksPassword()
     {
         var user = new User { ID = 9, Name = "tester", Password = "p@ssw0rd" };
@@ -112,6 +172,17 @@ public class SensitiveDataMaskerTests
         var remark = new TestLogProvider().BuildRemark("Insert", user);
 
         Assert.DoesNotContain("p@ssw0rd", remark);
+        Assert.Contains("***", remark);
+    }
+
+    [Fact(DisplayName = "实体字段按键名与模式掩码")]
+    public void MaskField_Cases()
+    {
+        var password = User.Meta.Factory.Fields.First(e => e.Name == "Password");
+
+        Assert.Equal("***", SensitiveDataMasker.MaskField(password, "p@ssw0rd", LogMaskModes.Partial));
+        Assert.Equal("***", SensitiveDataMasker.MaskField(password, "p@ssw0rd", LogMaskModes.PasswordOnly));
+        Assert.Equal("p@ssw0rd", SensitiveDataMasker.MaskField(password, "p@ssw0rd", LogMaskModes.Off));
     }
 
     [Fact(DisplayName = "写日志时备注中的密钥被掩码")]

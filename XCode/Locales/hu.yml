@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "Frissítés: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "A fájl nem létezik: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "Naplók maszkolása. Jelszavakat, titkokat és tokeneket maszkol az auditnapló megjegyzéseiben, alapértelmezés szerint engedélyezve"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "Naplómaszkolási mód, a legenyhébbtől a legszigorúbbig: Off nincs maszkolás (csak helyi hibakeresés), PasswordOnly csak jelszavak, Partial jelszavak teljesen és a titkok eleje és vége megmarad, Full minden hitelesítő adat (alapértelmezett)"
 "XCode settings": "XCode beállítások"
 "Debug": "Hibakeresés"
 "Output SQL. Whether to output SQL statements, enabled by default": "SQL-kimenet. Kiírja-e az SQL utasításokat, alapértelmezés szerint bekapcsolva"

@@ -378,7 +378,7 @@
 "Extended property expiration. Caches the Extends property, default 10 seconds": "擴充屬性過期。擴充屬性 Extends 快取，預設 10 秒"
 "Field cache expiration. Caches grouped values of category fields, default 3600 seconds": "欄位快取過期。快取資料表中分類型欄位的分組資料，預設 3600 秒"
 "Cache statistics period. Interval in seconds for logging cache statistics, 0 disables, default 3600": "快取統計週期。在記錄中定期輸出各快取的統計資料，用於分析效能問題，單位秒，0 表示不輸出，預設 3600 秒"
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "日誌脫敏。對稽核日誌備註中的密碼、金鑰與權杖進行遮罩，預設啟用"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "日誌脫敏模式，依嚴格程度遞增：Off 原樣記錄憑證（僅限本機偵錯），PasswordOnly 只遮蔽口令，Partial 口令全遮蔽、金鑰與權杖保留頭尾，Full 全部憑證遮蔽（預設）"
 "XCode settings": "XCode 設定"
 
 # XCode 內建實體/列舉的元資料（簡體中文來源 → 繁體中文）

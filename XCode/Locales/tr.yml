@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "Yükseltme: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "Dosya mevcut değil: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "Günlük maskeleme. Denetim günlüğü notlarındaki parolaları, sırları ve belirteçleri maskeler, varsayılan olarak etkin"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "Günlük maskeleme modu, en gevşekten en katıya: Off maskeleme yok (yalnızca yerel hata ayıklama), PasswordOnly yalnızca parolalar, Partial parolalar tamamen ve gizli değerlerin başı ve sonu kalır, Full tüm kimlik bilgileri (varsayılan)"
 "XCode settings": "XCode ayarları"
 "Debug": "Hata ayıklama"
 "Output SQL. Whether to output SQL statements, enabled by default": "SQL çıktısı. SQL deyimlerinin çıktılanıp çıktılanmayacağı, varsayılan olarak etkin"

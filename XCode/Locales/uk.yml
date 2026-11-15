@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "Оновлення: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "Файл не існує: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "Маскування журналів. Приховує паролі, секрети та токени в примітках журналу аудиту, увімкнено за замовчуванням"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "Режим маскування журналу, від слабкого до суворого: Off без маскування (лише локальне налагодження), PasswordOnly лише паролі, Partial паролі повністю і в секретів зберігаються початок і кінець, Full усі облікові дані (типово)"
 "XCode settings": "Параметри XCode"
 "Debug": "Налагодження"
 "Output SQL. Whether to output SQL statements, enabled by default": "Вивід SQL. Чи виводити інструкції SQL, увімкнено за замовчуванням"

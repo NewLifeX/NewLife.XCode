@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "ارتقا: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "فایل وجود ندارد: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "پوشاندن گزارش‌ها. گذرواژه‌ها، اسرار و نشانه‌ها را در یادداشت‌های گزارش حسابرسی می‌پوشاند؛ به‌طور پیش‌فرض فعال است"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "حالت پوشاندن گزارش، از کمترین تا بیشترین سختگیری: Off بدون پوشاندن (فقط اشکالزدایی محلی)، PasswordOnly فقط گذرواژهها، Partial گذرواژهها کامل و اسرار ابتدا و انتها را نگه میدارند، Full همه اعتبارنامهها (پیشفرض)"
 "XCode settings": "تنظیمات XCode"
 "Debug": "اشکال‌زدایی"
 "Output SQL. Whether to output SQL statements, enabled by default": "خروجی SQL. آیا دستورهای SQL تولید شوند، به‌طور پیش‌فرض فعال"

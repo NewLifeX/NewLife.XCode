@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "Αναβάθμιση: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "Το αρχείο δεν υπάρχει: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "Απόκρυψη καταγραφών. Αποκρύπτει κωδικούς πρόσβασης, μυστικά και διακριτικά στις σημειώσεις του αρχείου ελέγχου, ενεργό από προεπιλογή"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "Λειτουργία απόκρυψης αρχείου καταγραφής, από λιγότερο έως πιο αυστηρή: Off χωρίς απόκρυψη (μόνο τοπική αποσφαλμάτωση), PasswordOnly μόνο κωδικοί, Partial κωδικοί πλήρως και τα μυστικά διατηρούν αρχή και τέλος, Full όλα τα διαπιστευτήρια (προεπιλογή)"
 "XCode settings": "Ρυθμίσεις XCode"
 "Debug": "Εντοπισμός σφαλμάτων"
 "Output SQL. Whether to output SQL statements, enabled by default": "Έξοδος SQL. Αν θα εκτελούνται οι εντολές SQL, ενεργό από προεπιλογή"

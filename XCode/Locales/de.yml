@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "Aktualisierung: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "Datei existiert nicht: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "Protokollmaskierung. Maskiert Kennwörter, Geheimnisse und Token in Audit-Protokollbemerkungen, standardmäßig aktiviert"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "Protokollmaskierungsmodus, von wenig zu streng: Off keine Maskierung (nur lokale Fehlersuche), PasswordOnly nur Passwörter, Partial Passwörter vollständig und Geheimnisse behalten Anfang und Ende, Full alle Zugangsdaten (Standard)"
 "XCode settings": "XCode-Einstellungen"
 "Debug": "Debuggen"
 "Output SQL. Whether to output SQL statements, enabled by default": "SQL-Ausgabe. Ob SQL-Anweisungen ausgegeben werden, standardmäßig aktiviert"

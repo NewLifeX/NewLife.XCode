@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "Actualizare: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "Fișierul nu există: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "Mascherare jurnale. Maschează parole, secrete și tokenuri în notele jurnalului de audit, activat implicit"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "Mod de mascare a jurnalului, de la cel mai permisiv la cel mai strict: Off fără mascare (doar depanare locală), PasswordOnly doar parole, Partial parole complet și secretele păstrează începutul și sfârșitul, Full toate acreditările (implicit)"
 "XCode settings": "Setări XCode"
 "Debug": "Depanare"
 "Output SQL. Whether to output SQL statements, enabled by default": "Ieșire SQL. Dacă se generează instrucțiuni SQL, activat implicit"

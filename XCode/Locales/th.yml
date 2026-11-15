@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "การอัปเกรด: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "ไฟล์ไม่มีอยู่: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "การปิดบังบันทึก ปิดบังรหัสผ่าน ความลับ และโทเค็นในหมายเหตุของบันทึกการตรวจสอบ เปิดใช้โดยค่าเริ่มต้น"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "โหมดปิดบังบันทึก จากหลวมไปเข้ม: Off ไม่ปิดบัง (ดีบักภายในเท่านั้น), PasswordOnly ปิดบังเฉพาะรหัสผ่าน, Partial ปิดบังรหัสผ่านทั้งหมดและคงหัวท้ายของความลับ, Full ปิดบังข้อมูลรับรองทั้งหมด (ค่าเริ่มต้น)"
 "XCode settings": "การตั้งค่า XCode"
 "Debug": "การดีบัก"
 "Output SQL. Whether to output SQL statements, enabled by default": "เอาต์พุต SQL. จะส่งออกคำสั่ง SQL หรือไม่ เปิดใช้งานโดยค่าเริ่มต้น"

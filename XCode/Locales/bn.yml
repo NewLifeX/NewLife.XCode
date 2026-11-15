@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "আপগ্রেড: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "ফাইলটি নেই: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "লগ মাস্কিং। অডিট লগের মন্তব্যে পাসওয়ার্ড, গোপন তথ্য ও টোকেন মাস্ক করে, ডিফল্টভাবে সক্রিয়"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "লগ মাস্কিং মোড, কম থেকে বেশি কঠোর: Off মাস্কিং নেই (শুধু স্থানীয় ডিবাগ), PasswordOnly শুধু পাসওয়ার্ড মাস্ক, Partial পাসওয়ার্ড সম্পূর্ণ মাস্ক ও গোপন মানের শুরু ও শেষ রাখা, Full সব ক্রেডেনশিয়াল মাস্ক (ডিফল্ট)"
 "XCode settings": "XCode সেটিংস"
 "Debug": "ডিবাগিং"
 "Output SQL. Whether to output SQL statements, enabled by default": "SQL আউটপুট। SQL বিবৃতি আউটপুট হবে কি না, ডিফল্টভাবে সক্ষম"

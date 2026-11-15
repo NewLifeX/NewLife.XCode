@@ -378,7 +378,7 @@
 "Extended property expiration. Caches the Extends property, default 10 seconds": "扩展属性过期。扩展属性Extends缓存，默认10秒"
 "Field cache expiration. Caches grouped values of category fields, default 3600 seconds": "字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒"
 "Cache statistics period. Interval in seconds for logging cache statistics, 0 disables, default 3600": "缓存统计周期。在日志中定期输出各个缓存的统计数据，用于分析性能问题，单位秒，0表示不输出，默认3600秒"
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "日志脱敏。对审计日志备注中的密钥、口令与令牌进行掩码，默认启用"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "日志脱敏模式，按严格程度递增：Off 原样记录凭据（仅限本地调试），PasswordOnly 只掩口令，Partial 口令全掩、密钥与令牌保留头尾，Full 全部凭据掩码（默认）"
 "XCode settings": "XCode设置"
 
 # 程序集标题与描述（英文源文 → 简体中文）

@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "Peningkatan: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "Fail tidak wujud: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "Penyamaran log. Menyamarkan kata laluan, rahsia dan token dalam catatan log audit, didayakan secara lalai"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "Mod penyamaran log, daripada longgar kepada ketat: Off tiada penyamaran (nyahpepijat setempat sahaja), PasswordOnly kata laluan sahaja, Partial kata laluan penuh dan rahsia mengekalkan awal dan akhir, Full semua kelayakan (lalai)"
 "XCode settings": "Tetapan XCode"
 "Debug": "Penyahpepijatan"
 "Output SQL. Whether to output SQL statements, enabled by default": "Output SQL. Sama ada mengeluarkan pernyataan SQL, didayakan secara lalai"

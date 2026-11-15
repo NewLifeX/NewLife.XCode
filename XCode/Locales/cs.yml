@@ -354,7 +354,7 @@
 "Upgrade: http://x.newlifex.com/xcodetool.exe": "Aktualizace: http://x.newlifex.com/xcodetool.exe"
 "File does not exist: {0}": "Soubor neexistuje: {0}"
 # 设置页字段（英文源文，31 种语言完整译文）
-"Log masking. Masks passwords, secrets and tokens in audit log remarks, enabled by default": "Maskování protokolů. Maskuje hesla, tajné klíče a tokeny v poznámkách auditu, ve výchozím nastavení zapnuto"
+"Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)": "Režim maskování protokolu, od nejméně po nejpřísnější: Off bez maskování (jen místní ladění), PasswordOnly jen hesla, Partial hesla plně a u tajemství zůstává začátek a konec, Full všechny přihlašovací údaje (výchozí)"
 "XCode settings": "Nastavení XCode"
 "Debug": "Ladění"
 "Output SQL. Whether to output SQL statements, enabled by default": "Výstup SQL. Zda vypisovat příkazy SQL, ve výchozím nastavení zapnuto"

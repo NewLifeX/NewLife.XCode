@@ -50,7 +50,7 @@ public partial class DAL
     /// </remarks>
     public ProtectedKey ProtectedKey { get; set; } = ProtectedKey.Instance;
 
-    private IDatabase? _Db;
+    private volatile IDatabase? _Db;
     /// <summary>数据库。所有数据库操作在此统一管理，强烈建议不要直接使用该属性，在不同版本中IDatabase可能有较大改变</summary>
     public IDatabase Db
     {
@@ -98,7 +98,7 @@ public partial class DAL
     private DAL(String connName) => ConnName = connName;
 
     static String _symbols = "-_.";
-    private Boolean _inited;
+    private volatile Boolean _inited;
     private void Init()
     {
         if (_inited) return;
@@ -665,6 +665,25 @@ public partial class DAL
     /// 获取所有表名，带缓存，不区分大小写
     /// </summary>
     public ICollection<String> TableNames => _cache.GetOrAdd($"tableNames:{ConnName}", k => new HashSet<String>(GetTableNames(), StringComparer.OrdinalIgnoreCase), 60) ?? [];
+
+    /// <summary>判断指定表是否存在，不区分大小写</summary>
+    /// <remarks>
+    /// 优先使用 <see cref="TableNames"/> 缓存；未命中时再查询元数据，避免外部新建的分表在60秒缓存窗口内被误判为不存在。
+    /// </remarks>
+    /// <param name="tableName">表名</param>
+    /// <returns></returns>
+    public Boolean TableExists(String tableName)
+    {
+        if (tableName.IsNullOrEmpty()) return false;
+
+        if (TableNames.Contains(tableName)) return true;
+
+        // 缓存未命中时回查元数据，并把最新结果写回缓存，避免同一批分表检查反复查库
+        var names = new HashSet<String>(GetTableNames(), StringComparer.OrdinalIgnoreCase);
+        _cache.Set($"tableNames:{ConnName}", names, 60);
+
+        return names.Contains(tableName);
+    }
 
     /// <summary>
     /// 快速获取所有表名，无缓存，区分大小写

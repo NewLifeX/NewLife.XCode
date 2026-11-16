@@ -93,8 +93,9 @@ public class ReadWriteStrategy
 
         if (!Validate(dal, sql, action)) return false;
 
-        // 轮询从库
-        @readonly = rs[Interlocked.Increment(ref _index) % rs.Count];
+        // 轮询从库。_index 溢出后会变成负数，直接取模会得到负下标导致越界，改用无符号取模
+        var index = (Int32)((UInt32)Interlocked.Increment(ref _index) % (UInt32)rs.Count);
+        @readonly = rs[index];
 
         return true;
     }

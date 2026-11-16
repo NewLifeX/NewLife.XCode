@@ -25,9 +25,9 @@ jobs:
     timeout-minutes: 40
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
     - name: Build
@@ -40,9 +40,9 @@ jobs:
     timeout-minutes: 90
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
     - name: Setup Databases
@@ -168,9 +168,14 @@ jobs:
           Write-Host "::warning::首次测试运行失败，自动重试一次以规避偶发网络/驱动下载失败"
           dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --filter "$env:TEST_FILTER" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-win-x64-retry.trx" --results-directory TestResults
         }
+    - name: Summarize Failures
+      # 把 trx 里的失败用例写进 Step Summary 与 error 注解，页面即可定位，不必下载制品
+      if: always()
+      shell: pwsh
+      run: pwsh -NoProfile -File Tools/Scripts/summarize-test-failures.ps1 -Path TestResults
     - name: Upload Test Results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: test-results-win-x64
         path: TestResults/**
@@ -226,9 +231,9 @@ jobs:
           --health-start-period=30s
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
     - name: Test
@@ -241,9 +246,13 @@ jobs:
           echo "::warning::首次测试运行失败，自动重试一次以规避偶发原生崩溃（崩溃转储已上传制品，请留意 DataSimulationTests/ConnectionPoolTests）"
           dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-x64-retry.trx" --results-directory TestResults
         fi
+    - name: Summarize Failures
+      if: always()
+      shell: pwsh
+      run: pwsh -NoProfile -File Tools/Scripts/summarize-test-failures.ps1 -Path TestResults
     - name: Upload Test Results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: test-results-linux-x64
         path: TestResults/**
@@ -284,9 +293,9 @@ jobs:
           --health-retries=5
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
     - name: Test
@@ -298,9 +307,13 @@ jobs:
           echo "::warning::首次测试运行失败，自动重试一次以规避偶发网络/驱动下载失败"
           dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release --no-build --filter "FullyQualifiedName!~SqlServerTests" --blame-crash --blame-crash-dump-type mini --blame-hang-timeout 10m --blame-hang-dump-type mini --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-linux-arm64-retry.trx" --results-directory TestResults
         fi
+    - name: Summarize Failures
+      if: always()
+      shell: pwsh
+      run: pwsh -NoProfile -File Tools/Scripts/summarize-test-failures.ps1 -Path TestResults
     - name: Upload Test Results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: test-results-linux-arm64
         path: TestResults/**
@@ -313,9 +326,9 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET (host，用于预热 NuGet 缓存)
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.x
     - name: Warm NuGet cache
@@ -372,7 +385,7 @@ jobs:
           '
     - name: Upload Test Results
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: test-results-linux-la64
         path: |
@@ -386,19 +399,28 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Check locales
       shell: pwsh
+      # 失败时把脚本输出贴进 Step Summary，页面可直接看到缺失的键与语言
       run: |
         $failed = $false
         Get-ChildItem -Path . -Recurse -Directory -Filter Locales | ForEach-Object {
           if (Test-Path (Join-Path $_.FullName 'zh-Hans.yml')) {
             $src = Split-Path $_.FullName -Parent
+            $dir = $_.FullName
             # 元数据键允许部分语言缺失，缺失回退源文；metadata-keys.json 由脚本自动识别，
-                        # -MetadataSourceDir 补充扫描 [DisplayName]/[Description]/[Category] 特性；
-                        # -RequireMetadataTranslated 要求清单内的元数据键覆盖全部译文语言
-            pwsh -File Tools/Scripts/check-locales.ps1 -LocaleDir $_.FullName -Baseline zh-Hans.yml -SourceDir "$src,XCodeTool" -RequireTranslated -RequireMetadataTranslated -MetadataSourceDir $src
-            if ($LASTEXITCODE -ne 0) { $failed = $true }
+            # -MetadataSourceDir 补充扫描 [DisplayName]/[Description]/[Category] 特性；
+            # -RequireMetadataTranslated 要求清单内的元数据键覆盖全部译文语言
+            $out = & pwsh -NoProfile -File Tools/Scripts/check-locales.ps1 -LocaleDir $dir -Baseline zh-Hans.yml -SourceDir "$src,XCodeTool" -RequireTranslated -RequireMetadataTranslated -MetadataSourceDir $src 2>&1
+            $out | ForEach-Object { Write-Host $_ }
+            if ($LASTEXITCODE -ne 0) {
+              $failed = $true
+              Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "### check-locales failed: $dir"
+              Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '```'
+              $out | ForEach-Object { Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value $_ }
+              Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value '```'
+            }
           }
         }
         if ($failed) { exit 1 }

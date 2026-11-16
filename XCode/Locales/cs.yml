@@ -597,3 +597,7 @@
 "分钟": "Minuta"
 "实体缓存": "Mezipaměť entit"
 "统计字段": "Pole statistik"
+"Invalid sort field [{0}].": "Pole řazení [{0}] je neplatné."
+"Invalid table name [{0}].": "Název tabulky [{0}] je neplatný."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "Obnovení neznámé tabulky [{0}] bylo odmítnuto; povolte jej nastavením DbPackage.AllowNewTables."
+"The downloaded driver file [{0}] failed verification and was deleted.": "Stažený soubor ovladače [{0}] neprošel ověřením a byl smazán."

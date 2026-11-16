@@ -605,3 +605,7 @@
 "entity:XCode.Membership.Parameter": "Paramètre de dictionnaire"
 "entity:XCode.Membership.Tenant": "Locataire"
 "entity:XCode.Membership.TenantUser": "Relation de locataire"
+"Invalid sort field [{0}].": "Le champ de tri [{0}] n'est pas valide."
+"Invalid table name [{0}].": "Le nom de table [{0}] n'est pas valide."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "Refus de restaurer la table inconnue [{0}] ; définissez DbPackage.AllowNewTables pour l'autoriser."
+"The downloaded driver file [{0}] failed verification and was deleted.": "Le fichier de pilote téléchargé [{0}] n'a pas passé la vérification et a été supprimé."

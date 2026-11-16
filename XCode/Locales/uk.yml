@@ -597,3 +597,7 @@
 "分钟": "Хвилина"
 "实体缓存": "Кеш сутностей"
 "统计字段": "Поле статистики"
+"Invalid sort field [{0}].": "Недопустиме поле сортування [{0}]."
+"Invalid table name [{0}].": "Недопустима назва таблиці [{0}]."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "Відновлення невідомої таблиці [{0}] відхилено; установіть DbPackage.AllowNewTables, щоб дозволити."
+"The downloaded driver file [{0}] failed verification and was deleted.": "Завантажений файл драйвера [{0}] не пройшов перевірку та був видалений."

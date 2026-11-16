@@ -607,3 +607,7 @@
 "entity:XCode.Membership.Parameter": "字典參數"
 "entity:XCode.Membership.Tenant": "租戶"
 "entity:XCode.Membership.TenantUser": "租戶關係"
+"Invalid sort field [{0}].": "排序欄位[{0}]無效"
+"Invalid table name [{0}].": "資料表名稱[{0}]無效"
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "拒絕還原未知資料表[{0}]，可設定 DbPackage.AllowNewTables 允許建立"
+"The downloaded driver file [{0}] failed verification and was deleted.": "下載的驅動程式檔案[{0}]未通過驗證，已刪除"

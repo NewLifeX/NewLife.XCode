@@ -597,3 +597,7 @@
 "分钟": "Perc"
 "实体缓存": "Entitás-gyorsítótár"
 "统计字段": "Statisztikai mező"
+"Invalid sort field [{0}].": "A(z) [{0}] rendezési mező érvénytelen."
+"Invalid table name [{0}].": "A(z) [{0}] táblanév érvénytelen."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "Az ismeretlen [{0}] tábla visszaállítása elutasítva; engedélyezéshez állítsa be a DbPackage.AllowNewTables értéket."
+"The downloaded driver file [{0}] failed verification and was deleted.": "A letöltött [{0}] vezérlőfájl ellenőrzése nem sikerült, ezért törölve lett."

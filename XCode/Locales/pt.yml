@@ -597,3 +597,7 @@
 "分钟": "Minuto"
 "实体缓存": "Cache de entidades"
 "统计字段": "Campo de estatísticas"
+"Invalid sort field [{0}].": "O campo de ordenação [{0}] é inválido."
+"Invalid table name [{0}].": "O nome da tabela [{0}] é inválido."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "Recusando restaurar a tabela desconhecida [{0}]; defina DbPackage.AllowNewTables para permitir."
+"The downloaded driver file [{0}] failed verification and was deleted.": "O arquivo de driver baixado [{0}] falhou na verificação e foi excluído."

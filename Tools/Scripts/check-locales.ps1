@@ -36,7 +36,9 @@ param(
         '.CreateSlaveItem({0})',
         '.UpdateData {0} Expire={1} Visit={2}',
         '{0}({1},{2})',
-        '{0}({1})'
+        '{0}({1})',
+        'Driver file [{0}] SHA-256 is [{1}]; pin it in DriverLoader.KnownHashes to enforce integrity.',
+        '[{0}/{1}] failed to decrypt cached configuration; ignoring {2}: {3}'
     )
 )
 

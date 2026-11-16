@@ -597,3 +597,7 @@
 "分钟": "Minit"
 "实体缓存": "Cache entiti"
 "统计字段": "Medan statistik"
+"Invalid sort field [{0}].": "Medan isihan [{0}] tidak sah."
+"Invalid table name [{0}].": "Nama jadual [{0}] tidak sah."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "Menolak memulihkan jadual tidak dikenali [{0}]; tetapkan DbPackage.AllowNewTables untuk membenarkannya."
+"The downloaded driver file [{0}] failed verification and was deleted.": "Fail pemacu yang dimuat turun [{0}] gagal pengesahan dan telah dipadam."

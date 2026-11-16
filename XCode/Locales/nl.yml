@@ -597,3 +597,7 @@
 "分钟": "Minuut"
 "实体缓存": "Entiteitscache"
 "统计字段": "Statistiekveld"
+"Invalid sort field [{0}].": "Het sorteerveld [{0}] is ongeldig."
+"Invalid table name [{0}].": "De tabelnaam [{0}] is ongeldig."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "Weigeren de onbekende tabel [{0}] te herstellen; stel DbPackage.AllowNewTables in om dit toe te staan."
+"The downloaded driver file [{0}] failed verification and was deleted.": "Het gedownloade stuurprogrammabestand [{0}] is niet geverifieerd en is verwijderd."

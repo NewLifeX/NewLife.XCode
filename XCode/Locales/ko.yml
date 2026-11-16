@@ -597,3 +597,7 @@
 "分钟": "분"
 "实体缓存": "엔터티 캐시"
 "统计字段": "통계 필드"
+"Invalid sort field [{0}].": "정렬 필드 [{0}]이(가) 잘못되었습니다."
+"Invalid table name [{0}].": "테이블 이름 [{0}]이(가) 잘못되었습니다."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "알 수 없는 테이블 [{0}] 복원을 거부합니다. 허용하려면 DbPackage.AllowNewTables를 설정하세요."
+"The downloaded driver file [{0}] failed verification and was deleted.": "다운로드한 드라이버 파일 [{0}]이(가) 검증에 실패하여 삭제되었습니다."

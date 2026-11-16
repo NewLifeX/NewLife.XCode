@@ -597,3 +597,7 @@
 "分钟": "Minut"
 "实体缓存": "Entitetscache"
 "统计字段": "Statistikfelt"
+"Invalid sort field [{0}].": "Sorteringsfeltet [{0}] er ugyldigt."
+"Invalid table name [{0}].": "Tabelnavnet [{0}] er ugyldigt."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "Afviser at gendanne den ukendte tabel [{0}]; angiv DbPackage.AllowNewTables for at tillade det."
+"The downloaded driver file [{0}] failed verification and was deleted.": "Den downloadede driverfil [{0}] bestod ikke verifikationen og blev slettet."

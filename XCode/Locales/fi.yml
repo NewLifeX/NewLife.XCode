@@ -597,3 +597,7 @@
 "分钟": "Minuutti"
 "实体缓存": "Entiteettivälimuisti"
 "统计字段": "Tilastokenttä"
+"Invalid sort field [{0}].": "Lajittelukenttä [{0}] on virheellinen."
+"Invalid table name [{0}].": "Taulun nimi [{0}] on virheellinen."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "Tuntemattoman taulun [{0}] palauttaminen evätään; salli se asettamalla DbPackage.AllowNewTables."
+"The downloaded driver file [{0}] failed verification and was deleted.": "Ladattu ohjaintiedosto [{0}] ei läpäissyt tarkistusta ja poistettiin."

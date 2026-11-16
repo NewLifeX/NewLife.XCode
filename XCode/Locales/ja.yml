@@ -597,3 +597,7 @@
 "分钟": "分"
 "实体缓存": "エンティティキャッシュ"
 "统计字段": "統計フィールド"
+"Invalid sort field [{0}].": "並べ替えフィールド[{0}]が無効です。"
+"Invalid table name [{0}].": "テーブル名[{0}]が無効です。"
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "不明なテーブル[{0}]の復元を拒否します。許可するには DbPackage.AllowNewTables を設定してください。"
+"The downloaded driver file [{0}] failed verification and was deleted.": "ダウンロードしたドライバーファイル[{0}]は検証に失敗したため削除されました。"

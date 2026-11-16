@@ -605,3 +605,7 @@
 "entity:XCode.Membership.Parameter": "Wörterbuchparameter"
 "entity:XCode.Membership.Tenant": "Mieter"
 "entity:XCode.Membership.TenantUser": "Mandantenbeziehung"
+"Invalid sort field [{0}].": "Das Sortierfeld [{0}] ist ungültig."
+"Invalid table name [{0}].": "Der Tabellenname [{0}] ist ungültig."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "Das Wiederherstellen der unbekannten Tabelle [{0}] wird abgelehnt; setzen Sie DbPackage.AllowNewTables, um es zu erlauben."
+"The downloaded driver file [{0}] failed verification and was deleted.": "Die heruntergeladene Treiberdatei [{0}] hat die Prüfung nicht bestanden und wurde gelöscht."

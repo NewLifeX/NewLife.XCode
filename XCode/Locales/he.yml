@@ -597,3 +597,7 @@
 "分钟": "דקה"
 "实体缓存": "מטמון ישויות"
 "统计字段": "שדה סטטיסטיקה"
+"Invalid sort field [{0}].": "שדה המיון [{0}] אינו חוקי."
+"Invalid table name [{0}].": "שם הטבלה [{0}] אינו חוקי."
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "מסרב לשחזר את הטבלה הלא מוכרת [{0}]; הגדר DbPackage.AllowNewTables כדי לאפשר."
+"The downloaded driver file [{0}] failed verification and was deleted.": "קובץ מנהל ההתקן שהורד [{0}] לא עבר אימות ונמחק."

@@ -597,3 +597,7 @@
 "分钟": "মিনিট"
 "实体缓存": "এন্টিটি ক্যাশ"
 "统计字段": "পরিসংখ্যান ক্ষেত্র"
+"Invalid sort field [{0}].": "সাজানোর ক্ষেত্র [{0}] অবৈধ।"
+"Invalid table name [{0}].": "সারণির নাম [{0}] অবৈধ।"
+"Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.": "অজানা সারণি [{0}] পুনরুদ্ধার করতে অস্বীকার করা হচ্ছে; অনুমতি দিতে DbPackage.AllowNewTables সেট করুন।"
+"The downloaded driver file [{0}] failed verification and was deleted.": "ডাউনলোড করা ড্রাইভার ফাইল [{0}] যাচাইয়ে ব্যর্থ হয়েছে এবং মুছে ফেলা হয়েছে।"

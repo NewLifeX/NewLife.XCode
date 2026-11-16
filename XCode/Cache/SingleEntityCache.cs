@@ -434,7 +434,31 @@ public class SingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAcce
     /// <returns></returns>
     Boolean Add(TKey key, TEntity? entity)
     {
-        AddItem(key, entity);
+        // 空值表示移除，避免缓存里留下永远取不到实体的空项
+        if (entity == null)
+        {
+            RemoveKey(key);
+            return true;
+        }
+
+        var item = AddItem(key, entity);
+
+        // 真正写入两个字典并对齐计数，否则 SingleCache[key] = entity 写完等于没写
+        if (Entities.TryAdd(item.Key, item))
+        {
+            if (item.SlaveKey != null) SlaveEntities.TryAdd(item.SlaveKey, item);
+
+            Interlocked.Increment(ref _Count);
+        }
+        else
+        {
+            // 已存在则原位替换，保证后续按主键拿到的是刚写入的对象
+            if (Entities.TryGetValue(item.Key, out var old) && !old.SlaveKey.IsNullOrEmpty() && old.SlaveKey != item.SlaveKey)
+                SlaveEntities.TryRemove(old.SlaveKey, out _);
+
+            Entities[item.Key] = item;
+            if (item.SlaveKey != null) SlaveEntities[item.SlaveKey] = item;
+        }
 
         return true;
     }

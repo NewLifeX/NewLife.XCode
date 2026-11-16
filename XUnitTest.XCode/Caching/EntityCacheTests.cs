@@ -384,6 +384,55 @@ namespace XUnitTest.XCode.Caching
             Assert.Equal(1, list2.Count(e => e.ID == 100));
         }
 
+        [Fact(DisplayName = "已创建但未使用的实体缓存，清除时不写日志")]
+        public void ClearWithoutUsingDoesNotLog()
+        {
+            var savedLog = XTrace.Log;
+            var savedDebug = CacheBase.Debug;
+            try
+            {
+                var log = new ListLog();
+                XTrace.Log = log;
+                CacheBase.Debug = true;
+
+                var cache = new EntityCache<Role> { Expire = 2 };
+                Assert.False(cache.Using);
+
+                // 只写进程（Using=false）每次添删改都会调用 Clear，不能产生日志
+                cache.Clear("测试未使用缓存清除", true);
+                cache.Clear("测试未使用缓存清除", false);
+
+                Assert.DoesNotContain(log.Messages, e => e.Contains("EntityCache<Role>"));
+                Assert.False(cache.Using);
+            }
+            finally
+            {
+                XTrace.Log = savedLog;
+                CacheBase.Debug = savedDebug;
+            }
+        }
+
         private static Role Clone(Role entity) => new() { ID = entity.ID, Name = entity.Name, Enable = entity.Enable, Sort = entity.Sort };
+
+        private sealed class ListLog : NewLife.Log.ILog
+        {
+            public List<String> Messages { get; } = [];
+
+            public Boolean Enable { get; set; } = true;
+
+            public LogLevel Level { get; set; } = LogLevel.Info;
+
+            public void Write(LogLevel level, String format, params Object?[] args) => Messages.Add(args.Length > 0 ? String.Format(format, args) : format);
+
+            public void Debug(String format, params Object?[] args) => Write(LogLevel.Debug, format, args);
+
+            public void Info(String format, params Object?[] args) => Write(LogLevel.Info, format, args);
+
+            public void Warn(String format, params Object?[] args) => Write(LogLevel.Warn, format, args);
+
+            public void Error(String format, params Object?[] args) => Write(LogLevel.Error, format, args);
+
+            public void Fatal(String format, params Object?[] args) => Write(LogLevel.Fatal, format, args);
+        }
     }
 }

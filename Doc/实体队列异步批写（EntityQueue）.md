@@ -92,10 +92,11 @@ public class MyQueue : EntityQueue
 
 | 场景 | 行为 |
 |------|------|
-| 队列深度 >= `MaxEntity` | 写入线程 `Thread.Sleep(100)` 间歇等待，最多 15 s |
-| 仍无法入队 | 返回 `false`，调用者可选择丢弃或重试 |
+| 队列深度 >= `MaxEntity` | 写入线程 `Thread.Sleep(100)` 间歇等待，最多 `OverflowWaitTime`（默认 15 s） |
+| 仍无法入队 | 抛 `XCodeException`，该条未入队 |
+| 恰好推到队列上限 | 该条已入队，始终返回 `true`，避免调用方重试写重 |
 | Dispose 时队列非空 | 后台 Task 最多等待 3 s 完成剩余写入；超时写 Tracer 错误 Span |
-| 批处理抛异常 | 调用 `OnError(batch, ex)`（可重写），不影响其余批次 |
+| 批处理抛异常 | 调用 `OnError(batch, ex)`（可重写），不影响其余批次；失败批次不会自动重试，需要重试请在 `OnError` 中自行处理 |
 
 ---
 

@@ -69,7 +69,8 @@ Meta.Session.Queue.Method = DataMethod.Upsert;
 | 属性 | 默认值 | 说明 |
 |------|--------|------|
 | `Period` | 1 000 ms | 定时器初始周期，运行时自动调节 |
-| `MaxEntity` | 1 000 000 | 队列上限，超过时**阻塞生产线程**（最多等 15s） |
+| `MaxEntity` | 1 000 000 | 队列上限，超过时**阻塞生产线程**（最多等 `OverflowWaitTime`） |
+| `OverflowWaitTime` | 15 000 ms | 队列满时最长等待时间，超时后抛出 `XCodeException` |
 | `InsertOnly` | false | 仅插入模式 |
 | `Method` | `Insert/Update` 自动 | 写入方式 |
 | `ShowSQL` | null（继承全局） | 是否输出 SQL 日志 |
@@ -79,11 +80,17 @@ Meta.Session.Queue.Method = DataMethod.Upsert;
 ## 4. 背压控制
 
 当队列中等待的实体总数超过 `MaxEntity` 时：
-1. `Add()` 不立即返回，而是进入**最多 15 秒的自旋等待**；
+1. `Add()` 不立即返回，而是进入**最多 `OverflowWaitTime`（默认 15 秒）的自旋等待**；
 2. 等待期间若队列消费到低于 `MaxEntity`，立即恢复入队并返回 `true`；
-3. 等 15 秒仍未消费完则返回 `false`（丢弃该条写入请求，并通过链路追踪记录 `db:MaxQueueOverflow` 错误）。
+3. 等满 `OverflowWaitTime` 仍未消费完，**抛出 `XCodeException`**（把写入过慢暴露给调用方），并通过链路追踪记录 `db:MaxQueueOverflow` 错误。
+
+> 恰好把队列推到上限的那一条**已经入队**，因此始终返回 `true`，不会让调用方误判失败而重试写重。
 
 > 在 SkyWalking/NewLife Tracer 中若看到 `db:MaxQueueOverflow`，说明写入速度持续超过数据库处理能力，需要扩容写库或优化 SQL。
+
+### 4.1 写入失败处理
+
+批量写入抛异常时，调用 `OnError`（可重写）记录异常，该批次实体**不会自动重试**。如需重试或转存，请重写 `OnError` 自行处理；自动无限重试会让毒数据长期占用队列并持续刷错误日志。
 
 ---
 
@@ -91,7 +98,7 @@ Meta.Session.Queue.Method = DataMethod.Upsert;
 
 `EntityQueue` 实现了 `DisposeBase`，在 `Dispose` 时：
 1. 停止定时器；
-2. 启动一个最多 **3 秒**的 Task 把队列中剩余数据写入数据库；
+2. 启动一个最多 **3 秒**的 Task 把队列中剩余数据写入数据库（若定时器正在写库，会先等它结束再摘取，避免并发保护跳过摘取而丢数据）；
 3. 若 3 秒内未能写完，通过追踪记录 `db:EntityQueueNotEmptyOnDispose` 告警。
 
 配合 .NET `IHostedService` 的 `StopAsync` 机制，建议注册关闭钩子以确保应用退出时数据不丢失。

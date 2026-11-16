@@ -32,6 +32,8 @@ var rows = dal.Query<UserDto>(sql, new { Enable = 1 }, page);
 
 `page.RetrieveTotalCount=true` 时会自动执行 `SelectCount`。
 
+排序子句（`OrderBy`/`Sort`+`Desc`）在拼入原生 SQL 前会严格校验：只允许逗号分隔的字段名（可带表别名、方括号或引号）与 `Asc`/`Desc`，出现括号、分号、注释等一律抛 `XCodeException`，避免前端排序参数造成盲注。
+
 ---
 
 ## 2. 执行与标量

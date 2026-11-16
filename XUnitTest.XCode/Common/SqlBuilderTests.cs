@@ -60,6 +60,32 @@ public class SqlBuilderTests
         }
     }
 
+    [Fact(DisplayName = "排序子句只接受字段名与升降序标记")]
+    public void GetOrderBy_ValidatesInput()
+    {
+        var page = new PageParameter { Sort = "Name" };
+        Assert.Equal("Name", page.GetOrderBy());
+
+        page = new PageParameter { Sort = "Name", Desc = true };
+        Assert.Equal("Name Desc", page.GetOrderBy());
+
+        page = new PageParameter { Sort = "name desc\n,\nCode" };
+        Assert.Equal("name desc\n,\nCode", page.GetOrderBy());
+
+        page = new PageParameter { OrderBy = "t.Name Asc, [Code] Desc" };
+        Assert.Equal("t.Name Asc, [Code] Desc", page.GetOrderBy());
+
+        // 子查询、注释、分号与函数调用一律拒绝，防止排序位注入
+        foreach (var orderby in new[] { "Id; drop table user", "(select 1)", "Id --", "Id/*x*/", "rand()" })
+        {
+            page = new PageParameter { Sort = orderby };
+            Assert.Throws<XCodeException>(() => page.GetOrderBy());
+
+            page = new PageParameter { OrderBy = orderby };
+            Assert.Throws<XCodeException>(() => page.GetOrderBy());
+        }
+    }
+
     [Fact]
     public void BuildOrder2()
     {

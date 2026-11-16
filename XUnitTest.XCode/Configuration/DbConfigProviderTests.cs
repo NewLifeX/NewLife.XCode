@@ -1,6 +1,10 @@
-﻿using NewLife.Common;
+﻿using System.IO;
+using System.Security.Cryptography;
+using NewLife;
+using NewLife.Common;
 using NewLife.Configuration;
 using NewLife.Log;
+using NewLife.Security;
 using XCode.Configuration;
 using Xunit;
 
@@ -11,6 +15,40 @@ public class DbConfigProviderTests
     readonly IConfigProvider _provider;
 
     public DbConfigProviderTests() => _provider = new DbConfigProvider { UserId = 1234 };
+
+    [Fact(DisplayName = "本地缓存密钥直接取分类名，便于外部工具离线解密")]
+    public void GetCacheKey_DerivesPerCategory()
+    {
+        var key1 = DbConfigProvider.GetCacheKey("Alpha");
+        var key2 = DbConfigProvider.GetCacheKey("Beta");
+
+        Assert.Equal("Alpha".GetBytes(), key1);
+        Assert.NotEqual(key1, key2);
+    }
+
+    [Fact(DisplayName = "加密缓存按分类名密钥 AES-CBC 存储，外部工具可直接解密")]
+    public void EncryptedCache_CompatibleWithCategoryKey()
+    {
+        var category = "TestCfg";
+        var provider = new DbConfigProvider { UserId = 0, Category = category, CacheLevel = ConfigCacheLevel.Encrypted };
+
+        // 按外部工具的方式加密：密钥取分类名，AES-CBC/PKCS7
+        var json = "{\"Key\":\"Value\"}";
+        var cipher = Aes.Create().Encrypt(json.GetBytes(), category.GetBytes()).ToBase64();
+
+        var file = NewLife.Setting.Current.DataPath.CombinePath($"dbConfig_{category}.json").GetFullPath();
+        File.WriteAllText(file.EnsureDirectory(true), cipher);
+        try
+        {
+            provider.Init(null);
+
+            Assert.Equal("Value", provider["Key"]);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
 
     [Fact]
     public void TestLoadAndSave()

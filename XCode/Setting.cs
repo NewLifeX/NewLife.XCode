@@ -103,6 +103,10 @@ public class XCodeSetting : Config<XCodeSetting>
     /// <summary>日志脱敏模式。按严格程度递增：Off 关闭、PasswordOnly 仅口令、Partial 部分、Full 完全，默认完全掩码</summary>
     [Description("Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)")]
     public LogMaskModes LogMaskMode { get; set; } = LogMaskModes.Full;
+
+    /// <summary>SQL日志脱敏。默认true，SQL日志与异常中的口令、密钥、令牌参数按 LogMaskMode 掩码</summary>
+    [Description("SQL log masking. When enabled (default), password, secret and token parameters are masked in SQL logs and exceptions according to LogMaskMode")]
+    public Boolean MaskSqlLog { get; set; } = true;
     #endregion
 
     #region 缓存

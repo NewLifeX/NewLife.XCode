@@ -63,8 +63,10 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     protected virtual XSqlException OnException(Exception ex, DbCommand cmd, String? sql)
     {
         if (sql.IsNullOrEmpty()) sql = GetSql(cmd)!;
+
+        // 必须把原异常链传下去：上层靠 TimeoutException/SocketException 判断是否重试，丢了就永远不重试
         if (ex != null)
-            return new XSqlException(sql, this, ex.Message);
+            return new XSqlException(sql, this, ex);
         else
             return new XSqlException(sql, this);
     }
@@ -1176,15 +1178,22 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
             var ps = cmd.Parameters;
             if (!usePreviewSql && ps != null && ps.Count > 0)
             {
+                // 凭据类参数不能明文落日志，按 LogMaskMode 掩码
+                var maskLog = XCodeSetting.Current.MaskSqlLog;
+                var maskMode = XCodeSetting.Current.LogMaskMode;
+
                 var sb = Pool.StringBuilder.Get();
                 sb.Append(sql);
                 sb.Append(" [");
                 for (var i = 0; i < ps.Count; i++)
                 {
                     if (i > 0) sb.Append(", ");
+                    var name = ps[i].ParameterName;
                     var v = ps[i].Value;
                     var sv = "";
-                    if (v is Byte[] bv)
+                    if (maskLog && Membership.SensitiveDataMasker.IsSensitiveName(name))
+                        sv = Membership.SensitiveDataMasker.MaskValue(name, v?.ToString(), maskMode) ?? "***";
+                    else if (v is Byte[] bv)
                     {
                         if (bv.Length > 8)
                             sv = $"[{bv.Length}]0x{BitConverter.ToString(bv, 0, 8)}...";
@@ -1206,7 +1215,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
                         sv = $"{list[0].GetType().Name}[{list.Count}]";
                     else
                         sv = v + "";
-                    sb.AppendFormat("{0}={1}", ps[i].ParameterName, sv);
+                    sb.AppendFormat("{0}={1}", name, sv);
                 }
                 sb.Append(']');
                 sql = sb.Return(true);

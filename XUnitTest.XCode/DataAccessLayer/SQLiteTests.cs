@@ -146,7 +146,8 @@ public class SQLiteTests
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-        var db = "Data\\Membership_Test.db";
+        // 每次使用唯一文件名，避免上次运行残留的连接池句柄影响
+        var db = $"Data\\Membership_Test_{Rand.NextString(6)}.db";
         var dbf = db.GetFullPath();
         if (File.Exists(dbf)) File.Delete(dbf);
 
@@ -172,16 +173,21 @@ public class SQLiteTests
         // 来个耗时操作，把前面堵住
         Area.FetchAndSave();
 
-        // 清理现场
-        if (File.Exists(dbf)) File.Delete(dbf);
+        // 清理现场。Windows 下连接池可能仍持有文件句柄，删除失败不影响用例结论
+        Role.Meta.ConnName = null;
+        Area.Meta.ConnName = null;
+        ClearSqlitePools();
+        TryDelete(dbf);
     }
 
     [Fact]
     public void TablePrefixTest()
     {
-        var db = "Data\\Membership_Table_Prefix.db";
+        // 每次使用唯一文件名，避免上次运行残留的连接池句柄影响
+        var db = $"Data\\Membership_Table_Prefix_{Rand.NextString(6)}.db";
         var dbf = db.GetFullPath();
-        if (File.Exists(dbf)) File.Delete(dbf);
+        ClearSqlitePools();
+        TryDelete(dbf);
 
         DAL.AddConnStr("SQLite_Table_Prefix", $"Data Source={db};TablePrefix=member_", null, "SQLite");
 
@@ -210,8 +216,24 @@ public class SQLiteTests
         count = Department.Meta.Count;
         Assert.True(count > 0);
 
-        // 清理现场
-        if (File.Exists(dbf)) File.Delete(dbf);
+        // 清理现场。恢复实体连接名并清空连接池，删除失败不影响用例结论
+        Role.Meta.ConnName = null;
+        User.Meta.ConnName = null;
+        Department.Meta.ConnName = null;
+        ClearSqlitePools();
+        TryDelete(dbf);
+    }
+
+    /// <summary>清空两种SQLite驱动的连接池，释放Windows下的文件句柄</summary>
+    private static void ClearSqlitePools()
+    {
+        try { System.Data.SQLite.SQLiteConnection.ClearAllPools(); } catch { }
+        try { Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools(); } catch { }
+    }
+
+    private static void TryDelete(String file)
+    {
+        try { if (File.Exists(file)) File.Delete(file); } catch { }
     }
 
     private IDisposable CreateForBatch(String action)

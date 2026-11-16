@@ -86,11 +86,19 @@ public class DbServiceTests : IDisposable
         Assert.Equal(DatabaseType.SQLite, dal.DbType);
     }
 
-    [Fact]
-    public void Login_NoTokens_AllowAll()
+    [Fact(DisplayName = "未配置令牌时默认拒绝登录")]
+    public void Login_NoTokens_DenyByDefault()
     {
         var service = new DbService();
-        // 不添加任何令牌，Tokens字典为空时允许所有访问
+
+        // 未配置令牌时放行，等于把整库读写交给任何能连上端口的人
+        Assert.Throws<UnauthorizedAccessException>(() => service.Login("anytoken", _connName));
+    }
+
+    [Fact(DisplayName = "显式允许匿名后未配置令牌可登录")]
+    public void Login_NoTokens_AllowAnonymous()
+    {
+        var service = new DbService { AllowAnonymous = true };
 
         var dal = service.Login("anytoken", _connName);
 
@@ -220,6 +228,16 @@ public class DbServiceTests : IDisposable
         Assert.Throws<ArgumentException>(() => service.QueryCount(_dal, ""));
     }
 
+    [Fact(DisplayName = "快速计数拒绝白名单外的表名")]
+    public void QueryCount_UnknownTable_ThrowsException()
+    {
+        var service = new DbService();
+
+        // 表名会拼进各数据库的元数据查询，必须命中当前库白名单
+        Assert.Throws<ArgumentException>(() => service.QueryCount(_dal, "not_exist_' OR '1'='1"));
+        Assert.Throws<ArgumentException>(() => service.QueryCount(_dal, "test_cnt' OR '1'='1"));
+    }
+
     [Fact]
     public void InsertAndGetIdentity_NullDal_ThrowsException()
     {
@@ -268,11 +286,19 @@ public class DbServiceTests : IDisposable
         Assert.Throws<ArgumentException>(() => service.ValidateToken("token", ""));
     }
 
-    [Fact]
-    public void ValidateToken_NoTokens_AllowAll()
+    [Fact(DisplayName = "未配置令牌时校验令牌默认拒绝")]
+    public void ValidateToken_NoTokens_DenyByDefault()
     {
         var service = new DbService();
-        // 空Tokens字典时不抛异常
+
+        Assert.Throws<UnauthorizedAccessException>(() => service.ValidateToken("anytoken", "anydb"));
+    }
+
+    [Fact(DisplayName = "允许匿名时空令牌不抛异常")]
+    public void ValidateToken_NoTokens_AllowAnonymous()
+    {
+        var service = new DbService { AllowAnonymous = true };
+
         service.ValidateToken("anytoken", "anydb");
     }
 

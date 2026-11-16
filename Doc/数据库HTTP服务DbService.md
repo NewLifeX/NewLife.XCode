@@ -47,7 +47,8 @@ server.Start();
 Console.WriteLine("DbServer 已启动，端口 " + server.Port);
 ```
 
-> 不配置任何令牌时，`DbService.Tokens` 为空，所有请求均放行（开发环境适用）。
+> 默认**不允许零鉴权**：`DbService.Tokens` 为空且未显式允许匿名时，`DbServer.Start()` 直接抛异常拒绝启动，`DbService.ValidateToken` 也会拒绝所有登录。
+> 开发环境确需免令牌时，显式设置 `server.Service.AllowAnonymous = true;`。
 
 
 
@@ -62,7 +63,9 @@ Console.WriteLine("DbServer 已启动，端口 " + server.Port);
 | `GET` | `/Db/QueryCount` | 快速查询指定表的记录数 |
 | `GET` | `/Db/GetTables` | 获取数据库的表结构列表 |
 
-请求头或参数中需携带 `token`（令牌）和 `db`（数据库连接名）。
+请求需携带令牌和 `db`（数据库连接名）。令牌优先放在 `Authorization: Bearer {token}` 请求头，`DbClient` 已自动通过 `ApiHttpClient.Token` 发送；服务端仍兼容旧版把 `token` 放在查询串或参数中的调用方式，便于平滑升级。
+
+`QueryCount` 只接受当前库已存在的表名（表名白名单），未知表名会被拒绝，避免表名被拼入各数据库的元数据查询。
 
 
 
@@ -151,7 +154,7 @@ svc.Tokens["token1"] = [];
 svc.Tokens["token2"] = new[] { "OrderDB", "LogDB" };
 ```
 
-- `Tokens` 为空时（默认），不做任何验证，开发时方便调试。
+- `Tokens` 为空时默认拒绝所有请求（fail-closed）；仅当显式设置 `AllowAnonymous = true` 时放行。
 - 令牌校验不区分大小写。
 - `DbController` 对令牌校验结果缓存 10 分钟（`TokenCacheExpire`），减少重复验证开销。
 

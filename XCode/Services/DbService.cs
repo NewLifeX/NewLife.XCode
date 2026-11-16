@@ -22,6 +22,9 @@ public class DbService
     /// <summary>令牌字典。Key 为令牌，Value 为允许访问的数据库连接名列表（空列表表示允许所有）</summary>
     public IDictionary<String, String[]> Tokens { get; set; } = new ConcurrentDictionary<String, String[]>(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>是否允许匿名访问。默认false，未配置任何令牌时直接拒绝，避免端口暴露后零鉴权</summary>
+    public Boolean AllowAnonymous { get; set; }
+
     /// <summary>日志</summary>
     public ILog Log { get; set; } = Logger.Null;
     #endregion
@@ -35,7 +38,13 @@ public class DbService
         if (token.IsNullOrEmpty()) throw new ArgumentException(L.T("The token cannot be empty."), nameof(token));
         if (db.IsNullOrEmpty()) throw new ArgumentException(L.T("The database name cannot be empty."), nameof(db));
 
-        if (Tokens.Count <= 0) return;
+        if (Tokens.Count <= 0)
+        {
+            // 没配置令牌却放行，等于把整库读写能力交给任何能连上端口的人
+            if (AllowAnonymous) return;
+
+            throw new UnauthorizedAccessException(L.T("Invalid token."));
+        }
 
         if (!Tokens.TryGetValue(token, out var dbs))
             throw new UnauthorizedAccessException(L.T("Invalid token."));
@@ -114,6 +123,9 @@ public class DbService
     {
         if (dal == null) throw new ArgumentNullException(nameof(dal));
         if (tableName.IsNullOrEmpty()) throw new ArgumentException(L.T("The table name cannot be empty."), nameof(tableName));
+
+        // 表名来自远端调用方，必须命中当前库白名单；否则会被拼进各数据库的元数据查询实施注入
+        if (!dal.TableExists(tableName)) throw new ArgumentException(L.T("Invalid table name [{0}].", tableName), nameof(tableName));
 
         return dal.Session.QueryCountFast(tableName);
     }

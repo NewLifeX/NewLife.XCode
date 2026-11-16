@@ -1,6 +1,7 @@
 ﻿using NewLife.Http;
 using NewLife.Log;
 using NewLife.Model;
+using XCode.Exceptions;
 
 namespace XCode.Services;
 
@@ -49,6 +50,10 @@ public class DbServer : HttpServer
     /// <summary>开始时调用。注册控制器路由</summary>
     protected override void OnStart()
     {
+        // 未配置令牌又未显式允许匿名时拒绝启动，把配置缺失挡在启动阶段
+        if (Service.Tokens.Count <= 0 && !Service.AllowAnonymous)
+            throw new XCodeException(L.T("The token cannot be empty."));
+
         // 注册DbService到服务容器，以便控制器通过构造函数注入获取
         var container = new ObjectContainer();
         container.AddSingleton(Service);

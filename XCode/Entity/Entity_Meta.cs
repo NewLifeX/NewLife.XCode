@@ -255,9 +255,9 @@ public partial class Entity<TEntity>
 
             foreach (var shard in models)
             {
-                // 如果目标分表不存在，则不要展开查询
+                // 如果目标分表不存在，则不要展开查询。使用无缓存回退，避免新建分表在缓存窗口内被跳过
                 var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : Session.Dal;
-                if (shard.TableName.IsNullOrEmpty() || !dal.TableNames.Contains(shard.TableName)) continue;
+                if (shard.TableName.IsNullOrEmpty() || !dal.TableExists(shard.TableName)) continue;
 
                 using var split = new SplitPackge(shard.ConnName, shard.TableName);
                 yield return callback();
@@ -309,9 +309,9 @@ public partial class Entity<TEntity>
 
             foreach (var shard in models)
             {
-                // 如果目标分表不存在，则不要展开查询
+                // 如果目标分表不存在，则不要展开查询。使用无缓存回退，避免新建分表在缓存窗口内被跳过
                 var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : Session.Dal;
-                if (!dal.TableNames.Contains(shard.TableName)) continue;
+                if (!dal.TableExists(shard.TableName)) continue;
 
                 var ss = EntitySession<TEntity>.Create(shard.ConnName, shard.TableName);
                 yield return callback(ss);

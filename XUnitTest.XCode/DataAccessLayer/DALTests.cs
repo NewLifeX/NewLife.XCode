@@ -44,6 +44,42 @@ public class DALTests
         Assert.Equal("SqlServer", di.Provider);
     }
 
+    [Fact(DisplayName = "简单SQL检查只提取单一表名标识符")]
+    public void CheckSimpleSQL_RejectsMalformedTable()
+    {
+        Assert.Equal("user", DbBase.CheckSimpleSQL("select * from user"));
+        Assert.Equal("[user]", DbBase.CheckSimpleSQL("select * from [user]"));
+
+        // 含分号、空白分隔或括号错位时退回子查询包装，不把可疑片段当表名复用
+        Assert.Equal("(select * from a]b) XCode_Temp_a", DbBase.CheckSimpleSQL("select * from a]b"));
+        Assert.Equal("(select * from [a]; drop table x) XCode_Temp_a", DbBase.CheckSimpleSQL("select * from [a]; drop table x"));
+    }
+
+    [Fact(DisplayName = "表存在判断在缓存未命中时回退无缓存元数据")]
+    public void TableExists_UsesUncachedFallback()
+    {
+        var connName = "te_" + Guid.NewGuid().ToString("N");
+        var file = Path.Combine(Path.GetTempPath(), connName + ".db");
+        DAL.AddConnStr(connName, $"Data Source={file}", null, "SQLite");
+        var dal = DAL.Create(connName);
+        try
+        {
+            // 先填充表名缓存，再新建表，模拟外部新建分表落在60秒缓存窗口内
+            Assert.False(dal.TableExists("te_new_table"));
+
+            dal.Execute("Create Table te_new_table(id Integer Primary Key)");
+
+            Assert.True(dal.TableExists("te_new_table"));
+            Assert.True(dal.TableExists("TE_NEW_TABLE"));
+            Assert.False(dal.TableExists("te_missing_table"));
+            Assert.False(dal.TableExists(""));
+        }
+        finally
+        {
+            try { if (File.Exists(file)) File.Delete(file); } catch { }
+        }
+    }
+
     [Fact]
     public void LoadAppSettings2()
     {

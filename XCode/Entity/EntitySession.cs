@@ -665,7 +665,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     {
         try
         {
-            return !Dal.TableNames.Contains(TableName);
+            return !Dal.TableExists(TableName);
         }
         catch
         {

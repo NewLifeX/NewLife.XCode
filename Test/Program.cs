@@ -273,6 +273,7 @@ public class Program
         {
             Dal = dal,
             IgnoreError = false,
+            AllowNewTables = true,
             Log = XTrace.Log
         };
         //var ts = DAL.ImportFrom("财务数据库/xxgk2.xml");

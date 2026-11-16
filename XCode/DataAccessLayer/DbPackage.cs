@@ -38,6 +38,13 @@ public class DbPackage
     /// <summary>数据保存模式。默认Insert</summary>
     public SaveModes Mode { get; set; } = SaveModes.Insert;
 
+    /// <summary>是否允许从数据包恢复时创建目标库中不存在的新表。默认false</summary>
+    /// <remarks>
+    /// 数据包内的 XML 模型来自外部文件，默认只恢复目标库已有表或当前实体模型中的表，避免不可信包在目标库执行任意 DDL。
+    /// 跨库搬运到全新数据库时，可显式传入 <c>tables</c>，或开启本开关。
+    /// </remarks>
+    public Boolean AllowNewTables { get; set; }
+
     /// <summary>数据抽取器的创建回调，支持外部自定义</summary>
     public Func<IDataTable, IExtracter<DbTable>>? CreateExtracterCallback { get; set; }
 
@@ -100,10 +107,8 @@ public class DbPackage
         WriteLog("Backup of [{0}/{1}] started; total [{2:n0}] rows, extractor {3}", table, connName, writeFile.Total, extracer);
         writeFile.Start(cancellationToken);
 
-        // 临时关闭日志
-        var old = Dal.Db.ShowSQL;
-        Dal.Db.ShowSQL = false;
-        Dal.Session.ShowSQL = false;
+        // 临时关闭日志。只作用于本次备份的数据会话，避免整进程其它线程的SQL日志被一并关闭
+        using var showSql = Dal.Session.SetShowSql(false);
 
         var total = 0;
         var sw = Stopwatch.StartNew();
@@ -139,11 +144,6 @@ public class DbPackage
         {
             span?.SetError(ex, table);
             throw;
-        }
-        finally
-        {
-            Dal.Db.ShowSQL = old;
-            Dal.Session.ShowSQL = old;
         }
 
         sw.Stop();
@@ -230,7 +230,8 @@ public class DbPackage
     {
         if (file.IsNullOrEmpty()) file = table + ".table";
 
-        var file2 = file.GetFullPath();
+        // 外部可传文件名，限制到备份目录内，避免截断任意文件
+        var file2 = BackupPathHelper.Ensure(file);
         file2.EnsureDirectory(true);
 
         WriteLog("Backup of [{0}/{1}] to file {2}", table, Dal.ConnName, file2);
@@ -274,7 +275,7 @@ public class DbPackage
         //if (tables == null) tables = Tables;
         if (tables.Count > 0)
         {
-            var file2 = file.GetFullPath();
+            var file2 = BackupPathHelper.Ensure(file);
             file2.EnsureDirectory(true);
 
             WriteLog("Backup of [{0}] to file {1}. {2}", connName, file2, tables.Join(",", e => e.Name));
@@ -352,10 +353,8 @@ public class DbPackage
 
         var connName = Dal.ConnName;
 
-        // 临时关闭日志
-        var old = Dal.Db.ShowSQL;
-        Dal.Db.ShowSQL = false;
-        Dal.Session.ShowSQL = false;
+        // 临时关闭日志。只作用于本次恢复的数据会话，避免整进程其它线程的SQL日志被一并关闭
+        using var showSql = Dal.Session.SetShowSql(false);
         var total = 0;
         var sw = Stopwatch.StartNew();
         try
@@ -420,11 +419,6 @@ public class DbPackage
             span?.SetError(ex, null);
             throw;
         }
-        finally
-        {
-            Dal.Db.ShowSQL = old;
-            Dal.Session.ShowSQL = old;
-        }
 
         sw.Stop();
         var ms = sw.Elapsed.TotalMilliseconds;
@@ -444,7 +438,7 @@ public class DbPackage
         if (file.IsNullOrEmpty()) throw new ArgumentNullException(nameof(file));
         if (table == null) throw new ArgumentNullException(nameof(table));
 
-        var file2 = file.GetFullPath();
+        var file2 = BackupPathHelper.Ensure(file);
         if (!File.Exists(file2)) return 0;
         file2.EnsureDirectory(true);
 
@@ -471,7 +465,7 @@ public class DbPackage
         if (file.IsNullOrEmpty()) throw new ArgumentNullException(nameof(file));
         //if (tables == null) throw new ArgumentNullException(nameof(tables));
 
-        var file2 = file.GetFullPath();
+        var file2 = BackupPathHelper.Ensure(file);
         if (!File.Exists(file2)) return null;
 
         using var span = Tracer?.NewSpan($"db:{Dal.ConnName}:RestoreAll", file);
@@ -480,6 +474,7 @@ public class DbPackage
         using var zip = new ZipArchive(fs, ZipArchiveMode.Read, true, Encoding.UTF8);
 
         // 备份架构
+        var fromPackage = tables == null;
         if (tables == null)
         {
             var entry = zip.Entries.FirstOrDefault(e => e.Name.EndsWithIgnoreCase(".xml"));
@@ -490,6 +485,22 @@ public class DbPackage
             }
         }
         if (tables == null) throw new ArgumentNullException(nameof(tables));
+
+        // 包内XML属于外部输入，默认只允许恢复目标库已有表或当前实体模型中的表，避免不可信包在目标库执行任意DDL
+        if (fromPackage && !AllowNewTables)
+        {
+            var names = new HashSet<String>(Dal.GetTableNames(), StringComparer.OrdinalIgnoreCase);
+            foreach (var item in EntityFactory.GetTables(Dal.ConnName, false))
+            {
+                names.Add(item.TableName);
+            }
+
+            foreach (var item in tables)
+            {
+                if (!names.Contains(item.TableName))
+                    throw new XCodeException(L.T("Refusing to restore unknown table [{0}]; set DbPackage.AllowNewTables to allow creating it.", item.TableName));
+            }
+        }
 
         WriteLog("Restore [{0}] from file {1}. Tables: {2}", Dal.ConnName, file2, tables.Join(",", e => e.Name));
 
@@ -570,10 +581,8 @@ public class DbPackage
 
         var extracer = CreateExtracterCallback?.Invoke(table) ?? GetExtracter(table);
 
-        // 临时关闭日志
-        var old = Dal.Db.ShowSQL;
-        Dal.Db.ShowSQL = false;
-        Dal.Session.ShowSQL = false;
+        // 临时关闭日志。只作用于本次同步的源会话，避免整进程其它线程的SQL日志被一并关闭
+        using var showSql = Dal.Session.SetShowSql(false);
         var total = 0;
         var sw = Stopwatch.StartNew();
         try
@@ -609,11 +618,6 @@ public class DbPackage
         {
             span?.SetError(ex, table);
             throw;
-        }
-        finally
-        {
-            Dal.Db.ShowSQL = old;
-            Dal.Session.ShowSQL = old;
         }
 
         sw.Stop();

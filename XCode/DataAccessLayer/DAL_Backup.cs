@@ -72,10 +72,11 @@ public partial class DAL
     /// <param name="setSchema">是否设置数据表模型，自动建表</param>
     /// <param name="ignoreError">忽略错误，继续下一张表</param>
     /// <param name="cancellationToken">取消令牌</param>
+    /// <param name="allowNewTables">是否允许创建目标库中不存在的新表。默认false，跨库搬运到全新库时显式开启</param>
     /// <returns></returns>
-    public IDataTable[]? RestoreAll(String file, IDataTable[]? tables = null, Boolean setSchema = true, Boolean ignoreError = true, CancellationToken cancellationToken = default)
+    public IDataTable[]? RestoreAll(String file, IDataTable[]? tables = null, Boolean setSchema = true, Boolean ignoreError = true, CancellationToken cancellationToken = default, Boolean allowNewTables = false)
     {
-        var dpk = new DbPackage { Dal = this, IgnoreError = ignoreError, Tracer = Tracer ?? GlobalTracer, Log = XTrace.Log };
+        var dpk = new DbPackage { Dal = this, IgnoreError = ignoreError, AllowNewTables = allowNewTables, Tracer = Tracer ?? GlobalTracer, Log = XTrace.Log };
         return dpk.RestoreAll(file, tables, setSchema, cancellationToken);
     }
     #endregion

@@ -113,14 +113,14 @@ public class ModelBuilder : ClassBuilder
             des = Table.Description?.TrimPrefix(Table.DisplayName!, "。");
             des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
         }
-        WriteLine("/// <summary>{0}</summary>", des);
+        WriteLine("/// <summary>{0}</summary>", EscapeDoc(des));
 
         if (!Pure)
         {
             WriteLine("[Serializable]");
             WriteLine("[DataObject]");
 
-            if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
+            if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", EscapeString(des));
         }
     }
 
@@ -164,14 +164,14 @@ public class ModelBuilder : ClassBuilder
 
         // 注释
         var des = dc.Description;
-        WriteLine("/// <summary>{0}</summary>", des);
+        WriteLine("/// <summary>{0}</summary>", EscapeDoc(des));
 
         if (!Pure)
         {
-            if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
+            if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", EscapeString(des));
 
             var dis = dc.DisplayName;
-            if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
+            if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", EscapeString(dis));
         }
         //增加属性支持
         if (dc.Properties.TryGetValue("Attribute", out var att))

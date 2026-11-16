@@ -267,7 +267,7 @@ public class ClassBuilder
             }
             des = Option.DisplayNameTemplate.Replace("{displayName}", dis) + "。" + des;
         }
-        WriteLine("/// <summary>{0}</summary>", des);
+        WriteLine("/// <summary>{0}</summary>", EscapeDoc(des));
     }
 
     /// <summary>生成尾部</summary>
@@ -312,7 +312,7 @@ public class ClassBuilder
 
         // 注释
         var des = dc.Description;
-        WriteLine("/// <summary>{0}</summary>", des);
+        WriteLine("/// <summary>{0}</summary>", EscapeDoc(des));
 
         //if (!Option.Pure)
         //{
@@ -560,6 +560,16 @@ public class ClassBuilder
     /// <returns></returns>
     public override String ToString() => Writer.ToString();
 
+    /// <summary>转义写进 XML 注释的文本，避免描述里的换行、尖括号与 &amp; 破坏注释结构</summary>
+    /// <param name="text">原始文本</param>
+    /// <returns>可安全写进注释的文本</returns>
+    protected static String EscapeDoc(String? text) => text.IsNullOrEmpty() ? "" : text.Replace("\r", " ").Replace("\n", " ").Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+
+    /// <summary>转义写进字符串字面量的文本，避免引号与反斜杠中断生成代码</summary>
+    /// <param name="text">原始文本</param>
+    /// <returns>可安全写进字面量的文本</returns>
+    protected static String EscapeString(String? text) => text.IsNullOrEmpty() ? "" : text.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", " ").Replace("\n", " ");
+
     #endregion 写入缩进方法
 
     #region 保存
@@ -576,7 +586,11 @@ public class ClassBuilder
             ext += ".cs";
 
         if (chineseFileName && !Table.DisplayName.IsNullOrEmpty())
-            p = p.CombinePath(Table.DisplayName + ext);
+        {
+            // 显示名可能带路径分隔符，只取文件名部分，避免把文件写到输出目录之外
+            var name = Path.GetFileName(Table.DisplayName);
+            p = p.CombinePath((name.IsNullOrEmpty() ? ClassName : name) + ext);
+        }
         else
             p = p.CombinePath(ClassName + ext);
 

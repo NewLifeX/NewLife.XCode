@@ -593,6 +593,7 @@ abstract class DbBase : DisposeBase, IDatabase
     public abstract String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn);
 
     private static readonly Regex reg_SimpleSQL = new(@"^\s*select\s+\*\s+from\s+([\w\[\]\""\""\']+)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex reg_SafeTableName = new(@"^\s*(?:[\w]+|\[[^\[\]]+\]|""[^""]+""|'[^']+')\s*$", RegexOptions.Compiled);
     /// <summary>检查简单SQL语句，比如Select * From table</summary>
     /// <param name="sql">待检查SQL语句</param>
     /// <returns>如果是简单SQL语句则返回表名，否则返回子查询(sql) XCode_Temp_a</returns>
@@ -603,7 +604,12 @@ abstract class DbBase : DisposeBase, IDatabase
         var ms = reg_SimpleSQL.Matches(sql);
         if (ms == null || ms.Count <= 0 || ms[0].Groups.Count < 2 ||
             String.IsNullOrEmpty(ms[0].Groups[1].Value)) return $"({sql}) XCode_Temp_a";
-        return ms[0].Groups[1].Value;
+
+        // 提取出来的表名只能是单一标识符，禁止方括号/引号内部再夹带分隔符
+        var tableName = ms[0].Groups[1].Value;
+        if (!reg_SafeTableName.IsMatch(tableName)) return $"({sql}) XCode_Temp_a";
+
+        return tableName;
     }
 
     private static readonly Regex reg_Order = new(@"\border\s*by\b([^)]+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);

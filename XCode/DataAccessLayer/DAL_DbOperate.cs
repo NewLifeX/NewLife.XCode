@@ -89,6 +89,12 @@ partial class DAL
     /// <returns></returns>
     public Int32 SelectCount(SelectBuilder sb) => (Int32)QueryWrap(sb, "", "", (ss, s, k2, k3) => ss.QueryCount(s), nameof(SelectCount));
 
+    /// <summary>执行SQL查询，返回总记录数（内部使用，支持命令超时）</summary>
+    /// <param name="sb">查询生成器</param>
+    /// <param name="commandTimeout">命令超时时间，单位秒</param>
+    /// <returns></returns>
+    internal Int64 SelectCountLong(SelectBuilder sb, Int32 commandTimeout = 0) => QueryWrap(sb, commandTimeout, "", (ss, s, t, k3) => ss is DbSession ds && t > 0 ? ds.QueryCount(s, t) : ss.QueryCount(s), nameof(SelectCountLong));
+
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型，默认SQL文本</param>

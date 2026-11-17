@@ -55,7 +55,7 @@ public class ReadWriteStrategy
         //if (dal.ReadOnly == null) return false;
         if (dal.Session.Transaction != null) return false;
 
-        if (!action.EqualIgnoreCase("Select", "SelectCount", "Query")) return false;
+        if (!action.EqualIgnoreCase("Select", "SelectCount", "SelectCountLong", "Query")) return false;
         if (action == "ExecuteScalar" && !sql.TrimStart().StartsWithIgnoreCase("select ")) return false;
 
         // 判断是否忽略的时间区间
@@ -93,8 +93,9 @@ public class ReadWriteStrategy
 
         if (!Validate(dal, sql, action)) return false;
 
-        // 轮询从库
-        @readonly = rs[Interlocked.Increment(ref _index) % rs.Count];
+        // 轮询从库。_index 溢出后会变成负数，直接取模会得到负下标导致越界，改用无符号取模
+        var index = (Int32)((UInt32)Interlocked.Increment(ref _index) % (UInt32)rs.Count);
+        @readonly = rs[index];
 
         return true;
     }

@@ -15,24 +15,33 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class PostgreSQLTests
 {
-    private static String _ConnStr = "Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=postgres";
+    private const String DefaultConnStr = "Server=127.0.0.1;Port=5432;Database=postgres;Uid=postgres;Pwd=postgres";
 
-    public PostgreSQLTests()
+    private static String _ConnStr = DefaultConnStr;
+
+    /// <summary>解析当前环境的连接字符串。环境变量优先，其次本地配置文件，供真库用例探测服务可用性</summary>
+    /// <returns>连接字符串</returns>
+    internal static String ResolveConnectionString()
     {
         // 优先使用环境变量（CI环境）
         var envConnStr = Environment.GetEnvironmentVariable("XCode_pgsql");
-        if (!envConnStr.IsNullOrEmpty())
-        {
-            _ConnStr = envConnStr;
-            return;
-        }
+        if (!envConnStr.IsNullOrEmpty()) return envConnStr;
 
         // 本地开发使用配置文件
         var f = "Config\\pgsql.config".GetFullPath();
-        if (File.Exists(f))
-            _ConnStr = File.ReadAllText(f);
-        else
-            File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
+        return File.Exists(f) ? File.ReadAllText(f) : DefaultConnStr;
+    }
+
+    public PostgreSQLTests()
+    {
+        _ConnStr = ResolveConnectionString();
+
+        // 无环境变量时首次落地默认配置，方便本地修改
+        if (Environment.GetEnvironmentVariable("XCode_pgsql").IsNullOrEmpty())
+        {
+            var f = "Config\\pgsql.config".GetFullPath();
+            if (!File.Exists(f)) File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
+        }
     }
 
     [Fact]
@@ -57,7 +66,7 @@ public class PostgreSQLTests
         Assert.NotNull(dp);
     }
 
-    [Fact]
+    [PostgreSQLFact]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.PostgreSQL);
@@ -68,7 +77,7 @@ public class PostgreSQLTests
         conn.Open();
     }
 
-    [Fact]
+    [PostgreSQLFact]
     public void DALTest()
     {
         DAL.AddConnStr("sysPgSql", _ConnStr, null, "PostgreSQL");
@@ -85,7 +94,7 @@ public class PostgreSQLTests
         Assert.NotEmpty(ver);
     }
 
-    [Fact]
+    [PostgreSQLFact]
     public void MetaTest()
     {
         var connStr = _ConnStr.Replace("Database=postgres;", "Database=Membership;");
@@ -100,7 +109,7 @@ public class PostgreSQLTests
         Assert.True(tables.Count > 0);
     }
 
-    [Fact]
+    [PostgreSQLFact]
     public void SelectTest()
     {
         DAL.AddConnStr("sysPgSql", _ConnStr, null, "PostgreSQL");
@@ -142,7 +151,7 @@ public class PostgreSQLTests
         catch (Exception ex) { XTrace.WriteException(ex); }
     }
 
-    [Fact]
+    [PostgreSQLFact]
     public void TablePrefixTest()
     {
         DAL.AddConnStr("sysPgSql", _ConnStr, null, "PostgreSQL");
@@ -202,7 +211,7 @@ public class PostgreSQLTests
         return split;
     }
 
-    [Fact]
+    [PostgreSQLFact]
     public void BatchInsert()
     {
         using var split = CreateForBatch("BatchInsert");
@@ -223,7 +232,7 @@ public class PostgreSQLTests
         Assert.Contains(list2, e => e.Name == "普通用户");
     }
 
-    [Fact]
+    [PostgreSQLFact]
     public void PositiveAndNegative()
     {
         var connName = GetType().Name;

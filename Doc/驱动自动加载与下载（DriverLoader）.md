@@ -58,7 +58,23 @@ Load(typeName, disname, dll, linkName, urls, minVersion)
 
 ---
 
-## 5. 自定义下载客户端
+## 5. 下载安全校验
+
+驱动下载会执行 `Assembly.LoadFrom`，一旦下载页或文件被中间人篡改，等同于远程代码执行。因此默认启用以下校验：
+
+| 校验 | 默认行为 | 说明 |
+|------|----------|------|
+| 传输协议 | 不限制 | http/https 均按配置直接使用。部分嵌入式工控机没有 OpenSSL，无法建立 TLS 连接，强制 https 会让驱动自举直接不可用；完整性改由下列文件校验保证，不依赖传输层 |
+| 下载页哈希 | 校验链接指向的文件 | `WebClientX` 解析出的 `Link.Hash` 按 `FileInfo.VerifyHash` 规则比对（支持 `sha256$` 等算法前缀，以及 16/32 位 MD5、SHA1、SHA256、SHA512、CRC32；算法前缀或长度不可识别时跳过）。哈希对应下载页的链接文件；官方插件页给出的是**压缩包**哈希，因此比对归档，解压出的程序集另由托管程序集校验与固定哈希把关 |
+| 固定哈希 | 可选 | `DriverLoader.KnownHashes["MySql.Data.dll"] = "<SHA-256>"`，命中后强制校验 |
+| 托管程序集 | 强制 | 下载文件必须是可加载的 .NET 程序集，否则删除并拒绝 |
+| 自定义回调 | 可选 | `DriverLoader.VerifyFile = file => ...`，返回 `false` 拒绝 |
+
+未登记 `KnownHashes` 时，校验通过后会在日志中输出文件 SHA-256，便于运维登记形成固定校验。
+
+---
+
+## 6. 自定义下载客户端
 
 ```csharp
 // 默认使用 WebClientX + NewLife AuthKey
@@ -72,7 +88,7 @@ DriverLoader.CreateClient = linkName => new WebClientX
 
 ---
 
-## 6. 驱动搜索路径优先级
+## 7. 驱动搜索路径优先级
 
 1. 入口程序集所在目录
 2. 调用程序集所在目录
@@ -83,7 +99,7 @@ DriverLoader.CreateClient = linkName => new WebClientX
 
 ---
 
-## 7. 在各数据库驱动中的使用示例
+## 8. 在各数据库驱动中的使用示例
 
 每个数据库驱动的 `CreateFactory()` 方法调用 `DriverLoader.Load`：
 
@@ -104,7 +120,7 @@ protected override DbProviderFactory? CreateFactory()
 
 ---
 
-## 8. 关联阅读
+## 9. 关联阅读
 
 - `/xcode/idatabase_dbbase`
 - `/xcode/connection_string_builder`

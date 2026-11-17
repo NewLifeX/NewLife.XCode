@@ -77,6 +77,7 @@ public class LogProvider
         if (log.CreateIP.IsNullOrEmpty()) log.CreateIP = ManageProvider.UserHost;
 
         //log.TraceId = DefaultSpan.Current?.TraceId;
+        if (remark != null) remark = SensitiveDataMasker.Redact(remark, XCodeSetting.Current.LogMaskMode);
         log.Remark = remark;
         log.CreateTime = DateTime.Now;
 
@@ -195,6 +196,7 @@ public class LogProvider
     protected virtual String GetEntityRemark(String action, IEntity entity, String? error = null)
     {
         var fact = EntityFactory.CreateFactory(entity.GetType());
+        var mode = XCodeSetting.Current.LogMaskMode;
 
         // 构造字段数据的字符串表示形式
         var sb = Pool.StringBuilder.Get();
@@ -215,8 +217,12 @@ public class LogProvider
 
                     var v2 = entity[fi.Name];
 
-                    // 日志里面不要出现密码
-                    if (fi.Name.EqualIgnoreCase("pass", "password")) v1 = v2 = null;
+                    // 日志里面不要出现密码、密钥与令牌
+                    if (SensitiveDataMasker.IsSensitiveField(fi))
+                    {
+                        v1 = SensitiveDataMasker.MaskField(fi, v1, mode);
+                        v2 = SensitiveDataMasker.MaskField(fi, v2, mode);
+                    }
 
                     if (v1 is DateTime dt1)
                         v1 = dt1.ToFullString();
@@ -246,8 +252,8 @@ public class LogProvider
                     if (v is DateTime dt && dt == DateTime.MinValue) continue;
                 }
 
-                // 日志里面不要出现密码
-                if (fi.Name.EqualIgnoreCase("pass", "password")) v = null;
+                // 日志里面不要出现密码、密钥与令牌
+                if (SensitiveDataMasker.IsSensitiveField(fi)) v = SensitiveDataMasker.MaskField(fi, v, mode);
 
                 if (v is DateTime dt2)
                     v = dt2.ToFullString();

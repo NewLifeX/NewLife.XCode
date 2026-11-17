@@ -44,9 +44,34 @@ LogProvider.Provider.WriteLog("修改", this);
 
 - **"添加"/"删除"**：记录所有非空、非零字段
 - **"修改"**：对比 `Dirtys`（脏数据字典，记录旧值）和当前值，输出 `字段=旧值 -> 新值`
-- **密码字段**（名称含 `pass`/`password`）：自动脱敏，记录为空值
+- **凭据字段**（`SensitiveDataMasker.IsSensitiveName`，如 `Password`/`AppSecret`/`AccessToken`）以及显式 `ItemType=password` 的只写字段：按脱敏模式掩码，完全模式下记录为 `***`
 
-### 2.4 自动填充用户信息
+### 2.4 备注文本脱敏
+
+`CreateLog` 写入前统一调用 `SensitiveDataMasker.Redact`，按 `XCode:LogMaskMode` 掩码备注中的密钥、口令与令牌，适配两类形态：
+
+- JSON 报文：`{"Secret":"$md5$..."}` → `{"Secret":"***"}`
+- 查询串/键值文本：`secret=abc123&clientId=...` → `secret=***&clientId=...`
+
+脱敏模式按严格程度递增，默认 `Full`：
+
+| 模式 | 备注文本 | 实体字段 |
+|------|----------|----------|
+| `Off` | 原样记录 | 原样记录 |
+| `PasswordOnly` | 口令全掩，密钥与令牌原样 | 同左 |
+| `Partial` | 口令全掩，密钥与令牌保留头尾：`secret=abcd****ijkl` | 同左 |
+| `Full` | 全部凭据整值掩码 | 全部敏感字段记为 `***` |
+
+约定：
+
+- 口令类（`password`/`pwd`/`pass`）在任何模式下都全掩，不保留头尾
+- 部分模式中间固定四位星号，不泄漏原值长度；值短于 12 位时退化为全掩
+- 只识别“凭据字段名 + 分隔符 + 值”，普通叙述文本（如 `Secret validation failed`）原样保留
+- 实体字段日志同样识别显式标记为只写（`ItemType=password`）的字段
+- 掩码只作用于新写入的日志，历史数据不变
+- `Off` 会把凭据明文写入数据库，仅限本地调试
+
+### 2.5 自动填充用户信息
 
 `CreateLog` 内部会调用：
 

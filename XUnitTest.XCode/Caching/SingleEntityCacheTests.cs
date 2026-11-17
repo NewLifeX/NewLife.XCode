@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using NewLife.Log;
+using NewLife.Security;
 using XCode.Cache;
 using XCode.Membership;
 using Xunit;
@@ -57,6 +58,33 @@ public class SingleEntityCacheTests
         XTrace.WriteLine("三次访问");
         var user3 = cache[id];
         Assert.Equal(2, cache.Success);
+    }
+
+    [Fact(DisplayName = "写入单对象缓存后按主键与从键都能取到，且改名后旧从键失效")]
+    public void TestAdd()
+    {
+        var cache = new SingleEntityCache<Int32, User> { Expire = 60 };
+        cache.FindSlaveKeyMethod = k => User.Find(User._.Name == k);
+        cache.GetSlaveKeyMethod = e => e.Name;
+
+        // 高频主键，确保不会命中数据库既有记录
+        var id = 900_000 + Rand.Next(100_000);
+        var name = "cache_" + Rand.NextString(6);
+        var user = new User { ID = id, Name = name, Enable = true };
+
+        // 索引器写入后无需数据库即可命中
+        cache[id] = user;
+        Assert.True(cache.ContainsKey(id));
+        Assert.Equal(name, cache[id].Name);
+        Assert.True(cache.ContainsSlaveKey(name));
+        Assert.Equal(id, cache.GetItemWithSlaveKey(name).ID);
+
+        // 原位替换：改名后旧从键不能继续指向旧对象
+        var renamed = new User { ID = id, Name = name + "_new", Enable = true };
+        cache[id] = renamed;
+        Assert.Equal(renamed.Name, cache[id].Name);
+        Assert.False(cache.ContainsSlaveKey(name));
+        Assert.True(cache.ContainsSlaveKey(renamed.Name));
     }
 
     [Fact]

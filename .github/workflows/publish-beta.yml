@@ -21,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Setup dotNET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: |
           6.x
@@ -39,9 +39,11 @@ jobs:
         dotnet pack --version-suffix ${{ env.VERSION }} -c Release -o out XCodeTool/XCodeTool.csproj
     - name: NuGet login (OIDC)
       id: nuget-login
+      # fork 的 PR 没有 id-token 与 Secrets，登录必然 403；PR 只做编译与打包校验
+      if: github.event_name != 'pull_request'
       uses: NuGet/login@v1
       with:
-        user: NewLife
+        user: BigStone
     - name: Publish
       # 来自 fork 的 PR 不携带 Secrets（且 github.token 只读），发布推送会 403；仅在同仓库 push/workflow_dispatch 时执行
       if: github.event_name != 'pull_request'

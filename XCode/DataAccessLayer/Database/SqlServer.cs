@@ -581,7 +581,8 @@ internal class SqlServerSession : RemoteDbSession
     {
         tableName = tableName.Trim().Trim('[', ']').Trim();
 
-        var sql = $"select rows from sysindexes where id = object_id('{tableName}') and indid in (0,1)";
+        // 表名可能来自远端调用方，转义单引号避免字符串字面量越界
+        var sql = $"select rows from sysindexes where id = object_id('{tableName.Replace("'", "''")}') and indid in (0,1)";
         return ExecuteScalar<Int64>(sql);
     }
 
@@ -1368,6 +1369,8 @@ internal class SqlServerMetaData : RemoteDbMetaData
         }
         if (!Path.IsPathRooted(bf)) bf = NewLife.Setting.Current.BackupPath.CombinePath(bf).GetBasePath();
 
+        // 外部可传文件名，统一限制到备份目录内，避免写到任意位置
+        bf = BackupPathHelper.Ensure(bf);
         bf = bf.EnsureDirectory(true);
 
         WriteLog("{0} backing up SqlServer database {1} to {2}", Database.ConnName, name, bf);
@@ -1377,7 +1380,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
         // 删除已有文件
         if (File.Exists(bf)) File.Delete(bf);
 
-        base.Database.CreateSession().Execute($"USE master;BACKUP DATABASE {name} TO disk = '{bf}'");
+        base.Database.CreateSession().Execute($"USE master;BACKUP DATABASE {BackupPathHelper.QuoteName(name)} TO disk = {BackupPathHelper.Quote(bf)}");
 
         // 压缩
         WriteLog("Backup file size: {0:n0} bytes", bf.AsFile().Length);
@@ -1420,6 +1423,9 @@ internal class SqlServerMetaData : RemoteDbMetaData
             return result;
         }
 
+        // 备份文件路径同样限定在备份目录内，避免读到或引用任意路径
+        bakfile = BackupPathHelper.Ensure(bakfile);
+
         if (recoverDir.IsNullOrEmpty())
         {
             var sql = "select filename from sysfiles";
@@ -1440,8 +1446,8 @@ internal class SqlServerMetaData : RemoteDbMetaData
         var sw = Stopwatch.StartNew();
 
 
-        var headInfo = session.Query($"RESTORE HEADERONLY FROM DISK = '{bakfile}'").Tables[0];
-        var fileInfo = session.Query($"RESTORE FILELISTONLY from disk= N'{bakfile}'").Tables[0];
+        var headInfo = session.Query($"RESTORE HEADERONLY FROM DISK = {BackupPathHelper.Quote(bakfile)}").Tables[0];
+        var fileInfo = session.Query($"RESTORE FILELISTONLY from disk= {BackupPathHelper.Quote(bakfile)}").Tables[0];
         if (headInfo.Rows.Count < 1)
         {
             return result;
@@ -1451,12 +1457,12 @@ internal class SqlServerMetaData : RemoteDbMetaData
             var databaseName = headInfo.Rows[0]["DatabaseName"];
             var dataName = fileInfo.Rows[0]["LogicalName"];
             var logName = fileInfo.Rows[1]["LogicalName"];
-            var stopConnect = $"ALTER DATABASE {databaseName} SET OFFLINE WITH ROLLBACK IMMEDIATE";
-            var restorSql = $@"RESTORE DATABASE {databaseName} from disk= N'{bakfile}' 
+            var stopConnect = $"ALTER DATABASE {BackupPathHelper.QuoteName(databaseName + "")} SET OFFLINE WITH ROLLBACK IMMEDIATE";
+            var restorSql = $@"RESTORE DATABASE {BackupPathHelper.QuoteName(databaseName + "")} from disk= {BackupPathHelper.Quote(bakfile)} 
                 WITH NOUNLOAD,
                 {(replace ? "REPLACE," : "")}
-                    MOVE '{dataName}' TO '{Path.Combine(recoverDir, String.Concat(databaseName, ".mdf"))}',
-                    MOVE '{logName}' TO '{Path.Combine(recoverDir, String.Concat(databaseName, ".ldf"))}';";
+                    MOVE {BackupPathHelper.Quote(dataName + "")} TO {BackupPathHelper.Quote(Path.Combine(recoverDir, String.Concat(databaseName, ".mdf")))},
+                    MOVE {BackupPathHelper.Quote(logName + "")} TO {BackupPathHelper.Quote(Path.Combine(recoverDir, String.Concat(databaseName, ".ldf")))};";
             session.Execute(stopConnect);
             session.Execute(restorSql);
             result = "ok";

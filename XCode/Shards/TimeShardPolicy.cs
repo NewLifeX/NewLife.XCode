@@ -182,7 +182,8 @@ public class TimeShardPolicy : IShardPolicy
         else if (expression is FieldExpression fieldExpression && fieldExpression.Field.Name == fi.Name)
             exps.Add(fieldExpression);
         //if (exps.Count == 0) throw new XCodeException($"分表策略要求查询条件包括[{fi}]字段！");
-        if (exps.Count == 0) return [];
+        // 条件里推不出分片时，回落基准表会把其余分片的数据整体漏掉，直接报错
+        if (exps.Count == 0) throw new XCodeException($"The shard policy cannot derive shards from the query conditions, which must include the [{fi.Name}] field; otherwise data in other shards would be silently skipped.");
 
         if (fi.Type == typeof(DateTime))
         {
@@ -217,6 +218,9 @@ public class TimeShardPolicy : IShardPolicy
                         }
                     }
 
+                    // 下界可能晚于当前时间（预约、计划类数据），上下界倒挂会丢掉下界所在分片
+                    if (end <= start) end = start.Add(Step);
+
                     var models = GetModels(start, end);
 
                     // 如果只有一个分表模型，且时间是该时间段首尾，则自动去掉expression表达式中的Start/End条件
@@ -248,6 +252,9 @@ public class TimeShardPolicy : IShardPolicy
                     {
                         end = time2;
                     }
+
+                    // 下界可能晚于当前时间，上下界倒挂会丢掉下界所在分片
+                    if (end <= start) end = start.Add(Step);
 
                     var models = GetModels(start, end);
 

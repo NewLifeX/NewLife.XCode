@@ -863,11 +863,11 @@ public class EntityBuilder : ClassBuilder
                 des = des?.TrimPrefix(dis, "。");
             des = Option.DisplayNameTemplate.Replace("{displayName}", Table.DisplayName) + "。" + des;
         }
-        WriteLine("/// <summary>{0}</summary>", des);
+        WriteLine("/// <summary>{0}</summary>", EscapeDoc(des));
         WriteLine("[Serializable]");
         WriteLine("[DataObject]");
 
-        if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
+        if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", EscapeString(des));
 
         var dt = Table;
         foreach (var item in dt.Indexes)
@@ -907,7 +907,7 @@ public class EntityBuilder : ClassBuilder
 
         // 注释
         var des = dc.Description;
-        WriteLine("/// <summary>{0}</summary>", des);
+        WriteLine("/// <summary>{0}</summary>", EscapeDoc(des));
 
         // 附加特性
         if (dc.Properties.TryGetValue("Attribute", out var att))
@@ -927,15 +927,15 @@ public class EntityBuilder : ClassBuilder
         //if (!Option.Pure)
         {
             var dis = dc.DisplayName;
-            if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", dis);
+            if (!dis.IsNullOrEmpty()) WriteLine("[DisplayName(\"{0}\")]", EscapeString(dis));
 
-            if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", des);
+            if (!des.IsNullOrEmpty()) WriteLine("[Description(\"{0}\")]", EscapeString(des));
         }
 
         WriteLine("[DataObjectField({0}, {1}, {2}, {3})]", dc.PrimaryKey.ToString().ToLower(), dc.Identity.ToString().ToLower(), dc.Nullable.ToString().ToLower(), dc.Length);
 
         var sb = Pool.StringBuilder.Get();
-        sb.AppendFormat("[BindColumn(\"{0}\", \"{1}\", \"{2}\"", dc.ColumnName, dc.Description, dc.RawType);
+        sb.AppendFormat("[BindColumn(\"{0}\", \"{1}\", \"{2}\"", dc.ColumnName, EscapeString(dc.Description), dc.RawType);
 
         // 元素类型
         if (!dc.ItemType.IsNullOrEmpty()) sb.AppendFormat(", ItemType = \"{0}\"", dc.ItemType);
@@ -1109,7 +1109,7 @@ public class EntityBuilder : ClassBuilder
             if (Option.Excludes.Contains(column.Name)) continue;
             if (Option.Excludes.Contains(column.ColumnName)) continue;
 
-            WriteLine("/// <summary>{0}</summary>", column.Description);
+            WriteLine("/// <summary>{0}</summary>", EscapeDoc(column.Description));
             WriteLine("public static readonly Field {0} = FindByName(\"{0}\");", column.Name);
             WriteLine();
         }
@@ -1131,7 +1131,7 @@ public class EntityBuilder : ClassBuilder
             if (Option.Excludes.Contains(column.Name)) continue;
             if (Option.Excludes.Contains(column.ColumnName)) continue;
 
-            WriteLine("/// <summary>{0}</summary>", column.Description);
+            WriteLine("/// <summary>{0}</summary>", EscapeDoc(column.Description));
             WriteLine("public const String {0} = \"{0}\";", column.Name);
             if (--k > 0) WriteLine();
         }
@@ -1196,7 +1196,7 @@ public class EntityBuilder : ClassBuilder
             var dis = column.DisplayName;
             if (dis.IsNullOrEmpty()) dis = mapTable?.DisplayName;
 
-            WriteLine("/// <summary>{0}</summary>", dis);
+            WriteLine("/// <summary>{0}</summary>", EscapeDoc(dis));
             WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
             if (Option.Nullable)
                 WriteLine("public {0}? {1} => Extends.Get(nameof({1}), k => {0}.FindBy{2}({3}));", fullName, name, mapIdName, column.Name);
@@ -1220,7 +1220,7 @@ public class EntityBuilder : ClassBuilder
                 var type = Option.Nullable ? "String?" : "String";
 
                 WriteLine();
-                WriteLine("/// <summary>{0}</summary>", dis);
+                WriteLine("/// <summary>{0}</summary>", EscapeDoc(dis));
                 WriteLine("[Map(nameof({0}), typeof({1}), \"{2}\")]", column.Name, fullName, mapIdName);
                 if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
                     WriteLine("[Category(\"{0}\")]", att);
@@ -1776,7 +1776,7 @@ public class EntityBuilder : ClassBuilder
                     first = true;
                 }
 
-                WriteLine("/// <summary>{0}</summary>", dis);
+                WriteLine("/// <summary>{0}</summary>", EscapeDoc(dis));
                 WriteLine("[XmlIgnore, IgnoreDataMember, ScriptIgnore]");
                 if (Option.Nullable)
                     WriteLine("public {1}? {1} => Extends.Get({0}, k => {1}.FindBy{3}({2}));", NameOf(pname), dt.Name, column.Name, pk.Name);
@@ -1789,7 +1789,7 @@ public class EntityBuilder : ClassBuilder
                 if (master != null && !master.PrimaryKey && !Table.Columns.Any(e => e.Name.EqualIgnoreCase(pname + master.Name)))
                 {
                     WriteLine();
-                    WriteLine("/// <summary>{0}</summary>", dis);
+                    WriteLine("/// <summary>{0}</summary>", EscapeDoc(dis));
                     WriteLine("[Map(nameof({0}), typeof({1}), \"{2}\")]", column.Name, dt.Name, pk.Name);
                     if (column.Properties.TryGetValue("Category", out var att) && !att.IsNullOrEmpty())
                         WriteLine("[Category(\"{0}\")]", att);

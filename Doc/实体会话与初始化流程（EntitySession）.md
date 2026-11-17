@@ -65,24 +65,37 @@ private static readonly ConcurrentDictionary<String, EntitySession<TEntity>> _es
 
 ---
 
-## 4. Count / LongCount 快速计数策略
+## 4. Count / LongCount 计数策略
 
-`LongCount` 有多级策略，目标是“快速可用 + 周期修正”：
+`LongCount` 采用“小表精确、中表后台校准、大表估算”的策略：
 
 1. `_Count >= 0` 先返回缓存；到期后异步刷新。
 2. 首次读取时，尝试读取 `DataCache.Current.Counts` 里的历史值。
-3. 对大表优先 `QueryCountFast`（估算）。
-4. 若小于阈值 `FullCountFloor` 且到达校准周期，则执行 `SelectCount` 获取精确值。
-5. 若查询失败（如表未创建），触发建表并返回 0，后续再纠正。
+3. 优先快速计数：
+   - SQLite 使用自增主键 `MAX(Id) - MIN(Id) + 1` 估算；
+   - 其它数据库使用 `QueryCountFast`；
+   - `QueryCountFast` 拿不到时，用自增主键 `MIN/MAX` 区间兜底（仅限有索引的单列自增主键，雪花 ID 不适用）。
+4. `FullCountFloor` 默认 100 万：
+   - FastCount ≤ 10 万：同步精确计数；
+   - 10 万 ~ 100 万：返回估算值，后台异步精确；
+   - ≥ 100 万：只使用估算值，不执行 `COUNT(*)`。
+5. 精确计数使用内部 5 秒超时；失败保留估算值并退避 30 分钟。
+6. 只有确认表不存在时才触发建表；超时不再触发 `CheckTable`，也不会把计数写成 0。
+7. 视图保持精确计数，避免破坏模板视图语义。
 
-### 4.1 不同规模的校准周期
+> 精确总数仍可用 `Entity.FindCount()` 获取。将 `FullCountFloor` 设为 0 可让所有表只走 FastCount。
 
-- `>=1_000_000`：约 3600 秒
-- `>=100_000`：约 600 秒
-- `>=10_000`：约 60 秒
-- 其它：约 60 秒
+### 4.1 刷新周期
+
+- `_NextCount` 按规模分档：100 万以上 600 秒，10 万以上 300 秒，其它 60 秒。
+- 后台精确成功后设置 `_NextFullCount`：100 万以上约 3600 秒，10 万以上约 600 秒，其它约 60 秒。
+- 精确计数失败后 `_NextFullCount` 退避 30 分钟，期间同步与后台精确都跳过。
 
 这让大表避免频繁 `COUNT(*)`，小表又能保持较高准确性。
+
+### 4.2 诊断日志
+
+批量添删改（`BatchInsert`/`BatchUpdate`/`Upsert` 等）会清空实体缓存并把 `_NextCount` 重置为最小值，下一次读取 `Count` 便重新计算计数。为避免高频写入场景刷屏，计数过程的两条诊断消息（`{0}.Count fast row count (approximate) ...`）使用 Debug 级别输出，默认 Info 级别下不可见；排查计数偏差时把日志等级调到 Debug 即可查看。
 
 ---
 
@@ -154,3 +167,4 @@ builder.Table = $"({Factory.Template.GetSql(Dal.DbType)}) SourceTable";
 3. **大表统计页**优先用 `LongCount`，不要每次都 `SelectCount`。
 4. **初始化阶段**避免在 `InitData` 里使用可能触发二次初始化的缓存 API。
 5. **事务前先触发静态引用**（如先 `Entity<T>.Meta.Session.Count`）可减少首次事务开销。
+6. **需要精确总数时使用 `FindCount()`**，不要在大表上反复调用 `Meta.Count` 并期待精确值。

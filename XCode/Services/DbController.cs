@@ -1,5 +1,6 @@
 ﻿using NewLife.Caching;
 using NewLife.Data;
+using NewLife.Http;
 using NewLife.Remoting;
 using NewLife.Serialization;
 using XCode.DataAccessLayer;
@@ -46,8 +47,9 @@ public class DbController
     /// <param name="db">数据库连接名</param>
     /// <param name="token">令牌</param>
     /// <returns></returns>
-    public LoginInfo Login(String db, String token)
+    public LoginInfo Login(String db, String? token)
     {
+        token = ResolveToken(token);
         if (db.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, L.T("The database name cannot be empty."));
         if (token.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, L.T("The token cannot be empty."));
 
@@ -154,9 +156,22 @@ public class DbController
     {
         if (db.IsNullOrEmpty()) throw new ApiException(ApiCode.BadRequest, L.T("The database name cannot be empty."));
 
-        ValidateToken(token, db);
+        ValidateToken(ResolveToken(token), db);
 
         return DAL.Create(db);
+    }
+
+    /// <summary>解析令牌。优先使用参数，其次读取 Authorization 头，兼容旧版查询串传令牌</summary>
+    /// <param name="token">参数传入的令牌</param>
+    /// <returns></returns>
+    private static String? ResolveToken(String? token)
+    {
+        if (!token.IsNullOrEmpty()) return token;
+
+        var auth = DefaultHttpContext.Current?.Request?.Headers?["Authorization"];
+        if (auth.IsNullOrEmpty()) return token;
+
+        return auth.StartsWithIgnoreCase("Bearer ") ? auth.Substring(7).Trim() : auth.Trim();
     }
 
     /// <summary>验证令牌并检查是否可访问指定数据库</summary>

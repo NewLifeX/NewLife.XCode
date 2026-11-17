@@ -1,8 +1,8 @@
 # NewLife.XCode AOT 兼容性分析
 
-> 基线：v12.2（依赖 NewLife.Core 12.0.2026.1013-beta0732）｜更新：2026-10-16
+> 基线：v12.3（依赖 NewLife.Core 12.0.2026.1024、NewLife.MySql 1.5.2026.1024）｜更新：2026-11-09
 > 验证方式：分析器（net8.0/net10.0 常驻 `IsAotCompatible`）+ NativeAOT 真实发布 + 原生运行冒烟（win-x64/linux-x64/linux-arm64，.NET 10；linux-la64 QEMU JIT）
-> 冒烟工程：`AotSmoke/`（16 场景 JIT/AOT 双跑，`.github/workflows/aot.yml` 自动执行）
+> 冒烟工程：`AotSmoke/`（17 场景 JIT/AOT 双跑，`.github/workflows/aot.yml` 自动执行）
 
 ---
 
@@ -10,7 +10,8 @@
 
 - 目标框架：`net45;net461;netstandard2.0;netstandard2.1;net8.0;net10.0`，net8+ 常驻 `IsAotCompatible`
 - 库内 AOT/裁剪分析器告警 **0 条**（net8.0/net10.0 双目标），CI 以 `-warnaserror` 硬约束防回归
-- NativeAOT 发布：XCode 源侧告警 **0 条**；原生运行冒烟 **16/16 全通过**（MySQL/SqlServer 场景在提供 `XCode_mysql`/`XCode_sqlserver` 环境变量时执行，否则跳过）
+- NativeAOT 发布：XCode 源侧告警 **0 条**；原生运行冒烟 **17/17 全通过**（MySQL/SqlServer 场景在提供 `XCode_mysql`/`XCode_sqlserver` 环境变量时执行，否则跳过）
+- 驱动侧告警：发布时 `NewLife.MySql`（`MySqlDataAdapter.Update`）、`MySql.Data`、`System.Data.SqlClient` 与 `System.Configuration.ConfigurationManager` 会报其程序集自身的 IL2104/IL3053 告警，属驱动内部未标注裁剪语义的既有代码，不涉及 XCode 使用路径
 
 ---
 
@@ -29,7 +30,8 @@
 | 泛型属性拷贝 | `DataConversion.CopyProperty<TSource,TTarget>`（AOT/裁剪下自动保留源与目标的公开属性） |
 | 实体缓存 | `FindAllWithCache` |
 | SQLite 嵌入库 | Microsoft.Data.Sqlite（SQLitePCLRaw）路线：建表/CRUD/反向工程；System.Data.SQLite 为混合编译不支持 AOT |
-| MySQL 真库 | 官方 MySql.Data 26.7.0：建表/CRUD/DAL 查询；裁剪根需含 `MySql.Data` 与 `System.Configuration.ConfigurationManager` |
+| MySQL 真库（NewLife.MySql） | NewLife.MySql 1.5.2026.1024（XCode.MySql 适配包默认驱动）：建表/CRUD/DAL 查询/实体映射零拷贝入口（`ReadTableAsync`、`ReadModelsAsync<T>`），数组参数批量更新（`ExecuteArrayBatch`）；裁剪根含 `NewLife.MySql` |
+| MySQL 真库（官方连接器） | 官方 MySql.Data 26.7.0：原始 ADO.NET 建表/查询；裁剪根需含 `MySql.Data` 与 `System.Configuration.ConfigurationManager` |
 | SqlServer 真库 | 官方 System.Data.SqlClient 4.9.1：建表/CRUD/DAL 查询（本机 LocalDB 实例实测）；裁剪根需含 `System.Data.SqlClient` |
 | 数据库访问 | DAL 元数据对象创建、SQL 执行 |
 | 驱动加载 | 静态引用驱动（工程引用/deps）按程序集限定名降级加载 |
@@ -41,9 +43,8 @@
 
 | 功能 | 现状 | 方向 |
 |------|------|------|
-| 驱动矩阵 AOT 验证 | 已验证：NovaDb、SQLite（Microsoft.Data.Sqlite）、MySQL（MySql.Data）、SqlServer（System.Data.SqlClient，本机 LocalDB 实测、CI MySQL/SqlServer 服务容器常态化验证）；MySQL/SqlServer 场景连接串分别经 `XCode_mysql`/`XCode_sqlserver` 环境变量提供，未设置时冒烟自动跳过；其余 `XCode.*` 提供者需外部服务器，未验证；瀚高内置 `Nhgdb.dll` 为 .NET Framework 4.5.1 构建，现代 .NET 需厂商提供新驱动 | 具备服务器环境时逐个验证（PostgreSQL/Oracle/达梦/DB2/人大金仓/瀚高） |
+| 驱动矩阵 AOT 验证 | 已验证：NovaDb、SQLite（Microsoft.Data.Sqlite）、MySQL（NewLife.MySql 1.5 + 官方 MySql.Data 双驱动）、SqlServer（System.Data.SqlClient，本机 LocalDB 实测、CI MySQL/SqlServer 服务容器常态化验证）；MySQL/SqlServer 场景连接串分别经 `XCode_mysql`/`XCode_sqlserver` 环境变量提供，未设置时冒烟自动跳过；其余 `XCode.*` 提供者需外部服务器，未验证；瀚高内置 `Nhgdb.dll` 为 .NET Framework 4.5.1 构建，现代 .NET 需厂商提供新驱动 | 具备服务器环境时逐个验证（PostgreSQL/Oracle/达梦/DB2/人大金仓/瀚高） |
 | 静态化通道（可选增强） | 未实施（暂缓，待真实诉求） | XCodeTool 生成静态元数据表与工厂注册；配套全实体扫描的注册表替代 |
-| 驱动私有反射优化入口 | 受阻于驱动侧：`NewLife.MySql 1.4.2026.801` 与 Core 12.0.2026.1013 二进制不兼容（`OwnerPacket.Slice(Int32,Int32)` 已改为显式接口实现，任意操作即抛 `MissingMethodException`）；该入口需待上游重编译发版后再验证 | 改为公共 API 直调（MySql 零拷贝读取/批量执行） |
 
 ---
 
@@ -65,7 +66,7 @@
 dotnet build XCode\XCode.csproj -f net8.0 -c Release
 dotnet build XCode\XCode.csproj -f net10.0 -c Release
 
-# 冒烟（16 场景 JIT/AOT 双跑；任一失败即非 0 退出码）
+# 冒烟（17 场景 JIT/AOT 双跑；任一失败即非 0 退出码）
 # MySQL/SqlServer 场景分别读取环境变量 XCode_mysql/XCode_sqlserver，未设置时自动跳过
 dotnet run -c Release --project AotSmoke/AotSmoke.csproj
 dotnet publish AotSmoke/AotSmoke.csproj -c Release -r win-x64 -o AotSmoke/bin/aot-out

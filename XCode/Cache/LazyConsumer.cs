@@ -46,8 +46,9 @@ public class LazyConsumer
         catch { }
         finally
         {
-            // 标记为空闲
+            // 先置空闲再复查队列。若先置空闲前已入队，入队方会看到 processing==1 放弃启动，任务就滞留到下一次 Run
             _processing = 0;
+            if (!_queue.IsEmpty && Interlocked.CompareExchange(ref _processing, 1, 0) == 0) _ = Task.Run(ProcessQueue);
         }
     }
 }

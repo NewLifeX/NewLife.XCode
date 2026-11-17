@@ -36,6 +36,8 @@ var count = dal.BackupAll(tables, "backup.zip", backupSchema: true, ignoreError:
 - `backupSchema=true`：同时备份表结构
 - `ignoreError=true`：单表失败不影响后续表
 
+> **备份目录约束**：备份、恢复与数据包读写传入的文件名统一限制在 `NewLife.Setting.Current.BackupPath`（默认 `Backup`）目录内，`../`、绝对路径指向目录外一律抛 `XCodeException`。若备份文件放在外部磁盘或网络共享，请把 `BackupPath` 指向该目录，而不是传外部绝对路径。
+
 ---
 
 ## 2. 恢复能力
@@ -59,6 +61,13 @@ var tables = dal.RestoreAll("backup.zip", tables: null, setSchema: true, ignoreE
 ```
 
 当 `tables=null` 时，可由压缩包中的模型文件反推表结构。
+
+> **未知表保护**：包内 XML 属于外部输入，`DbPackage.RestoreAll` 默认只恢复目标库已有表或当前实体模型中的表，其余表直接拒绝，避免不可信数据包在目标库执行任意 DDL。跨库搬运到全新数据库时，显式传入可信的 `tables`，或设置 `DbPackage.AllowNewTables = true`。
+>
+> ```csharp
+> var dpk = new DbPackage { Dal = target, AllowNewTables = true };
+> var tables = dpk.RestoreAll("backup.zip", null, setSchema: true);
+> ```
 
 ---
 

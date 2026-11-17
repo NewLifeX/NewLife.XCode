@@ -3,6 +3,7 @@ using NewLife;
 using NewLife.Configuration;
 using NewLife.Data;
 using NewLife.Log;
+using NewLife.Security;
 using NewLife.Serialization;
 using NewLife.Threading;
 using XCode.Membership;
@@ -67,9 +68,19 @@ public class DbConfigProvider : ConfigProvider
             // 删除旧版
             if (file.EndsWithIgnoreCase(".config")) File.Delete(file);
 
-            // 加密存储
+            // 加密存储。解密失败（密钥不匹配或文件损坏）时忽略缓存，回退数据库加载
             if (CacheLevel == ConfigCacheLevel.Encrypted)
-                txt = Aes.Create().Decrypt(txt.ToBase64(), name.GetBytes()).ToStr();
+            {
+                try
+                {
+                    txt = Aes.Create().Decrypt(txt.ToBase64(), GetCacheKey(name)).ToStr();
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteLine("[{0}/{1}] failed to decrypt cached configuration; ignoring {2}: {3}", Category, UserId, file, ex.Message);
+                    return;
+                }
+            }
 
             txt = txt.Trim();
             var dic = txt.StartsWith("{") && txt.EndsWith("}") ?
@@ -194,6 +205,11 @@ public class DbConfigProvider : ConfigProvider
         }
     }
 
+    /// <summary>获取本地缓存加密密钥。直接使用配置分类名，保持与码神工具离线解密兼容</summary>
+    /// <param name="category">配置分类</param>
+    /// <returns>密钥字节</returns>
+    internal static Byte[] GetCacheKey(String? category) => category.GetBytes();
+
     private void SaveCache(IDictionary<String, Object?> configs)
     {
         // 缓存
@@ -210,7 +226,7 @@ public class DbConfigProvider : ConfigProvider
 
             // 加密存储
             if (CacheLevel == ConfigCacheLevel.Encrypted)
-                txt = Aes.Create().Encrypt(txt.GetBytes(), name.GetBytes()).ToBase64();
+                txt = Aes.Create().Encrypt(txt.GetBytes(), GetCacheKey(name)).ToBase64();
 
             File.WriteAllText(file.EnsureDirectory(true), txt);
         }

@@ -296,24 +296,18 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
     /// <param name="force">强制清除，下次访问阻塞等待。默认false仅置为过期，下次访问异步更新</param>
     public void Clear(String reason, Boolean force = false)
     {
-        if (!Using) return;
-
-        //var factory = Entity<TEntity>.Meta.Factory;
-        //using var span = DAL.GlobalTracer?.NewSpan($"db:{factory.ConnName}:ClearCache:{factory.TableName}", new { reason, force });
-
-        //// 直接执行异步更新，明明白白，确保任何情况下数据最新，并且不影响其它任务的性能
-        //UpdateCacheAsync(reason);
-
+        // 只写进程（Using=false）同样要置过期并广播失效，否则其它进程最长 Expire 秒内仍返回旧数据
+        // 已创建缓存对象但从未使用时（如只设置过 Expire），每次添删改都会进入本方法，不写日志，避免普通实体的写操作刷屏
         // 强迫下一次访问阻塞等待刷新
         if (force)
         {
             ExpiredTime = DateTime.MinValue;
-            WriteLog("Cache forcibly cleared; the next access blocks and waits for a synchronous update");
+            if (Using) WriteLog("Cache forcibly cleared; the next access blocks and waits for a synchronous update");
         }
         else
         {
             ExpiredTime = DateTime.Now;
-            WriteLog("Cache cleared without force; the next access updates asynchronously without blocking");
+            if (Using) WriteLog("Cache cleared without force; the next access updates asynchronously without blocking");
         }
 
         // 通知分布式缓存其它进程

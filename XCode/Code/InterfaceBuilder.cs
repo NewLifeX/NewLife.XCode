@@ -106,7 +106,7 @@ public class InterfaceBuilder : ClassBuilder
 
         // 注释
         var des = dc.Description;
-        WriteLine("/// <summary>{0}</summary>", des);
+        WriteLine("/// <summary>{0}</summary>", EscapeDoc(des));
 
         var type = dc.Properties["Type"];
         if (type.IsNullOrEmpty()) type = dc.DataType?.Name;

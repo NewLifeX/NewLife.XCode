@@ -201,7 +201,7 @@ public partial class Entity<TEntity>
         //[EditorBrowsable(EditorBrowsableState.Never)]
         public static ISingleEntityCache<Object, TEntity> SingleCache => Session.SingleCache;
 
-        /// <summary>总记录数，小于1000时是精确的，大于1000时缓存10分钟</summary>
+        /// <summary>总记录数。10 万以下精确，10 万~100 万后台校准，100 万以上为估算值；需要精确值时使用 FindCount()</summary>
         //[Obsolete("=>Session")]
         //[EditorBrowsable(EditorBrowsableState.Never)]
         public static Int32 Count => (Int32)Session.LongCount;
@@ -255,9 +255,9 @@ public partial class Entity<TEntity>
 
             foreach (var shard in models)
             {
-                // 如果目标分表不存在，则不要展开查询
+                // 如果目标分表不存在，则不要展开查询。使用无缓存回退，避免新建分表在缓存窗口内被跳过
                 var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : Session.Dal;
-                if (shard.TableName.IsNullOrEmpty() || !dal.TableNames.Contains(shard.TableName)) continue;
+                if (shard.TableName.IsNullOrEmpty() || !dal.TableExists(shard.TableName)) continue;
 
                 using var split = new SplitPackge(shard.ConnName, shard.TableName);
                 yield return callback();
@@ -309,9 +309,9 @@ public partial class Entity<TEntity>
 
             foreach (var shard in models)
             {
-                // 如果目标分表不存在，则不要展开查询
+                // 如果目标分表不存在，则不要展开查询。使用无缓存回退，避免新建分表在缓存窗口内被跳过
                 var dal = !shard.ConnName.IsNullOrEmpty() ? DAL.Create(shard.ConnName) : Session.Dal;
-                if (!dal.TableNames.Contains(shard.TableName)) continue;
+                if (!dal.TableExists(shard.TableName)) continue;
 
                 var ss = EntitySession<TEntity>.Create(shard.ConnName, shard.TableName);
                 yield return callback(ss);

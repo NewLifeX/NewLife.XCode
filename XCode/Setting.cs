@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using NewLife.Configuration;
 using XCode.DataAccessLayer;
+using XCode.Membership;
 
 [assembly: InternalsVisibleTo("XUnitTest.XCode, PublicKey=00240000048000001401000006020000002400005253413100080000010001000d41eb3bdab5c2150958b46c95632b7e4dcb0af77ed8637bd8543875bc2443d01273143bb46655a48a92efa76251adc63ccca6d0e9cef2e0ce93e32b5043bea179a6c710981be4a71703a03e10960643f7df091f499cf60183ef0e4e4e2eebf26e25cea0eebf87c8a6d7f8130c283fc3f747cb90623f0aaa619825e3fcd82f267a0f4bfd26c9f2a6b5a62a6b180b4f6d1d091fce6bd60a9aa9aa5b815b833b44e0f2e58b28a354cb20f52f31bb3b3a7c54f515426537e41f9c20c07e51f9cab8abc311daac19a41bd473a51c7386f014edf1863901a5c29addc89da2f2659c9c1e95affd6997396b9680e317c493e974a813186da277ff9c1d1b30e33cb5a2f6")]
 
@@ -93,9 +94,19 @@ public class XCodeSetting : Config<XCodeSetting>
     [Description("Table and column name case. Default: database decides; None: keep model casing; Upper: uppercase; Lower: lowercase; Underline: underscore")]
     public NameFormats NameFormat { get; set; } = NameFormats.Default;
 
-    /// <summary>全表查行数下限。在获取数据表行数时，先根据索引表进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。默认1000万</summary>
-    [Description("Full count threshold. Row counts are estimated from index statistics first; estimates above this value are used as-is, otherwise count(*) runs for an exact value. Lower it to avoid slow first visits on large tables, raise it for exact counts. Default 10 million")]
-    public Int32 FullCountFloor { get; set; } = 10_000_000;
+    /// <summary>全表查行数下限。在获取数据表行数时，先根据索引表进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。默认100万</summary>
+    [Description("Full count threshold. Row counts are estimated from index statistics first; estimates above this value are used as-is, otherwise count(*) runs for an exact value. Lower it to avoid slow first visits on large tables, raise it for exact counts. Default 1 million")]
+    public Int32 FullCountFloor { get; set; } = 1_000_000;
+    #endregion
+
+    #region 日志
+    /// <summary>日志脱敏模式。按严格程度递增：Off 关闭、PasswordOnly 仅口令、Partial 部分、Full 完全，默认完全掩码</summary>
+    [Description("Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)")]
+    public LogMaskModes LogMaskMode { get; set; } = LogMaskModes.Full;
+
+    /// <summary>SQL日志脱敏。默认true，SQL日志与异常中的口令、密钥、令牌参数按 LogMaskMode 掩码</summary>
+    [Description("SQL log masking. When enabled (default), password, secret and token parameters are masked in SQL logs and exceptions according to LogMaskMode")]
+    public Boolean MaskSqlLog { get; set; } = true;
     #endregion
 
     #region 缓存

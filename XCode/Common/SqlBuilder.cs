@@ -1,4 +1,5 @@
-﻿using NewLife;
+﻿using System.Text.RegularExpressions;
+using NewLife;
 using NewLife.Collections;
 using NewLife.Data;
 
@@ -14,7 +15,7 @@ public static class SqlBuilder
     public static String? BuildOrder(PageParameter page, IEntityFactory factory)
     {
         var orderby = page.OrderBy;
-        if (!orderby.IsNullOrEmpty()) return orderby;
+        if (!orderby.IsNullOrEmpty()) return orderby.CheckOrderBy();
 
         var dic = new Dictionary<String, Boolean>();
         if (!page.Sort.IsNullOrEmpty())
@@ -86,11 +87,30 @@ public static class SqlBuilder
     public static String? GetOrderBy(this PageParameter page)
     {
         var orderby = page.OrderBy;
-        if (!orderby.IsNullOrEmpty()) return orderby;
+        if (!orderby.IsNullOrEmpty()) return orderby.CheckOrderBy();
 
         orderby = page.Sort;
         if (orderby.IsNullOrEmpty()) return orderby;
         if (page.Desc && !orderby.EndsWithIgnoreCase(" Asc", " Desc")) orderby += " Desc";
+
+        return orderby.CheckOrderBy();
+    }
+
+    private static readonly Regex _orderByRegex = new(@"^\s*[\w\[\]`""\.]+(\s+(Asc|Desc))?(\s*,\s*[\w\[\]`""\.]+(\s+(Asc|Desc))?)*\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>校验排序子句，只允许字段名与升降序标记，防止排序位注入</summary>
+    /// <remarks>
+    /// 排序参数往往直接来自前端查询串，若拼入原生SQL而不校验，可借助子查询、注释或分号实施盲注。
+    /// 此处限定为逗号分隔的标识符列表，每项可带 Asc/Desc，禁止括号、引号以外的符号与空白分隔的其他内容。
+    /// </remarks>
+    /// <param name="orderby">排序子句</param>
+    /// <returns>原排序子句</returns>
+    /// <exception cref="XCodeException">排序子句包含非法字符时抛出</exception>
+    public static String? CheckOrderBy(this String? orderby)
+    {
+        if (orderby.IsNullOrEmpty()) return orderby;
+
+        if (!_orderByRegex.IsMatch(orderby)) throw new XCodeException(L.T("Invalid sort field [{0}].", orderby));
 
         return orderby;
     }

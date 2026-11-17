@@ -181,7 +181,13 @@ internal class NetworkDb : DbBase
     /// <param name="field">字段</param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    public override String FormatValue(IDataColumn field, Object? value) => Server?.FormatValue(field, value) ?? (value?.ToString() ?? "NULL");
+    public override String FormatValue(IDataColumn field, Object? value)
+    {
+        // 服务端还没挂上时不能降级成裸值，否则字符串会被原样拼进 SQL，既不安全也不正确
+        if (Server == null) throw new XCodeException(L.T("The provider type for [{0}] is invalid.", "Network"));
+
+        return Server.FormatValue(field, value);
+    }
 
     /// <summary>格式化参数名</summary>
     /// <param name="name">名称</param>

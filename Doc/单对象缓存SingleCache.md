@@ -5,6 +5,7 @@
 ## 1）核心能力
 
 - 主键缓存：`this[key]`
+- 主键写入：`SingleCache[key] = entity`（写入或原位替换，并从键同步更新）
 - 从键缓存：`GetItemWithSlaveKey(slaveKey)`
 - 过期更新：过期后异步/同步刷新
 - 定时清理：清理长期未访问项

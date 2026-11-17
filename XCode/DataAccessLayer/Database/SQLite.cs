@@ -861,6 +861,8 @@ internal class SQLiteMetaData : FileDbMetaData
         }
         if (!Path.IsPathRooted(bf)) bf = NewLife.Setting.Current.BackupPath.CombinePath(bf).GetBasePath();
 
+        // 外部可传文件名，统一限制到备份目录内，避免写到任意位置
+        bf = BackupPathHelper.Ensure(bf);
         bf = bf.EnsureDirectory(true);
 
         WriteLog("{0} backing up SQLite database {1} to {2}", Database.ConnName, dbfile, bf);

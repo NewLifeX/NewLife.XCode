@@ -74,6 +74,15 @@ public class DataCache
             catch { }
         }
 
+        if (data != null)
+        {
+            // 反序列化得到的是普通字典，后续会被多个线程并发写入，这里统一归一化为并发字典
+            if (data.Counts is not ConcurrentDictionary<String, Int64>)
+                data.Counts = new ConcurrentDictionary<String, Int64>(data.Counts ?? new Dictionary<String, Int64>());
+            if (data.FieldCache is not ConcurrentDictionary<String, Dictionary<String, String>>)
+                data.FieldCache = new ConcurrentDictionary<String, Dictionary<String, String>>(data.FieldCache ?? new Dictionary<String, Dictionary<String, String>>());
+        }
+
         if (data == null && create)
         {
             data = new DataCache();

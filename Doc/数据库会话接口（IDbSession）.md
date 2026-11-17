@@ -39,6 +39,8 @@ var session = db.CreateSession();
 | `QueryCountFast(tableName)` | `Int64` | 快速近似计数（稍有偏差） |
 | `ExecuteScalar<T>(sql, ...)` | `T` | 取第一行第一列 |
 
+> `QueryCountFast` 是估算值：SQL Server 取 `sysindexes.rows`，MySQL/HANA/IRIS 取 `information_schema.table_rows`，PostgreSQL/VastBase 取 `pg_class.reltuples`，Oracle/DaMeng/DB2 取 `ALL_TABLES.NUM_ROWS`。SQLite 不走该方法，由实体层使用自增主键区间估算。
+
 ### 2.2 执行
 
 | 方法 | 返回 | 说明 |

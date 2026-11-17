@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using NewLife;
 using NewLife.Data;
+using NewLife.Http;
+using NewLife.Net;
 using NewLife.Serialization;
 using NewLife.Log;
 using NewLife.Remoting;
@@ -35,7 +37,8 @@ public class DbControllerTests : IDisposable
 
     private DbService CreateService()
     {
-        var service = new DbService { Log = XTrace.Log };
+        // 服务默认未配置令牌即拒绝，测试里显式允许匿名
+        var service = new DbService { Log = XTrace.Log, AllowAnonymous = true };
         return service;
     }
 
@@ -158,6 +161,35 @@ public class DbControllerTests : IDisposable
 
         var json = result.ToJson();
         Assert.Contains("\"data\":", json);
+    }
+
+    [Fact(DisplayName = "令牌可从 Authorization 头读取")]
+    public void QueryCount_AuthorizationHeader_Works()
+    {
+        var service = CreateService();
+        var controller = new DbController { Service = service };
+
+        var token = "headertoken";
+        service.Tokens[token] = new[] { _connName };
+
+        _dal.Execute("CREATE TABLE IF NOT EXISTS ctrl_hdr(id INTEGER PRIMARY KEY)");
+
+        var request = new HttpRequest();
+        request.Headers["Authorization"] = "Bearer " + token;
+
+        var old = DefaultHttpContext.Current;
+        DefaultHttpContext.Current = new DefaultHttpContext((INetSession)null!, request, "", null);
+        try
+        {
+            // 查询参数不再携带令牌，改由 Authorization 头提供
+            var result = controller.QueryCount("ctrl_hdr", null, _connName);
+
+            Assert.Contains("\"data\":", result.ToJson());
+        }
+        finally
+        {
+            DefaultHttpContext.Current = old;
+        }
     }
 
     [Fact]

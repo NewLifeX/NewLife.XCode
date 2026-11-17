@@ -940,6 +940,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         Int64 count;
         if (startRowIndex > 500_000 && (count = session.LongCount) > 1_000_000)
         {
+            // 估算值可能因删除产生空洞而偏大，但这里绝不能改用 FindCount 精确计数：
+            // 千万级表每次深分页 COUNT(*) 都会全表扫描，超时会让整页查询直接失败，宁可容忍个别页错位
+
             //// 计算本次查询的结果行数
             //var wh = where?.GetString(null);
             // 数据量巨大，每次都查总记录数很不划算，还不如用一个不太准的数据
@@ -1058,9 +1061,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
                 var connName = shards[i].ConnName ?? session.ConnName;
                 var tableName = shards[i].TableName ?? session.TableName;
 
-                // 如果目标分表不存在，则不要展开查询
+                // 如果目标分表不存在，则不要展开查询。使用无缓存回退，避免新建分表在缓存窗口内被跳过
                 var dal = DAL.Create(connName);
-                if (!dal.TableNames.Contains(tableName)) continue;
+                if (!dal.TableExists(tableName)) continue;
 
                 // 分表查询
                 session = EntitySession<TEntity>.Create(connName, tableName);
@@ -1320,6 +1323,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         Int64 count;
         if (startRowIndex > 500_000 && (count = session.LongCount) > 1_000_000)
         {
+            // 估算值可能因删除产生空洞而偏大，但这里绝不能改用 FindCount 精确计数：
+            // 千万级表每次深分页 COUNT(*) 都会全表扫描，超时会让整页查询直接失败，宁可容忍个别页错位
+
             //// 计算本次查询的结果行数
             //var wh = where?.GetString(null);
             // 数据量巨大，每次都查总记录数很不划算，还不如用一个不太准的数据
@@ -1430,9 +1436,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
                 var connName = shards[i].ConnName ?? session.ConnName;
                 var tableName = shards[i].TableName ?? session.TableName;
 
-                // 如果目标分表不存在，则不要展开查询
+                // 如果目标分表不存在，则不要展开查询。使用无缓存回退，避免新建分表在缓存窗口内被跳过
                 var dal = DAL.Create(connName);
-                if (!dal.TableNames.Contains(tableName)) continue;
+                if (!dal.TableExists(tableName)) continue;
 
                 // 分表查询
                 session = EntitySession<TEntity>.Create(connName, tableName);
@@ -1569,9 +1575,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             var connName = shard.ConnName ?? session.ConnName;
             var tableName = shard.TableName ?? session.TableName;
 
-            // 如果目标分表不存在，则不要展开查询
+            // 如果目标分表不存在，则不要展开查询。使用无缓存回退，避免新建分表在缓存窗口内被跳过
             var dal = DAL.Create(connName);
-            if (!dal.TableNames.Contains(tableName)) continue;
+            if (!dal.TableExists(tableName)) continue;
 
             session = EntitySession<TEntity>.Create(connName, tableName);
             builder.Table = session.FormatedTableName;
@@ -1672,9 +1678,9 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             var connName = shard.ConnName ?? session.ConnName;
             var tableName = shard.TableName ?? session.TableName;
 
-            // 如果目标分表不存在，则不要展开查询
+            // 如果目标分表不存在，则不要展开查询。使用无缓存回退，避免新建分表在缓存窗口内被跳过
             var dal = DAL.Create(connName);
-            if (!dal.TableNames.Contains(tableName)) continue;
+            if (!dal.TableExists(tableName)) continue;
 
             session = EntitySession<TEntity>.Create(connName, tableName);
             builder.Table = session.FormatedTableName;

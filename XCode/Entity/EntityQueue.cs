@@ -12,7 +12,7 @@ public class EntityQueue(IEntitySession session) : DisposeBase
 {
     #region 属性
     /// <summary>需要近实时保存的实体队列</summary>
-    private ConcurrentDictionary<IEntity, IEntity> Entities { get; set; } = new ConcurrentDictionary<IEntity, IEntity>();
+    private ConcurrentDictionary<IEntity, IEntity> Entities { get; } = new ConcurrentDictionary<IEntity, IEntity>();
 
     /// <summary>需要延迟保存的实体队列</summary>
     private ConcurrentDictionary<IEntity, DateTime> DelayEntities { get; } = new ConcurrentDictionary<IEntity, DateTime>();
@@ -40,6 +40,9 @@ public class EntityQueue(IEntitySession session) : DisposeBase
     /// <summary>最大个数，超过该个数时，进入队列将产生堵塞。默认1_000_000</summary>
     public Int32 MaxEntity { get; set; } = 1_000_000;
 
+    /// <summary>队列满时最长等待时间。单位毫秒，默认15秒，避免死等阻塞业务处理</summary>
+    public Int32 OverflowWaitTime { get; set; } = 15_000;
+
     /// <summary>保存速度，每秒保存多少个实体</summary>
     public Int32 Speed { get; private set; }
 
@@ -62,7 +65,13 @@ public class EntityQueue(IEntitySession session) : DisposeBase
         var count = DelayEntities.Count + Entities.Count;
         if (count > 0)
         {
-            var task = Task.Run(() => Work(null));
+            var task = Task.Run(() =>
+            {
+                // 等待正在进行的 Work 退出，否则本次摘取被并发保护直接跳过，队列剩余数据丢失
+                for (var i = 0; i < 30 && Volatile.Read(ref _working) != 0; i++) Thread.Sleep(100);
+
+                Work(null);
+            });
             if (!task.Wait(3_000))
             {
                 using var span = DefaultTracer.Instance?.NewError("db:EntityQueueNotEmptyOnDispose", L.T("Entity queue of [{0}] still has [{1:n0}] items unsaved on dispose.", Session.TableName, count));
@@ -76,12 +85,13 @@ public class EntityQueue(IEntitySession session) : DisposeBase
     /// <param name="entity">实体对象</param>
     /// <param name="msDelay">延迟保存的时间</param>
     /// <returns>返回是否添加成功，实体对象已存在于队列中则返回false</returns>
+    /// <exception cref="XCodeException">队列已满且等待超时</exception>
     public Boolean Add(IEntity entity, Int32 msDelay)
     {
-        if (_count >= MaxEntity) return false;
+        // 先判断溢出再入队，避免实体已进队列却向调用方报失败，重试时写重
+        if (_count >= MaxEntity) WaitForFree(true);
 
-        var ss = Session;
-        //using var span = Tracer?.NewSpan($"db:{ss.ConnName}:AddQueue:{DAL.TrimTableName(ss.TableName)}", new { entity = entity + "", msDelay });
+        //using var span = Tracer?.NewSpan($"db:{Session.ConnName}:AddQueue:{DAL.TrimTableName(Session.TableName)}", new { entity = entity + "", msDelay });
 
         // 首次使用时初始化定时器
         if (_Timer == null)
@@ -94,40 +104,56 @@ public class EntityQueue(IEntitySession session) : DisposeBase
 
         //_lastTraceId = DefaultSpan.Current?.ToString();
 
+        // 先加计数再入队，否则与 Drain 的扣减交错会让计数永久偏大
+        Interlocked.Increment(ref _count);
+
         var rs = false;
         if (msDelay <= 0)
             rs = Entities.TryAdd(entity, entity);
         else
             rs = DelayEntities.TryAdd(entity, TimerX.Now.AddMilliseconds(msDelay));
-        if (!rs) return false;
-
-        Interlocked.Increment(ref _count);
-
-        // 超过最大值时，堵塞一段时间，等待消费完成
-        if (_count >= MaxEntity)
+        if (!rs)
         {
-            using var span2 = DefaultTracer.Instance?.NewError("db:MaxQueueOverflow", L.T("Entity queue of [{0}] overflowed; exceeded the maximum of {1:n0}.", ss.TableName, MaxEntity), _count);
-
-            // 最多等待15秒，避免死等阻塞业务处理
-            var times = 150;
-            while (_count >= MaxEntity && --times > 0)
-            {
-                Thread.Sleep(100);
-            }
-
-            return _count < MaxEntity;
+            Interlocked.Decrement(ref _count);
+            return false;
         }
 
+        // 刚刚推过上限，等待消费形成背压；实体已入队，因此不再报错也不返回false
+        if (_count >= MaxEntity) WaitForFree(false);
+
         return true;
+    }
+
+    /// <summary>队列满时等待消费。超时仍满则抛出异常，避免调用方误以为入队成功</summary>
+    /// <param name="throwOnFull">仍然满时是否抛出异常。实体已入队后只等待背压，不再抛错</param>
+    private void WaitForFree(Boolean throwOnFull)
+    {
+        var ss = Session;
+        using var span = DefaultTracer.Instance?.NewError("db:MaxQueueOverflow", L.T("Entity queue of [{0}] overflowed; exceeded the maximum of {1:n0}.", ss.TableName, MaxEntity), _count);
+
+        // 最多等待一段时间，避免死等阻塞业务处理
+        var times = OverflowWaitTime / 100;
+        while (_count >= MaxEntity && --times > 0)
+        {
+            Thread.Sleep(100);
+        }
+
+        // 仍然满就明确报错，不再静默返回false让调用方以为已经入队
+        if (throwOnFull && _count >= MaxEntity)
+            throw new XCodeException(L.T("Entity queue of [{0}] overflowed; exceeded the maximum of {1:n0}.", ss.TableName, MaxEntity));
     }
 
     /// <summary>当前缓存个数</summary>
     private volatile Int32 _count;
 
-    private void Work(Object? state)
+    /// <summary>摘取当前待保存的实体。定时器与单元测试共用</summary>
+    /// <remarks>
+    /// 逐条原子摘取，不整体替换字典。并发 Add 可能先拿到字典引用再写入，
+    /// 一旦替换，这些实体就落在被弃用的字典里，既不会被保存也不会被下一轮枚举到。
+    /// </remarks>
+    internal List<IEntity> Drain()
     {
         var list = new List<IEntity>();
-        var n = 0;
 
         // 检查是否有延迟保存
         var ds = DelayEntities;
@@ -137,13 +163,11 @@ public class EntityQueue(IEntitySession session) : DisposeBase
             foreach (var item in ds)
             {
                 if (item.Value < now && !list.Contains(item.Key)) list.Add(item.Key);
-
-                n++;
             }
-            // 从列表删除过期
+            // 从列表删除过期，只有摘到手的才进入待保存列表
             foreach (var item in list)
             {
-                ds.Remove(item);
+                ds.TryRemove(item, out _);
             }
         }
 
@@ -151,16 +175,29 @@ public class EntityQueue(IEntitySession session) : DisposeBase
         var es = Entities;
         if (!es.IsEmpty)
         {
-            // 为了速度，不拷贝，直接创建一个新的集合
-            Entities = new ConcurrentDictionary<IEntity, IEntity>();
-            //list.AddRange(es.Keys);
-            foreach (var item in es)
+            foreach (var key in es.Keys)
             {
-                if (!list.Contains(item.Key)) list.Add(item.Key);
+                if (es.TryRemove(key, out _) && !list.Contains(key)) list.Add(key);
             }
-
-            n += es.Count;
         }
+
+        return list;
+    }
+
+    private Int32 _working;
+
+    private void Work(Object? state)
+    {
+        // 定时器与 Dispose 可能同时触发，两个 Work 同时摘取会让同一实体被写两次
+        if (Interlocked.CompareExchange(ref _working, 1, 0) != 0) return;
+
+        try { WorkCore(); }
+        finally { Interlocked.Exchange(ref _working, 0); }
+    }
+
+    private void WorkCore()
+    {
+        var list = Drain();
 
         if (list.Count > 0)
         {
@@ -181,9 +218,6 @@ public class EntityQueue(IEntitySession session) : DisposeBase
                 span?.SetError(ex, null);
                 throw;
             }
-
-            // 如果集合没有数据了，重置计数器
-            if (Entities.IsEmpty) _count = 0;
         }
     }
 

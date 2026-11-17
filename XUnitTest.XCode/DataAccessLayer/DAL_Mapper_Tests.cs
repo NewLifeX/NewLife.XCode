@@ -78,6 +78,15 @@ public class DAL_Mapper_Tests
         Assert.Equal("[Membership] select * from user where name=@Name limit 5 [@Name=admin]", sql);
     }
 
+    [Fact(DisplayName = "分页排序参数被注入时拒绝查询")]
+    public void QueryPage_RejectsOrderByInjection()
+    {
+        var dal = User.Meta.Session.Dal;
+
+        var page = new PageParameter { PageIndex = 1, PageSize = 10, Sort = "Id; drop table user" };
+        Assert.Throws<XCodeException>(() => dal.Query<MyUser>("select * from user", null, page).ToList());
+    }
+
     [Fact]
     public void QueryPage2()
     {

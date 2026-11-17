@@ -95,7 +95,7 @@ public class DbClient : DisposeBase, ILogFeature
         Open();
 
         var client = Client ?? throw new InvalidOperationException(L.T("The client has not been initialized."));
-        var rs = await client.PostAsync<LoginInfo>("Db/Login", new { db = Db, token = Token }).ConfigureAwait(false);
+        var rs = await client.PostAsync<LoginInfo>("Db/Login", new { db = Db }).ConfigureAwait(false);
         if (rs != null)
         {
             Info = rs;
@@ -172,7 +172,8 @@ public class DbClient : DisposeBase, ILogFeature
 
         var client = Client ?? throw new InvalidOperationException(L.T("The client has not been initialized."));
 
-        return await client.GetAsync<Int64>("Db/QueryCount", new { tableName, db = Db, token = Token }).ConfigureAwait(false);
+        // 令牌由 ApiHttpClient.Token 放入 Authorization 头，避免出现在代理与访问日志的查询串
+        return await client.GetAsync<Int64>("Db/QueryCount", new { tableName, db = Db }).ConfigureAwait(false);
     }
 
     /// <summary>异步获取表结构</summary>
@@ -183,7 +184,7 @@ public class DbClient : DisposeBase, ILogFeature
 
         var client = Client ?? throw new InvalidOperationException(L.T("The client has not been initialized."));
 
-        var json = await client.GetAsync<String>("Db/GetTables", new { db = Db, token = Token }).ConfigureAwait(false);
+        var json = await client.GetAsync<String>("Db/GetTables", new { db = Db }).ConfigureAwait(false);
         if (json.IsNullOrEmpty()) return null;
 
         return JsonHelper.Convert<IDataTable[]>(json);
@@ -191,20 +192,20 @@ public class DbClient : DisposeBase, ILogFeature
     #endregion
 
     #region 辅助
-    /// <summary>构建请求参数，包含 sql/parameters/db/token</summary>
+    /// <summary>构建请求参数，包含 sql/parameters/db。令牌由 Authorization 头携带</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">参数字典</param>
     /// <returns></returns>
     private Object BuildArgs(String sql, IDictionary<String, Object?>? ps)
     {
-        // 控制器方法需要 db 和 token 参数做鉴权
+        // 控制器方法需要 db 参数做鉴权，令牌由 ApiHttpClient.Token 放入请求头
         if (ps == null || ps.Count == 0)
-            return new { sql, db = Db, token = Token };
+            return new { sql, db = Db };
 
         // 控制器期望 parameters 为 JSON 字符串
         var parameters = JsonHelper.ToJson(ps);
 
-        return new { sql, parameters, db = Db, token = Token };
+        return new { sql, parameters, db = Db };
     }
 
     #endregion

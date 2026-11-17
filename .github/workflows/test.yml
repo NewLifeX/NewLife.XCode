@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # 全解决方案编译校验：覆盖 net45/net461/netstandard2.0/netstandard2.1/net8.0/net10.0 全部目标
+  # 全解决方案编译校验：覆盖 net45/net461/netstandard2.0/netstandard2.1/net8.0/net10.0/net11.0 全部目标
   build:
     name: build solution
     runs-on: windows-latest
@@ -29,7 +29,9 @@ jobs:
     - name: Setup dotNET
       uses: actions/setup-dotnet@v6
       with:
-        dotnet-version: 10.x
+        dotnet-version: |
+          10.x
+          11.x
     - name: Build
       run: dotnet build -c Release
 

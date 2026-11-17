@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   # AOT 防回归：分析器 0 告警硬约束（与 RID 无关，单一 job）。
-  # 库自身 AOT/裁剪分析器告警当前 0 条（net8.0/net10.0）；-warnaserror 仅对 IL 告警生效，任一新增即阻断。
+  # 库自身 AOT/裁剪分析器告警当前 0 条（net8.0/net10.0/net11.0）；-warnaserror 仅对 IL 告警生效，任一新增即阻断。
   aot-analyzer:
     name: aot analyzer check
     runs-on: windows-latest
@@ -29,11 +29,14 @@ jobs:
     - name: Setup dotNET
       uses: actions/setup-dotnet@v6
       with:
-        dotnet-version: 10.x
+        dotnet-version: |
+          10.x
+          11.x
     - name: AOT Analyzer Check
       run: |
         dotnet build XCode\XCode.csproj -f net8.0 -c Release -warnaserror:IL2026,IL2046,IL2057,IL2060,IL2067,IL2070,IL2071,IL2072,IL2075,IL2091,IL2093,IL2095,IL2111,IL3000,IL3002,IL3050
         dotnet build XCode\XCode.csproj -f net10.0 -c Release -warnaserror:IL2026,IL2046,IL2057,IL2060,IL2067,IL2070,IL2071,IL2072,IL2075,IL2091,IL2093,IL2095,IL2111,IL3000,IL3002,IL3050
+        dotnet build XCode\XCode.csproj -f net11.0 -c Release -warnaserror:IL2026,IL2046,IL2057,IL2060,IL2067,IL2070,IL2071,IL2072,IL2075,IL2091,IL2093,IL2095,IL2111,IL3000,IL3002,IL3050
 
   # win-x64 与 linux-arm64：无外部依赖，嵌入库场景全跑（MySQL/SqlServer 真库场景未提供环境变量时自动跳过）
   aot:

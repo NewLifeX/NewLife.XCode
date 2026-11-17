@@ -21,10 +21,14 @@ internal static class BackupPathHelper
         if (root.IsNullOrEmpty()) root = "Backup";
         root = root.GetBasePath();
 
-        var full = Path.IsPathRooted(path) ? Path.GetFullPath(path) : Path.GetFullPath(root.CombinePath(path));
+        // 统一按当前平台的分隔符解析。Unix 只认 "/"，若不归一，"..\..\evil.bak" 会被当成普通文件名而绕过目录限制
+        var normalized = path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
+
+        var full = Path.IsPathRooted(normalized) ? Path.GetFullPath(normalized) : Path.GetFullPath(root.CombinePath(normalized));
 
         var rootFull = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        var cmp = StringComparison.OrdinalIgnoreCase;
+        // Unix 文件系统区分大小写，只有 Windows 风格分隔符才按忽略大小写比较
+        var cmp = Path.DirectorySeparatorChar == '\\' ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
         if (!full.Equals(rootFull, cmp) && !full.StartsWith(rootFull + Path.DirectorySeparatorChar, cmp))
             throw new XCodeException($"The file path [{path}] is outside the backup directory [{rootFull}] and is rejected.");
 

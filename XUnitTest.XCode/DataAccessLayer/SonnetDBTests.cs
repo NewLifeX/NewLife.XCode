@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using NewLife;
 using XCode;
@@ -18,6 +19,17 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [Collection("Database")]
 public class SonnetDBTests
 {
+    [Fact]
+    public async Task NumericNullQueries_PreserveNullThroughSyncAndAsyncOverrides()
+    {
+        using var scope = new DatabaseScope();
+        scope.Dal.Execute("CREATE TABLE NullValues(Id INT NOT NULL, I INT NULL, D DECIMAL(28,8) NULL, F FLOAT NULL, B BOOL NULL, PRIMARY KEY(Id))");
+        scope.Dal.Execute("INSERT INTO NullValues(Id,I,D,F,B) VALUES(1,NULL,NULL,NULL,NULL)");
+        Assert.All(scope.Dal.Query("SELECT I,D,F,B FROM NullValues").Rows.Single(), Assert.Null);
+        Assert.All((await scope.Dal.QueryAsync("SELECT I,D,F,B FROM NullValues")).Rows.Single(), Assert.Null);
+        Assert.Equal(1, scope.Dal.Session.ExecuteScalar<Int32>("SELECT COUNT(*) FROM NullValues WHERE I IS NULL AND D IS NULL AND F IS NULL AND B IS NULL"));
+    }
+
     [Fact]
     public void PrimitiveParametersPreserveValuesAndNulls()
     {
@@ -89,11 +101,10 @@ public class SonnetDBTests
         Assert.Equal("STRING", actual.Columns.Single(column => column.ColumnName == "Name").RawType);
         scope.Dal.Execute("CREATE VIEW ViewProjection AS SELECT Id,Name FROM ViewSource");
         Assert.Contains("ViewProjection", meta.GetTableNames());
-        var error = Assert.Throws<NotSupportedException>(() => meta.GetTables());
-        Assert.Contains("#261", error.Message);
+        Assert.Contains(meta.GetTables(), item => item.TableName == "ViewProjection" && item.IsView);
     }
 
-    [Fact(Skip = "🛠️ SonnetDB 尚需补齐视图声明元数据并正式发布：https://github.com/IoTSharp/SonnetDB/issues/261")]
+    [Fact]
     public void ViewMetadataRetainsDeclaredTypesWithoutReadingRows()
     {
         using var scope = new DatabaseScope();
@@ -171,6 +182,30 @@ public class SonnetDBTests
         Assert.True(scope.Dal.Session.ExecuteScalar<Boolean>("SELECT Enabled FROM MetadataRows WHERE Name='default'"));
         Assert.True(meta.DropTable(table));
         Assert.DoesNotContain(table.TableName, meta.GetTableNames());
+    }
+
+    /// <summary>旧 DATETIME/TIME 列仍能反向识别，新列 SQL 继续优先使用 DATETIME2/DURATION。</summary>
+    [Fact]
+    public void LegacyTemporalColumnMetadataRoundTrips()
+    {
+        using var scope = new DatabaseScope();
+        scope.Dal.Execute("CREATE TABLE LegacyTemporalRows(Id INT NOT NULL DEFAULT 0, Created DATETIME NULL, Elapsed TIME NULL, PRIMARY KEY(Id))");
+        var metadata = scope.Dal.Db.CreateMetaData();
+
+        var actual = Assert.Single(metadata.GetTables(), table => table.TableName == "LegacyTemporalRows");
+        var created = Assert.Single(actual.Columns, column => column.ColumnName == "Created");
+        var elapsed = Assert.Single(actual.Columns, column => column.ColumnName == "Elapsed");
+        Assert.Equal("DATETIME", created.RawType);
+        Assert.Equal(typeof(DateTime), created.DataType);
+        Assert.Equal("TIME", elapsed.RawType);
+        Assert.Equal(typeof(TimeSpan), elapsed.DataType);
+
+        var newModel = (IDataTable)actual.Clone();
+        newModel.Name = newModel.TableName = "PreferredTemporalRows";
+        var createSql = metadata.GetSchemaSQL(DDLSchema.CreateTable, newModel)
+            ?? throw new InvalidOperationException("Expected native create-table SQL for the reverse-engineered model.");
+        Assert.Contains("\"Created\" DATETIME2", createSql);
+        Assert.Contains("\"Elapsed\" DURATION", createSql);
     }
 
     [Fact]
@@ -313,18 +348,18 @@ public class SonnetDBTests
     }
 
     [Fact]
-    public void UnsupportedReplaceFailsClearly()
+    public void BatchReplaceUsesNativeReplacement()
     {
         using var scope = new DatabaseScope();
         using var split = scope.CreateEntitySplit();
         var row = new SonnetTestRow { Name = "retained", Remark = "original" };
         Assert.Equal(1, row.Insert());
         var replaced = new List<SonnetTestRow> { new() { Name = "retained", Remark = "replacement" } };
-        Assert.Throws<NotSupportedException>(() => replaced.BatchReplace());
-        Assert.Equal("original", Assert.Single(SonnetTestRow.FindAll()).Remark);
+        Assert.Equal(1, replaced.BatchReplace());
+        Assert.Equal("replacement", Assert.Single(SonnetTestRow.FindAll()).Remark);
     }
 
-    [Fact(Skip = "🛠️ SonnetDB 尚需实现原子 REPLACE 并正式发布：https://github.com/IoTSharp/SonnetDB/issues/242")]
+    [Fact]
     public void BatchReplaceDeletesThenInserts()
     {
         using var scope = new DatabaseScope();
@@ -340,49 +375,43 @@ public class SonnetDBTests
     }
 
     [Fact]
-    public void UnsupportedDecimalMigrationFailsClearly()
+    public void DecimalAddAndAlterPreservePrecision()
     {
         using var scope = new DatabaseScope();
         var table = CreateTable("DecimalGuardRows");
         var amount = AddColumn(table, "Amount", typeof(Decimal), true);
-        amount.Precision = 18;
-        amount.Scale = 4;
+        amount.Precision = 18; amount.Scale = 4;
         var meta = scope.Dal.Db.CreateMetaData();
         meta.SetTables(Migration.Full, table);
         scope.Dal.Execute("INSERT INTO DecimalGuardRows (Name,Amount) VALUES ('retained',123.1234)");
         var extra = AddColumn(table, "Extra", typeof(Decimal), true);
-        extra.Precision = 18;
-        extra.Scale = 4;
-        Assert.Throws<NotSupportedException>(() => meta.AddColumn(extra));
-        var old = amount.Clone(table);
-        amount.Precision = 20;
-        amount.Scale = 6;
-        Assert.Throws<NotSupportedException>(() => meta.AlterColumn(amount, old));
+        extra.Precision = 18; extra.Scale = 4;
+        Assert.True(meta.AddColumn(extra));
+        var old = amount.Clone(table); amount.Precision = 20; amount.Scale = 6;
+        Assert.True(meta.AlterColumn(amount, old));
         Assert.Equal(123.1234m, scope.Dal.Session.ExecuteScalar<Decimal>("SELECT Amount FROM DecimalGuardRows"));
-        Assert.DoesNotContain(meta.GetTables().Single(e => e.TableName == table.TableName).Columns, e => e.ColumnName == "Extra");
+        Assert.Contains(meta.GetTables().Single(e => e.TableName == table.TableName).Columns, e => e.ColumnName == "Extra" && e.Precision == 18 && e.Scale == 4);
     }
 
     [Fact]
-    public void ValuesThatWouldLosePrecisionFailClearly()
+    public void PreciseValuesAreSupportedAndUInt64IntMappingIsBounded()
     {
         using var scope = new DatabaseScope();
         var table = new XTable("PrecisionGuardRows");
         var number = AddColumn(table, "Amount", typeof(Decimal));
-        const Decimal unsafeAmount = 9007199254740993.123456789m;
-        Assert.Throws<NotSupportedException>(() => scope.Dal.Db.CreateParameter("amount", unsafeAmount));
-        Assert.Throws<NotSupportedException>(() => scope.Dal.Db.FormatValue(number, unsafeAmount));
+        const Decimal precise = 9007199254740993.123456789m;
+        Assert.Equal(precise, scope.Dal.Db.CreateParameter("amount", precise).Value);
+        Assert.Equal(precise.ToString(System.Globalization.CultureInfo.InvariantCulture), scope.Dal.Db.FormatValue(number, precise));
         var timestamp = AddColumn(table, "Created", typeof(DateTime));
-        var unsafeTime = new DateTime(2026, 10, 8, 12, 34, 56).AddTicks(1);
-        Assert.Throws<NotSupportedException>(() => scope.Dal.Db.CreateParameter("time", unsafeTime));
-        Assert.Throws<NotSupportedException>(() => scope.Dal.Db.FormatValue(timestamp, unsafeTime));
-        var unsafeOffset = new DateTimeOffset(unsafeTime, TimeSpan.FromHours(8));
-        Assert.Throws<NotSupportedException>(() => scope.Dal.Db.CreateParameter("offset", unsafeOffset));
+        var time = new DateTime(2026, 10, 8, 12, 34, 56).AddTicks(1);
+        Assert.Equal(DbType.DateTime2, scope.Dal.Db.CreateParameter("time", time).DbType);
+        Assert.Contains("0000001", scope.Dal.Db.FormatValue(timestamp, time));
         var unsigned = AddColumn(table, "Unsigned", typeof(UInt64));
         Assert.Throws<NotSupportedException>(() => scope.Dal.Db.CreateParameter("unsigned", UInt64.MaxValue));
         Assert.Throws<NotSupportedException>(() => scope.Dal.Db.FormatValue(unsigned, UInt64.MaxValue));
     }
 
-    [Fact(Skip = "🛠️ SonnetDB 尚需修复高精度 decimal 与亚毫秒 DATETIME 保真并正式发布：https://github.com/IoTSharp/SonnetDB/issues/235 https://github.com/IoTSharp/SonnetDB/issues/236")]
+    [Fact]
     public void HighPrecisionValuesRoundtrip()
     {
         using var scope = new DatabaseScope();
@@ -401,7 +430,7 @@ public class SonnetDBTests
         Assert.Equal(time, Convert.ToDateTime(record[1]));
     }
 
-    [Fact(Skip = "🛠️ SonnetDB 尚需修复 DECIMAL ADD/ALTER 精度并正式发布：https://github.com/IoTSharp/SonnetDB/issues/241")]
+    [Fact]
     public void DecimalColumnMigrationRetainsPrecision()
     {
         using var scope = new DatabaseScope();
@@ -476,20 +505,24 @@ public class SonnetDBTests
     }
 
     [Fact]
-    public void UnsupportedLengthAndCommentsFailClearly()
+    public void LengthAndCommentsPersistAndReverseEngineer()
     {
         using var scope = new DatabaseScope();
         var table = CreateTable("UnsupportedSchemaRows");
-        var meta = scope.Dal.Db.CreateMetaData();
-        meta.SetTables(Migration.Full, table);
+        var meta = scope.Dal.Db.CreateMetaData(); meta.SetTables(Migration.Full, table);
         var name = table.Columns.Single(e => e.ColumnName == "Name");
-        var old = name.Clone(table);
-        name.Length = 200;
-        Assert.Throws<NotSupportedException>(() => meta.AlterColumn(name, old));
-        table.Description = "需要保留的表说明";
-        name.Description = "需要保留的字段说明";
-        Assert.Throws<NotSupportedException>(() => meta.AddTableDescription(table));
-        Assert.Throws<NotSupportedException>(() => meta.AddColumnDescription(name));
+        var old = name.Clone(table); name.Length = 200;
+        Assert.True(meta.AlterColumn(name, old));
+        table.Description = "需要保留的表说明"; name.Description = "需要保留的字段说明";
+        Assert.True(meta.AddTableDescription(table));
+        Assert.True(meta.AddColumnDescription(name));
+        var actual = meta.GetTables().Single(e => e.TableName == table.TableName);
+        Assert.Equal(200, actual.Columns.Single(e => e.ColumnName == "Name").Length);
+        Assert.Equal(table.Description, actual.Description);
+        Assert.Equal(name.Description, actual.Columns.Single(e => e.ColumnName == "Name").Description);
+        using var connection = scope.Dal.Db.OpenConnection();
+        Assert.Contains(connection.GetSchema("Tables").Rows.Cast<DataRow>(), row => row.ItemArray.Contains(table.Description));
+        Assert.Contains(connection.GetSchema("Columns").Rows.Cast<DataRow>(), row => row.ItemArray.Contains(name.Description));
     }
 
     [Fact]
@@ -532,31 +565,51 @@ public class SonnetDBTests
     }
 
     [Fact]
-    public void DefaultsThatWouldLosePrecisionFailClearly()
+    public void PreciseDefaultsPreserveDecimalAndDateTime2Ticks()
     {
         using var scope = new DatabaseScope();
         var meta = scope.Dal.Db.CreateMetaData();
-
         var table = CreateTable("PrecisionDefaultRows");
         var time = AddColumn(table, "Created", typeof(DateTime), true);
         time.DefaultValue = "'2026-10-08T12:34:56.0000001'";
-        var error = Assert.Throws<NotSupportedException>(() => meta.CreateTable(table));
-        Assert.Contains("#236", error.Message);
-        Assert.DoesNotContain(table.TableName, meta.GetTableNames());
-
         var amount = AddColumn(table, "Amount", typeof(Decimal), true);
         amount.DefaultValue = "9007199254740993.123456789";
-        time.DefaultValue = "'2026-10-08T12:34:56.123'";
-        error = Assert.Throws<NotSupportedException>(() => meta.CreateTable(table));
-        Assert.Contains("#235", error.Message);
-
-        // 可保真的默认值仍应生效，省略字段的插入必须拿到默认值
-        amount.DefaultValue = "1.2345";
         Assert.True(meta.CreateTable(table));
         scope.Dal.Execute("INSERT INTO PrecisionDefaultRows (Name) VALUES ('omit')");
         var record = scope.Dal.Query("SELECT Created,Amount FROM PrecisionDefaultRows").Rows.Single();
-        Assert.Equal(new DateTime(2026, 10, 8, 12, 34, 56, 123), Convert.ToDateTime(record[0]));
-        Assert.Equal(1.2345m, Convert.ToDecimal(record[1]));
+        Assert.Equal(new DateTime(2026, 10, 8, 12, 34, 56).AddTicks(1), Convert.ToDateTime(record[0]));
+        Assert.Equal(9007199254740993.123456789m, Convert.ToDecimal(record[1]));
+    }
+
+    /// <summary>反向元数据中的原生 CAST 默认值重放时不产生 ALTER，并保留三个 temporal 类型的实际默认值。</summary>
+    [Fact]
+    public void TemporalDefaultsMetadataRoundTripDoesNotPlanAlter()
+    {
+        using var scope = new DatabaseScope();
+        scope.Dal.Execute("CREATE TABLE TemporalDefaultRows(Id INT NOT NULL DEFAULT 0,"
+            + " Created DATETIME2 NULL DEFAULT CAST('2026-11-07T01:02:03.0000001' AS DATETIME2),"
+            + " Occurred DATETIMEOFFSET NULL DEFAULT CAST('2026-11-07T01:02:03.0000001+08:00' AS DATETIMEOFFSET),"
+            + " Elapsed DURATION NULL DEFAULT CAST('1.02:03:04.0000001' AS DURATION), PRIMARY KEY(Id))");
+        var metadata = scope.Dal.Db.CreateMetaData();
+        var actual = Assert.Single(metadata.GetTables(), table => table.TableName == "TemporalDefaultRows");
+        Assert.Contains("CAST(", actual.Columns.Single(column => column.ColumnName == "Created").DefaultValue, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CAST(", actual.Columns.Single(column => column.ColumnName == "Occurred").DefaultValue, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CAST(", actual.Columns.Single(column => column.ColumnName == "Elapsed").DefaultValue, StringComparison.OrdinalIgnoreCase);
+        var model = (IDataTable)actual.Clone();
+
+        // 调用与 SetTables 相同的字段比较入口，但仅返回 DDL，不能被 CheckAllTables 的日志捕获掩盖。
+        Assert.Equal(String.Empty, GetReadOnlyColumnChangePlan(metadata, model, actual));
+        metadata.SetTables(Migration.Full, model);
+        var reloaded = Assert.Single(metadata.GetTables(), table => table.TableName == model.TableName);
+        Assert.Equal(String.Empty, GetReadOnlyColumnChangePlan(metadata, model, reloaded));
+
+        Assert.Equal(1, scope.Dal.Execute("INSERT INTO TemporalDefaultRows(Id) VALUES(1)"));
+        var row = Assert.Single(scope.Dal.Query("SELECT Created,Occurred,Elapsed FROM TemporalDefaultRows").Rows);
+        Assert.Equal(new DateTime(2026, 11, 7, 1, 2, 3).AddTicks(1), Assert.IsType<DateTime>(row[0]));
+        var occurred = Assert.IsType<DateTimeOffset>(row[1]);
+        Assert.Equal(new DateTimeOffset(2026, 11, 7, 1, 2, 3, TimeSpan.FromHours(8)).AddTicks(1).UtcTicks, occurred.UtcTicks);
+        Assert.Equal(TimeSpan.Zero, occurred.Offset);
+        Assert.Equal(new TimeSpan(1, 2, 3, 4).Add(TimeSpan.FromTicks(1)), Assert.IsType<TimeSpan>(row[2]));
     }
 
     [Fact]
@@ -676,22 +729,19 @@ public class SonnetDBTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void UnsupportedBoundedDeleteWithoutSinglePrimaryKeyFailsClearly(Boolean composite)
+    public void BoundedDeleteSupportsCompositeAndKeylessTables(Boolean composite)
     {
         using var scope = new DatabaseScope();
         var table = CreateTable("DeleteGuardRows");
         var id = table.Columns.Single(e => e.ColumnName == "Id");
-        id.Identity = false;
-        id.PrimaryKey = composite;
-        if (composite)
-        {
-            var other = AddColumn(table, "Other", typeof(Int64));
-            other.PrimaryKey = true;
-        }
+        id.Identity = false; id.PrimaryKey = composite;
+        if (composite) AddColumn(table, "Other", typeof(Int64)).PrimaryKey = true;
         scope.Dal.Db.CreateMetaData().SetTables(Migration.Full, table);
-        if (composite) scope.Dal.Execute("INSERT INTO DeleteGuardRows (Id,Name,Other) VALUES (1,'retained',2)");
-        Assert.Throws<NotSupportedException>(() => scope.Dal.Db.BuildDeleteSql(table.TableName, "Id>0", 1));
-        Assert.Equal(composite ? 1 : 0, scope.Dal.Session.ExecuteScalar<Int32>("SELECT COUNT(*) FROM DeleteGuardRows"));
+        if (composite) scope.Dal.Execute("INSERT INTO DeleteGuardRows (Id,Name,Other) VALUES (1,'retained',2),(1,'other',3)");
+        else scope.Dal.Execute("INSERT INTO DeleteGuardRows (Id,Name) VALUES (1,'retained'),(1,'other')");
+        var sql = scope.Dal.Db.BuildDeleteSql(table.TableName, "Id>0", 1);
+        Assert.Equal(1, scope.Dal.Execute(sql));
+        Assert.Equal(1, scope.Dal.Session.ExecuteScalar<Int32>("SELECT COUNT(*) FROM DeleteGuardRows"));
     }
 
     [Fact]
@@ -706,6 +756,40 @@ public class SonnetDBTests
         var next = scope.Dal.InsertAndGetIdentity("INSERT INTO TruncateRows (Name) VALUES ('after')");
         Assert.Equal(first, next);
         Assert.Contains(table.TableName, scope.Dal.Db.CreateMetaData().GetTableNames());
+    }
+
+    /// <summary>原生时刻与时长在参数和显式字面量路径中保持完整精度。</summary>
+    [Fact]
+    public void NativeDateTimeOffsetAndDurationRoundTripThroughParametersAndLiterals()
+    {
+        using var scope = new DatabaseScope();
+        var table = CreateTable("NativeTemporalRows");
+        var offsetColumn = AddColumn(table, "Occurred", typeof(DateTimeOffset), true);
+        var durationColumn = AddColumn(table, "Elapsed", typeof(TimeSpan), true);
+        Assert.True(scope.Dal.Db.CreateMetaData().CreateTable(table));
+        var offset = new DateTimeOffset(2026, 11, 3, 12, 34, 56, TimeSpan.FromHours(8)).AddTicks(17);
+        var duration = TimeSpan.FromDays(-2).Add(TimeSpan.FromTicks(19));
+        Assert.Equal(1, scope.Dal.Execute("INSERT INTO NativeTemporalRows(Name,Occurred,Elapsed) VALUES(@name,@moment,@duration)", CommandType.Text,
+            scope.Dal.Db.CreateParameter("name", "parameter"), scope.Dal.Db.CreateParameter("moment", offset), scope.Dal.Db.CreateParameter("duration", duration)));
+        Assert.Equal(1, scope.Dal.Execute("INSERT INTO NativeTemporalRows(Name,Occurred,Elapsed) SELECT 'literal',"
+            + scope.Dal.Db.FormatValue(offsetColumn, offset) + "," + scope.Dal.Db.FormatValue(durationColumn, duration)));
+        var rows = scope.Dal.Query("SELECT Occurred,Elapsed FROM NativeTemporalRows ORDER BY Id").Rows;
+        Assert.Equal(2, rows.Count);
+        Assert.All(rows, row =>
+        {
+            var actual = Assert.IsType<DateTimeOffset>(row[0]);
+            Assert.Equal(offset.UtcTicks, actual.UtcTicks);
+            Assert.Equal(TimeSpan.Zero, actual.Offset);
+            Assert.Equal(duration, Assert.IsType<TimeSpan>(row[1]));
+        });
+    }
+
+    private static String GetReadOnlyColumnChangePlan(IMetaData metadata, IDataTable model, IDataTable actual)
+    {
+        var method = metadata.GetType().GetMethod("CheckColumnsChange", BindingFlags.Instance | BindingFlags.NonPublic,
+            null, new[] { typeof(IDataTable), typeof(IDataTable), typeof(Boolean), typeof(Boolean), typeof(XCodeSetting) }, null);
+        Assert.NotNull(method);
+        return Assert.IsType<String>(method.Invoke(metadata, new Object[] { model, actual, true, false, XCodeSetting.Current }));
     }
 
     private sealed class KeyRow : NewLife.Data.IModel

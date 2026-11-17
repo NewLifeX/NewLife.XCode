@@ -349,14 +349,59 @@ internal class MySqlSession : RemoteDbSession
     /// <returns>新增行的自动编号</returns>
     public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
-        sql += ";Select LAST_INSERT_ID()";
-        return base.InsertAndGetIdentity(sql, type, ps);
+        var reader = GetLastInsertedIdReader();
+        if (reader == null)
+        {
+            sql += ";Select LAST_INSERT_ID()";
+            return base.InsertAndGetIdentity(sql, type, ps);
+        }
+
+        // NewLife.MySql 在插入响应的 OK 包中直接回填 LastInsertedId，省去第二条 SELECT
+        using var cmd = OnCreateCommand(sql, type, ps);
+        return Execute(cmd, false, cmd2 =>
+        {
+            cmd2.ExecuteNonQuery();
+            return reader(cmd2);
+        });
     }
 
-    public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
+    public override async Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
-        sql += ";Select LAST_INSERT_ID()";
-        return base.InsertAndGetIdentityAsync(sql, type, ps);
+        var reader = GetLastInsertedIdReader();
+        if (reader == null)
+        {
+            sql += ";Select LAST_INSERT_ID()";
+            return await base.InsertAndGetIdentityAsync(sql, type, ps).ConfigureAwait(false);
+        }
+
+        // NewLife.MySql 在插入响应的 OK 包中直接回填 LastInsertedId，省去第二条 SELECT
+        using var cmd = OnCreateCommand(sql, type, ps);
+        return await ExecuteAsync(cmd, false, async cmd2 =>
+        {
+            await cmd2.ExecuteNonQueryAsync().ConfigureAwait(false);
+            return reader(cmd2);
+        }).ConfigureAwait(false);
+    }
+
+    private Func<DbCommand, Int64>? _lastInsertedIdReader;
+    private Boolean _lastInsertedIdChecked;
+
+    /// <summary>探测并缓存 LastInsertedId 读取委托。仅 NewLife.MySql 驱动在 OK 包中回填该属性</summary>
+    /// <returns>读取委托；驱动不支持时返回 null，回退 SELECT LAST_INSERT_ID()</returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "探测NewLife.MySql驱动的LastInsertedId属性，找不到时回退LAST_INSERT_ID()")]
+    private Func<DbCommand, Int64>? GetLastInsertedIdReader()
+    {
+        if (_lastInsertedIdChecked) return _lastInsertedIdReader;
+        _lastInsertedIdChecked = true;
+
+        if (Database is not MySql db || !db.IsNewLifeDriver) return null;
+
+        using var cmd = Database.Factory?.CreateCommand();
+        var pi = cmd?.GetType().GetProperty("LastInsertedId", BindingFlags.Public | BindingFlags.Instance);
+        if (pi == null || pi.PropertyType != typeof(Int64)) return null;
+
+        // Reflect 内部按成员缓存 getter 委托，这里再缓存属性查找，避免每次插入做类型查找
+        return _lastInsertedIdReader = command => Reflect.GetValue(command, pi) is Int64 id ? id : 0;
     }
 
     private static MethodInfo? _readTableAsync;

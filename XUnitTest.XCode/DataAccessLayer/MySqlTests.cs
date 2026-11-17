@@ -894,6 +894,43 @@ public class MySqlTests
         Assert.Contains("IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact(DisplayName = "InsertAndGetIdentity—关闭多语句时用LastInsertedId取回自增ID")]
+    public async Task InsertAndGetIdentity_WithLastInsertedId()
+    {
+        // NewLife.MySql 的 LastInsertedId 直接读 OK 包，关闭多语句后仍应可用；旧驱动会因缺少第二个 SELECT 失败，跳过
+        var connStr = _ConnStr.TrimEnd(';') + ";AllowMultiStatements=false";
+        DAL.AddConnStr("MySql_Identity", connStr, null, "MySql");
+        var dal = DAL.Create("MySql_Identity");
+
+        // 数组参数批量更新是 NewLife.MySql 独有能力，用它间接判断驱动
+        if (!dal.BatchCapabilities.HasFlag(BatchCapability.Update)) return;
+
+        Assert.Equal("NewLife.MySql.MySqlClientFactory", dal.Db.Factory?.GetType().FullName);
+
+        var table = "identity_" + Rand.Next(100000);
+        try
+        {
+            dal.Execute($"Create Table `{table}` (`Id` Int Not Null Auto_Increment Primary Key, `Name` VarChar(32))");
+
+            var id1 = dal.InsertAndGetIdentity($"Insert Into `{table}` (`Name`) Values ('a')");
+            Assert.True(id1 > 0);
+
+            var id2 = dal.InsertAndGetIdentity($"Insert Into `{table}` (`Name`) Values ('b')");
+            Assert.Equal(id1 + 1, id2);
+
+            var id3 = await dal.InsertAndGetIdentityAsync($"Insert Into `{table}` (`Name`) Values ('c')");
+            Assert.Equal(id2 + 1, id3);
+
+            // 连接池可能把后续查询分到别的物理连接，LAST_INSERT_ID() 不可靠；直接回查表确认三条记录的真实主键
+            var count = dal.Session.ExecuteScalar<Int64>($"Select Count(*) From `{table}` Where `Id` In ({id1},{id2},{id3})");
+            Assert.Equal(3, count);
+        }
+        finally
+        {
+            dal.Execute($"Drop Table If Exists `{table}`");
+        }
+    }
+
     private class MyMySqlRole
     {
         public Int32 ID { get; set; }

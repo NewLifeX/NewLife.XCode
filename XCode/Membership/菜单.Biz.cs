@@ -239,6 +239,33 @@ public partial class Menu : EntityTree<Menu>, IMenu
 
         return Find(_.ParentID == parentId & _.Name == name);
     }
+
+    /// <summary>根据链接与父编号查找菜单</summary>
+    /// <param name="url">链接</param>
+    /// <param name="parentId">父编号</param>
+    /// <returns>实体对象；不存在时返回 null</returns>
+    public static Menu? FindByUrlAndParentID(String url, Int32 parentId)
+    {
+        if (url.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Url == url && e.ParentID == parentId);
+
+        return Find(_.Url == url & _.ParentID == parentId);
+    }
+
+    /// <summary>根据链接查找菜单列表</summary>
+    /// <param name="url">链接</param>
+    /// <returns>实体列表</returns>
+    public static IList<Menu> FindAllByUrl(String url)
+    {
+        if (url.IsNullOrEmpty()) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Url == url);
+
+        return FindAll(_.Url == url);
+    }
     #endregion
 
     #region 扩展操作

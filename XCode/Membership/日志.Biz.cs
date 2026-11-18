@@ -1,6 +1,7 @@
 ﻿using NewLife;
 using NewLife.Data;
 using XCode.Cache;
+using XCode.Exceptions;
 
 namespace XCode.Membership;
 
@@ -205,6 +206,89 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
 
         return FindAll(_.CreateUserID == createUserId);
     }
+
+    /// <summary>根据操作查找日志</summary>
+    /// <param name="action">操作</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByAction(String action)
+    {
+        if (action.IsNullOrEmpty()) return [];
+
+        return FindAll(_.Action == action);
+    }
+
+    /// <summary>按创建时间统计日志数量</summary>
+    /// <param name="start">开始时间</param>
+    /// <param name="end">结束时间</param>
+    /// <param name="success">成功状态。为空时不限</param>
+    /// <returns>日志数量</returns>
+    public static Int64 FindCountByCreateTime(DateTime start, DateTime end, Boolean? success = null)
+    {
+        var snow = Meta.Factory.Snow;
+        Expression exp = snow != null
+            ? _.ID.Between(start, end, snow)
+            : _.CreateTime.Between(start, end);
+        if (success != null) exp &= _.Success == success;
+
+        return FindCount(exp, null, null, 0, 0);
+    }
+
+    /// <summary>按创建时间查询日志</summary>
+    /// <param name="start">开始时间</param>
+    /// <param name="end">结束时间</param>
+    /// <param name="page">分页参数信息</param>
+    /// <returns>日志列表</returns>
+    public static IList<Log> FindAllByTimeRange(DateTime start, DateTime end, PageParameter page)
+    {
+        var snow = Meta.Factory.Snow;
+        var exp = snow != null
+            ? _.ID.Between(start, end, snow)
+            : _.CreateTime.Between(start, end);
+
+        return FindAll(exp, page);
+    }
+
+    /// <summary>按操作关键字与创建时间查询日志，按编号倒序</summary>
+    /// <param name="keywords">操作关键字集合，任一匹配即可</param>
+    /// <param name="start">开始时间</param>
+    /// <param name="end">结束时间</param>
+    /// <param name="count">最大条数</param>
+    /// <returns>日志列表</returns>
+    public static IList<Log> FindAllByActionKeywords(String[] keywords, DateTime start, DateTime end, Int32 count)
+    {
+        var exp = new WhereExpression();
+        if (keywords != null && keywords.Length > 0)
+        {
+            var exp2 = new WhereExpression();
+            foreach (var item in keywords)
+            {
+                exp2 |= _.Action.Contains(item);
+            }
+            exp &= exp2;
+        }
+
+        var snow = Meta.Factory.Snow;
+        exp &= snow != null
+            ? _.ID.Between(start, end, snow)
+            : _.CreateTime.Between(start, end);
+
+        return FindAll(exp, _.ID.Desc(), null, 0, count);
+    }
+
+    /// <summary>按创建时间查询日志，按编号倒序</summary>
+    /// <param name="start">开始时间</param>
+    /// <param name="end">结束时间</param>
+    /// <param name="count">最大条数</param>
+    /// <returns>日志列表</returns>
+    public static IList<Log> FindAllByCreateTimeRange(DateTime start, DateTime end, Int32 count)
+    {
+        var snow = Meta.Factory.Snow;
+        var exp = snow != null
+            ? _.ID.Between(start, end, snow)
+            : _.CreateTime.Between(start, end);
+
+        return FindAll(exp, _.ID.Desc(), null, 0, count);
+    }
     #endregion
 
     #region 扩展操作
@@ -226,6 +310,35 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
     /// <summary>获取所有操作名称，最近30天</summary>
     /// <returns></returns>
     public static IDictionary<String, String> FindAllActionName() => ActionCache.FindAllName();
+
+    /// <summary>删除指定日期之前的系统日志（CreateUserID=0）</summary>
+    /// <param name="date">截止日期</param>
+    /// <returns>影响行数</returns>
+    public static Int32 DeleteBefore(DateTime date)
+    {
+        var snow = Meta.Factory.Snow;
+        Expression exp = snow != null ? _.ID < snow.GetId(date) : _.CreateTime < date;
+        exp &= _.CreateUserID == 0;
+
+        try
+        {
+            return Delete(exp);
+        }
+        catch (XSqlException)
+        {
+            // SQLite 下日志表较大时删除可能报错，改为分批查询后逐批删除
+            var rs = 0;
+            for (var i = 0; i < 100; i++)
+            {
+                var list = FindAll(exp, null, null, 0, 10000);
+                if (list.Count == 0) break;
+
+                rs += list.Delete();
+            }
+
+            return rs;
+        }
+    }
     #endregion
 
     #region 业务

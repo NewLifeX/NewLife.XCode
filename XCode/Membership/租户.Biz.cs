@@ -111,6 +111,19 @@ public partial class Tenant : Entity<Tenant>, ITenantScope
         return FindAll(_.Name == name);
     }
 
+    /// <summary>根据名称查找单个租户</summary>
+    /// <param name="name">名称</param>
+    /// <returns>实体对象；不存在时返回 null</returns>
+    public static Tenant? FindByName(String name)
+    {
+        if (name.IsNullOrEmpty()) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name.EqualIgnoreCase(name));
+
+        return Find(_.Name == name);
+    }
+
     /// <summary>根据管理员编号查询</summary>
     /// <param name="managerId"></param>
     /// <returns></returns>

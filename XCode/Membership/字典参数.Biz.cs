@@ -76,6 +76,26 @@ public partial class Parameter : Entity<Parameter>
     /// <returns>实体列表</returns>
     public static IList<Parameter> FindAllByCategory(String category, Int32 userId = 0) =>
         FindAll(_.UserID == userId & _.Category == category);
+
+    /// <summary>根据编号删除参数</summary>
+    /// <param name="id">编号</param>
+    /// <returns>影响行数</returns>
+    public static Int32 DeleteByID(Int32 id) => Delete(_.ID == id);
+
+    /// <summary>根据分类统计参数数量</summary>
+    /// <param name="category">分类</param>
+    /// <returns>参数数量</returns>
+    public static Int64 FindCountByCategory(String category) => FindCount(_.Category == category);
+
+    /// <summary>根据用户删除参数</summary>
+    /// <param name="userId">用户</param>
+    /// <returns>影响行数</returns>
+    public static Int32 DeleteByUserID(Int32 userId) => Delete(_.UserID == userId);
+
+    /// <summary>根据用户统计参数数量</summary>
+    /// <param name="userId">用户</param>
+    /// <returns>参数数量</returns>
+    public static Int64 FindCountByUserID(Int32 userId) => FindCount(_.UserID == userId);
     #endregion
 
     #region 高级查询

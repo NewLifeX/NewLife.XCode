@@ -169,6 +169,16 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
         return FindAll(_.TenantId == tenantId);
     }
 
+    /// <summary>根据用户删除租户关系</summary>
+    /// <param name="userId">用户</param>
+    /// <returns>影响行数</returns>
+    public static Int32 DeleteByUserId(Int32 userId) => Delete(_.UserId == userId);
+
+    /// <summary>根据用户统计租户关系数量</summary>
+    /// <param name="userId">用户</param>
+    /// <returns>租户关系数量</returns>
+    public static Int64 FindCountByUserId(Int32 userId) => FindCount(_.UserId == userId);
+
     #endregion 扩展查询
 
     #region 高级查询

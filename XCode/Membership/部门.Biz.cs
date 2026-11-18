@@ -217,6 +217,20 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
 
         return FindAll(_.TenantId == tenantId & _.ParentID == parentId);
     }
+
+    /// <summary>根据编号集合查找</summary>
+    /// <param name="ids">编号集合</param>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllByIDs(Int32[] ids)
+    {
+        if (ids == null || ids.Length == 0) return [];
+
+        return FindAll(_.ID.In(ids));
+    }
+
+    /// <summary>查找启用且可见的部门</summary>
+    /// <returns>实体列表</returns>
+    public static IList<Department> FindAllEnabled() => FindAll(_.Enable == true & _.Visible == true);
     #endregion
 
     #region 高级查询

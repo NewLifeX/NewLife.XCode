@@ -168,6 +168,16 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         return Meta.SingleCache[id];
     }
 
+    /// <summary>直接从数据库查询用户，绕过实体缓存与单对象缓存</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象；不存在时返回 null</returns>
+    public static User? FindByIDFromDatabase(Int32 id)
+    {
+        if (id <= 0) return null;
+
+        return Find(_.ID == id);
+    }
+
     /// <summary>根据名称查找</summary>
     /// <param name="name">名称</param>
     /// <returns></returns>
@@ -324,11 +334,27 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <param name="page"></param>
     /// <returns></returns>
     public static IList<User> Search(Int32[]? roleIds, Int32[]? departmentIds, Int32[]? areaIds, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
+        => Search(roleIds, departmentIds, areaIds, enable, -1, null, null, null, start, end, key, page);
+
+    /// <summary>高级搜索（含性别、在线与验证状态）</summary>
+    /// <param name="roleIds">角色</param>
+    /// <param name="departmentIds">部门</param>
+    /// <param name="areaIds">地区</param>
+    /// <param name="enable">启用</param>
+    /// <param name="sex">性别。-1表示不限</param>
+    /// <param name="online">在线</param>
+    /// <param name="mailVerified">邮箱验证</param>
+    /// <param name="mobileVerified">手机验证</param>
+    /// <param name="start">登录时间开始</param>
+    /// <param name="end">登录时间结束</param>
+    /// <param name="key">关键字，搜索代码、名称、昵称、手机、邮箱</param>
+    /// <param name="page">分页参数信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<User> Search(Int32[]? roleIds, Int32[]? departmentIds, Int32[]? areaIds, Boolean? enable, Int32 sex, Boolean? online, Boolean? mailVerified, Boolean? mobileVerified, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
         if (roleIds != null && roleIds.Length > 0)
         {
-            //exp &= _.RoleID.In(roleIds) | _.RoleIds.Contains("," + roleIds.Join(",") + ",");
             var exp2 = new WhereExpression();
             exp2 |= _.RoleID.In(roleIds);
             foreach (var rid in roleIds)
@@ -340,10 +366,32 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         if (departmentIds != null && departmentIds.Length > 0) exp &= _.DepartmentID.In(departmentIds);
         if (areaIds != null && areaIds.Length > 0) exp &= _.AreaId.In(areaIds);
         if (enable != null) exp &= _.Enable == enable.Value;
+        if (sex >= 0) exp &= _.Sex == (SexKinds)sex;
+        if (online != null) exp &= _.Online == online.Value;
+        if (mailVerified != null) exp &= _.MailVerified == mailVerified.Value;
+        if (mobileVerified != null) exp &= _.MobileVerified == mobileVerified.Value;
         exp &= _.LastLogin.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Mobile.Contains(key) | _.Mail.Contains(key);
 
         return FindAll(exp, page);
+    }
+
+    /// <summary>构建活跃与新增用户统计列</summary>
+    /// <param name="t1">当日</param>
+    /// <param name="t7">7日前</param>
+    /// <param name="t30">30日前</param>
+    /// <returns>查询列表达式</returns>
+    public static ConcatExpression BuildStatSelects(DateTime t1, DateTime t7, DateTime t30)
+    {
+        var selects = new ConcatExpression();
+        selects &= _.LastLogin.SumLarge($"'{t1:yyyy-MM-dd}'", "activeT1");
+        selects &= _.LastLogin.SumLarge($"'{t7:yyyy-MM-dd}'", "activeT7");
+        selects &= _.LastLogin.SumLarge($"'{t30:yyyy-MM-dd}'", "activeT30");
+        selects &= _.RegisterTime.SumLarge($"'{t1:yyyy-MM-dd}'", "newT1");
+        selects &= _.RegisterTime.SumLarge($"'{t7:yyyy-MM-dd}'", "newT7");
+        selects &= _.RegisterTime.SumLarge($"'{t30:yyyy-MM-dd}'", "newT30");
+
+        return selects;
     }
 
     /// <summary>在租户中搜索</summary>

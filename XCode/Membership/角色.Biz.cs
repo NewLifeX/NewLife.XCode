@@ -3,6 +3,7 @@ using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Collections;
+using NewLife.Data;
 using NewLife.Log;
 
 namespace XCode.Membership;
@@ -279,6 +280,32 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
         if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
 
         return FindAll(_.TenantId == tenantId);
+    }
+
+    /// <summary>按关键字与创建时间搜索角色。关键字匹配名称与备注</summary>
+    /// <param name="start">创建时间开始</param>
+    /// <param name="end">创建时间结束</param>
+    /// <param name="key">关键字</param>
+    /// <param name="page">分页参数信息</param>
+    /// <returns>实体列表</returns>
+    public static IList<Role> Search(DateTime start, DateTime end, String key, PageParameter page)
+    {
+        var exp = new WhereExpression();
+        if (!key.IsNullOrWhiteSpace()) exp &= _.Name.Contains(key) | _.Remark.Contains(key);
+        if (start > DateTime.MinValue) exp &= _.CreateTime >= start;
+        if (end > DateTime.MinValue) exp &= _.CreateTime < end.AddDays(1);
+
+        return FindAll(exp, page);
+    }
+
+    /// <summary>根据编号集合查找</summary>
+    /// <param name="ids">编号集合</param>
+    /// <returns>实体列表</returns>
+    public static IList<Role> FindAllByIDs(Int32[] ids)
+    {
+        if (ids == null || ids.Length == 0) return [];
+
+        return FindAll(_.ID.In(ids));
     }
     #endregion 扩展查询
 

@@ -59,7 +59,10 @@ jobs:
     - name: Setup dotNET
       uses: actions/setup-dotnet@v6
       with:
-        dotnet-version: 10.x
+        # XCode 目标含 net11.0，还原工程图时需支持该版本的 SDK（不依赖镜像预装版本）
+        dotnet-version: |
+          10.x
+          11.x
     - name: Install NativeAOT Prerequisites (Linux)
       if: runner.os == 'Linux'
       run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
@@ -113,7 +116,10 @@ jobs:
     - name: Setup dotNET
       uses: actions/setup-dotnet@v6
       with:
-        dotnet-version: 10.x
+        # 同上：工程图含 net11.0 目标，显式安装避免依赖镜像预装 SDK
+        dotnet-version: |
+          10.x
+          11.x
     - name: Install NativeAOT Prerequisites (Linux)
       run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
     - name: JIT Baseline
@@ -141,7 +147,10 @@ jobs:
     - name: Setup dotNET (host，用于预热 NuGet 缓存)
       uses: actions/setup-dotnet@v6
       with:
-        dotnet-version: 10.x
+        # 同上：宿主侧还原/构建工程图含 net11.0 目标
+        dotnet-version: |
+          10.x
+          11.x
     - name: Build AotSmoke (host，QEMU 内不跑 MSBuild)
       run: dotnet build AotSmoke/AotSmoke.csproj -c Release
     - name: Download Loongson .NET SDK (linux-loongarch64)

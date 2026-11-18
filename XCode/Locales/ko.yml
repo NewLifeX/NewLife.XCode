@@ -592,3 +592,5 @@
 "SonnetDB supports ReadCommitted and Serializable transaction isolation levels; other levels require an explicit supported mapping.": "SonnetDB는 ReadCommitted 및 Serializable 트랜잭션 격리 수준을 지원합니다. 다른 수준에는 지원되는 명시적 매핑이 필요합니다."
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type or nullability; do not infer it from the first row. See SonnetDB issue #261.": "SonnetDB 뷰 [{0}]의 필드 [{1}]이(가) 매핑 가능한 선언 형식을 제공하지 않았습니다. SonnetDB issue #261. NULL 허용 여부도 선언해야 합니다. 첫 번째 행에서 형식이나 NULL 허용 여부를 추론하지 마세요."
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type. See SonnetDB issue #261.": "SonnetDB 뷰 [{0}]의 필드 [{1}]이(가) 매핑 가능한 선언 형식을 제공하지 않았습니다. SonnetDB issue #261."
+"ConfigSync[{0}] provider is not FileConfigProvider, skip": "ConfigSync[{0}] 공급자가 FileConfigProvider가 아니므로 건너뜁니다"
+"ConfigSync[{0}] FileName is empty, skip": "ConfigSync[{0}] FileName이 비어 있으므로 건너뜁니다"

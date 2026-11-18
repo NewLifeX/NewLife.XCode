@@ -592,3 +592,5 @@
 "SonnetDB supports ReadCommitted and Serializable transaction isolation levels; other levels require an explicit supported mapping.": "SonnetDB はトランザクション分離レベル ReadCommitted と Serializable をサポートします。他のレベルには明示的な対応付けが必要です。"
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type or nullability; do not infer it from the first row. See SonnetDB issue #261.": "SonnetDB ビュー [{0}] のフィールド [{1}] はマップ可能な宣言型を提供しませんでした。SonnetDB issue #261. NULL 許容性の宣言も必要です。型や NULL 許容性を先頭行から推測しないでください。"
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type. See SonnetDB issue #261.": "SonnetDB ビュー [{0}] のフィールド [{1}] はマップ可能な宣言型を提供しませんでした。SonnetDB issue #261."
+"ConfigSync[{0}] provider is not FileConfigProvider, skip": "ConfigSync[{0}] のプロバイダーが FileConfigProvider ではないため、スキップします"
+"ConfigSync[{0}] FileName is empty, skip": "ConfigSync[{0}] の FileName が空のため、スキップします"

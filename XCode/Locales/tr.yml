@@ -592,3 +592,5 @@
 "SonnetDB supports ReadCommitted and Serializable transaction isolation levels; other levels require an explicit supported mapping.": "SonnetDB, ReadCommitted ve Serializable işlem yalıtım düzeylerini destekler; diğer düzeyler açık ve desteklenen bir eşleme gerektirir."
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type or nullability; do not infer it from the first row. See SonnetDB issue #261.": "SonnetDB görünümü [{0}] alanı [{1}] eşlenebilir bir bildirilen tür sağlamadı. SonnetDB issue #261. NULL kabulü de bildirilmelidir; türü veya NULL kabulünü ilk satırdan çıkarsamayın."
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type. See SonnetDB issue #261.": "SonnetDB görünümü [{0}] alanı [{1}] eşlenebilir bir bildirilen tür sağlamadı. SonnetDB issue #261."
+"ConfigSync[{0}] provider is not FileConfigProvider, skip": "ConfigSync[{0}] sağlayıcı FileConfigProvider değil, atlanıyor"
+"ConfigSync[{0}] FileName is empty, skip": "ConfigSync[{0}] FileName boş, atlanıyor"

@@ -592,3 +592,5 @@
 "SonnetDB supports ReadCommitted and Serializable transaction isolation levels; other levels require an explicit supported mapping.": "A SonnetDB a ReadCommitted és Serializable tranzakcióelkülönítési szinteket támogatja; más szintekhez kifejezett, támogatott megfeleltetés szükséges."
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type or nullability; do not infer it from the first row. See SonnetDB issue #261.": "A(z) [{0}] SonnetDB-nézet [{1}] mezője nem adott leképezhető deklarált típust. Lásd: SonnetDB issue #261. A NULL megengedhetőségét is deklarálni kell; a típust vagy a NULL megengedhetőségét ne az első sorból következtesse ki."
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type. See SonnetDB issue #261.": "A(z) [{0}] SonnetDB-nézet [{1}] mezője nem adott leképezhető deklarált típust. Lásd: SonnetDB issue #261."
+"ConfigSync[{0}] provider is not FileConfigProvider, skip": "ConfigSync[{0}] a szolgáltató nem FileConfigProvider, kihagyva"
+"ConfigSync[{0}] FileName is empty, skip": "ConfigSync[{0}] a FileName üres, kihagyva"

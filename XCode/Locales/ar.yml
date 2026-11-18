@@ -592,3 +592,5 @@
 "SonnetDB supports ReadCommitted and Serializable transaction isolation levels; other levels require an explicit supported mapping.": "يدعم SonnetDB مستويي عزل المعاملات ReadCommitted وSerializable؛ وتتطلب المستويات الأخرى تعيينًا مدعومًا وصريحًا."
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type or nullability; do not infer it from the first row. See SonnetDB issue #261.": "لم يوفر الحقل [{1}] في عرض SonnetDB [{0}] نوعًا معلنًا قابلًا للتعيين. راجع SonnetDB issue #261. يجب أيضًا التصريح بقابلية قبول NULL؛ لا تستنتج النوع أو قابلية NULL من الصف الأول."
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type. See SonnetDB issue #261.": "لم يوفر الحقل [{1}] في عرض SonnetDB [{0}] نوعًا معلنًا قابلًا للتعيين. راجع SonnetDB issue #261."
+"ConfigSync[{0}] provider is not FileConfigProvider, skip": "ConfigSync[{0}] الموفر ليس FileConfigProvider، تم التخطي"
+"ConfigSync[{0}] FileName is empty, skip": "ConfigSync[{0}] FileName فارغ، تم التخطي"

@@ -5,10 +5,12 @@ on:
     branches: [ master,dev ]
     paths:
         - 'XCode/**'
+        - 'XCode.Analyzers/**'
   pull_request:
     branches: [ master,dev ]
     paths:
         - 'XCode/**'
+        - 'XCode.Analyzers/**'
   workflow_dispatch:
 
 permissions:

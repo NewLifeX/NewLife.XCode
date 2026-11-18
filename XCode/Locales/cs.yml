@@ -592,3 +592,5 @@
 "SonnetDB supports ReadCommitted and Serializable transaction isolation levels; other levels require an explicit supported mapping.": "SonnetDB podporuje úrovně izolace transakcí ReadCommitted a Serializable; jiné úrovně vyžadují explicitní podporované mapování."
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type or nullability; do not infer it from the first row. See SonnetDB issue #261.": "Pole [{1}] pohledu SonnetDB [{0}] neposkytlo mapovatelný deklarovaný typ. Viz SonnetDB issue #261. Je nutná také deklarovaná přípustnost NULL; typ ani přípustnost NULL neodvozujte z prvního řádku."
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type. See SonnetDB issue #261.": "Pole [{1}] pohledu SonnetDB [{0}] neposkytlo mapovatelný deklarovaný typ. Viz SonnetDB issue #261."
+"ConfigSync[{0}] provider is not FileConfigProvider, skip": "ConfigSync[{0}] poskytovatel není FileConfigProvider, přeskakuje se"
+"ConfigSync[{0}] FileName is empty, skip": "ConfigSync[{0}] FileName je prázdné, přeskakuje se"

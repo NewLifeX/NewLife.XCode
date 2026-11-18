@@ -389,3 +389,5 @@
 "SonnetDB supports ReadCommitted and Serializable transaction isolation levels; other levels require an explicit supported mapping.": "SonnetDB 支持 ReadCommitted 和 Serializable 事务隔离级别；其它级别需要显式映射到受支持的级别。"
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type or nullability; do not infer it from the first row. See SonnetDB issue #261.": "SonnetDB 视图[{0}]的字段[{1}]未提供可映射的声明类型。参见 SonnetDB issue #261. 也必须声明可空性；不能根据首行推测类型或可空性。"
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type. See SonnetDB issue #261.": "SonnetDB 视图[{0}]的字段[{1}]未提供可映射的声明类型。参见 SonnetDB issue #261."
+"ConfigSync[{0}] provider is not FileConfigProvider, skip": "ConfigSync[{0}] 提供者不是 FileConfigProvider，跳过"
+"ConfigSync[{0}] FileName is empty, skip": "ConfigSync[{0}] FileName 为空，跳过"

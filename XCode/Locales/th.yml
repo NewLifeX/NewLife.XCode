@@ -592,3 +592,5 @@
 "SonnetDB supports ReadCommitted and Serializable transaction isolation levels; other levels require an explicit supported mapping.": "SonnetDB รองรับระดับการแยกธุรกรรม ReadCommitted และ Serializable ระดับอื่นต้องมีการแมปที่รองรับอย่างชัดเจน"
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type or nullability; do not infer it from the first row. See SonnetDB issue #261.": "ฟิลด์ [{1}] ของมุมมอง SonnetDB [{0}] ไม่ได้ให้ชนิดที่ประกาศซึ่งแมปได้ ดู SonnetDB issue #261. ต้องประกาศด้วยว่าอนุญาต NULL หรือไม่ ห้ามอนุมานชนิดหรือการอนุญาต NULL จากแถวแรก"
 "SonnetDB view [{0}] field [{1}] does not provide a mappable declared type. See SonnetDB issue #261.": "ฟิลด์ [{1}] ของมุมมอง SonnetDB [{0}] ไม่ได้ให้ชนิดที่ประกาศซึ่งแมปได้ ดู SonnetDB issue #261."
+"ConfigSync[{0}] provider is not FileConfigProvider, skip": "ConfigSync[{0}] ผู้ให้บริการไม่ใช่ FileConfigProvider ข้าม"
+"ConfigSync[{0}] FileName is empty, skip": "ConfigSync[{0}] FileName ว่าง ข้าม"

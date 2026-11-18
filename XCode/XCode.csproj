@@ -81,7 +81,16 @@
   <ItemGroup>
     <None Include="..\XCode.Analyzers\bin\$(Configuration)\netstandard2.0\XCode.Analyzers.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
-  <Target Name="BuildAnalyzersForPackage" BeforeTargets="Pack">
-    <MSBuild Projects="..\XCode.Analyzers\XCode.Analyzers.csproj" Targets="Build" Properties="Configuration=$(Configuration)" />
+  <!-- 打包前构建分析器。必须经 BeforePack 挂在 _GetPackageFiles/GenerateNuspec 之前：
+       直接 BeforeTargets="Pack" 时依赖目标先生效，干净检出（无 bin 目录）下打包会因找不到分析器 DLL 而失败。
+       分析器不参与 XCode 编译（net45 无法引用 netstandard2.0），故用独立进程构建；
+       在打包进程内用 MSBuild 任务会复用 Restore 阶段的项目求值缓存（缺 nuget.g.targets），导致编译缺少 netstandard 引用。 -->
+  <PropertyGroup>
+    <BeforePack>BuildAnalyzersForPackage;$(BeforePack)</BeforePack>
+  </PropertyGroup>
+  <Target Name="BuildAnalyzersForPackage">
+    <!-- 路径统一用正斜杠：CI 在 Linux/macOS 执行，Exec 的原样命令行不会做反斜杠归一化 -->
+    <Exec Command="dotnet build &quot;$(MSBuildThisFileDirectory)../XCode.Analyzers/XCode.Analyzers.csproj&quot; -c $(Configuration) --nologo" StandardOutputImportance="low" />
+    <Error Condition="!Exists('$(MSBuildThisFileDirectory)../XCode.Analyzers/bin/$(Configuration)/netstandard2.0/XCode.Analyzers.dll')" Text="XCode.Analyzers 未生成，无法随包分发 analyzers/dotnet/cs/XCode.Analyzers.dll" />
   </Target>
 </Project>

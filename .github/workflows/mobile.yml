@@ -66,7 +66,11 @@ jobs:
       with:
         dotnet-version: 10.0.402
     - name: Select Xcode
-      run: sudo xcode-select -s /Applications/Xcode_26.6.app
+      # 与固定的 SDK 10.0.402 配套：其 iOS workload（26.0.x）要求 Xcode 26.0，
+      # 而镜像默认 Xcode 已升至 26.6，需显式切回 26.0；待升级 workload 后再同步提升
+      run: |
+        XCODE=$(ls -d /Applications/Xcode_26.0*.app | head -1)
+        sudo xcode-select -s "$XCODE"
     - name: Install iOS workload
       # 不锁定 workload set，跟随当前 SDK 10.0.402 的默认版本
       run: dotnet workload install ios || sudo dotnet workload install ios

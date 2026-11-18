@@ -83,6 +83,8 @@ var list = UserInfo.FindAll(UserInfo._.Age > 10 & UserInfo._.UserName == "张三
 UserInfo.FindById(user.Id)?.Delete();
 ```
 
+> 查询表达式的 `实体._.字段` 属于数据层用法；应用层推荐调用实体的 `Search`/`FindAllBy*` 方法，字段名/排序用 `实体.__.字段`。
+
 > 使用缓存时：实体数 <1000 → 整表缓存；否则普通查询 / 单对象缓存。
 
 ## 为什么选 XCode

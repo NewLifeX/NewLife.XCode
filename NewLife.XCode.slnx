@@ -22,6 +22,10 @@
       <Build Solution="*|iPhone" Project="false" />
       <Build Solution="*|iPhoneSimulator" Project="false" />
     </Project>
+    <Project Path="XCode.Analyzers.Tests/XCode.Analyzers.Tests.csproj" />
+  </Folder>
+  <Folder Name="/分析器/">
+    <Project Path="XCode.Analyzers/XCode.Analyzers.csproj" />
   </Folder>
   <Folder Name="/驱动包/">
     <Project Path="XCode.DaMeng/XCode.DaMeng.csproj" />

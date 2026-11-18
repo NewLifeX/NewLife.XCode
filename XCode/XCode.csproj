@@ -77,4 +77,11 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
+  <!-- XC0001 分析器随主包分发：下游引用 NewLife.XCode 即自动生效，无需额外包 -->
+  <ItemGroup>
+    <None Include="..\XCode.Analyzers\bin\$(Configuration)\netstandard2.0\XCode.Analyzers.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+  <Target Name="BuildAnalyzersForPackage" BeforeTargets="Pack">
+    <MSBuild Projects="..\XCode.Analyzers\XCode.Analyzers.csproj" Targets="Build" Properties="Configuration=$(Configuration)" />
+  </Target>
 </Project>

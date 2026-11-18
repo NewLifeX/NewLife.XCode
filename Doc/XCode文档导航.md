@@ -198,6 +198,7 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
 - [数据库HTTP服务（DbService）](/xcode/db_service)
 - [网络虚拟数据库（NetworkDb）](/xcode/network_db)
 - [配置中心（DbConfigProvider）](/xcode/db_config_provider)
+- [集群配置同步（ConfigSync）](/xcode/config_sync)
 - [Web行为模块与运行时监测](/xcode/web_runtime_monitor)（已移除）
 - [ASP.NET Core行为监测迁移指南](/xcode/aspnetcore_runtime_migration)（部分过时）
 - [TDengine时序数据库支持（TDengine）](/xcode/tdengine)

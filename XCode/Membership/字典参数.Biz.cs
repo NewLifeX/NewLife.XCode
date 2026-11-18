@@ -69,6 +69,13 @@ public partial class Parameter : Entity<Parameter>
             ? Meta.Cache.FindAll(e => e.UserID == userId && e.Category == category)
             : FindAll(_.UserID == userId & _.Category == category);
     }
+
+    /// <summary>根据分类查找。直接查库，不走实体缓存，用于集群配置同步等需要最新写入时间的场景</summary>
+    /// <param name="category">分类</param>
+    /// <param name="userId">用户。默认0表示全局</param>
+    /// <returns>实体列表</returns>
+    public static IList<Parameter> FindAllByCategory(String category, Int32 userId = 0) =>
+        FindAll(_.UserID == userId & _.Category == category);
     #endregion
 
     #region 高级查询

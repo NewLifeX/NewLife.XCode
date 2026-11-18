@@ -10,7 +10,7 @@ namespace XCode.Analyzers;
 /// <remarks>
 /// <c>Entity._</c> 返回 Field 对象，用于在数据层拼装 WhereExpression。
 /// 跨程序集使用会让查询逻辑散落到控制器、服务、任务等应用层，绕过实体 Biz 的查询封装。
-/// 应用层应调用实体查询方法（Search/FindAllByXxx），字段名或排序使用 <c>Entity.__</c>。
+/// 应用层应调用实体查询方法（Search/FindAllByXxx），字段名或排序使用字符串（如 <c>"Name"</c>）。
 /// </remarks>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class FieldHandleAccessAnalyzer : DiagnosticAnalyzer
@@ -21,7 +21,7 @@ public sealed class FieldHandleAccessAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor _rule = new(
         DiagnosticId,
         "禁止在实体程序集之外使用实体字段句柄",
-        "“{0}”属于数据层字段句柄，只能在实体程序集内使用；应用层请调用实体查询方法（Search/FindAllByXxx），字段名或排序请使用 __",
+        "“{0}”属于数据层字段句柄，只能在实体程序集内使用；应用层请调用实体查询方法（Search/FindAllByXxx），字段名或排序请使用字符串",
         "XCode",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true,

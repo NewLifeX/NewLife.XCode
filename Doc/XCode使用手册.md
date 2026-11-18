@@ -326,7 +326,7 @@ var user = await User.FindAsync(User._.Id == 1);
 var list = await User.FindAllAsync(User._.Status == 1);
 ```
 
-> **分层约定**：`实体._.字段` 是数据层字段句柄，只写在实体的 `*.Biz.cs` 或生成代码中；控制器、服务等应用层请调用实体查询方法（`Search`/`FindAllBy*`），需要字段名或排序时用 `实体.__.字段`（如 `p.Sort = User.__.Id + " Desc"`）。
+> **分层约定**：`实体._.字段` 是数据层字段句柄，只写在实体的 `*.Biz.cs` 或生成代码中；控制器、服务等应用层请调用实体查询方法（`Search`/`FindAllBy*`），需要字段名或排序时直接用字符串（如 `p.Sort = "Id Desc"`），字段名以 Model.xml 为准。
 
 ### 3.3 更新
 

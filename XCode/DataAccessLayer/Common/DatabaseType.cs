@@ -129,6 +129,10 @@ public enum DatabaseType
     [Description("MonetDB数据库")]
     MonetDB = 30,
 
+    /// <summary>Google Cloud Spanner数据库。全球分布式关系型数据库</summary>
+    [Description("Google Cloud Spanner数据库")]
+    Spanner = 31,
+
     /// <summary>网络虚拟数据库。通过HTTP接口转发数据库操作到远端服务执行</summary>
     [Description("网络虚拟数据库")]
     Network = 100,

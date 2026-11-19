@@ -37,6 +37,7 @@ public static class DbFactory
         Register<Teradata>(DatabaseType.Teradata);
         Register<YashanDB>(DatabaseType.YashanDB);
         Register<MonetDB>(DatabaseType.MonetDB);
+        Register<Spanner>(DatabaseType.Spanner);
         Register<NetworkDb>(DatabaseType.Network);
         Register<Firebird>(DatabaseType.Firebird);
         //Register<Access>(DatabaseType.Access);

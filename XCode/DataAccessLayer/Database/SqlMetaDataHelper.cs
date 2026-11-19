@@ -99,4 +99,40 @@ internal static class SqlMetaDataHelper
 
         return 0;
     }
+
+    /// <summary>构造 information_schema 查询条件</summary>
+    /// <param name="schema">模式名，为空时不按模式过滤</param>
+    /// <param name="names">表名集合，为空时不按表名过滤</param>
+    /// <returns>以 where 开头的条件，没有条件时返回空字符串</returns>
+    public static String BuildWhere(String? schema, String[]? names)
+    {
+        var filters = new List<String>();
+        if (!schema.IsNullOrEmpty()) filters.Add($"table_schema = '{schema.Replace("'", "''")}'");
+
+        var list = EscapeNames(names);
+        if (!list.IsNullOrEmpty()) filters.Add($"table_name in ({list})");
+
+        return filters.Count > 0 ? " where " + String.Join(" and ", filters) : "";
+    }
+
+    /// <summary>把名称集合转成 SQL 值列表，自动转义单引号</summary>
+    /// <param name="names">名称集合</param>
+    /// <returns>逗号分隔的带引号列表；没有有效名称时返回空字符串</returns>
+    public static String EscapeNames(String[]? names)
+    {
+        if (names == null || names.Length == 0) return "";
+
+        var ns = names.Where(e => !e.IsNullOrEmpty()).Select(e => "'" + e.Replace("'", "''") + "'");
+
+        return String.Join(",", ns);
+    }
+
+    /// <summary>取字符串字段类型。长度未知或超过长文本阈值时使用长文本类型</summary>
+    /// <param name="field">字段</param>
+    /// <param name="longTextLength">长文本阈值</param>
+    /// <param name="longType">长文本类型</param>
+    /// <param name="shortType">短文本类型</param>
+    /// <returns></returns>
+    public static String GetStringFieldType(IDataColumn field, Int32 longTextLength, String longType, String shortType = "VARCHAR")
+        => field.Length <= 0 || field.Length >= longTextLength ? longType : $"{shortType}({field.Length})";
 }

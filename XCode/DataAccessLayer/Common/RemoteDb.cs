@@ -94,6 +94,70 @@ abstract class RemoteDb : DbBase
         builder.Limit = $"limit {startRowIndex}, {maximumRows}";
         return builder;
     }
+
+    /// <summary>使用 LIMIT/OFFSET 获取分页。适用于 PostgreSQL 系方言</summary>
+    /// <param name="sql">SQL语句</param>
+    /// <param name="startRowIndex">开始行，0表示第一行</param>
+    /// <param name="maximumRows">最大返回行数，0表示所有行</param>
+    /// <param name="offsetFirst">OFFSET 是否在 LIMIT 之前（Presto/Trino）</param>
+    /// <returns></returns>
+    public static String PageSplitByLimitOffset(String sql, Int64 startRowIndex, Int64 maximumRows, Boolean offsetFirst = false)
+    {
+        // 从第一行开始，不需要分页
+        if (startRowIndex <= 0)
+        {
+            if (maximumRows < 1) return sql;
+
+            return $"{sql} limit {maximumRows}";
+        }
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
+
+        return offsetFirst
+            ? $"{sql} offset {startRowIndex} limit {maximumRows}"
+            : $"{sql} limit {maximumRows} offset {startRowIndex}";
+    }
+
+    /// <summary>使用 LIMIT/OFFSET 构造分页SQL</summary>
+    /// <param name="builder">查询生成器</param>
+    /// <param name="startRowIndex">开始行，0表示第一行</param>
+    /// <param name="maximumRows">最大返回行数，0表示所有行</param>
+    /// <param name="offsetFirst">OFFSET 是否在 LIMIT 之前（Presto/Trino）</param>
+    /// <returns>分页SQL</returns>
+    public static SelectBuilder PageSplitByLimitOffset(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows, Boolean offsetFirst = false)
+    {
+        // 从第一行开始，不需要分页
+        if (startRowIndex <= 0)
+        {
+            if (maximumRows > 0) builder.Limit = $"limit {maximumRows}";
+            return builder;
+        }
+        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
+
+        builder.Limit = offsetFirst
+            ? $"offset {startRowIndex} limit {maximumRows}"
+            : $"limit {maximumRows} offset {startRowIndex}";
+        return builder;
+    }
+
+    /// <summary>在 SELECT 之后插入 TOP 子句，DISTINCT 保持在前</summary>
+    /// <param name="sql">SQL语句</param>
+    /// <param name="top">TOP 子句，如 Top 10 Start At 11</param>
+    /// <returns></returns>
+    protected static String InsertTop(String sql, String top)
+    {
+        var p = sql.IndexOf("select", StringComparison.OrdinalIgnoreCase);
+        if (p < 0) return sql;
+
+        var head = sql.Substring(0, p + 6);
+        var rest = sql.Substring(p + 6);
+        var trim = rest.TrimStart();
+        var space = rest.Substring(0, rest.Length - trim.Length);
+
+        if (trim.StartsWith("distinct", StringComparison.OrdinalIgnoreCase))
+            return head + space + trim.Substring(0, "distinct".Length) + " " + top + trim.Substring("distinct".Length);
+
+        return head + space + top + " " + trim;
+    }
     #endregion
 }
 
@@ -108,6 +172,21 @@ abstract class RemoteDbSession : DbSession
     #region 构造函数
     public RemoteDbSession(IDatabase db) : base(db) { }
     #endregion
+
+    /// <summary>创建以异常结束的任务。目标框架 net45 没有 Task.FromException</summary>
+    /// <param name="ex">异常</param>
+    /// <returns></returns>
+    protected static Task<Int64> FromException(Exception ex)
+    {
+        var tcs = new TaskCompletionSource<Int64>();
+        tcs.SetException(ex);
+
+        return tcs.Task;
+    }
+
+    /// <summary>构造“不支持回读自增列”的异常</summary>
+    /// <returns></returns>
+    protected NotSupportedException IdentityNotSupported() => new(L.T("{0} does not support returning generated identity values; use a business key (Guid/snowflake) or set AllowInsertIdentity.", Database.Type));
 
     #region 架构
     public override DataTable GetSchema(DbConnection? conn, String collectionName, String?[]? restrictionValues)

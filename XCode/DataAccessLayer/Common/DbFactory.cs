@@ -32,6 +32,7 @@ public static class DbFactory
         Register<Presto>(DatabaseType.Presto);
         Register<Trino>(DatabaseType.Trino);
         Register<NetworkDb>(DatabaseType.Network);
+        Register<Firebird>(DatabaseType.Firebird);
         //Register<Access>(DatabaseType.Access);
         //Register<SqlCe>(DatabaseType.SqlCe);
     }

@@ -36,6 +36,7 @@ public class DatabaseTypeTests
             DatabaseType.SonnetDB,
             DatabaseType.Presto,
             DatabaseType.Trino,
+            DatabaseType.Firebird,
             DatabaseType.Network,
         };
 
@@ -96,5 +97,8 @@ public class DatabaseTypeTests
 
         var trino = DbFactory.Create(DatabaseType.Trino);
         Assert.True(trino.Support("Trino"));
+
+        var firebird = DbFactory.Create(DatabaseType.Firebird);
+        Assert.True(firebird.Support("Firebird"));
     }
 }

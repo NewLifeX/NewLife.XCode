@@ -33,9 +33,9 @@ public enum DatabaseType
     [Description("SQLite数据库")]
     SQLite = 6,
 
-    ///// <summary>Firebird数据库</summary>
-    //[Description("Firebird数据库")]
-    //Firebird,
+    /// <summary>Firebird数据库</summary>
+    [Description("Firebird数据库")]
+    Firebird = 7,
 
     /// <summary>SqlCe数据库</summary>
     [Description("PostgreSQL数据库")]

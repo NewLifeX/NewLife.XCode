@@ -260,7 +260,7 @@ public class TableItem
         if (dups.Length > 0)
         {
             var names = dups.Join(Environment.NewLine, g => g.Join(" / ", e => e.ColumnName));
-            throw new XCodeException($"实体[{EntityType.FullName}]存在仅大小写不同的字段：{Environment.NewLine}{names}。XCode不支持同一张表内仅大小写不同的字段名");
+            throw new XCodeException(L.T("Entity [{0}] contains fields that differ only by case: {1}. XCode does not support field names that differ only by case in the same table.", EntityType.FullName, Environment.NewLine + names));
         }
         // 先完成allfields才能专门处理
         foreach (var item in allfields)

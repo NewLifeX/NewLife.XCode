@@ -339,7 +339,7 @@ internal partial class DbMetaData
         if (dups.Length == 0) return;
 
         var names = dups.Join(Environment.NewLine, g => g.Join(" / ", e => e.ColumnName));
-        throw new XCodeException($"数据表[{dbtable.TableName}]存在仅大小写不同的字段：{Environment.NewLine}{names}。XCode不支持同一张表内仅大小写不同的字段名，请调整表结构");
+        throw new XCodeException(L.T("Table [{0}] contains fields that differ only by case: {1}. XCode does not support field names that differ only by case in the same table; adjust the table schema.", dbtable.TableName, Environment.NewLine + names));
     }
 
     /// <summary>精确命名格式下，把数据库中大小写不一致的字段名改成模型名称</summary>
@@ -358,7 +358,7 @@ internal partial class DbMetaData
             var old = dbtable.Columns.FirstOrDefault(e => String.Equals(FormatName(e), target, StringComparison.OrdinalIgnoreCase));
             if (old == null) continue;
 
-            WriteLog("字段[{0}.{1}]大小写与模型不一致，重命名[{2}]", dbtable.TableName, old.ColumnName, item.ColumnName);
+            WriteLog("The case of field [{0}.{1}] differs from the model; renaming to [{2}].", dbtable.TableName, old.ColumnName, item.ColumnName);
             PerformSchema(sb, @readonly, DDLSchema.RenameColumn, old, item.ColumnName + "");
 
             // 改名后同步内存模型，避免后续重复处理

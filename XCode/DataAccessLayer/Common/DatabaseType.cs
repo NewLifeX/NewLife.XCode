@@ -105,6 +105,10 @@ public enum DatabaseType
     [Description("Trino数据库")]
     Trino = 24,
 
+    /// <summary>Snowflake数据库。云原生数据仓库</summary>
+    [Description("Snowflake数据库")]
+    Snowflake = 25,
+
     /// <summary>网络虚拟数据库。通过HTTP接口转发数据库操作到远端服务执行</summary>
     [Description("网络虚拟数据库")]
     Network = 100,

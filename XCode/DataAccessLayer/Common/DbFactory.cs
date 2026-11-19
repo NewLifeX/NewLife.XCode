@@ -31,6 +31,7 @@ public static class DbFactory
         Register<SonnetDB>(DatabaseType.SonnetDB);
         Register<Presto>(DatabaseType.Presto);
         Register<Trino>(DatabaseType.Trino);
+        Register<Snowflake>(DatabaseType.Snowflake);
         Register<NetworkDb>(DatabaseType.Network);
         Register<Firebird>(DatabaseType.Firebird);
         //Register<Access>(DatabaseType.Access);

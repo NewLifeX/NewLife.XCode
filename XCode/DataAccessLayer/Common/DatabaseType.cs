@@ -121,6 +121,10 @@ public enum DatabaseType
     [Description("Teradata数据库")]
     Teradata = 28,
 
+    /// <summary>YashanDB(崖山)数据库</summary>
+    [Description("YashanDB(崖山)数据库")]
+    YashanDB = 29,
+
     /// <summary>网络虚拟数据库。通过HTTP接口转发数据库操作到远端服务执行</summary>
     [Description("网络虚拟数据库")]
     Network = 100,

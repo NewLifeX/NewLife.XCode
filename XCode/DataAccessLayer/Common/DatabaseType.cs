@@ -97,6 +97,14 @@ public enum DatabaseType
     [Description("SonnetDB数据库")]
     SonnetDB = 22,
 
+    /// <summary>Presto数据库。联邦查询引擎，写操作取决于连接器</summary>
+    [Description("Presto数据库")]
+    Presto = 23,
+
+    /// <summary>Trino数据库。PrestoSQL 更名而来，写操作取决于连接器</summary>
+    [Description("Trino数据库")]
+    Trino = 24,
+
     /// <summary>网络虚拟数据库。通过HTTP接口转发数据库操作到远端服务执行</summary>
     [Description("网络虚拟数据库")]
     Network = 100,

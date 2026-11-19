@@ -33,6 +33,9 @@ public class DatabaseTypeTests
             DatabaseType.ClickHouse,
             DatabaseType.DuckDB,
             DatabaseType.MongoDB,
+            DatabaseType.SonnetDB,
+            DatabaseType.Presto,
+            DatabaseType.Trino,
             DatabaseType.Network,
         };
 
@@ -87,5 +90,11 @@ public class DatabaseTypeTests
 
         var mongoDB = DbFactory.Create(DatabaseType.MongoDB);
         Assert.True(mongoDB.Support("MongoDB"));
+
+        var presto = DbFactory.Create(DatabaseType.Presto);
+        Assert.True(presto.Support("Presto"));
+
+        var trino = DbFactory.Create(DatabaseType.Trino);
+        Assert.True(trino.Support("Trino"));
     }
 }

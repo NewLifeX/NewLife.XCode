@@ -29,6 +29,8 @@ public static class DbFactory
         Register<DuckDB>(DatabaseType.DuckDB);
         Register<MongoDB>(DatabaseType.MongoDB);
         Register<SonnetDB>(DatabaseType.SonnetDB);
+        Register<Presto>(DatabaseType.Presto);
+        Register<Trino>(DatabaseType.Trino);
         Register<NetworkDb>(DatabaseType.Network);
         //Register<Access>(DatabaseType.Access);
         //Register<SqlCe>(DatabaseType.SqlCe);

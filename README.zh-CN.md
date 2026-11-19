@@ -16,13 +16,52 @@
 🌐 [English](README.md) | [繁體中文](README.zh-TW.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
 <!-- lang:end -->
 
-高性能 .NET 数据中间件，聚焦"添删改查 + 极致性能 + 海量数据"，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / 达梦 / 金仓 / 瀚高 / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network 网络虚拟数据库 / NovaDb 自研数据库 / SonnetDB 等。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
+高性能 .NET 数据中间件，聚焦"添删改查 + 极致性能 + 海量数据"，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner 等。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
 
 文档：https://newlifex.com/xcode   社区交流QQ群：1600800 / 1600838
 
 > ℹ️ 本中文版与 [English README](README.md) 同批维护；若两者内容不一致，以英文版为对外口径。
 
 **目录**：[快速开始](#快速开始) · [为什么选 XCode](#为什么选-xcode) · [主要功能](#主要功能) · [生态版图](#生态版图) · [文档](#文档) · [参与贡献](#参与贡献) · [新生命开发团队](#新生命开发团队) · [许可证](#许可证)
+
+## 支持的数据库
+
+XCode 通过独立的 ADO.NET 驱动包访问各类数据库。请按所用数据库安装对应 NuGet 包；驱动缺失时，异常信息也会直接给出需要添加的包名。
+
+| 数据库 | 提供者 | NuGet 驱动包 | 类型 |
+| --- | --- | --- | --- |
+| SQL Server | `SqlServer` | `System.Data.SqlClient` | 关系型 |
+| MySQL / MariaDB | `MySql` | `NewLife.MySql` | 关系型 |
+| PostgreSQL | `PostgreSQL` | `Npgsql` | 关系型 |
+| Oracle | `Oracle` | `Oracle.ManagedDataAccess.Core` | 关系型 |
+| SQLite | `SQLite` | `Microsoft.Data.Sqlite` | 嵌入式 |
+| Firebird | `Firebird` | `FirebirdSql.Data.FirebirdClient` | 关系型 |
+| DB2 | `DB2` | `IBM.Data.DB2.Core` | 关系型 |
+| SAP ASE (Sybase) | `Ase` | `AdoNetCore.AseClient` | 关系型 |
+| DaMeng | `DaMeng` | `dmdbms.DmProvider` | 关系型 |
+| Kingbase | `KingBase` | `Kdbndp` | 关系型 |
+| HighGo | `HighGo` | `Nhgdb` | 关系型 |
+| VastBase | `VastBase` | `Npgsql` | 关系型 |
+| YashanDB | `YashanDB` | `Yashandb.Data.YashandbClient` | 关系型 |
+| Hana | `Hana` | `Sap.Data.Hana` | 内存型 |
+| IRIS | `IRIS` | `InterSystems.Data.IRISClient` | 多模型 |
+| ClickHouse | `ClickHouse` | `ClickHouse.Client` | 列式 |
+| Vertica | `Vertica` | `Vertica.Data` | 列式 |
+| MonetDB | `MonetDB` | `MonetDb.Mapi` | 列式 |
+| DuckDB | `DuckDB` | `DuckDB.NET.Data` | 嵌入式 OLAP |
+| Snowflake | `Snowflake` | `Snowflake.Data` | 云数据仓库 |
+| Teradata | `Teradata` | `Teradata.Client.Provider` | 云数据仓库 |
+| Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | 云服务 |
+| TDengine | `TDengine` | 内置 | 时序 |
+| InfluxDB | `InfluxDB` | 内置 | 时序 |
+| MongoDB | `MongoDB` | `MongoDB.Driver` | 文档 |
+| Presto | `Presto` | `NReco.PrestoAdo` | 联邦查询 |
+| Trino | `Trino` | `Trino.Data.ADO` | 联邦查询 |
+| NovaDb | `NovaDb` | `NewLife.NovaDb` | 嵌入式 / 网络 |
+| SonnetDB | `SonnetDB` | `SonnetDB` | 嵌入式 / 远程 |
+| Network | `Network` | 内置 | 虚拟 |
+
+MySQL 与 PostgreSQL 协议兼容的数据库无需新增提供者，使用内置别名即可复用对应驱动：TiDB、Doris、StarRocks、OceanBase（MySQL 模式）、SingleStore、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB。Access 与 SqlCe 提供者保留但已停用。
 
 ## 快速开始
 

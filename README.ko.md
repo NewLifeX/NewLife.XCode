@@ -18,11 +18,50 @@
 
 > ⚠️ 이 번역은 구조를 포함하여 오래되었을 수 있으며, 기준 문서는 [영어 README](README.md)입니다.
 
-**NewLife.XCode**는 "CRUD + 극한 성능 + 대규모 데이터"에 집중한 고성능 .NET 데이터 미들웨어입니다. 다중 레벨 캐싱, 자동 모델링/마이그레이션, 샤딩, 강타입 쿼리 및 데이터베이스 간 마이그레이션을 포함합니다. MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb / SonnetDB 등을 지원합니다. 운영 환경에서는 테이블당 수백억 행에 이르며, 쿼리 처리량은 (캐시 전략에 따라) 수십억 QPS에 달할 수 있습니다.
+**NewLife.XCode**는 "CRUD + 극한 성능 + 대규모 데이터"에 집중한 고성능 .NET 데이터 미들웨어입니다. 다중 레벨 캐싱, 자동 모델링/마이그레이션, 샤딩, 강타입 쿼리 및 데이터베이스 간 마이그레이션을 포함합니다. MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner 등을 지원합니다. 운영 환경에서는 테이블당 수백억 행에 이르며, 쿼리 처리량은 (캐시 전략에 따라) 수십억 QPS에 달할 수 있습니다.
 
 문서: https://newlifex.com/xcode   커뮤니티 QQ 그룹: 1600800 / 1600838
 
 **목차**: [빠른 시작](#빠른-시작) · [XCode를 선택하는 이유](#xcode를-선택하는-이유) · [주요 기능](#주요-기능) · [생태계 지도](#생태계-지도) · [문서](#문서) · [기여](#기여) · [팀](#팀) · [라이선스](#라이선스)
+
+## 지원 데이터베이스
+
+XCode는 데이터베이스마다 별도의 ADO.NET 드라이버 패키지로 접속합니다. 사용하는 데이터베이스에 맞는 패키지를 설치하세요. 드라이버가 없으면 오류 메시지에 추가해야 할 패키지 이름도 표시됩니다.
+
+| 데이터베이스 | 공급자 | NuGet 드라이버 패키지 | 유형 |
+| --- | --- | --- | --- |
+| SQL Server | `SqlServer` | `System.Data.SqlClient` | 관계형 |
+| MySQL / MariaDB | `MySql` | `NewLife.MySql` | 관계형 |
+| PostgreSQL | `PostgreSQL` | `Npgsql` | 관계형 |
+| Oracle | `Oracle` | `Oracle.ManagedDataAccess.Core` | 관계형 |
+| SQLite | `SQLite` | `Microsoft.Data.Sqlite` | 임베디드 |
+| Firebird | `Firebird` | `FirebirdSql.Data.FirebirdClient` | 관계형 |
+| DB2 | `DB2` | `IBM.Data.DB2.Core` | 관계형 |
+| SAP ASE (Sybase) | `Ase` | `AdoNetCore.AseClient` | 관계형 |
+| DaMeng | `DaMeng` | `dmdbms.DmProvider` | 관계형 |
+| Kingbase | `KingBase` | `Kdbndp` | 관계형 |
+| HighGo | `HighGo` | `Nhgdb` | 관계형 |
+| VastBase | `VastBase` | `Npgsql` | 관계형 |
+| YashanDB | `YashanDB` | `Yashandb.Data.YashandbClient` | 관계형 |
+| Hana | `Hana` | `Sap.Data.Hana` | 인메모리 |
+| IRIS | `IRIS` | `InterSystems.Data.IRISClient` | 멀티 모델 |
+| ClickHouse | `ClickHouse` | `ClickHouse.Client` | 컬럼형 |
+| Vertica | `Vertica` | `Vertica.Data` | 컬럼형 |
+| MonetDB | `MonetDB` | `MonetDb.Mapi` | 컬럼형 |
+| DuckDB | `DuckDB` | `DuckDB.NET.Data` | 임베디드 OLAP |
+| Snowflake | `Snowflake` | `Snowflake.Data` | 클라우드 데이터 웨어하우스 |
+| Teradata | `Teradata` | `Teradata.Client.Provider` | 클라우드 데이터 웨어하우스 |
+| Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | 클라우드 |
+| TDengine | `TDengine` | 내장 | 시계열 |
+| InfluxDB | `InfluxDB` | 내장 | 시계열 |
+| MongoDB | `MongoDB` | `MongoDB.Driver` | 문서형 |
+| Presto | `Presto` | `NReco.PrestoAdo` | 페더레이션 |
+| Trino | `Trino` | `Trino.Data.ADO` | 페더레이션 |
+| NovaDb | `NovaDb` | `NewLife.NovaDb` | 임베디드 / 네트워크 |
+| SonnetDB | `SonnetDB` | `SonnetDB` | 임베디드 / 원격 |
+| Network | `Network` | 내장 | 가상 |
+
+MySQL/PostgreSQL 프로토콜 호환 엔진은 내장 별칭으로 해당 공급자를 재사용합니다: TiDB, Doris, StarRocks, OceanBase(MySQL 모드), SingleStore, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB. Access와 SqlCe 공급자는 유지되지만 비활성화되어 있습니다.
 
 ## 빠른 시작
 

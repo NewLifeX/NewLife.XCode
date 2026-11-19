@@ -18,11 +18,50 @@
 
 > ⚠️ Cette traduction peut être obsolète, y compris sa structure ; la version de référence est le [README anglais](README.md).
 
-**NewLife.XCode** est un intergiciel de données .NET hautes performances, axé sur « CRUD + performances extrêmes + données massives ». Il comprend le cache multi-niveaux, la modélisation/migration automatique, le partitionnement (sharding), les requêtes fortement typées et la migration inter-bases de données. Il prend en charge MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / base de données virtuelle Network / NovaDb / SonnetDB et bien d'autres. Les déploiements en production atteignent des dizaines de milliards de lignes par table, et le débit de requêtes peut atteindre des milliards de QPS (avec des stratégies de cache).
+**NewLife.XCode** est un intergiciel de données .NET hautes performances, axé sur « CRUD + performances extrêmes + données massives ». Il comprend le cache multi-niveaux, la modélisation/migration automatique, le partitionnement (sharding), les requêtes fortement typées et la migration inter-bases de données. Il prend en charge MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner et bien d'autres. Les déploiements en production atteignent des dizaines de milliards de lignes par table, et le débit de requêtes peut atteindre des milliards de QPS (avec des stratégies de cache).
 
 Documentation : https://newlifex.com/xcode   Groupes QQ de la communauté : 1600800 / 1600838
 
 **Sommaire** : [Démarrage rapide](#démarrage-rapide) · [Pourquoi XCode](#pourquoi-xcode) · [Fonctionnalités principales](#fonctionnalités-principales) · [Carte de l'écosystème](#carte-de-lécosystème) · [Documentation](#documentation) · [Contribuer](#contribuer) · [Équipe](#équipe) · [Licence](#licence)
+
+## Bases de données prises en charge
+
+XCode accède à chaque base de données via un package de pilote ADO.NET distinct. Installez le package correspondant à votre base de données ; si le pilote est absent, le message d'erreur indique également le package à ajouter.
+
+| Base de données | Fournisseur | Package NuGet du pilote | Type |
+| --- | --- | --- | --- |
+| SQL Server | `SqlServer` | `System.Data.SqlClient` | Relationnelle |
+| MySQL / MariaDB | `MySql` | `NewLife.MySql` | Relationnelle |
+| PostgreSQL | `PostgreSQL` | `Npgsql` | Relationnelle |
+| Oracle | `Oracle` | `Oracle.ManagedDataAccess.Core` | Relationnelle |
+| SQLite | `SQLite` | `Microsoft.Data.Sqlite` | Intégrée |
+| Firebird | `Firebird` | `FirebirdSql.Data.FirebirdClient` | Relationnelle |
+| DB2 | `DB2` | `IBM.Data.DB2.Core` | Relationnelle |
+| SAP ASE (Sybase) | `Ase` | `AdoNetCore.AseClient` | Relationnelle |
+| DaMeng | `DaMeng` | `dmdbms.DmProvider` | Relationnelle |
+| Kingbase | `KingBase` | `Kdbndp` | Relationnelle |
+| HighGo | `HighGo` | `Nhgdb` | Relationnelle |
+| VastBase | `VastBase` | `Npgsql` | Relationnelle |
+| YashanDB | `YashanDB` | `Yashandb.Data.YashandbClient` | Relationnelle |
+| Hana | `Hana` | `Sap.Data.Hana` | En mémoire |
+| IRIS | `IRIS` | `InterSystems.Data.IRISClient` | Multimodèle |
+| ClickHouse | `ClickHouse` | `ClickHouse.Client` | Colonnaire |
+| Vertica | `Vertica` | `Vertica.Data` | Colonnaire |
+| MonetDB | `MonetDB` | `MonetDb.Mapi` | Colonnaire |
+| DuckDB | `DuckDB` | `DuckDB.NET.Data` | OLAP intégré |
+| Snowflake | `Snowflake` | `Snowflake.Data` | Entrepôt de données cloud |
+| Teradata | `Teradata` | `Teradata.Client.Provider` | Entrepôt de données cloud |
+| Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Cloud |
+| TDengine | `TDengine` | Intégré | Séries temporelles |
+| InfluxDB | `InfluxDB` | Intégré | Séries temporelles |
+| MongoDB | `MongoDB` | `MongoDB.Driver` | Documentaire |
+| Presto | `Presto` | `NReco.PrestoAdo` | Fédérée |
+| Trino | `Trino` | `Trino.Data.ADO` | Fédérée |
+| NovaDb | `NovaDb` | `NewLife.NovaDb` | Intégrée / réseau |
+| SonnetDB | `SonnetDB` | `SonnetDB` | Intégrée / distante |
+| Network | `Network` | Intégré | Virtuelle |
+
+Les moteurs compatibles avec le protocole MySQL ou PostgreSQL réutilisent ces fournisseurs via des alias intégrés : TiDB, Doris, StarRocks, OceanBase (mode MySQL), SingleStore, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB et TimescaleDB. Les fournisseurs Access et SqlCe sont conservés mais désactivés.
 
 ## Démarrage rapide
 

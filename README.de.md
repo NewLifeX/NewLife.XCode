@@ -18,11 +18,50 @@
 
 > ⚠️ Diese Übersetzung kann veraltet sein, einschließlich ihrer Struktur; maßgeblich ist das [englische README](README.md).
 
-**NewLife.XCode** ist eine hochperformante .NET-Daten-Middleware mit dem Fokus auf „CRUD + extreme Performance + massenhafte Daten“. Sie umfasst mehrstufiges Caching, automatische Modellierung/Migration, Sharding, stark typisierte Abfragen und datenbankübergreifende Migration. Unterstützt werden MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb / SonnetDB und weitere. In Produktivumgebungen werden zig Milliarden Zeilen pro Tabelle erreicht, und der Abfragedurchsatz kann (mit Caching-Strategien) Milliarden QPS erreichen.
+**NewLife.XCode** ist eine hochperformante .NET-Daten-Middleware mit dem Fokus auf „CRUD + extreme Performance + massenhafte Daten“. Sie umfasst mehrstufiges Caching, automatische Modellierung/Migration, Sharding, stark typisierte Abfragen und datenbankübergreifende Migration. Unterstützt werden MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner und weitere. In Produktivumgebungen werden zig Milliarden Zeilen pro Tabelle erreicht, und der Abfragedurchsatz kann (mit Caching-Strategien) Milliarden QPS erreichen.
 
 Dokumentation: https://newlifex.com/xcode   Community-QQ-Gruppen: 1600800 / 1600838
 
 **Inhalt**: [Schnellstart](#schnellstart) · [Warum XCode](#warum-xcode) · [Hauptfunktionen](#hauptfunktionen) · [Ökosystem-Karte](#ökosystem-karte) · [Dokumentation](#dokumentation) · [Mitwirken](#mitwirken) · [Team](#team) · [Lizenz](#lizenz)
+
+## Unterstützte Datenbanken
+
+XCode greift über ein separates ADO.NET-Treiberpaket auf jede Datenbank zu. Installieren Sie das Paket für Ihre Datenbank; fehlt der Treiber, nennt die Fehlermeldung auch das hinzuzufügende Paket.
+
+| Datenbank | Anbieter | NuGet-Treiberpaket | Typ |
+| --- | --- | --- | --- |
+| SQL Server | `SqlServer` | `System.Data.SqlClient` | Relational |
+| MySQL / MariaDB | `MySql` | `NewLife.MySql` | Relational |
+| PostgreSQL | `PostgreSQL` | `Npgsql` | Relational |
+| Oracle | `Oracle` | `Oracle.ManagedDataAccess.Core` | Relational |
+| SQLite | `SQLite` | `Microsoft.Data.Sqlite` | Eingebettet |
+| Firebird | `Firebird` | `FirebirdSql.Data.FirebirdClient` | Relational |
+| DB2 | `DB2` | `IBM.Data.DB2.Core` | Relational |
+| SAP ASE (Sybase) | `Ase` | `AdoNetCore.AseClient` | Relational |
+| DaMeng | `DaMeng` | `dmdbms.DmProvider` | Relational |
+| Kingbase | `KingBase` | `Kdbndp` | Relational |
+| HighGo | `HighGo` | `Nhgdb` | Relational |
+| VastBase | `VastBase` | `Npgsql` | Relational |
+| YashanDB | `YashanDB` | `Yashandb.Data.YashandbClient` | Relational |
+| Hana | `Hana` | `Sap.Data.Hana` | In-Memory |
+| IRIS | `IRIS` | `InterSystems.Data.IRISClient` | Multimodell |
+| ClickHouse | `ClickHouse` | `ClickHouse.Client` | Spaltenbasiert |
+| Vertica | `Vertica` | `Vertica.Data` | Spaltenbasiert |
+| MonetDB | `MonetDB` | `MonetDb.Mapi` | Spaltenbasiert |
+| DuckDB | `DuckDB` | `DuckDB.NET.Data` | Eingebettetes OLAP |
+| Snowflake | `Snowflake` | `Snowflake.Data` | Cloud-Data-Warehouse |
+| Teradata | `Teradata` | `Teradata.Client.Provider` | Cloud-Data-Warehouse |
+| Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Cloud |
+| TDengine | `TDengine` | Integriert | Zeitreihen |
+| InfluxDB | `InfluxDB` | Integriert | Zeitreihen |
+| MongoDB | `MongoDB` | `MongoDB.Driver` | Dokument |
+| Presto | `Presto` | `NReco.PrestoAdo` | Föderiert |
+| Trino | `Trino` | `Trino.Data.ADO` | Föderiert |
+| NovaDb | `NovaDb` | `NewLife.NovaDb` | Eingebettet / Netzwerk |
+| SonnetDB | `SonnetDB` | `SonnetDB` | Eingebettet / Remote |
+| Network | `Network` | Integriert | Virtuell |
+
+MySQL- und PostgreSQL-protokollkompatible Engines nutzen diese Anbieter über integrierte Aliase wieder: TiDB, Doris, StarRocks, OceanBase (MySQL-Modus), SingleStore, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB und TimescaleDB. Die Anbieter Access und SqlCe bleiben erhalten, sind aber deaktiviert.
 
 ## Schnellstart
 

@@ -22,6 +22,45 @@ Docs: https://newlifex.com/xcode   Community QQ groups: 1600800 / 1600838
 
 **Contents**: [Quick Start](#quick-start) · [Why XCode](#why-xcode) · [Main Features](#main-features) · [Ecosystem Map](#ecosystem-map) · [Documentation](#documentation) · [Contributing](#contributing) · [Team](#team) · [License](#license)
 
+## Supported Databases
+
+XCode reaches every database through a separate ADO.NET driver package. Install the package that matches your database; when a driver is missing, the error message also names the package to add.
+
+| Database | Provider | NuGet driver package | Type |
+| --- | --- | --- | --- |
+| SQL Server | `SqlServer` | `System.Data.SqlClient` | Relational |
+| MySQL / MariaDB | `MySql` | `NewLife.MySql` | Relational |
+| PostgreSQL | `PostgreSQL` | `Npgsql` | Relational |
+| Oracle | `Oracle` | `Oracle.ManagedDataAccess.Core` | Relational |
+| SQLite | `SQLite` | `Microsoft.Data.Sqlite` | Embedded |
+| Firebird | `Firebird` | `FirebirdSql.Data.FirebirdClient` | Relational |
+| DB2 | `DB2` | `IBM.Data.DB2.Core` | Relational |
+| SAP ASE (Sybase) | `Ase` | `AdoNetCore.AseClient` | Relational |
+| DaMeng | `DaMeng` | `dmdbms.DmProvider` | Relational |
+| Kingbase | `KingBase` | `Kdbndp` | Relational |
+| HighGo | `HighGo` | `Nhgdb` | Relational |
+| VastBase | `VastBase` | `Npgsql` | Relational |
+| YashanDB | `YashanDB` | `Yashandb.Data.YashandbClient` | Relational |
+| Hana | `Hana` | `Sap.Data.Hana` | In-memory |
+| IRIS | `IRIS` | `InterSystems.Data.IRISClient` | Multi-model |
+| ClickHouse | `ClickHouse` | `ClickHouse.Client` | Columnar |
+| Vertica | `Vertica` | `Vertica.Data` | Columnar |
+| MonetDB | `MonetDB` | `MonetDb.Mapi` | Columnar |
+| DuckDB | `DuckDB` | `DuckDB.NET.Data` | Embedded OLAP |
+| Snowflake | `Snowflake` | `Snowflake.Data` | Cloud DW |
+| Teradata | `Teradata` | `Teradata.Client.Provider` | Cloud DW |
+| Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Cloud |
+| TDengine | `TDengine` | Built-in | Time-series |
+| InfluxDB | `InfluxDB` | Built-in | Time-series |
+| MongoDB | `MongoDB` | `MongoDB.Driver` | Document |
+| Presto | `Presto` | `NReco.PrestoAdo` | Federated |
+| Trino | `Trino` | `Trino.Data.ADO` | Federated |
+| NovaDb | `NovaDb` | `NewLife.NovaDb` | Embedded / network |
+| SonnetDB | `SonnetDB` | `SonnetDB` | Embedded / remote |
+| Network | `Network` | Built-in | Virtual |
+
+MySQL- and PostgreSQL-protocol engines reuse those providers through built-in aliases: TiDB, Doris, StarRocks, OceanBase (MySQL mode), SingleStore, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB and TimescaleDB. The Access and SqlCe providers are retained but disabled.
+
 ## Quick Start
 
 ### Install

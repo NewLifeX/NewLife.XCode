@@ -18,13 +18,52 @@
 
 > ⚠️ 本翻譯可能落後，包括其結構；以[英文 README](README.md)為準。
 
-高效能 .NET 資料中介層，聚焦「增刪改查 + 極致效能 + 海量資料」，內建多層快取、自動建模/移轉、分表分庫、強型別查詢、跨庫移轉，支援 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / 達夢 / 金倉 / 瀚高 / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network 網路虛擬資料庫 / NovaDb 自研資料庫 / SonnetDB 等。單表生產實踐達百億級，查詢吞吐可達十億級 QPS（搭配快取策略）。
+高效能 .NET 資料中介層，聚焦「增刪改查 + 極致效能 + 海量資料」，內建多層快取、自動建模/移轉、分表分庫、強型別查詢、跨庫移轉，支援 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner 等。單表生產實踐達百億級，查詢吞吐可達十億級 QPS（搭配快取策略）。
 
 文件：https://newlifex.com/xcode   社群交流 QQ 群：1600800 / 1600838
 
 > ℹ️ 本繁體中文版與 [English README](README.md) 同批維護；若兩者內容不一致，以英文版為對外口徑。
 
 **目錄**：[快速開始](#快速開始) · [為什麼選擇 XCode](#為什麼選擇-xcode) · [主要功能](#主要功能) · [生態版圖](#生態版圖) · [文件](#文件) · [參與貢獻](#參與貢獻) · [新生命開發團隊](#新生命開發團隊) · [授權條款](#授權條款)
+
+## 支援的資料庫
+
+XCode 透過獨立的 ADO.NET 驅動套件存取各類資料庫。請依所用資料庫安裝對應 NuGet 套件；驅動缺少時，例外訊息也會直接指出需要新增的套件名稱。
+
+| 資料庫 | 提供者 | NuGet 驅動套件 | 類型 |
+| --- | --- | --- | --- |
+| SQL Server | `SqlServer` | `System.Data.SqlClient` | 關聯式 |
+| MySQL / MariaDB | `MySql` | `NewLife.MySql` | 關聯式 |
+| PostgreSQL | `PostgreSQL` | `Npgsql` | 關聯式 |
+| Oracle | `Oracle` | `Oracle.ManagedDataAccess.Core` | 關聯式 |
+| SQLite | `SQLite` | `Microsoft.Data.Sqlite` | 內嵌 |
+| Firebird | `Firebird` | `FirebirdSql.Data.FirebirdClient` | 關聯式 |
+| DB2 | `DB2` | `IBM.Data.DB2.Core` | 關聯式 |
+| SAP ASE (Sybase) | `Ase` | `AdoNetCore.AseClient` | 關聯式 |
+| DaMeng | `DaMeng` | `dmdbms.DmProvider` | 關聯式 |
+| Kingbase | `KingBase` | `Kdbndp` | 關聯式 |
+| HighGo | `HighGo` | `Nhgdb` | 關聯式 |
+| VastBase | `VastBase` | `Npgsql` | 關聯式 |
+| YashanDB | `YashanDB` | `Yashandb.Data.YashandbClient` | 關聯式 |
+| Hana | `Hana` | `Sap.Data.Hana` | 記憶體式 |
+| IRIS | `IRIS` | `InterSystems.Data.IRISClient` | 多模型 |
+| ClickHouse | `ClickHouse` | `ClickHouse.Client` | 列式 |
+| Vertica | `Vertica` | `Vertica.Data` | 列式 |
+| MonetDB | `MonetDB` | `MonetDb.Mapi` | 列式 |
+| DuckDB | `DuckDB` | `DuckDB.NET.Data` | 內嵌 OLAP |
+| Snowflake | `Snowflake` | `Snowflake.Data` | 雲端資料倉儲 |
+| Teradata | `Teradata` | `Teradata.Client.Provider` | 雲端資料倉儲 |
+| Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | 雲端服務 |
+| TDengine | `TDengine` | 內建 | 時序 |
+| InfluxDB | `InfluxDB` | 內建 | 時序 |
+| MongoDB | `MongoDB` | `MongoDB.Driver` | 文件 |
+| Presto | `Presto` | `NReco.PrestoAdo` | 聯邦查詢 |
+| Trino | `Trino` | `Trino.Data.ADO` | 聯邦查詢 |
+| NovaDb | `NovaDb` | `NewLife.NovaDb` | 內嵌 / 網路 |
+| SonnetDB | `SonnetDB` | `SonnetDB` | 內嵌 / 遠端 |
+| Network | `Network` | 內建 | 虛擬 |
+
+與 MySQL、PostgreSQL 協議相容的資料庫無需新增提供者，使用內建別名即可沿用對應驅動：TiDB、Doris、StarRocks、OceanBase（MySQL 模式）、SingleStore、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB。Access 與 SqlCe 提供者保留但已停用。
 
 ## 快速開始
 

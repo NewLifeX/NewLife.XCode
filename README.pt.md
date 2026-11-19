@@ -18,11 +18,50 @@
 
 > ⚠️ Esta tradução pode ficar desatualizada, inclusive em sua estrutura; a versão autorizada é o [README em inglês](README.md).
 
-**NewLife.XCode** é um middleware de dados .NET de alto desempenho, focado em "CRUD + desempenho extremo + dados massivos". Inclui cache em múltiplos níveis, modelagem/migração automática, sharding, consultas fortemente tipadas e migração entre bancos de dados. Suporta MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / banco de dados virtual Network / NovaDb / SonnetDB e muito mais. Implantações em produção alcançam dezenas de bilhões de linhas por tabela, e a taxa de transferência de consultas pode chegar a bilhões de QPS (com estratégias de cache).
+**NewLife.XCode** é um middleware de dados .NET de alto desempenho, focado em "CRUD + desempenho extremo + dados massivos". Inclui cache em múltiplos níveis, modelagem/migração automática, sharding, consultas fortemente tipadas e migração entre bancos de dados. Suporta MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner e muito mais. Implantações em produção alcançam dezenas de bilhões de linhas por tabela, e a taxa de transferência de consultas pode chegar a bilhões de QPS (com estratégias de cache).
 
 Documentação: https://newlifex.com/xcode   Grupos QQ da comunidade: 1600800 / 1600838
 
 **Conteúdo**: [Início rápido](#início-rápido) · [Por que XCode](#por-que-xcode) · [Principais recursos](#principais-recursos) · [Mapa do ecossistema](#mapa-do-ecossistema) · [Documentação](#documentação) · [Como contribuir](#como-contribuir) · [Equipe](#equipe) · [Licença](#licença)
+
+## Bancos de dados suportados
+
+O XCode acessa cada banco de dados por meio de um pacote de driver ADO.NET separado. Instale o pacote correspondente ao seu banco de dados; quando o driver estiver ausente, a mensagem de erro também indica o pacote a adicionar.
+
+| Banco de dados | Provedor | Pacote NuGet do driver | Tipo |
+| --- | --- | --- | --- |
+| SQL Server | `SqlServer` | `System.Data.SqlClient` | Relacional |
+| MySQL / MariaDB | `MySql` | `NewLife.MySql` | Relacional |
+| PostgreSQL | `PostgreSQL` | `Npgsql` | Relacional |
+| Oracle | `Oracle` | `Oracle.ManagedDataAccess.Core` | Relacional |
+| SQLite | `SQLite` | `Microsoft.Data.Sqlite` | Incorporado |
+| Firebird | `Firebird` | `FirebirdSql.Data.FirebirdClient` | Relacional |
+| DB2 | `DB2` | `IBM.Data.DB2.Core` | Relacional |
+| SAP ASE (Sybase) | `Ase` | `AdoNetCore.AseClient` | Relacional |
+| DaMeng | `DaMeng` | `dmdbms.DmProvider` | Relacional |
+| Kingbase | `KingBase` | `Kdbndp` | Relacional |
+| HighGo | `HighGo` | `Nhgdb` | Relacional |
+| VastBase | `VastBase` | `Npgsql` | Relacional |
+| YashanDB | `YashanDB` | `Yashandb.Data.YashandbClient` | Relacional |
+| Hana | `Hana` | `Sap.Data.Hana` | Em memória |
+| IRIS | `IRIS` | `InterSystems.Data.IRISClient` | Multimodelo |
+| ClickHouse | `ClickHouse` | `ClickHouse.Client` | Colunar |
+| Vertica | `Vertica` | `Vertica.Data` | Colunar |
+| MonetDB | `MonetDB` | `MonetDb.Mapi` | Colunar |
+| DuckDB | `DuckDB` | `DuckDB.NET.Data` | OLAP incorporado |
+| Snowflake | `Snowflake` | `Snowflake.Data` | Data warehouse em nuvem |
+| Teradata | `Teradata` | `Teradata.Client.Provider` | Data warehouse em nuvem |
+| Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Nuvem |
+| TDengine | `TDengine` | Integrado | Séries temporais |
+| InfluxDB | `InfluxDB` | Integrado | Séries temporais |
+| MongoDB | `MongoDB` | `MongoDB.Driver` | Documento |
+| Presto | `Presto` | `NReco.PrestoAdo` | Federado |
+| Trino | `Trino` | `Trino.Data.ADO` | Federado |
+| NovaDb | `NovaDb` | `NewLife.NovaDb` | Incorporado / rede |
+| SonnetDB | `SonnetDB` | `SonnetDB` | Incorporado / remoto |
+| Network | `Network` | Integrado | Virtual |
+
+Os mecanismos compatíveis com o protocolo MySQL ou PostgreSQL reutilizam esses provedores por meio de aliases integrados: TiDB, Doris, StarRocks, OceanBase (modo MySQL), SingleStore, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB e TimescaleDB. Os provedores Access e SqlCe são mantidos, mas estão desabilitados.
 
 ## Início rápido
 

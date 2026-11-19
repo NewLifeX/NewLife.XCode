@@ -18,11 +18,50 @@
 
 > ⚠️ Этот перевод может устареть, включая структуру; авторитетной является [версия на английском](README.md).
 
-**NewLife.XCode** — это высокопроизводительное промежуточное ПО для работы с данными в .NET, ориентированное на «CRUD + предельную производительность + огромные объёмы данных». Оно включает многоуровневое кэширование, автоматическое моделирование и миграцию, шардирование, строго типизированные запросы и межбазовую миграцию. Поддерживаются MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network (сетевая виртуальная база данных) / NovaDb / SonnetDB и многие другие. В промышленной эксплуатации достигаются десятки миллиардов строк на таблицу, а пропускная способность запросов может достигать миллиардов QPS (при использовании стратегий кэширования).
+**NewLife.XCode** — это высокопроизводительное промежуточное ПО для работы с данными в .NET, ориентированное на «CRUD + предельную производительность + огромные объёмы данных». Оно включает многоуровневое кэширование, автоматическое моделирование и миграцию, шардирование, строго типизированные запросы и межбазовую миграцию. Поддерживаются MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner и многие другие. В промышленной эксплуатации достигаются десятки миллиардов строк на таблицу, а пропускная способность запросов может достигать миллиардов QPS (при использовании стратегий кэширования).
 
 Документация: https://newlifex.com/xcode   QQ-группы сообщества: 1600800 / 1600838
 
 **Содержание**: [Быстрый старт](#быстрый-старт) · [Почему XCode](#почему-xcode) · [Основные возможности](#основные-возможности) · [Карта экосистемы](#карта-экосистемы) · [Документация](#документация) · [Участие в проекте](#участие-в-проекте) · [Команда](#команда) · [Лицензия](#лицензия)
+
+## Поддерживаемые базы данных
+
+XCode обращается к каждой базе данных через отдельный пакет драйвера ADO.NET. Установите пакет для своей базы данных; если драйвер отсутствует, сообщение об ошибке также укажет нужный пакет.
+
+| База данных | Провайдер | NuGet-пакет драйвера | Тип |
+| --- | --- | --- | --- |
+| SQL Server | `SqlServer` | `System.Data.SqlClient` | Реляционная |
+| MySQL / MariaDB | `MySql` | `NewLife.MySql` | Реляционная |
+| PostgreSQL | `PostgreSQL` | `Npgsql` | Реляционная |
+| Oracle | `Oracle` | `Oracle.ManagedDataAccess.Core` | Реляционная |
+| SQLite | `SQLite` | `Microsoft.Data.Sqlite` | Встроенная |
+| Firebird | `Firebird` | `FirebirdSql.Data.FirebirdClient` | Реляционная |
+| DB2 | `DB2` | `IBM.Data.DB2.Core` | Реляционная |
+| SAP ASE (Sybase) | `Ase` | `AdoNetCore.AseClient` | Реляционная |
+| DaMeng | `DaMeng` | `dmdbms.DmProvider` | Реляционная |
+| Kingbase | `KingBase` | `Kdbndp` | Реляционная |
+| HighGo | `HighGo` | `Nhgdb` | Реляционная |
+| VastBase | `VastBase` | `Npgsql` | Реляционная |
+| YashanDB | `YashanDB` | `Yashandb.Data.YashandbClient` | Реляционная |
+| Hana | `Hana` | `Sap.Data.Hana` | В памяти |
+| IRIS | `IRIS` | `InterSystems.Data.IRISClient` | Мультимодельная |
+| ClickHouse | `ClickHouse` | `ClickHouse.Client` | Колоночная |
+| Vertica | `Vertica` | `Vertica.Data` | Колоночная |
+| MonetDB | `MonetDB` | `MonetDb.Mapi` | Колоночная |
+| DuckDB | `DuckDB` | `DuckDB.NET.Data` | Встроенная OLAP |
+| Snowflake | `Snowflake` | `Snowflake.Data` | Облачное хранилище данных |
+| Teradata | `Teradata` | `Teradata.Client.Provider` | Облачное хранилище данных |
+| Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Облачная |
+| TDengine | `TDengine` | Встроенный | Временных рядов |
+| InfluxDB | `InfluxDB` | Встроенный | Временных рядов |
+| MongoDB | `MongoDB` | `MongoDB.Driver` | Документная |
+| Presto | `Presto` | `NReco.PrestoAdo` | Федеративная |
+| Trino | `Trino` | `Trino.Data.ADO` | Федеративная |
+| NovaDb | `NovaDb` | `NewLife.NovaDb` | Встроенная / сеть |
+| SonnetDB | `SonnetDB` | `SonnetDB` | Встроенная / удалённая |
+| Network | `Network` | Встроенный | Виртуальная |
+
+СУБД, совместимые с протоколом MySQL или PostgreSQL, используют эти провайдеры через встроенные псевдонимы: TiDB, Doris, StarRocks, OceanBase (режим MySQL), SingleStore, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB и TimescaleDB. Провайдеры Access и SqlCe сохранены, но отключены.
 
 ## Быстрый старт
 

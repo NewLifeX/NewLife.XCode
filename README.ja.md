@@ -18,11 +18,50 @@
 
 > ⚠️ この翻訳は構成を含め古くなっている可能性があります。正式な版は[英語版 README](README.md)です。
 
-**NewLife.XCode** は、「CRUD + 極限のパフォーマンス + 大規模データ」に特化した高性能な .NET データミドルウェアです。マルチレベルキャッシュ、自動モデリング/マイグレーション、シャーディング、型付きクエリ、データベース間移行を備えています。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb / SonnetDB などに対応しています。本番環境では 1 テーブルあたり数百億行に達し、クエリのスループットは（キャッシュ戦略により）数十億 QPS に達することがあります。
+**NewLife.XCode** は、「CRUD + 極限のパフォーマンス + 大規模データ」に特化した高性能な .NET データミドルウェアです。マルチレベルキャッシュ、自動モデリング/マイグレーション、シャーディング、型付きクエリ、データベース間移行を備えています。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner などに対応しています。本番環境では 1 テーブルあたり数百億行に達し、クエリのスループットは（キャッシュ戦略により）数十億 QPS に達することがあります。
 
 ドキュメント：https://newlifex.com/xcode   コミュニティ QQ グループ：1600800 / 1600838
 
 **目次**：[クイックスタート](#クイックスタート) · [XCode を選ぶ理由](#xcode-を選ぶ理由) · [主な機能](#主な機能) · [エコシステムマップ](#エコシステムマップ) · [ドキュメント](#ドキュメント) · [コントリビュート](#コントリビュート) · [チーム](#チーム) · [ライセンス](#ライセンス)
+
+## 対応データベース
+
+XCode はデータベースごとに個別の ADO.NET ドライバーパッケージを介して接続します。使用するデータベースのパッケージをインストールしてください。ドライバーが見つからない場合、エラーメッセージに追加すべきパッケージ名も表示されます。
+
+| データベース | プロバイダー | NuGet ドライバーパッケージ | 種類 |
+| --- | --- | --- | --- |
+| SQL Server | `SqlServer` | `System.Data.SqlClient` | リレーショナル |
+| MySQL / MariaDB | `MySql` | `NewLife.MySql` | リレーショナル |
+| PostgreSQL | `PostgreSQL` | `Npgsql` | リレーショナル |
+| Oracle | `Oracle` | `Oracle.ManagedDataAccess.Core` | リレーショナル |
+| SQLite | `SQLite` | `Microsoft.Data.Sqlite` | 組み込み |
+| Firebird | `Firebird` | `FirebirdSql.Data.FirebirdClient` | リレーショナル |
+| DB2 | `DB2` | `IBM.Data.DB2.Core` | リレーショナル |
+| SAP ASE (Sybase) | `Ase` | `AdoNetCore.AseClient` | リレーショナル |
+| DaMeng | `DaMeng` | `dmdbms.DmProvider` | リレーショナル |
+| Kingbase | `KingBase` | `Kdbndp` | リレーショナル |
+| HighGo | `HighGo` | `Nhgdb` | リレーショナル |
+| VastBase | `VastBase` | `Npgsql` | リレーショナル |
+| YashanDB | `YashanDB` | `Yashandb.Data.YashandbClient` | リレーショナル |
+| Hana | `Hana` | `Sap.Data.Hana` | インメモリ |
+| IRIS | `IRIS` | `InterSystems.Data.IRISClient` | マルチモデル |
+| ClickHouse | `ClickHouse` | `ClickHouse.Client` | 列指向 |
+| Vertica | `Vertica` | `Vertica.Data` | 列指向 |
+| MonetDB | `MonetDB` | `MonetDb.Mapi` | 列指向 |
+| DuckDB | `DuckDB` | `DuckDB.NET.Data` | 組み込み OLAP |
+| Snowflake | `Snowflake` | `Snowflake.Data` | クラウド DWH |
+| Teradata | `Teradata` | `Teradata.Client.Provider` | クラウド DWH |
+| Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | クラウド |
+| TDengine | `TDengine` | 内蔵 | 時系列 |
+| InfluxDB | `InfluxDB` | 内蔵 | 時系列 |
+| MongoDB | `MongoDB` | `MongoDB.Driver` | ドキュメント |
+| Presto | `Presto` | `NReco.PrestoAdo` | フェデレーテッド |
+| Trino | `Trino` | `Trino.Data.ADO` | フェデレーテッド |
+| NovaDb | `NovaDb` | `NewLife.NovaDb` | 組み込み / ネットワーク |
+| SonnetDB | `SonnetDB` | `SonnetDB` | 組み込み / リモート |
+| Network | `Network` | 内蔵 | 仮想 |
+
+MySQL / PostgreSQL プロトコル互換のエンジンは、組み込みの別名で同じプロバイダーを再利用できます：TiDB、Doris、StarRocks、OceanBase（MySQL モード）、SingleStore、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB。Access と SqlCe のプロバイダーは残されていますが無効です。
 
 ## クイックスタート
 

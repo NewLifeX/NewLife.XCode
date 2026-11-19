@@ -18,11 +18,50 @@
 
 > ⚠️ قد تكون هذه الترجمة قديمة، بما في ذلك هيكلها؛ النسخة المعتمدة هي [README بالإنجليزية](README.md).
 
-**NewLife.XCode** هو وسيط بيانات .NET عالي الأداء يركّز على «CRUD + أداء فائق + بيانات ضخمة». يشمل التخزين المؤقت متعدد المستويات، والنمذجة/الترحيل التلقائي، وتجزئة الجداول، والاستعلامات قوية النوع، والترحيل بين قواعد البيانات. يدعم MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / قاعدة بيانات الشبكة الافتراضية / NovaDb / SonnetDB وغيرها. تصل عمليات النشر في بيئات الإنتاج إلى عشرات المليارات من الصفوف لكل جدول، ويمكن أن يبلغ معدل نقل الاستعلامات مليارات QPS (مع استراتيجيات التخزين المؤقت).
+**NewLife.XCode** هو وسيط بيانات .NET عالي الأداء يركّز على «CRUD + أداء فائق + بيانات ضخمة». يشمل التخزين المؤقت متعدد المستويات، والنمذجة/الترحيل التلقائي، وتجزئة الجداول، والاستعلامات قوية النوع، والترحيل بين قواعد البيانات. يدعم MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner وغيرها. تصل عمليات النشر في بيئات الإنتاج إلى عشرات المليارات من الصفوف لكل جدول، ويمكن أن يبلغ معدل نقل الاستعلامات مليارات QPS (مع استراتيجيات التخزين المؤقت).
 
 التوثيق: https://newlifex.com/xcode   مجموعات QQ المجتمعية: 1600800 / 1600838
 
 **المحتويات**: [البدء السريع](#البدء-السريع) · [لماذا XCode](#لماذا-xcode) · [الميزات الرئيسية](#الميزات-الرئيسية) · [خريطة المنظومة](#خريطة-المنظومة) · [التوثيق](#التوثيق) · [المساهمة](#المساهمة) · [الفريق](#الفريق) · [الترخيص](#الترخيص)
+
+## قواعد البيانات المدعومة
+
+يتصل XCode بكل قاعدة بيانات عبر حزمة برنامج تشغيل ADO.NET منفصلة. ثبّت الحزمة المناسبة لقاعدة بياناتك؛ وعند غياب برنامج التشغيل تذكر رسالة الخطأ أيضًا الحزمة المطلوب إضافتها.
+
+| قاعدة البيانات | المزوّد | حزمة NuGet للبرنامج | النوع |
+| --- | --- | --- | --- |
+| SQL Server | `SqlServer` | `System.Data.SqlClient` | علائقية |
+| MySQL / MariaDB | `MySql` | `NewLife.MySql` | علائقية |
+| PostgreSQL | `PostgreSQL` | `Npgsql` | علائقية |
+| Oracle | `Oracle` | `Oracle.ManagedDataAccess.Core` | علائقية |
+| SQLite | `SQLite` | `Microsoft.Data.Sqlite` | مدمجة |
+| Firebird | `Firebird` | `FirebirdSql.Data.FirebirdClient` | علائقية |
+| DB2 | `DB2` | `IBM.Data.DB2.Core` | علائقية |
+| SAP ASE (Sybase) | `Ase` | `AdoNetCore.AseClient` | علائقية |
+| DaMeng | `DaMeng` | `dmdbms.DmProvider` | علائقية |
+| Kingbase | `KingBase` | `Kdbndp` | علائقية |
+| HighGo | `HighGo` | `Nhgdb` | علائقية |
+| VastBase | `VastBase` | `Npgsql` | علائقية |
+| YashanDB | `YashanDB` | `Yashandb.Data.YashandbClient` | علائقية |
+| Hana | `Hana` | `Sap.Data.Hana` | في الذاكرة |
+| IRIS | `IRIS` | `InterSystems.Data.IRISClient` | متعددة النماذج |
+| ClickHouse | `ClickHouse` | `ClickHouse.Client` | عمودية |
+| Vertica | `Vertica` | `Vertica.Data` | عمودية |
+| MonetDB | `MonetDB` | `MonetDb.Mapi` | عمودية |
+| DuckDB | `DuckDB` | `DuckDB.NET.Data` | OLAP مدمج |
+| Snowflake | `Snowflake` | `Snowflake.Data` | مستودع بيانات سحابي |
+| Teradata | `Teradata` | `Teradata.Client.Provider` | مستودع بيانات سحابي |
+| Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | سحابية |
+| TDengine | `TDengine` | مدمج | سلاسل زمنية |
+| InfluxDB | `InfluxDB` | مدمج | سلاسل زمنية |
+| MongoDB | `MongoDB` | `MongoDB.Driver` | مستندية |
+| Presto | `Presto` | `NReco.PrestoAdo` | اتحادية |
+| Trino | `Trino` | `Trino.Data.ADO` | اتحادية |
+| NovaDb | `NovaDb` | `NewLife.NovaDb` | مدمجة / شبكة |
+| SonnetDB | `SonnetDB` | `SonnetDB` | مدمجة / بعيدة |
+| Network | `Network` | مدمج | افتراضية |
+
+تستخدم المحركات المتوافقة مع بروتوكول MySQL أو PostgreSQL هذين المزوّدين عبر أسماء مستعارة مدمجة: TiDB وDoris وStarRocks وOceanBase (وضع MySQL) وSingleStore وDatabend وopenGauss وGaussDB وGreenplum وAmazon Redshift وCockroachDB وYugabyteDB وTimescaleDB. مزوّدا Access وSqlCe محفوظان لكنهما معطّلان.
 
 ## البدء السريع
 

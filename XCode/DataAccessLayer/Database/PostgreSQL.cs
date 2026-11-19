@@ -60,8 +60,18 @@ internal class PostgreSQL : RemoteDb
         if (providerName.Contains("postgresql")) return true;
         if (providerName.Contains("npgsql")) return true;
 
+        // PostgreSQL 协议兼容的数据库，统一使用 PostgreSQL 提供者。
+        // 注意：HighGo/KingBase/VastBase 有专属提供者且注册在本类之后，不能加入别名，否则会被本类抢先匹配
+        foreach (var item in _ProtocolAliases)
+        {
+            if (providerName.Contains(item)) return true;
+        }
+
         return false;
     }
+
+    /// <summary>PostgreSQL 协议兼容的数据库别名。openGauss/Redshift/Greenplum 等均可直接使用 PostgreSQL 提供者</summary>
+    private static readonly String[] _ProtocolAliases = ["opengauss", "gaussdb", "greenplum", "redshift", "cockroach", "yugabyte", "timescale", "questdb"];
 
     #endregion 方法
 

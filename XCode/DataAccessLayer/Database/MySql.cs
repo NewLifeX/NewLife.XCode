@@ -133,8 +133,17 @@ internal class MySql : RemoteDb
         if (providerName.Contains("mysql.data.mysqlclient")) return true;
         if (providerName.Contains("mysql")) return true;
 
+        // MySQL 协议兼容的数据库，统一使用 MySql 提供者
+        foreach (var item in _ProtocolAliases)
+        {
+            if (providerName.Contains(item)) return true;
+        }
+
         return false;
     }
+
+    /// <summary>MySQL 协议兼容的数据库别名。TiDB/StarRocks/Doris/OceanBase 等均可直接使用 MySql 提供者</summary>
+    private static readonly String[] _ProtocolAliases = ["mariadb", "tidb", "starrocks", "doris", "oceanbase", "singlestore", "polardb", "tdsql", "goldendb", "greatdb", "databend"];
 
     #endregion 方法
 

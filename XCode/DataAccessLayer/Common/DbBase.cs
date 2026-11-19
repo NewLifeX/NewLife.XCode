@@ -295,6 +295,16 @@ abstract class DbBase : DisposeBase, IDatabase
 
     /// <summary>数据库引擎默认的反向工程表名、字段名大小写设置</summary>
     public virtual NameFormats DefaultNameFormat => NameFormats.None;
+
+    /// <summary>有效命名格式。连接字符串配置 &gt; 全局配置 &gt; 数据库默认</summary>
+    public NameFormats EffectiveNameFormat
+    {
+        get
+        {
+            var fmt = NameFormat;
+            return fmt != NameFormats.Default ? fmt : DefaultNameFormat;
+        }
+    }
     #endregion
 
     #region 方法
@@ -719,12 +729,15 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <returns></returns>
     public virtual String FormatKeyWord(String keyWord) => keyWord;
 
-    /// <summary>格式化名称，如果是关键字，则格式化后返回，否则原样返回</summary>
+    /// <summary>格式化名称。关键字按方言加引号，<see cref="NameFormats.Exact"/> 下所有标识符强制加引号</summary>
     /// <param name="name">名称</param>
     /// <returns></returns>
     public virtual String FormatName(String name)
     {
         if (name.IsNullOrEmpty()) return name;
+
+        // 精确模式逐字保留物理名称，强制加引号
+        if (EffectiveNameFormat == NameFormats.Exact) return FormatKeyWord(name);
 
         // 优先使用内置关键字
         var rws = ReservedWords;
@@ -759,11 +772,10 @@ abstract class DbBase : DisposeBase, IDatabase
         var pf = TablePrefix;
         if (!pf.IsNullOrEmpty()) name = pf + name;
 
+        var fmt = EffectiveNameFormat;
         // 名称格式化，只有表名跟名称相同时才处理。否则认为用户指定了表名
         if (table.TableName == table.Name)
         {
-            var fmt = DefaultNameFormat;
-            if (NameFormat != NameFormats.Default) fmt = NameFormat;
             switch (fmt)
             {
                 case NameFormats.Upper:
@@ -782,7 +794,9 @@ abstract class DbBase : DisposeBase, IDatabase
             }
         }
 
-        return formatKeyword ? FormatName(name) : name;
+        if (!formatKeyword) return name;
+
+        return FormatName(name);
     }
 
     /// <summary>格式化字段名，考虑大小写</summary>
@@ -794,11 +808,10 @@ abstract class DbBase : DisposeBase, IDatabase
 
         var name = column.ColumnName;
 
-        // 名称格式化，只有字段名名跟名称相同时才处理。否则认为用户指定了字段名
+        var fmt = EffectiveNameFormat;
+        // 名称格式化，只有字段名跟名称相同时才处理。否则认为用户指定了字段名
         if (column.ColumnName == column.Name)
         {
-            var fmt = DefaultNameFormat;
-            if (NameFormat != NameFormats.Default) fmt = NameFormat;
             switch (fmt)
             {
                 case NameFormats.Upper:

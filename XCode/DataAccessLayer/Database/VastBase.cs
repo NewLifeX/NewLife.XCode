@@ -238,6 +238,9 @@ internal class VastBase : RemoteDb
     /// <inheritdoc/>
     public override String FormatName(String name)
     {
+        // 精确模式保留原有大小写
+        if (EffectiveNameFormat == NameFormats.Exact) return base.FormatName(name);
+
         name = base.FormatName(name);
 
         if (name.StartsWith("\"") || name.EndsWith("\"")) return name;

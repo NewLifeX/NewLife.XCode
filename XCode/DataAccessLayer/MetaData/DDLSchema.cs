@@ -34,6 +34,9 @@ namespace XCode.DataAccessLayer
         /// <summary>修改字段</summary>
         AlterColumn,
 
+        /// <summary>重命名字段。仅用于精确命名格式下修正列名大小写</summary>
+        RenameColumn,
+
         /// <summary>删除字段</summary>
         DropColumn,
 

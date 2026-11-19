@@ -21,22 +21,28 @@ public enum Migration
 }
 
 /// <summary>名称格式化</summary>
+/// <remarks>
+/// 控制表名与字段名输出到数据库时的转换方式与引号策略。
+/// <see cref="None"/> 交给数据库折叠大小写，<see cref="Exact"/> 强制加引号以逐字保留物理名称。
+/// </remarks>
 public enum NameFormats
 {
-    /// <summary>默认</summary>
+    /// <summary>默认。跟随数据库的反向工程命名设置</summary>
     Default = 0,
-    /// <summary>保持原样</summary>
+
+    /// <summary>保持原样，不强制加引号（仅关键字与特殊字符按方言加引号），由数据库折叠大小写</summary>
     None,
-    /// <summary>全大写</summary>
+
+    /// <summary>全大写。不加引号</summary>
     Upper,
 
-    /// <summary>全小写</summary>
+    /// <summary>全小写。不加引号</summary>
     Lower,
 
-    /// <summary>下划线</summary>
+    /// <summary>下划线。转为下划线小写，不加引号</summary>
     Underline,
 
-    /// <summary>保持原样，XML模型同时保留物理名称的精确大小写</summary>
+    /// <summary>精确。保持原样并强制加引号，物理名称逐字匹配且区分大小写，XML模型同时保留名称的精确大小写</summary>
     Exact,
 }
 
@@ -111,8 +117,11 @@ public interface IDatabase : IDisposable2
     /// <summary>反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，新建；Full 完全，修改删除</summary>
     Migration Migration { get; set; }
 
-    /// <summary>表名、字段名大小写设置。（No 保持原样输出、Upper 全大写、Lower全小写）</summary>
+    /// <summary>表名、字段名大小写设置。（None 保持原样不加引号、Upper 全大写、Lower 全小写、Underline 下划线、Exact 保持原样并强制加引号）</summary>
     NameFormats NameFormat { get; set; }
+
+    /// <summary>有效命名格式。连接字符串配置 &gt; 全局配置 &gt; 数据库默认</summary>
+    NameFormats EffectiveNameFormat { get; }
 
     /// <summary>批大小。用于批量操作数据，默认5000</summary>
     Int32 BatchSize { get; set; }

@@ -254,6 +254,14 @@ public class TableItem
             if (fi.IsIdentity) Identity = fi;
             if (fi.Master) Master = fi;
         }
+
+        // 同一张表禁止仅大小写不同的字段名
+        var dups = fields.GroupBy(e => e.ColumnName + "", StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1).ToArray();
+        if (dups.Length > 0)
+        {
+            var names = dups.Join(Environment.NewLine, g => g.Join(" / ", e => e.ColumnName));
+            throw new XCodeException($"实体[{EntityType.FullName}]存在仅大小写不同的字段：{Environment.NewLine}{names}。XCode不支持同一张表内仅大小写不同的字段名");
+        }
         // 先完成allfields才能专门处理
         foreach (var item in allfields)
         {

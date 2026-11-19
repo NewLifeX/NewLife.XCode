@@ -230,6 +230,13 @@ internal partial class DbMetaData
     protected virtual String CheckColumnsChange(IDataTable entitytable, IDataTable dbtable, Boolean @readonly, Boolean onlyCreate, XCodeSetting set)
     {
         var sb = new StringBuilder();
+
+        // 同一张表不允许存在仅大小写不同的字段
+        CheckDuplicateColumnCase(dbtable);
+
+        // 精确命名格式下，字段名大小写不一致需要先改名，否则查询时找不到列
+        if (Database.EffectiveNameFormat == NameFormats.Exact) CheckColumnCase(entitytable, dbtable, sb, @readonly);
+
         var etdic = entitytable.Columns.ToDictionary(e => FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
         var dbdic = dbtable.Columns.ToDictionary(e => FormatName(e), e => e, StringComparer.OrdinalIgnoreCase);
 
@@ -322,6 +329,41 @@ internal partial class DbMetaData
         #endregion
 
         return sb.ToString();
+    }
+
+    /// <summary>检查同一张表内是否存在仅大小写不同的字段。XCode不支持该结构</summary>
+    /// <param name="dbtable">数据库表</param>
+    private static void CheckDuplicateColumnCase(IDataTable dbtable)
+    {
+        var dups = dbtable.Columns.GroupBy(e => e.ColumnName + "", StringComparer.OrdinalIgnoreCase).Where(g => g.Count() > 1).ToArray();
+        if (dups.Length == 0) return;
+
+        var names = dups.Join(Environment.NewLine, g => g.Join(" / ", e => e.ColumnName));
+        throw new XCodeException($"数据表[{dbtable.TableName}]存在仅大小写不同的字段：{Environment.NewLine}{names}。XCode不支持同一张表内仅大小写不同的字段名，请调整表结构");
+    }
+
+    /// <summary>精确命名格式下，把数据库中大小写不一致的字段名改成模型名称</summary>
+    /// <param name="entitytable">实体表</param>
+    /// <param name="dbtable">数据库表</param>
+    /// <param name="sb">SQL收集器</param>
+    /// <param name="readonly">只生成SQL而不执行</param>
+    private void CheckColumnCase(IDataTable entitytable, IDataTable dbtable, StringBuilder sb, Boolean @readonly)
+    {
+        foreach (var item in entitytable.Columns)
+        {
+            var target = FormatName(item);
+            if (dbtable.Columns.Any(e => FormatName(e) == target)) continue;
+
+            // 忽略大小写能找到，说明只是大小写不同
+            var old = dbtable.Columns.FirstOrDefault(e => String.Equals(FormatName(e), target, StringComparison.OrdinalIgnoreCase));
+            if (old == null) continue;
+
+            WriteLog("字段[{0}.{1}]大小写与模型不一致，重命名[{2}]", dbtable.TableName, old.ColumnName, item.ColumnName);
+            PerformSchema(sb, @readonly, DDLSchema.RenameColumn, old, item.ColumnName + "");
+
+            // 改名后同步内存模型，避免后续重复处理
+            old.ColumnName = item.ColumnName;
+        }
     }
 
     /// <summary>检查表说明和索引</summary>
@@ -862,6 +904,7 @@ internal partial class DbMetaData
             DDLSchema.DropTableDescription => DropTableDescriptionSQL((IDataTable)values[0]!),
             DDLSchema.AddColumn => AddColumnSQL((IDataColumn)values[0]!),
             DDLSchema.AlterColumn => AlterColumnSQL((IDataColumn)values[0]!, values.Length > 1 ? (IDataColumn)values[1]! : null),
+            DDLSchema.RenameColumn => RenameColumnSQL((IDataColumn)values[0]!, (String)values[1]!),
             DDLSchema.DropColumn => DropColumnSQL((IDataColumn)values[0]!),
             DDLSchema.AddColumnDescription => AddColumnDescriptionSQL((IDataColumn)values[0]!),
             DDLSchema.DropColumnDescription => DropColumnDescriptionSQL((IDataColumn)values[0]!),
@@ -889,6 +932,7 @@ internal partial class DbMetaData
             DDLSchema.DropTableDescription => DropTableDescription((IDataTable)values[0]!),
             DDLSchema.AddColumn => AddColumn((IDataColumn)values[0]!),
             DDLSchema.AlterColumn => AlterColumn((IDataColumn)values[0]!, values.Length > 1 ? (IDataColumn)values[1]! : null),
+            DDLSchema.RenameColumn => RenameColumn((IDataColumn)values[0]!, (String)values[1]!),
             DDLSchema.DropColumn => DropColumn((IDataColumn)values[0]!),
             DDLSchema.AddColumnDescription => AddColumnDescription((IDataColumn)values[0]!),
             DDLSchema.DropColumnDescription => DropColumnDescription((IDataColumn)values[0]!),
@@ -1069,6 +1113,12 @@ internal partial class DbMetaData
 
     public virtual String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"Alter Table {FormatName(field.Table)} Alter Column {FieldClause(field, false)}";
 
+    /// <summary>重命名字段SQL。仅用于精确命名格式下修正列名大小写</summary>
+    /// <param name="field">字段</param>
+    /// <param name="newName">新名称</param>
+    /// <returns></returns>
+    public virtual String? RenameColumnSQL(IDataColumn field, String newName) => $"Alter Table {FormatName(field.Table)} Rename Column {Database.FormatName(field.ColumnName + "")} To {Database.FormatName(newName)}";
+
     public virtual String? DropColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Drop Column {FormatName(field)}";
 
     public virtual String? AddColumnDescriptionSQL(IDataColumn field) => null;
@@ -1238,6 +1288,16 @@ internal partial class DbMetaData
     {
         var sql = AlterColumnSQL(column, oldColumn);
         return ExecuteDDL(sql, "AlterColumn");
+    }
+
+    /// <summary>重命名字段。仅用于精确命名格式下修正列名大小写</summary>
+    /// <param name="field">字段</param>
+    /// <param name="newName">新名称</param>
+    /// <returns>是否成功</returns>
+    public virtual Boolean RenameColumn(IDataColumn field, String newName)
+    {
+        var sql = RenameColumnSQL(field, newName);
+        return ExecuteDDL(sql, "RenameColumn");
     }
 
     /// <summary>删除字段</summary>

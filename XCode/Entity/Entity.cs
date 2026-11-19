@@ -2,6 +2,7 @@
 using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using NewLife.Collections;
 using NewLife.Data;
@@ -2049,7 +2050,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             // 扩展属性
             if (Meta.Table.ExtendFieldNames.Contains(name))
             {
-                var pi = GetType().GetPropertyEx(name, true);
+                var pi = FindExtendProperty(name);
                 if (pi != null && pi.CanRead) return this.GetValue(pi);
             }
 
@@ -2074,7 +2075,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             // 扩展属性
             if (Meta.Table.ExtendFieldNames.Contains(name))
             {
-                var pi = GetType().GetPropertyEx(name, true);
+                var pi = FindExtendProperty(name);
                 if (pi != null && pi.CanWrite)
                 {
                     this.SetValue(pi, value);
@@ -2088,6 +2089,27 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             //Extends[name] = value;
             (this as IExtend).Items[name] = value;
         }
+    }
+
+    /// <summary>查找扩展属性。优先精确匹配，忽略大小写存在多个候选时视为歧义</summary>
+    /// <param name="name">名称</param>
+    /// <returns></returns>
+    private PropertyInfo? FindExtendProperty(String name)
+    {
+        var type = GetType();
+        var pi = type.GetPropertyEx(name);
+        if (pi != null) return pi;
+
+        PropertyInfo? find = null;
+        foreach (var item in type.GetProperties())
+        {
+            if (!item.Name.EqualIgnoreCase(name)) continue;
+            // 存在多个仅大小写不同的属性时不做猜测，交由字段查找处理
+            if (find != null) return null;
+            find = item;
+        }
+
+        return find;
     }
     #endregion
 

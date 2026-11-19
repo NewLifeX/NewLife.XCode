@@ -1521,6 +1521,14 @@ internal class SqlServerMetaData : RemoteDbMetaData
 
     public override String? AddColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Add {FieldClause(field, true)}";
 
+    public override String? RenameColumnSQL(IDataColumn field, String newName)
+    {
+        var table = field.Table;
+        var name = $"{FormatName(table)}.{Database.FormatName(field.ColumnName + "")}";
+
+        return $"EXEC sp_rename N'{name.Replace("'", "''")}', N'{newName.Replace("'", "''")}', 'COLUMN'";
+    }
+
     public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
     {
         if (oldfield != null)

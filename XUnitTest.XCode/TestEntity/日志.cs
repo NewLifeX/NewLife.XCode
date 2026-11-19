@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -18,9 +18,9 @@ namespace XUnitTest.XCode.TestEntity;
 [DataObject]
 [Description("日志")]
 [BindIndex("IX_Log2_Action_Category", false, "Action,Category")]
-[BindIndex("IX_Log2_Action_Category_ID", false, "Action,Category,ID")]
-[BindIndex("IX_Log2_Category_LinkID_ID", false, "Category,LinkID,ID")]
-[BindIndex("IX_Log2_CreateUserID_ID", false, "CreateUserID,ID")]
+[BindIndex("IX_Log2_Action_Category_ID", false, "Action,Category,Id")]
+[BindIndex("IX_Log2_Category_LinkID_ID", false, "Category,LinkId,Id")]
+[BindIndex("IX_Log2_CreateUserID_ID", false, "CreateUserId,Id")]
 [BindTable("Log2", Description = "日志", ConnName = "test", DbType = DatabaseType.None)]
 public partial class Log2
 {
@@ -30,8 +30,8 @@ public partial class Log2
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, false, false, 0)]
-    [BindColumn("ID", "编号", "", DataScale = "time")]
-    public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "", DataScale = "time")]
+    public Int64 Id { get => _ID; set { if (OnPropertyChanging("Id", value)) { _ID = value; OnPropertyChanged("Id"); } } }
 
     private String _Category;
     /// <summary>类别</summary>
@@ -54,8 +54,8 @@ public partial class Log2
     [DisplayName("链接")]
     [Description("链接")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("LinkID", "链接", "")]
-    public Int32 LinkID { get => _LinkID; set { if (OnPropertyChanging("LinkID", value)) { _LinkID = value; OnPropertyChanged("LinkID"); } } }
+    [BindColumn("LinkId", "链接", "")]
+    public Int32 LinkId { get => _LinkID; set { if (OnPropertyChanging("LinkId", value)) { _LinkID = value; OnPropertyChanged("LinkId"); } } }
 
     private Boolean _Success;
     /// <summary>成功</summary>
@@ -134,8 +134,8 @@ public partial class Log2
     [DisplayName("创建用户")]
     [Description("创建用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建用户", "")]
-    public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
+    [BindColumn("CreateUserId", "创建用户", "")]
+    public Int32 CreateUserId { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserId", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserId"); } } }
 
     private String _CreateIP;
     /// <summary>创建地址</summary>
@@ -170,10 +170,10 @@ public partial class Log2
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _ID,
             "Category" => _Category,
             "Action" => _Action,
-            "LinkID" => _LinkID,
+            "LinkId" => _LinkID,
             "Success" => _Success,
             "UserName" => _UserName,
             "Ex1" => _Ex1,
@@ -183,7 +183,7 @@ public partial class Log2
             "Ex5" => _Ex5,
             "Ex6" => _Ex6,
             "CreateUser" => _CreateUser,
-            "CreateUserID" => _CreateUserID,
+            "CreateUserId" => _CreateUserID,
             "CreateIP" => _CreateIP,
             "CreateTime" => _CreateTime,
             "Remark" => _Remark,
@@ -193,10 +193,10 @@ public partial class Log2
         {
             switch (name)
             {
-                case "ID": _ID = value.ToLong(); break;
+                case "Id": _ID = value.ToLong(); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Action": _Action = Convert.ToString(value); break;
-                case "LinkID": _LinkID = value.ToInt(); break;
+                case "LinkId": _LinkID = value.ToInt(); break;
                 case "Success": _Success = value.ToBoolean(); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
@@ -206,7 +206,7 @@ public partial class Log2
                 case "Ex5": _Ex5 = Convert.ToString(value); break;
                 case "Ex6": _Ex6 = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                case "CreateUserId": _CreateUserID = value.ToInt(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "Remark": _Remark = (Byte[])value; break;
@@ -241,7 +241,7 @@ public partial class Log2
         if (category.IsNullOrEmpty()) return [];
         if (linkId < 0) return [];
 
-        return FindAll(_.Category == category & _.LinkID == linkId);
+        return FindAll(_.Category == category & _.LinkId == linkId);
     }
 
     /// <summary>根据操作查找</summary>
@@ -262,7 +262,7 @@ public partial class Log2
     /// <returns>清理行数</returns>
     public static Int32 DeleteWith(DateTime start, DateTime end)
     {
-        return Delete(_.ID.Between(start, end, Meta.Factory.Snow));
+        return Delete(_.Id.Between(start, end, Meta.Factory.Snow));
     }
     #endregion
 
@@ -271,7 +271,7 @@ public partial class Log2
     public partial class _
     {
         /// <summary>编号</summary>
-        public static readonly Field ID = FindByName("ID");
+        public static readonly Field Id = FindByName("Id");
 
         /// <summary>类别</summary>
         public static readonly Field Category = FindByName("Category");
@@ -280,7 +280,7 @@ public partial class Log2
         public static readonly Field Action = FindByName("Action");
 
         /// <summary>链接</summary>
-        public static readonly Field LinkID = FindByName("LinkID");
+        public static readonly Field LinkId = FindByName("LinkId");
 
         /// <summary>成功</summary>
         public static readonly Field Success = FindByName("Success");
@@ -310,7 +310,7 @@ public partial class Log2
         public static readonly Field CreateUser = FindByName("CreateUser");
 
         /// <summary>创建用户</summary>
-        public static readonly Field CreateUserID = FindByName("CreateUserID");
+        public static readonly Field CreateUserId = FindByName("CreateUserId");
 
         /// <summary>创建地址</summary>
         public static readonly Field CreateIP = FindByName("CreateIP");
@@ -328,7 +328,7 @@ public partial class Log2
     public partial class __
     {
         /// <summary>编号</summary>
-        public const String ID = "ID";
+        public const String Id = "Id";
 
         /// <summary>类别</summary>
         public const String Category = "Category";
@@ -337,7 +337,7 @@ public partial class Log2
         public const String Action = "Action";
 
         /// <summary>链接</summary>
-        public const String LinkID = "LinkID";
+        public const String LinkId = "LinkId";
 
         /// <summary>成功</summary>
         public const String Success = "Success";
@@ -367,7 +367,7 @@ public partial class Log2
         public const String CreateUser = "CreateUser";
 
         /// <summary>创建用户</summary>
-        public const String CreateUserID = "CreateUserID";
+        public const String CreateUserId = "CreateUserId";
 
         /// <summary>创建地址</summary>
         public const String CreateIP = "CreateIP";

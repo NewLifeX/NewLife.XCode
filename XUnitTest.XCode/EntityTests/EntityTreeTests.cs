@@ -19,14 +19,14 @@ public class TreeTestEntity : EntityTree<TreeTestEntity>
     private Int32 _ID;
     /// <summary>编号</summary>
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _ID; set { if (OnPropertyChanging("Id", value)) { _ID = value; OnPropertyChanged("Id"); } } }
 
     private Int32 _ParentID;
     /// <summary>父编号</summary>
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ParentID", "父编号", "")]
-    public Int32 ParentID { get => _ParentID; set { if (OnPropertyChanging("ParentID", value)) { _ParentID = value; OnPropertyChanged("ParentID"); } } }
+    [BindColumn("ParentId", "父编号", "")]
+    public Int32 ParentId { get => _ParentID; set { if (OnPropertyChanging("ParentId", value)) { _ParentID = value; OnPropertyChanged("ParentId"); } } }
 
     private String _Name;
     /// <summary>名称</summary>
@@ -55,8 +55,8 @@ public class TreeTestEntity : EntityTree<TreeTestEntity>
     {
         get => name switch
         {
-            "ID" => _ID,
-            "ParentID" => _ParentID,
+            "Id" => _ID,
+            "ParentId" => _ParentID,
             "Name" => _Name,
             "Sort" => _Sort,
             "Remark" => _Remark,
@@ -66,8 +66,8 @@ public class TreeTestEntity : EntityTree<TreeTestEntity>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
-                case "ParentID": _ParentID = value.ToInt(); break;
+                case "Id": _ID = value.ToInt(); break;
+                case "ParentId": _ParentID = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Sort": _Sort = value.ToInt(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
@@ -89,7 +89,7 @@ public class EntityTreeTests
     {
         _dbFile = Path.Combine(Path.GetTempPath(), $"TreeTest_{Guid.NewGuid():n}.db");
         DAL.AddConnStr(_connName, $"Data Source={_dbFile}", null, "SQLite");
-        DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS TreeTestEntity (ID INTEGER PRIMARY KEY AUTOINCREMENT, ParentID INTEGER NOT NULL DEFAULT 0, Name TEXT NOT NULL DEFAULT '', Sort INTEGER NOT NULL DEFAULT 0, Remark TEXT)");
+        DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS TreeTestEntity (Id INTEGER PRIMARY KEY AUTOINCREMENT, ParentId INTEGER NOT NULL DEFAULT 0, Name TEXT NOT NULL DEFAULT '', Sort INTEGER NOT NULL DEFAULT 0, Remark TEXT)");
     }
 
     public EntityTreeTests()
@@ -106,7 +106,7 @@ public class EntityTreeTests
 
     private static TreeTestEntity Add(String name, Int32 parentId = 0, Int32 sort = 0, String remark = null)
     {
-        var entity = new TreeTestEntity { Name = name, ParentID = parentId, Sort = sort, Remark = remark };
+        var entity = new TreeTestEntity { Name = name, ParentId = parentId, Sort = sort, Remark = remark };
         entity.Insert();
         return entity;
     }
@@ -116,13 +116,13 @@ public class EntityTreeTests
     {
         var a = Add("A", 0, 1);
         var b = Add("B", 0, 2);
-        var a1 = Add("A1", a.ID, 1);
-        var a1a = Add("A1a", a1.ID, 1);
+        var a1 = Add("A1", a.Id, 1);
+        var a1a = Add("A1a", a1.Id, 1);
         ResetTree();
         return (a, b, a1, a1a);
     }
 
-    private static TreeTestEntity Reload(TreeTestEntity entity) => TreeTestEntity.FindByKey(entity.ID)!;
+    private static TreeTestEntity Reload(TreeTestEntity entity) => TreeTestEntity.FindByKey(entity.Id)!;
 
     [Fact(DisplayName = "顶级子节点按排序降序返回")]
     public void RootChilds_SortedDesc()
@@ -174,8 +174,8 @@ public class EntityTreeTests
         Assert.Equal(new[] { "A", "A1" }, na1a.AllParents.Select(e => e.Name));
 
         // 静态查询入口
-        Assert.Equal(new[] { "A", "A1", "A1a" }, TreeTestEntity.FindAllChildsByParent(a.ID).Select(e => e.Name));
-        Assert.Equal(new[] { "A", "A1" }, TreeTestEntity.FindAllParentsByKey(a1a.ID).Select(e => e.Name));
+        Assert.Equal(new[] { "A", "A1", "A1a" }, TreeTestEntity.FindAllChildsByParent(a.Id).Select(e => e.Name));
+        Assert.Equal(new[] { "A", "A1" }, TreeTestEntity.FindAllParentsByKey(a1a.Id).Select(e => e.Name));
         Assert.Empty(TreeTestEntity.FindAllChildsByParent(99999));
         Assert.Empty(TreeTestEntity.FindAllParentsByKey(99999));
 
@@ -191,8 +191,8 @@ public class EntityTreeTests
         var na = Reload(a);
         var na1a = Reload(a1a);
 
-        Assert.Equal(a1a.ID, na.FindByPath("A1/A1a")!.ID);
-        Assert.Equal(a1a.ID, na.FindByPath(@"A1\A1a")!.ID);
+        Assert.Equal(a1a.Id, na.FindByPath("A1/A1a")!.Id);
+        Assert.Equal(a1a.Id, na.FindByPath(@"A1\A1a")!.Id);
         Assert.Null(na.FindByPath("B"));
         Assert.Null(na.FindByPath("A1/NotFound"));
 
@@ -216,7 +216,7 @@ public class EntityTreeTests
     public void TreeNodeText_UsesTextSetting()
     {
         var p = Add("P", 0, 0, "备注P");
-        var c = Add("C", p.ID, 0, "备注文本");
+        var c = Add("C", p.Id, 0, "备注文本");
         ResetTree();
 
         try
@@ -241,12 +241,12 @@ public class EntityTreeTests
     public void UpDown_SwapSiblings()
     {
         var p = Add("P", 0, 0);
-        var s1 = Add("S1", p.ID, 1);
-        var s2 = Add("S2", p.ID, 2);
-        var s3 = Add("S3", p.ID, 3);
+        var s1 = Add("S1", p.Id, 1);
+        var s2 = Add("S2", p.Id, 2);
+        var s3 = Add("S3", p.Id, 3);
         ResetTree();
 
-        String[] Siblings() => TreeTestEntity.FindAllByParent(p.ID).Select(e => e.Name).ToArray();
+        String[] Siblings() => TreeTestEntity.FindAllByParent(p.Id).Select(e => e.Name).ToArray();
         Assert.Equal(new[] { "S3", "S2", "S1" }, Siblings());
 
         // 中间的上升到第一位
@@ -277,7 +277,7 @@ public class EntityTreeTests
 
         // 删除父节点后，子节点变成无头节点
         var b = Add("B", 0, 0);
-        var b1 = Add("B1", b.ID, 0);
+        var b1 = Add("B1", b.Id, 0);
         ResetTree();
         Reload(b).Delete();
         ResetTree();
@@ -294,17 +294,17 @@ public class EntityTreeTests
 
         // 上级不能是当前节点
         var na = Reload(a);
-        na.ParentID = na.ID;
+        na.ParentId = na.Id;
         Assert.Throws<XException>(() => na.Update());
 
         // 上级不能是子孙节点
         var na2 = Reload(a);
-        na2.ParentID = a1a.ID;
+        na2.ParentId = a1a.Id;
         Assert.Throws<XException>(() => na2.Update());
 
         // 校验失败不应写库
         ResetTree();
-        Assert.Equal(0, Reload(a).ParentID);
+        Assert.Equal(0, Reload(a).ParentId);
     }
 
     [Fact(DisplayName = "包含判断与重新挂载父级")]
@@ -313,13 +313,13 @@ public class EntityTreeTests
         var (a, b, a1, a1a) = BuildTree();
 
         var na = Reload(a);
-        Assert.True(na.Contains(a.ID));
-        Assert.True(na.Contains(a1a.ID));
-        Assert.False(na.Contains(Reload(b).ID));
+        Assert.True(na.Contains(a.Id));
+        Assert.True(na.Contains(a1a.Id));
+        Assert.False(na.Contains(Reload(b).Id));
 
         // 把 A1a 移动到 B 下
         var na1a = Reload(a1a);
-        na1a.ParentID = b.ID;
+        na1a.ParentId = b.Id;
         Assert.Equal(1, na1a.Update());
         ResetTree();
 
@@ -333,14 +333,14 @@ public class EntityTreeTests
     public void BigSort_False_Ascending()
     {
         var p = Add("P", 0, 0);
-        var s1 = Add("S1", p.ID, 1);
-        var s2 = Add("S2", p.ID, 2);
+        var s1 = Add("S1", p.Id, 1);
+        var s2 = Add("S2", p.Id, 2);
         ResetTree();
 
         try
         {
             TreeTestEntity.Setting.BigSort = false;
-            Assert.Equal(new[] { "S1", "S2" }, TreeTestEntity.FindAllByParent(p.ID).Select(e => e.Name));
+            Assert.Equal(new[] { "S1", "S2" }, TreeTestEntity.FindAllByParent(p.Id).Select(e => e.Name));
         }
         finally
         {
@@ -348,6 +348,6 @@ public class EntityTreeTests
         }
 
         ResetTree();
-        Assert.Equal(new[] { "S2", "S1" }, TreeTestEntity.FindAllByParent(p.ID).Select(e => e.Name));
+        Assert.Equal(new[] { "S2", "S1" }, TreeTestEntity.FindAllByParent(p.Id).Select(e => e.Name));
     }
 }

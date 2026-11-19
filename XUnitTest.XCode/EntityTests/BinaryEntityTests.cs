@@ -1,4 +1,4 @@
-﻿using NewLife.Security;
+using NewLife.Security;
 using Xunit;
 using XUnitTest.XCode.TestEntity;
 
@@ -20,9 +20,9 @@ public class BinaryEntityTests
         };
         log.Insert();
 
-        Assert.True(log.ID > 0);
+        Assert.True(log.Id > 0);
 
-        var log2 = Log2.FindByID(log.ID);
+        var log2 = Log2.FindByID(log.Id);
         Assert.NotNull(log2);
         Assert.Equal(buf, log2.Remark);
 
@@ -30,7 +30,7 @@ public class BinaryEntityTests
         log2.Remark = buf2;
         log2.Update();
 
-        var log3 = Log2.FindByID(log.ID);
+        var log3 = Log2.FindByID(log.Id);
         Assert.NotNull(log3);
         Assert.Equal(buf2, log3.Remark);
 

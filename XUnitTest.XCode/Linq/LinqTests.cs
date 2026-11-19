@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -26,7 +26,7 @@ public class LinqTests : IDisposable
         _dbFile = Path.Combine(Path.GetTempPath(), $"LinqTest_{Guid.NewGuid():n}.db");
 
         DAL.AddConnStr(_connName, $"Data Source={_dbFile}", null, "SQLite");
-        DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS Role (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
+        DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS Role (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
 
         _originalConnName = Role.Meta.ConnName;
     }
@@ -64,10 +64,10 @@ public class LinqTests : IDisposable
     [Fact] public void Parse_Where_Equals()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
-            Role.Query.Where(r => r.ID > 0).Expression);
+            Role.Query.Where(r => r.Id > 0).Expression);
         Assert.NotNull(v.WhereExpression);
         Assert.False(v.WhereExpression!.IsEmpty);
-        Assert.Contains("ID>0", v.WhereExpression.ToString());
+        Assert.Contains("Id>0", v.WhereExpression.ToString());
     }
 
     [Fact] public void Parse_Where_String()
@@ -81,29 +81,29 @@ public class LinqTests : IDisposable
     [Fact] public void Parse_OrderBy_Asc()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
-            Role.Query.OrderBy(r => r.ID).Expression);
-        Assert.Equal("ID", v.OrderBy);
+            Role.Query.OrderBy(r => r.Id).Expression);
+        Assert.Equal("Id", v.OrderBy);
     }
 
     [Fact] public void Parse_OrderBy_Desc()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
-            Role.Query.OrderByDescending(r => r.ID).Expression);
-        Assert.Equal("ID desc", v.OrderBy);
+            Role.Query.OrderByDescending(r => r.Id).Expression);
+        Assert.Equal("Id desc", v.OrderBy);
     }
 
     [Fact] public void Parse_ThenBy()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
-            Role.Query.OrderBy(r => r.ID).ThenBy(r => r.Name).Expression);
-        Assert.Equal("ID,Name", v.OrderBy);
+            Role.Query.OrderBy(r => r.Id).ThenBy(r => r.Name).Expression);
+        Assert.Equal("Id,Name", v.OrderBy);
     }
 
     [Fact] public void Parse_ThenByDescending()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
-            Role.Query.OrderBy(r => r.ID).ThenByDescending(r => r.Name).Expression);
-        Assert.Equal("ID,Name desc", v.OrderBy);
+            Role.Query.OrderBy(r => r.Id).ThenByDescending(r => r.Name).Expression);
+        Assert.Equal("Id,Name desc", v.OrderBy);
     }
 
     [Fact] public void Parse_Skip()
@@ -130,7 +130,7 @@ public class LinqTests : IDisposable
 
     [Fact] public void Parse_Count()
     {
-        var q = Role.Query.Where(r => r.ID > 0);
+        var q = Role.Query.Where(r => r.Id > 0);
         var countExpr = LinqExpr.Call(
             typeof(Queryable), "Count", [typeof(Role)], q.Expression);
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(countExpr);
@@ -150,7 +150,7 @@ public class LinqTests : IDisposable
 
     [Fact] public void Parse_Single()
     {
-        var q = Role.Query.Where(r => r.ID == 1);
+        var q = Role.Query.Where(r => r.Id == 1);
         var expr = LinqExpr.Call(
             typeof(Queryable), "Single", [typeof(Role)], q.Expression);
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(expr);
@@ -172,7 +172,7 @@ public class LinqTests : IDisposable
     [Fact] public void Parse_Complex()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
-            Role.Query.Where(r => r.ID > 0).OrderByDescending(r => r.Name).Skip(5).Take(10).Expression);
+            Role.Query.Where(r => r.Id > 0).OrderByDescending(r => r.Name).Skip(5).Take(10).Expression);
         Assert.NotNull(v.WhereExpression);
         Assert.Equal("Name desc", v.OrderBy);
         Assert.Equal(5, v.Skip);
@@ -182,17 +182,17 @@ public class LinqTests : IDisposable
     [Fact] public void Parse_NoWhere_OrderBy()
     {
         var v = new EntityQueryProvider(Role.Meta.Factory).Parse(
-            Role.Query.OrderBy(r => r.ID).Expression);
+            Role.Query.OrderBy(r => r.Id).Expression);
         Assert.Null(v.WhereExpression);
-        Assert.Equal("ID", v.OrderBy);
+        Assert.Equal("Id", v.OrderBy);
     }
 
     // ====== 5. WhereIf ======
 
     [Fact] public void WhereIf_NullSource_Throws() { IQueryable<Role> q = null; Assert.Throws<ArgumentNullException>(() => q.WhereIf(true, r => r.Enable)); }
     [Fact] public void WhereIf_NullPredicate_Throws() => Assert.Throws<ArgumentNullException>(() => Role.Query.WhereIf(true, null));
-    [Fact] public void WhereIf_True_ReturnsQueryable() { var q = Role.Query.WhereIf(true, r => r.ID > 0); Assert.IsType<EntityQueryable<Role>>(q); }
-    [Fact] public void WhereIf_False_ReturnsSameType() { var q = Role.Query.WhereIf(false, r => r.ID > 0); Assert.IsType<EntityQueryable<Role>>(q); }
+    [Fact] public void WhereIf_True_ReturnsQueryable() { var q = Role.Query.WhereIf(true, r => r.Id > 0); Assert.IsType<EntityQueryable<Role>>(q); }
+    [Fact] public void WhereIf_False_ReturnsSameType() { var q = Role.Query.WhereIf(false, r => r.Id > 0); Assert.IsType<EntityQueryable<Role>>(q); }
 
     // ====== 6. Include ======
 
@@ -211,13 +211,13 @@ public class LinqTests : IDisposable
 
     [Fact] public void FindAllWhereIf_NotNull() => Assert.NotNull(Role.FindAllWhereIf());
     [Fact] public void FindAllWhereIf_Empty() => Assert.NotNull(Role.FindAllWhereIf());
-    [Fact] public void FindAllWhereIf_AllDisabled() => Assert.NotNull(Role.FindAllWhereIf((false, Role._.ID > 0)));
+    [Fact] public void FindAllWhereIf_AllDisabled() => Assert.NotNull(Role.FindAllWhereIf((false, Role._.Id > 0)));
     [Fact] public void FindAllWhereIf_MultipleMixed()
     {
         var list = Role.FindAllWhereIf(
-            (true, Role._.ID >= 0),
+            (true, Role._.Id >= 0),
             (false, Role._.Name == "ignored"),
-            (false, Role._.ID < -1)
+            (false, Role._.Id < -1)
         );
         Assert.NotNull(list);
     }
@@ -276,7 +276,7 @@ public class LinqTests : IDisposable
     {
         var dal = DAL.Create(_connName);
         var list = dal.Select<Role>()
-            .WhereIf(true, r => r.ID >= 0)
+            .WhereIf(true, r => r.Id >= 0)
             .WhereIf(false, r => r.Name == "ignored")
             .ToList();
         Assert.NotNull(list);
@@ -289,7 +289,7 @@ public class LinqTests : IDisposable
         // 所有 WhereIf 条件均为 false，应返回全部记录
         var listAll = dal.Select<Role>().ToList();
         var listFiltered = dal.Select<Role>()
-            .WhereIf(false, r => r.ID > 999999)
+            .WhereIf(false, r => r.Id > 999999)
             .WhereIf(false, r => r.Name!.Contains("notexist"))
             .ToList();
         Assert.Equal(listAll.Count, listFiltered.Count);
@@ -300,14 +300,14 @@ public class LinqTests : IDisposable
     {
         var dal = DAL.Create(_connName);
         var list = dal.Select<Role>()
-            .Where(r => r.ID >= 0)
-            .OrderByDescending(r => r.ID)
+            .Where(r => r.Id >= 0)
+            .OrderByDescending(r => r.Id)
             .ToList();
         Assert.NotNull(list);
-        // 验证降序排列：每对相邻元素，前者 ID >= 后者 ID
+        // 验证降序排列：每对相邻元素，前者 Id >= 后者 Id
         for (var i = 1; i < list.Count; i++)
         {
-            Assert.True(list[i - 1].ID >= list[i].ID);
+            Assert.True(list[i - 1].Id >= list[i].Id);
         }
     }
 
@@ -316,8 +316,8 @@ public class LinqTests : IDisposable
     {
         var dal = DAL.Create(_connName);
         var list = dal.Select<Role>()
-            .Where(r => r.ID >= 0)
-            .OrderBy(r => r.ID)
+            .Where(r => r.Id >= 0)
+            .OrderBy(r => r.Id)
             .Page(1, 10)
             .ToList();
         Assert.NotNull(list);
@@ -345,7 +345,7 @@ public class LinqTests : IDisposable
     public void DAL_Select_FirstOrDefault()
     {
         var dal = DAL.Create(_connName);
-        var entity = dal.Select<Role>().Where(r => r.ID >= 0).OrderBy(r => r.ID).FirstOrDefault();
+        var entity = dal.Select<Role>().Where(r => r.Id >= 0).OrderBy(r => r.Id).FirstOrDefault();
         // 可能为 null（表为空），但不抛异常
     }
 
@@ -355,15 +355,15 @@ public class LinqTests : IDisposable
         // 核心验证：DAL.Select<T>() 能查到刚插入的数据
         var r = new Role { Name = "DalSelectTest", Enable = true };
         r.Insert();
-        var insertedId = r.ID;
+        var insertedId = r.Id;
 
         // 控制组：XCode 原生 Expression 查询
-        var controlList = Role.FindAll(Role._.ID == insertedId);
+        var controlList = Role.FindAll(Role._.Id == insertedId);
         Assert.Single(controlList);
 
         // 实验组：DAL.Select<T>().Where 使用 LINQ 表达式
         var dal = DAL.Create(_connName);
-        var list = dal.Select<Role>().Where(e => e.ID == insertedId).ToList();
+        var list = dal.Select<Role>().Where(e => e.Id == insertedId).ToList();
         Assert.Single(list);
         Assert.Equal("DalSelectTest", list[0].Name);
     }
@@ -374,14 +374,14 @@ public class LinqTests : IDisposable
         // 验证基础 LINQ 查询能否找到刚插入的数据
         var r = new Role { Name = "QueryTest", Enable = true };
         r.Insert();
-        var id = r.ID;
+        var id = r.Id;
 
         // Role.FindAll（原生 Expression）应该能找到
-        var nativeList = Role.FindAll(Role._.ID == id);
+        var nativeList = Role.FindAll(Role._.Id == id);
         Assert.Single(nativeList);
 
         // Role.Query.Where（LINQ）也应该能找到
-        var linqList = Role.Query.Where(e => e.ID == id).ToList();
+        var linqList = Role.Query.Where(e => e.Id == id).ToList();
         Assert.Single(linqList);
     }
 

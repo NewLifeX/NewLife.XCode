@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -48,7 +48,7 @@ public class SqlTests
         };
 
         var sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Insert);
-        Assert.Equal(@"Insert Into User(Name,DisplayName,Sex,MailVerified,MobileVerified,AreaId,RoleID,DepartmentID,Online,Enable,Age,Logins,RegisterTime,OnlineTime,Ex1,Ex2,Ex3,UpdateUser,UpdateUserID,UpdateTime) Values('Stone','大石头',0,0,0,0,0,0,0,1,0,0,'2020-08-22 00:00:00',0,0,0,0,'newlife',0,'2020-09-01 00:00:00')", sql);
+        Assert.Equal(@"Insert Into User(Name,DisplayName,Sex,MailVerified,MobileVerified,AreaId,RoleId,DepartmentId,Online,Enable,Age,Logins,RegisterTime,OnlineTime,Ex1,Ex2,Ex3,UpdateUser,UpdateUserId,UpdateTime) Values('Stone','大石头',0,0,0,0,0,0,0,1,0,0,'2020-08-22 00:00:00',0,0,0,0,'newlife',0,'2020-09-01 00:00:00')", sql);
     }
 
     [TestOrder(10)]
@@ -87,7 +87,7 @@ public class SqlTests
 
         var user = new User
         {
-            ID = 2,
+            Id = 2,
             Name = "Stone",
             DisplayName = "大石头",
             Enable = true,
@@ -97,7 +97,7 @@ public class SqlTests
         };
 
         var sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Update);
-        Assert.Equal(@"Update User Set Name='Stone',DisplayName='大石头',Enable=1,RegisterTime='2020-08-22 00:00:00',UpdateTime='2020-09-01 00:00:00' Where ID=2", sql);
+        Assert.Equal(@"Update User Set Name='Stone',DisplayName='大石头',Enable=1,RegisterTime='2020-08-22 00:00:00',UpdateTime='2020-09-01 00:00:00' Where Id=2", sql);
     }
 
     [TestOrder(20)]
@@ -111,7 +111,7 @@ public class SqlTests
 
         var user = new User
         {
-            ID = 2,
+            Id = 2,
             Name = "Stone",
             DisplayName = "大石头",
             Enable = true,
@@ -139,18 +139,18 @@ public class SqlTests
         {
             // 值中的 And 是普通数据，不能被替换成逗号
             var value = "data:image/png;base64,AAAndBBAndCC";
-            Assert.Equal(1, User.Update([nameof(User.Remark)], [value], [nameof(User.ID)], [user.ID]));
-            Assert.Equal(value, User.FindByKey(user.ID)!.Remark);
+            Assert.Equal(1, User.Update([nameof(User.Remark)], [value], [nameof(User.Id)], [user.Id]));
+            Assert.Equal(value, User.FindByKey(user.Id)!.Remark);
 
             // 值中的 or 同样是普通数据，不能触发参数异常
             value = "data:image/png;base64,AA or BB";
-            Assert.Equal(1, User.Update([nameof(User.Remark)], [value], [nameof(User.ID)], [user.ID]));
-            Assert.Equal(value, User.FindByKey(user.ID)!.Remark);
+            Assert.Equal(1, User.Update([nameof(User.Remark)], [value], [nameof(User.Id)], [user.Id]));
+            Assert.Equal(value, User.FindByKey(user.Id)!.Remark);
 
             // 原始子句路径同样按原文执行
             value = "AAAndBB or CC";
-            Assert.Equal(1, User.Update($"Remark='{value}'", $"ID={user.ID}"));
-            Assert.Equal(value, User.FindByKey(user.ID)!.Remark);
+            Assert.Equal(1, User.Update($"Remark='{value}'", $"Id={user.Id}"));
+            Assert.Equal(value, User.FindByKey(user.Id)!.Remark);
         }
         finally
         {
@@ -167,11 +167,11 @@ public class SqlTests
 
         var user = new User
         {
-            ID = 2,
+            Id = 2,
         };
 
         var sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Delete);
-        Assert.Equal(@"Delete From User Where ID=2", sql);
+        Assert.Equal(@"Delete From User Where Id=2", sql);
     }
 
     [TestOrder(30)]
@@ -185,7 +185,7 @@ public class SqlTests
 
         var user = new User
         {
-            ID = 2,
+            Id = 2,
         };
 
         var sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Delete);
@@ -197,9 +197,9 @@ public class SqlTests
     public void SelectTestSQLite()
     {
         var exp = User._.Name == "Stone" & User._.DisplayName == "大石头" & User._.Logins > 0 & User._.RegisterTime < new DateTime(2020, 9, 1);
-        var builder = User.CreateBuilder(exp, User._.UpdateUserID.Desc(), null);
+        var builder = User.CreateBuilder(exp, User._.UpdateUserId.Desc(), null);
         var sql = builder.ToString();
-        Assert.Equal(@"Select * From User Where Name='Stone' And DisplayName='大石头' And Logins>0 And RegisterTime<'2020-09-01 00:00:00' Order By UpdateUserID Desc", sql);
+        Assert.Equal(@"Select * From User Where Name='Stone' And DisplayName='大石头' And Logins>0 And RegisterTime<'2020-09-01 00:00:00' Order By UpdateUserId Desc", sql);
     }
 
     [TestOrder(40)]
@@ -209,7 +209,7 @@ public class SqlTests
         using var split = User.Meta.CreateSplit("mysql_underline", null);
 
         var exp = User._.Name == "Stone" & User._.DisplayName == "大石头" & User._.Logins > 0 & User._.RegisterTime < new DateTime(2020, 9, 1);
-        var builder = User.CreateBuilder(exp, User._.UpdateUserID.Desc(), null);
+        var builder = User.CreateBuilder(exp, User._.UpdateUserId.Desc(), null);
         var sql = builder.ToString();
         Assert.Equal(@"Select * From `user` Where name='Stone' And display_name='大石头' And logins>0 And register_time<'2020-09-01 00:00:00' Order By update_user_id Desc", sql);
     }
@@ -234,14 +234,14 @@ public class SqlTests
     //    var session = User2.Meta.Session;
 
     //    var sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Insert);
-    //    Assert.Equal(@"Insert Into User_202008(Name,Password,DisplayName,Sex,Mail,Mobile,Code,Avatar,RoleID,RoleIds,DepartmentID,Online,Enable,Logins,LastLogin,LastLoginIP,RegisterTime,RegisterIP,Ex1,Ex2,Ex3,Ex4,Ex5,Ex6,UpdateUser,UpdateUserID,UpdateIP,UpdateTime,Remark) Values('Stone',null,'大石头',0,null,null,null,null,0,null,0,0,1,0,null,null,'2020-08-22 00:00:00',null,0,0,0,null,null,null,null,0,null,'2020-09-01 00:00:00',null)", sql);
+    //    Assert.Equal(@"Insert Into User_202008(Name,Password,DisplayName,Sex,Mail,Mobile,Code,Avatar,RoleId,RoleIds,DepartmentId,Online,Enable,Logins,LastLogin,LastLoginIP,RegisterTime,RegisterIP,Ex1,Ex2,Ex3,Ex4,Ex5,Ex6,UpdateUser,UpdateUserId,UpdateIP,UpdateTime,Remark) Values('Stone',null,'大石头',0,null,null,null,null,0,null,0,0,1,0,null,null,'2020-08-22 00:00:00',null,0,0,0,null,null,null,null,0,null,'2020-09-01 00:00:00',null)", sql);
 
-    //    user.ID = 2;
+    //    user.Id = 2;
     //    sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Update);
-    //    Assert.Equal(@"Update User_202008 Set Name='Stone',DisplayName='大石头',Enable=1,RegisterTime='2020-08-22 00:00:00',UpdateTime='2020-09-01 00:00:00' Where ID=2", sql);
+    //    Assert.Equal(@"Update User_202008 Set Name='Stone',DisplayName='大石头',Enable=1,RegisterTime='2020-08-22 00:00:00',UpdateTime='2020-09-01 00:00:00' Where Id=2", sql);
 
     //    sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Delete);
-    //    Assert.Equal(@"Delete From User_202008 Where ID=2", sql);
+    //    Assert.Equal(@"Delete From User_202008 Where Id=2", sql);
 
     //    // 恢复现场，避免影响其它测试用例
     //    User2.Meta.ShardTableName = null;
@@ -291,9 +291,9 @@ public class SqlTests
     public void ShardTestSQLite2()
     {
         // 配置自动分表策略，一般在实体类静态构造函数中配置
-        var shard = new TimeShardPolicy("ID", Log2.Meta.Factory)
+        var shard = new TimeShardPolicy("Id", Log2.Meta.Factory)
         {
-            //Field = Log2._.ID,
+            //Field = Log2._.Id,
             ConnPolicy = "{0}_{1:yyyy}",
             TablePolicy = "{0}_{1:yyyyMMdd}",
         };
@@ -303,7 +303,7 @@ public class SqlTests
         var today = DateTime.Now;
         new Log2
         {
-            ID = Log2.Meta.Factory.Snow.NewId(today.AddHours(-24)),
+            Id = Log2.Meta.Factory.Snow.NewId(today.AddHours(-24)),
             Action = "分表",
             Category = Rand.NextString(8),
         }.Insert();
@@ -393,7 +393,7 @@ public class SqlTests
         // 配置自动分表策略，一般在实体类静态构造函数中配置 
         //var shard = new TimeShardPolicy("CreateTime", Log2.Meta.Factory)
         //{
-        //    //Field = Log2._.ID,
+        //    //Field = Log2._.Id,
         //    ConnPolicy = "{0}_{1:yyyy}",
         //    TablePolicy = "{0}_{1:yyyyMMdd}",
         //};

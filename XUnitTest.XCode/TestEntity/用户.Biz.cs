@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -85,7 +85,7 @@ namespace XUnitTest.XCode.TestEntity
         //    if (XTrace.Debug) XTrace.WriteLine("开始初始化User2[用户]数据……");
 
         //    var entity = new User2();
-        //    entity.ID = 0;
+        //    entity.Id = 0;
         //    entity.Name = "abc";
         //    entity.Password = "abc";
         //    entity.DisplayName = "abc";
@@ -94,7 +94,7 @@ namespace XUnitTest.XCode.TestEntity
         //    entity.Mobile = "abc";
         //    entity.Code = "abc";
         //    entity.Avatar = "abc";
-        //    entity.RoleID = 0;
+        //    entity.RoleId = 0;
         //    entity.RoleIDs = "abc";
         //    entity.Online = true;
         //    entity.Enable = true;
@@ -135,12 +135,12 @@ namespace XUnitTest.XCode.TestEntity
             if (id <= 0) return null;
 
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             // 单对象缓存
             return Meta.SingleCache[id];
 
-            //return Find(_.ID == id);
+            //return Find(_.Id == id);
         }
 
         /// <summary>根据名称查找</summary>
@@ -163,9 +163,9 @@ namespace XUnitTest.XCode.TestEntity
         public static IList<User2> FindAllByRoleID(Int32 roleId)
         {
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleID == roleId);
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleId == roleId);
 
-            return FindAll(_.RoleID == roleId);
+            return FindAll(_.RoleId == roleId);
         }
         #endregion
 
@@ -181,13 +181,13 @@ namespace XUnitTest.XCode.TestEntity
             var exp = new WhereExpression();
 
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-            if (roleId >= 0) exp &= _.RoleID == roleId;
+            if (roleId >= 0) exp &= _.RoleId == roleId;
             if (!key.IsNullOrEmpty()) exp &= _.Password.Contains(key) | _.DisplayName.Contains(key) | _.Mail.Contains(key) | _.Mobile.Contains(key) | _.Code.Contains(key) | _.Avatar.Contains(key) | _.RoleIds.Contains(key) | _.LastLoginIP.Contains(key) | _.RegisterIP.Contains(key);
 
             return FindAll(exp, page);
         }
 
-        // Select Count(ID) as ID,Category From User2 Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
+        // Select Count(Id) as Id,Category From User2 Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
         //static readonly FieldCache<User2> _CategoryCache = new FieldCache<User2>(nameof(Category))
         //{
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty

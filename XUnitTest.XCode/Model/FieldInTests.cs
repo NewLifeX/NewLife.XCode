@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -21,12 +21,12 @@ namespace XUnitTest.XCode.Model
         [Fact]
         public void In()
         {
-            var fi = User._.RoleID;
+            var fi = User._.RoleId;
             var exp = fi.In(new[] { 1, 2, 3, 4 });
             var where = exp.GetString(_dbUser, null);
-            Assert.Equal("RoleID In(1,2,3,4)", where);
+            Assert.Equal("RoleId In(1,2,3,4)", where);
 
-            Assert.Equal("RoleID In(1,2,3,4)", exp);
+            Assert.Equal("RoleId In(1,2,3,4)", exp);
 
             Assert.Throws<ArgumentNullException>(() => fi.In((IEnumerable)null));
             Assert.Throws<ArgumentNullException>(() => fi.In(Array.Empty<Int32>()));
@@ -65,12 +65,12 @@ namespace XUnitTest.XCode.Model
         [Fact]
         public void NotIn()
         {
-            var fi = User._.RoleID;
+            var fi = User._.RoleId;
             var exp = fi.NotIn(new[] { 1, 2, 3, 4 });
             var where = exp.GetString(_dbUser, null);
-            Assert.Equal("RoleID Not In(1,2,3,4)", where);
+            Assert.Equal("RoleId Not In(1,2,3,4)", where);
 
-            Assert.Equal("RoleID Not In(1,2,3,4)", exp);
+            Assert.Equal("RoleId Not In(1,2,3,4)", exp);
 
             Assert.Throws<ArgumentNullException>(() => fi.NotIn((IEnumerable)null));
             Assert.Throws<ArgumentNullException>(() => fi.NotIn(Array.Empty<Int32>()));
@@ -109,12 +109,12 @@ namespace XUnitTest.XCode.Model
         [Fact]
         public void InForSelectBuilder()
         {
-            var fi = User._.RoleID;
+            var fi = User._.RoleId;
             var exp = fi.In(Role.FindSQLWithKey());
             var where = exp.GetString(_dbUser, null);
-            Assert.Equal("RoleID In(Select ID From Role)", where);
+            Assert.Equal("RoleId In(Select Id From Role)", where);
 
-            Assert.Equal("RoleID In(Select ID From Role)", exp);
+            Assert.Equal("RoleId In(Select Id From Role)", exp);
 
             Assert.Throws<ArgumentNullException>(() => fi.In((SelectBuilder)null));
         }
@@ -122,12 +122,12 @@ namespace XUnitTest.XCode.Model
         [Fact]
         public void NotInForSelectBuilder()
         {
-            var fi = User._.RoleID;
+            var fi = User._.RoleId;
             var exp = fi.NotIn(Role.FindSQLWithKey());
             var where = exp.GetString(_dbUser, null);
-            Assert.Equal("RoleID Not In(Select ID From Role)", where);
+            Assert.Equal("RoleId Not In(Select Id From Role)", where);
 
-            Assert.Equal("RoleID Not In(Select ID From Role)", exp);
+            Assert.Equal("RoleId Not In(Select Id From Role)", exp);
 
             Assert.Throws<ArgumentNullException>(() => fi.NotIn((SelectBuilder)null));
         }

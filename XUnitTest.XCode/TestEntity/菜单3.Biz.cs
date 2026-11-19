@@ -33,7 +33,7 @@ namespace XUnitTest.XCode.TestEntity
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
-            //df.Add(nameof(ParentID));
+            //df.Add(nameof(ParentId));
 
             // 过滤器 UserModule、TimeModule、IPModule
         }
@@ -64,11 +64,11 @@ namespace XUnitTest.XCode.TestEntity
         //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Menu3[菜单3]数据……");
 
         //    var entity = new Menu3();
-        //    entity.ID = 0;
+        //    entity.Id = 0;
         //    entity.Name = "abc";
         //    entity.DisplayName = "abc";
         //    entity.FullName = "abc";
-        //    entity.ParentID = 0;
+        //    entity.ParentId = 0;
         //    entity.Url = "abc";
         //    entity.Sort = 0;
         //    entity.Icon = "abc";
@@ -108,18 +108,18 @@ namespace XUnitTest.XCode.TestEntity
             if (id <= 0) return null;
 
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             // 单对象缓存
             return Meta.SingleCache[id];
 
-            //return Find(_.ID == id);
+            //return Find(_.Id == id);
         }
         #endregion
 
         #region 高级查询
 
-        // Select Count(ID) as ID,Category From #MenuX Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
+        // Select Count(Id) as Id,Category From #MenuX Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
         //static readonly FieldCache<Menu3> _CategoryCache = new FieldCache<Menu3>(nameof(Category))
         //{
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty

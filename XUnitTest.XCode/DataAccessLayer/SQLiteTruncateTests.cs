@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.IO;
 using NewLife;
@@ -61,7 +61,7 @@ public class SQLiteTruncateTests
         var dal = CreateTestDal("ClearRows");
         var ss = dal.Session;
 
-        ss.Execute("Create Table [TestRole] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL)");
+        ss.Execute("Create Table [TestRole] ([Id] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL)");
         ss.Execute("Insert Into [TestRole] ([Name]) Values ('管理员')");
         ss.Execute("Insert Into [TestRole] ([Name]) Values ('普通用户')");
         ss.Execute("Insert Into [TestRole] ([Name]) Values ('游客')");
@@ -79,24 +79,24 @@ public class SQLiteTruncateTests
     }
 
     [Fact]
-    [System.ComponentModel.Description("Truncate后Drop自动清理sqlite_sequence，新插入行自增ID从1重新开始")]
+    [System.ComponentModel.Description("Truncate后Drop自动清理sqlite_sequence，新插入行自增Id从1重新开始")]
     public void Truncate_DropAndRecreate_ResetsAutoIncrement()
     {
         var dal = CreateTestDal("ResetAutoIncrement");
         var ss = dal.Session;
 
-        ss.Execute("Create Table [TestRole] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL)");
+        ss.Execute("Create Table [TestRole] ([Id] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL)");
         ss.Execute("Insert Into [TestRole] ([Name]) Values ('管理员')");
         ss.Execute("Insert Into [TestRole] ([Name]) Values ('普通用户')");
 
-        // 插入两行后最大ID为2
-        Assert.Equal(2L, ss.ExecuteScalar<Int64>("Select max(ID) From [TestRole]"));
+        // 插入两行后最大Id为2
+        Assert.Equal(2L, ss.ExecuteScalar<Int64>("Select max(Id) From [TestRole]"));
 
         ss.Truncate("TestRole");
 
         // Truncate后自增从1重新开始
         ss.Execute("Insert Into [TestRole] ([Name]) Values ('新管理员')");
-        var newId = ss.ExecuteScalar<Int64>("Select max(ID) From [TestRole]");
+        var newId = ss.ExecuteScalar<Int64>("Select max(Id) From [TestRole]");
         Assert.Equal(1L, newId);
     }
 
@@ -107,7 +107,7 @@ public class SQLiteTruncateTests
         var dal = CreateTestDal("PreserveSingleIndex");
         var ss = dal.Session;
 
-        ss.Execute("Create Table [TestRole] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL)");
+        ss.Execute("Create Table [TestRole] ([Id] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL)");
         ss.Execute("Create Unique Index IX_TestRole_Name On [TestRole] ([Name])");
         ss.Execute("Insert Into [TestRole] ([Name]) Values ('管理员')");
 
@@ -131,7 +131,7 @@ public class SQLiteTruncateTests
         var dal = CreateTestDal("PreserveMultiIndex");
         var ss = dal.Session;
 
-        ss.Execute("Create Table [TestRole] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL, [Code] nvarchar(20))");
+        ss.Execute("Create Table [TestRole] ([Id] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL, [Code] nvarchar(20))");
         ss.Execute("Create Unique Index IX_TestRole_Name On [TestRole] ([Name])");
         ss.Execute("Create Index IX_TestRole_Code On [TestRole] ([Code])");
         ss.Execute("Insert Into [TestRole] ([Name], [Code]) Values ('管理员', 'admin')");
@@ -159,8 +159,8 @@ public class SQLiteTruncateTests
         var dal = CreateTestDal("MultiTable");
         var ss = dal.Session;
 
-        ss.Execute("Create Table [Table1] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50))");
-        ss.Execute("Create Table [Table2] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Value] nvarchar(50))");
+        ss.Execute("Create Table [Table1] ([Id] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50))");
+        ss.Execute("Create Table [Table2] ([Id] integer PRIMARY KEY AUTOINCREMENT, [Value] nvarchar(50))");
         ss.Execute("Insert Into [Table1] ([Name]) Values ('row1')");
         ss.Execute("Insert Into [Table1] ([Name]) Values ('row2')");
         ss.Execute("Insert Into [Table2] ([Value]) Values ('保留数据1')");
@@ -185,7 +185,7 @@ public class SQLiteTruncateTests
         var dal = CreateTestDal("SingleTableVacuum");
         var ss = dal.Session;
 
-        ss.Execute("Create Table [BigTable] ([ID] integer PRIMARY KEY, [Data] nvarchar(200))");
+        ss.Execute("Create Table [BigTable] ([Id] integer PRIMARY KEY, [Data] nvarchar(200))");
         // 插入足够多行以占用多个页面（每页约4KB，每行约60字节，200行≈3KB→跨多页）
         InsertRows(ss, "BigTable", 200);
 
@@ -205,8 +205,8 @@ public class SQLiteTruncateTests
         var dal = CreateTestDal("MultiTableNoVacuum");
         var ss = dal.Session;
 
-        ss.Execute("Create Table [BigTable] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Data] nvarchar(200))");
-        ss.Execute("Create Table [SmallTable] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50))");
+        ss.Execute("Create Table [BigTable] ([Id] integer PRIMARY KEY AUTOINCREMENT, [Data] nvarchar(200))");
+        ss.Execute("Create Table [SmallTable] ([Id] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50))");
         ss.Execute("Insert Into [SmallTable] ([Name]) Values ('保留数据')");
         // 插入足够多行确保 Drop Table 后空闲列表不为零
         InsertRows(ss, "BigTable", 200);
@@ -237,7 +237,7 @@ public class SQLiteTruncateTests
         ss.BeginTransaction(IsolationLevel.ReadCommitted);
         try
         {
-            ss.Execute("Create Table [TestRole] ([ID] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL)");
+            ss.Execute("Create Table [TestRole] ([Id] integer PRIMARY KEY AUTOINCREMENT, [Name] nvarchar(50) NOT NULL)");
             ss.Execute("Insert Into [TestRole] ([Name]) Values ('管理员')");
             ss.Execute("Insert Into [TestRole] ([Name]) Values ('普通用户')");
 

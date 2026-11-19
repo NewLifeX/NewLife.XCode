@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -26,8 +26,8 @@ public partial class Menu3
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _ID; set { if (OnPropertyChanging("Id", value)) { _ID = value; OnPropertyChanged("Id"); } } }
 
     private String _Name;
     /// <summary>名称</summary>
@@ -58,8 +58,8 @@ public partial class Menu3
     [DisplayName("父编号")]
     [Description("父编号")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ParentID", "父编号", "")]
-    public Int32 ParentID { get => _ParentID; set { if (OnPropertyChanging("ParentID", value)) { _ParentID = value; OnPropertyChanged("ParentID"); } } }
+    [BindColumn("ParentId", "父编号", "")]
+    public Int32 ParentId { get => _ParentID; set { if (OnPropertyChanging("ParentId", value)) { _ParentID = value; OnPropertyChanged("ParentId"); } } }
 
     private String _Url;
     /// <summary>链接</summary>
@@ -126,11 +126,11 @@ public partial class Menu3
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _ID,
             "Name" => _Name,
             "DisplayName" => _DisplayName,
             "FullName" => _FullName,
-            "ParentID" => _ParentID,
+            "ParentId" => _ParentID,
             "Url" => _Url,
             "Sort" => _Sort,
             "Icon" => _Icon,
@@ -144,11 +144,11 @@ public partial class Menu3
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
+                case "Id": _ID = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "DisplayName": _DisplayName = Convert.ToString(value); break;
                 case "FullName": _FullName = Convert.ToString(value); break;
-                case "ParentID": _ParentID = value.ToInt(); break;
+                case "ParentId": _ParentID = value.ToInt(); break;
                 case "Url": _Url = Convert.ToString(value); break;
                 case "Sort": _Sort = value.ToInt(); break;
                 case "Icon": _Icon = Convert.ToString(value); break;
@@ -173,7 +173,7 @@ public partial class Menu3
     public partial class _
     {
         /// <summary>编号</summary>
-        public static readonly Field ID = FindByName("ID");
+        public static readonly Field Id = FindByName("Id");
 
         /// <summary>名称</summary>
         public static readonly Field Name = FindByName("Name");
@@ -185,7 +185,7 @@ public partial class Menu3
         public static readonly Field FullName = FindByName("FullName");
 
         /// <summary>父编号</summary>
-        public static readonly Field ParentID = FindByName("ParentID");
+        public static readonly Field ParentId = FindByName("ParentId");
 
         /// <summary>链接</summary>
         public static readonly Field Url = FindByName("Url");
@@ -215,7 +215,7 @@ public partial class Menu3
     public partial class __
     {
         /// <summary>编号</summary>
-        public const String ID = "ID";
+        public const String Id = "Id";
 
         /// <summary>名称</summary>
         public const String Name = "Name";
@@ -227,7 +227,7 @@ public partial class Menu3
         public const String FullName = "FullName";
 
         /// <summary>父编号</summary>
-        public const String ParentID = "ParentID";
+        public const String ParentId = "ParentId";
 
         /// <summary>链接</summary>
         public const String Url = "Url";

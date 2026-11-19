@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -33,7 +33,7 @@ namespace XUnitTest.XCode.TestEntity
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
-            //df.Add(nameof(CreateUserID));
+            //df.Add(nameof(CreateUserId));
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Interceptors.Add<UserInterceptor>();
@@ -64,8 +64,8 @@ namespace XUnitTest.XCode.TestEntity
             /*var user = ManageProvider.User;
             if (user != null)
             {
-                if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
-                if (!Dirtys[nameof(UpdateUserID)]) UpdateUserID = user.ID;
+                if (isNew && !Dirtys[nameof(CreateUserId)]) CreateUserId = user.Id;
+                if (!Dirtys[nameof(UpdateUserId)]) UpdateUserId = user.Id;
             }*/
             //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
             //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
@@ -86,15 +86,15 @@ namespace XUnitTest.XCode.TestEntity
         //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Role2[角色]数据……");
 
         //    var entity = new Role2();
-        //    entity.ID = 0;
+        //    entity.Id = 0;
         //    entity.Name = "abc";
         //    entity.IsSystem = true;
         //    entity.Remark = "abc";
         //    entity.Permission = "abc";
-        //    entity.CreateUserID = 0;
+        //    entity.CreateUserId = 0;
         //    entity.CreateIP = "abc";
         //    entity.CreateTime = DateTime.Now;
-        //    entity.UpdateUserID = 0;
+        //    entity.UpdateUserId = 0;
         //    entity.UpdateIP = "abc";
         //    entity.UpdateTime = DateTime.Now;
         //    entity.Insert();
@@ -129,12 +129,12 @@ namespace XUnitTest.XCode.TestEntity
             if (id <= 0) return null;
 
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             // 单对象缓存
             return Meta.SingleCache[id];
 
-            //return Find(_.ID == id);
+            //return Find(_.Id == id);
         }
 
         /// <summary>根据名称查找</summary>
@@ -171,7 +171,7 @@ namespace XUnitTest.XCode.TestEntity
             return FindAll(exp, page);
         }
 
-        // Select Count(ID) as ID,Category From Role2 Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
+        // Select Count(Id) as Id,Category From Role2 Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
         //static readonly FieldCache<Role2> _CategoryCache = new FieldCache<Role2>(nameof(Category))
         //{
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty

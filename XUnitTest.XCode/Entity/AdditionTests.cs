@@ -310,7 +310,7 @@ public class AdditionTests
         var connName = "test_addition_upsert_snap";
         using var split = SetupSqliteSession(connName, out var session);
 
-        var user = new User { ID = 1001, Name = "UpsertUser1", Ex1 = 100 };
+        var user = new User { Id = 1001, Name = "UpsertUser1", Ex1 = 100 };
         // 模拟从 DB 加载后的快照
         var addition = GetAddition(user);
         addition.Set(new[] { "Ex1" });
@@ -345,7 +345,7 @@ public class AdditionTests
         var connName = "test_addition_upsert_nosnap";
         using var split = SetupSqliteSession(connName, out var session);
 
-        var user = new User { ID = 1002, Name = "UpsertUser2", Ex1 = 100 };
+        var user = new User { Id = 1002, Name = "UpsertUser2", Ex1 = 100 };
         // 不设置快照，模拟全新实体
 
         String? capturedSql = null;
@@ -373,12 +373,12 @@ public class AdditionTests
         using var split = SetupSqliteSession(connName, out var session);
 
         // user1：Ex1 有快照，Ex2 无快照
-        var user1 = new User { ID = 2001, Name = "MixUser1", Ex1 = 100, Ex2 = 10 };
+        var user1 = new User { Id = 2001, Name = "MixUser1", Ex1 = 100, Ex2 = 10 };
         GetAddition(user1).Set(new[] { "Ex1" });
         user1.Ex1 = 150;
 
         // user2：无任何快照
-        var user2 = new User { ID = 2002, Name = "MixUser2", Ex1 = 200, Ex2 = 20 };
+        var user2 = new User { Id = 2002, Name = "MixUser2", Ex1 = 200, Ex2 = 20 };
 
         String? capturedSql = null;
         DAL.LocalFilter = sql => capturedSql = sql;

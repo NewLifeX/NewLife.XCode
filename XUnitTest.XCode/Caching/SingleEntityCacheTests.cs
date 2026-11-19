@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading;
 using NewLife.Log;
@@ -36,9 +36,9 @@ public class SingleEntityCacheTests
     public void TestKey()
     {
         var list = User.FindAll(null, null, null, 0, 1);
-        var id = list.FirstOrDefault().ID;
+        var id = list.FirstOrDefault().Id;
 
-        XTrace.WriteLine("准备在User上测试单对象缓存，ID={0}    ", id);
+        XTrace.WriteLine("准备在User上测试单对象缓存，Id={0}    ", id);
 
         var cache = new SingleEntityCache<Int32, User> { Expire = 1 };
 
@@ -70,17 +70,17 @@ public class SingleEntityCacheTests
         // 高频主键，确保不会命中数据库既有记录
         var id = 900_000 + Rand.Next(100_000);
         var name = "cache_" + Rand.NextString(6);
-        var user = new User { ID = id, Name = name, Enable = true };
+        var user = new User { Id = id, Name = name, Enable = true };
 
         // 索引器写入后无需数据库即可命中
         cache[id] = user;
         Assert.True(cache.ContainsKey(id));
         Assert.Equal(name, cache[id].Name);
         Assert.True(cache.ContainsSlaveKey(name));
-        Assert.Equal(id, cache.GetItemWithSlaveKey(name).ID);
+        Assert.Equal(id, cache.GetItemWithSlaveKey(name).Id);
 
         // 原位替换：改名后旧从键不能继续指向旧对象
-        var renamed = new User { ID = id, Name = name + "_new", Enable = true };
+        var renamed = new User { Id = id, Name = name + "_new", Enable = true };
         cache[id] = renamed;
         Assert.Equal(renamed.Name, cache[id].Name);
         Assert.False(cache.ContainsSlaveKey(name));

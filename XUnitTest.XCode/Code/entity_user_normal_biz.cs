@@ -78,7 +78,7 @@ public partial class User : Entity<User>
         /*var user = ManageProvider.User;
         if (user != null)
         {
-            if (!Dirtys[nameof(UpdateUserID)]) UpdateUserID = user.ID;
+            if (!Dirtys[nameof(UpdateUserId)]) UpdateUserId = user.ID;
         }*/
         //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;
         //if (!Dirtys[nameof(UpdateIP)]) UpdateIP = ManageProvider.UserHost;
@@ -110,9 +110,9 @@ public partial class User : Entity<User>
     //    entity.Code = "abc";
     //    entity.AreaId = 0;
     //    entity.Avatar = "abc";
-    //    entity.RoleID = 0;
+    //    entity.RoleId = 0;
     //    entity.RoleIds = "abc";
-    //    entity.DepartmentID = 0;
+    //    entity.DepartmentId = 0;
     //    entity.Online = true;
     //    entity.Enable = true;
     //    entity.Age = 0;
@@ -171,8 +171,8 @@ public partial class User : Entity<User>
     {
         var exp = new WhereExpression();
 
-        if (roleId >= 0) exp &= _.RoleID == roleId;
-        if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
+        if (roleId >= 0) exp &= _.RoleId == roleId;
+        if (departmentId >= 0) exp &= _.DepartmentId == departmentId;
         if (sex >= 0) exp &= _.Sex == sex;
         if (mailVerified != null) exp &= _.MailVerified == mailVerified;
         if (mobileVerified != null) exp &= _.MobileVerified == mobileVerified;
@@ -185,7 +185,7 @@ public partial class User : Entity<User>
         return FindAll(exp, page);
     }
 
-    // Select Count(ID) as ID,Mail From User Where CreateTime>'2020-01-24 00:00:00' Group By Mail Order By ID Desc limit 20
+    // Select Count(Id) as Id,Mail From User Where CreateTime>'2020-01-24 00:00:00' Group By Mail Order By Id Desc limit 20
     static readonly FieldCache<User> _MailCache = new(nameof(Mail))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
@@ -195,7 +195,7 @@ public partial class User : Entity<User>
     /// <returns></returns>
     public static IDictionary<String, String> GetMailList() => _MailCache.FindAllName();
 
-    // Select Count(ID) as ID,Mobile From User Where CreateTime>'2020-01-24 00:00:00' Group By Mobile Order By ID Desc limit 20
+    // Select Count(Id) as Id,Mobile From User Where CreateTime>'2020-01-24 00:00:00' Group By Mobile Order By Id Desc limit 20
     static readonly FieldCache<User> _MobileCache = new(nameof(Mobile))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
@@ -205,7 +205,7 @@ public partial class User : Entity<User>
     /// <returns></returns>
     public static IDictionary<String, String> GetMobileList() => _MobileCache.FindAllName();
 
-    // Select Count(ID) as ID,Code From User Where CreateTime>'2020-01-24 00:00:00' Group By Code Order By ID Desc limit 20
+    // Select Count(Id) as Id,Code From User Where CreateTime>'2020-01-24 00:00:00' Group By Code Order By Id Desc limit 20
     static readonly FieldCache<User> _CodeCache = new(nameof(Code))
     {
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty

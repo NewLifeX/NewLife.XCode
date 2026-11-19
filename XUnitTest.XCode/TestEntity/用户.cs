@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -18,7 +18,7 @@ namespace XUnitTest.XCode.TestEntity;
 [DataObject]
 [Description("用户")]
 [BindIndex("IU_User2_Name", true, "Name")]
-[BindIndex("IX_User2_RoleID", false, "RoleID")]
+[BindIndex("IX_User2_RoleID", false, "RoleId")]
 [BindTable("User2", Description = "用户", ConnName = "test", DbType = DatabaseType.None)]
 public partial class User2
 {
@@ -28,8 +28,8 @@ public partial class User2
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _ID; set { if (OnPropertyChanging("Id", value)) { _ID = value; OnPropertyChanged("Id"); } } }
 
     private String _Name;
     /// <summary>名称。登录用户名</summary>
@@ -100,8 +100,8 @@ public partial class User2
     [DisplayName("角色")]
     [Description("角色。主要角色")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("RoleID", "角色。主要角色", "")]
-    public Int32 RoleID { get => _RoleID; set { if (OnPropertyChanging("RoleID", value)) { _RoleID = value; OnPropertyChanged("RoleID"); } } }
+    [BindColumn("RoleId", "角色。主要角色", "")]
+    public Int32 RoleId { get => _RoleID; set { if (OnPropertyChanging("RoleId", value)) { _RoleID = value; OnPropertyChanged("RoleId"); } } }
 
     private String _RoleIds;
     /// <summary>角色组。次要角色集合</summary>
@@ -116,8 +116,8 @@ public partial class User2
     [DisplayName("部门")]
     [Description("部门。组织机构")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("DepartmentID", "部门。组织机构", "")]
-    public Int32 DepartmentID { get => _DepartmentID; set { if (OnPropertyChanging("DepartmentID", value)) { _DepartmentID = value; OnPropertyChanged("DepartmentID"); } } }
+    [BindColumn("DepartmentId", "部门。组织机构", "")]
+    public Int32 DepartmentId { get => _DepartmentID; set { if (OnPropertyChanging("DepartmentId", value)) { _DepartmentID = value; OnPropertyChanged("DepartmentId"); } } }
 
     private Boolean _Online;
     /// <summary>在线</summary>
@@ -237,8 +237,8 @@ public partial class User2
     [DisplayName("更新用户")]
     [Description("更新用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("UpdateUserID", "更新用户", "")]
-    public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
+    [BindColumn("UpdateUserId", "更新用户", "")]
+    public Int32 UpdateUserId { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserId", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserId"); } } }
 
     private String _UpdateIP;
     /// <summary>更新地址</summary>
@@ -273,7 +273,7 @@ public partial class User2
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _ID,
             "Name" => _Name,
             "Password" => _Password,
             "DisplayName" => _DisplayName,
@@ -282,9 +282,9 @@ public partial class User2
             "Mobile" => _Mobile,
             "Code" => _Code,
             "Avatar" => _Avatar,
-            "RoleID" => _RoleID,
+            "RoleId" => _RoleID,
             "RoleIds" => _RoleIds,
-            "DepartmentID" => _DepartmentID,
+            "DepartmentId" => _DepartmentID,
             "Online" => _Online,
             "Enable" => _Enable,
             "Logins" => _Logins,
@@ -299,7 +299,7 @@ public partial class User2
             "Ex5" => _Ex5,
             "Ex6" => _Ex6,
             "UpdateUser" => _UpdateUser,
-            "UpdateUserID" => _UpdateUserID,
+            "UpdateUserId" => _UpdateUserID,
             "UpdateIP" => _UpdateIP,
             "UpdateTime" => _UpdateTime,
             "Remark" => _Remark,
@@ -309,7 +309,7 @@ public partial class User2
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
+                case "Id": _ID = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Password": _Password = Convert.ToString(value); break;
                 case "DisplayName": _DisplayName = Convert.ToString(value); break;
@@ -318,9 +318,9 @@ public partial class User2
                 case "Mobile": _Mobile = Convert.ToString(value); break;
                 case "Code": _Code = Convert.ToString(value); break;
                 case "Avatar": _Avatar = Convert.ToString(value); break;
-                case "RoleID": _RoleID = value.ToInt(); break;
+                case "RoleId": _RoleID = value.ToInt(); break;
                 case "RoleIds": _RoleIds = Convert.ToString(value); break;
-                case "DepartmentID": _DepartmentID = value.ToInt(); break;
+                case "DepartmentId": _DepartmentID = value.ToInt(); break;
                 case "Online": _Online = value.ToBoolean(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Logins": _Logins = value.ToInt(); break;
@@ -335,7 +335,7 @@ public partial class User2
                 case "Ex5": _Ex5 = Convert.ToString(value); break;
                 case "Ex6": _Ex6 = Convert.ToString(value); break;
                 case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
+                case "UpdateUserId": _UpdateUserID = value.ToInt(); break;
                 case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
@@ -356,7 +356,7 @@ public partial class User2
     public partial class _
     {
         /// <summary>编号</summary>
-        public static readonly Field ID = FindByName("ID");
+        public static readonly Field Id = FindByName("Id");
 
         /// <summary>名称。登录用户名</summary>
         public static readonly Field Name = FindByName("Name");
@@ -383,13 +383,13 @@ public partial class User2
         public static readonly Field Avatar = FindByName("Avatar");
 
         /// <summary>角色。主要角色</summary>
-        public static readonly Field RoleID = FindByName("RoleID");
+        public static readonly Field RoleId = FindByName("RoleId");
 
         /// <summary>角色组。次要角色集合</summary>
         public static readonly Field RoleIds = FindByName("RoleIds");
 
         /// <summary>部门。组织机构</summary>
-        public static readonly Field DepartmentID = FindByName("DepartmentID");
+        public static readonly Field DepartmentId = FindByName("DepartmentId");
 
         /// <summary>在线</summary>
         public static readonly Field Online = FindByName("Online");
@@ -434,7 +434,7 @@ public partial class User2
         public static readonly Field UpdateUser = FindByName("UpdateUser");
 
         /// <summary>更新用户</summary>
-        public static readonly Field UpdateUserID = FindByName("UpdateUserID");
+        public static readonly Field UpdateUserId = FindByName("UpdateUserId");
 
         /// <summary>更新地址</summary>
         public static readonly Field UpdateIP = FindByName("UpdateIP");
@@ -452,7 +452,7 @@ public partial class User2
     public partial class __
     {
         /// <summary>编号</summary>
-        public const String ID = "ID";
+        public const String Id = "Id";
 
         /// <summary>名称。登录用户名</summary>
         public const String Name = "Name";
@@ -479,13 +479,13 @@ public partial class User2
         public const String Avatar = "Avatar";
 
         /// <summary>角色。主要角色</summary>
-        public const String RoleID = "RoleID";
+        public const String RoleId = "RoleId";
 
         /// <summary>角色组。次要角色集合</summary>
         public const String RoleIds = "RoleIds";
 
         /// <summary>部门。组织机构</summary>
-        public const String DepartmentID = "DepartmentID";
+        public const String DepartmentId = "DepartmentId";
 
         /// <summary>在线</summary>
         public const String Online = "Online";
@@ -530,7 +530,7 @@ public partial class User2
         public const String UpdateUser = "UpdateUser";
 
         /// <summary>更新用户</summary>
-        public const String UpdateUserID = "UpdateUserID";
+        public const String UpdateUserId = "UpdateUserId";
 
         /// <summary>更新地址</summary>
         public const String UpdateIP = "UpdateIP";

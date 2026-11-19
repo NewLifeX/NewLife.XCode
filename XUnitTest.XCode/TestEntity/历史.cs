@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using NewLife;
@@ -22,8 +22,8 @@ namespace XUnitTest.XCode.TestEntity
         [DisplayName("编号")]
         [Description("编号")]
         [DataObjectField(true, true, false, 0)]
-        [BindColumn("ID", "编号", "")]
-        public Int32 ID { get { return _ID; } set { if (OnPropertyChanging(__.ID, value)) { _ID = value; OnPropertyChanged(__.ID); } } }
+        [BindColumn("Id", "编号", "")]
+        public Int32 Id { get { return _ID; } set { if (OnPropertyChanging(__.Id, value)) { _ID = value; OnPropertyChanged(__.Id); } } }
 
         private String _Category;
         /// <summary>类别</summary>
@@ -54,8 +54,8 @@ namespace XUnitTest.XCode.TestEntity
         [DisplayName("用户编号")]
         [Description("用户编号")]
         [DataObjectField(false, false, false, 0)]
-        [BindColumn("CreateUserID", "用户编号", "")]
-        public Int32 CreateUserID { get { return _CreateUserID; } set { if (OnPropertyChanging(__.CreateUserID, value)) { _CreateUserID = value; OnPropertyChanged(__.CreateUserID); } } }
+        [BindColumn("CreateUserId", "用户编号", "")]
+        public Int32 CreateUserId { get { return _CreateUserID; } set { if (OnPropertyChanging(__.CreateUserId, value)) { _CreateUserID = value; OnPropertyChanged(__.CreateUserId); } } }
 
         private String _CreateIP;
         /// <summary>IP地址</summary>
@@ -92,11 +92,11 @@ namespace XUnitTest.XCode.TestEntity
             {
                 switch (name)
                 {
-                    case __.ID : return _ID;
+                    case __.Id : return _ID;
                     case __.Category : return _Category;
                     case __.Action : return _Action;
                     case __.UserName : return _UserName;
-                    case __.CreateUserID : return _CreateUserID;
+                    case __.CreateUserId : return _CreateUserID;
                     case __.CreateIP : return _CreateIP;
                     case __.CreateTime : return _CreateTime;
                     case __.Remark : return _Remark;
@@ -107,11 +107,11 @@ namespace XUnitTest.XCode.TestEntity
             {
                 switch (name)
                 {
-                    case __.ID : _ID = value.ToInt(); break;
+                    case __.Id : _ID = value.ToInt(); break;
                     case __.Category : _Category = Convert.ToString(value); break;
                     case __.Action : _Action = Convert.ToString(value); break;
                     case __.UserName : _UserName = Convert.ToString(value); break;
-                    case __.CreateUserID : _CreateUserID = value.ToInt(); break;
+                    case __.CreateUserId : _CreateUserID = value.ToInt(); break;
                     case __.CreateIP : _CreateIP = Convert.ToString(value); break;
                     case __.CreateTime : _CreateTime = value.ToDateTime(); break;
                     case __.Remark : _Remark = Convert.ToString(value); break;
@@ -126,7 +126,7 @@ namespace XUnitTest.XCode.TestEntity
         public partial class _
         {
             /// <summary>编号</summary>
-            public static readonly Field ID = FindByName(__.ID);
+            public static readonly Field Id = FindByName(__.Id);
 
             /// <summary>类别</summary>
             public static readonly Field Category = FindByName(__.Category);
@@ -138,7 +138,7 @@ namespace XUnitTest.XCode.TestEntity
             public static readonly Field UserName = FindByName(__.UserName);
 
             /// <summary>用户编号</summary>
-            public static readonly Field CreateUserID = FindByName(__.CreateUserID);
+            public static readonly Field CreateUserId = FindByName(__.CreateUserId);
 
             /// <summary>IP地址</summary>
             public static readonly Field CreateIP = FindByName(__.CreateIP);
@@ -156,7 +156,7 @@ namespace XUnitTest.XCode.TestEntity
         public partial class __
         {
             /// <summary>编号</summary>
-            public const String ID = "ID";
+            public const String Id = "Id";
 
             /// <summary>类别</summary>
             public const String Category = "Category";
@@ -168,7 +168,7 @@ namespace XUnitTest.XCode.TestEntity
             public const String UserName = "UserName";
 
             /// <summary>用户编号</summary>
-            public const String CreateUserID = "CreateUserID";
+            public const String CreateUserId = "CreateUserId";
 
             /// <summary>IP地址</summary>
             public const String CreateIP = "CreateIP";
@@ -187,7 +187,7 @@ namespace XUnitTest.XCode.TestEntity
     {
         #region 属性
         /// <summary>编号</summary>
-        Int32 ID { get; set; }
+        Int32 Id { get; set; }
 
         /// <summary>类别</summary>
         String Category { get; set; }
@@ -199,7 +199,7 @@ namespace XUnitTest.XCode.TestEntity
         String UserName { get; set; }
 
         /// <summary>用户编号</summary>
-        Int32 CreateUserID { get; set; }
+        Int32 CreateUserId { get; set; }
 
         /// <summary>IP地址</summary>
         String CreateIP { get; set; }

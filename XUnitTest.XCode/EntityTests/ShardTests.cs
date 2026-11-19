@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NewLife;
@@ -47,14 +47,14 @@ public class ShardTests
     //    var session = User2.Meta.Session;
 
     //    var sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Insert);
-    //    Assert.Equal(@"Insert Into User_202008(Name,Password,DisplayName,Sex,Mail,Mobile,Code,Avatar,RoleID,RoleIds,DepartmentID,Online,Enable,Logins,LastLogin,LastLoginIP,RegisterTime,RegisterIP,Ex1,Ex2,Ex3,Ex4,Ex5,Ex6,UpdateUser,UpdateUserID,UpdateIP,UpdateTime,Remark) Values('Stone',null,'大石头',0,null,null,null,null,0,null,0,0,1,0,null,null,'2020-08-22 00:00:00',null,0,0,0,null,null,null,null,0,null,'2020-09-01 00:00:00',null)", sql);
+    //    Assert.Equal(@"Insert Into User_202008(Name,Password,DisplayName,Sex,Mail,Mobile,Code,Avatar,RoleId,RoleIds,DepartmentId,Online,Enable,Logins,LastLogin,LastLoginIP,RegisterTime,RegisterIP,Ex1,Ex2,Ex3,Ex4,Ex5,Ex6,UpdateUser,UpdateUserId,UpdateIP,UpdateTime,Remark) Values('Stone',null,'大石头',0,null,null,null,null,0,null,0,0,1,0,null,null,'2020-08-22 00:00:00',null,0,0,0,null,null,null,null,0,null,'2020-09-01 00:00:00',null)", sql);
 
-    //    user.ID = 2;
+    //    user.Id = 2;
     //    sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Update);
-    //    Assert.Equal(@"Update User_202008 Set Name='Stone',DisplayName='大石头',Enable=1,RegisterTime='2020-08-22 00:00:00',UpdateTime='2020-09-01 00:00:00' Where ID=2", sql);
+    //    Assert.Equal(@"Update User_202008 Set Name='Stone',DisplayName='大石头',Enable=1,RegisterTime='2020-08-22 00:00:00',UpdateTime='2020-09-01 00:00:00' Where Id=2", sql);
 
     //    sql = factory.Persistence.GetSql(session, user, DataObjectMethodType.Delete);
-    //    Assert.Equal(@"Delete From User_202008 Where ID=2", sql);
+    //    Assert.Equal(@"Delete From User_202008 Where Id=2", sql);
 
     //    // 恢复现场，避免影响其它测试用例
     //    User2.Meta.ShardTableName = null;
@@ -104,9 +104,9 @@ public class ShardTests
     public void ShardTestSQLite2()
     {
         // 配置自动分表策略，一般在实体类静态构造函数中配置
-        var shard = new TimeShardPolicy("ID", Log2.Meta.Factory)
+        var shard = new TimeShardPolicy("Id", Log2.Meta.Factory)
         {
-            //Field = Log2._.ID,
+            //Field = Log2._.Id,
             ConnPolicy = "{0}_{1:yyyy}",
             TablePolicy = "{0}_{1:yyyyMMdd}",
         };
@@ -116,7 +116,7 @@ public class ShardTests
         var today = DateTime.Now;
         new Log2
         {
-            ID = Log2.Meta.Factory.Snow.NewId(today.AddHours(-24)),
+            Id = Log2.Meta.Factory.Snow.NewId(today.AddHours(-24)),
             Action = "分表",
             Category = Rand.NextString(8),
         }.Insert();
@@ -165,7 +165,7 @@ public class ShardTests
     public void FindById()
     {
         // 配置自动分表策略，一般在实体类静态构造函数中配置
-        var shard = new TimeShardPolicy("ID", Log2.Meta.Factory)
+        var shard = new TimeShardPolicy("Id", Log2.Meta.Factory)
         {
             ConnPolicy = "{0}_{1:yyyy}",
             TablePolicy = "{0}_{1:yyyyMMdd}",
@@ -189,8 +189,8 @@ public class ShardTests
         log.Insert();
         Assert.StartsWith($"[test_{time:yyyy}] Insert Into Log2_{time:yyyyMMdd}(", sqls[^1]);
 
-        var log2 = Log2.FindByID(log.ID);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time:yyyyMMdd} Where ID=" + log.ID, sqls[^1]);
+        var log2 = Log2.FindByID(log.Id);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time:yyyyMMdd} Where Id=" + log.Id, sqls[^1]);
 
         // 恢复现场，避免影响其它测试用例
         Log2.Meta.ShardPolicy = null;
@@ -201,7 +201,7 @@ public class ShardTests
     public void SearchDates()
     {
         // 配置自动分表策略，一般在实体类静态构造函数中配置
-        var shard = new TimeShardPolicy("ID", Log2.Meta.Factory)
+        var shard = new TimeShardPolicy("Id", Log2.Meta.Factory)
         {
             ConnPolicy = "{0}_{1:yyyy}",
             TablePolicy = "{0}_{1:yyyyMMdd}",
@@ -211,13 +211,13 @@ public class ShardTests
         // 插入一点数据
         var snow = Log2.Meta.Factory.Snow;
         var now = DateTime.Now;
-        var log = new Log2 { ID = snow.NewId(now.AddDays(-2)) };
+        var log = new Log2 { Id = snow.NewId(now.AddDays(-2)) };
         log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-1)) };
+        log = new Log2 { Id = snow.NewId(now.AddDays(-1)) };
         log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-0)) };
+        log = new Log2 { Id = snow.NewId(now.AddDays(-0)) };
         log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-3)) };
+        log = new Log2 { Id = snow.NewId(now.AddDays(-3)) };
         log.Insert();
 
         // 拦截Sql，仅为了断言，非业务代码
@@ -240,31 +240,31 @@ public class ShardTests
         XTrace.WriteLine("Search Page");
         var list = Log2.Search(null, null, -1, null, -1, start, time, null, new PageParameter { PageSize = 10000 });
         sqls.RemoveAll(e => e.EndsWith("sqlite_master"));
-        Assert.StartsWith($"[test_{time.AddDays(-3):yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^4]);
-        Assert.StartsWith($"[test_{time.AddDays(-2):yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^3]);
-        Assert.StartsWith($"[test_{time.AddDays(-1):yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where ID>=", sqls[^1]);
+        Assert.StartsWith($"[test_{time.AddDays(-3):yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where Id>=", sqls[^4]);
+        Assert.StartsWith($"[test_{time.AddDays(-2):yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where Id>=", sqls[^3]);
+        Assert.StartsWith($"[test_{time.AddDays(-1):yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where Id>=", sqls[^2]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where Id>=", sqls[^1]);
 
         // 查询第二页
         XTrace.WriteLine("Search Page2");
         list = Log2.Search(null, null, -1, null, -1, start, time, null, new PageParameter { PageIndex = 2, PageSize = 10000 });
         sqls.RemoveAll(e => e.EndsWith("sqlite_master"));
-        Assert.StartsWith($"[test_{time.AddDays(-3):yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^7]);
-        Assert.StartsWith($"[test_{time.AddDays(-3):yyyy}] Select Count(*) From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^6]);
-        Assert.StartsWith($"[test_{time.AddDays(-2):yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^5]);
-        Assert.StartsWith($"[test_{time.AddDays(-2):yyyy}] Select Count(*) From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^4]);
-        Assert.StartsWith($"[test_{time.AddDays(-1):yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^3]);
-        Assert.StartsWith($"[test_{time.AddDays(-1):yyyy}] Select Count(*) From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^2]);
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where ID>=", sqls[^1]);
+        Assert.StartsWith($"[test_{time.AddDays(-3):yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where Id>=", sqls[^7]);
+        Assert.StartsWith($"[test_{time.AddDays(-3):yyyy}] Select Count(*) From Log2_{time.AddDays(-3):yyyyMMdd} Where Id>=", sqls[^6]);
+        Assert.StartsWith($"[test_{time.AddDays(-2):yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where Id>=", sqls[^5]);
+        Assert.StartsWith($"[test_{time.AddDays(-2):yyyy}] Select Count(*) From Log2_{time.AddDays(-2):yyyyMMdd} Where Id>=", sqls[^4]);
+        Assert.StartsWith($"[test_{time.AddDays(-1):yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where Id>=", sqls[^3]);
+        Assert.StartsWith($"[test_{time.AddDays(-1):yyyy}] Select Count(*) From Log2_{time.AddDays(-1):yyyyMMdd} Where Id>=", sqls[^2]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where Id>=", sqls[^1]);
 
         // 在多表中进行分页查询（倒序）
         XTrace.WriteLine("Search Page Reverse");
         list = Log2.Search(null, null, -1, null, -1, start, time, null, new PageParameter { PageSize = 10000, Sort = "id", Desc = true });
         sqls.RemoveAll(e => e.EndsWith("sqlite_master"));
-        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where ID>=", sqls[^4]);
-        Assert.StartsWith($"[test_{time.AddDays(-1):yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where ID>=", sqls[^3]);
-        Assert.StartsWith($"[test_{time.AddDays(-2):yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where ID>=", sqls[^2]);
-        Assert.StartsWith($"[test_{time.AddDays(-3):yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where ID>=", sqls[^1]);
+        Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddDays(-0):yyyyMMdd} Where Id>=", sqls[^4]);
+        Assert.StartsWith($"[test_{time.AddDays(-1):yyyy}] Select * From Log2_{time.AddDays(-1):yyyyMMdd} Where Id>=", sqls[^3]);
+        Assert.StartsWith($"[test_{time.AddDays(-2):yyyy}] Select * From Log2_{time.AddDays(-2):yyyyMMdd} Where Id>=", sqls[^2]);
+        Assert.StartsWith($"[test_{time.AddDays(-3):yyyy}] Select * From Log2_{time.AddDays(-3):yyyyMMdd} Where Id>=", sqls[^1]);
 
         // 日期倒序
         time = DateTime.Today;
@@ -296,7 +296,7 @@ public class ShardTests
     public void SearchAutoShard()
     {
         // 配置自动分表策略，一般在实体类静态构造函数中配置
-        var shard = new TimeShardPolicy("ID", Log2.Meta.Factory)
+        var shard = new TimeShardPolicy("Id", Log2.Meta.Factory)
         {
             ConnPolicy = "{0}_{1:yyyy}",
             TablePolicy = "{0}_{1:yyyyMMdd}",
@@ -306,11 +306,11 @@ public class ShardTests
         // 插入一点数据
         var snow = Log2.Meta.Factory.Snow;
         var now = DateTime.Now;
-        var log = new Log2 { ID = snow.NewId(now.AddDays(-2)), Success = true };
+        var log = new Log2 { Id = snow.NewId(now.AddDays(-2)), Success = true };
         log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-1)), Success = true };
+        log = new Log2 { Id = snow.NewId(now.AddDays(-1)), Success = true };
         log.Insert();
-        log = new Log2 { ID = snow.NewId(now.AddDays(-0)), Success = true };
+        log = new Log2 { Id = snow.NewId(now.AddDays(-0)), Success = true };
         log.Insert();
 
         // 拦截Sql，仅为了断言，非业务代码
@@ -356,7 +356,7 @@ public class ShardTests
     public void SearchAutoShard2()
     {
         // 配置自动分表策略，一般在实体类静态构造函数中配置
-        var shard = new TimeShardPolicy("ID", Log2.Meta.Factory)
+        var shard = new TimeShardPolicy("Id", Log2.Meta.Factory)
         {
             ConnPolicy = "{0}_{1:yyyy}",
             TablePolicy = "{0}_{1:yyyyMMdd}",
@@ -405,7 +405,7 @@ public class ShardTests
     public void SearchAutoShard3()
     {
         // 配置自动分表策略，一般在实体类静态构造函数中配置
-        var shard = new TimeShardPolicy("ID", Log2.Meta.Factory)
+        var shard = new TimeShardPolicy("Id", Log2.Meta.Factory)
         {
             ConnPolicy = "{0}_{1:yyyy}",
             TablePolicy = "{0}_{1:yyyyMMdd}",
@@ -444,7 +444,7 @@ public class ShardTests
     public void SearchAutoShard4()
     {
         // 配置自动分表策略，一般在实体类静态构造函数中配置
-        var shard = new TimeShardPolicy("ID", Log2.Meta.Factory)
+        var shard = new TimeShardPolicy("Id", Log2.Meta.Factory)
         {
             ConnPolicy = "{0}_{1:yyyy}",
             TablePolicy = "{0}_{1:yyyyMMdd}",
@@ -477,7 +477,7 @@ public class ShardTests
 
         var start = "2024-05-29".ToDateTime();
         var end = start.AddDays(1);
-        //var fi = Log2.Meta.Factory.Table.FindByName("ID");
+        //var fi = Log2.Meta.Factory.Table.FindByName("Id");
         var fi = policy.Field;
         var where = fi >= start & fi < end;
 

@@ -36,7 +36,7 @@ public partial class Log : Entity<Log>
 
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
         //var df = Meta.Factory.AdditionalFields;
-        //df.Add(nameof(LinkID));
+        //df.Add(nameof(LinkId));
 
         // 拦截器 UserInterceptor、TimeInterceptor、IPInterceptor
         Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
@@ -68,7 +68,7 @@ public partial class Log : Entity<Log>
         /*var user = ManageProvider.User;
         if (user != null)
         {
-            if (method == DataMethod.Insert && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
+            if (method == DataMethod.Insert && !Dirtys[nameof(CreateUserId)]) CreateUserId = user.ID;
         }*/
         //if (method == DataMethod.Insert && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
         //if (method == DataMethod.Insert && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
@@ -86,10 +86,10 @@ public partial class Log : Entity<Log>
     //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Log[日志]数据……");
 
     //    var entity = new Log();
-    //    entity.ID = 0;
+    //    entity.Id = 0;
     //    entity.Category = "abc";
     //    entity.Action = "abc";
-    //    entity.LinkID = 0;
+    //    entity.LinkId = 0;
     //    entity.Success = true;
     //    entity.UserName = "abc";
     //    entity.Ex1 = 0;
@@ -138,9 +138,9 @@ public partial class Log : Entity<Log>
 
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (!action.IsNullOrEmpty()) exp &= _.Action == action;
-        if (linkId >= 0) exp &= _.LinkID == linkId;
+        if (linkId >= 0) exp &= _.LinkId == linkId;
         if (success != null) exp &= _.Success == success;
-        exp &= _.ID.Between(start, end, Meta.Factory.Snow);
+        exp &= _.Id.Between(start, end, Meta.Factory.Snow);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -33,7 +33,7 @@ public partial class ExpressLogs : Entity<ExpressLogs>
     {
         // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
         //var df = Meta.Factory.AdditionalFields;
-        //df.Add(nameof(CreateUserID));
+        //df.Add(nameof(CreateUserId));
 
         // 按年分表
         Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
@@ -72,8 +72,8 @@ public partial class ExpressLogs : Entity<ExpressLogs>
         /*var user = ManageProvider.User;
         if (user != null)
         {
-            if (method == DataMethod.Insert && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
-            if (!Dirtys[nameof(UpdateUserID)]) UpdateUserID = user.ID;
+            if (method == DataMethod.Insert && !Dirtys[nameof(CreateUserId)]) CreateUserId = user.Id;
+            if (!Dirtys[nameof(UpdateUserId)]) UpdateUserId = user.Id;
         }*/
         //if (method == DataMethod.Insert && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
         //if (!Dirtys[nameof(UpdateTime)]) UpdateTime = DateTime.Now;

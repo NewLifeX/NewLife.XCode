@@ -308,8 +308,8 @@ public class HanaTests
         var gly2 = list2.FirstOrDefault(e => e.Name == "管理员");
         Assert.NotNull(gly2);
         Assert.Null(gly2.Remark);
-        // 管理员被删除后重新插入，自增ID改变
-        Assert.NotEqual(gly.ID, gly2.ID);
+        // 管理员被删除后重新插入，自增Id改变
+        Assert.NotEqual(gly.Id, gly2.Id);
     }
 
     [Fact(Skip = "跳过")]
@@ -381,7 +381,7 @@ public class HanaTests
         var user = User.FindByName("stone");
         if (user == null)
         {
-            user = new User { Name = "stone", RoleID = 4 };
+            user = new User { Name = "stone", RoleId = 4 };
             user.Insert();
         }
 

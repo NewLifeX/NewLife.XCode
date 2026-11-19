@@ -19,7 +19,7 @@ public class MultiResultsetTests
         DAL.AddConnStr(_connName, $"Data Source={dbFile}", null, "SQLite");
 
         var dal = DAL.Create(_connName);
-        dal.Execute("CREATE TABLE IF NOT EXISTS MultiRsTest (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL)");
+        dal.Execute("CREATE TABLE IF NOT EXISTS MultiRsTest (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL)");
         dal.Execute("DELETE FROM MultiRsTest");
         dal.Execute("INSERT INTO MultiRsTest (Name) VALUES ('one')");
         dal.Execute("INSERT INTO MultiRsTest (Name) VALUES ('two')");
@@ -31,7 +31,7 @@ public class MultiResultsetTests
     {
         var dal = DAL.Create(_connName);
 
-        var ds = dal.Select("Select ID, Name From MultiRsTest Order By ID; Select Count(*) As Cnt From MultiRsTest");
+        var ds = dal.Select("Select Id, Name From MultiRsTest Order By Id; Select Count(*) As Cnt From MultiRsTest");
 
         Assert.Equal(2, ds.Tables.Count);
 
@@ -50,7 +50,7 @@ public class MultiResultsetTests
     {
         var dal = DAL.Create(_connName);
 
-        var ds = dal.Select("Select Name From MultiRsTest Where ID=1");
+        var ds = dal.Select("Select Name From MultiRsTest Where Id=1");
 
         Assert.Equal(1, ds.Tables.Count);
         Assert.Equal(1, ds.Tables[0].Rows.Count);
@@ -62,7 +62,7 @@ public class MultiResultsetTests
     {
         var dal = DAL.Create(_connName);
 
-        var ds = dal.Select("Select Name From MultiRsTest Where ID=1; Select Name From MultiRsTest Where ID=999");
+        var ds = dal.Select("Select Name From MultiRsTest Where Id=1; Select Name From MultiRsTest Where Id=999");
 
         Assert.Equal(2, ds.Tables.Count);
         Assert.Equal(1, ds.Tables[0].Rows.Count);

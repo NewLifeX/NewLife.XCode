@@ -97,7 +97,7 @@ public class FieldExtensionTests
     [Fact(DisplayName = "DateTime字段_不支持整数字段_抛出NotSupportedException")]
     public void Between_DateTime_IntField_ThrowsNotSupported()
     {
-        var fi = User._.ID; // Int32 类型
+        var fi = User._.Id; // Int32 类型
         var start = new DateTime(2025, 1, 1);
         var ex = Assert.Throws<NotSupportedException>(() => fi.Between(start, DateTime.MinValue));
         Assert.Contains("Between", ex.Message);
@@ -201,7 +201,7 @@ public class FieldExtensionTests
     [Fact(DisplayName = "Int64字段_开始等于结束_生成等号表达式")]
     public void Between_Int64_StartEqualsEnd_GeneratesEqual()
     {
-        var fi = Log._.ID; // Int64 类型
+        var fi = Log._.Id; // Int64 类型
         var exp = fi.Between(1000L, 1000L);
 
         var fe = Assert.IsType<FieldExpression>(exp);
@@ -213,7 +213,7 @@ public class FieldExtensionTests
     [Fact(DisplayName = "Int64字段_开始大于结束_返回空表达式")]
     public void Between_Int64_StartGreaterThanEnd_ReturnsEmpty()
     {
-        var fi = Log._.ID;
+        var fi = Log._.Id;
         var exp = fi.Between(2000L, 1000L);
         Assert.True(exp.IsEmpty);
     }
@@ -221,7 +221,7 @@ public class FieldExtensionTests
     [Fact(DisplayName = "Int64字段_区间_生成大于等于且小于等于")]
     public void Between_Int64_Range_GeneratesGteLte()
     {
-        var fi = Log._.ID;
+        var fi = Log._.Id;
         var exp = fi.Between(100L, 200L);
 
         var we = Assert.IsType<WhereExpression>(exp);
@@ -248,7 +248,7 @@ public class FieldExtensionTests
     [Fact(DisplayName = "Int32字段_区间_两端闭合")]
     public void Between_Int32_Range_GeneratesGteLte()
     {
-        var fi = User._.ID; // Int32 类型
+        var fi = User._.Id; // Int32 类型
         var exp = fi.Between(10, 20);
 
         var we = Assert.IsType<WhereExpression>(exp);
@@ -264,7 +264,7 @@ public class FieldExtensionTests
     [Fact(DisplayName = "Int32字段_开始等于结束_生成等号")]
     public void Between_Int32_StartEqualsEnd_Equal()
     {
-        var fi = User._.ID;
+        var fi = User._.Id;
         var exp = fi.Between(5, 5);
 
         var fe = Assert.IsType<FieldExpression>(exp);
@@ -313,7 +313,7 @@ public class FieldExtensionTests
     [Fact(DisplayName = "Double字段_整数字段不支持_抛出NotSupportedException")]
     public void Between_Double_IntField_ThrowsNotSupported()
     {
-        var fi = User._.ID; // Int32 类型
+        var fi = User._.Id; // Int32 类型
         var ex = Assert.Throws<NotSupportedException>(() => fi.Between(1.0, 2.0));
         Assert.Contains("Between", ex.Message);
         Assert.Contains("Single", ex.Message);

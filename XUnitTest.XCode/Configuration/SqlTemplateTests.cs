@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -203,7 +203,7 @@ select * from userx where id=@id
         Assert.Equal("[test] Select * From (select * from menu2 where 'visible'=2) SourceTable", sql);
 
         var menu2 = Menu3.FindByKey(1234);
-        Assert.Equal("[test] Select * From (select * from menu2 where 'visible'=2) SourceTable Where ID=1234", sql);
+        Assert.Equal("[test] Select * From (select * from menu2 where 'visible'=2) SourceTable Where Id=1234", sql);
 
         var date = DateTime.Today;
         var list = Menu3.Search(date, date, "stone", new PageParameter { PageIndex = 2, PageSize = 30 });
@@ -234,7 +234,7 @@ select * from userx where id=@id
         Assert.Equal("[MySql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable", sql);
 
         var menu2 = Menu3.FindByKey(1234);
-        Assert.Equal("[MySql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable Where ID=1234", sql);
+        Assert.Equal("[MySql_member] Select * From (select * from Menu2 where 'visible'=1) SourceTable Where Id=1234", sql);
 
         var date = DateTime.Today;
         var list = Menu3.Search(date, date, "stone", new PageParameter { PageIndex = 2, PageSize = 30 });

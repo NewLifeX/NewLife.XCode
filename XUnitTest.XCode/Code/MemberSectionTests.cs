@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using XCode.Code;
 using Xunit;
 
@@ -15,10 +15,10 @@ public class MemberSectionTests
             #region 扩展属性
             /// <summary>部门</summary>
             [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-            public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
+            public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentId));
 
             /// <summary>部门</summary>
-            [Map(nameof(DepartmentID), typeof(Department), "ID")]
+            [Map(nameof(DepartmentId), typeof(Department), "Id")]
             [Category("登录信息")]
             public String DepartmentName => Department?.Name;
             #endregion
@@ -32,12 +32,12 @@ public class MemberSectionTests
                 if (id <= 0) return null;
 
                 // 实体缓存
-                if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+                if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
                 // 单对象缓存
                 return Meta.SingleCache[id];
 
-                //return Find(_.ID == id);
+                //return Find(_.Id == id);
             }
 
             /// <summary>根据名称查找</summary>
@@ -101,9 +101,9 @@ public class MemberSectionTests
                 if (roleId <= 0) return new List<User>();
 
                 // 实体缓存
-                if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleID == roleId);
+                if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleId == roleId);
 
-                return FindAll(_.RoleID == roleId);
+                return FindAll(_.RoleId == roleId);
             }
             #endregion
 
@@ -150,7 +150,7 @@ public class MemberSectionTests
 
     /// <summary>父级</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Area Parent => Extends.Get(nameof(Parent), k => FindByID(ParentID) ?? Root);
+    public Area Parent => Extends.Get(nameof(Parent), k => FindByID(ParentId) ?? Root);
 
     /// <summary>所有父级</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
@@ -160,7 +160,7 @@ public class MemberSectionTests
         var entity = Parent;
         while (entity != null)
         {
-            if (entity.ID == 0 || list.Contains(entity)) break;
+            if (entity.Id == 0 || list.Contains(entity)) break;
 
             list.Add(entity);
 
@@ -200,7 +200,7 @@ public class MemberSectionTests
 
     /// <summary>下级地区</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public IList<Area> Childs => Extends.Get(nameof(Childs), k => FindAllByParentID(ID).Where(e => e.Enable).ToList());
+    public IList<Area> Childs => Extends.Get(nameof(Childs), k => FindAllByParentID(Id).Where(e => e.Enable).ToList());
 
     /// <summary>子孙级区域。支持省市区，不支持乡镇街道</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
@@ -229,16 +229,16 @@ public class MemberSectionTests
         if (id <= 10_00_00 || id > 99_99_99_999) return null;
 
         //// 实体缓存
-        //var r = Meta.Cache.Find(e => e.ID == id);
+        //var r = Meta.Cache.Find(e => e.Id == id);
         //if (r != null) return r;
 
         // 单对象缓存
         return Meta.SingleCache[id];
 
-        //return Find(_.ID == id);
+        //return Find(_.Id == id);
     }
 
-    /// <summary>根据ID列表数组查询，一般先后查街道、区县、城市、省份</summary>
+    /// <summary>根据Id列表数组查询，一般先后查街道、区县、城市、省份</summary>
     /// <param name="ids"></param>
     /// <returns></returns>
     public static Area FindByIDs(params Int32[] ids)
@@ -346,7 +346,7 @@ public class MemberSectionTests
         if (parentid is < 0 or > 99_99_99) return new List<Area>();
 
         // 实体缓存
-        var rs = Meta.Cache.FindAll(e => e.ParentID == parentid);
+        var rs = Meta.Cache.FindAll(e => e.ParentId == parentid);
         // 有子节点，并且都是启用状态，则直接使用
         //if (rs.Count > 0 && rs.Any(e => e.Enable)) return rs;
         if (rs.Count > 0) return rs;
@@ -354,7 +354,7 @@ public class MemberSectionTests
         var key = parentid + "";
         if (_pcache.TryGetValue(key, out rs)) return rs;
 
-        rs = FindAll(_.ParentID == parentid, _.ID.Asc(), null, 0, 0);
+        rs = FindAll(_.ParentId == parentid, _.Id.Asc(), null, 0, 0);
 
         _pcache.Set(key, rs, 20 * 60);
 
@@ -477,10 +477,10 @@ public class MemberSectionTests
             #region 扩展属性
             /// <summary>部门</summary>
             [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-            public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
+            public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentId));
 
             /// <summary>部门</summary>
-            [Map(nameof(DepartmentID), typeof(Department), "ID")]
+            [Map(nameof(DepartmentId), typeof(Department), "Id")]
             [Category("登录信息")]
             public String DepartmentName => Department?.Name;
             #endregion
@@ -494,12 +494,12 @@ public class MemberSectionTests
                 if (id <= 0) return null;
 
                 // 实体缓存
-                if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+                if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
                 // 单对象缓存
                 return Meta.SingleCache[id];
 
-                //return Find(_.ID == id);
+                //return Find(_.Id == id);
             }
 
             /// <summary>根据名称查找</summary>
@@ -563,9 +563,9 @@ public class MemberSectionTests
                 if (roleId <= 0) return new List<User>();
 
                 // 实体缓存
-                if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleID == roleId);
+                if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleId == roleId);
 
-                return FindAll(_.RoleID == roleId);
+                return FindAll(_.RoleId == roleId);
             }
             #endregion
 
@@ -579,9 +579,9 @@ public class MemberSectionTests
             {
 
                 // 实体缓存
-                if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+                if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentId == parentId && e.Name.EqualIgnoreCase(name));
 
-                return FindAll(_.ParentID == parentId & _.Name == name);
+                return FindAll(_.ParentId == parentId & _.Name == name);
             }
 
             /// <summary>高级查询</summary>
@@ -595,7 +595,7 @@ public class MemberSectionTests
             public static IList<User> Search(String key, Int32 roleId, Boolean? isEnable, DateTime start, DateTime end, PageParameter p)
             {
                 var exp = _.LastLogin.Between(start, end);
-                if (roleId > 0) exp &= _.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",");
+                if (roleId > 0) exp &= _.RoleId == roleId | _.RoleIds.Contains("," + roleId + ",");
                 if (isEnable != null) exp &= _.Enable == isEnable;
         
                 // 先精确查询，再模糊

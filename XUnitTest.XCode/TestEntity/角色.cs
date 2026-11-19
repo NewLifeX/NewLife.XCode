@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -27,8 +27,8 @@ public partial class Role2
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _ID; set { if (OnPropertyChanging("Id", value)) { _ID = value; OnPropertyChanged("Id"); } } }
 
     private String _Name;
     /// <summary>名称</summary>
@@ -67,8 +67,8 @@ public partial class Role2
     [DisplayName("创建用户")]
     [Description("创建用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建用户", "")]
-    public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
+    [BindColumn("CreateUserId", "创建用户", "")]
+    public Int32 CreateUserId { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserId", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserId"); } } }
 
     private String _CreateIP;
     /// <summary>创建地址</summary>
@@ -91,8 +91,8 @@ public partial class Role2
     [DisplayName("更新用户")]
     [Description("更新用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("UpdateUserID", "更新用户", "")]
-    public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
+    [BindColumn("UpdateUserId", "更新用户", "")]
+    public Int32 UpdateUserId { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserId", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserId"); } } }
 
     private String _UpdateIP;
     /// <summary>更新地址</summary>
@@ -119,15 +119,15 @@ public partial class Role2
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _ID,
             "Name" => _Name,
             "IsSystem" => _IsSystem,
             "Remark" => _Remark,
             "Permission" => _Permission,
-            "CreateUserID" => _CreateUserID,
+            "CreateUserId" => _CreateUserID,
             "CreateIP" => _CreateIP,
             "CreateTime" => _CreateTime,
-            "UpdateUserID" => _UpdateUserID,
+            "UpdateUserId" => _UpdateUserID,
             "UpdateIP" => _UpdateIP,
             "UpdateTime" => _UpdateTime,
             _ => base[name]
@@ -136,15 +136,15 @@ public partial class Role2
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
+                case "Id": _ID = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "IsSystem": _IsSystem = value.ToBoolean(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
                 case "Permission": _Permission = Convert.ToString(value); break;
-                case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                case "CreateUserId": _CreateUserID = value.ToInt(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
+                case "UpdateUserId": _UpdateUserID = value.ToInt(); break;
                 case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                 default: base[name] = value; break;
@@ -164,7 +164,7 @@ public partial class Role2
     public partial class _
     {
         /// <summary>编号</summary>
-        public static readonly Field ID = FindByName("ID");
+        public static readonly Field Id = FindByName("Id");
 
         /// <summary>名称</summary>
         public static readonly Field Name = FindByName("Name");
@@ -179,7 +179,7 @@ public partial class Role2
         public static readonly Field Permission = FindByName("Permission");
 
         /// <summary>创建用户</summary>
-        public static readonly Field CreateUserID = FindByName("CreateUserID");
+        public static readonly Field CreateUserId = FindByName("CreateUserId");
 
         /// <summary>创建地址</summary>
         public static readonly Field CreateIP = FindByName("CreateIP");
@@ -188,7 +188,7 @@ public partial class Role2
         public static readonly Field CreateTime = FindByName("CreateTime");
 
         /// <summary>更新用户</summary>
-        public static readonly Field UpdateUserID = FindByName("UpdateUserID");
+        public static readonly Field UpdateUserId = FindByName("UpdateUserId");
 
         /// <summary>更新地址</summary>
         public static readonly Field UpdateIP = FindByName("UpdateIP");
@@ -203,7 +203,7 @@ public partial class Role2
     public partial class __
     {
         /// <summary>编号</summary>
-        public const String ID = "ID";
+        public const String Id = "Id";
 
         /// <summary>名称</summary>
         public const String Name = "Name";
@@ -218,7 +218,7 @@ public partial class Role2
         public const String Permission = "Permission";
 
         /// <summary>创建用户</summary>
-        public const String CreateUserID = "CreateUserID";
+        public const String CreateUserId = "CreateUserId";
 
         /// <summary>创建地址</summary>
         public const String CreateIP = "CreateIP";
@@ -227,7 +227,7 @@ public partial class Role2
         public const String CreateTime = "CreateTime";
 
         /// <summary>更新用户</summary>
-        public const String UpdateUserID = "UpdateUserID";
+        public const String UpdateUserId = "UpdateUserId";
 
         /// <summary>更新地址</summary>
         public const String UpdateIP = "UpdateIP";

@@ -23,8 +23,8 @@ public class ExtractTestEntity : Entity<ExtractTestEntity>
     private Int64 _ID;
     /// <summary>编号</summary>
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "")]
+    public Int64 Id { get => _ID; set { if (OnPropertyChanging("Id", value)) { _ID = value; OnPropertyChanged("Id"); } } }
 
     private String _Name;
     /// <summary>名称</summary>
@@ -47,7 +47,7 @@ public class ExtractTestEntity : Entity<ExtractTestEntity>
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _ID,
             "Name" => _Name,
             "LogTime" => _LogTime,
             _ => base[name]
@@ -56,7 +56,7 @@ public class ExtractTestEntity : Entity<ExtractTestEntity>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToLong(); break;
+                case "Id": _ID = value.ToLong(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "LogTime": _LogTime = value.ToDateTime(); break;
                 default: base[name] = value; break;
@@ -77,12 +77,12 @@ public class ExtracterTests
     {
         var dbFile = Path.Combine(Path.GetTempPath(), $"ExtractTest_{Guid.NewGuid():n}.db");
         DAL.AddConnStr(_connName, $"Data Source={dbFile}", null, "SQLite");
-        DAL.Create(_connName).Execute($"CREATE TABLE IF NOT EXISTS {_table} (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, LogTime DATETIME)");
+        DAL.Create(_connName).Execute($"CREATE TABLE IF NOT EXISTS {_table} (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, LogTime DATETIME)");
     }
 
     private static DAL Dal => DAL.Create(_connName);
 
-    private static IDataColumn IdColumn => ExtractTestEntity.Meta.Table.DataTable.Columns.First(e => e.Name == "ID");
+    private static IDataColumn IdColumn => ExtractTestEntity.Meta.Table.DataTable.Columns.First(e => e.Name == "Id");
 
     private static IDataColumn TimeColumn => ExtractTestEntity.Meta.Table.DataTable.Columns.First(e => e.Name == "LogTime");
 
@@ -108,7 +108,7 @@ public class ExtracterTests
     private static Int64[] IdsOf(DbTable dt)
     {
         var list = new List<Int64>();
-        for (var i = 0; i < dt.Rows.Count; i++) list.Add(dt.Get<Int64>(i, "ID"));
+        for (var i = 0; i < dt.Rows.Count; i++) list.Add(dt.Get<Int64>(i, "Id"));
         return list.ToArray();
     }
 
@@ -141,7 +141,7 @@ public class ExtracterTests
     {
         ResetRows(RecentFlags(5, 180));
 
-        var ex = new PagingExtracter(Dal, _table, "ID asc") { BatchSize = 2 };
+        var ex = new PagingExtracter(Dal, _table, "Id asc") { BatchSize = 2 };
         var batches = ex.Fetch().ToList();
 
         Assert.Equal(3, batches.Count);
@@ -149,7 +149,7 @@ public class ExtracterTests
         Assert.Equal(new[] { 1L, 2L, 3L, 4L, 5L }, batches.SelectMany(IdsOf).ToArray());
 
         // 从偏移4继续
-        var ex2 = new PagingExtracter(Dal, _table, "ID asc") { BatchSize = 2, Row = 4 };
+        var ex2 = new PagingExtracter(Dal, _table, "Id asc") { BatchSize = 2, Row = 4 };
         var batches2 = ex2.Fetch().ToList();
         Assert.Single(batches2);
         Assert.Equal(new[] { 5L }, IdsOf(batches2[0]));
@@ -202,12 +202,12 @@ public class ExtracterTests
     {
         ResetRows(RecentFlags(5, 180));
 
-        var field = ExtractTestEntity.Meta.Table.Fields.First(e => e.Name == "ID");
+        var field = ExtractTestEntity.Meta.Table.Fields.First(e => e.Name == "Id");
         var ex = new EntityIdExtracter(ExtractTestEntity.Meta.Factory, field) { BatchSize = 2 };
         var batches = ex.Fetch().ToList();
 
         Assert.Equal(3, batches.Count);
-        var ids = batches.SelectMany(b => b.Select(e => (e as ExtractTestEntity).ID)).ToArray();
+        var ids = batches.SelectMany(b => b.Select(e => (e as ExtractTestEntity).Id)).ToArray();
         Assert.Equal(new[] { 1L, 2L, 3L, 4L, 5L }, ids);
 
         // 无新增数据时续抽为空
@@ -222,9 +222,9 @@ public class ExtracterTests
         await Task.Run(() =>
         {
             Assert.Empty(new IdExtracter(Dal, _table, IdColumn).Fetch().ToList());
-            Assert.Empty(new PagingExtracter(Dal, _table, "ID asc").Fetch().ToList());
+            Assert.Empty(new PagingExtracter(Dal, _table, "Id asc").Fetch().ToList());
             Assert.Empty(new TimeExtracter(Dal, _table, TimeColumn).Fetch().ToList());
-            Assert.Empty(new EntityIdExtracter(ExtractTestEntity.Meta.Factory, ExtractTestEntity.Meta.Table.Fields.First(e => e.Name == "ID")).Fetch().ToList());
+            Assert.Empty(new EntityIdExtracter(ExtractTestEntity.Meta.Factory, ExtractTestEntity.Meta.Table.Fields.First(e => e.Name == "Id")).Fetch().ToList());
         });
     }
 }

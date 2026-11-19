@@ -18,8 +18,8 @@ public class MigrationTestEntity : Entity<MigrationTestEntity>
     private Int32 _ID;
     /// <summary>编号</summary>
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _ID; set { if (OnPropertyChanging("Id", value)) { _ID = value; OnPropertyChanged("Id"); } } }
 
     private String _Name;
     /// <summary>名称</summary>
@@ -54,7 +54,7 @@ public class MigrationTestEntity : Entity<MigrationTestEntity>
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _ID,
             "Name" => _Name,
             "Count" => _Count,
             "Weight" => _Weight,
@@ -65,7 +65,7 @@ public class MigrationTestEntity : Entity<MigrationTestEntity>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
+                case "Id": _ID = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Count": _Count = value.ToInt(); break;
                 case "Weight": _Weight = value.ToInt(); break;
@@ -121,17 +121,17 @@ public class MigrationTests
 
         Apply(Migration.On);
 
-        Assert.Equal(new[] { "Count", "ID", "Name", "Remark", "Weight" }, DbColumns());
+        Assert.Equal(new[] { "Count", "Id", "Name", "Remark", "Weight" }, DbColumns());
 
         // 重复应用应当幂等
         Apply(Migration.On);
-        Assert.Equal(new[] { "Count", "ID", "Name", "Remark", "Weight" }, DbColumns());
+        Assert.Equal(new[] { "Count", "Id", "Name", "Remark", "Weight" }, DbColumns());
     }
 
     [Fact(DisplayName = "On 模式：新增字段自动补齐，已有多余字段不删除")]
     public void On_AddsMissingColumns_KeepsExtra()
     {
-        ResetTable($"Create Table {_table} (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Extra TEXT)");
+        ResetTable($"Create Table {_table} (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Extra TEXT)");
 
         Apply(Migration.On);
 
@@ -145,7 +145,7 @@ public class MigrationTests
     [Fact(DisplayName = "Full 模式：删除模型外的多余字段")]
     public void Full_DropsExtraColumn()
     {
-        ResetTable($"Create Table {_table} (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Extra TEXT)");
+        ResetTable($"Create Table {_table} (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Extra TEXT)");
 
         Apply(Migration.Full);
 
@@ -157,21 +157,21 @@ public class MigrationTests
     [Fact(DisplayName = "Off 模式：完全不做任何变更")]
     public void Off_Skips()
     {
-        ResetTable($"Create Table {_table} (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
+        ResetTable($"Create Table {_table} (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
 
         Apply(Migration.Off);
 
-        Assert.Equal(new[] { "ID", "Name" }, DbColumns());
+        Assert.Equal(new[] { "Id", "Name" }, DbColumns());
     }
 
     [Fact(DisplayName = "ReadOnly 模式：只检查差异不执行 DDL")]
     public void ReadOnly_Skips()
     {
-        ResetTable($"Create Table {_table} (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
+        ResetTable($"Create Table {_table} (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
 
         Apply(Migration.ReadOnly);
 
-        Assert.Equal(new[] { "ID", "Name" }, DbColumns());
+        Assert.Equal(new[] { "Id", "Name" }, DbColumns());
     }
 
     [Fact(DisplayName = "表级配置只能收紧全局模式，不能放宽")]
@@ -182,18 +182,18 @@ public class MigrationTests
         {
             // 全局 On，表级 Off → 收紧，不执行
             table.Properties[nameof(Migration)] = nameof(Migration.Off);
-            ResetTable($"Create Table {_table} (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
+            ResetTable($"Create Table {_table} (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
             Apply(Migration.On);
-            Assert.Equal(new[] { "ID", "Name" }, DbColumns());
+            Assert.Equal(new[] { "Id", "Name" }, DbColumns());
 
             // 全局 Off，表级 Full → 不能放宽，仍然不执行
             table.Properties[nameof(Migration)] = nameof(Migration.Full);
             Apply(Migration.Off);
-            Assert.Equal(new[] { "ID", "Name" }, DbColumns());
+            Assert.Equal(new[] { "Id", "Name" }, DbColumns());
 
             // 全局 Full，表级 On → 收紧为只加字段，不删多余字段
             table.Properties[nameof(Migration)] = nameof(Migration.On);
-            ResetTable($"Create Table {_table} (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Extra TEXT)");
+            ResetTable($"Create Table {_table} (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT, Extra TEXT)");
             Apply(Migration.Full);
             var columns = DbColumns();
             Assert.Contains("Count", columns);

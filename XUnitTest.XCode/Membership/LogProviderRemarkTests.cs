@@ -12,7 +12,7 @@ namespace XUnitTest.XCode;
 /// <remarks>
 /// 日志明细的字段名原先取属性名（DisplayName/Online 等英文标识），中文界面下仍然显示英文。
 /// 现改为取字段元数据显示名并经 L.T 翻译：源文为中文时中文界面原样输出、英文界面回退英文，
-/// 源文为英文时由各应用词表提供译文。主键保留属性名，保持 ID=xxx 的机器可读约定。
+/// 源文为英文时由各应用词表提供译文。主键保留属性名，保持 Id=xxx 的机器可读约定。
 /// </remarks>
 [Collection("Localization")]
 public class LogProviderRemarkTests
@@ -38,7 +38,7 @@ public class LogProviderRemarkTests
             return;
         }
 
-        var user = new User { ID = 2, DisplayName = "测试", Online = true };
+        var user = new User { Id = 2, DisplayName = "测试", Online = true };
         var provider = new TestLogProvider();
 
         var saved = Localization.Culture;
@@ -47,7 +47,7 @@ public class LogProviderRemarkTests
             // 中文界面：元数据源文即中文，字段显示名不再是属性名
             Localization.Culture = CultureInfo.GetCultureInfo("zh-CN");
             var remark = provider.BuildRemark("Insert", user);
-            Assert.Contains("ID=2", remark);
+            Assert.Contains("Id=2", remark);
             Assert.Contains("昵称=测试", remark);
             Assert.Contains("在线=True", remark);
             Assert.DoesNotContain("DisplayName=", remark);
@@ -63,5 +63,24 @@ public class LogProviderRemarkTests
         {
             Localization.Culture = saved;
         }
+    }
+
+    [Fact(DisplayName = "日志关联编号支持 Id= 前缀与多字段备注")]
+    public void CreateLog_ParsesLinkId()
+    {
+        var provider = new LogProvider();
+
+        // 明细以 Id= 开头，后跟逗号分隔的其它字段
+        var log = provider.CreateLog("测试", "Insert", true, "Id=12,昵称=测试");
+        Assert.Equal(12L, log.LinkId);
+        Assert.Equal("Id=12,昵称=测试", log.Remark);
+
+        // 兼容旧版本 ID= 前缀
+        var legacy = provider.CreateLog("测试", "Insert", true, "ID=34,Name=old");
+        Assert.Equal(34L, legacy.LinkId);
+
+        // 无关联编号时不解析
+        var none = provider.CreateLog("测试", "Insert", true, "Key=1");
+        Assert.Equal(0L, none.LinkId);
     }
 }

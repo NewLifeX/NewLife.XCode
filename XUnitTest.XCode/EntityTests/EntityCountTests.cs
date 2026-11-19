@@ -84,7 +84,7 @@ public class EntityCountTests
         {
             Prepare(connName, dbFile, 4);
 
-            var roles = Role2.FindAll().OrderBy(e => e.ID).ToList();
+            var roles = Role2.FindAll().OrderBy(e => e.Id).ToList();
             Assert.Equal(4, roles.Count);
 
             roles[0].Delete();

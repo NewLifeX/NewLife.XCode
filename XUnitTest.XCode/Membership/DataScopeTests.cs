@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
@@ -101,8 +101,8 @@ public class DataScopeTests : IDisposable
     public void DataScopeContext_Create_SetsBasicProperties()
     {
         // Arrange
-        var user = new MockUser { ID = 100, DepartmentID = 200 };
-        var role = new MockRole { ID = 1, IsSystem = false, DataScope = DataScopes.本部门 };
+        var user = new MockUser { Id = 100, DepartmentId = 200 };
+        var role = new MockRole { Id = 1, IsSystem = false, DataScope = DataScopes.本部门 };
         user.Role = role;
         user.Roles = [role];
 
@@ -121,8 +121,8 @@ public class DataScopeTests : IDisposable
     public void DataScopeContext_Create_SystemRole_ReturnsAllScope()
     {
         // Arrange
-        var user = new MockUser { ID = 100, DepartmentID = 200 };
-        var role = new MockRole { ID = 1, IsSystem = true, DataScope = DataScopes.仅本人 };
+        var user = new MockUser { Id = 100, DepartmentId = 200 };
+        var role = new MockRole { Id = 1, IsSystem = true, DataScope = DataScopes.仅本人 };
         user.Role = role;
         user.Roles = [role];
 
@@ -141,9 +141,9 @@ public class DataScopeTests : IDisposable
     public void DataScopeContext_Create_MultipleRoles_TakesMaxPermission()
     {
         // Arrange
-        var user = new MockUser { ID = 100, DepartmentID = 200 };
-        var role1 = new MockRole { ID = 1, IsSystem = false, DataScope = DataScopes.仅本人 };
-        var role2 = new MockRole { ID = 2, IsSystem = false, DataScope = DataScopes.本部门及下级 };
+        var user = new MockUser { Id = 100, DepartmentId = 200 };
+        var role1 = new MockRole { Id = 1, IsSystem = false, DataScope = DataScopes.仅本人 };
+        var role2 = new MockRole { Id = 2, IsSystem = false, DataScope = DataScopes.本部门及下级 };
         user.Role = role1;
         user.Roles = [role1, role2];
 
@@ -161,7 +161,7 @@ public class DataScopeTests : IDisposable
     public void DataScopeContext_Create_NoRoles_DefaultsToSelfOnly()
     {
         // Arrange
-        var user = new MockUser { ID = 100, DepartmentID = 200 };
+        var user = new MockUser { Id = 100, DepartmentId = 200 };
         user.Role = null!;
         user.Roles = [];
 
@@ -178,9 +178,9 @@ public class DataScopeTests : IDisposable
     public void DataScopeContext_Create_ViewSensitive_AnyRoleHasPermission()
     {
         // Arrange
-        var user = new MockUser { ID = 100, DepartmentID = 200 };
-        var role1 = new MockRole { ID = 1, IsSystem = false, DataScope = DataScopes.本部门, ViewSensitive = false };
-        var role2 = new MockRole { ID = 2, IsSystem = false, DataScope = DataScopes.本部门, ViewSensitive = true };
+        var user = new MockUser { Id = 100, DepartmentId = 200 };
+        var role1 = new MockRole { Id = 1, IsSystem = false, DataScope = DataScopes.本部门, ViewSensitive = false };
+        var role2 = new MockRole { Id = 2, IsSystem = false, DataScope = DataScopes.本部门, ViewSensitive = true };
         user.Role = role1;
         user.Roles = [role1, role2];
 
@@ -992,7 +992,7 @@ public class DataScopeTests : IDisposable
     {
         // Arrange：插入一个由指定用户管理的部门
         var userId = 987_654;
-        var dept = new Department { Name = "管理线测试部", ParentID = 0, ManagerId = userId, Enable = true, Visible = true };
+        var dept = new Department { Name = "管理线测试部", ParentId = 0, ManagerId = userId, Enable = true, Visible = true };
         try
         {
             dept.Insert();
@@ -1003,8 +1003,8 @@ public class DataScopeTests : IDisposable
             var accessible = DataScopeHelper.GetAccessibleDepartmentIds(0, roles, DataScopes.本部门, userId);
 
             // Assert：管理线本身并入，且无部门用户的可访问列表不再为空（不会被归一化退化为仅本人）
-            Assert.Contains(dept.ID, managed);
-            Assert.Contains(dept.ID, accessible);
+            Assert.Contains(dept.Id, managed);
+            Assert.Contains(dept.Id, accessible);
         }
         finally
         {
@@ -1385,7 +1385,7 @@ public class DataScopeTests : IDisposable
     public void User_Implements_IDataScope()
     {
         // Arrange
-        var user = new User { ID = 100, DepartmentID = 200 };
+        var user = new User { Id = 100, DepartmentId = 200 };
         var dataScope = (IDataScope)user;
 
         // Act & Assert
@@ -1395,8 +1395,8 @@ public class DataScopeTests : IDisposable
         // 测试设置
         dataScope.UserId = 101;
         dataScope.DepartmentId = 201;
-        Assert.Equal(101, user.ID);
-        Assert.Equal(201, user.DepartmentID);
+        Assert.Equal(101, user.Id);
+        Assert.Equal(201, user.DepartmentId);
     }
 
     [Fact]
@@ -1404,7 +1404,7 @@ public class DataScopeTests : IDisposable
     public void User_Implements_IFieldScope()
     {
         // Arrange
-        var user = new User { ID = 100, Password = "test123" };
+        var user = new User { Id = 100, Password = "test123" };
         var fieldScope = (IFieldScope)user;
 
         // Act
@@ -1433,9 +1433,9 @@ public class DataScopeTests : IDisposable
 
         // Assert
         Assert.NotNull(userField);
-        Assert.Equal("ID", userField.Name);
+        Assert.Equal("Id", userField.Name);
         Assert.NotNull(deptField);
-        Assert.Equal("DepartmentID", deptField.Name);
+        Assert.Equal("DepartmentId", deptField.Name);
         Assert.Null(tenantField);
     }
     #endregion
@@ -1528,7 +1528,7 @@ public class DataScopeTests : IDisposable
     }
 
     [Fact]
-    [DisplayName("User_本部门滤DepartmentID_仅本人滤ID")]
+    [DisplayName("User_本部门滤DepartmentID_仅本人滤Id")]
     public void User_Filter_Department_And_SelfOnly()
     {
         // 本部门：按部门过滤
@@ -1542,10 +1542,10 @@ public class DataScopeTests : IDisposable
         var deptFilter = DataScopeHelper.GetFilter<User>();
         Assert.NotNull(deptFilter);
         var deptSql = deptFilter!.ToString();
-        Assert.Contains("DepartmentID", deptSql);
+        Assert.Contains("DepartmentId", deptSql);
         Assert.Contains("200", deptSql);
 
-        // 仅本人：按用户主键 ID 过滤
+        // 仅本人：按用户主键 Id 过滤
         DataScopeContext.Current = new DataScopeContext
         {
             UserId = 100,
@@ -1555,12 +1555,12 @@ public class DataScopeTests : IDisposable
         var selfFilter = DataScopeHelper.GetFilter<User>();
         Assert.NotNull(selfFilter);
         var selfSql = selfFilter!.ToString();
-        Assert.DoesNotContain("DepartmentID", selfSql);
+        Assert.DoesNotContain("DepartmentId", selfSql);
         Assert.Contains("100", selfSql);
     }
 
     [Fact]
-    [DisplayName("Log_本部门仍按CreateUserID过滤")]
+    [DisplayName("Log_本部门仍按CreateUserId过滤")]
     public void Log_Filter_Department_UsesCreateUserID()
     {
         // 日志表无部门列，本部门范围仍按创建用户过滤，不放大成同事数据
@@ -1574,15 +1574,15 @@ public class DataScopeTests : IDisposable
         var filter = DataScopeHelper.GetFilter<Log>();
         Assert.NotNull(filter);
         var sql = filter!.ToString();
-        Assert.Contains("CreateUserID", sql);
+        Assert.Contains("CreateUserId", sql);
         Assert.Contains("100", sql);
     }
 
     [Fact]
-    [DisplayName("Department_仅本人滤当前部门ID而非-1")]
+    [DisplayName("Department_仅本人滤当前部门Id而非-1")]
     public void Department_Filter_SelfOnly_UsesCurrentDeptId()
     {
-        // 部门表“一行一个部门”，仅本人退化为 ID=当前用户所在部门，而不是恒假条件 -1
+        // 部门表“一行一个部门”，仅本人退化为 Id=当前用户所在部门，而不是恒假条件 -1
         DataScopeContext.Current = new DataScopeContext
         {
             UserId = 100,
@@ -1602,8 +1602,8 @@ public class DataScopeTests : IDisposable
     {
         // Arrange
         DataScopeContext.ClearCache();
-        var user = new MockUser { ID = 100, DepartmentID = 200 };
-        var role = new MockRole { ID = 1, IsSystem = false, DataScope = DataScopes.本部门 };
+        var user = new MockUser { Id = 100, DepartmentId = 200 };
+        var role = new MockRole { Id = 1, IsSystem = false, DataScope = DataScopes.本部门 };
         user.Role = role;
         user.Roles = [role];
 
@@ -1613,7 +1613,7 @@ public class DataScopeTests : IDisposable
         Assert.Equal([200], ctx1!.AccessibleDepartmentIds);
 
         // 调岗后再次创建，缓存键含部门编号，立即生效
-        user.DepartmentID = 300;
+        user.DepartmentId = 300;
         var ctx2 = DataScopeContext.Create(user);
         Assert.NotNull(ctx2);
         Assert.Equal([300], ctx2!.AccessibleDepartmentIds);
@@ -2087,7 +2087,7 @@ public partial class CustomFieldEntity : Entity<CustomFieldEntity>, IDataScope, 
 /// <summary>Mock 用户类</summary>
 public class MockUser : IUser
 {
-    public Int32 ID { get; set; }
+    public Int32 Id { get; set; }
     public String Name { get; set; } = "";
     public String? Password { get; set; }
     public String? DisplayName { get; set; }
@@ -2099,9 +2099,9 @@ public class MockUser : IUser
     public String? Code { get; set; }
     public Int32 AreaId { get; set; }
     public String? Avatar { get; set; }
-    public Int32 RoleID { get; set; }
+    public Int32 RoleId { get; set; }
     public String? RoleIds { get; set; }
-    public Int32 DepartmentID { get; set; }
+    public Int32 DepartmentId { get; set; }
     public Boolean Online { get; set; }
     public Boolean Enable { get; set; }
     public Int32 Age { get; set; }
@@ -2132,7 +2132,7 @@ public class MockUser : IUser
 /// <summary>Mock 角色类</summary>
 public class MockRole : IRole
 {
-    public Int32 ID { get; set; }
+    public Int32 Id { get; set; }
     public String Name { get; set; } = "";
     public RoleTypes Type { get; set; }
     public Boolean Enable { get; set; } = true;
@@ -2150,11 +2150,11 @@ public class MockRole : IRole
     public String? Ex5 { get; set; }
     public String? Ex6 { get; set; }
     public String? CreateUser { get; set; }
-    public Int32 CreateUserID { get; set; }
+    public Int32 CreateUserId { get; set; }
     public String? CreateIP { get; set; }
     public DateTime CreateTime { get; set; }
     public String? UpdateUser { get; set; }
-    public Int32 UpdateUserID { get; set; }
+    public Int32 UpdateUserId { get; set; }
     public String? UpdateIP { get; set; }
     public DateTime UpdateTime { get; set; }
     public String? Remark { get; set; }

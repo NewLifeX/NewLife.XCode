@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NewLife.Model;
 using XCode.DataAccessLayer;
 using Xunit;
@@ -15,13 +15,13 @@ public class DbBaseTests
     [Theory]
     [InlineData("Name", "name")]
     [InlineData("NickName", "nick_name")]
-    [InlineData("ID", "id")]
+    [InlineData("Id", "id")]
     [InlineData("Id", "id")]
     [InlineData("id", "id")]
     [InlineData("ProductID", "product_id")]
     [InlineData("CreateIP", "create_ip")]
     //[InlineData("IPStart", "ip_start")]
-    [InlineData("RoleID", "role_id")]
+    [InlineData("RoleId", "role_id")]
     [InlineData("RoleIds", "role_ids")]
     [InlineData("LastLoginIP", "last_login_ip")]
     public void FormatUnderlineName(String name, String result)

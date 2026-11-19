@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -110,7 +110,7 @@ public class ClassBuilderTests
             Nullable = true,
         };
         option.Excludes.Add("UpdateUser");
-        option.Excludes.Add("UpdateUserID");
+        option.Excludes.Add("UpdateUserId");
         option.Excludes.Add("UpdateIP");
         option.Excludes.Add("UpdateTime");
 
@@ -168,7 +168,7 @@ public class ClassBuilderTests
             DisplayNameTemplate = "{displayName}模型",
         };
         option.Excludes.Add("UpdateUser");
-        option.Excludes.Add("UpdateUserID");
+        option.Excludes.Add("UpdateUserId");
         option.Excludes.Add("UpdateIP");
         option.Excludes.Add("UpdateTime");
 

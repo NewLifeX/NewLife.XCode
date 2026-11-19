@@ -12,7 +12,7 @@ public partial interface IxxUser : NewLife.Data.IModel
 {
     #region 属性
     /// <summary>编号</summary>
-    Int32 ID { get; set; }
+    Int32 Id { get; set; }
 
     /// <summary>名称。登录用户名</summary>
     String Name { get; set; }
@@ -48,13 +48,13 @@ public partial interface IxxUser : NewLife.Data.IModel
     String? Avatar { get; set; }
 
     /// <summary>角色。主要角色</summary>
-    Int32 RoleID { get; set; }
+    Int32 RoleId { get; set; }
 
     /// <summary>角色组。次要角色集合</summary>
     String? RoleIds { get; set; }
 
     /// <summary>部门。组织机构</summary>
-    Int32 DepartmentID { get; set; }
+    Int32 DepartmentId { get; set; }
 
     /// <summary>在线</summary>
     Boolean Online { get; set; }

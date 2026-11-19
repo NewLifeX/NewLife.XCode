@@ -35,17 +35,17 @@ public class EmptyHtmlHelperTests
         user.Insert();
 
         // 插入时即被清理
-        var user2 = User.FindByKey(user.ID);
+        var user2 = User.FindByKey(user.Id);
         Assert.True(user2.Remark.IsNullOrEmpty());
 
         // 绕过实体直接写库制造脏值，再通过更新触发清理
-        User.Update($"Remark='<p><br></p>'", $"ID={user.ID}");
-        user2 = User.FindByKey(user.ID);
+        User.Update($"Remark='<p><br></p>'", $"Id={user.Id}");
+        user2 = User.FindByKey(user.Id);
         Assert.Equal("<p><br></p>", user2.Remark);
 
         user2.Update();
 
-        var user3 = User.FindByKey(user.ID);
+        var user3 = User.FindByKey(user.Id);
         Assert.True(user3.Remark.IsNullOrEmpty());
     }
 }

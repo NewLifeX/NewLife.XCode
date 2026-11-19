@@ -27,8 +27,8 @@ public class IncludeTests : IDisposable
         _dbFile = Path.Combine(Path.GetTempPath(), $"NavIncludeTest_{Guid.NewGuid():n}.db");
 
         DAL.AddConnStr(_connName, $"Data Source={_dbFile}", null, "SQLite");
-        DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS Role (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
-        DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS Department (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
+        DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS Role (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
+        DAL.Create(_connName).Execute("CREATE TABLE IF NOT EXISTS Department (Id INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT)");
 
         // 记录原始连接名，退出时恢复，避免污染其它用例
         _origRoleConn = Role.Meta.ConnName;

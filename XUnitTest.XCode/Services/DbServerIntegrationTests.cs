@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -122,14 +122,14 @@ public class DbServerIntegrationTests : IAsyncLifetime
         Assert.Equal(110L, Convert.ToInt64(verifyResult.Rows[0][0]));
     }
 
-    [Fact(DisplayName = "插入并返回自增ID")]
+    [Fact(DisplayName = "插入并返回自增Id")]
     public async Task InsertAndGetIdentity_ReturnsNewId()
     {
         using var client = new DbClient(_serverUrl, _testDb, TestToken);
         client.Open();
         await client.LoginAsync();
 
-        // 插入新记录并获取ID
+        // 插入新记录并获取Id
         var newId = await client.InsertAndGetIdentityAsync(
             "INSERT INTO TestTable (Name, Value) VALUES (@name, @value)",
             new Dictionary<String, Object?> { { "@name", "NewRecord" }, { "@value", 999 } }

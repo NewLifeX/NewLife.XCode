@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using NewLife;
 using NewLife.Log;
@@ -22,28 +22,28 @@ public class UserTests
         };
         user.Insert();
 
-        Assert.Equal(1, user.RoleID);
+        Assert.Equal(1, user.RoleId);
         Assert.Equal(4, user.RoleIds.SplitAsInt().Length);
         Assert.Equal(",2,3,4,7,", user.RoleIds);
 
-        var user2 = User.FindByKey(user.ID);
-        Assert.Equal(1, user2.RoleID);
+        var user2 = User.FindByKey(user.Id);
+        Assert.Equal(1, user2.RoleId);
         Assert.Equal(4, user2.RoleIds.SplitAsInt().Length);
         Assert.Equal(",2,3,4,7,", user2.RoleIds);
 
         user2.RoleIds = "5,3,9,2,";
         user2.Update();
 
-        var user3 = User.FindByKey(user.ID);
-        Assert.Equal(1, user3.RoleID);
+        var user3 = User.FindByKey(user.Id);
+        Assert.Equal(1, user3.RoleId);
         Assert.Equal(4, user3.RoleIds.SplitAsInt().Length);
         Assert.Equal(",2,3,5,9,", user3.RoleIds);
 
         var dal = User.Meta.Session.Dal;
-        var str = dal.QuerySingle<String>("select roleIds from user where id=@id", new { id = user.ID });
+        var str = dal.QuerySingle<String>("select roleIds from user where id=@id", new { id = user.Id });
         Assert.Equal(",2,3,5,9,", str);
 
-        //var ids = dal.QuerySingle<Int32[]>("select roleIds from user where id=@id", new { id = user.ID });
+        //var ids = dal.QuerySingle<Int32[]>("select roleIds from user where id=@id", new { id = user.Id });
         //Assert.Equal(new[] { 2, 3, 5, 9 }, ids);
     }
 
@@ -72,7 +72,7 @@ public class UserTests
 
         var user2 = User.GetOrAdd(name, k => User.FindByName(k), k => new User { Name = k });
         Assert.NotNull(user2);
-        Assert.Equal(user.ID, user2.ID);
+        Assert.Equal(user.Id, user2.Id);
 
         user.Delete();
     }
@@ -115,7 +115,7 @@ public class UserTests
 
         var user2 = User.GetOrAdd("name", name);
         Assert.NotNull(user2);
-        Assert.Equal(user.ID, user2.ID);
+        Assert.Equal(user.Id, user2.Id);
 
         user.Delete();
     }
@@ -134,7 +134,7 @@ public class UserTests
         try
         {
             // 默认角色为"普通用户"或"游客"
-            Assert.True(user.RoleID > 0);
+            Assert.True(user.RoleId > 0);
         }
         finally
         {
@@ -149,23 +149,23 @@ public class UserTests
         var roleA = Role.Add("租户测试A" + Rand.NextString(4), false, RoleTypes.普通, DataScopes.本部门);
         var roleB = Role.Add("租户测试B" + Rand.NextString(4), false, RoleTypes.普通, DataScopes.本部门);
 
-        var user = new User { Name = Rand.NextString(16), RoleID = roleA.ID };
+        var user = new User { Name = Rand.NextString(16), RoleId = roleA.Id };
         user.Insert();
 
-        var tu = new TenantUser { TenantId = 9527, UserId = user.ID, RoleId = roleB.ID, Enable = true };
+        var tu = new TenantUser { TenantId = 9527, UserId = user.Id, RoleId = roleB.Id, Enable = true };
         tu.Insert();
 
         try
         {
             // 无租户上下文：返回自有角色
             TenantContext.Current = null!;
-            Assert.Equal(new[] { roleA.ID }, user.GetRoleIDs());
-            Assert.Equal(new[] { roleA.ID }, user.GetOwnRoleIDs());
+            Assert.Equal(new[] { roleA.Id }, user.GetRoleIds());
+            Assert.Equal(new[] { roleA.Id }, user.GetOwnRoleIds());
 
             // 有租户上下文：以租户关系角色替代自有角色
             TenantContext.Current = new TenantContext { TenantId = 9527 };
-            Assert.Equal(new[] { roleB.ID }, user.GetRoleIDs());
-            Assert.Equal(new[] { roleA.ID }, user.GetOwnRoleIDs());
+            Assert.Equal(new[] { roleB.Id }, user.GetRoleIds());
+            Assert.Equal(new[] { roleA.Id }, user.GetOwnRoleIds());
         }
         finally
         {

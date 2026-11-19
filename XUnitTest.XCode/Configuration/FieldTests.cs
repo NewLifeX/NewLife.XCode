@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using XCode.Membership;
@@ -32,15 +32,15 @@ namespace XUnitTest.XCode.Configuration
             Assert.Null(fi.OriField);
             Assert.Null(fi.Map);
 
-            Assert.True(User._.ID.IsIdentity);
-            Assert.True(User._.ID.PrimaryKey);
+            Assert.True(User._.Id.IsIdentity);
+            Assert.True(User._.Id.PrimaryKey);
             Assert.True(User._.Name.Master);
             Assert.False(User._.Name.IsNullable);
 
             fi = User.Meta.Table.FindByName("DepartmentName");
             Assert.NotNull(fi);
             Assert.NotNull(fi.OriField);
-            Assert.Equal("DepartmentID", fi.OriField.Name);
+            Assert.Equal("DepartmentId", fi.OriField.Name);
             Assert.NotNull(fi.Map);
         }
     }

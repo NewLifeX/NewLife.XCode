@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -31,7 +31,7 @@ namespace XUnitTest.XCode.TestEntity
         {
             // 累加字段
             //var df = Meta.Factory.AdditionalFields;
-            //df.Add(__.CreateUserID);
+            //df.Add(__.CreateUserId);
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Interceptors.Add<UserInterceptor>();
@@ -51,7 +51,7 @@ namespace XUnitTest.XCode.TestEntity
             /*var user = ManageProvider.User;
             if (user != null)
             {
-                if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
+                if (isNew && !Dirtys[nameof(CreateUserId)]) CreateUserId = user.Id;
             }*/
             //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
             //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
@@ -67,11 +67,11 @@ namespace XUnitTest.XCode.TestEntity
         //    if (XTrace.Debug) XTrace.WriteLine("开始初始化History[历史]数据……");
 
         //    var entity = new History();
-        //    entity.ID = 0;
+        //    entity.Id = 0;
         //    entity.Category = "abc";
         //    entity.Action = "abc";
         //    entity.UserName = "abc";
-        //    entity.CreateUserID = 0;
+        //    entity.CreateUserId = 0;
         //    entity.CreateIP = "abc";
         //    entity.CreateTime = DateTime.Now;
         //    entity.Remark = "abc";
@@ -107,12 +107,12 @@ namespace XUnitTest.XCode.TestEntity
             if (id <= 0) return null;
 
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             // 单对象缓存
             return Meta.SingleCache[id];
 
-            //return Find(_.ID == id);
+            //return Find(_.Id == id);
         }
         #endregion
 

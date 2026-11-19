@@ -13,21 +13,21 @@ public class WindowFunctionTests
     public void SelectBuilder_Window_Injected()
     {
         var sb = new SelectBuilder { Table = "Role", Column = "*" };
-        sb.Window = "ROW_NUMBER() OVER(ORDER BY ID) AS RowNum";
+        sb.Window = "ROW_NUMBER() OVER(ORDER BY Id) AS RowNum";
 
         var sql = sb.ToString();
-        Assert.Contains("ROW_NUMBER() OVER(ORDER BY ID) AS RowNum", sql);
+        Assert.Contains("ROW_NUMBER() OVER(ORDER BY Id) AS RowNum", sql);
         Assert.StartsWith("Select *,", sql);
     }
 
     [Fact]
     public void SelectBuilder_Window_WithColumn()
     {
-        var sb = new SelectBuilder { Table = "Role", Column = "ID, Name" };
+        var sb = new SelectBuilder { Table = "Role", Column = "Id, Name" };
         sb.Window = "RANK() OVER(ORDER BY Name) AS Rank";
 
         var sql = sb.ToString();
-        Assert.Contains("Select ID, Name,", sql);
+        Assert.Contains("Select Id, Name,", sql);
         Assert.Contains("RANK() OVER(ORDER BY Name) AS Rank", sql);
     }
 
@@ -45,7 +45,7 @@ public class WindowFunctionTests
     [Fact]
     public void SelectBuilder_Clone_CopiesWindow()
     {
-        var sb = new SelectBuilder { Table = "T", Window = "ROW_NUMBER() OVER(ORDER BY ID) AS Rn" };
+        var sb = new SelectBuilder { Table = "T", Window = "ROW_NUMBER() OVER(ORDER BY Id) AS Rn" };
         var clone = sb.Clone();
 
         Assert.Equal(sb.Window, clone.Window);
@@ -57,8 +57,8 @@ public class WindowFunctionTests
     [Fact]
     public void RowNumber_Basic()
     {
-        var result = WindowFunction.RowNumber("ID DESC");
-        Assert.Equal("ROW_NUMBER() OVER(ORDER BY ID DESC) AS RowNum", result);
+        var result = WindowFunction.RowNumber("Id DESC");
+        Assert.Equal("ROW_NUMBER() OVER(ORDER BY Id DESC) AS RowNum", result);
     }
 
     [Fact]
@@ -79,8 +79,8 @@ public class WindowFunctionTests
     [Fact]
     public void RowNumber_WithPartitionAndAlias()
     {
-        var result = WindowFunction.RowNumber("DeptID", "ID", "Row");
-        Assert.Equal("ROW_NUMBER() OVER(PARTITION BY DeptID ORDER BY ID) AS Row", result);
+        var result = WindowFunction.RowNumber("DeptID", "Id", "Row");
+        Assert.Equal("ROW_NUMBER() OVER(PARTITION BY DeptID ORDER BY Id) AS Row", result);
     }
 
     [Fact]

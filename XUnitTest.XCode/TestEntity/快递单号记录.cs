@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -53,8 +53,8 @@ public partial class ExpressLogs
     [DisplayName("创建者")]
     [Description("创建者")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建者", "")]
-    public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
+    [BindColumn("CreateUserId", "创建者", "")]
+    public Int32 CreateUserId { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserId", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserId"); } } }
 
     private DateTime _CreateTime;
     /// <summary>创建时间</summary>
@@ -85,8 +85,8 @@ public partial class ExpressLogs
     [DisplayName("更新者")]
     [Description("更新者")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("UpdateUserID", "更新者", "")]
-    public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
+    [BindColumn("UpdateUserId", "更新者", "")]
+    public Int32 UpdateUserId { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserId", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserId"); } } }
 
     private DateTime _UpdateTime;
     /// <summary>更新时间</summary>
@@ -116,11 +116,11 @@ public partial class ExpressLogs
             "Id" => _Id,
             "Code" => _Code,
             "CreateUser" => _CreateUser,
-            "CreateUserID" => _CreateUserID,
+            "CreateUserId" => _CreateUserID,
             "CreateTime" => _CreateTime,
             "CreateIP" => _CreateIP,
             "UpdateUser" => _UpdateUser,
-            "UpdateUserID" => _UpdateUserID,
+            "UpdateUserId" => _UpdateUserID,
             "UpdateTime" => _UpdateTime,
             "UpdateIP" => _UpdateIP,
             _ => base[name]
@@ -132,11 +132,11 @@ public partial class ExpressLogs
                 case "Id": _Id = value.ToLong(); break;
                 case "Code": _Code = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                case "CreateUserId": _CreateUserID = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
                 case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
+                case "UpdateUserId": _UpdateUserID = value.ToInt(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                 case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
                 default: base[name] = value; break;
@@ -216,7 +216,7 @@ public partial class ExpressLogs
         public static readonly Field CreateUser = FindByName("CreateUser");
 
         /// <summary>创建者</summary>
-        public static readonly Field CreateUserID = FindByName("CreateUserID");
+        public static readonly Field CreateUserId = FindByName("CreateUserId");
 
         /// <summary>创建时间</summary>
         public static readonly Field CreateTime = FindByName("CreateTime");
@@ -228,7 +228,7 @@ public partial class ExpressLogs
         public static readonly Field UpdateUser = FindByName("UpdateUser");
 
         /// <summary>更新者</summary>
-        public static readonly Field UpdateUserID = FindByName("UpdateUserID");
+        public static readonly Field UpdateUserId = FindByName("UpdateUserId");
 
         /// <summary>更新时间</summary>
         public static readonly Field UpdateTime = FindByName("UpdateTime");
@@ -252,7 +252,7 @@ public partial class ExpressLogs
         public const String CreateUser = "CreateUser";
 
         /// <summary>创建者</summary>
-        public const String CreateUserID = "CreateUserID";
+        public const String CreateUserId = "CreateUserId";
 
         /// <summary>创建时间</summary>
         public const String CreateTime = "CreateTime";
@@ -264,7 +264,7 @@ public partial class ExpressLogs
         public const String UpdateUser = "UpdateUser";
 
         /// <summary>更新者</summary>
-        public const String UpdateUserID = "UpdateUserID";
+        public const String UpdateUserId = "UpdateUserId";
 
         /// <summary>更新时间</summary>
         public const String UpdateTime = "UpdateTime";

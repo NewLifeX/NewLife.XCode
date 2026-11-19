@@ -19,7 +19,7 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class KingBaseTests
 {
-    private static String _ConnStr = "Server=127.0.0.1;User ID=system;Password=123456!@;Database=test;Port=54321";
+    private static String _ConnStr = "Server=127.0.0.1;User Id=system;Password=123456!@;Database=test;Port=54321";
 
     public KingBaseTests()
     {
@@ -284,21 +284,21 @@ public class KingBaseTests
 
         DAL.AddConnStr("Membership", connStr, null, "KingBase");
         var dal = DAL.Create("Membership");
-        var a = dal.Query<Role>("select * from \"Role\" order by \"ID\"");
+        var a = dal.Query<Role>("select * from \"Role\" order by \"Id\"");
 
-        var p1 = new PageParameter() { PageSize = 20, PageIndex = 1, Sort = "\"ID\"", RetrieveTotalCount = true, Desc = false };
+        var p1 = new PageParameter() { PageSize = 20, PageIndex = 1, Sort = "\"Id\"", RetrieveTotalCount = true, Desc = false };
         a = dal.Query<Role>("select * from \"Role\" ", null, p1);
 
-        var p2 = new PageParameter() { PageSize = 20, PageIndex = 1, Sort = "\"ID\"", RetrieveTotalCount = true, Desc = false };
+        var p2 = new PageParameter() { PageSize = 20, PageIndex = 1, Sort = "\"Id\"", RetrieveTotalCount = true, Desc = false };
         a = dal.Query<Role>("select * from \"Role\"", null, p2);
 
 
-        dal.Query<Role>("select * from \"Role\" order by \"ID\"");
+        dal.Query<Role>("select * from \"Role\" order by \"Id\"");
 
-        var p11 = new PageParameter() { PageSize = 20, PageIndex = 2, Sort = "\"ID\"", RetrieveTotalCount = true, Desc = false };
+        var p11 = new PageParameter() { PageSize = 20, PageIndex = 2, Sort = "\"Id\"", RetrieveTotalCount = true, Desc = false };
         a = dal.Query<Role>("select * from \"Role\" ", null, p11);
 
-        var p21 = new PageParameter() { PageSize = 20, PageIndex = 2, Sort = "\"ID\"", RetrieveTotalCount = true, Desc = false };
+        var p21 = new PageParameter() { PageSize = 20, PageIndex = 2, Sort = "\"Id\"", RetrieveTotalCount = true, Desc = false };
         a = dal.Query<Role>("select * from \"Role\"", null, p21);
         // 清理现场
         //try

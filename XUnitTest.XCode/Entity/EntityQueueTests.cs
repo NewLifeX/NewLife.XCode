@@ -35,7 +35,7 @@ public class EntityQueueTests
         {
             for (var i = 0; i < 1000; i++)
             {
-                var user = new User { ID = t * 1000 + i + 1, Name = "queue" };
+                var user = new User { Id = t * 1000 + i + 1, Name = "queue" };
                 Assert.True(queue.Add(user, 0));
                 Interlocked.Increment(ref total);
             }
@@ -63,8 +63,8 @@ public class EntityQueueTests
         var ss = Entity<User>.Meta.Session;
         using var queue = new ProbeQueue(ss) { MaxEntity = 2, OverflowWaitTime = 100 };
 
-        var first = new User { ID = 1, Name = "q1" };
-        var second = new User { ID = 2, Name = "q2" };
+        var first = new User { Id = 1, Name = "q1" };
+        var second = new User { Id = 2, Name = "q2" };
         Assert.True(queue.Add(first, 0));
         Assert.True(queue.Add(second, 0));
 
@@ -79,11 +79,11 @@ public class EntityQueueTests
         var ss = Entity<User>.Meta.Session;
         using var queue = new ProbeQueue(ss) { MaxEntity = 1, OverflowWaitTime = 100 };
 
-        var first = new User { ID = 1, Name = "q1" };
+        var first = new User { Id = 1, Name = "q1" };
         Assert.True(queue.Add(first, 0));
 
         // 队列满时向调用方明确报错，而不是静默返回 false 让人误以为已入队
-        Assert.Throws<XCodeException>(() => queue.Add(new User { ID = 2, Name = "q2" }, 0));
+        Assert.Throws<XCodeException>(() => queue.Add(new User { Id = 2, Name = "q2" }, 0));
 
         // 被拒绝的实体不能留在队列里，否则调用方重试会写重
         var list = queue.Drain();

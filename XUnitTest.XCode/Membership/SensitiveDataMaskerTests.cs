@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using XCode;
 using XCode.Membership;
@@ -167,7 +167,7 @@ public class SensitiveDataMaskerTests
     [Fact(DisplayName = "实体日志明细中的口令字段被掩码")]
     public void EntityRemark_MasksPassword()
     {
-        var user = new User { ID = 9, Name = "tester", Password = "p@ssw0rd" };
+        var user = new User { Id = 9, Name = "tester", Password = "p@ssw0rd" };
 
         var remark = new TestLogProvider().BuildRemark("Insert", user);
 

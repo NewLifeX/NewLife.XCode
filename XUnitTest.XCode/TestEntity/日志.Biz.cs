@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -33,7 +33,7 @@ namespace XUnitTest.XCode.TestEntity
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
-            //df.Add(nameof(LinkID));
+            //df.Add(nameof(LinkId));
 
             // 过滤器 UserModule、TimeModule、IPModule
             Meta.Interceptors.Add<UserInterceptor>();
@@ -56,7 +56,7 @@ namespace XUnitTest.XCode.TestEntity
             /*var user = ManageProvider.User;
             if (user != null)
             {
-                if (isNew && !Dirtys[nameof(CreateUserID)]) CreateUserID = user.ID;
+                if (isNew && !Dirtys[nameof(CreateUserId)]) CreateUserId = user.Id;
             }*/
             //if (isNew && !Dirtys[nameof(CreateTime)]) CreateTime = DateTime.Now;
             //if (isNew && !Dirtys[nameof(CreateIP)]) CreateIP = ManageProvider.UserHost;
@@ -72,12 +72,12 @@ namespace XUnitTest.XCode.TestEntity
         //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Log2[日志]数据……");
 
         //    var entity = new Log2();
-        //    entity.ID = 0;
+        //    entity.Id = 0;
         //    entity.Category = "abc";
         //    entity.Action = "abc";
-        //    entity.LinkID = 0;
+        //    entity.LinkId = 0;
         //    entity.UserName = "abc";
-        //    entity.CreateUserID = 0;
+        //    entity.CreateUserId = 0;
         //    entity.CreateIP = "abc";
         //    entity.CreateTime = DateTime.Now;
         //    entity.Insert();
@@ -112,12 +112,12 @@ namespace XUnitTest.XCode.TestEntity
             if (id <= 0) return null;
 
             //// 实体缓存
-            //if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+            //if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             //// 单对象缓存
             //return Meta.SingleCache[id];
 
-            return Find(_.ID == id);
+            return Find(_.Id == id);
         }
 
         /// <summary>根据类别查找</summary>
@@ -137,9 +137,9 @@ namespace XUnitTest.XCode.TestEntity
         public static IList<Log2> FindAllByCreateUserID(Int32 createUserId)
         {
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserID == createUserId);
+            if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserId == createUserId);
 
-            return FindAll(_.CreateUserID == createUserId);
+            return FindAll(_.CreateUserId == createUserId);
         }
         #endregion
 
@@ -161,14 +161,14 @@ namespace XUnitTest.XCode.TestEntity
 
             if (!category.IsNullOrEmpty() && category != "全部") exp &= _.Category == category;
             if (!action.IsNullOrEmpty() && action != "全部") exp &= _.Action == action;
-            if (linkId >= 0) exp &= _.LinkID == linkId;
+            if (linkId >= 0) exp &= _.LinkId == linkId;
             if (success != null) exp &= _.Success == success;
-            if (userid >= 0) exp &= _.CreateUserID == userid;
+            if (userid >= 0) exp &= _.CreateUserId == userid;
 
             // 主键带有时间戳
             var snow = Meta.Factory.Snow;
             if (snow != null)
-                exp &= _.ID.Between(start, end, snow);
+                exp &= _.Id.Between(start, end, snow);
             else
                 exp &= _.CreateTime.Between(start, end);
 

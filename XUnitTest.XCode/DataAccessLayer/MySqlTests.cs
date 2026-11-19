@@ -362,8 +362,8 @@ public class MySqlTests
         var gly2 = list2.FirstOrDefault(e => e.Name == "管理员");
         Assert.NotNull(gly2);
         Assert.Null(gly2.Remark);
-        // 管理员被删除后重新插入，自增ID改变
-        Assert.NotEqual(gly.ID, gly2.ID);
+        // 管理员被删除后重新插入，自增Id改变
+        Assert.NotEqual(gly.Id, gly2.Id);
     }
 
     [Fact]
@@ -462,7 +462,7 @@ public class MySqlTests
         var user = User.FindByName("stone");
         if (user == null)
         {
-            user = new User { Name = "stone", RoleID = 4 };
+            user = new User { Name = "stone", RoleId = 4 };
             user.Insert();
         }
 
@@ -865,7 +865,7 @@ public class MySqlTests
 
         var admin = list.FirstOrDefault(r => r.Name == "管理员");
         Assert.NotNull(admin);
-        Assert.True(admin.ID > 0);
+        Assert.True(admin.Id > 0);
     }
 
     /// <summary>验证 DatabaseExist(null) 能正确从连接字符串解析数据库名并判断存在</summary>
@@ -894,7 +894,7 @@ public class MySqlTests
         Assert.Contains("IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact(DisplayName = "InsertAndGetIdentity—关闭多语句时用LastInsertedId取回自增ID")]
+    [Fact(DisplayName = "InsertAndGetIdentity—关闭多语句时用LastInsertedId取回自增Id")]
     public async Task InsertAndGetIdentity_WithLastInsertedId()
     {
         // NewLife.MySql 的 LastInsertedId 直接读 OK 包，关闭多语句后仍应可用；旧驱动会因缺少第二个 SELECT 失败，跳过
@@ -933,7 +933,7 @@ public class MySqlTests
 
     private class MyMySqlRole
     {
-        public Int32 ID { get; set; }
+        public Int32 Id { get; set; }
         public String Name { get; set; } = "";
     }
 }

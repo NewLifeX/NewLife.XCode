@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using XCode;
@@ -20,7 +20,7 @@ namespace XUnitTest.XCode.Model
             var builder = new WhereBuilder
             {
                 Factory = Log.Meta.Factory,
-                Expression = "CreateUserID={$userId}",
+                Expression = "CreateUserId={$userId}",
             };
             builder.SetData(dic);
 
@@ -29,7 +29,7 @@ namespace XUnitTest.XCode.Model
 
             var fe = exp as FieldExpression;
             Assert.NotNull(fe);
-            Assert.Equal(Log._.CreateUserID, fe.Field);
+            Assert.Equal(Log._.CreateUserId, fe.Field);
             Assert.Equal("=", fe.Action);
             Assert.Equal(1234, fe.Value);
         }
@@ -40,7 +40,7 @@ namespace XUnitTest.XCode.Model
             var builder = new WhereBuilder
             {
                 Factory = Log.Meta.Factory,
-                Expression = "CreateUserID={$userId}",
+                Expression = "CreateUserId={$userId}",
             };
 
             var ex = Assert.Throws<ArgumentException>("Data", () => builder.GetExpression());
@@ -58,7 +58,7 @@ namespace XUnitTest.XCode.Model
             var builder = new WhereBuilder
             {
                 Factory = Log.Meta.Factory,
-                Expression = "CreateUserID={#userId}",
+                Expression = "CreateUserId={#userId}",
             };
             builder.SetData2(dic);
 
@@ -71,7 +71,7 @@ namespace XUnitTest.XCode.Model
 
             var fe = exp as FieldExpression;
             Assert.NotNull(fe);
-            Assert.Equal(Log._.CreateUserID, fe.Field);
+            Assert.Equal(Log._.CreateUserId, fe.Field);
             Assert.Equal("=", fe.Action);
             //Assert.Null(fe.Value);
             Assert.Equal(1234, fe.Value);
@@ -83,7 +83,7 @@ namespace XUnitTest.XCode.Model
             var builder = new WhereBuilder
             {
                 Factory = Log.Meta.Factory,
-                Expression = "UserID={$userId}",
+                Expression = "UserId={$userId}",
             };
 
             var ex = Assert.Throws<XCodeException>(() => builder.GetExpression());
@@ -93,7 +93,7 @@ namespace XUnitTest.XCode.Model
         [Fact(DisplayName = "多层变量")]
         public void ParseVar()
         {
-            var user = new User { ID = 1234 };
+            var user = new User { Id = 1234 };
             var dic = new Dictionary<String, Object>(StringComparer.OrdinalIgnoreCase)
             {
                 ["user"] = user
@@ -101,7 +101,7 @@ namespace XUnitTest.XCode.Model
             var builder = new WhereBuilder
             {
                 Factory = Log.Meta.Factory,
-                Expression = "CreateUserID={$User.ID}",
+                Expression = "CreateUserId={$User.Id}",
             };
             builder.SetData(dic);
 
@@ -110,7 +110,7 @@ namespace XUnitTest.XCode.Model
 
             var fe = exp as FieldExpression;
             Assert.NotNull(fe);
-            Assert.Equal(Log._.CreateUserID, fe.Field);
+            Assert.Equal(Log._.CreateUserId, fe.Field);
             Assert.Equal("=", fe.Action);
             Assert.Equal(1234, fe.Value);
         }
@@ -126,7 +126,7 @@ namespace XUnitTest.XCode.Model
             var builder = new WhereBuilder
             {
                 Factory = Log.Meta.Factory,
-                Expression = "linkid in{#SiteIds} or CreateUserID={#userId}",
+                Expression = "linkid in{#SiteIds} or CreateUserId={#userId}",
             };
             builder.SetData2(dic);
 
@@ -139,7 +139,7 @@ namespace XUnitTest.XCode.Model
 
             var left = where.Left as InExpression;
             Assert.NotNull(left);
-            Assert.Equal(Log._.LinkID, left.Field);
+            Assert.Equal(Log._.LinkId, left.Field);
             Assert.Equal("{0} In({1})", left.Format);
             Assert.Equal(dic["SiteIds"], left.Value);
         }
@@ -147,7 +147,7 @@ namespace XUnitTest.XCode.Model
         [Fact(DisplayName = "未支持表达式")]
         public void ParseUnknown()
         {
-            var user = new User { ID = 1234 };
+            var user = new User { Id = 1234 };
             var dic = new Dictionary<String, Object>(StringComparer.OrdinalIgnoreCase)
             {
                 ["user"] = user
@@ -155,7 +155,7 @@ namespace XUnitTest.XCode.Model
             var builder = new WhereBuilder
             {
                 Factory = Log.Meta.Factory,
-                Expression = "CreateUserID>={$User.ID}",
+                Expression = "CreateUserId>={$User.Id}",
             };
             builder.SetData(dic);
 
@@ -164,8 +164,8 @@ namespace XUnitTest.XCode.Model
         }
 
         [Theory]
-        [InlineData("CreateUserID={$userId}")]
-        [InlineData("CreateUserID!={#userId} or linkid in{#SiteIds}")]
+        [InlineData("CreateUserId={$userId}")]
+        [InlineData("CreateUserId!={#userId} or linkid in{#SiteIds}")]
         public void EvalSuccess(String exp)
         {
             var dic = new Dictionary<String, Object>(StringComparer.OrdinalIgnoreCase)
@@ -181,15 +181,15 @@ namespace XUnitTest.XCode.Model
             builder.SetData(dic);
             builder.SetData2(dic);
 
-            var log = new Log { LinkID = 8, CreateUserID = 1234 };
+            var log = new Log { LinkId = 8, CreateUserId = 1234 };
 
             var rs = builder.Eval(log);
             Assert.True(rs);
         }
 
         [Theory]
-        [InlineData("CreateUserID=={$userId}")]
-        [InlineData("CreateUserID=={#userId} or linkid in{#SiteIds}")]
+        [InlineData("CreateUserId=={$userId}")]
+        [InlineData("CreateUserId=={#userId} or linkid in{#SiteIds}")]
         public void EvalFail(String exp)
         {
             var dic = new Dictionary<String, Object>(StringComparer.OrdinalIgnoreCase)
@@ -205,7 +205,7 @@ namespace XUnitTest.XCode.Model
             builder.SetData(dic);
             builder.SetData2(dic);
 
-            var log = new Log { LinkID = 17, CreateUserID = 1235 };
+            var log = new Log { LinkId = 17, CreateUserId = 1235 };
 
             var rs = builder.Eval(log);
             Assert.False(rs);

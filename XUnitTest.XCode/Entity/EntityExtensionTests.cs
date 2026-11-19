@@ -1,4 +1,4 @@
-﻿using NewLife.Security;
+using NewLife.Security;
 using XCode;
 using XCode.Membership;
 using Xunit;
@@ -59,9 +59,9 @@ public class EntityExtensionTests
         var list = new User[]
         {
             null!,
-            new User { ID = 123, Name = "Stone" },
+            new User { Id = 123, Name = "Stone" },
             null!,
-            new User { ID = 456, Name = "NewLife" }
+            new User { Id = 456, Name = "NewLife" }
         };
 
         var dic = list.ToDictionary(nameof(User.Name));
@@ -74,8 +74,8 @@ public class EntityExtensionTests
     [Fact(DisplayName = "实体列表包含空元素时应忽略并继续转换表结构与脏字段")]
     public void IgnoreNullItems_ForTableAndDirtyColumns()
     {
-        var user1 = new User { ID = 123, Name = "Stone" };
-        var user2 = new User { ID = 456, Name = "NewLife" };
+        var user1 = new User { Id = 123, Name = "Stone" };
+        var user2 = new User { Id = 456, Name = "NewLife" };
         var list = new User[] { null!, user1, null!, user2 };
 
         var dt = list.ToDataTable();

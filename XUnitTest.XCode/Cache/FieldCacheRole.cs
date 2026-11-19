@@ -24,8 +24,8 @@ public partial class FieldCacheRole : Entity<FieldCacheRole>
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "", DataScale = "identity:True")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "", DataScale = "identity:True")]
+    public Int32 Id { get => _ID; set { if (OnPropertyChanging("Id", value)) { _ID = value; OnPropertyChanged("Id"); } } }
 
     private String _Name;
     /// <summary>名称</summary>
@@ -44,7 +44,7 @@ public partial class FieldCacheRole : Entity<FieldCacheRole>
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _ID,
             "Name" => _Name,
             _ => base[name],
         };
@@ -52,7 +52,7 @@ public partial class FieldCacheRole : Entity<FieldCacheRole>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
+                case "Id": _ID = value.ToInt(); break;
                 case "Name": _Name = (String)value!; break;
                 default: base[name] = value; break;
             }

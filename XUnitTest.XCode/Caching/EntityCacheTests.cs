@@ -181,8 +181,8 @@ namespace XUnitTest.XCode.Caching
         {
             var entities = new List<Role>
             {
-                new() { ID = 1, Name = "cache_race_1" },
-                new() { ID = 2, Name = "cache_race_2" },
+                new() { Id = 1, Name = "cache_race_1" },
+                new() { Id = 2, Name = "cache_race_2" },
             };
 
             var blockNext = false;
@@ -216,7 +216,7 @@ namespace XUnitTest.XCode.Caching
             Assert.True(loading.Wait(5000), "刷新未按预期启动");
 
             // 刷新进行中新增实体（模拟数据库写入后更新缓存）
-            var added = new Role { ID = 100, Name = "cache_race_added" };
+            var added = new Role { Id = 100, Name = "cache_race_added" };
             cache.Add(added);
 
             proceed.Set();
@@ -224,7 +224,7 @@ namespace XUnitTest.XCode.Caching
 
             // 旧快照不包含新增实体，刷新完成后仍须保留
             var list2 = cache.Entities;
-            Assert.Contains(list2, e => e.ID == added.ID);
+            Assert.Contains(list2, e => e.Id == added.Id);
         }
 
         [Fact(DisplayName = "刷新期间更新缓存内实体不被旧快照覆盖")]
@@ -232,8 +232,8 @@ namespace XUnitTest.XCode.Caching
         {
             var entities = new List<Role>
             {
-                new() { ID = 1, Name = "cache_update_old" },
-                new() { ID = 2, Name = "cache_update_keep" },
+                new() { Id = 1, Name = "cache_update_old" },
+                new() { Id = 2, Name = "cache_update_keep" },
             };
 
             var blockNext = false;
@@ -260,7 +260,7 @@ namespace XUnitTest.XCode.Caching
             // 首次加载，拿到缓存内实例
             var list = cache.Entities;
             Assert.Equal(2, list.Count);
-            var target = list.First(e => e.ID == 1);
+            var target = list.First(e => e.Id == 1);
 
             // 强制过期，下一次访问同步刷新；刷新线程读取旧快照后阻塞
             blockNext = true;
@@ -278,7 +278,7 @@ namespace XUnitTest.XCode.Caching
 
             // 读库旧快照是旧值，回放后必须是新值
             var list2 = cache.Entities;
-            Assert.Equal("cache_update_new", list2.First(e => e.ID == 1).Name);
+            Assert.Equal("cache_update_new", list2.First(e => e.Id == 1).Name);
         }
 
         [Fact(DisplayName = "刷新期间删除实体不被旧快照复活")]
@@ -286,8 +286,8 @@ namespace XUnitTest.XCode.Caching
         {
             var entities = new List<Role>
             {
-                new() { ID = 1, Name = "cache_remove_keep" },
-                new() { ID = 2, Name = "cache_remove_del" },
+                new() { Id = 1, Name = "cache_remove_keep" },
+                new() { Id = 2, Name = "cache_remove_del" },
             };
 
             var blockNext = false;
@@ -313,7 +313,7 @@ namespace XUnitTest.XCode.Caching
             // 首次加载，拿到缓存内实例
             var list = cache.Entities;
             Assert.Equal(2, list.Count);
-            var target = list.First(e => e.ID == 2);
+            var target = list.First(e => e.Id == 2);
 
             // 强制过期，下一次访问同步刷新；刷新线程读取旧快照后阻塞
             blockNext = true;
@@ -322,7 +322,7 @@ namespace XUnitTest.XCode.Caching
             Assert.True(loading.Wait(5000), "刷新未按预期启动");
 
             // 刷新进行中删除实体（模拟数据库删除后移除缓存）
-            entities.RemoveAll(e => e.ID == 2);
+            entities.RemoveAll(e => e.Id == 2);
             cache.Remove(target);
 
             proceed.Set();
@@ -330,8 +330,8 @@ namespace XUnitTest.XCode.Caching
 
             // 读库旧快照仍含该行，回放后不得复活
             var list2 = cache.Entities;
-            Assert.DoesNotContain(list2, e => e.ID == 2);
-            Assert.Contains(list2, e => e.ID == 1);
+            Assert.DoesNotContain(list2, e => e.Id == 2);
+            Assert.Contains(list2, e => e.Id == 1);
         }
 
         [Fact(DisplayName = "刷新期间新增已存在于新快照的实体不重复")]
@@ -339,7 +339,7 @@ namespace XUnitTest.XCode.Caching
         {
             var entities = new List<Role>
             {
-                new() { ID = 1, Name = "cache_dedup_1" },
+                new() { Id = 1, Name = "cache_dedup_1" },
             };
 
             var blockNext = false;
@@ -372,8 +372,8 @@ namespace XUnitTest.XCode.Caching
             Assert.True(loading.Wait(5000), "刷新未按预期启动");
 
             // 数据库新增已提交，新快照将包含该行；缓存同时收到新增通知
-            entities.Add(new Role { ID = 100, Name = "cache_dedup_added" });
-            var added = new Role { ID = 100, Name = "cache_dedup_added" };
+            entities.Add(new Role { Id = 100, Name = "cache_dedup_added" });
+            var added = new Role { Id = 100, Name = "cache_dedup_added" };
             cache.Add(added);
 
             proceed.Set();
@@ -381,7 +381,7 @@ namespace XUnitTest.XCode.Caching
 
             // 回放新增时必须按键去重，不能出现两条
             var list2 = cache.Entities;
-            Assert.Equal(1, list2.Count(e => e.ID == 100));
+            Assert.Equal(1, list2.Count(e => e.Id == 100));
         }
 
         [Fact(DisplayName = "已创建但未使用的实体缓存，清除时不写日志")]
@@ -412,7 +412,7 @@ namespace XUnitTest.XCode.Caching
             }
         }
 
-        private static Role Clone(Role entity) => new() { ID = entity.ID, Name = entity.Name, Enable = entity.Enable, Sort = entity.Sort };
+        private static Role Clone(Role entity) => new() { Id = entity.Id, Name = entity.Name, Enable = entity.Enable, Sort = entity.Sort };
 
         private sealed class ListLog : NewLife.Log.ILog
         {

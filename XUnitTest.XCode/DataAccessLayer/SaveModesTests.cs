@@ -41,8 +41,8 @@ public class SaveModesTests : IDisposable
         table.TableName = "sm_user";
 
         var id = table.CreateColumn();
-        id.Name = "ID";
-        id.ColumnName = "ID";
+        id.Name = "Id";
+        id.ColumnName = "Id";
         id.DataType = typeof(Int32);
         id.PrimaryKey = true;
         table.Columns.Add(id);
@@ -70,7 +70,7 @@ public class SaveModesTests : IDisposable
 
         public Object this[String key] { get => _dic.TryGetValue(key, out var v) ? v : null; set => _dic[key] = value; }
 
-        public SmModel(Int32 id, String name, Int32 num = 0) { _dic["ID"] = id; _dic["Name"] = name; _dic["Num"] = num; }
+        public SmModel(Int32 id, String name, Int32 num = 0) { _dic["Id"] = id; _dic["Name"] = name; _dic["Num"] = num; }
     }
 
     [Fact(DisplayName = "保存模式枚举值")]
@@ -92,8 +92,8 @@ public class SaveModesTests : IDisposable
         var table = DAL.CreateTable();
         table.TableName = "sm_user";
         var id = table.CreateColumn();
-        id.Name = "ID";
-        id.ColumnName = "ID";
+        id.Name = "Id";
+        id.ColumnName = "Id";
         id.DataType = typeof(Int32);
         id.PrimaryKey = true;
         table.Columns.Add(id);
@@ -138,8 +138,8 @@ public class SaveModesTests : IDisposable
         var count = _dal.Session.QueryCount("select * from sm_user");
         Assert.Equal(2L, count);
 
-        Assert.Equal("Stone", _dal.QuerySingle<String>("select Name from sm_user where ID=1"));
-        Assert.Equal("NewLife", _dal.QuerySingle<String>("select Name from sm_user where ID=3"));
+        Assert.Equal("Stone", _dal.QuerySingle<String>("select Name from sm_user where Id=1"));
+        Assert.Equal("NewLife", _dal.QuerySingle<String>("select Name from sm_user where Id=3"));
     }
 
     [Fact(DisplayName = "SQLite Replace 重复主键整行替换")]
@@ -157,8 +157,8 @@ public class SaveModesTests : IDisposable
         var count = _dal.Session.QueryCount("select * from sm_user");
         Assert.Equal(1L, count);
 
-        Assert.Equal("Replace", _dal.QuerySingle<String>("select Name from sm_user where ID=1"));
-        Assert.Equal(20, _dal.QuerySingle<Int32>("select Num from sm_user where ID=1"));
+        Assert.Equal("Replace", _dal.QuerySingle<String>("select Name from sm_user where Id=1"));
+        Assert.Equal(20, _dal.QuerySingle<Int32>("select Num from sm_user where Id=1"));
     }
 
     [Fact(DisplayName = "SQLite Upsert 混合插入更新")]
@@ -175,9 +175,9 @@ public class SaveModesTests : IDisposable
 
         var count = _dal.Session.QueryCount("select * from sm_user");
         Assert.Equal(2L, count);
-        Assert.Equal("Upsert", _dal.QuerySingle<String>("select Name from sm_user where ID=1"));
-        Assert.Equal(10, _dal.QuerySingle<Int32>("select Num from sm_user where ID=1"));
-        Assert.Equal("NewLife", _dal.QuerySingle<String>("select Name from sm_user where ID=2"));
+        Assert.Equal("Upsert", _dal.QuerySingle<String>("select Name from sm_user where Id=1"));
+        Assert.Equal(10, _dal.QuerySingle<Int32>("select Num from sm_user where Id=1"));
+        Assert.Equal("NewLife", _dal.QuerySingle<String>("select Name from sm_user where Id=2"));
     }
 
     [Fact(DisplayName = "SQLite Upsert 增量更新列")]
@@ -192,6 +192,6 @@ public class SaveModesTests : IDisposable
         var n = _dal.Session.Upsert(table, columns, null, ["Num"], [new SmModel(1, "Stone", 5)]);
         Assert.Equal(1, n);
 
-        Assert.Equal(15, _dal.QuerySingle<Int32>("select Num from sm_user where ID=1"));
+        Assert.Equal(15, _dal.QuerySingle<Int32>("select Num from sm_user where Id=1"));
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Threading.Tasks;
 using NewLife;
@@ -200,7 +200,7 @@ public class TenantContextTests : IDisposable
         // Act
         var result = module.Valid(entity, DataMethod.Insert);
 
-        // Assert - 异常被捕获，方法返回 true，但租户 ID 不会改变
+        // Assert - 异常被捕获，方法返回 true，但租户 Id 不会改变
         Assert.True(result);
     }
 

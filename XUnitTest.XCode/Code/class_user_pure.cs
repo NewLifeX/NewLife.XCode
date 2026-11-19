@@ -12,7 +12,7 @@ public partial class PureUser : Object, IxxUser
 {
     #region 属性
     /// <summary>编号</summary>
-    public Int32 ID { get; set; }
+    public Int32 Id { get; set; }
 
     /// <summary>名称。登录用户名</summary>
     public String Name { get; set; }
@@ -48,13 +48,13 @@ public partial class PureUser : Object, IxxUser
     public String Avatar { get; set; }
 
     /// <summary>角色。主要角色</summary>
-    public Int32 RoleID { get; set; }
+    public Int32 RoleId { get; set; }
 
     /// <summary>角色组。次要角色集合</summary>
     public String RoleIds { get; set; }
 
     /// <summary>部门。组织机构</summary>
-    public Int32 DepartmentID { get; set; }
+    public Int32 DepartmentId { get; set; }
 
     /// <summary>在线</summary>
     public Boolean Online { get; set; }
@@ -114,7 +114,7 @@ public partial class PureUser : Object, IxxUser
     /// <param name="model">模型</param>
     public void Copy(IxxUser model)
     {
-        ID = model.ID;
+        Id = model.Id;
         Name = model.Name;
         Password = model.Password;
         DisplayName = model.DisplayName;
@@ -126,9 +126,9 @@ public partial class PureUser : Object, IxxUser
         Code = model.Code;
         AreaId = model.AreaId;
         Avatar = model.Avatar;
-        RoleID = model.RoleID;
+        RoleId = model.RoleId;
         RoleIds = model.RoleIds;
-        DepartmentID = model.DepartmentID;
+        DepartmentId = model.DepartmentId;
         Online = model.Online;
         Enable = model.Enable;
         Age = model.Age;

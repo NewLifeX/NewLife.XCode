@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -62,7 +62,7 @@ public class AreaTests
         Assert.Equal(15, r.GetAllChilds().Count);
         Assert.Equal("广西/玉林/容县/容州", r.GetAllChilds()[0].Path);
 
-        var r2 = Area.FindByIDs(450921102, 450921, 450900, 450000);
+        var r2 = Area.FindByIds(450921102, 450921, 450900, 450000);
         Assert.Equal("杨梅", r2.Name);
 
         var r3 = Area.FindByName(450900, "北流");
@@ -91,32 +91,32 @@ public class AreaTests
     {
         var r = Area.FindByNames("广西", "玉林", "容县");
         Assert.NotNull(r);
-        Assert.Equal(450921, r.ID);
+        Assert.Equal(450921, r.Id);
         Assert.Equal("广西/玉林/容县", r.Path);
 
         r = Area.FindByNames("上海", "青浦");
         Assert.NotNull(r);
-        Assert.Equal(310118, r.ID);
+        Assert.Equal(310118, r.Id);
         Assert.Equal("上海/青浦", r.Path);
 
         r = Area.FindByNames("重庆", "万州");
         Assert.NotNull(r);
-        Assert.Equal(500101, r.ID);
+        Assert.Equal(500101, r.Id);
         Assert.Equal("重庆/万州", r.Path);
 
         r = Area.FindByNames("重庆", "巫山");
         Assert.NotNull(r);
-        Assert.Equal(500237, r.ID);
+        Assert.Equal(500237, r.Id);
         Assert.Equal("重庆/巫山", r.Path);
 
         r = Area.FindByNames("湖北", "仙桃");
         Assert.NotNull(r);
-        Assert.Equal(429004, r.ID);
+        Assert.Equal(429004, r.Id);
         Assert.Equal("湖北/仙桃", r.Path);
 
         r = Area.FindByNames("湖北", "神农架");
         Assert.NotNull(r);
-        Assert.Equal(429021, r.ID);
+        Assert.Equal(429021, r.Id);
         Assert.Equal("湖北/神农架", r.Path);
     }
 
@@ -184,7 +184,7 @@ public class AreaTests
         Assert.Equal("广西", ar.Name);
 
         ar = ar.Parent;
-        Assert.Equal(0, ar.ID);
+        Assert.Equal(0, ar.Id);
         Assert.Equal(Area.Root, ar);
     }
 
@@ -205,7 +205,7 @@ public class AreaTests
         Assert.Equal("上海", ar.Name);
 
         ar = ar.Parent;
-        Assert.Equal(0, ar.ID);
+        Assert.Equal(0, ar.Id);
         Assert.Equal(Area.Root, ar);
     }
 
@@ -247,7 +247,7 @@ public class AreaTests
         var txt = File.ReadAllText(file);
         //foreach (var item in Area.Parse(txt))
         //{
-        //    XTrace.WriteLine("{0} {1}", item.ID, item.Name);
+        //    XTrace.WriteLine("{0} {1}", item.Id, item.Name);
         //}
 
         var rs = Parse(txt).ToList();
@@ -263,7 +263,7 @@ public class AreaTests
         var txt = File.ReadAllText(file);
         //foreach (var item in Area.Parse(txt))
         //{
-        //    XTrace.WriteLine("{0} {1}", item.ID, item.Name);
+        //    XTrace.WriteLine("{0} {1}", item.Id, item.Name);
         //}
 
         var rs = Parse(txt).ToList();
@@ -296,7 +296,7 @@ public class AreaTests
         var rs = Area.ParseAndSave(txt);
         Assert.Equal(3213, rs.Count);
 
-        var r = Area.Find(_.ParentID == 0 & _.Name == "上海");
+        var r = Area.Find(_.ParentId == 0 & _.Name == "上海");
         Assert.NotNull(r);
         Assert.Equal("上海市", r.FullName);
 
@@ -323,7 +323,7 @@ public class AreaTests
         //Assert.Equal(3208, rs);
         Assert.Equal(3222, rs);
 
-        var r = Area.Find(_.ParentID == 0 & _.Name == "上海");
+        var r = Area.Find(_.ParentId == 0 & _.Name == "上海");
         Assert.NotNull(r);
         Assert.Equal("上海市", r.FullName);
 
@@ -398,7 +398,7 @@ public class AreaTests
         Assert.Equal(count, list.Count);
         if (list.Count > 0)
         {
-            Assert.Equal(rid, list[0].ID);
+            Assert.Equal(rid, list[0].Id);
             if (!name.IsNullOrEmpty()) Assert.Equal(name, list[0].Name);
         }
     }
@@ -420,7 +420,7 @@ public class AreaTests
         Assert.Equal(count, list.Count);
         if (list.Count > 0)
         {
-            Assert.Equal(rid, list[0].ID);
+            Assert.Equal(rid, list[0].Id);
             if (!name.IsNullOrEmpty()) Assert.Equal(name, list[0].Name);
         }
     }
@@ -440,7 +440,7 @@ public class AreaTests
         if (set.Count > 0)
         {
             var r = set[0].Key;
-            Assert.Equal(rid, r.ID);
+            Assert.Equal(rid, r.Id);
             Assert.Equal(target, r.Path);
         }
     }
@@ -458,7 +458,7 @@ public class AreaTests
         if (rs.Count > 0)
         {
             var r = rs.LastOrDefault();
-            Assert.Equal(rid, r.ID);
+            Assert.Equal(rid, r.Id);
             Assert.Equal(target, r.Path);
         }
     }
@@ -478,8 +478,8 @@ public class AreaTests
         Assert.True(list.Count > 0);
 
         var ar = list[^1];
-        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
-        Assert.Equal(areaId, ar.ID);
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.Id, ar.Path);
+        Assert.Equal(areaId, ar.Id);
     }
 
     [TestOrder(80)]
@@ -497,8 +497,8 @@ public class AreaTests
         Assert.True(list.Count > 0);
 
         var ar = list[^1];
-        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
-        Assert.Equal(areaId, ar.ID);
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.Id, ar.Path);
+        Assert.Equal(areaId, ar.Id);
     }
 
     [TestOrder(80)]
@@ -516,8 +516,8 @@ public class AreaTests
         Assert.True(list.Count > 0);
 
         var ar = list[^1];
-        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
-        Assert.Equal(areaId, ar.ID);
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.Id, ar.Path);
+        Assert.Equal(areaId, ar.Id);
     }
 
     [TestOrder(90)]
@@ -532,8 +532,8 @@ public class AreaTests
         Assert.True(list.Count > 0);
 
         var ar = list[^1];
-        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
-        Assert.Equal(areaId, ar.ID);
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.Id, ar.Path);
+        Assert.Equal(areaId, ar.Id);
     }
 
     [TestOrder(92)]
@@ -551,7 +551,7 @@ public class AreaTests
         Assert.True(list.Count > 0);
 
         var ar = list[^1];
-        XTrace.WriteLine("{0} => {1} {2}", ip, ar.ID, ar.Path);
-        Assert.Equal(areaId, ar.ID);
+        XTrace.WriteLine("{0} => {1} {2}", ip, ar.Id, ar.Path);
+        Assert.Equal(areaId, ar.Id);
     }
 }

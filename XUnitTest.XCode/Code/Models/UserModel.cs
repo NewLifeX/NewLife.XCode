@@ -12,7 +12,7 @@ public partial class UserModel
 {
     #region 属性
     /// <summary>编号</summary>
-    public Int32 ID { get; set; }
+    public Int32 Id { get; set; }
 
     /// <summary>名称。登录用户名</summary>
     public String Name { get; set; } = null!;
@@ -48,13 +48,13 @@ public partial class UserModel
     public String? Avatar { get; set; }
 
     /// <summary>角色。主要角色</summary>
-    public Int32 RoleID { get; set; }
+    public Int32 RoleId { get; set; }
 
     /// <summary>角色组。次要角色集合</summary>
     public String? RoleIds { get; set; }
 
     /// <summary>部门。组织机构</summary>
-    public Int32 DepartmentID { get; set; }
+    public Int32 DepartmentId { get; set; }
 
     /// <summary>在线</summary>
     public Boolean Online { get; set; }

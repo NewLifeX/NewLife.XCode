@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -34,7 +34,7 @@ namespace XUnitTest.XCode.TestEntity
         {
             // 累加字段，生成 Update xx Set Count=Count+1234 Where xxx
             //var df = Meta.Factory.AdditionalFields;
-            //df.Add(nameof(ParentID));
+            //df.Add(nameof(ParentId));
 
             // 过滤器 UserModule、TimeModule、IPModule
         }
@@ -55,7 +55,7 @@ namespace XUnitTest.XCode.TestEntity
             // 在新插入数据或者修改了指定字段时进行修正
 
             // 检查唯一索引
-            // CheckExist(isNew, nameof(ParentID), nameof(Name));
+            // CheckExist(isNew, nameof(ParentId), nameof(Name));
         }
 
         ///// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>
@@ -68,11 +68,11 @@ namespace XUnitTest.XCode.TestEntity
         //    if (XTrace.Debug) XTrace.WriteLine("开始初始化Menu2[菜单]数据……");
 
         //    var entity = new Menu2();
-        //    entity.ID = 0;
+        //    entity.Id = 0;
         //    entity.Name = "abc";
         //    entity.DisplayName = "abc";
         //    entity.FullName = "abc";
-        //    entity.ParentID = 0;
+        //    entity.ParentId = 0;
         //    entity.Url = "abc";
         //    entity.Sort = 0;
         //    entity.Icon = "abc";
@@ -112,12 +112,12 @@ namespace XUnitTest.XCode.TestEntity
             if (id <= 0) return null;
 
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
 
             // 单对象缓存
             return Meta.SingleCache[id];
 
-            //return Find(_.ID == id);
+            //return Find(_.Id == id);
         }
 
         /// <summary>根据名称查找</summary>
@@ -138,9 +138,9 @@ namespace XUnitTest.XCode.TestEntity
         public static Menu2 FindByParentIDAndName(Int32 parentId, String name)
         {
             // 实体缓存
-            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ParentID == parentId && e.Name == name);
+            if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ParentId == parentId && e.Name == name);
 
-            return Find(_.ParentID == parentId & _.Name == name);
+            return Find(_.ParentId == parentId & _.Name == name);
         }
         #endregion
 
@@ -156,13 +156,13 @@ namespace XUnitTest.XCode.TestEntity
             var exp = new WhereExpression();
 
             if (!name.IsNullOrEmpty()) exp &= _.Name == name;
-            if (parentId >= 0) exp &= _.ParentID == parentId;
+            if (parentId >= 0) exp &= _.ParentId == parentId;
             if (!key.IsNullOrEmpty()) exp &= _.DisplayName.Contains(key) | _.FullName.Contains(key) | _.Url.Contains(key) | _.Icon.Contains(key) | _.Permission.Contains(key) | _.Remark.Contains(key);
 
             return FindAll(exp, page);
         }
 
-        // Select Count(ID) as ID,Category From Menu2 Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
+        // Select Count(Id) as Id,Category From Menu2 Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
         //static readonly FieldCache<Menu2> _CategoryCache = new FieldCache<Menu2>(nameof(Category))
         //{
         //Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty

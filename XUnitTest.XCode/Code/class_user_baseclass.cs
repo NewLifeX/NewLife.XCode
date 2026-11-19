@@ -17,7 +17,7 @@ public partial class User : MyEntityBase
     /// <summary>编号</summary>
     [Description("编号")]
     [DisplayName("编号")]
-    public Int32 ID { get; set; }
+    public Int32 Id { get; set; }
 
     /// <summary>名称。登录用户名</summary>
     [Description("名称。登录用户名")]
@@ -77,7 +77,7 @@ public partial class User : MyEntityBase
     /// <summary>角色。主要角色</summary>
     [Description("角色。主要角色")]
     [DisplayName("角色")]
-    public Int32 RoleID { get; set; }
+    public Int32 RoleId { get; set; }
 
     /// <summary>角色组。次要角色集合</summary>
     [Description("角色组。次要角色集合")]
@@ -87,7 +87,7 @@ public partial class User : MyEntityBase
     /// <summary>部门。组织机构</summary>
     [Description("部门。组织机构")]
     [DisplayName("部门")]
-    public Int32 DepartmentID { get; set; }
+    public Int32 DepartmentId { get; set; }
 
     /// <summary>在线</summary>
     [Description("在线")]

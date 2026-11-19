@@ -24,7 +24,7 @@ public class RoleTests
 
         try
         {
-            var role2 = Role.FindByID(role.ID);
+            var role2 = Role.FindById(role.Id);
             Assert.NotNull(role2);
 
             // 解析自 "1#1,2#12"
@@ -33,7 +33,7 @@ public class RoleTests
             Assert.True(role2.Has(2, PermissionFlags.Delete));
             Assert.False(role2.Has(2, PermissionFlags.Insert));
 
-            // 序列化格式：资源ID#权限值，逗号分隔，按资源ID升序
+            // 序列化格式：资源Id#权限值，逗号分隔，按资源Id升序
             Assert.Equal("1#1,2#12", role2.Permission);
         }
         finally
@@ -53,7 +53,7 @@ public class RoleTests
         menu.Update();
 
         var role = Role.Add("权限角色" + Rand.NextString(4), false, RoleTypes.普通, DataScopes.本部门);
-        role.Set(menu.ID, PermissionFlags.Detail);
+        role.Set(menu.Id, PermissionFlags.Detail);
         role.Save();
 
         try
@@ -81,29 +81,29 @@ public class RoleTests
         var roleA = Role.Add("清理角色A" + Rand.NextString(4), false, RoleTypes.普通, DataScopes.本部门);
         var roleB = Role.Add("清理角色B" + Rand.NextString(4), false, RoleTypes.普通, DataScopes.本部门);
 
-        var user = new User { Name = Rand.NextString(16), RoleID = roleA.ID, RoleIds = "," + roleB.ID + "," };
+        var user = new User { Name = Rand.NextString(16), RoleId = roleA.Id, RoleIds = "," + roleB.Id + "," };
         user.Insert();
-        Assert.Equal(roleA.ID, user.RoleID);
+        Assert.Equal(roleA.Id, user.RoleId);
 
         try
         {
             // 删除主角色A：用户主角色提升为角色B
             roleA.Delete();
-            var user2 = User.FindByID(user.ID);
-            Assert.Equal(roleB.ID, user2.RoleID);
+            var user2 = User.FindById(user.Id);
+            Assert.Equal(roleB.Id, user2.RoleId);
             Assert.True(user2.RoleIds.IsNullOrEmpty());
 
             // 删除次角色B：用户无角色
             roleB.Delete();
-            var user3 = User.FindByID(user.ID);
-            Assert.Equal(0, user3.RoleID);
+            var user3 = User.FindById(user.Id);
+            Assert.Equal(0, user3.RoleId);
             Assert.True(user3.RoleIds.IsNullOrEmpty());
         }
         finally
         {
             // 幂等清理，防止断言失败时遗留数据
-            User.ClearRole(roleA.ID);
-            User.ClearRole(roleB.ID);
+            User.ClearRole(roleA.Id);
+            User.ClearRole(roleB.Id);
             user.Delete();
         }
     }

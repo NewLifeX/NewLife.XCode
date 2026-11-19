@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NewLife.Security;
 using XCode.Membership;
@@ -16,7 +16,7 @@ namespace XUnitTest.XCode.Membership
         {
             var p = new Parameter
             {
-                UserID = Rand.Next(),
+                UserId = Rand.Next(),
                 Category = Rand.NextString(8),
                 Name = Rand.NextString(8)
             };
@@ -26,7 +26,7 @@ namespace XUnitTest.XCode.Membership
 
             p.Insert();
 
-            var p2 = Parameter.FindByID(p.ID);
+            var p2 = Parameter.FindById(p.Id);
             Assert.NotNull(p2);
 
             var val = p2.GetValue();
@@ -39,7 +39,7 @@ namespace XUnitTest.XCode.Membership
         {
             var p = new Parameter
             {
-                UserID = Rand.Next(),
+                UserId = Rand.Next(),
                 Category = Rand.NextString(8),
                 Name = Rand.NextString(8)
             };
@@ -49,7 +49,7 @@ namespace XUnitTest.XCode.Membership
 
             p.Insert();
 
-            var p2 = Parameter.FindByID(p.ID);
+            var p2 = Parameter.FindById(p.Id);
             Assert.NotNull(p2);
 
             var val = p2.GetValue();
@@ -62,7 +62,7 @@ namespace XUnitTest.XCode.Membership
         {
             var p = new Parameter
             {
-                UserID = Rand.Next(),
+                UserId = Rand.Next(),
                 Category = Rand.NextString(8),
                 Name = Rand.NextString(8)
             };
@@ -72,7 +72,7 @@ namespace XUnitTest.XCode.Membership
 
             p.Insert();
 
-            var p2 = Parameter.FindByID(p.ID);
+            var p2 = Parameter.FindById(p.Id);
             Assert.NotNull(p2);
 
             var val = p2.GetValue();
@@ -85,7 +85,7 @@ namespace XUnitTest.XCode.Membership
         {
             var p = new Parameter
             {
-                UserID = Rand.Next(),
+                UserId = Rand.Next(),
                 Category = Rand.NextString(8),
                 Name = Rand.NextString(8)
             };
@@ -95,7 +95,7 @@ namespace XUnitTest.XCode.Membership
 
             p.Insert();
 
-            var p2 = Parameter.FindByID(p.ID);
+            var p2 = Parameter.FindById(p.Id);
             Assert.NotNull(p2);
 
             var val = p2.GetValue();
@@ -108,7 +108,7 @@ namespace XUnitTest.XCode.Membership
         {
             var p = new Parameter
             {
-                UserID = Rand.Next(),
+                UserId = Rand.Next(),
                 Category = Rand.NextString(8),
                 Name = Rand.NextString(8)
             };
@@ -118,7 +118,7 @@ namespace XUnitTest.XCode.Membership
 
             p.Insert();
 
-            var p2 = Parameter.FindByID(p.ID);
+            var p2 = Parameter.FindById(p.Id);
             Assert.NotNull(p2);
 
             var val = p2.GetValue();
@@ -131,7 +131,7 @@ namespace XUnitTest.XCode.Membership
         {
             var p = new Parameter
             {
-                UserID = Rand.Next(),
+                UserId = Rand.Next(),
                 Category = Rand.NextString(8),
                 Name = Rand.NextString(8)
             };
@@ -145,7 +145,7 @@ namespace XUnitTest.XCode.Membership
 
             p.Insert();
 
-            var p2 = Parameter.FindByID(p.ID);
+            var p2 = Parameter.FindById(p.Id);
             Assert.NotNull(p2);
 
             var list2 = p2.GetList<Int32>();
@@ -159,7 +159,7 @@ namespace XUnitTest.XCode.Membership
         {
             var p = new Parameter
             {
-                UserID = Rand.Next(),
+                UserId = Rand.Next(),
                 Category = Rand.NextString(8),
                 Name = Rand.NextString(8)
             };
@@ -173,7 +173,7 @@ namespace XUnitTest.XCode.Membership
 
             p.Insert();
 
-            var p2 = Parameter.FindByID(p.ID);
+            var p2 = Parameter.FindById(p.Id);
             Assert.NotNull(p2);
 
             var dic2 = p2.GetHash<Int32, String>();

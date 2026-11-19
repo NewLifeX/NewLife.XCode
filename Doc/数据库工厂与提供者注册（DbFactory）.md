@@ -26,6 +26,22 @@
 | `NovaDb` | `NovaDb` | NovaDb |
 | `Network` | `NetworkDb` | HTTP 虚拟数据库 |
 | `Hana` | `Hana` | SAP HANA |
+| `ClickHouse` | `ClickHouse` | 列式分析库，需 `ClickHouse.Client` |
+| `DuckDB` | `DuckDB` | 嵌入式 OLAP，需 `DuckDB.NET.Data` |
+| `MongoDB` | `MongoDB` | 文档型数据库 |
+| `SonnetDB` | `SonnetDB` | 官方 ADO.NET 驱动 |
+| `Presto` | `Presto` | 联邦查询引擎，需 `NReco.PrestoAdo`；不支持事务与自动建表 |
+| `Trino` | `Trino` | 联邦查询引擎，需 `Trino.Client.ADO`；不支持事务与自动建表 |
+| `Firebird` | `Firebird` | 开源关系型库，需 `FirebirdSql.Data.FirebirdClient` |
+| `Snowflake` | `Snowflake` | 云原生数据仓库，需 `Snowflake.Data` |
+| `Vertica` | `Vertica` | 列式分析型数据仓库，需 `Vertica.Data` |
+| `Ase` | `Ase` | SAP ASE(Sybase)，需 `AdoNetCore.AseClient` |
+| `Teradata` | `Teradata` | 企业级数据仓库，需 `Teradata.Client.Provider` |
+| `YashanDB` | `YashanDB` | 国产 Oracle 兼容库，需 `Yashandb.Data.YashandbClient` |
+| `MonetDB` | `MonetDB` | 列式关系型库，需 `MonetDb.Mapi`（反射工厂适配） |
+| `Spanner` | `Spanner` | Google Cloud Spanner，需 `Google.Cloud.Spanner.Data`；强制 `Migration=Off` |
+
+> MySQL / PostgreSQL 协议兼容的数据库（TiDB、Doris、StarRocks、openGauss、Redshift 等）通过 `Support` 别名复用对应提供者，详见 [数据库支持矩阵](数据库支持矩阵.md)。
 
 ---
 

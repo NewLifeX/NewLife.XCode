@@ -16,7 +16,7 @@
 🌐 [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
 <!-- lang:end -->
 
-**NewLife.XCode** is a high-performance .NET data middleware focused on "CRUD + extreme performance + massive data". It includes multi-level caching, automatic modeling/migration, sharding, strongly-typed queries and cross-database migration. It supports MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb / SonnetDB and more. Production deployments reach tens of billions of rows per table, and query throughput can reach billions of QPS (with caching strategies).
+**NewLife.XCode** is a high-performance .NET data middleware focused on "CRUD + extreme performance + massive data". It includes multi-level caching, automatic modeling/migration, sharding, strongly-typed queries and cross-database migration. It supports MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner and more; MySQL and PostgreSQL protocol-compatible engines (TiDB / Doris / StarRocks / openGauss / Redshift and others) reuse those providers. Production deployments reach tens of billions of rows per table, and query throughput can reach billions of QPS (with caching strategies).
 
 Docs: https://newlifex.com/xcode   Community QQ groups: 1600800 / 1600838
 
@@ -398,6 +398,7 @@ NewLife is a layered ecosystem of independently versioned open-source projects. 
 - [XCode documentation navigation](Doc/XCode文档导航.md): complete document index grouped by module
 - [XCode user manual](Doc/XCode使用手册.md): end-to-end usage walkthrough
 - [Architecture design](Doc/架构设计.md): layering, components and key design decisions
+- [Database support matrix](Doc/数据库支持矩阵.md): supported engines, ADO.NET drivers, capability boundaries
 - [Multi-language localization](Doc/多语言本地化.md): message model, language tables and runtime overrides
 - Online documentation: https://newlifex.com/xcode
 - [ChangeLog.md](ChangeLog.md): version history

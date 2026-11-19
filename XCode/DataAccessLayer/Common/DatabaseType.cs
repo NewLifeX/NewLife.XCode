@@ -113,6 +113,10 @@ public enum DatabaseType
     [Description("Vertica数据库")]
     Vertica = 26,
 
+    /// <summary>SAP ASE(Sybase)数据库</summary>
+    [Description("SAP ASE(Sybase)数据库")]
+    Ase = 27,
+
     /// <summary>网络虚拟数据库。通过HTTP接口转发数据库操作到远端服务执行</summary>
     [Description("网络虚拟数据库")]
     Network = 100,

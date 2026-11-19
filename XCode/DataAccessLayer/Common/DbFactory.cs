@@ -33,6 +33,7 @@ public static class DbFactory
         Register<Trino>(DatabaseType.Trino);
         Register<Snowflake>(DatabaseType.Snowflake);
         Register<Vertica>(DatabaseType.Vertica);
+        Register<Ase>(DatabaseType.Ase);
         Register<NetworkDb>(DatabaseType.Network);
         Register<Firebird>(DatabaseType.Firebird);
         //Register<Access>(DatabaseType.Access);

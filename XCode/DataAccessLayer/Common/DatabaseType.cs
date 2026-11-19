@@ -109,6 +109,10 @@ public enum DatabaseType
     [Description("Snowflake数据库")]
     Snowflake = 25,
 
+    /// <summary>Vertica数据库。列式分析型数据仓库</summary>
+    [Description("Vertica数据库")]
+    Vertica = 26,
+
     /// <summary>网络虚拟数据库。通过HTTP接口转发数据库操作到远端服务执行</summary>
     [Description("网络虚拟数据库")]
     Network = 100,

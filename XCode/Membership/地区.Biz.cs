@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
@@ -27,6 +27,7 @@ namespace XCode.Membership;
 [ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
 public partial class Area : Entity<Area>
 {
+
     #region 对象操作
     private static Int32 MaxCacheCount = 10000;
 
@@ -45,7 +46,7 @@ public partial class Area : Entity<Area>
         // 实体缓存三级地区
         var ec = Meta.Cache;
         ec.Expire = 10 * 60;
-        ec.FillListMethod = () => FindAll(_.ID >= 100000 & _.ID <= 999999, _.ID.Asc(), null, 0, 0);
+        ec.FillListMethod = () => FindAll(_.Id >= 100000 & _.Id <= 999999, _.Id.Asc(), null, 0, 0);
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
@@ -115,7 +116,7 @@ public partial class Area : Entity<Area>
 
     /// <summary>父级</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Area Parent => Extends.Get(nameof(Parent), k => FindByID(ParentID) ?? Root)!;
+    public Area Parent => Extends.Get(nameof(Parent), k => FindByID(ParentId) ?? Root)!;
 
     ///// <summary>所有父级，从高到底</summary>
     //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
@@ -135,7 +136,7 @@ public partial class Area : Entity<Area>
         var entity = Parent;
         while (entity != null)
         {
-            if (entity.ID == 0 || list.Contains(entity)) break;
+            if (entity.Id == 0 || list.Contains(entity)) break;
 
             list.Add(entity);
 
@@ -145,7 +146,7 @@ public partial class Area : Entity<Area>
         // 倒序
         list.Reverse();
 
-        if (includeSelf && !list.Any(e => e.ID == ID)) list.Add(this);
+        if (includeSelf && !list.Any(e => e.Id == Id)) list.Add(this);
 
         return list;
     }
@@ -177,7 +178,7 @@ public partial class Area : Entity<Area>
 
     /// <summary>下级地区</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public IList<Area> Childs => Extends.Get(nameof(Childs), k => FindAllByParentID(ID).Where(e => e.Enable).ToList())!;
+    public IList<Area> Childs => Extends.Get(nameof(Childs), k => FindAllByParentID(Id).Where(e => e.Enable).ToList())!;
 
     ///// <summary>子孙级区域。支持省市区，不支持乡镇街道</summary>
     //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
@@ -204,25 +205,24 @@ public partial class Area : Entity<Area>
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
+    /// <remarks>街道级编号不在实体缓存内（缓存只加载省市县），因此直接走单对象缓存，不能简单转发给 FindById</remarks>
     public static Area? FindByID(Int32 id)
     {
         //if (id == 0) return Root;
         if (id <= 10_00_00 || id > 99_99_99_999) return null;
 
-        //// 实体缓存
-        //var r = Meta.Cache.Find(e => e.ID == id);
-        //if (r != null) return r;
-
         // 单对象缓存
         return Meta.SingleCache[id];
-
-        //return Find(_.ID == id);
     }
 
-    /// <summary>根据ID列表数组查询，一般先后查街道、区县、城市、省份</summary>
+    /// <summary>根据Id列表数组查询，一般先后查街道、区县、城市、省份</summary>
     /// <param name="ids"></param>
     /// <returns></returns>
-    public static Area? FindByIDs(params Int32[] ids)
+
+    /// <summary>根据Id列表数组查询，一般先后查街道、区县、城市、省份</summary>
+    /// <param name="ids"></param>
+    /// <returns></returns>
+    public static Area? FindByIds(params Int32[] ids)
     {
         foreach (var item in ids)
         {
@@ -332,7 +332,7 @@ public partial class Area : Entity<Area>
         if (parentid is < 0 or > 99_99_99) return [];
 
         // 实体缓存
-        var rs = Meta.Cache.FindAll(e => e.ParentID == parentid);
+        var rs = Meta.Cache.FindAll(e => e.ParentId == parentid);
         // 有子节点，并且都是启用状态，则直接使用
         //if (rs.Count > 0 && rs.Any(e => e.Enable)) return rs;
         if (rs.Count > 0) return rs;
@@ -340,7 +340,7 @@ public partial class Area : Entity<Area>
         var key = parentid + "";
         if (_pcache.TryGetValue(key, out rs) && rs != null) return rs;
 
-        rs = FindAll(_.ParentID == parentid, _.ID.Asc(), null, 0, 0);
+        rs = FindAll(_.ParentId == parentid, _.Id.Asc(), null, 0, 0);
 
         _pcache.Set(key, rs, 20 * 60);
 
@@ -364,10 +364,10 @@ public partial class Area : Entity<Area>
     {
         var exp = _.UpdateTime.Between(start, end);
 
-        if (parentid >= 0) exp &= _.ParentID == parentid;
+        if (parentid >= 0) exp &= _.ParentId == parentid;
         if (level > 0) exp &= _.Level == level;
-        if (idstart > 0) exp &= _.ID >= idstart;
-        if (idend > 0) exp &= _.ID <= idend;
+        if (idstart > 0) exp &= _.Id >= idstart;
+        if (idend > 0) exp &= _.Id <= idend;
         if (enable != null) exp &= _.Enable == enable;
 
         if (!key.IsNullOrEmpty())
@@ -375,7 +375,7 @@ public partial class Area : Entity<Area>
             if (key.ToLong() > 0)
             {
                 var exp2 = new WhereExpression();
-                if (key.Length is 6 or 9) exp2 |= _.ID == key;
+                if (key.Length is 6 or 9) exp2 |= _.Id == key;
                 if (key.Length is 2 or 3) exp2 |= _.TelCode == key;
                 if (key.Length == 6) exp2 |= _.ZipCode == key;
 
@@ -413,11 +413,11 @@ public partial class Area : Entity<Area>
 
         if (r != null)
         {
-            var set = SearchLike(r.ID, key, enable, count);
-            if (set.Count > 0 || r.ID > 0) return set.Take(count).Select(e => e.Key).ToList();
+            var set = SearchLike(r.Id, key, enable, count);
+            if (set.Count > 0 || r.Id > 0) return set.Take(count).Select(e => e.Key).ToList();
         }
 
-        return Search(parentid, -1, -1, -1, enable, key, DateTime.MinValue, DateTime.MinValue, new PageParameter { PageSize = count, Sort = nameof(ID) });
+        return Search(parentid, -1, -1, -1, enable, key, DateTime.MinValue, DateTime.MinValue, new PageParameter { PageSize = count, Sort = nameof(Id) });
     }
 
     private static IDictionary<Area, Double> SearchLike(Int32 parentid, String key, Boolean? enable, Int32 count)
@@ -425,10 +425,10 @@ public partial class Area : Entity<Area>
         // 两级搜索，特殊处理直辖
         var list = (FindAllByParentID(parentid) as List<Area>)!;
         if (list.Count == 1 && list[0].Name.StartsWithIgnoreCase("直辖", "省辖", "市辖"))
-            list = (FindAllByParentID(list[0].ID) as List<Area>)!;
+            list = (FindAllByParentID(list[0].Id) as List<Area>)!;
         foreach (var item in list.ToArray())
         {
-            var list2 = FindAllByParentID(item.ID);
+            var list2 = FindAllByParentID(item.Id);
             if (list2.Count > 0) list.AddRange(list2);
         }
 
@@ -471,11 +471,11 @@ public partial class Area : Entity<Area>
         foreach (var item in dic)
         {
             var addr3 = address.TrimPrefix(item.Key.FullName!, item.Key.Name);
-            var dic3 = SearchLike(item.Key.ID, addr3, true, count);
+            var dic3 = SearchLike(item.Key.Id, addr3, true, count);
             foreach (var elm in dic3)
             {
                 var r3 = elm.Key;
-                if (r3.ID > 999999)
+                if (r3.Id > 999999)
                 {
                     var val = item.Value + elm.Value;
                     if (!set.TryGetValue(r3, out var v) || v < val)
@@ -485,7 +485,7 @@ public partial class Area : Entity<Area>
                 {
                     // 四级搜索
                     var addr4 = addr3.TrimPrefix(item.Key.FullName!, item.Key.Name);
-                    var dic4 = SearchLike(r3.ID, addr4, true, count);
+                    var dic4 = SearchLike(r3.Id, addr4, true, count);
                     foreach (var elm4 in dic4)
                     {
                         var r4 = elm4.Key;
@@ -586,14 +586,14 @@ public partial class Area : Entity<Area>
         //        if (maxLevel == 2 && addrs.Length >= 2)
         //        {
         //            var city = FindByNames(addrs.Take(2).ToArray());
-        //            if (city != null && city.ID != prov.ID) list.Add(city);
+        //            if (city != null && city.Id != prov.Id) list.Add(city);
         //        }
         //        else if (maxLevel == 3)
         //        {
         //            var city = FindByNames(addrs);
-        //            if (city != null && city.ID != prov.ID)
+        //            if (city != null && city.Id != prov.Id)
         //            {
-        //                if (city.ParentID != prov.ID) list.Add(city.Parent);
+        //                if (city.ParentId != prov.Id) list.Add(city.Parent);
         //                list.Add(city);
         //            }
         //        }
@@ -658,17 +658,17 @@ public partial class Area : Entity<Area>
             if (id > 999999999) return null;
         }
 
-        var r = FindByID(id) ?? Find(_.ID == id);
+        var r = FindByID(id) ?? Find(_.Id == id);
         if (r != null) return r;
 
         if (name.IsNullOrEmpty()) name = id + "";
 
         r = new Area
         {
-            ID = id,
+            Id = id,
             Name = name,
             FullName = name,
-            ParentID = parentid,
+            ParentId = parentid,
             Remark = remark
         };
         r.Insert();
@@ -690,7 +690,7 @@ public partial class Area : Entity<Area>
             foreach (var item in list)
             {
                 // 香港澳门没有三层地区，一级直辖三级
-                if (i == layer - 1 && item.ID > 810000) continue;
+                if (i == layer - 1 && item.Id > 810000) continue;
 
                 bs.AddRange(item.Childs);
             }
@@ -715,7 +715,7 @@ public partial class Area : Entity<Area>
         var p = 0;
         while (true)
         {
-            var list = FindAll(_.Level == 0 | _.Level.IsNull(), _.ID.Asc(), null, p, 1000);
+            var list = FindAll(_.Level == 0 | _.Level.IsNull(), _.Id.Asc(), null, p, 1000);
             if (list.Count == 0) break;
 
             foreach (var item in list)
@@ -776,7 +776,7 @@ public partial class Area : Entity<Area>
                 {
                     var r = new Area
                     {
-                        ID = id.ToInt(),
+                        Id = id.ToInt(),
                         FullName = name,
                     };
                     yield return r;
@@ -813,7 +813,7 @@ public partial class Area : Entity<Area>
                 {
                     var r = new Area
                     {
-                        ID = id.ToInt(),
+                        Id = id.ToInt(),
                         FullName = name,
                     };
                     yield return r;
@@ -830,41 +830,41 @@ public partial class Area : Entity<Area>
     public static IList<Area> ParseAndSave(String html)
     {
         var all = Parse(html).ToList();
-        //File.WriteAllText("area.csv", all.Join("\r\n", e => $"{e.ID},{e.FullName}"));
+        //File.WriteAllText("area.csv", all.Join("\r\n", e => $"{e.Id},{e.FullName}"));
 
         // 预备好所有三级数据
-        var list = FindAll(_.ID > 10_00_00 & _.ID < 99_99_99);
+        var list = FindAll(_.Id > 10_00_00 & _.Id < 99_99_99);
 
         var rs = new List<Area>();
         foreach (var item in all)
         {
             // 查找是否已存在
-            var r = list.Find(e => e.ID == item.ID);
-            if (r == null && item.ID > 99_99_99) r = FindByID(item.ID);
+            var r = list.Find(e => e.Id == item.Id);
+            if (r == null && item.Id > 99_99_99) r = FindByID(item.Id);
 
             if (r == null)
             {
                 r = item;
 
                 // 找到它的上级
-                var pid = GetParent(item.ID);
+                var pid = GetParent(item.Id);
 
                 // 部分区县由省直管，中间没有第二级
-                if (pid > 0 && !list.Any(e => e.ID == pid) && !all.Any(e => e.ID == pid))
+                if (pid > 0 && !list.Any(e => e.Id == pid) && !all.Any(e => e.Id == pid))
                 {
                     var pid2 = GetParent(pid);
-                    var r2 = all.Find(e => e.ID == pid2);
+                    var r2 = all.Find(e => e.Id == pid2);
                     if (r2 != null)
                     {
                         var r3 = new Area
                         {
-                            ID = pid,
-                            ParentID = pid2,
+                            Id = pid,
+                            ParentId = pid2,
                             Enable = true,
                         };
 
                         // 直辖市处理市辖区
-                        if (r2.Name.EqualIgnoreCase("北京", "天津", "上海", "重庆") && r3.ID != 500200)
+                        if (r2.Name.EqualIgnoreCase("北京", "天津", "上海", "重庆") && r3.Id != 500200)
                             r3.Name = "市辖区";
                         else
                             r3.Name = "直辖县";
@@ -877,11 +877,11 @@ public partial class Area : Entity<Area>
                     }
                     else
                     {
-                        XTrace.WriteLine("Unable to recognize the parent of area {0} {1}.", item.ID, item.Name);
+                        XTrace.WriteLine("Unable to recognize the parent of area {0} {1}.", item.Id, item.Name);
                     }
                 }
 
-                r.ParentID = pid;
+                r.ParentId = pid;
                 r.Enable = true;
             }
             else
@@ -929,7 +929,7 @@ public partial class Area : Entity<Area>
         var rs = ParseAndSave(html);
         var count = rs.Count;
 
-        //File.WriteAllText("area.csv", rs.Join("\r\n", e => $"{e.ID},{e.FullName}"));
+        //File.WriteAllText("area.csv", rs.Join("\r\n", e => $"{e.Id},{e.FullName}"));
 
         Meta.Session.ClearCache("FetchAndSave", false);
 
@@ -946,15 +946,15 @@ public partial class Area : Entity<Area>
         //                {
         //                    if (item.Level == 3)
         //                    {
-        //                        var str = item.ID + "";
+        //                        var str = item.Id + "";
         //                        var url2 = $"http://www.stats.gov.cn/tjsj/tjbz/tjyqhdmhcxhfdm/2018/{str.Substring(0, 2)}/{str.Substring(2, 2)}/{str}.html";
-        //                        XTrace.WriteLine("拉取[{0}/{1}]的四级地区 {2}", item.Name, item.ID, url2);
+        //                        XTrace.WriteLine("拉取[{0}/{1}]的四级地区 {2}", item.Name, item.Id, url2);
 
         //                        var buf = http.GetByteArrayAsync(url2).Result;
         //                        var html2 = encode.GetString(buf);
         //                        foreach (var elm in ParseLevel4(html2))
         //                        {
-        //                            elm.ParentID = item.ID;
+        //                            elm.ParentId = item.Id;
 
         //                            elm.FixLevel();
         //                            elm.FixName();
@@ -978,53 +978,53 @@ public partial class Area : Entity<Area>
         XTrace.WriteLine("Merging third-level addresses: {0:n0}", list.Count);
 
         // 一次性加载三级地址
-        var rs = FindAll(_.ID < 99_99_99);
+        var rs = FindAll(_.Id < 99_99_99);
         //var first = rs.Count == 0;
 
         var count = 0;
         var bs = new List<Area>();
         foreach (var r in list)
         {
-            if (r.ID is < 10_00_00 or > 99_99_99) continue;
+            if (r.Id is < 10_00_00 or > 99_99_99) continue;
 
-            //var r2 = FindByID(r.ID);
-            var r2 = rs.FirstOrDefault(e => e.ID == r.ID);
+            //var r2 = FindByID(r.Id);
+            var r2 = rs.FirstOrDefault(e => e.Id == r.Id);
             if (r2 == null)
             {
                 if (!addLose) continue;
 
-                if (r.ID == 441999 && r.Name == "东莞")
+                if (r.Id == 441999 && r.Name == "东莞")
                 {
                     r.Name = r.FullName = "直辖镇";
-                    r.ParentID = 441900;
+                    r.ParentId = 441900;
                     r.Enable = true;
                 }
-                else if (r.ID == 442099 && r.Name == "中山")
+                else if (r.Id == 442099 && r.Name == "中山")
                 {
                     r.Name = r.FullName = "直辖镇";
-                    r.ParentID = 442000;
+                    r.ParentId = 442000;
                     r.Enable = true;
                 }
-                else if (r.ID == 460499 && r.Name == "儋州")
+                else if (r.Id == 460499 && r.Name == "儋州")
                 {
                     r.Name = r.FullName = "直辖镇";
-                    r.ParentID = 460400;
+                    r.ParentId = 460400;
                     r.Enable = true;
                 }
-                else if (r.ID == 620299 && r.Name == "嘉峪关")
+                else if (r.Id == 620299 && r.Name == "嘉峪关")
                 {
                     r.Name = r.FullName = "直辖镇";
-                    r.ParentID = 620200;
+                    r.ParentId = 620200;
                     r.Enable = true;
                 }
                 else
                 {
                     // 三沙和港澳台强制启用
-                    r.Enable = enable || r.ParentID == 460300 || r.ParentID > 700000 || r.Name.StartsWith("直辖");
+                    r.Enable = enable || r.ParentId == 460300 || r.ParentId > 700000 || r.Name.StartsWith("直辖");
                 }
 
-                XTrace.Log.Debug("Added {0} {1} {2}", r.ID, r.Name, r.FullName);
-                if (r.ParentID > 0 && !rs.Any(e => e.ID == r.ParentID)) XTrace.Log.Debug("Unknown parent {0}", r.ParentID);
+                XTrace.Log.Debug("Added {0} {1} {2}", r.Id, r.Name, r.FullName);
+                if (r.ParentId > 0 && !rs.Any(e => e.Id == r.ParentId)) XTrace.Log.Debug("Unknown parent {0}", r.ParentId);
 
                 r.PinYin = null;
                 r.JianPin = null;
@@ -1041,9 +1041,9 @@ public partial class Area : Entity<Area>
             }
             else
             {
-                if (r.FullName != r2.FullName) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
+                if (r.FullName != r2.FullName) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.Id, r.Name, r.FullName, r2.Name, r2.FullName);
                 if (r.Name != r2.Name && r.Name.TrimSuffix("市", "矿区", "林区", "区", "县") != r2.Name)
-                    XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
+                    XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.Id, r.Name, r.FullName, r2.Name, r2.FullName);
 
                 // 合并字段
                 if (!r.English.IsNullOrEmpty()) r2.English = r.English;
@@ -1087,22 +1087,22 @@ public partial class Area : Entity<Area>
         XTrace.WriteLine("Merging fourth-level addresses: {0:n0}", list.Count);
 
         // 一次性加载四级地址
-        var rs = FindAll(_.ID < 99_99_99_999);
+        var rs = FindAll(_.Id < 99_99_99_999);
         var bs = new List<Area>();
 
         var count = 0;
         foreach (var r in list)
         {
-            if (r.ID is < 10_00_00_000 or > 99_99_99_999) continue;
+            if (r.Id is < 10_00_00_000 or > 99_99_99_999) continue;
 
-            //var r2 = FindByID(r.ID);
-            var r2 = rs.FirstOrDefault(e => e.ID == r.ID);
+            //var r2 = FindByID(r.Id);
+            var r2 = rs.FirstOrDefault(e => e.Id == r.Id);
             if (r2 == null)
             {
                 if (!addLose) continue;
 
-                //XTrace.WriteLine("新增 {0} {1} {2}", r.ID, r.Name, r.FullName);
-                if (r.ParentID > 0 && !rs.Any(e => e.ID == r.ParentID)) XTrace.Log.Debug("Unknown parent {0}", r.ParentID);
+                //XTrace.WriteLine("新增 {0} {1} {2}", r.Id, r.Name, r.FullName);
+                if (r.ParentId > 0 && !rs.Any(e => e.Id == r.ParentId)) XTrace.Log.Debug("Unknown parent {0}", r.ParentId);
 
                 r.PinYin = null;
                 r.JianPin = null;
@@ -1117,9 +1117,9 @@ public partial class Area : Entity<Area>
             }
             else
             {
-                if (r.FullName != r2.FullName) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
+                if (r.FullName != r2.FullName) XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.Id, r.Name, r.FullName, r2.Name, r2.FullName);
                 if (r.Name != r2.Name && r.Name.TrimSuffix("街道") != r2.Name)
-                    XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.ID, r.Name, r.FullName, r2.Name, r2.FullName);
+                    XTrace.Log.Debug("{0} {1} {2} => {3} {4}", r.Id, r.Name, r.FullName, r2.Name, r2.FullName);
 
                 // 合并字段
                 if (!r.English.IsNullOrEmpty()) r2.English = r.English;
@@ -1201,7 +1201,7 @@ public partial class Area : Entity<Area>
     public static Int32 Export(String csvFile, Int32 level = 4)
     {
         // Id抽取器
-        var extracter = new IdExtracter(Meta.Session.Dal, Meta.TableName, _.ID.Field);
+        var extracter = new IdExtracter(Meta.Session.Dal, Meta.TableName, _.Id.Field);
         extracter.Builder.Where = _.Level <= level;
 
         // 得到数据迭代
@@ -1251,7 +1251,7 @@ public partial class Area : Entity<Area>
     public void FixLevel()
     {
         // 计算父级编号和层级
-        var id = ID;
+        var id = Id;
         if (id <= 99_99_99)
         {
             if (id % 10000 == 0)
@@ -1341,7 +1341,7 @@ public partial class Area : Entity<Area>
         }
         else
         {
-            if (ParentID == 0)
+            if (ParentId == 0)
             {
                 name = name.TrimSuffix("省", "市", "自治区", "壮族", "回族", "维吾尔", "特别行政区");
             }

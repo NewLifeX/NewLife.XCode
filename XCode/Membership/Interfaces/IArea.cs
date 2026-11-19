@@ -12,7 +12,7 @@ public partial interface IArea
 {
     #region 属性
     /// <summary>编码。行政区划编码</summary>
-    Int32 ID { get; set; }
+    Int32 Id { get; set; }
 
     /// <summary>名称</summary>
     String Name { get; set; }
@@ -21,7 +21,7 @@ public partial interface IArea
     String? FullName { get; set; }
 
     /// <summary>父级</summary>
-    Int32 ParentID { get; set; }
+    Int32 ParentId { get; set; }
 
     /// <summary>层级</summary>
     Int32 Level { get; set; }

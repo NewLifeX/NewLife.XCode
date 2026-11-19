@@ -1,4 +1,4 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Collections;
 using NewLife.Model;
 using NewLife.Security;
@@ -178,7 +178,7 @@ public abstract class ManageProvider : IManageProvider
     /// <summary>根据用户编号查找</summary>
     /// <param name="userid"></param>
     /// <returns></returns>
-    public virtual IManageUser? FindByID(Object userid) => Membership.User.FindByID((userid + "").ToInt(-1));
+    public virtual IManageUser? FindByID(Object userid) => Membership.User.FindById((userid + "").ToInt(-1));
 
     /// <summary>根据用户帐号查找</summary>
     /// <param name="name"></param>
@@ -268,7 +268,7 @@ public abstract class ManageProvider : IManageProvider
                 Name = username,
                 Password = pass,
                 Enable = enable,
-                RoleID = roleid
+                RoleId = roleid
             };
 
             user.Register();

@@ -21,20 +21,20 @@ namespace XCode.Membership;
 [BindIndex("IX_User_Mail", false, "Mail")]
 [BindIndex("IX_User_Mobile", false, "Mobile")]
 [BindIndex("IX_User_Code", false, "Code")]
-[BindIndex("IX_User_RoleID", false, "RoleID")]
-[BindIndex("IX_User_DepartmentID", false, "DepartmentID")]
+[BindIndex("IX_User_RoleId", false, "RoleId")]
+[BindIndex("IX_User_DepartmentId", false, "DepartmentId")]
 [BindIndex("IX_User_UpdateTime", false, "UpdateTime")]
 [BindTable("User", Description = "用户。用户帐号信息，以身份验证为中心，拥有多种角色，可加入多个租户", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class User : IUser, IEntity<IUser>
 {
     #region 属性
-    private Int32 _ID;
+    private Int32 _Id;
     /// <summary>编号</summary>
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private String _Name = null!;
     /// <summary>名称。登录用户名</summary>
@@ -124,14 +124,14 @@ public partial class User : IUser, IEntity<IUser>
     [BindColumn("Avatar", "头像", "", ItemType = "image")]
     public String? Avatar { get => _Avatar; set { if (OnPropertyChanging("Avatar", value)) { _Avatar = value; OnPropertyChanged("Avatar"); } } }
 
-    private Int32 _RoleID;
+    private Int32 _RoleId;
     /// <summary>角色。主要角色</summary>
     [Category("登录信息")]
     [DisplayName("角色")]
     [Description("角色。主要角色")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("RoleID", "角色。主要角色", "", DefaultValue = "3")]
-    public Int32 RoleID { get => _RoleID; set { if (OnPropertyChanging("RoleID", value)) { _RoleID = value; OnPropertyChanged("RoleID"); } } }
+    [BindColumn("RoleId", "角色。主要角色", "", DefaultValue = "3")]
+    public Int32 RoleId { get => _RoleId; set { if (OnPropertyChanging("RoleId", value)) { _RoleId = value; OnPropertyChanged("RoleId"); } } }
 
     private String? _RoleIds;
     /// <summary>角色组。次要角色集合</summary>
@@ -142,14 +142,14 @@ public partial class User : IUser, IEntity<IUser>
     [BindColumn("RoleIds", "角色组。次要角色集合", "")]
     public String? RoleIds { get => _RoleIds; set { if (OnPropertyChanging("RoleIds", value)) { _RoleIds = value; OnPropertyChanged("RoleIds"); } } }
 
-    private Int32 _DepartmentID;
+    private Int32 _DepartmentId;
     /// <summary>部门。组织机构</summary>
     [Category("登录信息")]
     [DisplayName("部门")]
     [Description("部门。组织机构")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("DepartmentID", "部门。组织机构", "")]
-    public Int32 DepartmentID { get => _DepartmentID; set { if (OnPropertyChanging("DepartmentID", value)) { _DepartmentID = value; OnPropertyChanged("DepartmentID"); } } }
+    [BindColumn("DepartmentId", "部门。组织机构", "")]
+    public Int32 DepartmentId { get => _DepartmentId; set { if (OnPropertyChanging("DepartmentId", value)) { _DepartmentId = value; OnPropertyChanged("DepartmentId"); } } }
 
     private Boolean _Online;
     /// <summary>在线</summary>
@@ -303,14 +303,14 @@ public partial class User : IUser, IEntity<IUser>
     [BindColumn("UpdateUser", "更新者", "", DefaultValue = "''")]
     public String UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
 
-    private Int32 _UpdateUserID;
+    private Int32 _UpdateUserId;
     /// <summary>更新用户</summary>
     [Category("扩展")]
     [DisplayName("更新用户")]
     [Description("更新用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("UpdateUserID", "更新用户", "")]
-    public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
+    [BindColumn("UpdateUserId", "更新用户", "")]
+    public Int32 UpdateUserId { get => _UpdateUserId; set { if (OnPropertyChanging("UpdateUserId", value)) { _UpdateUserId = value; OnPropertyChanged("UpdateUserId"); } } }
 
     private String? _UpdateIP;
     /// <summary>更新地址</summary>
@@ -345,7 +345,7 @@ public partial class User : IUser, IEntity<IUser>
     /// <param name="model">模型</param>
     public void Copy(IUser model)
     {
-        ID = model.ID;
+        Id = model.Id;
         Name = model.Name;
         Password = model.Password;
         DisplayName = model.DisplayName;
@@ -357,9 +357,9 @@ public partial class User : IUser, IEntity<IUser>
         Code = model.Code;
         AreaId = model.AreaId;
         Avatar = model.Avatar;
-        RoleID = model.RoleID;
+        RoleId = model.RoleId;
         RoleIds = model.RoleIds;
-        DepartmentID = model.DepartmentID;
+        DepartmentId = model.DepartmentId;
         Online = model.Online;
         Enable = model.Enable;
         Age = model.Age;
@@ -388,7 +388,7 @@ public partial class User : IUser, IEntity<IUser>
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _Id,
             "Name" => _Name,
             "Password" => _Password,
             "DisplayName" => _DisplayName,
@@ -400,9 +400,9 @@ public partial class User : IUser, IEntity<IUser>
             "Code" => _Code,
             "AreaId" => _AreaId,
             "Avatar" => _Avatar,
-            "RoleID" => _RoleID,
+            "RoleId" => _RoleId,
             "RoleIds" => _RoleIds,
-            "DepartmentID" => _DepartmentID,
+            "DepartmentId" => _DepartmentId,
             "Online" => _Online,
             "Enable" => _Enable,
             "Age" => _Age,
@@ -420,7 +420,7 @@ public partial class User : IUser, IEntity<IUser>
             "Ex5" => _Ex5,
             "Ex6" => _Ex6,
             "UpdateUser" => _UpdateUser,
-            "UpdateUserID" => _UpdateUserID,
+            "UpdateUserId" => _UpdateUserId,
             "UpdateIP" => _UpdateIP,
             "UpdateTime" => _UpdateTime,
             "Remark" => _Remark,
@@ -430,7 +430,7 @@ public partial class User : IUser, IEntity<IUser>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
+                case "Id": _Id = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Password": _Password = Convert.ToString(value); break;
                 case "DisplayName": _DisplayName = Convert.ToString(value); break;
@@ -442,9 +442,9 @@ public partial class User : IUser, IEntity<IUser>
                 case "Code": _Code = Convert.ToString(value); break;
                 case "AreaId": _AreaId = value.ToInt(); break;
                 case "Avatar": _Avatar = Convert.ToString(value); break;
-                case "RoleID": _RoleID = value.ToInt(); break;
+                case "RoleId": _RoleId = value.ToInt(); break;
                 case "RoleIds": _RoleIds = Convert.ToString(value); break;
-                case "DepartmentID": _DepartmentID = value.ToInt(); break;
+                case "DepartmentId": _DepartmentId = value.ToInt(); break;
                 case "Online": _Online = value.ToBoolean(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Age": _Age = value.ToInt(); break;
@@ -462,7 +462,7 @@ public partial class User : IUser, IEntity<IUser>
                 case "Ex5": _Ex5 = Convert.ToString(value); break;
                 case "Ex6": _Ex6 = Convert.ToString(value); break;
                 case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
+                case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
                 case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
@@ -475,33 +475,49 @@ public partial class User : IUser, IEntity<IUser>
     #region 关联映射
     /// <summary>地区</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public XCode.Membership.Area? Area => Extends.Get(nameof(Area), k => XCode.Membership.Area.FindByID(AreaId));
+    public XCode.Membership.Area? Area => Extends.Get(nameof(Area), k => XCode.Membership.Area.FindById(AreaId));
 
     /// <summary>地区</summary>
-    [Map(nameof(AreaId), typeof(XCode.Membership.Area), "ID")]
+    [Map(nameof(AreaId), typeof(XCode.Membership.Area), "Id")]
     public String? AreaPath => Area?.ToString();
 
     /// <summary>角色</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Role? Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleID));
+    public Role? Role => Extends.Get(nameof(Role), k => Role.FindById(RoleId));
 
     /// <summary>角色</summary>
-    [Map(nameof(RoleID), typeof(Role), "ID")]
+    [Map(nameof(RoleId), typeof(Role), "Id")]
     [Category("登录信息")]
     public String? RoleName => Role?.Name;
 
     /// <summary>部门</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Department? Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
+    public Department? Department => Extends.Get(nameof(Department), k => Department.FindById(DepartmentId));
 
     /// <summary>部门</summary>
-    [Map(nameof(DepartmentID), typeof(Department), "ID")]
+    [Map(nameof(DepartmentId), typeof(Department), "Id")]
     [Category("登录信息")]
     public String? DepartmentName => Department?.Name;
 
     #endregion
 
     #region 扩展查询
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static User? FindById(Int32 id)
+    {
+        if (id < 0) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
+
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.Id == id);
+    }
+
     /// <summary>根据邮件查找</summary>
     /// <param name="mail">邮件</param>
     /// <returns>实体列表</returns>
@@ -541,17 +557,30 @@ public partial class User : IUser, IEntity<IUser>
         return FindAll(_.Code == code);
     }
 
+    /// <summary>根据角色查找</summary>
+    /// <param name="roleId">角色</param>
+    /// <returns>实体列表</returns>
+    public static IList<User> FindAllByRoleId(Int32 roleId)
+    {
+        if (roleId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleId == roleId);
+
+        return FindAll(_.RoleId == roleId);
+    }
+
     /// <summary>根据部门查找</summary>
     /// <param name="departmentId">部门</param>
     /// <returns>实体列表</returns>
-    public static IList<User> FindAllByDepartmentID(Int32 departmentId)
+    public static IList<User> FindAllByDepartmentId(Int32 departmentId)
     {
         if (departmentId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DepartmentID == departmentId);
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.DepartmentId == departmentId);
 
-        return FindAll(_.DepartmentID == departmentId);
+        return FindAll(_.DepartmentId == departmentId);
     }
     #endregion
 
@@ -574,8 +603,8 @@ public partial class User : IUser, IEntity<IUser>
     {
         var exp = new WhereExpression();
 
-        if (roleId >= 0) exp &= _.RoleID == roleId;
-        if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
+        if (roleId >= 0) exp &= _.RoleId == roleId;
+        if (departmentId >= 0) exp &= _.DepartmentId == departmentId;
         if (sex >= 0) exp &= _.Sex == sex;
         if (mailVerified != null) exp &= _.MailVerified == mailVerified;
         if (mobileVerified != null) exp &= _.MobileVerified == mobileVerified;
@@ -594,7 +623,7 @@ public partial class User : IUser, IEntity<IUser>
     public partial class _
     {
         /// <summary>编号</summary>
-        public static readonly Field ID = FindByName("ID");
+        public static readonly Field Id = FindByName("Id");
 
         /// <summary>名称。登录用户名</summary>
         public static readonly Field Name = FindByName("Name");
@@ -630,13 +659,13 @@ public partial class User : IUser, IEntity<IUser>
         public static readonly Field Avatar = FindByName("Avatar");
 
         /// <summary>角色。主要角色</summary>
-        public static readonly Field RoleID = FindByName("RoleID");
+        public static readonly Field RoleId = FindByName("RoleId");
 
         /// <summary>角色组。次要角色集合</summary>
         public static readonly Field RoleIds = FindByName("RoleIds");
 
         /// <summary>部门。组织机构</summary>
-        public static readonly Field DepartmentID = FindByName("DepartmentID");
+        public static readonly Field DepartmentId = FindByName("DepartmentId");
 
         /// <summary>在线</summary>
         public static readonly Field Online = FindByName("Online");
@@ -690,7 +719,7 @@ public partial class User : IUser, IEntity<IUser>
         public static readonly Field UpdateUser = FindByName("UpdateUser");
 
         /// <summary>更新用户</summary>
-        public static readonly Field UpdateUserID = FindByName("UpdateUserID");
+        public static readonly Field UpdateUserId = FindByName("UpdateUserId");
 
         /// <summary>更新地址</summary>
         public static readonly Field UpdateIP = FindByName("UpdateIP");
@@ -708,7 +737,7 @@ public partial class User : IUser, IEntity<IUser>
     public partial class __
     {
         /// <summary>编号</summary>
-        public const String ID = "ID";
+        public const String Id = "Id";
 
         /// <summary>名称。登录用户名</summary>
         public const String Name = "Name";
@@ -744,13 +773,13 @@ public partial class User : IUser, IEntity<IUser>
         public const String Avatar = "Avatar";
 
         /// <summary>角色。主要角色</summary>
-        public const String RoleID = "RoleID";
+        public const String RoleId = "RoleId";
 
         /// <summary>角色组。次要角色集合</summary>
         public const String RoleIds = "RoleIds";
 
         /// <summary>部门。组织机构</summary>
-        public const String DepartmentID = "DepartmentID";
+        public const String DepartmentId = "DepartmentId";
 
         /// <summary>在线</summary>
         public const String Online = "Online";
@@ -804,7 +833,7 @@ public partial class User : IUser, IEntity<IUser>
         public const String UpdateUser = "UpdateUser";
 
         /// <summary>更新用户</summary>
-        public const String UpdateUserID = "UpdateUserID";
+        public const String UpdateUserId = "UpdateUserId";
 
         /// <summary>更新地址</summary>
         public const String UpdateIP = "UpdateIP";

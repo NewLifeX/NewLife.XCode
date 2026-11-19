@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using NewLife;
 using NewLife.Collections;
 using NewLife.Log;
@@ -50,19 +50,24 @@ public class LogProvider
         log.Action = action;
         log.Success = success;
 
-        // 加上关联编号
-        if (remark.StartsWithIgnoreCase("ID="))
+        // 加上关联编号。兼容旧版本 ID= 前缀
+        if (remark.StartsWithIgnoreCase("Id="))
         {
             if (factory.Table.FindByName("Id") is FieldItem fi && fi.Type.IsInt())
-                log.LinkID = remark.Substring("ID=", ",").ToLong();
+            {
+                var str = remark[3..];
+                var p = str.IndexOf(',');
+                if (p >= 0) str = str[..p];
+                log.LinkId = str.ToLong();
+            }
         }
 
-        if (userid > 0) log.CreateUserID = userid;
+        if (userid > 0) log.CreateUserId = userid;
         if (!name.IsNullOrEmpty()) log.UserName = name;
         if (!ip.IsNullOrEmpty()) log.CreateIP = ip;
 
         // 获取当前登录信息
-        if (log.CreateUserID == 0 || name.IsNullOrEmpty())
+        if (log.CreateUserId == 0 || name.IsNullOrEmpty())
         {
             // 当前登录用户
             var prv = Provider2 ?? ManageProvider.Provider;
@@ -70,7 +75,7 @@ public class LogProvider
             var user = prv?.Current;
             if (user != null)
             {
-                if (log.CreateUserID == 0) log.CreateUserID = user.ID;
+                if (log.CreateUserId == 0) log.CreateUserId = user.ID;
                 if (log.UserName.IsNullOrEmpty()) log.UserName = user + "";
             }
         }
@@ -107,7 +112,7 @@ public class LogProvider
 
         // 类别是元数据，按当前语言翻译后再写入，避免日志永远停留在源文
         var log = CreateLog(L.T(cat), action, success, remark, userid, name, ip);
-        if (linkid > 0) log.LinkID = linkid;
+        if (linkid > 0) log.LinkId = linkid;
 
         return log;
     }
@@ -179,7 +184,7 @@ public class LogProvider
         // 类别是元数据，按当前语言翻译后再写入，避免日志永远停留在源文。
         // 操作名由调用方决定（多为已本地化的文案），此处原样写入
         var log = CreateLog(L.T(category), action, error.IsNullOrEmpty(), remark, userid, name);
-        log.LinkID = linkId;
+        log.LinkId = linkId;
 
         log.SaveAsync();
     }
@@ -187,7 +192,7 @@ public class LogProvider
     /// <summary>构造实体变更明细文本</summary>
     /// <remarks>
     /// 修改操作输出字段修改前后的对比，其余操作输出字段快照。
-    /// 字段名取元数据显示名并按当前语言翻译；主键保留属性名（ID=xxx），便于机器检索与关联。
+    /// 字段名取元数据显示名并按当前语言翻译；主键保留属性名（Id=xxx），便于机器检索与关联。
     /// </remarks>
     /// <param name="action">操作</param>
     /// <param name="entity">实体对象</param>

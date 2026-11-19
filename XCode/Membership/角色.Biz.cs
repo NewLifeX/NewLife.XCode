@@ -11,6 +11,7 @@ namespace XCode.Membership;
 /// <summary>角色</summary>
 public partial class Role : LogEntity<Role>, IRole, ITenantScope
 {
+
     #region 对象操作
 
     static Role()
@@ -71,7 +72,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
 
         // 如果某些菜单已经被删除，但是角色权限表仍然存在，则删除
         var menus = Menu.FindAll();
-        var ids = menus.Select(e => e.ID).ToArray();
+        var ids = menus.Select(e => e.Id).ToArray();
         foreach (var role in list)
         {
             if (!role.CheckValid(ids)) XTrace.WriteLine("Removing invalid resource permissions from [{0}]!", role);
@@ -83,24 +84,24 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
         {
             foreach (var role in list)
             {
-                role.Set(menu.ID, PermissionFlags.Detail);
+                role.Set(menu.Id, PermissionFlags.Detail);
             }
         }
         list.Save();
 
         // 系统角色
-        var sys = list.Where(e => e.IsSystem).OrderBy(e => e.ID).FirstOrDefault();
+        var sys = list.Where(e => e.IsSystem).OrderBy(e => e.Id).FirstOrDefault();
         if (sys == null) return;
 
         // 如果没有任何角色拥有权限管理的权限，那是很悲催的事情
         var count = 0;
         foreach (var item in menus)
         {
-            //if (item.Visible && !list.Any(e => e.Has(item.ID, PermissionFlags.Detail)))
-            if (!list.Any(e => e.Has(item.ID, PermissionFlags.Detail)))
+            //if (item.Visible && !list.Any(e => e.Has(item.Id, PermissionFlags.Detail)))
+            if (!list.Any(e => e.Has(item.Id, PermissionFlags.Detail)))
             {
                 count++;
-                sys.Set(item.ID, PermissionFlags.All);
+                sys.Set(item.Id, PermissionFlags.All);
 
                 XTrace.WriteLine("No role has permission for menu [{0}].", item.Name);
             }
@@ -159,7 +160,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
         var name = entity.Name;
         if (String.IsNullOrEmpty(name))
         {
-            entity = FindByID(ID);
+            entity = FindById(Id);
             if (entity != null) name = entity.Name;
         }
 
@@ -182,7 +183,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
         var rs = base.Delete();
 
         // 删除角色后，清理用户与租户关系中的角色引用，避免遗留孤儿角色编号
-        if (rs > 0) User.ClearRole(ID);
+        if (rs > 0) User.ClearRole(Id);
 
         return rs;
     }
@@ -232,17 +233,11 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
     /// <summary>根据编号查找角色</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    public static Role? FindByID(Int32 id)
-    {
-        if (id <= 0 || Meta.Cache.Entities == null || Meta.Cache.Entities.Count <= 0) return null;
-
-        return Meta.Cache.Entities.ToArray().FirstOrDefault(e => e.ID == id);
-    }
 
     /// <summary>根据编号查找角色</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    IRole? IRole.FindByID(Int32 id) => FindByID(id);
+    IRole? IRole.FindByID(Int32 id) => FindById(id);
 
     /// <summary>根据名称查找角色</summary>
     /// <param name="name">名称</param>
@@ -301,11 +296,15 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
     /// <summary>根据编号集合查找</summary>
     /// <param name="ids">编号集合</param>
     /// <returns>实体列表</returns>
-    public static IList<Role> FindAllByIDs(Int32[] ids)
+
+    /// <summary>根据编号列表查找角色</summary>
+    /// <param name="ids"></param>
+    /// <returns></returns>
+    public static IList<Role> FindAllByIds(Int32[] ids)
     {
         if (ids == null || ids.Length == 0) return [];
 
-        return FindAll(_.ID.In(ids));
+        return FindAll(_.Id.In(ids));
     }
     #endregion 扩展查询
 
@@ -343,7 +342,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
         if (roles == null || roles.Length == 0) return false;
 
         // 如果没有指定权限子项，则指判断是否拥有资源
-        if (flags == null || flags.Length == 0) return roles.Any(r => r.Has(menu.ID));
+        if (flags == null || flags.Length == 0) return roles.Any(r => r.Has(menu.Id));
 
         foreach (var item in flags)
         {
@@ -353,7 +352,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
             // 菜单必须拥有这些权限位才行
             if (menu.Permissions.ContainsKey((Int32)item))
             {
-                if (roles.Any(r => r.Has(menu.ID, item))) return true;
+                if (roles.Any(r => r.Has(menu.Id, item))) return true;
             }
         }
 

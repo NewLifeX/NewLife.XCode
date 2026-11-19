@@ -12,7 +12,7 @@ public partial interface IRole
 {
     #region 属性
     /// <summary>编号</summary>
-    Int32 ID { get; set; }
+    Int32 Id { get; set; }
 
     /// <summary>名称</summary>
     String Name { get; set; }
@@ -66,7 +66,7 @@ public partial interface IRole
     String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
-    Int32 CreateUserID { get; set; }
+    Int32 CreateUserId { get; set; }
 
     /// <summary>创建地址</summary>
     String? CreateIP { get; set; }
@@ -78,7 +78,7 @@ public partial interface IRole
     String? UpdateUser { get; set; }
 
     /// <summary>更新用户</summary>
-    Int32 UpdateUserID { get; set; }
+    Int32 UpdateUserId { get; set; }
 
     /// <summary>更新地址</summary>
     String? UpdateIP { get; set; }

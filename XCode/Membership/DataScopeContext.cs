@@ -1,4 +1,4 @@
-﻿using NewLife.Caching;
+using NewLife.Caching;
 using NewLife.Data;
 using NewLife.Log;
 using XCode.Configuration;
@@ -75,9 +75,9 @@ public class DataScopeContext
         {
             var ctx = new DataScopeContext
             {
-                UserId = user.ID,
-                DepartmentId = user.DepartmentID,
-                MenuId = menu?.ID ?? 0,
+                UserId = user.Id,
+                DepartmentId = user.DepartmentId,
+                MenuId = menu?.Id ?? 0,
             };
 
             // 获取所有角色
@@ -108,7 +108,7 @@ public class DataScopeContext
                 if (menu != null) ctx.SetMenu(menu);
 
                 // 从缓存获取或计算可访问部门列表
-                ctx.AccessibleDepartmentIds ??= GetCachedDepartmentIds(user.ID, user.DepartmentID, roles, ctx.DataScope);
+                ctx.AccessibleDepartmentIds ??= GetCachedDepartmentIds(user.Id, user.DepartmentId, roles, ctx.DataScope);
             }
             else
             {
@@ -130,7 +130,7 @@ public class DataScopeContext
         // 全部权限不需要缓存
         if (scope == DataScopes.全部) return null;
 
-        // 缓存键包含部门编号，用户调岗（DepartmentID 变化）后立即使用新的部门列表，无需等待过期
+        // 缓存键包含部门编号，用户调岗（DepartmentId 变化）后立即使用新的部门列表，无需等待过期
         var key = $"DataScope:{userId}:{deptId}:{(Int32)scope}";
         return _cache.GetOrAdd(key, k => DataScopeHelper.GetAccessibleDepartmentIds(deptId, roles, scope, userId));
     }
@@ -162,7 +162,7 @@ public class DataScopeContext
         MenuId = menuId;
 
         // 检查菜单级数据权限覆盖
-        var menu = ManageProvider.Menu?.FindByID(menuId) ?? Menu.FindByID(menuId);
+        var menu = ManageProvider.Menu?.FindByID(menuId) ?? Menu.FindById(menuId);
         if (menu != null && menu.DataScope >= 0)
         {
             SetMenu(menu);
@@ -175,7 +175,7 @@ public class DataScopeContext
     {
         if (menu == null) return;
 
-        MenuId = menu.ID;
+        MenuId = menu.Id;
 
         // 检查菜单级数据权限覆盖
         if (menu.DataScope >= 0)
@@ -189,7 +189,7 @@ public class DataScopeContext
             {
                 var roles = user.Roles ?? (user.Role != null ? [user.Role] : null);
                 if (roles != null)
-                    AccessibleDepartmentIds = GetCachedDepartmentIds(user.ID, DepartmentId, roles, DataScope);
+                    AccessibleDepartmentIds = GetCachedDepartmentIds(user.Id, DepartmentId, roles, DataScope);
             }
         }
     }
@@ -200,7 +200,7 @@ public class DataScopeContext
 /// <remarks>
 /// 提供数据权限相关的计算和过滤方法。
 /// <para>主要功能：</para>
-/// <para>1. 根据角色计算可访问的部门ID列表</para>
+/// <para>1. 根据角色计算可访问的部门Id列表</para>
 /// <para>2. 构建数据权限过滤表达式</para>
 /// <para>3. 处理多角色数据权限合并</para>
 /// <para>4. 支持通过 PageParameter 传递数据权限过滤</para>
@@ -296,9 +296,9 @@ public static class DataScopeHelper
             var ids = new HashSet<Int32>();
             foreach (var dept in managed)
             {
-                if (ids.Add(dept.ID))
+                if (ids.Add(dept.Id))
                 {
-                    foreach (var id in GetDepartmentAndChildren(dept.ID))
+                    foreach (var id in GetDepartmentAndChildren(dept.Id))
                     {
                         ids.Add(id);
                     }
@@ -322,7 +322,7 @@ public static class DataScopeHelper
     {
         if (departmentId <= 0) return [];
 
-        var dept = Department.FindByID(departmentId);
+        var dept = Department.FindById(departmentId);
         if (dept == null) return [departmentId];
 
         var ids = new List<Int32> { departmentId };
@@ -339,9 +339,9 @@ public static class DataScopeHelper
 
         foreach (var child in childs)
         {
-            if (!ids.Contains(child.ID))
+            if (!ids.Contains(child.Id))
             {
-                ids.Add(child.ID);
+                ids.Add(child.Id);
                 CollectChildDepartmentIds(child, ids);
             }
         }
@@ -456,8 +456,8 @@ public static class DataScopeHelper
 
     /// <summary>构建纯部门实体的过滤表达式</summary>
     /// <remarks>
-    /// 适用于“一行一个部门”的表（如部门表，DepartmentId 映射到主键 ID）。
-    /// 仅本人时没有可访问部门列表，退化为“当前用户所在部门”，即 ID=当前用户.DepartmentID，
+    /// 适用于“一行一个部门”的表（如部门表，DepartmentId 映射到主键 Id）。
+    /// 仅本人时没有可访问部门列表，退化为“当前用户所在部门”，即 Id=当前用户.DepartmentId，
     /// 而不是恒假条件 Equal(-1) 导致空表。其余数据范围与普通部门过滤保持一致。
     /// </remarks>
     private static Expression? BuildDepartmentScopeFilter(DataScopeContext context, FieldItem? deptField)

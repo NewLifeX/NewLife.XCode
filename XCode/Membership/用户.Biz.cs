@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Principal;
 using System.Web.Script.Serialization;
@@ -75,13 +75,13 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
 
         // 新用户默认角色。仅当没有任何角色时生效，避免干扰下方对 RoleIds 的角色整理；
         // 不依赖数据库默认值3（可能因角色删除或顺序变化而失效）
-        if (method == DataMethod.Insert && RoleID <= 0 && RoleIds.IsNullOrEmpty())
+        if (method == DataMethod.Insert && RoleId <= 0 && RoleIds.IsNullOrEmpty())
         {
             var role = Role.FindByName("普通用户") ?? Role.FindByName("游客");
-            if (role != null) RoleID = role.ID;
+            if (role != null) RoleId = role.Id;
         }
 
-        //if (RoleID < 1) throw new ArgumentNullException(__.RoleID, "没有指定角色！");
+        //if (RoleId < 1) throw new ArgumentNullException(__.RoleId, "没有指定角色！");
 
         //var pass = Password;
         //if (isNew)
@@ -101,10 +101,10 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         //}
 
         // 重新整理角色（仅自有角色，避免租户上下文下把租户角色写回本表）
-        var ids = GetOwnRoleIDs();
+        var ids = GetOwnRoleIds();
         if (ids.Length > 0)
         {
-            RoleID = ids[0];
+            RoleId = ids[0];
             if (ids.Length == 1)
                 RoleIds = null;
             else
@@ -140,42 +140,37 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
 
     ///// <summary>部门</summary>
     //[XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    //public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentID));
+    //public Department Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentId));
 
     ///// <summary>部门</summary>
     //[Category("登录信息")]
-    //[Map(__.DepartmentID, typeof(Department), __.ID)]
+    //[Map(__.DepartmentId, typeof(Department), __.Id)]
     //public String DepartmentName => Department?.Path;
 
     /// <summary>
     /// 地区名
     /// </summary>
     [Map(nameof(AreaId))]
-    public String? AreaName => Area.FindByID(AreaId)?.Path;
+    public String? AreaName => Area.FindById(AreaId)?.Path;
     #endregion
 
     #region 扩展查询
     /// <summary>根据编号查找</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    public static User? FindByID(Int32 id)
-    {
-        if (id <= 0) return null;
-
-        if (Meta.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
-
-        // 实体缓存
-        return Meta.SingleCache[id];
-    }
 
     /// <summary>直接从数据库查询用户，绕过实体缓存与单对象缓存</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象；不存在时返回 null</returns>
-    public static User? FindByIDFromDatabase(Int32 id)
+
+    /// <summary>直接从数据库查询用户，绕过实体缓存与单对象缓存</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象；不存在时返回 null</returns>
+    public static User? FindByIdFromDatabase(Int32 id)
     {
         if (id <= 0) return null;
 
-        return Find(_.ID == id);
+        return Find(_.Id == id);
     }
 
     /// <summary>根据名称查找</summary>
@@ -245,15 +240,6 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>根据角色查找</summary>
     /// <param name="roleId">角色</param>
     /// <returns>实体列表</returns>
-    public static IList<User> FindAllByRoleID(Int32 roleId)
-    {
-        if (roleId <= 0) return [];
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.RoleID == roleId);
-
-        return FindAll(_.RoleID == roleId);
-    }
     #endregion
 
     #region 高级查询
@@ -276,7 +262,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     public static IList<User> Search(String key, Int32 roleId, Boolean? isEnable, DateTime start, DateTime end, PageParameter p)
     {
         var exp = _.LastLogin.Between(start, end);
-        if (roleId > 0) exp &= _.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",");
+        if (roleId > 0) exp &= _.RoleId == roleId | _.RoleIds.Contains("," + roleId + ",");
         if (isEnable != null) exp &= _.Enable == isEnable;
 
         // 先精确查询，再模糊
@@ -303,8 +289,8 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     public static IList<User> Search(Int32 roleId, Int32 departmentId, Boolean? enable, DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
-        if (roleId >= 0) exp &= _.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",");
-        if (departmentId >= 0) exp &= _.DepartmentID == departmentId;
+        if (roleId >= 0) exp &= _.RoleId == roleId | _.RoleIds.Contains("," + roleId + ",");
+        if (departmentId >= 0) exp &= _.DepartmentId == departmentId;
         if (enable != null) exp &= _.Enable == enable.Value;
         exp &= _.LastLogin.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Mobile.Contains(key) | _.Mail.Contains(key);
@@ -356,14 +342,14 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         if (roleIds != null && roleIds.Length > 0)
         {
             var exp2 = new WhereExpression();
-            exp2 |= _.RoleID.In(roleIds);
+            exp2 |= _.RoleId.In(roleIds);
             foreach (var rid in roleIds)
             {
                 exp2 |= _.RoleIds.Contains("," + rid + ",");
             }
             exp &= exp2;
         }
-        if (departmentIds != null && departmentIds.Length > 0) exp &= _.DepartmentID.In(departmentIds);
+        if (departmentIds != null && departmentIds.Length > 0) exp &= _.DepartmentId.In(departmentIds);
         if (areaIds != null && areaIds.Length > 0) exp &= _.AreaId.In(areaIds);
         if (enable != null) exp &= _.Enable == enable.Value;
         if (sex >= 0) exp &= _.Sex == (SexKinds)sex;
@@ -411,20 +397,20 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         if (roleIds != null && roleIds.Length > 0)
         {
             var exp2 = new WhereExpression();
-            exp2 |= _.RoleID.In(roleIds);
+            exp2 |= _.RoleId.In(roleIds);
             foreach (var rid in roleIds)
             {
                 exp2 |= _.RoleIds.Contains("," + rid + ",");
             }
             exp &= exp2;
         }
-        if (departmentIds != null && departmentIds.Length > 0) exp &= _.DepartmentID.In(departmentIds);
+        if (departmentIds != null && departmentIds.Length > 0) exp &= _.DepartmentId.In(departmentIds);
         if (areaIds != null && areaIds.Length > 0) exp &= _.AreaId.In(areaIds);
         if (enable != null) exp &= _.Enable == enable.Value;
         exp &= _.LastLogin.Between(start, end);
         if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.DisplayName.Contains(key) | _.Mobile.Contains(key) | _.Mail.Contains(key);
 
-        var sql = $"SELECT User.* FROM User INNER JOIN TenantUser ON User.ID= TenantUser.UserId where {exp} ";
+        var sql = $"SELECT User.* FROM User INNER JOIN TenantUser ON User.Id= TenantUser.UserId where {exp} ";
 
         return Meta.Session.Dal.Query<User>(sql, null, page)?.ToList();
     }
@@ -449,7 +435,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
             Name = name,
             Password = pass.MD5(),
             DisplayName = display,
-            RoleID = roleid,
+            RoleId = roleid,
             Enable = true
         };
 
@@ -468,20 +454,20 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         var count = 0;
 
         // 清理用户主角色与角色组
-        foreach (var user in FindAll(_.RoleID == roleId | _.RoleIds.Contains("," + roleId + ",")))
+        foreach (var user in FindAll(_.RoleId == roleId | _.RoleIds.Contains("," + roleId + ",")))
         {
-            if (user.RoleID == roleId)
+            if (user.RoleId == roleId)
             {
                 // 主角色被删除，从角色组中提升一个作为主角色
                 var ids = user.RoleIds.SplitAsInt();
                 if (ids.Length > 0)
                 {
-                    user.RoleID = ids[0];
+                    user.RoleId = ids[0];
                     user.RoleIds = ids.Length > 1 ? "," + ids.Skip(1).Join(",") + "," : null;
                 }
                 else
                 {
-                    user.RoleID = 0;
+                    user.RoleId = 0;
                     user.RoleIds = null;
                 }
             }
@@ -537,7 +523,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         if (ip.IsNullOrEmpty()) return;
 
         var list = Area.SearchIP(ip);
-        if (list.Count > 0) AreaId = list[list.Count - 1].ID;
+        if (list.Count > 0) AreaId = list[list.Count - 1].Id;
     }
     #endregion
 
@@ -699,7 +685,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
             var list = FindAll();
             if (list.Count == 0 || list.Count == 1 && list[0].DisableAdmin())
             {
-                RoleID = 1;
+                RoleId = 1;
                 Enable = true;
             }
         }
@@ -720,7 +706,7 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         if (!Password.EqualIgnoreCase("admin".MD5())) return false;
 
         Enable = false;
-        RoleID = 4;
+        RoleId = 4;
 
         Save();
 
@@ -736,18 +722,21 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
 
     /// <summary>角色集合</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Cast<IRole>().ToArray()) ?? [];
+    public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIds().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Cast<IRole>().ToArray()) ?? [];
 
     /// <summary>获取当前上下文下的角色列表。主角色在前，其它角色升序在后；进入租户后以租户关系角色组替代自有角色组进行鉴权</summary>
     /// <returns></returns>
-    public virtual Int32[] GetRoleIDs()
+
+    /// <summary>获取当前上下文下的角色列表。主角色在前，其它角色升序在后；进入租户后以租户关系角色组替代自有角色组进行鉴权</summary>
+    /// <returns></returns>
+    public virtual Int32[] GetRoleIds()
     {
         // 曾经尝试过在自有角色组上叠加租户角色（TenantUser.RoleId 插入最前），
         // 但 TenantUser 的设计语义是"替代自有角色组进行鉴权"，叠加会导致 User.Roles 与 ManageProvider.Has 两套鉴权路径不一致
         var tenantId = TenantContext.CurrentId;
         if (tenantId > 0)
         {
-            var tu = TenantUser.FindByTenantIdAndUserId(tenantId, ID);
+            var tu = TenantUser.FindByTenantIdAndUserId(tenantId, Id);
             if (tu != null && tu.Enable)
             {
                 var ids = tu.RoleIds.SplitAsInt().OrderBy(e => e).ToList();
@@ -757,22 +746,25 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
             }
         }
 
-        return GetOwnRoleIDs();
+        return GetOwnRoleIds();
     }
 
     /// <summary>获取自有角色列表。主角色在前，其它角色升序在后</summary>
     /// <returns></returns>
-    public virtual Int32[] GetOwnRoleIDs()
+
+    /// <summary>获取自有角色列表。主角色在前，其它角色升序在后</summary>
+    /// <returns></returns>
+    public virtual Int32[] GetOwnRoleIds()
     {
         var ids = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
-        if (RoleID > 0) ids.Insert(0, RoleID);
+        if (RoleId > 0) ids.Insert(0, RoleId);
 
         return ids.Distinct().ToArray();
     }
 
     ///// <summary>角色名</summary>
     //[Category("登录信息")]
-    //[Map(__.RoleID, typeof(Role), "ID")]
+    //[Map(__.RoleId, typeof(Role), "Id")]
     //public virtual String RoleName => Role + "";
 
     /// <summary>角色组名</summary>
@@ -799,18 +791,19 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     #endregion
 
     #region IDataScope 成员
-    Int32 IUserScope.UserId { get => ID; set => ID = value; }
-    Int32 IDepartmentScope.DepartmentId { get => DepartmentID; set => DepartmentID = value; }
+    Int32 IUserScope.UserId { get => Id; set => Id = value; }
+    Int32 IDepartmentScope.DepartmentId { get => DepartmentId; set => DepartmentId = value; }
+
     #endregion
 
     #region IFieldScope 成员
     String[] IFieldScope.GetSensitiveFields() => [__.Password];
-    Boolean IFieldScope.CanViewSensitiveFields(Int32 userId) => userId == ID;
+    Boolean IFieldScope.CanViewSensitiveFields(Int32 userId) => userId == Id;
     #endregion
 
     #region IDataScopeFieldProvider 成员
-    FieldItem? IDataScopeFieldProvider.GetUserField() => _.ID;
-    FieldItem? IDataScopeFieldProvider.GetDepartmentField() => _.DepartmentID;
+    FieldItem? IDataScopeFieldProvider.GetUserField() => _.Id;
+    FieldItem? IDataScopeFieldProvider.GetDepartmentField() => _.DepartmentId;
     FieldItem? IDataScopeFieldProvider.GetTenantField() => null;
     #endregion
 }

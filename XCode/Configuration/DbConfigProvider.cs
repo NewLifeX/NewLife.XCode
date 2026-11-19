@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using NewLife;
 using NewLife.Configuration;
 using NewLife.Data;
@@ -105,7 +105,7 @@ public class DbConfigProvider : ConfigProvider
         // 减少日志
         using var showSql = Parameter.Meta.Session.Dal.Session.SetShowSql(false);
 
-        var list = Parameter.FindAllByUserID(UserId, Category);
+        var list = Parameter.FindAllByUserId(UserId).Where(e => e.Category == Category).ToList();
         foreach (var item in list)
         {
             if (!item.Enable || item.Name.IsNullOrEmpty()) continue;
@@ -235,7 +235,7 @@ public class DbConfigProvider : ConfigProvider
     /// <summary>保存配置树到数据源</summary>
     public override Boolean SaveAll()
     {
-        var list = Parameter.FindAllByUserID(UserId, Category);
+        var list = Parameter.FindAllByUserId(UserId).Where(e => e.Category == Category).ToList();
         Save(list, Root, null);
 
         // 通知绑定对象，配置数据有改变
@@ -260,7 +260,7 @@ public class DbConfigProvider : ConfigProvider
                 var pi = list.FirstOrDefault(_ => _.Name == name);
                 if (pi == null)
                 {
-                    pi = new Parameter { UserID = UserId, Category = Category, Name = name };
+                    pi = new Parameter { UserId = UserId, Category = Category, Name = name };
                     list.Add(pi);
                 }
 

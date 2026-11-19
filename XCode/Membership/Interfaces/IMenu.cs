@@ -12,7 +12,7 @@ public partial interface IMenu
 {
     #region 属性
     /// <summary>编号</summary>
-    Int32 ID { get; set; }
+    Int32 Id { get; set; }
 
     /// <summary>名称</summary>
     String Name { get; set; }
@@ -27,7 +27,7 @@ public partial interface IMenu
     String? FullName { get; set; }
 
     /// <summary>父编号</summary>
-    Int32 ParentID { get; set; }
+    Int32 ParentId { get; set; }
 
     /// <summary>链接</summary>
     String? Url { get; set; }
@@ -78,7 +78,7 @@ public partial interface IMenu
     String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
-    Int32 CreateUserID { get; set; }
+    Int32 CreateUserId { get; set; }
 
     /// <summary>创建地址</summary>
     String? CreateIP { get; set; }
@@ -90,7 +90,7 @@ public partial interface IMenu
     String? UpdateUser { get; set; }
 
     /// <summary>更新用户</summary>
-    Int32 UpdateUserID { get; set; }
+    Int32 UpdateUserId { get; set; }
 
     /// <summary>更新地址</summary>
     String? UpdateIP { get; set; }

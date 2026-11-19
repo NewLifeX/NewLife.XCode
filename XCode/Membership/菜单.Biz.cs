@@ -1,4 +1,4 @@
-﻿using System.Runtime.Serialization;
+using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Collections;
@@ -9,6 +9,7 @@ namespace XCode.Membership;
 [EntityFactory(typeof(MenuFactory))]
 public partial class Menu : EntityTree<Menu>, IMenu
 {
+
     #region 对象操作
     static Menu()
     {
@@ -149,7 +150,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
             var list2 = list.Where(e => e.Necessary).ToList();
             if (list2.Count > 0) list = list2;
 
-            return list.Select(e => e.ID).ToArray();
+            return list.Select(e => e.Id).ToArray();
         }
     }
 
@@ -161,12 +162,6 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <summary>根据编号查找</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    public static Menu? FindByID(Int32 id)
-    {
-        if (id <= 0) return null;
-
-        return Meta.Cache.Find(e => e.ID == id);
-    }
 
     /// <summary>根据名字查找</summary>
     /// <param name="name">名称</param>
@@ -197,7 +192,6 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <summary>查找指定菜单的子菜单</summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    public static List<Menu> FindAllByParentID(Int32 id) => Meta.Cache.FindAll(e => e.ParentID == id).OrderByDescending(e => e.Sort).ThenBy(e => e.ID).ToList();
 
     /// <summary>取得当前角色的子菜单，有权限、可显示、排序</summary>
     /// <param name="filters"></param>
@@ -211,7 +205,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
         if (!inclInvisible) list = list.Where(e => e.Visible).ToList();
         if (list == null || list.Count <= 0) return [];
 
-        return list.Where(e => filters.Contains(e.ID)).Cast<IMenu>().ToList();
+        return list.Where(e => filters.Contains(e.Id)).Cast<IMenu>().ToList();
     }
 
     /// <summary>根据名称查找</summary>
@@ -231,27 +225,24 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <param name="parentId">父编号</param>
     /// <param name="name">名称</param>
     /// <returns>实体对象</returns>
-    public static Menu? FindByParentIDAndName(Int32 parentId, String name)
-    {
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
-
-        return Find(_.ParentID == parentId & _.Name == name);
-    }
 
     /// <summary>根据链接与父编号查找菜单</summary>
     /// <param name="url">链接</param>
     /// <param name="parentId">父编号</param>
     /// <returns>实体对象；不存在时返回 null</returns>
-    public static Menu? FindByUrlAndParentID(String url, Int32 parentId)
+
+    /// <summary>根据链接与父编号查找菜单</summary>
+    /// <param name="url">链接</param>
+    /// <param name="parentId">父编号</param>
+    /// <returns>实体对象；不存在时返回 null</returns>
+    public static Menu? FindByUrlAndParentId(String url, Int32 parentId)
     {
         if (url.IsNullOrEmpty()) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Url == url && e.ParentID == parentId);
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Url == url && e.ParentId == parentId);
 
-        return Find(_.Url == url & _.ParentID == parentId);
+        return Find(_.Url == url & _.ParentId == parentId);
     }
 
     /// <summary>根据链接查找菜单列表</summary>
@@ -283,9 +274,9 @@ public partial class Menu : EntityTree<Menu>, IMenu
             DisplayName = displayName,
             FullName = fullName,
             Url = url,
-            ParentID = ID,
+            ParentId = Id,
 
-            Visible = ID == 0 || displayName != null
+            Visible = Id == 0 || displayName != null
         };
 
         entity.Save();
@@ -307,10 +298,10 @@ public partial class Menu : EntityTree<Menu>, IMenu
             DisplayName = displayName,
             FullName = fullName,
             Url = url,
-            ParentID = ID,
+            ParentId = Id,
 
             Type = type,
-            Visible = ID == 0 || displayName != null,
+            Visible = Id == 0 || displayName != null,
         };
 
         entity.Save();
@@ -419,7 +410,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
         /// <summary>根据编号找到菜单</summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        IMenu? IMenuFactory.FindByID(Int32 id) => FindByID(id);
+        IMenu? IMenuFactory.FindByID(Int32 id) => FindById(id);
 
         /// <summary>根据Url找到菜单</summary>
         /// <param name="url"></param>
@@ -449,7 +440,7 @@ public partial class Menu : EntityTree<Menu>, IMenu
             IMenu? menu = null;
 
             // 找到菜单
-            if (menuid > 0) menu = FindByID(menuid);
+            if (menuid > 0) menu = FindById(menuid);
 
             if (menu == null)
             {

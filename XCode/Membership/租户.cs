@@ -297,10 +297,10 @@ public partial class Tenant : ITenant, IEntity<ITenant>
     #region 关联映射
     /// <summary>管理者</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public User? Manager => Extends.Get(nameof(Manager), k => User.FindByID(ManagerId));
+    public User? Manager => Extends.Get(nameof(Manager), k => User.FindById(ManagerId));
 
     /// <summary>管理者</summary>
-    [Map(nameof(ManagerId), typeof(User), "ID")]
+    [Map(nameof(ManagerId), typeof(User), "Id")]
     public String? ManagerName => Manager?.ToString();
 
     #endregion

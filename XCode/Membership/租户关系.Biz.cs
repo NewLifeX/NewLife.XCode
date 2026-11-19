@@ -1,4 +1,4 @@
-﻿using System.Runtime.Serialization;
+using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 using NewLife.Data;
@@ -33,7 +33,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
         if (!HasDirty) return true;
 
         // 重新整理角色
-        var ids = GetRoleIDs();
+        var ids = GetRoleIds();
         if (ids.Length > 0)
         {
             RoleId = ids[0];
@@ -63,7 +63,7 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
     //public User User => Extends.Get(nameof(User), k => User.FindByID(UserId));
 
     ///// <summary>用户</summary>
-    //[Map(nameof(UserId), typeof(User), "ID")]
+    //[Map(nameof(UserId), typeof(User), "Id")]
     //public String UserName => User?.Name;
 
     /// <summary>角色</summary>
@@ -71,16 +71,19 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
     IRole? ITenantUser.Role => Role;
 
     ///// <summary>角色</summary>
-    //[Map(nameof(RoleId), typeof(Role), "ID")]
+    //[Map(nameof(RoleId), typeof(Role), "Id")]
     //public String RoleName => Role?.Name;
 
     /// <summary>角色集合</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIDs().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Cast<IRole>().ToArray()) ?? [];
+    public virtual IRole[] Roles => Extends.Get(nameof(Roles), k => GetRoleIds().Select(e => ManageProvider.Get<IRole>()?.FindByID(e)).Where(e => e != null).Cast<IRole>().ToArray()) ?? [];
 
     /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>
     /// <returns></returns>
-    public virtual Int32[] GetRoleIDs()
+
+    /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>
+    /// <returns></returns>
+    public virtual Int32[] GetRoleIds()
     {
         var ids = RoleIds.SplitAsInt().OrderBy(e => e).ToList();
         if (RoleId > 0) ids.Insert(0, RoleId);

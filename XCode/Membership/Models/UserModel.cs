@@ -15,7 +15,7 @@ public partial class UserModel : IModel
 {
     #region 属性
     /// <summary>编号</summary>
-    public Int32 ID { get; set; }
+    public Int32 Id { get; set; }
 
     /// <summary>名称。登录用户名</summary>
     public String Name { get; set; } = null!;
@@ -51,13 +51,13 @@ public partial class UserModel : IModel
     public String? Avatar { get; set; }
 
     /// <summary>角色。主要角色</summary>
-    public Int32 RoleID { get; set; }
+    public Int32 RoleId { get; set; }
 
     /// <summary>角色组。次要角色集合</summary>
     public String? RoleIds { get; set; }
 
     /// <summary>部门。组织机构</summary>
-    public Int32 DepartmentID { get; set; }
+    public Int32 DepartmentId { get; set; }
 
     /// <summary>在线</summary>
     public Boolean Online { get; set; }
@@ -122,7 +122,7 @@ public partial class UserModel : IModel
         {
             return name switch
             {
-                "ID" => ID,
+                "Id" => Id,
                 "Name" => Name,
                 "Password" => Password,
                 "DisplayName" => DisplayName,
@@ -134,9 +134,9 @@ public partial class UserModel : IModel
                 "Code" => Code,
                 "AreaId" => AreaId,
                 "Avatar" => Avatar,
-                "RoleID" => RoleID,
+                "RoleId" => RoleId,
                 "RoleIds" => RoleIds,
-                "DepartmentID" => DepartmentID,
+                "DepartmentId" => DepartmentId,
                 "Online" => Online,
                 "Enable" => Enable,
                 "Age" => Age,
@@ -161,7 +161,7 @@ public partial class UserModel : IModel
         {
             switch (name)
             {
-                case "ID": ID = value.ToInt(); break;
+                case "Id": Id = value.ToInt(); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "Password": Password = Convert.ToString(value); break;
                 case "DisplayName": DisplayName = Convert.ToString(value); break;
@@ -173,9 +173,9 @@ public partial class UserModel : IModel
                 case "Code": Code = Convert.ToString(value); break;
                 case "AreaId": AreaId = value.ToInt(); break;
                 case "Avatar": Avatar = Convert.ToString(value); break;
-                case "RoleID": RoleID = value.ToInt(); break;
+                case "RoleId": RoleId = value.ToInt(); break;
                 case "RoleIds": RoleIds = Convert.ToString(value); break;
-                case "DepartmentID": DepartmentID = value.ToInt(); break;
+                case "DepartmentId": DepartmentId = value.ToInt(); break;
                 case "Online": Online = value.ToBoolean(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "Age": Age = value.ToInt(); break;
@@ -204,7 +204,7 @@ public partial class UserModel : IModel
     /// <param name="model">模型</param>
     public void Copy(IUser model)
     {
-        ID = model.ID;
+        Id = model.Id;
         Name = model.Name;
         Password = model.Password;
         DisplayName = model.DisplayName;
@@ -216,9 +216,9 @@ public partial class UserModel : IModel
         Code = model.Code;
         AreaId = model.AreaId;
         Avatar = model.Avatar;
-        RoleID = model.RoleID;
+        RoleId = model.RoleId;
         RoleIds = model.RoleIds;
-        DepartmentID = model.DepartmentID;
+        DepartmentId = model.DepartmentId;
         Online = model.Online;
         Enable = model.Enable;
         Age = model.Age;

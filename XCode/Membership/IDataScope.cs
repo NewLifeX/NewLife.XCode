@@ -1,4 +1,4 @@
-﻿using XCode.Configuration;
+using XCode.Configuration;
 
 namespace XCode.Membership;
 

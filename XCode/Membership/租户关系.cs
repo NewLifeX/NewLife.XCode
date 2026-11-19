@@ -218,26 +218,26 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
 
     /// <summary>用户</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public User? User => Extends.Get(nameof(User), k => User.FindByID(UserId));
+    public User? User => Extends.Get(nameof(User), k => User.FindById(UserId));
 
     /// <summary>用户</summary>
-    [Map(nameof(UserId), typeof(User), "ID")]
+    [Map(nameof(UserId), typeof(User), "Id")]
     public String? UserName => User?.ToString();
 
     /// <summary>部门</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Department? Department => Extends.Get(nameof(Department), k => Department.FindByID(DepartmentId));
+    public Department? Department => Extends.Get(nameof(Department), k => Department.FindById(DepartmentId));
 
     /// <summary>部门</summary>
-    [Map(nameof(DepartmentId), typeof(Department), "ID")]
+    [Map(nameof(DepartmentId), typeof(Department), "Id")]
     public String? DepartmentName => Department?.Name;
 
     /// <summary>角色</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Role? Role => Extends.Get(nameof(Role), k => Role.FindByID(RoleId));
+    public Role? Role => Extends.Get(nameof(Role), k => Role.FindById(RoleId));
 
     /// <summary>角色</summary>
-    [Map(nameof(RoleId), typeof(Role), "ID")]
+    [Map(nameof(RoleId), typeof(Role), "Id")]
     public String? RoleName => Role?.Name;
 
     #endregion

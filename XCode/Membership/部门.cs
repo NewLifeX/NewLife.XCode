@@ -17,9 +17,9 @@ namespace XCode.Membership;
 [Serializable]
 [DataObject]
 [Description("部门。组织机构，多级树状结构，支持多租户")]
-[BindIndex("IX_Department_TenantId_ParentID_Name", false, "TenantId,ParentID,Name")]
+[BindIndex("IX_Department_TenantId_ParentId_Name", false, "TenantId,ParentId,Name")]
 [BindIndex("IX_Department_Name", false, "Name")]
-[BindIndex("IX_Department_ParentID_Name", false, "ParentID,Name")]
+[BindIndex("IX_Department_ParentId_Name", false, "ParentId,Name")]
 [BindIndex("IX_Department_Code", false, "Code")]
 [BindIndex("IX_Department_ManagerId", false, "ManagerId")]
 [BindIndex("IX_Department_UpdateTime", false, "UpdateTime")]
@@ -27,13 +27,13 @@ namespace XCode.Membership;
 public partial class Department : IDepartment, IEntity<IDepartment>
 {
     #region 属性
-    private Int32 _ID;
+    private Int32 _Id;
     /// <summary>编号</summary>
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private Int32 _TenantId;
     /// <summary>租户</summary>
@@ -75,13 +75,13 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     [BindColumn("FullName", "全名", "")]
     public String? FullName { get => _FullName; set { if (OnPropertyChanging("FullName", value)) { _FullName = value; OnPropertyChanged("FullName"); } } }
 
-    private Int32 _ParentID;
+    private Int32 _ParentId;
     /// <summary>父级</summary>
     [DisplayName("父级")]
     [Description("父级")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ParentID", "父级", "")]
-    public Int32 ParentID { get => _ParentID; set { if (OnPropertyChanging("ParentID", value)) { _ParentID = value; OnPropertyChanged("ParentID"); } } }
+    [BindColumn("ParentId", "父级", "")]
+    public Int32 ParentId { get => _ParentId; set { if (OnPropertyChanging("ParentId", value)) { _ParentId = value; OnPropertyChanged("ParentId"); } } }
 
     private Int32 _Level;
     /// <summary>层级。树状结构的层级</summary>
@@ -186,14 +186,14 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     [BindColumn("CreateUser", "创建者", "")]
     public String? CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
 
-    private Int32 _CreateUserID;
+    private Int32 _CreateUserId;
     /// <summary>创建用户</summary>
     [Category("扩展")]
     [DisplayName("创建用户")]
     [Description("创建用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建用户", "")]
-    public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
+    [BindColumn("CreateUserId", "创建用户", "")]
+    public Int32 CreateUserId { get => _CreateUserId; set { if (OnPropertyChanging("CreateUserId", value)) { _CreateUserId = value; OnPropertyChanged("CreateUserId"); } } }
 
     private String? _CreateIP;
     /// <summary>创建地址</summary>
@@ -222,14 +222,14 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     [BindColumn("UpdateUser", "更新者", "")]
     public String? UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
 
-    private Int32 _UpdateUserID;
+    private Int32 _UpdateUserId;
     /// <summary>更新用户</summary>
     [Category("扩展")]
     [DisplayName("更新用户")]
     [Description("更新用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("UpdateUserID", "更新用户", "")]
-    public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
+    [BindColumn("UpdateUserId", "更新用户", "")]
+    public Int32 UpdateUserId { get => _UpdateUserId; set { if (OnPropertyChanging("UpdateUserId", value)) { _UpdateUserId = value; OnPropertyChanged("UpdateUserId"); } } }
 
     private String? _UpdateIP;
     /// <summary>更新地址</summary>
@@ -264,13 +264,13 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <param name="model">模型</param>
     public void Copy(IDepartment model)
     {
-        ID = model.ID;
+        Id = model.Id;
         TenantId = model.TenantId;
         Type = model.Type;
         Code = model.Code;
         Name = model.Name;
         FullName = model.FullName;
-        ParentID = model.ParentID;
+        ParentId = model.ParentId;
         Level = model.Level;
         Sort = model.Sort;
         Enable = model.Enable;
@@ -283,11 +283,11 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
         CreateUser = model.CreateUser;
-        CreateUserID = model.CreateUserID;
+        CreateUserId = model.CreateUserId;
         CreateIP = model.CreateIP;
         CreateTime = model.CreateTime;
         UpdateUser = model.UpdateUser;
-        UpdateUserID = model.UpdateUserID;
+        UpdateUserId = model.UpdateUserId;
         UpdateIP = model.UpdateIP;
         UpdateTime = model.UpdateTime;
         Remark = model.Remark;
@@ -302,13 +302,13 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _Id,
             "TenantId" => _TenantId,
             "Type" => _Type,
             "Code" => _Code,
             "Name" => _Name,
             "FullName" => _FullName,
-            "ParentID" => _ParentID,
+            "ParentId" => _ParentId,
             "Level" => _Level,
             "Sort" => _Sort,
             "Enable" => _Enable,
@@ -321,11 +321,11 @@ public partial class Department : IDepartment, IEntity<IDepartment>
             "Ex5" => _Ex5,
             "Ex6" => _Ex6,
             "CreateUser" => _CreateUser,
-            "CreateUserID" => _CreateUserID,
+            "CreateUserId" => _CreateUserId,
             "CreateIP" => _CreateIP,
             "CreateTime" => _CreateTime,
             "UpdateUser" => _UpdateUser,
-            "UpdateUserID" => _UpdateUserID,
+            "UpdateUserId" => _UpdateUserId,
             "UpdateIP" => _UpdateIP,
             "UpdateTime" => _UpdateTime,
             "Remark" => _Remark,
@@ -335,13 +335,13 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
+                case "Id": _Id = value.ToInt(); break;
                 case "TenantId": _TenantId = value.ToInt(); break;
                 case "Type": _Type = (XCode.Membership.DepartmentTypes)value.ToInt(); break;
                 case "Code": _Code = Convert.ToString(value); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "FullName": _FullName = Convert.ToString(value); break;
-                case "ParentID": _ParentID = value.ToInt(); break;
+                case "ParentId": _ParentId = value.ToInt(); break;
                 case "Level": _Level = value.ToInt(); break;
                 case "Sort": _Sort = value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
@@ -354,11 +354,11 @@ public partial class Department : IDepartment, IEntity<IDepartment>
                 case "Ex5": _Ex5 = Convert.ToString(value); break;
                 case "Ex6": _Ex6 = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
+                case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
                 case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
@@ -379,10 +379,10 @@ public partial class Department : IDepartment, IEntity<IDepartment>
 
     /// <summary>管理者</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public User? Manager => Extends.Get(nameof(Manager), k => User.FindByID(ManagerId));
+    public User? Manager => Extends.Get(nameof(Manager), k => User.FindById(ManagerId));
 
     /// <summary>管理者</summary>
-    [Map(nameof(ManagerId), typeof(User), "ID")]
+    [Map(nameof(ManagerId), typeof(User), "Id")]
     public String? ManagerName => Manager?.ToString();
 
     #endregion
@@ -391,17 +391,17 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static Department? FindByID(Int32 id)
+    public static Department? FindById(Int32 id)
     {
         if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.ID == id);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Id == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
 
-        //return Find(_.ID == id);
+        //return Find(_.Id == id);
     }
 
     /// <summary>根据租户、父级、名称查找</summary>
@@ -409,16 +409,16 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <param name="parentId">父级</param>
     /// <param name="name">名称</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByTenantIdAndParentIDAndName(Int32 tenantId, Int32 parentId, String name)
+    public static IList<Department> FindAllByTenantIdAndParentIdAndName(Int32 tenantId, Int32 parentId, String name)
     {
         if (tenantId < 0) return [];
         if (parentId < 0) return [];
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentId == parentId && e.Name.EqualIgnoreCase(name));
 
-        return FindAll(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
+        return FindAll(_.TenantId == tenantId & _.ParentId == parentId & _.Name == name);
     }
 
     /// <summary>根据名称查找</summary>
@@ -438,15 +438,15 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     /// <param name="parentId">父级</param>
     /// <param name="name">名称</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByParentIDAndName(Int32 parentId, String name)
+    public static IList<Department> FindAllByParentIdAndName(Int32 parentId, String name)
     {
         if (parentId < 0) return [];
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ParentId == parentId && e.Name.EqualIgnoreCase(name));
 
-        return FindAll(_.ParentID == parentId & _.Name == name);
+        return FindAll(_.ParentId == parentId & _.Name == name);
     }
 
     /// <summary>根据代码查找</summary>
@@ -494,7 +494,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         var exp = new WhereExpression();
 
         if (tenantId >= 0) exp &= _.TenantId == tenantId;
-        if (parentId >= 0) exp &= _.ParentID == parentId;
+        if (parentId >= 0) exp &= _.ParentId == parentId;
         if (managerId >= 0) exp &= _.ManagerId == managerId;
         if (type >= 0) exp &= _.Type == type;
         if (visible != null) exp &= _.Visible == visible;
@@ -511,7 +511,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     public partial class _
     {
         /// <summary>编号</summary>
-        public static readonly Field ID = FindByName("ID");
+        public static readonly Field Id = FindByName("Id");
 
         /// <summary>租户</summary>
         public static readonly Field TenantId = FindByName("TenantId");
@@ -529,7 +529,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         public static readonly Field FullName = FindByName("FullName");
 
         /// <summary>父级</summary>
-        public static readonly Field ParentID = FindByName("ParentID");
+        public static readonly Field ParentId = FindByName("ParentId");
 
         /// <summary>层级。树状结构的层级</summary>
         public static readonly Field Level = FindByName("Level");
@@ -568,7 +568,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         public static readonly Field CreateUser = FindByName("CreateUser");
 
         /// <summary>创建用户</summary>
-        public static readonly Field CreateUserID = FindByName("CreateUserID");
+        public static readonly Field CreateUserId = FindByName("CreateUserId");
 
         /// <summary>创建地址</summary>
         public static readonly Field CreateIP = FindByName("CreateIP");
@@ -580,7 +580,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         public static readonly Field UpdateUser = FindByName("UpdateUser");
 
         /// <summary>更新用户</summary>
-        public static readonly Field UpdateUserID = FindByName("UpdateUserID");
+        public static readonly Field UpdateUserId = FindByName("UpdateUserId");
 
         /// <summary>更新地址</summary>
         public static readonly Field UpdateIP = FindByName("UpdateIP");
@@ -598,7 +598,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
     public partial class __
     {
         /// <summary>编号</summary>
-        public const String ID = "ID";
+        public const String Id = "Id";
 
         /// <summary>租户</summary>
         public const String TenantId = "TenantId";
@@ -616,7 +616,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         public const String FullName = "FullName";
 
         /// <summary>父级</summary>
-        public const String ParentID = "ParentID";
+        public const String ParentId = "ParentId";
 
         /// <summary>层级。树状结构的层级</summary>
         public const String Level = "Level";
@@ -655,7 +655,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         public const String CreateUser = "CreateUser";
 
         /// <summary>创建用户</summary>
-        public const String CreateUserID = "CreateUserID";
+        public const String CreateUserId = "CreateUserId";
 
         /// <summary>创建地址</summary>
         public const String CreateIP = "CreateIP";
@@ -667,7 +667,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         public const String UpdateUser = "UpdateUser";
 
         /// <summary>更新用户</summary>
-        public const String UpdateUserID = "UpdateUserID";
+        public const String UpdateUserId = "UpdateUserId";
 
         /// <summary>更新地址</summary>
         public const String UpdateIP = "UpdateIP";

@@ -15,7 +15,7 @@ public partial class LogModel : IModel
 {
     #region 属性
     /// <summary>编号</summary>
-    public Int64 ID { get; set; }
+    public Int64 Id { get; set; }
 
     /// <summary>类别</summary>
     public String? Category { get; set; }
@@ -24,7 +24,7 @@ public partial class LogModel : IModel
     public String Action { get; set; } = null!;
 
     /// <summary>链接</summary>
-    public Int64 LinkID { get; set; }
+    public Int64 LinkId { get; set; }
 
     /// <summary>成功</summary>
     public Boolean Success { get; set; }
@@ -57,7 +57,7 @@ public partial class LogModel : IModel
     public String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
-    public Int32 CreateUserID { get; set; }
+    public Int32 CreateUserId { get; set; }
 
     /// <summary>创建地址</summary>
     public String? CreateIP { get; set; }
@@ -79,10 +79,10 @@ public partial class LogModel : IModel
         {
             return name switch
             {
-                "ID" => ID,
+                "Id" => Id,
                 "Category" => Category,
                 "Action" => Action,
-                "LinkID" => LinkID,
+                "LinkId" => LinkId,
                 "Success" => Success,
                 "UserName" => UserName,
                 "Ex1" => Ex1,
@@ -93,7 +93,7 @@ public partial class LogModel : IModel
                 "Ex6" => Ex6,
                 "TraceId" => TraceId,
                 "CreateUser" => CreateUser,
-                "CreateUserID" => CreateUserID,
+                "CreateUserId" => CreateUserId,
                 "CreateIP" => CreateIP,
                 "CreateTime" => CreateTime,
                 "Remark" => Remark,
@@ -104,10 +104,10 @@ public partial class LogModel : IModel
         {
             switch (name)
             {
-                case "ID": ID = value.ToLong(); break;
+                case "Id": Id = value.ToLong(); break;
                 case "Category": Category = Convert.ToString(value); break;
                 case "Action": Action = Convert.ToString(value); break;
-                case "LinkID": LinkID = value.ToLong(); break;
+                case "LinkId": LinkId = value.ToLong(); break;
                 case "Success": Success = value.ToBoolean(); break;
                 case "UserName": UserName = Convert.ToString(value); break;
                 case "Ex1": Ex1 = value.ToInt(); break;
@@ -118,7 +118,7 @@ public partial class LogModel : IModel
                 case "Ex6": Ex6 = Convert.ToString(value); break;
                 case "TraceId": TraceId = Convert.ToString(value); break;
                 case "CreateUser": CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": CreateUserID = value.ToInt(); break;
+                case "CreateUserId": CreateUserId = value.ToInt(); break;
                 case "CreateIP": CreateIP = Convert.ToString(value); break;
                 case "CreateTime": CreateTime = value.ToDateTime(); break;
                 case "Remark": Remark = Convert.ToString(value); break;
@@ -133,10 +133,10 @@ public partial class LogModel : IModel
     /// <param name="model">模型</param>
     public void Copy(ILog model)
     {
-        ID = model.ID;
+        Id = model.Id;
         Category = model.Category;
         Action = model.Action;
-        LinkID = model.LinkID;
+        LinkId = model.LinkId;
         Success = model.Success;
         UserName = model.UserName;
         Ex1 = model.Ex1;
@@ -147,7 +147,7 @@ public partial class LogModel : IModel
         Ex6 = model.Ex6;
         TraceId = model.TraceId;
         CreateUser = model.CreateUser;
-        CreateUserID = model.CreateUserID;
+        CreateUserId = model.CreateUserId;
         CreateIP = model.CreateIP;
         CreateTime = model.CreateTime;
         Remark = model.Remark;

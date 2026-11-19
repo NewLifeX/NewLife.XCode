@@ -12,10 +12,10 @@ public partial interface IParameter
 {
     #region 属性
     /// <summary>编号</summary>
-    Int32 ID { get; set; }
+    Int32 Id { get; set; }
 
     /// <summary>用户。按用户区分参数，用户0表示系统级</summary>
-    Int32 UserID { get; set; }
+    Int32 UserId { get; set; }
 
     /// <summary>类别</summary>
     String? Category { get; set; }
@@ -57,7 +57,7 @@ public partial interface IParameter
     String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
-    Int32 CreateUserID { get; set; }
+    Int32 CreateUserId { get; set; }
 
     /// <summary>创建地址</summary>
     String? CreateIP { get; set; }
@@ -69,7 +69,7 @@ public partial interface IParameter
     String? UpdateUser { get; set; }
 
     /// <summary>更新用户</summary>
-    Int32 UpdateUserID { get; set; }
+    Int32 UpdateUserId { get; set; }
 
     /// <summary>更新地址</summary>
     String? UpdateIP { get; set; }

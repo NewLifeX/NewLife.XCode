@@ -17,28 +17,28 @@ namespace XCode.Membership;
 [Serializable]
 [DataObject]
 [Description("字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合")]
-[BindIndex("IU_Parameter_UserID_Category_Name", true, "UserID,Category,Name")]
+[BindIndex("IU_Parameter_UserId_Category_Name", true, "UserId,Category,Name")]
 [BindIndex("IX_Parameter_Category_Name", false, "Category,Name")]
 [BindIndex("IX_Parameter_UpdateTime", false, "UpdateTime")]
 [BindTable("Parameter", Description = "字典参数。管理用户或系统全局的名值对数据，常用于参数配置场合", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class Parameter : IParameter, IEntity<IParameter>
 {
     #region 属性
-    private Int32 _ID;
+    private Int32 _Id;
     /// <summary>编号</summary>
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
-    private Int32 _UserID;
+    private Int32 _UserId;
     /// <summary>用户。按用户区分参数，用户0表示系统级</summary>
     [DisplayName("用户")]
     [Description("用户。按用户区分参数，用户0表示系统级")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("UserID", "用户。按用户区分参数，用户0表示系统级", "")]
-    public Int32 UserID { get => _UserID; set { if (OnPropertyChanging("UserID", value)) { _UserID = value; OnPropertyChanged("UserID"); } } }
+    [BindColumn("UserId", "用户。按用户区分参数，用户0表示系统级", "")]
+    public Int32 UserId { get => _UserId; set { if (OnPropertyChanging("UserId", value)) { _UserId = value; OnPropertyChanged("UserId"); } } }
 
     private String? _Category;
     /// <summary>类别</summary>
@@ -151,14 +151,14 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     [BindColumn("CreateUser", "创建者", "")]
     public String? CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
 
-    private Int32 _CreateUserID;
+    private Int32 _CreateUserId;
     /// <summary>创建用户</summary>
     [Category("扩展")]
     [DisplayName("创建用户")]
     [Description("创建用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建用户", "")]
-    public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
+    [BindColumn("CreateUserId", "创建用户", "")]
+    public Int32 CreateUserId { get => _CreateUserId; set { if (OnPropertyChanging("CreateUserId", value)) { _CreateUserId = value; OnPropertyChanged("CreateUserId"); } } }
 
     private String? _CreateIP;
     /// <summary>创建地址</summary>
@@ -187,14 +187,14 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     [BindColumn("UpdateUser", "更新者", "")]
     public String? UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
 
-    private Int32 _UpdateUserID;
+    private Int32 _UpdateUserId;
     /// <summary>更新用户</summary>
     [Category("扩展")]
     [DisplayName("更新用户")]
     [Description("更新用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("UpdateUserID", "更新用户", "")]
-    public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
+    [BindColumn("UpdateUserId", "更新用户", "")]
+    public Int32 UpdateUserId { get => _UpdateUserId; set { if (OnPropertyChanging("UpdateUserId", value)) { _UpdateUserId = value; OnPropertyChanged("UpdateUserId"); } } }
 
     private String? _UpdateIP;
     /// <summary>更新地址</summary>
@@ -229,8 +229,8 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     /// <param name="model">模型</param>
     public void Copy(IParameter model)
     {
-        ID = model.ID;
-        UserID = model.UserID;
+        Id = model.Id;
+        UserId = model.UserId;
         Category = model.Category;
         Name = model.Name;
         Value = model.Value;
@@ -244,11 +244,11 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
         CreateUser = model.CreateUser;
-        CreateUserID = model.CreateUserID;
+        CreateUserId = model.CreateUserId;
         CreateIP = model.CreateIP;
         CreateTime = model.CreateTime;
         UpdateUser = model.UpdateUser;
-        UpdateUserID = model.UpdateUserID;
+        UpdateUserId = model.UpdateUserId;
         UpdateIP = model.UpdateIP;
         UpdateTime = model.UpdateTime;
         Remark = model.Remark;
@@ -263,8 +263,8 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     {
         get => name switch
         {
-            "ID" => _ID,
-            "UserID" => _UserID,
+            "Id" => _Id,
+            "UserId" => _UserId,
             "Category" => _Category,
             "Name" => _Name,
             "Value" => _Value,
@@ -278,11 +278,11 @@ public partial class Parameter : IParameter, IEntity<IParameter>
             "Ex5" => _Ex5,
             "Ex6" => _Ex6,
             "CreateUser" => _CreateUser,
-            "CreateUserID" => _CreateUserID,
+            "CreateUserId" => _CreateUserId,
             "CreateIP" => _CreateIP,
             "CreateTime" => _CreateTime,
             "UpdateUser" => _UpdateUser,
-            "UpdateUserID" => _UpdateUserID,
+            "UpdateUserId" => _UpdateUserId,
             "UpdateIP" => _UpdateIP,
             "UpdateTime" => _UpdateTime,
             "Remark" => _Remark,
@@ -292,8 +292,8 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
-                case "UserID": _UserID = value.ToInt(); break;
+                case "Id": _Id = value.ToInt(); break;
+                case "UserId": _UserId = value.ToInt(); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Value": _Value = Convert.ToString(value); break;
@@ -307,11 +307,11 @@ public partial class Parameter : IParameter, IEntity<IParameter>
                 case "Ex5": _Ex5 = Convert.ToString(value); break;
                 case "Ex6": _Ex6 = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
+                case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
                 case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
@@ -324,45 +324,74 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     #region 关联映射
     /// <summary>用户</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public User? User => Extends.Get(nameof(User), k => User.FindByID(UserID));
+    public User? User => Extends.Get(nameof(User), k => User.FindById(UserId));
 
     /// <summary>用户</summary>
-    [Map(nameof(UserID), typeof(User), "ID")]
+    [Map(nameof(UserId), typeof(User), "Id")]
     public String? UserName => User?.ToString();
 
     #endregion
 
     #region 扩展查询
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static Parameter? FindById(Int32 id)
+    {
+        if (id < 0) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
+
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.Id == id);
+    }
+
     /// <summary>根据用户、类别、名称查找</summary>
     /// <param name="userId">用户</param>
     /// <param name="category">类别</param>
     /// <param name="name">名称</param>
     /// <returns>实体对象</returns>
-    public static Parameter? FindByUserIDAndCategoryAndName(Int32 userId, String? category, String name)
+    public static Parameter? FindByUserIdAndCategoryAndName(Int32 userId, String? category, String name)
     {
         if (userId < 0) return null;
         if (category == null) return null;
         if (name.IsNullOrEmpty()) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserID == userId && e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserId == userId && e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));
 
-        return Find(_.UserID == userId & _.Category == category & _.Name == name);
+        return Find(_.UserId == userId & _.Category == category & _.Name == name);
+    }
+
+    /// <summary>根据用户查找</summary>
+    /// <param name="userId">用户</param>
+    /// <returns>实体列表</returns>
+    public static IList<Parameter> FindAllByUserId(Int32 userId)
+    {
+        if (userId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserId == userId);
+
+        return FindAll(_.UserId == userId);
     }
 
     /// <summary>根据用户、类别查找</summary>
     /// <param name="userId">用户</param>
     /// <param name="category">类别</param>
     /// <returns>实体列表</returns>
-    public static IList<Parameter> FindAllByUserIDAndCategory(Int32 userId, String? category)
+    public static IList<Parameter> FindAllByUserIdAndCategory(Int32 userId, String? category)
     {
         if (userId < 0) return [];
         if (category == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserID == userId && e.Category.EqualIgnoreCase(category));
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserId == userId && e.Category.EqualIgnoreCase(category));
 
-        return FindAll(_.UserID == userId & _.Category == category);
+        return FindAll(_.UserId == userId & _.Category == category);
     }
 
     /// <summary>根据类别、名称查找</summary>
@@ -396,7 +425,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     {
         var exp = new WhereExpression();
 
-        if (userId >= 0) exp &= _.UserID == userId;
+        if (userId >= 0) exp &= _.UserId == userId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (kind >= 0) exp &= _.Kind == kind;
         if (enable != null) exp &= _.Enable == enable;
@@ -412,10 +441,10 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     public partial class _
     {
         /// <summary>编号</summary>
-        public static readonly Field ID = FindByName("ID");
+        public static readonly Field Id = FindByName("Id");
 
         /// <summary>用户。按用户区分参数，用户0表示系统级</summary>
-        public static readonly Field UserID = FindByName("UserID");
+        public static readonly Field UserId = FindByName("UserId");
 
         /// <summary>类别</summary>
         public static readonly Field Category = FindByName("Category");
@@ -457,7 +486,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         public static readonly Field CreateUser = FindByName("CreateUser");
 
         /// <summary>创建用户</summary>
-        public static readonly Field CreateUserID = FindByName("CreateUserID");
+        public static readonly Field CreateUserId = FindByName("CreateUserId");
 
         /// <summary>创建地址</summary>
         public static readonly Field CreateIP = FindByName("CreateIP");
@@ -469,7 +498,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         public static readonly Field UpdateUser = FindByName("UpdateUser");
 
         /// <summary>更新用户</summary>
-        public static readonly Field UpdateUserID = FindByName("UpdateUserID");
+        public static readonly Field UpdateUserId = FindByName("UpdateUserId");
 
         /// <summary>更新地址</summary>
         public static readonly Field UpdateIP = FindByName("UpdateIP");
@@ -487,10 +516,10 @@ public partial class Parameter : IParameter, IEntity<IParameter>
     public partial class __
     {
         /// <summary>编号</summary>
-        public const String ID = "ID";
+        public const String Id = "Id";
 
         /// <summary>用户。按用户区分参数，用户0表示系统级</summary>
-        public const String UserID = "UserID";
+        public const String UserId = "UserId";
 
         /// <summary>类别</summary>
         public const String Category = "Category";
@@ -532,7 +561,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         public const String CreateUser = "CreateUser";
 
         /// <summary>创建用户</summary>
-        public const String CreateUserID = "CreateUserID";
+        public const String CreateUserId = "CreateUserId";
 
         /// <summary>创建地址</summary>
         public const String CreateIP = "CreateIP";
@@ -544,7 +573,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         public const String UpdateUser = "UpdateUser";
 
         /// <summary>更新用户</summary>
-        public const String UpdateUserID = "UpdateUserID";
+        public const String UpdateUserId = "UpdateUserId";
 
         /// <summary>更新地址</summary>
         public const String UpdateIP = "UpdateIP";

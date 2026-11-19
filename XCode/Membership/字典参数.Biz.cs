@@ -1,8 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Reflection;
 using XCode;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 
 namespace XCode.Membership;
 
@@ -10,6 +13,7 @@ namespace XCode.Membership;
 [ModelCheckMode(ModelCheckModes.CheckTableWhenFirstUse)]
 public partial class Parameter : Entity<Parameter>
 {
+
     #region 对象操作
     static Parameter()
     {
@@ -27,60 +31,33 @@ public partial class Parameter : Entity<Parameter>
     #region 扩展属性
     ///// <summary>用户</summary>
     //[XmlIgnore, IgnoreDataMember]
-    //public IManageUser User => Extends.Get(nameof(User), k => Membership.User.FindByID(UserID));
+    //public IManageUser User => Extends.Get(nameof(User), k => Membership.User.FindByID(UserId));
 
     ///// <summary>用户名</summary>
-    //[Map(nameof(UserID))]
-    //public String UserName => UserID == 0 ? "全局" : (User + "");
+    //[Map(nameof(UserId))]
+    //public String UserName => UserId == 0 ? "全局" : (User + "");
     #endregion
 
     #region 扩展查询
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static Parameter? FindByID(Int32 id)
-    {
-        if (id <= 0) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
-
-        // 单对象缓存
-        //return Meta.SingleCache[id];
-
-        return Find(_.ID == id);
-    }
-
-    /// <summary>根据用户查找</summary>
-    /// <param name="userId">用户</param>
-    /// <returns>实体列表</returns>
-    public static IList<Parameter> FindAllByUserID(Int32 userId) =>
-        // 实体缓存
-        Meta.Session.Count < 1000 ? Meta.Cache.FindAll(e => e.UserID == userId) : FindAll(_.UserID == userId);
-
-    /// <summary>根据用户查找</summary>
-    /// <param name="userId">用户</param>
-    /// <param name="category">分类</param>
-    /// <returns>实体列表</returns>
-    public static IList<Parameter> FindAllByUserID(Int32 userId, String? category)
-    {
-        // 实体缓存
-        return Meta.Session.Count < 1000
-            ? Meta.Cache.FindAll(e => e.UserID == userId && e.Category == category)
-            : FindAll(_.UserID == userId & _.Category == category);
-    }
 
     /// <summary>根据分类查找。直接查库，不走实体缓存，用于集群配置同步等需要最新写入时间的场景</summary>
     /// <param name="category">分类</param>
     /// <param name="userId">用户。默认0表示全局</param>
     /// <returns>实体列表</returns>
     public static IList<Parameter> FindAllByCategory(String category, Int32 userId = 0) =>
-        FindAll(_.UserID == userId & _.Category == category);
+        FindAll(_.UserId == userId & _.Category == category);
 
     /// <summary>根据编号删除参数</summary>
     /// <param name="id">编号</param>
     /// <returns>影响行数</returns>
-    public static Int32 DeleteByID(Int32 id) => Delete(_.ID == id);
+
+    /// <summary>根据编号删除</summary>
+    /// <param name="id">编号</param>
+    /// <returns></returns>
+    public static Int32 DeleteById(Int32 id) => Delete(_.Id == id);
 
     /// <summary>根据分类统计参数数量</summary>
     /// <param name="category">分类</param>
@@ -90,12 +67,20 @@ public partial class Parameter : Entity<Parameter>
     /// <summary>根据用户删除参数</summary>
     /// <param name="userId">用户</param>
     /// <returns>影响行数</returns>
-    public static Int32 DeleteByUserID(Int32 userId) => Delete(_.UserID == userId);
+
+    /// <summary>根据用户删除</summary>
+    /// <param name="userId">用户</param>
+    /// <returns></returns>
+    public static Int32 DeleteByUserId(Int32 userId) => Delete(_.UserId == userId);
 
     /// <summary>根据用户统计参数数量</summary>
     /// <param name="userId">用户</param>
     /// <returns>参数数量</returns>
-    public static Int64 FindCountByUserID(Int32 userId) => FindCount(_.UserID == userId);
+
+    /// <summary>根据用户统计数量</summary>
+    /// <param name="userId">用户</param>
+    /// <returns></returns>
+    public static Int64 FindCountByUserId(Int32 userId) => FindCount(_.UserId == userId);
     #endregion
 
     #region 高级查询
@@ -110,7 +95,7 @@ public partial class Parameter : Entity<Parameter>
     {
         var exp = new WhereExpression();
 
-        if (userId >= 0) exp &= _.UserID == userId;
+        if (userId >= 0) exp &= _.UserId == userId;
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (enable != null) exp &= _.Enable == enable.Value;
         if (!key.IsNullOrEmpty()) exp &= _.Name == key | _.Value.Contains(key);
@@ -126,11 +111,11 @@ public partial class Parameter : Entity<Parameter>
     /// <returns></returns>
     public static Parameter GetOrAdd(Int32 userId, String category, String name, String? defaultValue = null)
     {
-        var list = FindAllByUserID(userId);
+        var list = FindAllByUserId(userId);
         var p = list.FirstOrDefault(e => e.Category == category && e.Name == name);
         if (p == null)
         {
-            p = new Parameter { UserID = userId, Category = category, Name = name, Enable = true, Value = defaultValue };
+            p = new Parameter { UserId = userId, Category = category, Name = name, Enable = true, Value = defaultValue };
 
             try
             {
@@ -138,7 +123,7 @@ public partial class Parameter : Entity<Parameter>
             }
             catch
             {
-                var p2 = Find(_.UserID == userId & _.Category == category & _.Name == name);
+                var p2 = Find(_.UserId == userId & _.Category == category & _.Name == name);
                 if (p2 != null) return p2;
             }
         }

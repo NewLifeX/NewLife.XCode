@@ -17,20 +17,20 @@ namespace XCode.Membership;
 [Serializable]
 [DataObject]
 [Description("日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除")]
-[BindIndex("IX_Log_Action_Category_ID", false, "Action,Category,ID")]
-[BindIndex("IX_Log_Category_LinkID_ID", false, "Category,LinkID,ID")]
-[BindIndex("IX_Log_CreateUserID_ID", false, "CreateUserID,ID")]
+[BindIndex("IX_Log_Action_Category_Id", false, "Action,Category,Id")]
+[BindIndex("IX_Log_Category_LinkId_Id", false, "Category,LinkId,Id")]
+[BindIndex("IX_Log_CreateUserId_Id", false, "CreateUserId,Id")]
 [BindTable("Log", Description = "日志。应用系统审计日志，记录用户的各种操作，禁止修改和删除", ConnName = "Log", DbType = DatabaseType.None)]
 public partial class Log : ILog, IEntity<ILog>
 {
     #region 属性
-    private Int64 _ID;
+    private Int64 _Id;
     /// <summary>编号</summary>
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, false, false, 0)]
-    [BindColumn("ID", "编号", "", DataScale = "time")]
-    public Int64 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "", DataScale = "time")]
+    public Int64 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private String? _Category;
     /// <summary>类别</summary>
@@ -48,13 +48,13 @@ public partial class Log : ILog, IEntity<ILog>
     [BindColumn("Action", "操作", "")]
     public String Action { get => _Action; set { if (OnPropertyChanging("Action", value)) { _Action = value; OnPropertyChanged("Action"); } } }
 
-    private Int64 _LinkID;
+    private Int64 _LinkId;
     /// <summary>链接</summary>
     [DisplayName("链接")]
     [Description("链接")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("LinkID", "链接", "")]
-    public Int64 LinkID { get => _LinkID; set { if (OnPropertyChanging("LinkID", value)) { _LinkID = value; OnPropertyChanged("LinkID"); } } }
+    [BindColumn("LinkId", "链接", "")]
+    public Int64 LinkId { get => _LinkId; set { if (OnPropertyChanging("LinkId", value)) { _LinkId = value; OnPropertyChanged("LinkId"); } } }
 
     private Boolean _Success;
     /// <summary>成功</summary>
@@ -143,14 +143,14 @@ public partial class Log : ILog, IEntity<ILog>
     [BindColumn("CreateUser", "创建者", "")]
     public String? CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
 
-    private Int32 _CreateUserID;
+    private Int32 _CreateUserId;
     /// <summary>创建用户</summary>
     [Category("扩展")]
     [DisplayName("创建用户")]
     [Description("创建用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建用户", "", ShowIn = "Auto,-Search")]
-    public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
+    [BindColumn("CreateUserId", "创建用户", "", ShowIn = "Auto,-Search")]
+    public Int32 CreateUserId { get => _CreateUserId; set { if (OnPropertyChanging("CreateUserId", value)) { _CreateUserId = value; OnPropertyChanged("CreateUserId"); } } }
 
     private String? _CreateIP;
     /// <summary>创建地址</summary>
@@ -183,10 +183,10 @@ public partial class Log : ILog, IEntity<ILog>
     /// <param name="model">模型</param>
     public void Copy(ILog model)
     {
-        ID = model.ID;
+        Id = model.Id;
         Category = model.Category;
         Action = model.Action;
-        LinkID = model.LinkID;
+        LinkId = model.LinkId;
         Success = model.Success;
         UserName = model.UserName;
         Ex1 = model.Ex1;
@@ -197,7 +197,7 @@ public partial class Log : ILog, IEntity<ILog>
         Ex6 = model.Ex6;
         TraceId = model.TraceId;
         CreateUser = model.CreateUser;
-        CreateUserID = model.CreateUserID;
+        CreateUserId = model.CreateUserId;
         CreateIP = model.CreateIP;
         CreateTime = model.CreateTime;
         Remark = model.Remark;
@@ -212,10 +212,10 @@ public partial class Log : ILog, IEntity<ILog>
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _Id,
             "Category" => _Category,
             "Action" => _Action,
-            "LinkID" => _LinkID,
+            "LinkId" => _LinkId,
             "Success" => _Success,
             "UserName" => _UserName,
             "Ex1" => _Ex1,
@@ -226,7 +226,7 @@ public partial class Log : ILog, IEntity<ILog>
             "Ex6" => _Ex6,
             "TraceId" => _TraceId,
             "CreateUser" => _CreateUser,
-            "CreateUserID" => _CreateUserID,
+            "CreateUserId" => _CreateUserId,
             "CreateIP" => _CreateIP,
             "CreateTime" => _CreateTime,
             "Remark" => _Remark,
@@ -236,10 +236,10 @@ public partial class Log : ILog, IEntity<ILog>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToLong(); break;
+                case "Id": _Id = value.ToLong(); break;
                 case "Category": _Category = Convert.ToString(value); break;
                 case "Action": _Action = Convert.ToString(value); break;
-                case "LinkID": _LinkID = value.ToLong(); break;
+                case "LinkId": _LinkId = value.ToLong(); break;
                 case "Success": _Success = value.ToBoolean(); break;
                 case "UserName": _UserName = Convert.ToString(value); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
@@ -250,7 +250,7 @@ public partial class Log : ILog, IEntity<ILog>
                 case "Ex6": _Ex6 = Convert.ToString(value); break;
                 case "TraceId": _TraceId = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
@@ -263,16 +263,26 @@ public partial class Log : ILog, IEntity<ILog>
     #region 关联映射
     /// <summary>创建用户</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public User? MyCreateUser => Extends.Get(nameof(MyCreateUser), k => User.FindByID(CreateUserID));
+    public User? MyCreateUser => Extends.Get(nameof(MyCreateUser), k => User.FindById(CreateUserId));
 
     /// <summary>创建用户</summary>
-    [Map(nameof(CreateUserID), typeof(User), "ID")]
+    [Map(nameof(CreateUserId), typeof(User), "Id")]
     [Category("扩展")]
     public String? CreateUserName => MyCreateUser?.ToString();
 
     #endregion
 
     #region 扩展查询
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static Log? FindById(Int64 id)
+    {
+        if (id < 0) return null;
+
+        return Find(_.Id == id);
+    }
+
     /// <summary>根据操作、类别查找</summary>
     /// <param name="action">操作</param>
     /// <param name="category">类别</param>
@@ -289,12 +299,22 @@ public partial class Log : ILog, IEntity<ILog>
     /// <param name="category">类别</param>
     /// <param name="linkId">链接</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCategoryAndLinkID(String? category, Int64 linkId)
+    public static IList<Log> FindAllByCategoryAndLinkId(String? category, Int64 linkId)
     {
         if (category == null) return [];
         if (linkId < 0) return [];
 
-        return FindAll(_.Category == category & _.LinkID == linkId);
+        return FindAll(_.Category == category & _.LinkId == linkId);
+    }
+
+    /// <summary>根据创建用户查找</summary>
+    /// <param name="createUserId">创建用户</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByCreateUserId(Int32 createUserId)
+    {
+        if (createUserId < 0) return [];
+
+        return FindAll(_.CreateUserId == createUserId);
     }
     #endregion
 
@@ -315,9 +335,9 @@ public partial class Log : ILog, IEntity<ILog>
 
         if (!category.IsNullOrEmpty()) exp &= _.Category == category;
         if (!action.IsNullOrEmpty()) exp &= _.Action == action;
-        if (linkId >= 0) exp &= _.LinkID == linkId;
+        if (linkId >= 0) exp &= _.LinkId == linkId;
         if (success != null) exp &= _.Success == success;
-        exp &= _.ID.Between(start, end, Meta.Factory.Snow);
+        exp &= _.Id.Between(start, end, Meta.Factory.Snow);
         if (!key.IsNullOrEmpty()) exp &= SearchWhereByKeys(key);
 
         return FindAll(exp, page);
@@ -332,7 +352,7 @@ public partial class Log : ILog, IEntity<ILog>
     /// <returns>清理行数</returns>
     public static Int32 DeleteWith(DateTime start, DateTime end, Int32 maximumRows = 0)
     {
-        return Delete(_.ID.Between(start, end, Meta.Factory.Snow), maximumRows);
+        return Delete(_.Id.Between(start, end, Meta.Factory.Snow), maximumRows);
     }
     #endregion
 
@@ -341,7 +361,7 @@ public partial class Log : ILog, IEntity<ILog>
     public partial class _
     {
         /// <summary>编号</summary>
-        public static readonly Field ID = FindByName("ID");
+        public static readonly Field Id = FindByName("Id");
 
         /// <summary>类别</summary>
         public static readonly Field Category = FindByName("Category");
@@ -350,7 +370,7 @@ public partial class Log : ILog, IEntity<ILog>
         public static readonly Field Action = FindByName("Action");
 
         /// <summary>链接</summary>
-        public static readonly Field LinkID = FindByName("LinkID");
+        public static readonly Field LinkId = FindByName("LinkId");
 
         /// <summary>成功</summary>
         public static readonly Field Success = FindByName("Success");
@@ -383,7 +403,7 @@ public partial class Log : ILog, IEntity<ILog>
         public static readonly Field CreateUser = FindByName("CreateUser");
 
         /// <summary>创建用户</summary>
-        public static readonly Field CreateUserID = FindByName("CreateUserID");
+        public static readonly Field CreateUserId = FindByName("CreateUserId");
 
         /// <summary>创建地址</summary>
         public static readonly Field CreateIP = FindByName("CreateIP");
@@ -401,7 +421,7 @@ public partial class Log : ILog, IEntity<ILog>
     public partial class __
     {
         /// <summary>编号</summary>
-        public const String ID = "ID";
+        public const String Id = "Id";
 
         /// <summary>类别</summary>
         public const String Category = "Category";
@@ -410,7 +430,7 @@ public partial class Log : ILog, IEntity<ILog>
         public const String Action = "Action";
 
         /// <summary>链接</summary>
-        public const String LinkID = "LinkID";
+        public const String LinkId = "LinkId";
 
         /// <summary>成功</summary>
         public const String Success = "Success";
@@ -443,7 +463,7 @@ public partial class Log : ILog, IEntity<ILog>
         public const String CreateUser = "CreateUser";
 
         /// <summary>创建用户</summary>
-        public const String CreateUserID = "CreateUserID";
+        public const String CreateUserId = "CreateUserId";
 
         /// <summary>创建地址</summary>
         public const String CreateIP = "CreateIP";

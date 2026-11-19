@@ -12,7 +12,7 @@ public partial interface IDepartment
 {
     #region 属性
     /// <summary>编号</summary>
-    Int32 ID { get; set; }
+    Int32 Id { get; set; }
 
     /// <summary>租户</summary>
     Int32 TenantId { get; set; }
@@ -30,7 +30,7 @@ public partial interface IDepartment
     String? FullName { get; set; }
 
     /// <summary>父级</summary>
-    Int32 ParentID { get; set; }
+    Int32 ParentId { get; set; }
 
     /// <summary>层级。树状结构的层级</summary>
     Int32 Level { get; set; }
@@ -69,7 +69,7 @@ public partial interface IDepartment
     String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
-    Int32 CreateUserID { get; set; }
+    Int32 CreateUserId { get; set; }
 
     /// <summary>创建地址</summary>
     String? CreateIP { get; set; }
@@ -81,7 +81,7 @@ public partial interface IDepartment
     String? UpdateUser { get; set; }
 
     /// <summary>更新用户</summary>
-    Int32 UpdateUserID { get; set; }
+    Int32 UpdateUserId { get; set; }
 
     /// <summary>更新地址</summary>
     String? UpdateIP { get; set; }

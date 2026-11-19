@@ -17,23 +17,23 @@ namespace XCode.Membership;
 [Serializable]
 [DataObject]
 [Description("地区。行政区划数据，最高支持四级地址，9位数字")]
-[BindIndex("IX_Area_ParentID", false, "ParentID")]
+[BindIndex("IX_Area_ParentId", false, "ParentId")]
 [BindIndex("IX_Area_Name", false, "Name")]
 [BindIndex("IX_Area_PinYin", false, "PinYin")]
 [BindIndex("IX_Area_JianPin", false, "JianPin")]
 [BindIndex("IX_Area_GeoHash", false, "GeoHash")]
-[BindIndex("IX_Area_UpdateTime_ID", false, "UpdateTime,ID")]
+[BindIndex("IX_Area_UpdateTime_Id", false, "UpdateTime,Id")]
 [BindTable("Area", Description = "地区。行政区划数据，最高支持四级地址，9位数字", ConnName = "Membership", DbType = DatabaseType.None)]
 public partial class Area : IArea, IEntity<IArea>
 {
     #region 属性
-    private Int32 _ID;
+    private Int32 _Id;
     /// <summary>编码。行政区划编码</summary>
     [DisplayName("编码")]
     [Description("编码。行政区划编码")]
     [DataObjectField(true, false, false, 0)]
-    [BindColumn("ID", "编码。行政区划编码", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编码。行政区划编码", "")]
+    public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private String _Name = null!;
     /// <summary>名称</summary>
@@ -51,13 +51,13 @@ public partial class Area : IArea, IEntity<IArea>
     [BindColumn("FullName", "全名", "", Master = true)]
     public String? FullName { get => _FullName; set { if (OnPropertyChanging("FullName", value)) { _FullName = value; OnPropertyChanged("FullName"); } } }
 
-    private Int32 _ParentID;
+    private Int32 _ParentId;
     /// <summary>父级</summary>
     [DisplayName("父级")]
     [Description("父级")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("ParentID", "父级", "")]
-    public Int32 ParentID { get => _ParentID; set { if (OnPropertyChanging("ParentID", value)) { _ParentID = value; OnPropertyChanged("ParentID"); } } }
+    [BindColumn("ParentId", "父级", "")]
+    public Int32 ParentId { get => _ParentId; set { if (OnPropertyChanging("ParentId", value)) { _ParentId = value; OnPropertyChanged("ParentId"); } } }
 
     private Int32 _Level;
     /// <summary>层级</summary>
@@ -180,10 +180,10 @@ public partial class Area : IArea, IEntity<IArea>
     /// <param name="model">模型</param>
     public void Copy(IArea model)
     {
-        ID = model.ID;
+        Id = model.Id;
         Name = model.Name;
         FullName = model.FullName;
-        ParentID = model.ParentID;
+        ParentId = model.ParentId;
         Level = model.Level;
         Kind = model.Kind;
         English = model.English;
@@ -209,10 +209,10 @@ public partial class Area : IArea, IEntity<IArea>
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _Id,
             "Name" => _Name,
             "FullName" => _FullName,
-            "ParentID" => _ParentID,
+            "ParentId" => _ParentId,
             "Level" => _Level,
             "Kind" => _Kind,
             "English" => _English,
@@ -233,10 +233,10 @@ public partial class Area : IArea, IEntity<IArea>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
+                case "Id": _Id = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "FullName": _FullName = Convert.ToString(value); break;
-                case "ParentID": _ParentID = value.ToInt(); break;
+                case "ParentId": _ParentId = value.ToInt(); break;
                 case "Level": _Level = value.ToInt(); break;
                 case "Kind": _Kind = Convert.ToString(value); break;
                 case "English": _English = Convert.ToString(value); break;
@@ -261,6 +261,35 @@ public partial class Area : IArea, IEntity<IArea>
     #endregion
 
     #region 扩展查询
+    /// <summary>根据编码查找</summary>
+    /// <param name="id">编码</param>
+    /// <returns>实体对象</returns>
+    public static Area? FindById(Int32 id)
+    {
+        if (id < 0) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Id == id);
+
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.Id == id);
+    }
+
+    /// <summary>根据父级查找</summary>
+    /// <param name="parentId">父级</param>
+    /// <returns>实体列表</returns>
+    public static IList<Area> FindAllByParentId(Int32 parentId)
+    {
+        if (parentId < 0) return [];
+
+        // 实体缓存
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ParentId == parentId);
+
+        return FindAll(_.ParentId == parentId);
+    }
+
     /// <summary>根据拼音查找</summary>
     /// <param name="pinYin">拼音</param>
     /// <returns>实体列表</returns>
@@ -317,7 +346,7 @@ public partial class Area : IArea, IEntity<IArea>
     {
         var exp = new WhereExpression();
 
-        if (parentId >= 0) exp &= _.ParentID == parentId;
+        if (parentId >= 0) exp &= _.ParentId == parentId;
         if (!pinYin.IsNullOrEmpty()) exp &= _.PinYin == pinYin;
         if (!jianPin.IsNullOrEmpty()) exp &= _.JianPin == jianPin;
         if (!geoHash.IsNullOrEmpty()) exp &= _.GeoHash == geoHash;
@@ -334,7 +363,7 @@ public partial class Area : IArea, IEntity<IArea>
     public partial class _
     {
         /// <summary>编码。行政区划编码</summary>
-        public static readonly Field ID = FindByName("ID");
+        public static readonly Field Id = FindByName("Id");
 
         /// <summary>名称</summary>
         public static readonly Field Name = FindByName("Name");
@@ -343,7 +372,7 @@ public partial class Area : IArea, IEntity<IArea>
         public static readonly Field FullName = FindByName("FullName");
 
         /// <summary>父级</summary>
-        public static readonly Field ParentID = FindByName("ParentID");
+        public static readonly Field ParentId = FindByName("ParentId");
 
         /// <summary>层级</summary>
         public static readonly Field Level = FindByName("Level");
@@ -394,7 +423,7 @@ public partial class Area : IArea, IEntity<IArea>
     public partial class __
     {
         /// <summary>编码。行政区划编码</summary>
-        public const String ID = "ID";
+        public const String Id = "Id";
 
         /// <summary>名称</summary>
         public const String Name = "Name";
@@ -403,7 +432,7 @@ public partial class Area : IArea, IEntity<IArea>
         public const String FullName = "FullName";
 
         /// <summary>父级</summary>
-        public const String ParentID = "ParentID";
+        public const String ParentId = "ParentId";
 
         /// <summary>层级</summary>
         public const String Level = "Level";

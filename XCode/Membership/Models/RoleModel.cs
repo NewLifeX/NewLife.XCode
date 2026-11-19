@@ -15,7 +15,7 @@ public partial class RoleModel : IModel
 {
     #region 属性
     /// <summary>编号</summary>
-    public Int32 ID { get; set; }
+    public Int32 Id { get; set; }
 
     /// <summary>名称</summary>
     public String Name { get; set; } = null!;
@@ -69,7 +69,7 @@ public partial class RoleModel : IModel
     public String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
-    public Int32 CreateUserID { get; set; }
+    public Int32 CreateUserId { get; set; }
 
     /// <summary>创建地址</summary>
     public String? CreateIP { get; set; }
@@ -81,7 +81,7 @@ public partial class RoleModel : IModel
     public String? UpdateUser { get; set; }
 
     /// <summary>更新用户</summary>
-    public Int32 UpdateUserID { get; set; }
+    public Int32 UpdateUserId { get; set; }
 
     /// <summary>更新地址</summary>
     public String? UpdateIP { get; set; }
@@ -103,7 +103,7 @@ public partial class RoleModel : IModel
         {
             return name switch
             {
-                "ID" => ID,
+                "Id" => Id,
                 "Name" => Name,
                 "Type" => Type,
                 "Enable" => Enable,
@@ -121,11 +121,11 @@ public partial class RoleModel : IModel
                 "Ex5" => Ex5,
                 "Ex6" => Ex6,
                 "CreateUser" => CreateUser,
-                "CreateUserID" => CreateUserID,
+                "CreateUserId" => CreateUserId,
                 "CreateIP" => CreateIP,
                 "CreateTime" => CreateTime,
                 "UpdateUser" => UpdateUser,
-                "UpdateUserID" => UpdateUserID,
+                "UpdateUserId" => UpdateUserId,
                 "UpdateIP" => UpdateIP,
                 "UpdateTime" => UpdateTime,
                 "Remark" => Remark,
@@ -136,7 +136,7 @@ public partial class RoleModel : IModel
         {
             switch (name)
             {
-                case "ID": ID = value.ToInt(); break;
+                case "Id": Id = value.ToInt(); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "Type": Type = (XCode.Membership.RoleTypes)value.ToInt(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
@@ -154,11 +154,11 @@ public partial class RoleModel : IModel
                 case "Ex5": Ex5 = Convert.ToString(value); break;
                 case "Ex6": Ex6 = Convert.ToString(value); break;
                 case "CreateUser": CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": CreateUserID = value.ToInt(); break;
+                case "CreateUserId": CreateUserId = value.ToInt(); break;
                 case "CreateIP": CreateIP = Convert.ToString(value); break;
                 case "CreateTime": CreateTime = value.ToDateTime(); break;
                 case "UpdateUser": UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": UpdateUserID = value.ToInt(); break;
+                case "UpdateUserId": UpdateUserId = value.ToInt(); break;
                 case "UpdateIP": UpdateIP = Convert.ToString(value); break;
                 case "UpdateTime": UpdateTime = value.ToDateTime(); break;
                 case "Remark": Remark = Convert.ToString(value); break;
@@ -173,7 +173,7 @@ public partial class RoleModel : IModel
     /// <param name="model">模型</param>
     public void Copy(IRole model)
     {
-        ID = model.ID;
+        Id = model.Id;
         Name = model.Name;
         Type = model.Type;
         Enable = model.Enable;
@@ -191,11 +191,11 @@ public partial class RoleModel : IModel
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
         CreateUser = model.CreateUser;
-        CreateUserID = model.CreateUserID;
+        CreateUserId = model.CreateUserId;
         CreateIP = model.CreateIP;
         CreateTime = model.CreateTime;
         UpdateUser = model.UpdateUser;
-        UpdateUserID = model.UpdateUserID;
+        UpdateUserId = model.UpdateUserId;
         UpdateIP = model.UpdateIP;
         UpdateTime = model.UpdateTime;
         Remark = model.Remark;

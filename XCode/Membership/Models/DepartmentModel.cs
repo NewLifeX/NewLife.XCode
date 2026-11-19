@@ -15,7 +15,7 @@ public partial class DepartmentModel : IModel
 {
     #region 属性
     /// <summary>编号</summary>
-    public Int32 ID { get; set; }
+    public Int32 Id { get; set; }
 
     /// <summary>租户</summary>
     public Int32 TenantId { get; set; }
@@ -33,7 +33,7 @@ public partial class DepartmentModel : IModel
     public String? FullName { get; set; }
 
     /// <summary>父级</summary>
-    public Int32 ParentID { get; set; }
+    public Int32 ParentId { get; set; }
 
     /// <summary>层级。树状结构的层级</summary>
     public Int32 Level { get; set; }
@@ -72,7 +72,7 @@ public partial class DepartmentModel : IModel
     public String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
-    public Int32 CreateUserID { get; set; }
+    public Int32 CreateUserId { get; set; }
 
     /// <summary>创建地址</summary>
     public String? CreateIP { get; set; }
@@ -84,7 +84,7 @@ public partial class DepartmentModel : IModel
     public String? UpdateUser { get; set; }
 
     /// <summary>更新用户</summary>
-    public Int32 UpdateUserID { get; set; }
+    public Int32 UpdateUserId { get; set; }
 
     /// <summary>更新地址</summary>
     public String? UpdateIP { get; set; }
@@ -106,13 +106,13 @@ public partial class DepartmentModel : IModel
         {
             return name switch
             {
-                "ID" => ID,
+                "Id" => Id,
                 "TenantId" => TenantId,
                 "Type" => Type,
                 "Code" => Code,
                 "Name" => Name,
                 "FullName" => FullName,
-                "ParentID" => ParentID,
+                "ParentId" => ParentId,
                 "Level" => Level,
                 "Sort" => Sort,
                 "Enable" => Enable,
@@ -125,11 +125,11 @@ public partial class DepartmentModel : IModel
                 "Ex5" => Ex5,
                 "Ex6" => Ex6,
                 "CreateUser" => CreateUser,
-                "CreateUserID" => CreateUserID,
+                "CreateUserId" => CreateUserId,
                 "CreateIP" => CreateIP,
                 "CreateTime" => CreateTime,
                 "UpdateUser" => UpdateUser,
-                "UpdateUserID" => UpdateUserID,
+                "UpdateUserId" => UpdateUserId,
                 "UpdateIP" => UpdateIP,
                 "UpdateTime" => UpdateTime,
                 "Remark" => Remark,
@@ -140,13 +140,13 @@ public partial class DepartmentModel : IModel
         {
             switch (name)
             {
-                case "ID": ID = value.ToInt(); break;
+                case "Id": Id = value.ToInt(); break;
                 case "TenantId": TenantId = value.ToInt(); break;
                 case "Type": Type = (XCode.Membership.DepartmentTypes)value.ToInt(); break;
                 case "Code": Code = Convert.ToString(value); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "FullName": FullName = Convert.ToString(value); break;
-                case "ParentID": ParentID = value.ToInt(); break;
+                case "ParentId": ParentId = value.ToInt(); break;
                 case "Level": Level = value.ToInt(); break;
                 case "Sort": Sort = value.ToInt(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
@@ -159,11 +159,11 @@ public partial class DepartmentModel : IModel
                 case "Ex5": Ex5 = Convert.ToString(value); break;
                 case "Ex6": Ex6 = Convert.ToString(value); break;
                 case "CreateUser": CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": CreateUserID = value.ToInt(); break;
+                case "CreateUserId": CreateUserId = value.ToInt(); break;
                 case "CreateIP": CreateIP = Convert.ToString(value); break;
                 case "CreateTime": CreateTime = value.ToDateTime(); break;
                 case "UpdateUser": UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": UpdateUserID = value.ToInt(); break;
+                case "UpdateUserId": UpdateUserId = value.ToInt(); break;
                 case "UpdateIP": UpdateIP = Convert.ToString(value); break;
                 case "UpdateTime": UpdateTime = value.ToDateTime(); break;
                 case "Remark": Remark = Convert.ToString(value); break;
@@ -178,13 +178,13 @@ public partial class DepartmentModel : IModel
     /// <param name="model">模型</param>
     public void Copy(IDepartment model)
     {
-        ID = model.ID;
+        Id = model.Id;
         TenantId = model.TenantId;
         Type = model.Type;
         Code = model.Code;
         Name = model.Name;
         FullName = model.FullName;
-        ParentID = model.ParentID;
+        ParentId = model.ParentId;
         Level = model.Level;
         Sort = model.Sort;
         Enable = model.Enable;
@@ -197,11 +197,11 @@ public partial class DepartmentModel : IModel
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
         CreateUser = model.CreateUser;
-        CreateUserID = model.CreateUserID;
+        CreateUserId = model.CreateUserId;
         CreateIP = model.CreateIP;
         CreateTime = model.CreateTime;
         UpdateUser = model.UpdateUser;
-        UpdateUserID = model.UpdateUserID;
+        UpdateUserId = model.UpdateUserId;
         UpdateIP = model.UpdateIP;
         UpdateTime = model.UpdateTime;
         Remark = model.Remark;

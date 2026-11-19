@@ -23,13 +23,13 @@ namespace XCode.Membership;
 public partial class Role : IRole, IEntity<IRole>
 {
     #region 属性
-    private Int32 _ID;
+    private Int32 _Id;
     /// <summary>编号</summary>
     [DisplayName("编号")]
     [Description("编号")]
     [DataObjectField(true, true, false, 0)]
-    [BindColumn("ID", "编号", "")]
-    public Int32 ID { get => _ID; set { if (OnPropertyChanging("ID", value)) { _ID = value; OnPropertyChanged("ID"); } } }
+    [BindColumn("Id", "编号", "")]
+    public Int32 Id { get => _Id; set { if (OnPropertyChanging("Id", value)) { _Id = value; OnPropertyChanged("Id"); } } }
 
     private String _Name = null!;
     /// <summary>名称</summary>
@@ -174,14 +174,14 @@ public partial class Role : IRole, IEntity<IRole>
     [BindColumn("CreateUser", "创建者", "")]
     public String? CreateUser { get => _CreateUser; set { if (OnPropertyChanging("CreateUser", value)) { _CreateUser = value; OnPropertyChanged("CreateUser"); } } }
 
-    private Int32 _CreateUserID;
+    private Int32 _CreateUserId;
     /// <summary>创建用户</summary>
     [Category("扩展")]
     [DisplayName("创建用户")]
     [Description("创建用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("CreateUserID", "创建用户", "")]
-    public Int32 CreateUserID { get => _CreateUserID; set { if (OnPropertyChanging("CreateUserID", value)) { _CreateUserID = value; OnPropertyChanged("CreateUserID"); } } }
+    [BindColumn("CreateUserId", "创建用户", "")]
+    public Int32 CreateUserId { get => _CreateUserId; set { if (OnPropertyChanging("CreateUserId", value)) { _CreateUserId = value; OnPropertyChanged("CreateUserId"); } } }
 
     private String? _CreateIP;
     /// <summary>创建地址</summary>
@@ -210,14 +210,14 @@ public partial class Role : IRole, IEntity<IRole>
     [BindColumn("UpdateUser", "更新者", "")]
     public String? UpdateUser { get => _UpdateUser; set { if (OnPropertyChanging("UpdateUser", value)) { _UpdateUser = value; OnPropertyChanged("UpdateUser"); } } }
 
-    private Int32 _UpdateUserID;
+    private Int32 _UpdateUserId;
     /// <summary>更新用户</summary>
     [Category("扩展")]
     [DisplayName("更新用户")]
     [Description("更新用户")]
     [DataObjectField(false, false, false, 0)]
-    [BindColumn("UpdateUserID", "更新用户", "")]
-    public Int32 UpdateUserID { get => _UpdateUserID; set { if (OnPropertyChanging("UpdateUserID", value)) { _UpdateUserID = value; OnPropertyChanged("UpdateUserID"); } } }
+    [BindColumn("UpdateUserId", "更新用户", "")]
+    public Int32 UpdateUserId { get => _UpdateUserId; set { if (OnPropertyChanging("UpdateUserId", value)) { _UpdateUserId = value; OnPropertyChanged("UpdateUserId"); } } }
 
     private String? _UpdateIP;
     /// <summary>更新地址</summary>
@@ -252,7 +252,7 @@ public partial class Role : IRole, IEntity<IRole>
     /// <param name="model">模型</param>
     public void Copy(IRole model)
     {
-        ID = model.ID;
+        Id = model.Id;
         Name = model.Name;
         Type = model.Type;
         Enable = model.Enable;
@@ -270,11 +270,11 @@ public partial class Role : IRole, IEntity<IRole>
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
         CreateUser = model.CreateUser;
-        CreateUserID = model.CreateUserID;
+        CreateUserId = model.CreateUserId;
         CreateIP = model.CreateIP;
         CreateTime = model.CreateTime;
         UpdateUser = model.UpdateUser;
-        UpdateUserID = model.UpdateUserID;
+        UpdateUserId = model.UpdateUserId;
         UpdateIP = model.UpdateIP;
         UpdateTime = model.UpdateTime;
         Remark = model.Remark;
@@ -289,7 +289,7 @@ public partial class Role : IRole, IEntity<IRole>
     {
         get => name switch
         {
-            "ID" => _ID,
+            "Id" => _Id,
             "Name" => _Name,
             "Type" => _Type,
             "Enable" => _Enable,
@@ -307,11 +307,11 @@ public partial class Role : IRole, IEntity<IRole>
             "Ex5" => _Ex5,
             "Ex6" => _Ex6,
             "CreateUser" => _CreateUser,
-            "CreateUserID" => _CreateUserID,
+            "CreateUserId" => _CreateUserId,
             "CreateIP" => _CreateIP,
             "CreateTime" => _CreateTime,
             "UpdateUser" => _UpdateUser,
-            "UpdateUserID" => _UpdateUserID,
+            "UpdateUserId" => _UpdateUserId,
             "UpdateIP" => _UpdateIP,
             "UpdateTime" => _UpdateTime,
             "Remark" => _Remark,
@@ -321,7 +321,7 @@ public partial class Role : IRole, IEntity<IRole>
         {
             switch (name)
             {
-                case "ID": _ID = value.ToInt(); break;
+                case "Id": _Id = value.ToInt(); break;
                 case "Name": _Name = Convert.ToString(value); break;
                 case "Type": _Type = (XCode.Membership.RoleTypes)value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
@@ -339,11 +339,11 @@ public partial class Role : IRole, IEntity<IRole>
                 case "Ex5": _Ex5 = Convert.ToString(value); break;
                 case "Ex6": _Ex6 = Convert.ToString(value); break;
                 case "CreateUser": _CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": _CreateUserID = value.ToInt(); break;
+                case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateIP": _CreateIP = Convert.ToString(value); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
+                case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
                 case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                 case "Remark": _Remark = Convert.ToString(value); break;
@@ -365,6 +365,22 @@ public partial class Role : IRole, IEntity<IRole>
     #endregion
 
     #region 扩展查询
+    /// <summary>根据编号查找</summary>
+    /// <param name="id">编号</param>
+    /// <returns>实体对象</returns>
+    public static Role? FindById(Int32 id)
+    {
+        if (id < 0) return null;
+
+        // 实体缓存
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
+
+        // 单对象缓存
+        return Meta.SingleCache[id];
+
+        //return Find(_.Id == id);
+    }
+
     /// <summary>根据名称查找</summary>
     /// <param name="name">名称</param>
     /// <returns>实体列表</returns>
@@ -429,7 +445,7 @@ public partial class Role : IRole, IEntity<IRole>
     public partial class _
     {
         /// <summary>编号</summary>
-        public static readonly Field ID = FindByName("ID");
+        public static readonly Field Id = FindByName("Id");
 
         /// <summary>名称</summary>
         public static readonly Field Name = FindByName("Name");
@@ -483,7 +499,7 @@ public partial class Role : IRole, IEntity<IRole>
         public static readonly Field CreateUser = FindByName("CreateUser");
 
         /// <summary>创建用户</summary>
-        public static readonly Field CreateUserID = FindByName("CreateUserID");
+        public static readonly Field CreateUserId = FindByName("CreateUserId");
 
         /// <summary>创建地址</summary>
         public static readonly Field CreateIP = FindByName("CreateIP");
@@ -495,7 +511,7 @@ public partial class Role : IRole, IEntity<IRole>
         public static readonly Field UpdateUser = FindByName("UpdateUser");
 
         /// <summary>更新用户</summary>
-        public static readonly Field UpdateUserID = FindByName("UpdateUserID");
+        public static readonly Field UpdateUserId = FindByName("UpdateUserId");
 
         /// <summary>更新地址</summary>
         public static readonly Field UpdateIP = FindByName("UpdateIP");
@@ -513,7 +529,7 @@ public partial class Role : IRole, IEntity<IRole>
     public partial class __
     {
         /// <summary>编号</summary>
-        public const String ID = "ID";
+        public const String Id = "Id";
 
         /// <summary>名称</summary>
         public const String Name = "Name";
@@ -567,7 +583,7 @@ public partial class Role : IRole, IEntity<IRole>
         public const String CreateUser = "CreateUser";
 
         /// <summary>创建用户</summary>
-        public const String CreateUserID = "CreateUserID";
+        public const String CreateUserId = "CreateUserId";
 
         /// <summary>创建地址</summary>
         public const String CreateIP = "CreateIP";
@@ -579,7 +595,7 @@ public partial class Role : IRole, IEntity<IRole>
         public const String UpdateUser = "UpdateUser";
 
         /// <summary>更新用户</summary>
-        public const String UpdateUserID = "UpdateUserID";
+        public const String UpdateUserId = "UpdateUserId";
 
         /// <summary>更新地址</summary>
         public const String UpdateIP = "UpdateIP";

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
@@ -11,6 +11,7 @@ namespace XCode.Membership;
 /// <summary>部门。组织机构，多级树状结构</summary>
 public partial class Department : Entity<Department>, ITenantScope, IDepartmentScope, IDataScopeFieldProvider
 {
+
     #region 对象操作
     private static Int32 MaxCacheCount = 10000;
 
@@ -21,7 +22,7 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
 
         // 累加字段
         //var df = Meta.Factory.AdditionalFields;
-        //df.Add(__.ParentID);
+        //df.Add(__.ParentId);
 
         // 过滤器 UserModule、TimeModule、IPModule
         Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
@@ -79,13 +80,13 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
         if (XTrace.Debug) XTrace.WriteLine("Initializing {0} data...", typeof(Department).Name);
 
         var root = Add("总公司", "001", 0);
-        Add("行政部", "011", root.ID);
-        Add("技术部", "012", root.ID);
-        Add("生产部", "013", root.ID);
+        Add("行政部", "011", root.Id);
+        Add("技术部", "012", root.Id);
+        Add("生产部", "013", root.Id);
 
         root = Add("上海分公司", "101", 0);
-        Add("行政部", "111", root.ID);
-        Add("市场部", "112", root.ID);
+        Add("行政部", "111", root.Id);
+        Add("市场部", "112", root.Id);
 
         if (XTrace.Debug) XTrace.WriteLine("Finished initializing {0} data!", typeof(Department).Name);
     }
@@ -101,7 +102,7 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
         {
             Name = name,
             Code = code,
-            ParentID = parentid,
+            ParentId = parentid,
             Enable = true,
             Visible = true,
         };
@@ -115,10 +116,10 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
     #region 扩展属性
     /// <summary>父级</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public Department? Parent => Extends.Get(nameof(Department), k => FindByID(ParentID));
+    public Department? Parent => Extends.Get(nameof(Department), k => FindById(ParentId));
 
     /// <summary>父级</summary>
-    [Map(__.ParentID, typeof(Department), __.ID)]
+    [Map(__.ParentId, typeof(Department), __.Id)]
     public String? ParentName => Parent?.ToString();
 
     /// <summary>父级路径</summary>
@@ -129,10 +130,10 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
             var list = new List<Department>();
             var ids = new List<Int32>();
             var p = Parent;
-            while (p != null && !ids.Contains(p.ID))
+            while (p != null && !ids.Contains(p.Id))
             {
                 list.Add(p);
-                ids.Add(p.ID);
+                ids.Add(p.Id);
 
                 p = p.Parent;
             }
@@ -157,7 +158,7 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
 
     /// <summary>下级部门</summary>
     [XmlIgnore, IgnoreDataMember, ScriptIgnore]
-    public IEnumerable<Department>? Childs => Extends.Get(nameof(Childs), k => FindAllByTenantIdAndParentId(TenantId, ID).OrderBy(e => e.ID));
+    public IEnumerable<Department>? Childs => Extends.Get(nameof(Childs), k => FindAllByTenantIdAndParentId(TenantId, Id).OrderBy(e => e.Id));
     #endregion
 
     #region 扩展查询
@@ -178,12 +179,17 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
     /// <param name="name">名称</param>
     /// <param name="parentid">父级</param>
     /// <returns>实体对象</returns>
-    public static Department? FindByNameAndParentID(String name, Int32 parentid)
+
+    /// <summary>根据名称和父级查找</summary>
+    /// <param name="name">名称</param>
+    /// <param name="parentid">父级</param>
+    /// <returns>实体对象</returns>
+    public static Department? FindByNameAndParentId(String name, Int32 parentid)
     {
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name == name && e.ParentID == parentid);
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Name == name && e.ParentId == parentid);
 
-        return Find(_.Name == name & _.ParentID == parentid);
+        return Find(_.Name == name & _.ParentId == parentid);
     }
 
     /// <summary>根据租户、父级、名称查找</summary>
@@ -198,9 +204,9 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
         if (name.IsNullOrEmpty()) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.ParentId == parentId && e.Name.EqualIgnoreCase(name));
 
-        return Find(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
+        return Find(_.TenantId == tenantId & _.ParentId == parentId & _.Name == name);
     }
 
     /// <summary>根据租户、父级查找</summary>
@@ -213,19 +219,23 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
         if (parentId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId);
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentId == parentId);
 
-        return FindAll(_.TenantId == tenantId & _.ParentID == parentId);
+        return FindAll(_.TenantId == tenantId & _.ParentId == parentId);
     }
 
     /// <summary>根据编号集合查找</summary>
     /// <param name="ids">编号集合</param>
     /// <returns>实体列表</returns>
-    public static IList<Department> FindAllByIDs(Int32[] ids)
+
+    /// <summary>根据编号列表查找部门</summary>
+    /// <param name="ids"></param>
+    /// <returns></returns>
+    public static IList<Department> FindAllByIds(Int32[] ids)
     {
         if (ids == null || ids.Length == 0) return [];
 
-        return FindAll(_.ID.In(ids));
+        return FindAll(_.Id.In(ids));
     }
 
     /// <summary>查找启用且可见的部门</summary>
@@ -244,7 +254,7 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
     public static IList<Department> Search(Int32 parentId, Boolean? enable, Boolean? visible, String key, PageParameter page)
     {
         var exp = new WhereExpression();
-        if (parentId >= 0) exp &= _.ParentID == parentId;
+        if (parentId >= 0) exp &= _.ParentId == parentId;
         if (enable != null) exp &= _.Enable == enable.Value;
         if (visible != null) exp &= _.Visible == visible.Value;
         if (!key.IsNullOrEmpty()) exp &= _.Code.Contains(key) | _.Name.Contains(key) | _.FullName.Contains(key);
@@ -267,7 +277,7 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
         var exp = new WhereExpression();
         if (tenantId >= 0) exp &= _.TenantId == tenantId;
         if (type >= 0) exp &= _.Type == type;
-        if (parentId >= 0) exp &= _.ParentID == parentId;
+        if (parentId >= 0) exp &= _.ParentId == parentId;
         if (managerId >= 0) exp &= _.ManagerId == managerId;
         if (enable != null) exp &= _.Enable == enable.Value;
         if (visible != null) exp &= _.Visible == visible.Value;
@@ -281,12 +291,13 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
     #endregion
 
     #region IDepartmentScope 成员
-    Int32 IDepartmentScope.DepartmentId { get => ID; set => ID = value; }
+    Int32 IDepartmentScope.DepartmentId { get => Id; set => Id = value; }
+
     #endregion
 
     #region IDataScopeFieldProvider 成员
     XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetUserField() => null;
-    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetDepartmentField() => _.ID;
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetDepartmentField() => _.Id;
     XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetTenantField() => _.TenantId;
     #endregion
 }

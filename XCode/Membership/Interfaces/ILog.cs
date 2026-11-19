@@ -12,7 +12,7 @@ public partial interface ILog
 {
     #region 属性
     /// <summary>编号</summary>
-    Int64 ID { get; set; }
+    Int64 Id { get; set; }
 
     /// <summary>类别</summary>
     String? Category { get; set; }
@@ -21,7 +21,7 @@ public partial interface ILog
     String Action { get; set; }
 
     /// <summary>链接</summary>
-    Int64 LinkID { get; set; }
+    Int64 LinkId { get; set; }
 
     /// <summary>成功</summary>
     Boolean Success { get; set; }
@@ -54,7 +54,7 @@ public partial interface ILog
     String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
-    Int32 CreateUserID { get; set; }
+    Int32 CreateUserId { get; set; }
 
     /// <summary>创建地址</summary>
     String? CreateIP { get; set; }

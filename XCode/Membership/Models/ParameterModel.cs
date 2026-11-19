@@ -15,10 +15,10 @@ public partial class ParameterModel : IModel
 {
     #region 属性
     /// <summary>编号</summary>
-    public Int32 ID { get; set; }
+    public Int32 Id { get; set; }
 
     /// <summary>用户。按用户区分参数，用户0表示系统级</summary>
-    public Int32 UserID { get; set; }
+    public Int32 UserId { get; set; }
 
     /// <summary>类别</summary>
     public String? Category { get; set; }
@@ -60,7 +60,7 @@ public partial class ParameterModel : IModel
     public String? CreateUser { get; set; }
 
     /// <summary>创建用户</summary>
-    public Int32 CreateUserID { get; set; }
+    public Int32 CreateUserId { get; set; }
 
     /// <summary>创建地址</summary>
     public String? CreateIP { get; set; }
@@ -72,7 +72,7 @@ public partial class ParameterModel : IModel
     public String? UpdateUser { get; set; }
 
     /// <summary>更新用户</summary>
-    public Int32 UpdateUserID { get; set; }
+    public Int32 UpdateUserId { get; set; }
 
     /// <summary>更新地址</summary>
     public String? UpdateIP { get; set; }
@@ -94,8 +94,8 @@ public partial class ParameterModel : IModel
         {
             return name switch
             {
-                "ID" => ID,
-                "UserID" => UserID,
+                "Id" => Id,
+                "UserId" => UserId,
                 "Category" => Category,
                 "Name" => Name,
                 "Value" => Value,
@@ -109,11 +109,11 @@ public partial class ParameterModel : IModel
                 "Ex5" => Ex5,
                 "Ex6" => Ex6,
                 "CreateUser" => CreateUser,
-                "CreateUserID" => CreateUserID,
+                "CreateUserId" => CreateUserId,
                 "CreateIP" => CreateIP,
                 "CreateTime" => CreateTime,
                 "UpdateUser" => UpdateUser,
-                "UpdateUserID" => UpdateUserID,
+                "UpdateUserId" => UpdateUserId,
                 "UpdateIP" => UpdateIP,
                 "UpdateTime" => UpdateTime,
                 "Remark" => Remark,
@@ -124,8 +124,8 @@ public partial class ParameterModel : IModel
         {
             switch (name)
             {
-                case "ID": ID = value.ToInt(); break;
-                case "UserID": UserID = value.ToInt(); break;
+                case "Id": Id = value.ToInt(); break;
+                case "UserId": UserId = value.ToInt(); break;
                 case "Category": Category = Convert.ToString(value); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "Value": Value = Convert.ToString(value); break;
@@ -139,11 +139,11 @@ public partial class ParameterModel : IModel
                 case "Ex5": Ex5 = Convert.ToString(value); break;
                 case "Ex6": Ex6 = Convert.ToString(value); break;
                 case "CreateUser": CreateUser = Convert.ToString(value); break;
-                case "CreateUserID": CreateUserID = value.ToInt(); break;
+                case "CreateUserId": CreateUserId = value.ToInt(); break;
                 case "CreateIP": CreateIP = Convert.ToString(value); break;
                 case "CreateTime": CreateTime = value.ToDateTime(); break;
                 case "UpdateUser": UpdateUser = Convert.ToString(value); break;
-                case "UpdateUserID": UpdateUserID = value.ToInt(); break;
+                case "UpdateUserId": UpdateUserId = value.ToInt(); break;
                 case "UpdateIP": UpdateIP = Convert.ToString(value); break;
                 case "UpdateTime": UpdateTime = value.ToDateTime(); break;
                 case "Remark": Remark = Convert.ToString(value); break;
@@ -158,8 +158,8 @@ public partial class ParameterModel : IModel
     /// <param name="model">模型</param>
     public void Copy(IParameter model)
     {
-        ID = model.ID;
-        UserID = model.UserID;
+        Id = model.Id;
+        UserId = model.UserId;
         Category = model.Category;
         Name = model.Name;
         Value = model.Value;
@@ -173,11 +173,11 @@ public partial class ParameterModel : IModel
         Ex5 = model.Ex5;
         Ex6 = model.Ex6;
         CreateUser = model.CreateUser;
-        CreateUserID = model.CreateUserID;
+        CreateUserId = model.CreateUserId;
         CreateIP = model.CreateIP;
         CreateTime = model.CreateTime;
         UpdateUser = model.UpdateUser;
-        UpdateUserID = model.UpdateUserID;
+        UpdateUserId = model.UpdateUserId;
         UpdateIP = model.UpdateIP;
         UpdateTime = model.UpdateTime;
         Remark = model.Remark;

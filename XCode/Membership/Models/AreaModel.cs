@@ -15,7 +15,7 @@ public partial class AreaModel : IModel
 {
     #region 属性
     /// <summary>编码。行政区划编码</summary>
-    public Int32 ID { get; set; }
+    public Int32 Id { get; set; }
 
     /// <summary>名称</summary>
     public String Name { get; set; } = null!;
@@ -24,7 +24,7 @@ public partial class AreaModel : IModel
     public String? FullName { get; set; }
 
     /// <summary>父级</summary>
-    public Int32 ParentID { get; set; }
+    public Int32 ParentId { get; set; }
 
     /// <summary>层级</summary>
     public Int32 Level { get; set; }
@@ -79,10 +79,10 @@ public partial class AreaModel : IModel
         {
             return name switch
             {
-                "ID" => ID,
+                "Id" => Id,
                 "Name" => Name,
                 "FullName" => FullName,
-                "ParentID" => ParentID,
+                "ParentId" => ParentId,
                 "Level" => Level,
                 "Kind" => Kind,
                 "English" => English,
@@ -104,10 +104,10 @@ public partial class AreaModel : IModel
         {
             switch (name)
             {
-                case "ID": ID = value.ToInt(); break;
+                case "Id": Id = value.ToInt(); break;
                 case "Name": Name = Convert.ToString(value); break;
                 case "FullName": FullName = Convert.ToString(value); break;
-                case "ParentID": ParentID = value.ToInt(); break;
+                case "ParentId": ParentId = value.ToInt(); break;
                 case "Level": Level = value.ToInt(); break;
                 case "Kind": Kind = Convert.ToString(value); break;
                 case "English": English = Convert.ToString(value); break;
@@ -133,10 +133,10 @@ public partial class AreaModel : IModel
     /// <param name="model">模型</param>
     public void Copy(IArea model)
     {
-        ID = model.ID;
+        Id = model.Id;
         Name = model.Name;
         FullName = model.FullName;
-        ParentID = model.ParentID;
+        ParentId = model.ParentId;
         Level = model.Level;
         Kind = model.Kind;
         English = model.English;

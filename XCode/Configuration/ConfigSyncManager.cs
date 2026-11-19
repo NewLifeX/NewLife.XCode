@@ -230,7 +230,7 @@ public class ConfigSyncManager(String appId)
                 if (onlyMissing) continue;
             }
             else
-                row = new Parameter { UserID = 0, Category = category, Name = kv.Key };
+                row = new Parameter { UserId = 0, Category = category, Name = kv.Key };
 
             if (kv.Value != null) row.SetValue(kv.Value);
             row.Enable = true;

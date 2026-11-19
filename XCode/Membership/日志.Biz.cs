@@ -1,13 +1,17 @@
-﻿using NewLife;
+using NewLife;
 using NewLife.Data;
 using XCode.Cache;
 using XCode.Exceptions;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Xml.Serialization;
 
 namespace XCode.Membership;
 
 /// <summary>日志</summary>
 public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
 {
+
     #region 对象操作
     static Log()
     {
@@ -79,12 +83,12 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
         var exp = new WhereExpression();
         //if (!key.IsNullOrEmpty()) exp &= (_.Action == key | _.Remark.Contains(key));
         if (!category.IsNullOrEmpty() && category != "全部") exp &= _.Category == category;
-        if (userid > 0) exp &= _.CreateUserID == userid;
+        if (userid > 0) exp &= _.CreateUserId == userid;
 
         // 主键带有时间戳
         var snow = Meta.Factory.Snow;
         if (snow != null)
-            exp &= _.ID.Between(start, end, snow);
+            exp &= _.Id.Between(start, end, snow);
         else
             exp &= _.CreateTime.Between(start, end);
 
@@ -118,12 +122,12 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
         if (!category.IsNullOrEmpty() && category != "全部") exp &= _.Category == category;
         if (!action.IsNullOrEmpty() && action != "全部") exp &= _.Action == action;
         if (success != null) exp &= _.Success == success;
-        if (userid > 0) exp &= _.CreateUserID == userid;
+        if (userid > 0) exp &= _.CreateUserId == userid;
 
         // 主键带有时间戳
         var snow = Meta.Factory.Snow;
         if (snow != null)
-            exp &= _.ID.Between(start, end, snow);
+            exp &= _.Id.Between(start, end, snow);
         else
             exp &= _.CreateTime.Between(start, end);
 
@@ -149,14 +153,14 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
 
         if (!category.IsNullOrEmpty() && category != "全部") exp &= _.Category == category;
         if (!action.IsNullOrEmpty() && action != "全部") exp &= _.Action == action;
-        if (linkId > 0) exp &= _.LinkID == linkId;
+        if (linkId > 0) exp &= _.LinkId == linkId;
         if (success != null) exp &= _.Success == success;
-        if (userid > 0) exp &= _.CreateUserID == userid;
+        if (userid > 0) exp &= _.CreateUserId == userid;
 
         // 主键带有时间戳
         var snow = Meta.Factory.Snow;
         if (snow != null)
-            exp &= _.ID.Between(start, end, snow);
+            exp &= _.Id.Between(start, end, snow);
         else
             exp &= _.CreateTime.Between(start, end);
 
@@ -168,44 +172,28 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
-    public static Log? FindByID(Int64 id)
-    {
-        if (id <= 0) return null;
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
-
-        // 单对象缓存
-        return Meta.SingleCache[id];
-
-        //return Find(_.ID == id);
-    }
 
     /// <summary>根据创建用户、编号查找</summary>
     /// <param name="createUserId">创建用户</param>
     /// <param name="id">编号</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCreateUserIDAndID(Int32 createUserId, Int64 id)
+
+    /// <summary>根据创建用户和编号查找</summary>
+    /// <param name="createUserId">创建用户</param>
+    /// <param name="id">编号</param>
+    /// <returns>实体列表</returns>
+    public static IList<Log> FindAllByCreateUserIdAndId(Int32 createUserId, Int64 id)
     {
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserID == createUserId && e.ID == id);
+        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserId == createUserId && e.Id == id);
 
-        return FindAll(_.CreateUserID == createUserId & _.ID == id);
+        return FindAll(_.CreateUserId == createUserId & _.Id == id);
     }
 
     /// <summary>根据创建用户查找</summary>
     /// <param name="createUserId">创建用户</param>
     /// <returns>实体列表</returns>
-    public static IList<Log> FindAllByCreateUserID(Int32 createUserId)
-    {
-        if (createUserId <= 0) return [];
-
-        // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.CreateUserID == createUserId);
-
-        return FindAll(_.CreateUserID == createUserId);
-    }
 
     /// <summary>根据操作查找日志</summary>
     /// <param name="action">操作</param>
@@ -226,7 +214,7 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
     {
         var snow = Meta.Factory.Snow;
         Expression exp = snow != null
-            ? _.ID.Between(start, end, snow)
+            ? _.Id.Between(start, end, snow)
             : _.CreateTime.Between(start, end);
         if (success != null) exp &= _.Success == success;
 
@@ -242,7 +230,7 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
     {
         var snow = Meta.Factory.Snow;
         var exp = snow != null
-            ? _.ID.Between(start, end, snow)
+            ? _.Id.Between(start, end, snow)
             : _.CreateTime.Between(start, end);
 
         return FindAll(exp, page);
@@ -269,10 +257,10 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
 
         var snow = Meta.Factory.Snow;
         exp &= snow != null
-            ? _.ID.Between(start, end, snow)
+            ? _.Id.Between(start, end, snow)
             : _.CreateTime.Between(start, end);
 
-        return FindAll(exp, _.ID.Desc(), null, 0, count);
+        return FindAll(exp, _.Id.Desc(), null, 0, count);
     }
 
     /// <summary>按创建时间查询日志，按编号倒序</summary>
@@ -284,15 +272,15 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
     {
         var snow = Meta.Factory.Snow;
         var exp = snow != null
-            ? _.ID.Between(start, end, snow)
+            ? _.Id.Between(start, end, snow)
             : _.CreateTime.Between(start, end);
 
-        return FindAll(exp, _.ID.Desc(), null, 0, count);
+        return FindAll(exp, _.Id.Desc(), null, 0, count);
     }
     #endregion
 
     #region 扩展操作
-    // Select Count(ID) as ID,Category From Log Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By ID Desc limit 20
+    // Select Count(Id) as Id,Category From Log Where CreateTime>'2020-01-24 00:00:00' Group By Category Order By Id Desc limit 20
     static readonly FieldCache<Log> CategoryCache = new(__.Category)
     {
         Where = _.CreateTime > DateTime.Today.AddDays(-30) & Expression.Empty
@@ -311,14 +299,14 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
     /// <returns></returns>
     public static IDictionary<String, String> FindAllActionName() => ActionCache.FindAllName();
 
-    /// <summary>删除指定日期之前的系统日志（CreateUserID=0）</summary>
+    /// <summary>删除指定日期之前的系统日志（CreateUserId=0）</summary>
     /// <param name="date">截止日期</param>
     /// <returns>影响行数</returns>
     public static Int32 DeleteBefore(DateTime date)
     {
         var snow = Meta.Factory.Snow;
-        Expression exp = snow != null ? _.ID < snow.GetId(date) : _.CreateTime < date;
-        exp &= _.CreateUserID == 0;
+        Expression exp = snow != null ? _.Id < snow.GetId(date) : _.CreateTime < date;
+        exp &= _.CreateUserId == 0;
 
         try
         {
@@ -349,11 +337,12 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
 
     #region IUserScope 成员
     // 日志表没有部门列，仅按创建用户过滤；本部门/自定义等范围不会 join 用户表放大成同事数据
-    Int32 IUserScope.UserId { get => CreateUserID; set => CreateUserID = value; }
+    Int32 IUserScope.UserId { get => CreateUserId; set => CreateUserId = value; }
+
     #endregion
 
     #region IDataScopeFieldProvider 成员
-    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetUserField() => _.CreateUserID;
+    XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetUserField() => _.CreateUserId;
     XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetDepartmentField() => null;
     XCode.Configuration.FieldItem? IDataScopeFieldProvider.GetTenantField() => null;
     #endregion

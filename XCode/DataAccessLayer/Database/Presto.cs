@@ -88,14 +88,7 @@ internal abstract class PrestoBase : RemoteDb
     /// <summary>格式化关键字。Presto/Trino 使用双引号，内部双引号成对转义</summary>
     /// <param name="keyWord">关键字</param>
     /// <returns></returns>
-    public override String FormatKeyWord(String keyWord)
-    {
-        if (keyWord.IsNullOrEmpty()) return keyWord;
-
-        if (keyWord.StartsWith("\"") && keyWord.EndsWith("\"")) return keyWord;
-
-        return "\"" + keyWord.Replace("\"", "\"\"") + "\"";
-    }
+    public override String FormatKeyWord(String keyWord) => FormatKeyWord(keyWord, "\"");
 
     /// <summary>格式化数据为SQL数据</summary>
     /// <param name="field">字段</param>
@@ -123,13 +116,7 @@ internal abstract class PrestoBase : RemoteDb
     /// <param name="column">字段</param>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public override String FormatDateTime(IDataColumn column, DateTime dateTime)
-    {
-        if (dateTime.Ticks % 10_000_000 == 0)
-            return $"TIMESTAMP '{dateTime:yyyy-MM-dd HH:mm:ss}'";
-
-        return $"TIMESTAMP '{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'";
-    }
+    public override String FormatDateTime(IDataColumn column, DateTime dateTime) => FormatDateTimeLiteral(dateTime);
 
     /// <summary>格式化模糊搜索。Presto/Trino 默认无转义字符，含通配符时需要显式 ESCAPE</summary>
     /// <param name="column">字段</param>
@@ -166,36 +153,14 @@ internal abstract class PrestoBase : RemoteDb
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">主键列</param>
     /// <returns></returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
-    {
-        if (startRowIndex <= 0)
-        {
-            if (maximumRows < 1) return sql;
-
-            return $"{sql} limit {maximumRows}";
-        }
-        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
-
-        return $"{sql} offset {startRowIndex} limit {maximumRows}";
-    }
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn) => PageSplitByLimitOffset(sql, startRowIndex, maximumRows, true);
 
     /// <summary>构造分页SQL</summary>
     /// <param name="builder">查询生成器</param>
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns>分页SQL</returns>
-    public override SelectBuilder PageSplit(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
-    {
-        if (startRowIndex <= 0)
-        {
-            if (maximumRows > 0) builder.Limit = $"limit {maximumRows}";
-            return builder;
-        }
-        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
-
-        builder.Limit = $"offset {startRowIndex} limit {maximumRows}";
-        return builder;
-    }
+    public override SelectBuilder PageSplit(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows) => PageSplitByLimitOffset(builder, startRowIndex, maximumRows, true);
     #endregion
 }
 
@@ -210,25 +175,12 @@ internal class Presto : PrestoBase
     #region 方法
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory? CreateFactory()
-    {
-        var type = DriverLoader.Load("NReco.PrestoAdo.PrestoDbFactory", null, "NReco.PrestoAdo.dll", null);
-        var factory = GetProviderFactory(type);
-        if (factory != null) return factory;
-
-        return GetProviderFactory(null, "NReco.PrestoAdo.dll", "NReco.PrestoAdo.PrestoDbFactory", true, true);
-    }
+    protected override DbProviderFactory? CreateFactory() => LoadFactory("NReco.PrestoAdo.PrestoDbFactory", "NReco.PrestoAdo.dll");
 
     /// <summary>是否支持该提供者所描述的数据库</summary>
     /// <param name="providerName">提供者</param>
     /// <returns></returns>
-    public override Boolean Support(String providerName)
-    {
-        providerName = providerName.ToLower();
-        if (providerName.Contains("presto")) return true;
-
-        return false;
-    }
+    public override Boolean Support(String providerName) => providerName.ToLower().Contains("presto");
     #endregion
 
     #region 数据库特性
@@ -274,13 +226,7 @@ internal class Trino : PrestoBase
     /// <summary>是否支持该提供者所描述的数据库</summary>
     /// <param name="providerName">提供者</param>
     /// <returns></returns>
-    public override Boolean Support(String providerName)
-    {
-        providerName = providerName.ToLower();
-        if (providerName.Contains("trino")) return true;
-
-        return false;
-    }
+    public override Boolean Support(String providerName) => providerName.ToLower().Contains("trino");
     #endregion
 
     #region 数据库特性
@@ -302,38 +248,27 @@ internal class Trino : PrestoBase
 }
 
 /// <summary>Trino 反射工厂。官方驱动未提供 DbProviderFactory</summary>
-internal sealed class TrinoDbFactory : DbProviderFactory
+internal sealed class TrinoDbFactory(Type connType, Type cmdType, Type prmType) : DbProviderFactory
 {
-    private readonly Type _connType;
-    private readonly Type _cmdType;
-    private readonly Type _prmType;
-
-    public TrinoDbFactory(Type connType, Type cmdType, Type prmType)
-    {
-        _connType = connType;
-        _cmdType = cmdType;
-        _prmType = prmType;
-    }
-
     /// <summary>创建连接</summary>
     /// <returns></returns>
     [UnconditionalSuppressMessage("AOT", "IL2077", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
-    public override DbConnection CreateConnection() => (DbConnection)Activator.CreateInstance(_connType)!;
+    public override DbConnection CreateConnection() => (DbConnection)Activator.CreateInstance(connType)!;
 
     /// <summary>创建命令。TrinoCommand 没有无参构造，先绑定一个临时连接，随后由 XCode 重新赋值</summary>
     /// <returns></returns>
     [UnconditionalSuppressMessage("AOT", "IL2077", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
     public override DbCommand CreateCommand()
     {
-        var conn = Activator.CreateInstance(_connType);
+        var conn = Activator.CreateInstance(connType);
 
-        return (DbCommand)Activator.CreateInstance(_cmdType, conn)!;
+        return (DbCommand)Activator.CreateInstance(cmdType, conn)!;
     }
 
     /// <summary>创建参数</summary>
     /// <returns></returns>
     [UnconditionalSuppressMessage("AOT", "IL2077", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
-    public override DbParameter CreateParameter() => (DbParameter)Activator.CreateInstance(_prmType)!;
+    public override DbParameter CreateParameter() => (DbParameter)Activator.CreateInstance(prmType)!;
 
     /// <summary>创建连接字符串生成器</summary>
     /// <returns></returns>
@@ -341,12 +276,8 @@ internal sealed class TrinoDbFactory : DbProviderFactory
 }
 
 /// <summary>Presto/Trino 数据库会话</summary>
-internal class PrestoSession : RemoteDbSession
+internal class PrestoSession(IDatabase db) : RemoteDbSession(db)
 {
-    #region 构造函数
-    public PrestoSession(IDatabase db) : base(db) { }
-    #endregion
-
     #region 基本方法 查询/执行
     /// <summary>执行插入语句并返回新增行的自动编号。Presto/Trino 没有自增主键</summary>
     /// <param name="sql">SQL语句</param>
@@ -364,12 +295,7 @@ internal class PrestoSession : RemoteDbSession
     /// <returns>新增行的自动编号</returns>
     /// <exception cref="NotSupportedException">Presto/Trino 不支持自增列</exception>
     public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
-    {
-        var tcs = new TaskCompletionSource<Int64>();
-        tcs.SetException(new NotSupportedException(L.T("Presto/Trino does not support auto-increment columns; use a business key (Guid/snowflake) as the primary key, or set AllowInsertIdentity.")));
-
-        return tcs.Task;
-    }
+        => FromException(new NotSupportedException(L.T("Presto/Trino does not support auto-increment columns; use a business key (Guid/snowflake) as the primary key, or set AllowInsertIdentity.")));
     #endregion
 
     #region 事务
@@ -431,94 +357,11 @@ internal class PrestoMetaData : RemoteDbMetaData
     /// <returns></returns>
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
-        var list = new List<IDataTable>();
+        var where = SqlMetaDataHelper.BuildWhere((Database as PrestoBase)?.SchemaName, names);
+        var tables = $"select table_schema, table_name, table_type from information_schema.tables{where} order by table_schema, table_name";
+        var columns = $"select table_schema, table_name, column_name, ordinal_position, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale from information_schema.columns{where} order by table_schema, table_name, ordinal_position";
 
-        var schema = (Database as PrestoBase)?.SchemaName;
-        var where = "";
-        if (!schema.IsNullOrEmpty()) where = $" where table_schema = '{schema.Replace("'", "''")}'";
-        if (names != null && names.Length > 0)
-        {
-            var ns = names.Where(e => !e.IsNullOrEmpty()).Select(e => "'" + e.Replace("'", "''") + "'").ToArray();
-            if (ns.Length > 0) where += where.IsNullOrEmpty() ? " where" : " and";
-            if (ns.Length > 0) where += " table_name in (" + String.Join(",", ns) + ")";
-        }
-
-        var ss = Database.CreateSession();
-        var old = ss.ShowSQL;
-        ss.ShowSQL = false;
-        try
-        {
-            var tables = ss.Query($"select table_schema, table_name, table_type from information_schema.tables{where} order by table_schema, table_name", CommandType.Text);
-            if (tables.Tables.Count == 0) return list;
-
-            var dt = tables.Tables[0];
-            if (dt.Rows.Count == 0) return list;
-
-            var columns = ss.Query($"select table_schema, table_name, column_name, ordinal_position, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale from information_schema.columns{where} order by table_schema, table_name, ordinal_position", CommandType.Text);
-
-            // 按 模式.表名 分组，避免同名表跨模式串数据
-            var dic = new Dictionary<String, List<DataRow>>(StringComparer.OrdinalIgnoreCase);
-            if (columns.Tables.Count > 0)
-            {
-                foreach (DataRow dr in columns.Tables[0].Rows)
-                {
-                    var key = $"{dr["table_schema"]}.{dr["table_name"]}";
-                    if (!dic.TryGetValue(key, out var rows)) dic[key] = rows = [];
-                    rows.Add(dr);
-                }
-            }
-
-            foreach (DataRow dr in dt.Rows)
-            {
-                var table = DAL.CreateTable();
-                table.TableName = dr["table_name"] + "";
-                table.Owner = dr["table_schema"] + "";
-                table.IsView = (dr["table_type"] + "").EqualIgnoreCase("VIEW");
-                table.DbType = Database.Type;
-
-                if (dic.TryGetValue($"{dr["table_schema"]}.{dr["table_name"]}", out var rows))
-                {
-                    foreach (var cr in rows)
-                    {
-                        var field = table.CreateColumn();
-                        field.ColumnName = cr["column_name"] + "";
-                        field.RawType = cr["data_type"] + "";
-                        field.Length = GetInt32(cr, "character_maximum_length");
-                        field.Precision = GetInt32(cr, "numeric_precision");
-                        field.Scale = GetInt32(cr, "numeric_scale");
-                        field.Nullable = (cr["is_nullable"] + "").EqualIgnoreCase("YES");
-                        if (cr["column_default"] is not DBNull) field.DefaultValue = cr["column_default"] + "";
-
-                        // 约束均为信息性，Presto/Trino 没有自增主键
-                        field.Identity = false;
-                        field.PrimaryKey = false;
-
-                        field.DataType = GetDataType(field) ?? typeof(String);
-
-                        field.Fix();
-                        table.Columns.Add(field);
-                    }
-                }
-
-                table.Fix();
-
-                list.Add(table);
-            }
-        }
-        finally
-        {
-            ss.ShowSQL = old;
-            ss.Dispose();
-        }
-
-        return list;
-    }
-
-    private static Int32 GetInt32(DataRow dr, String name)
-    {
-        if (dr.Table.Columns.Contains(name) && !dr.IsNull(name) && Int32.TryParse(dr[name] + "", out var n)) return n;
-
-        return 0;
+        return SqlMetaDataHelper.GetTables(Database, tables, columns, GetDataType);
     }
     #endregion
 

@@ -33,14 +33,7 @@ internal class Snowflake : RemoteDb
     #region 方法
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory? CreateFactory()
-    {
-        var type = DriverLoader.Load("Snowflake.Data.Client.SnowflakeDbFactory", null, "Snowflake.Data.dll", null);
-        var factory = GetProviderFactory(type);
-        if (factory != null) return factory;
-
-        return GetProviderFactory(null, "Snowflake.Data.dll", "Snowflake.Data.Client.SnowflakeDbFactory", true, true);
-    }
+    protected override DbProviderFactory? CreateFactory() => LoadFactory("Snowflake.Data.Client.SnowflakeDbFactory", "Snowflake.Data.dll");
 
     /// <summary>创建数据库会话</summary>
     /// <returns></returns>
@@ -53,13 +46,7 @@ internal class Snowflake : RemoteDb
     /// <summary>是否支持该提供者所描述的数据库</summary>
     /// <param name="providerName">提供者</param>
     /// <returns></returns>
-    public override Boolean Support(String providerName)
-    {
-        providerName = providerName.ToLower();
-        if (providerName.Contains("snowflake")) return true;
-
-        return false;
-    }
+    public override Boolean Support(String providerName) => providerName.ToLower().Contains("snowflake");
 
     /// <summary>设置连接字符串</summary>
     /// <param name="builder"></param>
@@ -97,14 +84,7 @@ internal class Snowflake : RemoteDb
     /// <summary>格式化标识符。Snowflake 使用双引号</summary>
     /// <param name="keyWord">关键字</param>
     /// <returns></returns>
-    public override String FormatKeyWord(String keyWord)
-    {
-        if (keyWord.IsNullOrEmpty()) return keyWord;
-
-        if (keyWord.StartsWith("\"") && keyWord.EndsWith("\"")) return keyWord;
-
-        return "\"" + keyWord.Replace("\"", "\"\"") + "\"";
-    }
+    public override String FormatKeyWord(String keyWord) => FormatKeyWord(keyWord, "\"");
 
     /// <summary>格式化数据为SQL数据</summary>
     /// <param name="field">字段</param>
@@ -121,13 +101,7 @@ internal class Snowflake : RemoteDb
     /// <param name="column">字段</param>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public override String FormatDateTime(IDataColumn column, DateTime dateTime)
-    {
-        if (dateTime.Ticks % 10_000_000 == 0)
-            return $"TO_TIMESTAMP_NTZ('{dateTime:yyyy-MM-dd HH:mm:ss}')";
-
-        return $"TO_TIMESTAMP_NTZ('{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}')";
-    }
+    public override String FormatDateTime(IDataColumn column, DateTime dateTime) => $"TO_TIMESTAMP_NTZ({base.FormatDateTime(column, dateTime)})";
 
     /// <summary>长文本长度。Snowflake VARCHAR 上限 16MB</summary>
     public override Int32 LongTextLength => 16777216;
@@ -146,46 +120,20 @@ internal class Snowflake : RemoteDb
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <param name="keyColumn">主键列</param>
     /// <returns></returns>
-    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
-    {
-        if (startRowIndex <= 0)
-        {
-            if (maximumRows < 1) return sql;
-
-            return $"{sql} limit {maximumRows}";
-        }
-        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
-
-        return $"{sql} limit {maximumRows} offset {startRowIndex}";
-    }
+    public override String PageSplit(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn) => PageSplitByLimitOffset(sql, startRowIndex, maximumRows);
 
     /// <summary>构造分页SQL</summary>
     /// <param name="builder">查询生成器</param>
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns>分页SQL</returns>
-    public override SelectBuilder PageSplit(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
-    {
-        if (startRowIndex <= 0)
-        {
-            if (maximumRows > 0) builder.Limit = $"limit {maximumRows}";
-            return builder;
-        }
-        if (maximumRows < 1) throw new NotSupportedException(L.T("Fetching all rows after a given row is not supported!"));
-
-        builder.Limit = $"limit {maximumRows} offset {startRowIndex}";
-        return builder;
-    }
+    public override SelectBuilder PageSplit(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows) => PageSplitByLimitOffset(builder, startRowIndex, maximumRows);
     #endregion
 }
 
 /// <summary>Snowflake数据库会话</summary>
-internal class SnowflakeSession : RemoteDbSession
+internal class SnowflakeSession(IDatabase db) : RemoteDbSession(db)
 {
-    #region 构造函数
-    public SnowflakeSession(IDatabase db) : base(db) { }
-    #endregion
-
     #region 基本方法 查询/执行
     /// <summary>Snowflake 无法回读自增列，进入自增路径时给出明确异常</summary>
     /// <param name="sql">SQL语句</param>
@@ -194,7 +142,7 @@ internal class SnowflakeSession : RemoteDbSession
     /// <returns>新增行的自动编号</returns>
     /// <exception cref="NotSupportedException">Snowflake 不支持回读自增列</exception>
     public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
-        => throw new NotSupportedException(L.T("Snowflake does not support returning generated identity values; use a business key (Guid/snowflake) or set AllowInsertIdentity."));
+        => throw IdentityNotSupported();
 
     /// <summary>Snowflake 无法回读自增列，进入自增路径时给出明确异常</summary>
     /// <param name="sql">SQL语句</param>
@@ -202,12 +150,7 @@ internal class SnowflakeSession : RemoteDbSession
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
     public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
-    {
-        var tcs = new TaskCompletionSource<Int64>();
-        tcs.SetException(new NotSupportedException(L.T("Snowflake does not support returning generated identity values; use a business key (Guid/snowflake) or set AllowInsertIdentity.")));
-
-        return tcs.Task;
-    }
+        => FromException(IdentityNotSupported());
     #endregion
 }
 
@@ -240,7 +183,7 @@ internal class SnowflakeMetaData : RemoteDbMetaData
     /// <returns></returns>
     protected override String? GetFieldType(IDataColumn field)
     {
-        if (field.DataType == typeof(String)) return field.Length > 0 ? $"VARCHAR({field.Length})" : "VARCHAR";
+        if (field.DataType == typeof(String)) return SqlMetaDataHelper.GetStringFieldType(field, Int32.MaxValue, "VARCHAR");
 
         return base.GetFieldType(field);
     }
@@ -256,26 +199,11 @@ internal class SnowflakeMetaData : RemoteDbMetaData
     /// <returns></returns>
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
-        var where = BuildWhere(names);
+        var where = SqlMetaDataHelper.BuildWhere((Database as Snowflake)?.SchemaName, names);
         var tables = $"select table_schema, table_name, table_type from information_schema.tables{where} order by table_schema, table_name";
         var columns = $"select table_schema, table_name, column_name, ordinal_position, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale from information_schema.columns{where} order by table_schema, table_name, ordinal_position";
 
         return SqlMetaDataHelper.GetTables(Database, tables, columns, GetDataType);
-    }
-
-    private String BuildWhere(String[]? names)
-    {
-        var filters = new List<String>();
-        var schema = (Database as Snowflake)?.SchemaName;
-        if (!schema.IsNullOrEmpty()) filters.Add($"table_schema = '{schema.Replace("'", "''")}'");
-
-        if (names != null && names.Length > 0)
-        {
-            var ns = names.Where(e => !e.IsNullOrEmpty()).Select(e => "'" + e.Replace("'", "''") + "'").ToArray();
-            if (ns.Length > 0) filters.Add("table_name in (" + String.Join(",", ns) + ")");
-        }
-
-        return filters.Count > 0 ? " where " + String.Join(" and ", filters) : "";
     }
     #endregion
 }

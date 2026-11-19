@@ -31,14 +31,7 @@ internal class Teradata : RemoteDb
     #region 方法
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory? CreateFactory()
-    {
-        var type = DriverLoader.Load("Teradata.Client.Provider.TdFactory", null, "Teradata.Client.Provider.dll", null);
-        var factory = GetProviderFactory(type);
-        if (factory != null) return factory;
-
-        return GetProviderFactory(null, "Teradata.Client.Provider.dll", "Teradata.Client.Provider.TdFactory", true, true);
-    }
+    protected override DbProviderFactory? CreateFactory() => LoadFactory("Teradata.Client.Provider.TdFactory", "Teradata.Client.Provider.dll");
 
     /// <summary>创建数据库会话</summary>
     /// <returns></returns>
@@ -51,13 +44,7 @@ internal class Teradata : RemoteDb
     /// <summary>是否支持该提供者所描述的数据库</summary>
     /// <param name="providerName">提供者</param>
     /// <returns></returns>
-    public override Boolean Support(String providerName)
-    {
-        providerName = providerName.ToLower();
-        if (providerName.Contains("teradata")) return true;
-
-        return false;
-    }
+    public override Boolean Support(String providerName) => providerName.ToLower().Contains("teradata");
     #endregion
 
     #region 数据库特性
@@ -69,26 +56,13 @@ internal class Teradata : RemoteDb
     /// <summary>格式化标识符。Teradata 使用双引号</summary>
     /// <param name="keyWord">关键字</param>
     /// <returns></returns>
-    public override String FormatKeyWord(String keyWord)
-    {
-        if (keyWord.IsNullOrEmpty()) return keyWord;
-
-        if (keyWord.StartsWith("\"") && keyWord.EndsWith("\"")) return keyWord;
-
-        return "\"" + keyWord.Replace("\"", "\"\"") + "\"";
-    }
+    public override String FormatKeyWord(String keyWord) => FormatKeyWord(keyWord, "\"");
 
     /// <summary>格式化时间为SQL字符串</summary>
     /// <param name="column">字段</param>
     /// <param name="dateTime">时间值</param>
     /// <returns></returns>
-    public override String FormatDateTime(IDataColumn column, DateTime dateTime)
-    {
-        if (dateTime.Ticks % 10_000_000 == 0)
-            return $"TIMESTAMP '{dateTime:yyyy-MM-dd HH:mm:ss}'";
-
-        return $"TIMESTAMP '{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'";
-    }
+    public override String FormatDateTime(IDataColumn column, DateTime dateTime) => FormatDateTimeLiteral(dateTime);
 
     /// <summary>长文本长度。Teradata VARCHAR 上限 32000</summary>
     public override Int32 LongTextLength => 32000;
@@ -140,19 +114,6 @@ internal class Teradata : RemoteDb
         return new SelectBuilder(BuildOffsetSql(builder.ToString(), startRowIndex, maximumRows, builder.Key));
     }
 
-    private static String InsertTop(String sql, String top)
-    {
-        var p = sql.IndexOf("select", StringComparison.OrdinalIgnoreCase);
-        if (p < 0) return sql;
-
-        var head = sql.Substring(0, p + 6);
-        var rest = sql.Substring(p + 6);
-        var trim = rest.TrimStart();
-        var space = rest.Substring(0, rest.Length - trim.Length);
-
-        return head + space + top + " " + trim;
-    }
-
     private static String BuildOffsetSql(String sql, Int64 startRowIndex, Int64 maximumRows, String? keyColumn)
     {
         // 派生表内不允许 ORDER BY（除非带 TOP），先移除尾部排序
@@ -166,12 +127,8 @@ internal class Teradata : RemoteDb
 }
 
 /// <summary>Teradata数据库会话</summary>
-internal class TeradataSession : RemoteDbSession
+internal class TeradataSession(IDatabase db) : RemoteDbSession(db)
 {
-    #region 构造函数
-    public TeradataSession(IDatabase db) : base(db) { }
-    #endregion
-
     #region 基本方法 查询/执行
     /// <summary>Teradata 无法回读自增列，进入自增路径时给出明确异常</summary>
     /// <param name="sql">SQL语句</param>
@@ -180,7 +137,7 @@ internal class TeradataSession : RemoteDbSession
     /// <returns>新增行的自动编号</returns>
     /// <exception cref="NotSupportedException">Teradata 不支持回读自增列</exception>
     public override Int64 InsertAndGetIdentity(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
-        => throw new NotSupportedException(L.T("Teradata does not support returning generated identity values; use a business key (Guid/snowflake) or set AllowInsertIdentity."));
+        => throw IdentityNotSupported();
 
     /// <summary>Teradata 无法回读自增列，进入自增路径时给出明确异常</summary>
     /// <param name="sql">SQL语句</param>
@@ -188,12 +145,7 @@ internal class TeradataSession : RemoteDbSession
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
     public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
-    {
-        var tcs = new TaskCompletionSource<Int64>();
-        tcs.SetException(new NotSupportedException(L.T("Teradata does not support returning generated identity values; use a business key (Guid/snowflake) or set AllowInsertIdentity.")));
-
-        return tcs.Task;
-    }
+        => FromException(IdentityNotSupported());
     #endregion
 }
 
@@ -226,8 +178,7 @@ internal class TeradataMetaData : RemoteDbMetaData
     /// <returns></returns>
     protected override String? GetFieldType(IDataColumn field)
     {
-        if (field.DataType == typeof(String))
-            return field.Length <= 0 || field.Length >= Database.LongTextLength ? "CLOB" : $"VARCHAR({field.Length})";
+        if (field.DataType == typeof(String)) return SqlMetaDataHelper.GetStringFieldType(field, Database.LongTextLength, "CLOB");
 
         return base.GetFieldType(field);
     }
@@ -268,14 +219,11 @@ internal class TeradataMetaData : RemoteDbMetaData
     {
         var tableFilters = new List<String> { "TableKind in ('T','V','O')" };
         var columnFilters = new List<String>();
-        if (names != null && names.Length > 0)
+        var list = SqlMetaDataHelper.EscapeNames(names);
+        if (!list.IsNullOrEmpty())
         {
-            var ns = names.Where(e => !e.IsNullOrEmpty()).Select(e => "'" + e.Replace("'", "''") + "'").ToArray();
-            if (ns.Length > 0)
-            {
-                tableFilters.Add("TableName in (" + String.Join(",", ns) + ")");
-                columnFilters.Add("TableName in (" + String.Join(",", ns) + ")");
-            }
+            tableFilters.Add($"TableName in ({list})");
+            columnFilters.Add($"TableName in ({list})");
         }
 
         var columnWhere = columnFilters.Count > 0 ? " where " + String.Join(" and ", columnFilters) : "";

@@ -27,14 +27,7 @@ internal class Firebird : DbBase
     #region 方法
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory? CreateFactory()
-    {
-        var type = DriverLoader.Load("FirebirdSql.Data.FirebirdClient.FirebirdClientFactory", null, "FirebirdSql.Data.FirebirdClient.dll", null);
-        var factory = GetProviderFactory(type);
-        if (factory != null) return factory;
-
-        return GetProviderFactory(null, "FirebirdSql.Data.FirebirdClient.dll", "FirebirdSql.Data.FirebirdClient.FirebirdClientFactory", true, true);
-    }
+    protected override DbProviderFactory? CreateFactory() => LoadFactory("FirebirdSql.Data.FirebirdClient.FirebirdClientFactory", "FirebirdSql.Data.FirebirdClient.dll");
 
     /// <summary>创建数据库会话</summary>
     /// <returns></returns>
@@ -47,13 +40,7 @@ internal class Firebird : DbBase
     /// <summary>是否支持该提供者所描述的数据库</summary>
     /// <param name="providerName">提供者</param>
     /// <returns></returns>
-    public override Boolean Support(String providerName)
-    {
-        providerName = providerName.ToLower();
-        if (providerName.Contains("firebird")) return true;
-
-        return false;
-    }
+    public override Boolean Support(String providerName) => providerName.ToLower().Contains("firebird");
 
     /// <summary>设置连接字符串。Firebird 的 Database 表示数据库文件，Data Source 表示服务器地址</summary>
     /// <param name="builder"></param>
@@ -80,14 +67,7 @@ internal class Firebird : DbBase
     /// <summary>格式化标识符。Firebird 使用双引号</summary>
     /// <param name="keyWord">关键字</param>
     /// <returns></returns>
-    public override String FormatKeyWord(String keyWord)
-    {
-        if (keyWord.IsNullOrEmpty()) return keyWord;
-
-        if (keyWord.StartsWith("\"") && keyWord.EndsWith("\"")) return keyWord;
-
-        return "\"" + keyWord.Replace("\"", "\"\"") + "\"";
-    }
+    public override String FormatKeyWord(String keyWord) => FormatKeyWord(keyWord, "\"");
 
     /// <summary>长文本长度</summary>
     public override Int32 LongTextLength => 32767;
@@ -140,12 +120,8 @@ internal class Firebird : DbBase
 }
 
 /// <summary>Firebird数据库会话</summary>
-internal class FirebirdSession : DbSession
+internal class FirebirdSession(IDatabase db) : DbSession(db)
 {
-    #region 构造函数
-    public FirebirdSession(IDatabase db) : base(db) { }
-    #endregion
-
     #region 基本方法 查询/执行
     private static readonly ConcurrentDictionary<String, String> _identityCache = new();
 

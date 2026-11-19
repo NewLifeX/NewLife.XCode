@@ -30,14 +30,7 @@ internal class Ase : RemoteDb
     #region 方法
     /// <summary>创建工厂</summary>
     /// <returns></returns>
-    protected override DbProviderFactory? CreateFactory()
-    {
-        var type = DriverLoader.Load("AdoNetCore.AseClient.AseClientFactory", null, "AdoNetCore.AseClient.dll", null);
-        var factory = GetProviderFactory(type);
-        if (factory != null) return factory;
-
-        return GetProviderFactory(null, "AdoNetCore.AseClient.dll", "AdoNetCore.AseClient.AseClientFactory", true, true);
-    }
+    protected override DbProviderFactory? CreateFactory() => LoadFactory("AdoNetCore.AseClient.AseClientFactory", "AdoNetCore.AseClient.dll");
 
     /// <summary>创建数据库会话</summary>
     /// <returns></returns>
@@ -52,12 +45,8 @@ internal class Ase : RemoteDb
     /// <returns></returns>
     public override Boolean Support(String providerName)
     {
-        providerName = providerName.ToLower();
-        if (providerName.Contains("aseclient")) return true;
-        if (providerName.Contains("sybase")) return true;
-        if (providerName == "ase" || providerName == "sapase" || providerName == "sap ase") return true;
-
-        return false;
+        var name = providerName.ToLower();
+        return name.Contains("aseclient") || name.Contains("sybase") || name is "ase" or "sapase" or "sap ase";
     }
     #endregion
 
@@ -70,14 +59,7 @@ internal class Ase : RemoteDb
     /// <summary>格式化标识符。ASE 支持双引号定界标识符</summary>
     /// <param name="keyWord">关键字</param>
     /// <returns></returns>
-    public override String FormatKeyWord(String keyWord)
-    {
-        if (keyWord.IsNullOrEmpty()) return keyWord;
-
-        if (keyWord.StartsWith("\"") && keyWord.EndsWith("\"")) return keyWord;
-
-        return "\"" + keyWord.Replace("\"", "\"\"") + "\"";
-    }
+    public override String FormatKeyWord(String keyWord) => FormatKeyWord(keyWord, "\"");
 
     /// <summary>长文本长度。ASE VARCHAR 上限 16384</summary>
     public override Int32 LongTextLength => 16384;
@@ -129,32 +111,12 @@ internal class Ase : RemoteDb
 
         return builder;
     }
-
-    private static String InsertTop(String sql, String top)
-    {
-        var p = sql.IndexOf("select", StringComparison.OrdinalIgnoreCase);
-        if (p < 0) return sql;
-
-        var head = sql.Substring(0, p + 6);
-        var rest = sql.Substring(p + 6);
-        var trim = rest.TrimStart();
-        var space = rest.Substring(0, rest.Length - trim.Length);
-
-        if (trim.StartsWith("distinct", StringComparison.OrdinalIgnoreCase))
-            return head + space + trim.Substring(0, "distinct".Length) + " " + top + trim.Substring("distinct".Length);
-
-        return head + space + top + " " + trim;
-    }
     #endregion
 }
 
 /// <summary>SAP ASE数据库会话</summary>
-internal class AseSession : RemoteDbSession
+internal class AseSession(IDatabase db) : RemoteDbSession(db)
 {
-    #region 构造函数
-    public AseSession(IDatabase db) : base(db) { }
-    #endregion
-
     #region 基本方法 查询/执行
     /// <summary>执行插入语句并返回新增行的自动编号。ASE 使用 @@IDENTITY</summary>
     /// <param name="sql">SQL语句</param>
@@ -213,8 +175,7 @@ internal class AseMetaData : RemoteDbMetaData
     /// <returns></returns>
     protected override String? GetFieldType(IDataColumn field)
     {
-        if (field.DataType == typeof(String))
-            return field.Length <= 0 || field.Length >= Database.LongTextLength ? "TEXT" : $"VARCHAR({field.Length})";
+        if (field.DataType == typeof(String)) return SqlMetaDataHelper.GetStringFieldType(field, Database.LongTextLength, "TEXT");
 
         return base.GetFieldType(field);
     }
@@ -244,14 +205,11 @@ internal class AseMetaData : RemoteDbMetaData
     {
         var tableFilter = "";
         var columnFilter = "";
-        if (names != null && names.Length > 0)
+        var list = SqlMetaDataHelper.EscapeNames(names);
+        if (!list.IsNullOrEmpty())
         {
-            var ns = names.Where(e => !e.IsNullOrEmpty()).Select(e => "'" + e.Replace("'", "''") + "'").ToArray();
-            if (ns.Length > 0)
-            {
-                tableFilter = " and name in (" + String.Join(",", ns) + ")";
-                columnFilter = " and o.name in (" + String.Join(",", ns) + ")";
-            }
+            tableFilter = $" and name in ({list})";
+            columnFilter = $" and o.name in ({list})";
         }
 
         var tables = $"select 'dbo' as table_schema, name as table_name, case type when 'V' then 'VIEW' else 'TABLE' end as table_type from sysobjects where type in ('U','V'){tableFilter} order by name";

@@ -34,6 +34,7 @@ public static class DbFactory
         Register<Snowflake>(DatabaseType.Snowflake);
         Register<Vertica>(DatabaseType.Vertica);
         Register<Ase>(DatabaseType.Ase);
+        Register<Teradata>(DatabaseType.Teradata);
         Register<NetworkDb>(DatabaseType.Network);
         Register<Firebird>(DatabaseType.Firebird);
         //Register<Access>(DatabaseType.Access);

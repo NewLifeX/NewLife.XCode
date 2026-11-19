@@ -117,6 +117,10 @@ public enum DatabaseType
     [Description("SAP ASE(Sybase)数据库")]
     Ase = 27,
 
+    /// <summary>Teradata数据库。企业级数据仓库</summary>
+    [Description("Teradata数据库")]
+    Teradata = 28,
+
     /// <summary>网络虚拟数据库。通过HTTP接口转发数据库操作到远端服务执行</summary>
     [Description("网络虚拟数据库")]
     Network = 100,

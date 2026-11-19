@@ -391,22 +391,34 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <returns></returns>
     public virtual DbConnection OpenConnection()
     {
-        if (Factory == null) throw new InvalidOperationException(L.T("The ADO.NET driver for {0} was not found; reference it from NuGet.", Type));
+        var factory = Factory;
+        if (factory == null) throw CreateDriverMissingException();
 
-        var conn = Factory.CreateConnection();
+        var conn = factory.CreateConnection();
         conn.ConnectionString = GetConnectionString();
         conn.Open();
 
         return conn;
     }
 
+    /// <summary>创建驱动缺失异常，尽量给出需要安装的 NuGet 包</summary>
+    /// <returns></returns>
+    private InvalidOperationException CreateDriverMissingException()
+    {
+        var package = DriverPackages.Get(Type);
+        return package.IsNullOrEmpty()
+            ? new InvalidOperationException(L.T("The ADO.NET driver for {0} was not found; reference it from NuGet.", Type))
+            : new InvalidOperationException(L.T("The ADO.NET driver for {0} was not found; add the NuGet package [{1}].", Type, package));
+    }
+
     /// <summary>打开连接</summary>
     /// <returns></returns>
     public virtual async Task<DbConnection> OpenConnectionAsync()
     {
-        if (Factory == null) throw new InvalidOperationException(L.T("The ADO.NET driver for {0} was not found; reference it from NuGet.", Type));
+        var factory = Factory;
+        if (factory == null) throw CreateDriverMissingException();
 
-        var conn = Factory.CreateConnection();
+        var conn = factory.CreateConnection();
         conn.ConnectionString = GetConnectionString();
         await conn.OpenAsync().ConfigureAwait(false);
 
@@ -508,7 +520,7 @@ abstract class DbBase : DisposeBase, IDatabase
             if (type == null)
             {
                 if (assemblyFile.IsNullOrEmpty()) return null;
-                if (!File.Exists(file)) throw new FileNotFoundException(L.T("File [{0}] is missing!", file), file);
+                if (!File.Exists(file)) throw CreateDriverMissingFileException(assemblyFile, file);
             }
 
             if (type == null)
@@ -533,12 +545,18 @@ abstract class DbBase : DisposeBase, IDatabase
                 type = DriverLoader.Load(className, null!, assemblyFile, links.Join(","), urls2.Join(";"), minVersion);
 
                 // 如果还没有，就写异常
-                if (!File.Exists(file)) throw new FileNotFoundException(L.T("File [{0}] is missing!", file), file);
+                if (!File.Exists(file)) throw CreateDriverMissingFileException(assemblyFile, file);
             }
 
             factory = GetProviderFactory(type);
 
-            if (factory == null) throw new XCodeException(L.T("Unable to load driver [{0}]; add the database driver package from NuGet."), assemblyFile);
+            if (factory == null)
+            {
+                var package = DriverPackages.Get(assemblyFile);
+                throw new XCodeException(package.IsNullOrEmpty()
+                    ? L.T("Unable to load driver [{0}]; add the database driver package from NuGet.", assemblyFile)
+                    : L.T("Unable to load driver [{0}]; add the NuGet package [{1}] and try again.", assemblyFile, package));
+            }
 
             return factory;
         }
@@ -548,6 +566,18 @@ abstract class DbBase : DisposeBase, IDatabase
 
             throw;
         }
+    }
+
+    /// <summary>创建驱动文件缺失异常，尽量给出需要安装的 NuGet 包</summary>
+    /// <param name="assemblyFile">驱动程序集名称</param>
+    /// <param name="file">驱动文件路径</param>
+    /// <returns></returns>
+    private static FileNotFoundException CreateDriverMissingFileException(String assemblyFile, String file)
+    {
+        var package = DriverPackages.Get(assemblyFile);
+        return package.IsNullOrEmpty()
+            ? new FileNotFoundException(L.T("File [{0}] is missing!", file), file)
+            : new FileNotFoundException(L.T("File [{0}] is missing; add the NuGet package [{1}].", file, package), file);
     }
 
     /// <summary>
@@ -582,6 +612,17 @@ abstract class DbBase : DisposeBase, IDatabase
         {
             return null;
         }
+    }
+
+    /// <summary>加载驱动工厂。先按类型名反射，再从插件目录查找程序集</summary>
+    /// <param name="typeName">工厂类型全名</param>
+    /// <param name="assemblyFile">驱动程序集文件名</param>
+    /// <returns></returns>
+    protected static DbProviderFactory? LoadFactory(String typeName, String assemblyFile)
+    {
+        var type = DriverLoader.Load(typeName, null, assemblyFile, null);
+
+        return GetProviderFactory(type) ?? GetProviderFactory(null, assemblyFile, typeName, true, true);
     }
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
@@ -724,10 +765,26 @@ abstract class DbBase : DisposeBase, IDatabase
             return $"'{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'";
     }
 
+    /// <summary>格式化时间为带类型前缀的SQL字面量</summary>
+    /// <param name="dateTime">时间值</param>
+    /// <param name="type">类型名，默认 TIMESTAMP</param>
+    /// <returns></returns>
+    protected static String FormatDateTimeLiteral(DateTime dateTime, String type = "TIMESTAMP") => dateTime.Ticks % 10_000_000 == 0
+        ? $"{type} '{dateTime:yyyy-MM-dd HH:mm:ss}'"
+        : $"{type} '{dateTime:yyyy-MM-dd HH:mm:ss.fffffff}'";
+
     /// <summary>格式化关键字</summary>
     /// <param name="keyWord">表名</param>
     /// <returns></returns>
     public virtual String FormatKeyWord(String keyWord) => keyWord;
+
+    /// <summary>格式化关键字。用成对引号包裹，已包裹则原样返回</summary>
+    /// <param name="keyWord">关键字</param>
+    /// <param name="quote">引号字符，如双引号或反引号</param>
+    /// <returns></returns>
+    protected static String FormatKeyWord(String keyWord, String quote) => keyWord.IsNullOrEmpty() || keyWord.StartsWith(quote) && keyWord.EndsWith(quote)
+        ? keyWord
+        : quote + keyWord.Replace(quote, quote + quote) + quote;
 
     /// <summary>格式化名称。关键字按方言加引号，<see cref="NameFormats.Exact"/> 下所有标识符强制加引号</summary>
     /// <param name="name">名称</param>

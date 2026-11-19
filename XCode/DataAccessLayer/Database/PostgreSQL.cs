@@ -62,10 +62,7 @@ internal class PostgreSQL : RemoteDb
 
         // PostgreSQL 协议兼容的数据库，统一使用 PostgreSQL 提供者。
         // 注意：HighGo/KingBase/VastBase 有专属提供者且注册在本类之后，不能加入别名，否则会被本类抢先匹配
-        foreach (var item in _ProtocolAliases)
-        {
-            if (providerName.Contains(item)) return true;
-        }
+        if (_ProtocolAliases.Any(e => providerName.Contains(e))) return true;
 
         return false;
     }

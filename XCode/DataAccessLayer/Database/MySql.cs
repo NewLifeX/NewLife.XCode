@@ -134,10 +134,7 @@ internal class MySql : RemoteDb
         if (providerName.Contains("mysql")) return true;
 
         // MySQL 协议兼容的数据库，统一使用 MySql 提供者
-        foreach (var item in _ProtocolAliases)
-        {
-            if (providerName.Contains(item)) return true;
-        }
+        if (_ProtocolAliases.Any(e => providerName.Contains(e))) return true;
 
         return false;
     }

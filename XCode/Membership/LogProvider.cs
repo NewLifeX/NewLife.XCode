@@ -55,10 +55,9 @@ public class LogProvider
         {
             if (factory.Table.FindByName("Id") is FieldItem fi && fi.Type.IsInt())
             {
-                var str = remark[3..];
-                var p = str.IndexOf(',');
-                if (p >= 0) str = str[..p];
-                log.LinkId = str.ToLong();
+                var value = remark[3..];
+                var p = value.IndexOf(',');
+                log.LinkId = (p >= 0 ? value[..p] : value).ToLong();
             }
         }
 

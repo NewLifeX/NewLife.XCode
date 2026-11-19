@@ -12,6 +12,56 @@ namespace XCode.Membership;
 public partial class Department : Entity<Department>, ITenantScope, IDepartmentScope, IDataScopeFieldProvider
 {
 
+    #region 兼容别名
+
+    /// <summary>编号</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 Id</remarks>
+    [Obsolete("请使用 Id")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 ID { get => Id; set => Id = value; }
+
+    /// <summary>父级</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 ParentId</remarks>
+    [Obsolete("请使用 ParentId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 ParentID { get => ParentId; set => ParentId = value; }
+
+    /// <summary>创建者</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 CreateUserId</remarks>
+    [Obsolete("请使用 CreateUserId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 CreateUserID { get => CreateUserId; set => CreateUserId = value; }
+
+    /// <summary>更新者</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 UpdateUserId</remarks>
+    [Obsolete("请使用 UpdateUserId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 UpdateUserID { get => UpdateUserId; set => UpdateUserId = value; }
+
+    /// <summary>根据编号查找部门</summary>
+    [Obsolete("请使用 FindById")]
+    public static Department? FindByID(Int32 id) => FindById(id);
+
+    /// <summary>根据父级和名称查找部门</summary>
+    [Obsolete("请使用 FindAllByParentIdAndName")]
+    public static IList<Department> FindAllByParentIDAndName(Int32 parentId, String name) => FindAllByParentIdAndName(parentId, name);
+
+    /// <summary>根据租户、父级和名称查找部门</summary>
+    [Obsolete("请使用 FindAllByTenantIdAndParentIdAndName")]
+    public static IList<Department> FindAllByTenantIdAndParentIDAndName(Int32 tenantId, Int32 parentId, String name) => FindAllByTenantIdAndParentIdAndName(tenantId, parentId, name);
+    #endregion
     #region 对象操作
     private static Int32 MaxCacheCount = 10000;
 
@@ -179,6 +229,8 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
     /// <param name="name">名称</param>
     /// <param name="parentid">父级</param>
     /// <returns>实体对象</returns>
+    [Obsolete("请使用 FindByNameAndParentId")]
+    public static Department? FindByNameAndParentID(String name, Int32 parentid) => FindByNameAndParentId(name, parentid);
 
     /// <summary>根据名称和父级查找</summary>
     /// <param name="name">名称</param>
@@ -227,6 +279,8 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
     /// <summary>根据编号集合查找</summary>
     /// <param name="ids">编号集合</param>
     /// <returns>实体列表</returns>
+    [Obsolete("请使用 FindAllByIds")]
+    public static IList<Department> FindAllByIDs(Int32[] ids) => FindAllByIds(ids);
 
     /// <summary>根据编号列表查找部门</summary>
     /// <param name="ids"></param>

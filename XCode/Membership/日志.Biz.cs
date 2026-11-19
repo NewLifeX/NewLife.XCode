@@ -12,6 +12,39 @@ namespace XCode.Membership;
 public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
 {
 
+    #region 兼容别名
+
+    /// <summary>编号</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 Id</remarks>
+    [Obsolete("请使用 Id")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int64 ID { get => Id; set => Id = value; }
+
+    /// <summary>关联编号</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 LinkId</remarks>
+    [Obsolete("请使用 LinkId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int64 LinkID { get => LinkId; set => LinkId = value; }
+
+    /// <summary>创建者</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 CreateUserId</remarks>
+    [Obsolete("请使用 CreateUserId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 CreateUserID { get => CreateUserId; set => CreateUserId = value; }
+
+    /// <summary>根据类别和关联编号查找日志</summary>
+    [Obsolete("请使用 FindAllByCategoryAndLinkId")]
+    public static IList<Log> FindAllByCategoryAndLinkID(String? category, Int64 linkId) => FindAllByCategoryAndLinkId(category, linkId);
+    #endregion
     #region 对象操作
     static Log()
     {
@@ -172,11 +205,15 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
+    [Obsolete("请使用 FindById")]
+    public static Log? FindByID(Int64 id) => FindById(id);
 
     /// <summary>根据创建用户、编号查找</summary>
     /// <param name="createUserId">创建用户</param>
     /// <param name="id">编号</param>
     /// <returns>实体列表</returns>
+    [Obsolete("请使用 FindAllByCreateUserIdAndId")]
+    public static IList<Log> FindAllByCreateUserIDAndID(Int32 createUserId, Int64 id) => FindAllByCreateUserIdAndId(createUserId, id);
 
     /// <summary>根据创建用户和编号查找</summary>
     /// <param name="createUserId">创建用户</param>
@@ -194,6 +231,8 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
     /// <summary>根据创建用户查找</summary>
     /// <param name="createUserId">创建用户</param>
     /// <returns>实体列表</returns>
+    [Obsolete("请使用 FindAllByCreateUserId")]
+    public static IList<Log> FindAllByCreateUserID(Int32 createUserId) => FindAllByCreateUserId(createUserId);
 
     /// <summary>根据操作查找日志</summary>
     /// <param name="action">操作</param>

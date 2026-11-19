@@ -28,6 +28,27 @@ namespace XCode.Membership;
 public partial class Area : Entity<Area>
 {
 
+    #region 兼容别名
+
+    /// <summary>编号</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 Id</remarks>
+    [Obsolete("请使用 Id")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 ID { get => Id; set => Id = value; }
+
+    /// <summary>父级</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 ParentId</remarks>
+    [Obsolete("请使用 ParentId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 ParentID { get => ParentId; set => ParentId = value; }
+
+    #endregion
     #region 对象操作
     private static Int32 MaxCacheCount = 10000;
 
@@ -218,6 +239,8 @@ public partial class Area : Entity<Area>
     /// <summary>根据Id列表数组查询，一般先后查街道、区县、城市、省份</summary>
     /// <param name="ids"></param>
     /// <returns></returns>
+    [Obsolete("请使用 FindByIds")]
+    public static Area? FindByIDs(params Int32[] ids) => FindByIds(ids);
 
     /// <summary>根据Id列表数组查询，一般先后查街道、区县、城市、省份</summary>
     /// <param name="ids"></param>

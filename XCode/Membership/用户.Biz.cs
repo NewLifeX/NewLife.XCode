@@ -158,10 +158,14 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>根据编号查找</summary>
     /// <param name="id"></param>
     /// <returns></returns>
+    [Obsolete("请使用 FindById")]
+    public static User? FindByID(Int32 id) => FindById(id);
 
     /// <summary>直接从数据库查询用户，绕过实体缓存与单对象缓存</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象；不存在时返回 null</returns>
+    [Obsolete("请使用 FindByIdFromDatabase")]
+    public static User? FindByIDFromDatabase(Int32 id) => FindByIdFromDatabase(id);
 
     /// <summary>直接从数据库查询用户，绕过实体缓存与单对象缓存</summary>
     /// <param name="id">编号</param>
@@ -240,6 +244,8 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     /// <summary>根据角色查找</summary>
     /// <param name="roleId">角色</param>
     /// <returns>实体列表</returns>
+    [Obsolete("请使用 FindAllByRoleId")]
+    public static IList<User> FindAllByRoleID(Int32 roleId) => FindAllByRoleId(roleId);
     #endregion
 
     #region 高级查询
@@ -726,6 +732,8 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
 
     /// <summary>获取当前上下文下的角色列表。主角色在前，其它角色升序在后；进入租户后以租户关系角色组替代自有角色组进行鉴权</summary>
     /// <returns></returns>
+    [Obsolete("请使用 GetRoleIds")]
+    public Int32[] GetRoleIDs() => GetRoleIds();
 
     /// <summary>获取当前上下文下的角色列表。主角色在前，其它角色升序在后；进入租户后以租户关系角色组替代自有角色组进行鉴权</summary>
     /// <returns></returns>
@@ -751,6 +759,8 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
 
     /// <summary>获取自有角色列表。主角色在前，其它角色升序在后</summary>
     /// <returns></returns>
+    [Obsolete("请使用 GetOwnRoleIds")]
+    public Int32[] GetOwnRoleIDs() => GetOwnRoleIds();
 
     /// <summary>获取自有角色列表。主角色在前，其它角色升序在后</summary>
     /// <returns></returns>
@@ -788,6 +798,51 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
     String IIdentity.AuthenticationType => "XCode";
 
     Boolean IIdentity.IsAuthenticated => true;
+    #endregion
+
+    #region 兼容别名
+    /// <summary>编号</summary>
+    /// <remarks>兼容旧版本调用方，新代码请使用 Id</remarks>
+    [Obsolete("请使用 Id")]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 ID { get => Id; set => Id = value; }
+
+    /// <summary>角色</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 RoleId</remarks>
+    [Obsolete("请使用 RoleId")]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 RoleID { get => RoleId; set => RoleId = value; }
+
+    /// <summary>部门</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 DepartmentId</remarks>
+    [Obsolete("请使用 DepartmentId")]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 DepartmentID { get => DepartmentId; set => DepartmentId = value; }
+
+    /// <summary>更新者</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 UpdateUserId</remarks>
+    [Obsolete("请使用 UpdateUserId")]
+    [XmlIgnore, IgnoreDataMember, ScriptIgnore]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 UpdateUserID { get => UpdateUserId; set => UpdateUserId = value; }
+
+    #endregion
+
+    #region 兼容方法
+    /// <summary>根据部门查找用户</summary>
+    [Obsolete("请使用 FindAllByDepartmentId")]
+    public static IList<User> FindAllByDepartmentID(Int32 departmentId) => FindAllByDepartmentId(departmentId);
     #endregion
 
     #region IDataScope 成员

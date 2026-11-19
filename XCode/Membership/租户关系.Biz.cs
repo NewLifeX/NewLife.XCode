@@ -80,6 +80,8 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
 
     /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>
     /// <returns></returns>
+    [Obsolete("请使用 GetRoleIds")]
+    public Int32[] GetRoleIDs() => GetRoleIds();
 
     /// <summary>获取角色列表。主角色在前，其它角色升序在后</summary>
     /// <returns></returns>

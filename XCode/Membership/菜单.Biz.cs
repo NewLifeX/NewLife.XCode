@@ -10,6 +10,45 @@ namespace XCode.Membership;
 public partial class Menu : EntityTree<Menu>, IMenu
 {
 
+    #region 兼容别名
+
+    /// <summary>编号</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 Id</remarks>
+    [Obsolete("请使用 Id")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 ID { get => Id; set => Id = value; }
+
+    /// <summary>父级</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 ParentId</remarks>
+    [Obsolete("请使用 ParentId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 ParentID { get => ParentId; set => ParentId = value; }
+
+    /// <summary>创建者</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 CreateUserId</remarks>
+    [Obsolete("请使用 CreateUserId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 CreateUserID { get => CreateUserId; set => CreateUserId = value; }
+
+    /// <summary>更新者</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 UpdateUserId</remarks>
+    [Obsolete("请使用 UpdateUserId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 UpdateUserID { get => UpdateUserId; set => UpdateUserId = value; }
+
+    #endregion
     #region 对象操作
     static Menu()
     {
@@ -162,6 +201,8 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <summary>根据编号查找</summary>
     /// <param name="id"></param>
     /// <returns></returns>
+    [Obsolete("请使用 FindById")]
+    public static Menu? FindByID(Int32 id) => FindById(id);
 
     /// <summary>根据名字查找</summary>
     /// <param name="name">名称</param>
@@ -192,6 +233,8 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <summary>查找指定菜单的子菜单</summary>
     /// <param name="id"></param>
     /// <returns></returns>
+    [Obsolete("请使用 FindAllByParentId")]
+    public static List<Menu> FindAllByParentID(Int32 id) => FindAllByParentId(id).OrderByDescending(e => e.Sort).ThenBy(e => e.Id).ToList();
 
     /// <summary>取得当前角色的子菜单，有权限、可显示、排序</summary>
     /// <param name="filters"></param>
@@ -225,11 +268,15 @@ public partial class Menu : EntityTree<Menu>, IMenu
     /// <param name="parentId">父编号</param>
     /// <param name="name">名称</param>
     /// <returns>实体对象</returns>
+    [Obsolete("请使用 FindByParentIdAndName")]
+    public static Menu? FindByParentIDAndName(Int32 parentId, String name) => FindByParentIdAndName(parentId, name);
 
     /// <summary>根据链接与父编号查找菜单</summary>
     /// <param name="url">链接</param>
     /// <param name="parentId">父编号</param>
     /// <returns>实体对象；不存在时返回 null</returns>
+    [Obsolete("请使用 FindByUrlAndParentId")]
+    public static Menu? FindByUrlAndParentID(String url, Int32 parentId) => FindByUrlAndParentId(url, parentId);
 
     /// <summary>根据链接与父编号查找菜单</summary>
     /// <param name="url">链接</param>

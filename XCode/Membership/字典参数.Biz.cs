@@ -14,6 +14,60 @@ namespace XCode.Membership;
 public partial class Parameter : Entity<Parameter>
 {
 
+    #region 兼容别名
+
+    /// <summary>编号</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 Id</remarks>
+    [Obsolete("请使用 Id")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 ID { get => Id; set => Id = value; }
+
+    /// <summary>用户</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 UserId</remarks>
+    [Obsolete("请使用 UserId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 UserID { get => UserId; set => UserId = value; }
+
+    /// <summary>创建者</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 CreateUserId</remarks>
+    [Obsolete("请使用 CreateUserId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 CreateUserID { get => CreateUserId; set => CreateUserId = value; }
+
+    /// <summary>更新者</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 UpdateUserId</remarks>
+    [Obsolete("请使用 UpdateUserId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 UpdateUserID { get => UpdateUserId; set => UpdateUserId = value; }
+
+    /// <summary>根据用户查找参数</summary>
+    [Obsolete("请使用 FindAllByUserId")]
+    public static IList<Parameter> FindAllByUserID(Int32 userId) => FindAllByUserId(userId);
+
+    /// <summary>根据用户和分类查找参数</summary>
+    [Obsolete("请使用 FindAllByUserIdAndCategory")]
+    public static IList<Parameter> FindAllByUserID(Int32 userId, String? category) => FindAllByUserIdAndCategory(userId, category);
+
+    /// <summary>根据用户和分类查找参数</summary>
+    [Obsolete("请使用 FindAllByUserIdAndCategory")]
+    public static IList<Parameter> FindAllByUserIDAndCategory(Int32 userId, String? category) => FindAllByUserIdAndCategory(userId, category);
+
+    /// <summary>根据用户、分类和名称查找参数</summary>
+    [Obsolete("请使用 FindByUserIdAndCategoryAndName")]
+    public static Parameter? FindByUserIDAndCategoryAndName(Int32 userId, String? category, String name) => FindByUserIdAndCategoryAndName(userId, category, name);
+    #endregion
     #region 对象操作
     static Parameter()
     {
@@ -42,6 +96,9 @@ public partial class Parameter : Entity<Parameter>
     /// <summary>根据编号查找</summary>
     /// <param name="id">编号</param>
     /// <returns>实体对象</returns>
+    [Obsolete("请使用 FindById")]
+    public static Parameter? FindByID(Int32 id) => FindById(id);
+
 
     /// <summary>根据分类查找。直接查库，不走实体缓存，用于集群配置同步等需要最新写入时间的场景</summary>
     /// <param name="category">分类</param>
@@ -53,6 +110,8 @@ public partial class Parameter : Entity<Parameter>
     /// <summary>根据编号删除参数</summary>
     /// <param name="id">编号</param>
     /// <returns>影响行数</returns>
+    [Obsolete("请使用 DeleteById")]
+    public static Int32 DeleteByID(Int32 id) => DeleteById(id);
 
     /// <summary>根据编号删除</summary>
     /// <param name="id">编号</param>
@@ -67,6 +126,8 @@ public partial class Parameter : Entity<Parameter>
     /// <summary>根据用户删除参数</summary>
     /// <param name="userId">用户</param>
     /// <returns>影响行数</returns>
+    [Obsolete("请使用 DeleteByUserId")]
+    public static Int32 DeleteByUserID(Int32 userId) => DeleteByUserId(userId);
 
     /// <summary>根据用户删除</summary>
     /// <param name="userId">用户</param>
@@ -76,6 +137,8 @@ public partial class Parameter : Entity<Parameter>
     /// <summary>根据用户统计参数数量</summary>
     /// <param name="userId">用户</param>
     /// <returns>参数数量</returns>
+    [Obsolete("请使用 FindCountByUserId")]
+    public static Int64 FindCountByUserID(Int32 userId) => FindCountByUserId(userId);
 
     /// <summary>根据用户统计数量</summary>
     /// <param name="userId">用户</param>

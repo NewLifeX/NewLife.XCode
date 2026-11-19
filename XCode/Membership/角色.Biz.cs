@@ -12,6 +12,36 @@ namespace XCode.Membership;
 public partial class Role : LogEntity<Role>, IRole, ITenantScope
 {
 
+    #region 兼容别名
+
+    /// <summary>编号</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 Id</remarks>
+    [Obsolete("请使用 Id")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 ID { get => Id; set => Id = value; }
+
+    /// <summary>创建者</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 CreateUserId</remarks>
+    [Obsolete("请使用 CreateUserId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 CreateUserID { get => CreateUserId; set => CreateUserId = value; }
+
+    /// <summary>更新者</summary>
+    /// <remarks>兼容旧版本字段名，新代码请使用 UpdateUserId</remarks>
+    [Obsolete("请使用 UpdateUserId")]
+    [XmlIgnore, ScriptIgnore, IgnoreDataMember]
+#if NET5_0_OR_GREATER
+    [System.Text.Json.Serialization.JsonIgnore]
+#endif
+    public Int32 UpdateUserID { get => UpdateUserId; set => UpdateUserId = value; }
+
+    #endregion
     #region 对象操作
 
     static Role()
@@ -233,6 +263,8 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
     /// <summary>根据编号查找角色</summary>
     /// <param name="id"></param>
     /// <returns></returns>
+    [Obsolete("请使用 FindById")]
+    public static Role? FindByID(Int32 id) => FindById(id);
 
     /// <summary>根据编号查找角色</summary>
     /// <param name="id"></param>
@@ -296,6 +328,8 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
     /// <summary>根据编号集合查找</summary>
     /// <param name="ids">编号集合</param>
     /// <returns>实体列表</returns>
+    [Obsolete("请使用 FindAllByIds")]
+    public static IList<Role> FindAllByIDs(Int32[] ids) => FindAllByIds(ids);
 
     /// <summary>根据编号列表查找角色</summary>
     /// <param name="ids"></param>

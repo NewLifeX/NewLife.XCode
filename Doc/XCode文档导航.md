@@ -159,6 +159,7 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
 - [表元数据（TableItem）](/xcode/table_item)
 - [TableItem全局启动配置（连接名/表名/Migration 永久修改）](/xcode/table_item_startup)
 - [字段元数据（FieldItem与ShowIn）](/xcode/field_item_showin)
+- [实体字段命名规范](/xcode/naming)
 - [XCode数据模型与结构同步（IDataTable正/反向工程）](/xcode/data_model_sync)
 
 ---

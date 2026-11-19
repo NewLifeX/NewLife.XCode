@@ -49,6 +49,15 @@ public class TeradataTests
     }
 
     [Fact]
+    public void PageSplitDistinctTest()
+    {
+        var db = DbFactory.Create(DatabaseType.Teradata);
+
+        var sql = db.PageSplit("SELECT DISTINCT Name FROM test", 0, 5, null);
+        Assert.Contains("SELECT DISTINCT Top 5", sql);
+    }
+
+    [Fact]
     public void StringConcatTest()
     {
         var db = (DbBase)DbFactory.Create(DatabaseType.Teradata)!;

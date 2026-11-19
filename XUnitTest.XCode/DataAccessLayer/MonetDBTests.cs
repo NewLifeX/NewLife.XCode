@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using XCode;
 using XCode.DataAccessLayer;
 using Xunit;
@@ -75,5 +76,15 @@ public class MonetDBTests
 
         var session = db.CreateSession();
         Assert.Throws<NotSupportedException>(() => session.InsertAndGetIdentity("insert into t(a) values(1)"));
+    }
+
+    [Fact]
+    public async Task IdentityNotSupportedAsyncTest()
+    {
+        var db = DbFactory.Create(DatabaseType.MonetDB);
+        db.ConnectionString = "Host=localhost;Database=test";
+
+        var session = (IAsyncDbSession)db.CreateSession();
+        await Assert.ThrowsAsync<NotSupportedException>(() => session.InsertAndGetIdentityAsync("insert into t(a) values(1)"));
     }
 }

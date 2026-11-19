@@ -180,9 +180,6 @@ internal class YashanDBMetaData : RemoteDbMetaData
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
     {
         { typeof(Byte[]), ["BLOB", "RAW({0})"] },
-        { typeof(Boolean), ["NUMBER(1)"] },
-        { typeof(Byte), ["NUMBER(3)"] },
-        { typeof(Int16), ["NUMBER(5)"] },
         { typeof(Int32), ["INTEGER", "NUMBER(10)"] },
         { typeof(Int64), ["BIGINT", "NUMBER(19)"] },
         { typeof(Single), ["BINARY_FLOAT", "FLOAT"] },
@@ -190,6 +187,7 @@ internal class YashanDBMetaData : RemoteDbMetaData
         { typeof(Decimal), ["NUMBER({0},{1})", "DECIMAL({0},{1})", "NUMBER", "DECIMAL"] },
         { typeof(DateTime), ["TIMESTAMP", "DATE"] },
         { typeof(String), ["VARCHAR2({0})", "NVARCHAR2({0})", "CLOB", "CHAR({0})"] },
+        { typeof(Boolean), ["NUMBER(1)"] },
     };
 
     /// <summary>取字段类型。VARCHAR2 按长度格式化，超长使用 CLOB</summary>
@@ -199,6 +197,9 @@ internal class YashanDBMetaData : RemoteDbMetaData
     {
         if (field.DataType == typeof(String))
             return field.Length <= 0 || field.Length >= Database.LongTextLength ? "CLOB" : $"VARCHAR2({field.Length})";
+
+        if (field.DataType == typeof(Boolean)) return "NUMBER(1)";
+        if (field.DataType == typeof(Byte) || field.DataType == typeof(Int16)) return "NUMBER(5)";
 
         return base.GetFieldType(field);
     }

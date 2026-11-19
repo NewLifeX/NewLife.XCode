@@ -209,8 +209,8 @@ internal class TeradataMetaData : RemoteDbMetaData
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
     {
         { typeof(Byte[]), ["VARBYTE({0})", "BYTE({0})", "BLOB"] },
-        { typeof(Boolean), ["BYTEINT"] },
         { typeof(Byte), ["BYTEINT"] },
+        { typeof(Boolean), ["BYTEINT"] },
         { typeof(Int16), ["SMALLINT"] },
         { typeof(Int32), ["INTEGER", "INT"] },
         { typeof(Int64), ["BIGINT"] },

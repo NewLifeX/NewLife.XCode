@@ -67,16 +67,17 @@ partial class DAL
         var sql = target.BuildSql(Db, out var fallback);
 
         var ds = QueryWrap(sql, builder, "", (ss, sql, sb, k3) => ss.Query(sql, CommandType.Text, sb.Parameters.ToArray()), nameof(Select));
-        if (fallback != null)
-        {
-            var table = new NewLife.Data.DbTable();
-            table.Read(ds.Tables[0]);
-            WindowEvaluator.Apply(fallback, table);
-            ds.Tables.Clear();
-            ds.Tables.Add(table.ToDataTable());
-        }
+        if (fallback == null) return ds;
 
-        return ds;
+        // 结果集可能来自数据层缓存，这里构造新对象后再补算窗口列，避免修改缓存中的共享实例
+        var table = new NewLife.Data.DbTable();
+        table.Read(ds.Tables[0]);
+        WindowEvaluator.Apply(fallback, table);
+
+        var ds2 = new DataSet();
+        ds2.Tables.Add(table.ToDataTable());
+
+        return ds2;
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
@@ -194,7 +195,12 @@ partial class DAL
         var sql = target.BuildSql(Db, out var fallback);
 
         var table = await QueryAsyncWrap(sql, builder, "", (ss, sql, sb, k3) => ss.QueryAsync(sql, sb.Parameters.ToArray()), nameof(QueryAsync)).ConfigureAwait(false);
-        if (fallback != null) WindowEvaluator.Apply(fallback, table);
+        if (fallback != null)
+        {
+            // 结果集可能来自数据层缓存，先克隆再补算窗口列，避免修改缓存中的共享实例
+            table = table.Clone();
+            WindowEvaluator.Apply(fallback, table);
+        }
 
         return table;
     }

@@ -506,39 +506,39 @@ public static class WindowEvaluator
     public static void SetColumn(DbTable table, String alias, Object?[] values)
     {
         var columns = table.Columns ?? [];
-        var types = table.Types;
         var index = table.GetColumn(alias);
+        var width = columns.Length;
 
         if (index < 0)
         {
-            index = columns.Length;
+            index = width;
+            width++;
 
-            var newColumns = new String[columns.Length + 1];
+            var newColumns = new String[width];
             Array.Copy(columns, newColumns, columns.Length);
             newColumns[index] = alias;
             table.Columns = newColumns;
-
-            var newTypes = new Type[index + 1];
-            if (types != null) Array.Copy(types, newTypes, Math.Min(types.Length, index));
-            newTypes[index] = typeof(Object);
-            table.Types = newTypes;
         }
 
+        // 始终重建行数组，避免修改可能来自数据层缓存的共享实例
+        var newTypes = new Type[width];
+        var types = table.Types;
+        if (types != null) Array.Copy(types, newTypes, Math.Min(types.Length, width));
+        for (var i = 0; i < width; i++) newTypes[i] ??= typeof(Object);
+        table.Types = newTypes;
+
         var rows = table.Rows;
+        var newRows = new List<Object[]>(rows.Count);
         for (var i = 0; i < rows.Count; i++)
         {
             var row = rows[i];
-            if (row.Length > index)
-            {
-                row[index] = i < values.Length ? values[i] : null;
-                continue;
-            }
-
-            var newRow = new Object[index + 1];
-            Array.Copy(row, newRow, row.Length);
+            var newRow = new Object[width];
+            Array.Copy(row, newRow, Math.Min(row.Length, width));
             newRow[index] = i < values.Length ? values[i] : null;
-            rows[i] = newRow;
+            newRows.Add(newRow);
         }
+
+        table.Rows = newRows;
     }
     #endregion
 }

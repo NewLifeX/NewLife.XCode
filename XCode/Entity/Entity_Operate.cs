@@ -5,6 +5,7 @@ using XCode.Configuration;
 using XCode.Model;
 using XCode.Shards;
 using XCode.Statistics;
+using IDatabase = XCode.DataAccessLayer.IDatabase;
 
 namespace XCode;
 
@@ -20,8 +21,23 @@ public partial class Entity<TEntity>
         /// <summary>实体会话</summary>
         public virtual IEntitySession Session => Meta.Session;
 
-        /// <summary>实体持久化</summary>
-        public IEntityPersistence Persistence { get; set; }
+        private IEntityPersistence? _persistence;
+        /// <summary>实体持久化。未显式设置时按当前数据库类型选择默认实现</summary>
+        public IEntityPersistence Persistence
+        {
+            get
+            {
+                if (_persistence != null) return _persistence;
+
+                // 只读场景（代码生成、模型检查）不应因为取持久化而暴露数据库配置问题，
+                // 真正的连接错误留给实际操作抛出更明确的异常
+                IDatabase? db = null;
+                try { db = Session.Dal.Db; } catch { }
+
+                return _persistence = EntityPersistenceFactory.Create(this, db);
+            }
+            set => _persistence = value;
+        }
 
         /// <summary>数据行访问器，把数据行映射到实体类</summary>
         public IDataRowEntityAccessor Accessor { get; set; }
@@ -70,7 +86,6 @@ public partial class Entity<TEntity>
         public DefaultEntityFactory()
         {
             //MasterTime = GetMasterTime();
-            Persistence = new EntityPersistence(this);
             Accessor = new DataRowEntityAccessor();
         }
         #endregion

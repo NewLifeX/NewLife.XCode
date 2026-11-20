@@ -94,7 +94,7 @@ public partial class DAL
             var session = Db.CreateSession();
             if (session is IAsyncDbSession asyncSession) return asyncSession;
 
-            throw new NotSupportedException(L.T("数据库[{0}]的会话不支持异步操作", Db.Type));
+            throw new NotSupportedException(L.T("Database [{0}] sessions do not support asynchronous operations.", Db.Type));
         }
     }
 

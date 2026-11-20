@@ -196,7 +196,7 @@ public static class WindowEvaluator
 
     private static Int32 ResolveColumn(DbTable table, String name)
     {
-        if (table.Columns == null) throw new NotSupportedException(L.T("内存窗口回退要求结果集包含列 [{0}]，但当前结果集没有列信息", name));
+        if (table.Columns == null) throw new NotSupportedException(L.T("In-memory window fallback requires column [{0}] in the result set; add it to the query fields.", name));
 
         var idx = table.GetColumn(name);
         if (idx < 0)
@@ -211,7 +211,7 @@ public static class WindowEvaluator
             }
         }
 
-        if (idx < 0) throw new NotSupportedException(L.T("内存窗口回退要求结果集包含列 [{0}]，请把该列加入查询字段", name));
+        if (idx < 0) throw new NotSupportedException(L.T("In-memory window fallback requires column [{0}] in the result set; add it to the query fields.", name));
 
         return idx;
     }
@@ -271,7 +271,7 @@ public static class WindowEvaluator
     private static void EvaluateNtile(WindowExpression expression, List<Int32> ordered, Object?[] values)
     {
         if (!Int32.TryParse(expression.Arguments, out var buckets) || buckets <= 0)
-            throw new NotSupportedException(L.T("NTILE 的内存回退需要正整数分桶数量，当前为 [{0}]", expression.Arguments));
+            throw new NotSupportedException(L.T("NTILE requires a positive bucket count for in-memory fallback; got [{0}].", expression.Arguments));
 
         var count = ordered.Count;
         var baseSize = count / buckets;
@@ -287,7 +287,7 @@ public static class WindowEvaluator
     private static void EvaluateOffset(WindowExpression expression, DbTable table, List<Int32> ordered, Object?[] values, Boolean lead)
     {
         var args = ParseArguments(expression.Arguments);
-        if (args.Length == 0) throw new NotSupportedException(L.T("LAG/LEAD 的内存回退需要取值列"));
+        if (args.Length == 0) throw new NotSupportedException(L.T("Window function [{0}] requires a value column for in-memory fallback.", "LAG/LEAD"));
 
         var idx = ResolveColumn(table, args[0]);
         var offset = args.Length > 1 ? args[1].ToInt(1) : 1;
@@ -303,7 +303,7 @@ public static class WindowEvaluator
     private static void EvaluateValue(WindowExpression expression, DbTable table, List<Int32> ordered, Object?[] values, Boolean last)
     {
         var args = ParseArguments(expression.Arguments);
-        if (args.Length == 0) throw new NotSupportedException(L.T("FIRST_VALUE/LAST_VALUE 的内存回退需要取值列"));
+        if (args.Length == 0) throw new NotSupportedException(L.T("Window function [{0}] requires a value column for in-memory fallback.", "FIRST_VALUE/LAST_VALUE"));
 
         var idx = ResolveColumn(table, args[0]);
         var frame = ResolveFrame(expression);
@@ -319,7 +319,7 @@ public static class WindowEvaluator
     private static void EvaluateAggregate(WindowExpression expression, DbTable table, List<Int32> ordered, Object?[] values)
     {
         var args = ParseArguments(expression.Arguments);
-        if (args.Length == 0) throw new NotSupportedException(L.T("聚合窗口的内存回退需要聚合列"));
+        if (args.Length == 0) throw new NotSupportedException(L.T("Window function [{0}] requires a value column for in-memory fallback.", "aggregate"));
 
         var idx = ResolveColumn(table, args[0]);
         var frame = ResolveFrame(expression);
@@ -418,7 +418,7 @@ public static class WindowEvaluator
                     }
                 }
             default:
-                throw new NotSupportedException(L.T("内存窗口回退不支持带偏移量的 RANGE 帧 [{0}]，请改用 ROWS 帧", boundary));
+                throw new NotSupportedException(L.T("In-memory window fallback does not support RANGE frames with offsets ([{0}]); use ROWS instead.", boundary));
         }
     }
 

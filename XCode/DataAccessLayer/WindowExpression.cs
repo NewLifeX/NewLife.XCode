@@ -99,7 +99,7 @@ public sealed class WindowFrame
     private static String RenderBoundary(WindowFrameBoundary boundary, Int32 offset)
     {
         if ((boundary is WindowFrameBoundary.Preceding or WindowFrameBoundary.Following) && offset < 0)
-            throw new ArgumentOutOfRangeException(nameof(offset), "窗口帧偏移量不能为负数");
+            throw new ArgumentOutOfRangeException(nameof(offset), "Window frame offset cannot be negative.");
 
         return boundary switch
         {
@@ -191,7 +191,7 @@ public sealed class WindowExpression
     /// <returns>窗口表达式</returns>
     public static WindowExpression RowNumber(String? orderBy = null, String? partitionBy = null, String? alias = "RowNum")
     {
-        if (orderBy.IsNullOrEmpty()) throw new ArgumentNullException(nameof(orderBy), "ROW_NUMBER 必须指定排序字段");
+        if (orderBy.IsNullOrEmpty()) throw new ArgumentNullException(nameof(orderBy), "ROW_NUMBER requires an ORDER BY column.");
 
         return new()
         {
@@ -208,7 +208,7 @@ public sealed class WindowExpression
     /// <returns>窗口表达式</returns>
     public static WindowExpression Rank(String orderBy, String? partitionBy = null, String? alias = "Rank")
     {
-        if (orderBy.IsNullOrEmpty()) throw new ArgumentNullException(nameof(orderBy), "RANK 必须指定排序字段");
+        if (orderBy.IsNullOrEmpty()) throw new ArgumentNullException(nameof(orderBy), "RANK requires an ORDER BY column.");
 
         return new()
         {
@@ -225,7 +225,7 @@ public sealed class WindowExpression
     /// <returns>窗口表达式</returns>
     public static WindowExpression DenseRank(String orderBy, String? partitionBy = null, String? alias = "DenseRank")
     {
-        if (orderBy.IsNullOrEmpty()) throw new ArgumentNullException(nameof(orderBy), "DENSE_RANK 必须指定排序字段");
+        if (orderBy.IsNullOrEmpty()) throw new ArgumentNullException(nameof(orderBy), "DENSE_RANK requires an ORDER BY column.");
 
         return new()
         {
@@ -243,7 +243,7 @@ public sealed class WindowExpression
     /// <returns>窗口表达式</returns>
     public static WindowExpression Ntile(Int32 buckets, String? orderBy = null, String? partitionBy = null, String? alias = "Ntile")
     {
-        if (buckets <= 0) throw new ArgumentOutOfRangeException(nameof(buckets), "分桶数量必须大于零");
+        if (buckets <= 0) throw new ArgumentOutOfRangeException(nameof(buckets), "Bucket count must be greater than zero.");
 
         return new()
         {
@@ -345,8 +345,8 @@ public sealed class WindowExpression
     public static WindowExpression Aggregate(WindowFunctionKind function, String column, String? partitionBy = null, String? orderBy = null, WindowFrame? frame = null, String? alias = null)
     {
         if (function is not (WindowFunctionKind.Sum or WindowFunctionKind.Avg or WindowFunctionKind.Count or WindowFunctionKind.Min or WindowFunctionKind.Max))
-            throw new ArgumentOutOfRangeException(nameof(function), function, "仅聚合函数可创建聚合窗口表达式");
-        if (column.IsNullOrEmpty()) throw new ArgumentNullException(nameof(column), "聚合窗口必须指定列");
+            throw new ArgumentOutOfRangeException(nameof(function), function, "Only aggregate functions can build an aggregate window expression.");
+        if (column.IsNullOrEmpty()) throw new ArgumentNullException(nameof(column), "Aggregate windows require a column.");
 
         return new()
         {
@@ -359,7 +359,7 @@ public sealed class WindowExpression
 
     private static String BuildOffsetArguments(String column, Int32 offset, String? defaultValue)
     {
-        if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset), "窗口偏移量不能为负数");
+        if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset), "Window offset cannot be negative.");
         if (!defaultValue.IsNullOrEmpty()) return $"{column}, {offset}, {defaultValue}";
         if (offset != 1) return $"{column}, {offset}";
 

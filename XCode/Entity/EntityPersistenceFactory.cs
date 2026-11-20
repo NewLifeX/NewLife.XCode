@@ -26,6 +26,7 @@ public static class EntityPersistenceFactory
         // 非 SQL 数据库默认使用原生持久化适配器，避免落到 SQL 生成路径
         Register(DatabaseType.MongoDB, new MongoEntityPersistenceFactory());
         Register(DatabaseType.InfluxDB, new InfluxEntityPersistenceFactory());
+        Register(DatabaseType.OpenTSDB, new OpenTSDBEntityPersistenceFactory());
     }
 
     /// <summary>注册指定数据库类型的持久化工厂</summary>

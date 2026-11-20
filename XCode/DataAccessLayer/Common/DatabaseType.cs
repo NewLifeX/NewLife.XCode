@@ -133,6 +133,18 @@ public enum DatabaseType
     [Description("Google Cloud Spanner数据库")]
     Spanner = 31,
 
+    /// <summary>OpenTSDB时序数据库。基于HBase的指标存储，使用HTTP JSON接口</summary>
+    [Description("OpenTSDB时序数据库")]
+    OpenTSDB = 32,
+
+    /// <summary>Apache IoTDB时序数据库。使用REST接口访问</summary>
+    [Description("Apache IoTDB时序数据库")]
+    IoTDB = 33,
+
+    /// <summary>Prometheus时序数据库。PromQL只读查询，兼容VictoriaMetrics</summary>
+    [Description("Prometheus时序数据库")]
+    Prometheus = 34,
+
     /// <summary>网络虚拟数据库。通过HTTP接口转发数据库操作到远端服务执行</summary>
     [Description("网络虚拟数据库")]
     Network = 100,

@@ -38,6 +38,9 @@ public static class DbFactory
         Register<YashanDB>(DatabaseType.YashanDB);
         Register<MonetDB>(DatabaseType.MonetDB);
         Register<Spanner>(DatabaseType.Spanner);
+        Register<OpenTSDB>(DatabaseType.OpenTSDB);
+        Register<IoTDB>(DatabaseType.IoTDB);
+        Register<Prometheus>(DatabaseType.Prometheus);
         Register<NetworkDb>(DatabaseType.Network);
         Register<Firebird>(DatabaseType.Firebird);
         //Register<Access>(DatabaseType.Access);

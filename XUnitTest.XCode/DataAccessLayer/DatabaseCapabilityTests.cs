@@ -119,6 +119,55 @@ public class DatabaseCapabilityTests
     }
 
     [Fact]
+    [System.ComponentModel.Description("OpenTSDB只声明批量写入，不含更新与删除")]
+    public void OpenTSDB_DatabaseCapability()
+    {
+        var db = DbFactory.Create(DatabaseType.OpenTSDB);
+        var cap = db.Capabilities;
+
+        Assert.True(cap.HasFlag(DatabaseCapability.BulkInsert));
+        Assert.True(cap.HasFlag(DatabaseCapability.BulkUpsert));
+        Assert.False(cap.HasFlag(DatabaseCapability.Update));
+        Assert.False(cap.HasFlag(DatabaseCapability.Delete));
+        Assert.False(cap.HasFlag(DatabaseCapability.Sql));
+        Assert.Equal(Migration.Off, db.MaxMigration);
+    }
+
+    [Fact]
+    [System.ComponentModel.Description("IoTDB声明原生SQL与架构发现，不声明实体增删改")]
+    public void IoTDB_DatabaseCapability()
+    {
+        var db = DbFactory.Create(DatabaseType.IoTDB);
+        var cap = db.Capabilities;
+
+        Assert.True(cap.HasFlag(DatabaseCapability.Sql));
+        Assert.True(cap.HasFlag(DatabaseCapability.SchemaDiscovery));
+        Assert.False(cap.HasFlag(DatabaseCapability.Insert));
+        Assert.False(cap.HasFlag(DatabaseCapability.Update));
+        Assert.False(cap.HasFlag(DatabaseCapability.Delete));
+        Assert.Equal(Migration.Off, db.MaxMigration);
+
+        // 实体 ORM 被能力门禁拒绝
+        Assert.Throws<NotSupportedException>(() => db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Insert, "entity insert"));
+    }
+
+    [Fact]
+    [System.ComponentModel.Description("Prometheus只读，仅声明架构发现")]
+    public void Prometheus_DatabaseCapability()
+    {
+        var db = DbFactory.Create(DatabaseType.Prometheus);
+        var cap = db.Capabilities;
+
+        Assert.True(cap.HasFlag(DatabaseCapability.SchemaDiscovery));
+        Assert.False(cap.HasFlag(DatabaseCapability.Sql));
+        Assert.False(cap.HasFlag(DatabaseCapability.Insert));
+        Assert.False(cap.HasFlag(DatabaseCapability.Transactions));
+        Assert.Equal(Migration.Off, db.MaxMigration);
+        Assert.True(db.Support("Prometheus"));
+        Assert.True(db.Support("VictoriaMetrics"));
+    }
+
+    [Fact]
     [System.ComponentModel.Description("DatabaseCapability枚举值满足Flags语义，组合标志可通过HasFlag判断")]
     public void DatabaseCapability_FlagsSemantics()
     {
@@ -180,6 +229,8 @@ public class DatabaseCapabilityTests
     [Theory]
     [InlineData(DatabaseType.MongoDB)]
     [InlineData(DatabaseType.InfluxDB)]
+    [InlineData(DatabaseType.OpenTSDB)]
+    [InlineData(DatabaseType.Prometheus)]
     [System.ComponentModel.Description("非 SQL 提供者不得声明 SQL/事务能力")]
     public void NonSqlProvider_DoesNotClaimSqlOrTransactions(DatabaseType dbType)
     {
@@ -195,6 +246,9 @@ public class DatabaseCapabilityTests
     [InlineData(DatabaseType.Spanner)]
     [InlineData(DatabaseType.MongoDB)]
     [InlineData(DatabaseType.InfluxDB)]
+    [InlineData(DatabaseType.OpenTSDB)]
+    [InlineData(DatabaseType.IoTDB)]
+    [InlineData(DatabaseType.Prometheus)]
     [InlineData(DatabaseType.Network)]
     [System.ComponentModel.Description("不支持自动迁移的提供者，最大迁移模式必须为 Off")]
     public void ProviderWithoutDdl_MaxMigrationIsOff(DatabaseType dbType)
@@ -229,6 +283,8 @@ public class DatabaseCapabilityTests
     [Theory]
     [InlineData(DatabaseType.MongoDB)]
     [InlineData(DatabaseType.InfluxDB)]
+    [InlineData(DatabaseType.OpenTSDB)]
+    [InlineData(DatabaseType.Prometheus)]
     [System.ComponentModel.Description("非 SQL 提供者不得声明窗口函数能力")]
     public void NonSqlProvider_DoesNotClaimWindowFunctions(DatabaseType dbType)
     {

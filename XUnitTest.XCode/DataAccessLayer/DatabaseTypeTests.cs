@@ -38,6 +38,9 @@ public class DatabaseTypeTests
             DatabaseType.Trino,
             DatabaseType.Firebird,
             DatabaseType.Network,
+            DatabaseType.OpenTSDB,
+            DatabaseType.IoTDB,
+            DatabaseType.Prometheus,
         };
 
         foreach (var dbType in types)

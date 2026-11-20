@@ -1099,10 +1099,10 @@ internal class SQLiteMetaData : FileDbMetaData
         base.CheckTable(entitytable, dbtable, mode, set);
     }
 
-    protected override Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
+    protected override Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLCommand command)
     {
         // SQLite表和字段不支持注释
-        switch (schema)
+        switch (command.Schema)
         {
             case DDLSchema.AddTableDescription:
             case DDLSchema.DropTableDescription:
@@ -1110,11 +1110,11 @@ internal class SQLiteMetaData : FileDbMetaData
             case DDLSchema.DropColumnDescription:
                 return true;
             case DDLSchema.AlterColumn:
-                return base.PerformSchema(sb, true, schema, values);
+                return base.PerformSchema(sb, true, command);
             default:
                 break;
         }
-        return base.PerformSchema(sb, onlySql, schema, values);
+        return base.PerformSchema(sb, onlySql, command);
     }
 
     protected override Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)

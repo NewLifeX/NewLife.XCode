@@ -648,8 +648,8 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     /// <inheritdoc/>
     public override String? DropColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS NULL";
 
-    protected override Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
+    protected override Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLCommand command)
     {
-        return base.PerformSchema(sb, onlySql, schema, values);
+        return base.PerformSchema(sb, onlySql, command);
     }
 }

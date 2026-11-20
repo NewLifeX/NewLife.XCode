@@ -8,13 +8,23 @@ public interface ISchemaMigrator
     /// <param name="tables">表模型集合</param>
     void SetTables(Migration setting, params IDataTable[] tables);
 
-    /// <summary>获取数据定义语句</summary>
+    /// <summary>获取 DDL 命令对应的 SQL 语句</summary>
+    /// <param name="command">DDL 命令</param>
+    /// <returns>数据定义语句；无 SQL 语义时返回 null</returns>
+    String? GetCommandSql(DDLCommand command);
+
+    /// <summary>执行 DDL 命令</summary>
+    /// <param name="command">DDL 命令</param>
+    /// <returns>执行结果</returns>
+    Object? ExecuteCommand(DDLCommand command);
+
+    /// <summary>获取数据定义语句。兼容入口，内部转发到 <see cref="GetCommandSql"/></summary>
     /// <param name="schema">数据定义模式</param>
     /// <param name="values">其它信息</param>
     /// <returns>数据定义语句</returns>
     String? GetSchemaSQL(DDLSchema schema, params Object?[] values);
 
-    /// <summary>设置数据定义模式</summary>
+    /// <summary>设置数据定义模式。兼容入口，内部转发到 <see cref="ExecuteCommand"/></summary>
     /// <param name="schema">数据定义模式</param>
     /// <param name="values">其它信息</param>
     /// <returns>执行结果</returns>

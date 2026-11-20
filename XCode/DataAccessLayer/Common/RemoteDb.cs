@@ -285,7 +285,7 @@ abstract class RemoteDbMetaData : DbMetaData
 
         using var span = db.Tracer?.NewSpan($"db:{db.ConnName}:CreateDatabase", databaseName);
 
-        var sql = base.GetSchemaSQL(DDLSchema.CreateDatabase, [databaseName, file]);
+        var sql = CreateDatabaseSQL(databaseName, file);
         if (sql.IsNullOrEmpty()) return false;
 
         if (span != null) span.Tag += Environment.NewLine + sql;

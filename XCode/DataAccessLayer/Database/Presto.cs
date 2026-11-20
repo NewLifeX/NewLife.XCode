@@ -389,16 +389,15 @@ internal class PrestoMetaData : RemoteDbMetaData
     private const String NotSupportedMessage = "Presto/Trino does not support automatic schema migration. Keep Migration=Off and create tables with the connector's own tooling.";
 
     /// <summary>获取数据定义语句。DDL 全部不支持</summary>
-    /// <param name="schema">数据定义模式</param>
-    /// <param name="values">其它信息</param>
+    /// <param name="command">DDL 命令</param>
     /// <returns></returns>
-    public override String? GetSchemaSQL(DDLSchema schema, params Object?[] values) => schema switch
+    public override String? GetCommandSql(DDLCommand command) => command.Schema switch
     {
         DDLSchema.CreateTable or DDLSchema.DropTable or DDLSchema.AddColumn or DDLSchema.AlterColumn or
         DDLSchema.RenameColumn or DDLSchema.DropColumn or DDLSchema.CreateIndex or DDLSchema.DropIndex or
         DDLSchema.CreateDatabase or DDLSchema.DropDatabase => throw new NotSupportedException(NotSupportedMessage),
         DDLSchema.AddTableDescription or DDLSchema.DropTableDescription or DDLSchema.AddColumnDescription or DDLSchema.DropColumnDescription => null,
-        _ => base.GetSchemaSQL(schema, values),
+        _ => base.GetCommandSql(command),
     };
 
     /// <summary>建立表。Presto/Trino 不支持</summary>

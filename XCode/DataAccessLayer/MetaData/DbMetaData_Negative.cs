@@ -113,7 +113,7 @@ public partial class DbMetaData
             }
             else
             {
-                var sql = GetSchemaSQL(DDLSchema.CreateDatabase, [null, null]);
+                var sql = GetCommandSql(DDLCommand.CreateDatabase(null));
                 if (String.IsNullOrEmpty(sql))
                     WriteLog("Please create the database for connection {0}!", ConnName);
                 else
@@ -273,8 +273,8 @@ public partial class DbMetaData
                         item.Nullable = true;
                 }
 
-                PerformSchema(sb, @readonly, DDLSchema.AddColumn, item);
-                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, @readonly, DDLSchema.AddColumnDescription, item);
+                PerformSchema(sb, @readonly, DDLCommand.AddColumn(item));
+                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, @readonly, DDLCommand.AddColumnDescription(item));
             }
         }
         #endregion
@@ -286,8 +286,8 @@ public partial class DbMetaData
             var item = dbtable.Columns[i];
             if (!etdic.ContainsKey(FormatName(item)))
             {
-                if (!String.IsNullOrEmpty(item.Description)) PerformSchema(sb, @readonly || onlyCreate, DDLSchema.DropColumnDescription, item);
-                PerformSchema(sbDelete, @readonly || onlyCreate, DDLSchema.DropColumn, item);
+                if (!String.IsNullOrEmpty(item.Description)) PerformSchema(sb, @readonly || onlyCreate, DDLCommand.DropColumnDescription(item));
+                PerformSchema(sbDelete, @readonly || onlyCreate, DDLCommand.DropColumn(item));
             }
         }
         if (sbDelete.Length > 0)
@@ -318,12 +318,12 @@ public partial class DbMetaData
             if (IsColumnTypeChanged(item, dbf))
             {
                 WriteLog("The type of field [{0}.{1}] needs to change from database type [{2}] to entity type [{3}], RawType={4}", entitytable.Name, item.Name, dbf.DataType?.Name, item.DataType?.FullName.TrimPrefix("System."), dbf.RawType);
-                PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly || onlyCreate, DDLCommand.AlterColumn(item, dbf));
             }
             else if (IsColumnLengthChanged(item, dbf, entityDb))
-                PerformSchema(sb, @readonly, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly, DDLCommand.AlterColumn(item, dbf));
             else if (IsColumnChanged(item, dbf, entityDb))
-                PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AlterColumn, item, dbf);
+                PerformSchema(sb, @readonly || onlyCreate, DDLCommand.AlterColumn(item, dbf));
 
             //if (item.Description + "" != dbf.Description + "")
             if (set.CheckComment && FormatDescription(item.Description) != FormatDescription(dbf.Description))
@@ -332,7 +332,7 @@ public partial class DbMetaData
                 //if (dbf.Description != null) PerformSchema(sb, noDelete, DDLSchema.DropColumnDescription, dbf);
 
                 // 加上新注释
-                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, @readonly || onlyCreate, DDLSchema.AddColumnDescription, item);
+                if (!item.Description.IsNullOrEmpty()) PerformSchema(sb, @readonly || onlyCreate, DDLCommand.AddColumnDescription(item));
             }
         }
         #endregion
@@ -368,7 +368,7 @@ public partial class DbMetaData
             if (old == null) continue;
 
             WriteLog("The case of field [{0}.{1}] differs from the model; renaming to [{2}].", dbtable.TableName, old.ColumnName, item.ColumnName);
-            PerformSchema(sb, @readonly, DDLSchema.RenameColumn, old, item.ColumnName + "");
+            PerformSchema(sb, @readonly, DDLCommand.RenameColumn(old, item.ColumnName + ""));
 
             // 改名后同步内存模型，避免后续重复处理
             old.ColumnName = item.ColumnName;
@@ -394,7 +394,7 @@ public partial class DbMetaData
             //if (!String.IsNullOrEmpty(dbtable.Description)) PerformSchema(sb, onlySql, DDLSchema.DropTableDescription, dbtable);
 
             // 加上新注释
-            if (!String.IsNullOrEmpty(entitytable.Description)) PerformSchema(sb, @readonly, DDLSchema.AddTableDescription, entitytable);
+            if (!String.IsNullOrEmpty(entitytable.Description)) PerformSchema(sb, @readonly, DDLCommand.AddTableDescription(entitytable));
         }
         #endregion
 
@@ -466,7 +466,7 @@ public partial class DbMetaData
                     ids.Add(key);
 
                     if (di == null || di.Unique != item.Unique)
-                        PerformSchema(sb, @readonly, DDLSchema.CreateIndex, item);
+                        PerformSchema(sb, @readonly, DDLCommand.CreateIndex(item));
                 }
 
                 if (di == null)
@@ -510,7 +510,7 @@ public partial class DbMetaData
                 var di = ModelHelper.GetIndex(entitytable, item.Unique, dcs.Select(e => e.ColumnName).ToArray());
                 if (di == null || di.Unique != item.Unique)
                 {
-                    PerformSchema(sb, onlyCreate, DDLSchema.DropIndex, item);
+                    PerformSchema(sb, onlyCreate, DDLCommand.DropIndex(item));
                     if (!onlyCreate) dbdis.Remove(item);
                 }
             }
@@ -769,66 +769,39 @@ public partial class DbMetaData
     /// </summary>
     /// <param name="sb"></param>
     /// <param name="onlySql"></param>
-    /// <param name="schema"></param>
-    /// <param name="values"></param>
+    /// <param name="command">DDL 命令</param>
     /// <returns>返回是否成功</returns>
-    protected virtual Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
+    protected virtual Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLCommand command)
     {
-        var sql = GetSchemaSQL(schema, values);
+        var sql = GetCommandSql(command);
 
         // 只有null才表示通过非SQL的方式处理，而String.Empty表示已经通过别的SQL处理，这里不用输出日志
         if (sql == null)
         {
-            // 没办法形成SQL，输出日志信息
-            var s = new StringBuilder();
-            if (values.Length > 0)
-            {
-                foreach (var item in values)
-                {
-                    if (s.Length > 0) s.Append(' ');
-                    s.Append(item);
-                }
-            }
-
-            IDataColumn? dc = null;
-            IDataTable? dt = null;
-            if (values.Length > 0)
-            {
-                dc = values[0] as IDataColumn;
-                dt = values[0] as IDataTable;
-            }
-
-            switch (schema)
+            switch (command.Schema)
             {
                 case DDLSchema.AddTableDescription:
-                    if (dt == null) throw new ArgumentNullException(nameof(values));
-                    WriteLog("{0}({1},{2})", schema, dt.TableName, dt.Description);
+                    WriteLog("{0}({1},{2})", command.Schema, command.Table?.TableName, command.Table?.Description);
                     break;
                 case DDLSchema.DropTableDescription:
-                    WriteLog("{0}({1})", schema, dt);
+                    WriteLog("{0}({1})", command.Schema, command.Table);
                     break;
                 case DDLSchema.AddColumn:
-                    WriteLog("{0}({1})", schema, dc);
+                    WriteLog("{0}({1})", command.Schema, command.Column);
                     break;
-                //case DDLSchema.AlterColumn:
-                //    break;
                 case DDLSchema.DropColumn:
-                    if (dc == null) throw new ArgumentNullException(nameof(values));
-                    WriteLog("{0}({1})", schema, dc.ColumnName);
+                    WriteLog("{0}({1})", command.Schema, command.Column?.ColumnName);
                     break;
                 case DDLSchema.AddColumnDescription:
-                    if (dc == null) throw new ArgumentNullException(nameof(values));
-                    WriteLog("{0}({1},{2})", schema, dc.ColumnName, dc.Description);
+                    WriteLog("{0}({1},{2})", command.Schema, command.Column?.ColumnName, command.Column?.Description);
                     break;
                 case DDLSchema.DropColumnDescription:
-                    if (dc == null) throw new ArgumentNullException(nameof(values));
-                    WriteLog("{0}({1})", schema, dc.ColumnName);
+                    WriteLog("{0}({1})", command.Schema, command.Column?.ColumnName);
                     break;
                 default:
-                    WriteLog("Altering table: {0} {1}", schema.ToString(), s.ToString());
+                    WriteLog("Altering table: {0}", command);
                     break;
             }
-            //WriteLog("Altering table: {0} {1}", schema.ToString(), s.ToString());
         }
 
         if (onlySql)
@@ -843,17 +816,26 @@ public partial class DbMetaData
         {
             try
             {
-                SetSchema(schema, values);
+                ExecuteCommand(command);
             }
             catch (Exception ex)
             {
-                WriteLog("Failed to alter table {0}! {1}", schema.ToString(), ex.Message);
+                WriteLog("Failed to alter table {0}! {1}", command.Schema.ToString(), ex.Message);
                 return false;
             }
         }
 
         return true;
     }
+
+    /// <summary>获取架构语句。兼容旧版模式与参数</summary>
+    /// <param name="sb"></param>
+    /// <param name="onlySql"></param>
+    /// <param name="schema">数据定义模式</param>
+    /// <param name="values">旧版参数</param>
+    /// <returns>返回是否成功</returns>
+    protected virtual Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLSchema schema, params Object[] values)
+        => PerformSchema(sb, onlySql, DDLCommand.From(schema, values));
 
     /// <summary>创建数据表，包括注释与索引</summary>
     /// <param name="sb"></param>
@@ -862,15 +844,15 @@ public partial class DbMetaData
     public virtual void CreateTable(StringBuilder sb, IDataTable table, Boolean onlySql)
     {
         // 创建表失败后，不再处理注释和索引
-        if (!PerformSchema(sb, onlySql, DDLSchema.CreateTable, table)) return;
+        if (!PerformSchema(sb, onlySql, DDLCommand.CreateTable(table))) return;
 
         // 加上表注释
-        if (!String.IsNullOrEmpty(table.Description)) PerformSchema(sb, onlySql, DDLSchema.AddTableDescription, table);
+        if (!String.IsNullOrEmpty(table.Description)) PerformSchema(sb, onlySql, DDLCommand.AddTableDescription(table));
 
         // 加上字段注释
         foreach (var item in table.Columns)
         {
-            if (!String.IsNullOrEmpty(item.Description)) PerformSchema(sb, onlySql, DDLSchema.AddColumnDescription, item);
+            if (!String.IsNullOrEmpty(item.Description)) PerformSchema(sb, onlySql, DDLCommand.AddColumnDescription(item));
         }
 
         // 加上索引
@@ -900,7 +882,7 @@ public partial class DbMetaData
                 {
                     ids.Add(key);
 
-                    PerformSchema(sb, onlySql, DDLSchema.CreateIndex, item);
+                    PerformSchema(sb, onlySql, DDLCommand.CreateIndex(item));
                 }
             }
         }
@@ -908,63 +890,77 @@ public partial class DbMetaData
     #endregion
 
     #region 数据定义
-    /// <summary>获取数据定义语句</summary>
-    /// <param name="schema">数据定义模式</param>
-    /// <param name="values">其它信息</param>
+    /// <summary>获取 DDL 命令对应的 SQL 语句</summary>
+    /// <param name="command">DDL 命令</param>
     /// <returns></returns>
-    public virtual String? GetSchemaSQL(DDLSchema schema, params Object?[] values)
+    public virtual String? GetCommandSql(DDLCommand command)
     {
-        return schema switch
+        if (command == null) throw new ArgumentNullException(nameof(command));
+
+        return command.Schema switch
         {
-            DDLSchema.CreateDatabase => CreateDatabaseSQL((String)values[0]!, (String?)values[1]),
-            DDLSchema.DropDatabase => DropDatabaseSQL((String)values[0]!),
-            DDLSchema.DatabaseExist => DatabaseExistSQL((String)values[0]!),
-            DDLSchema.CreateTable => CreateTableSQL((IDataTable)values[0]!),
-            DDLSchema.DropTable => DropTableSQL((IDataTable)values[0]!),
-            DDLSchema.AddTableDescription => AddTableDescriptionSQL((IDataTable)values[0]!),
-            DDLSchema.DropTableDescription => DropTableDescriptionSQL((IDataTable)values[0]!),
-            DDLSchema.AddColumn => AddColumnSQL((IDataColumn)values[0]!),
-            DDLSchema.AlterColumn => AlterColumnSQL((IDataColumn)values[0]!, values.Length > 1 ? (IDataColumn)values[1]! : null),
-            DDLSchema.RenameColumn => RenameColumnSQL((IDataColumn)values[0]!, (String)values[1]!),
-            DDLSchema.DropColumn => DropColumnSQL((IDataColumn)values[0]!),
-            DDLSchema.AddColumnDescription => AddColumnDescriptionSQL((IDataColumn)values[0]!),
-            DDLSchema.DropColumnDescription => DropColumnDescriptionSQL((IDataColumn)values[0]!),
-            DDLSchema.CreateIndex => CreateIndexSQL((IDataIndex)values[0]!),
-            DDLSchema.DropIndex => DropIndexSQL((IDataIndex)values[0]!),
+            DDLSchema.CreateDatabase => CreateDatabaseSQL(command.DatabaseName!, command.File),
+            DDLSchema.DropDatabase => DropDatabaseSQL(command.DatabaseName!),
+            DDLSchema.DatabaseExist => DatabaseExistSQL(command.DatabaseName!),
+            DDLSchema.CreateTable => CreateTableSQL(command.Table!),
+            DDLSchema.DropTable => DropTableSQL(command.Table!),
+            DDLSchema.AddTableDescription => AddTableDescriptionSQL(command.Table!),
+            DDLSchema.DropTableDescription => DropTableDescriptionSQL(command.Table!),
+            DDLSchema.AddColumn => AddColumnSQL(command.Column!),
+            DDLSchema.AlterColumn => AlterColumnSQL(command.Column!, command.OldColumn),
+            DDLSchema.RenameColumn => RenameColumnSQL(command.Column!, command.NewName!),
+            DDLSchema.DropColumn => DropColumnSQL(command.Column!),
+            DDLSchema.AddColumnDescription => AddColumnDescriptionSQL(command.Column!),
+            DDLSchema.DropColumnDescription => DropColumnDescriptionSQL(command.Column!),
+            DDLSchema.CreateIndex => CreateIndexSQL(command.Index!),
+            DDLSchema.DropIndex => DropIndexSQL(command.Index!),
             DDLSchema.CompactDatabase => CompactDatabaseSQL(),
             _ => throw new NotSupportedException(L.T("This operation is not supported!")),
         };
     }
 
-    /// <summary>设置数据定义模式</summary>
-    /// <param name="schema">数据定义模式</param>
-    /// <param name="values">其它信息</param>
+    /// <summary>执行 DDL 命令</summary>
+    /// <param name="command">DDL 命令</param>
     /// <returns></returns>
-    public virtual Object? SetSchema(DDLSchema schema, params Object?[] values)
+    public virtual Object? ExecuteCommand(DDLCommand command)
     {
-        return schema switch
+        if (command == null) throw new ArgumentNullException(nameof(command));
+
+        return command.Schema switch
         {
-            DDLSchema.CreateDatabase => CreateDatabase((String)values[0]!, values.Length > 1 ? (String?)values[1] : null),
-            DDLSchema.DropDatabase => DropDatabase((String)values[0]!),
-            DDLSchema.DatabaseExist => DatabaseExist(values.Length > 0 ? (String?)values[0] : null),
-            DDLSchema.CreateTable => CreateTable((IDataTable)values[0]!),
-            DDLSchema.DropTable => DropTable((IDataTable)values[0]!),
-            DDLSchema.AddTableDescription => AddTableDescription((IDataTable)values[0]!),
-            DDLSchema.DropTableDescription => DropTableDescription((IDataTable)values[0]!),
-            DDLSchema.AddColumn => AddColumn((IDataColumn)values[0]!),
-            DDLSchema.AlterColumn => AlterColumn((IDataColumn)values[0]!, values.Length > 1 ? (IDataColumn)values[1]! : null),
-            DDLSchema.RenameColumn => RenameColumn((IDataColumn)values[0]!, (String)values[1]!),
-            DDLSchema.DropColumn => DropColumn((IDataColumn)values[0]!),
-            DDLSchema.AddColumnDescription => AddColumnDescription((IDataColumn)values[0]!),
-            DDLSchema.DropColumnDescription => DropColumnDescription((IDataColumn)values[0]!),
-            DDLSchema.CreateIndex => CreateIndex((IDataIndex)values[0]!),
-            DDLSchema.DropIndex => DropIndex((IDataIndex)values[0]!),
-            DDLSchema.BackupDatabase => BackupDatabase(values?.Length > 0 ? (String?)values[0] : null, values?.Length > 1 ? (String?)values[1] : null),
-            DDLSchema.RestoreDatabase => RestoreDatabase((String)values[0]!, values?.Length > 1 ? (String?)values[1] : null),
+            DDLSchema.CreateDatabase => CreateDatabase(command.DatabaseName!, command.File),
+            DDLSchema.DropDatabase => DropDatabase(command.DatabaseName!),
+            DDLSchema.DatabaseExist => DatabaseExist(command.DatabaseName),
+            DDLSchema.CreateTable => CreateTable(command.Table!),
+            DDLSchema.DropTable => DropTable(command.Table!),
+            DDLSchema.AddTableDescription => AddTableDescription(command.Table!),
+            DDLSchema.DropTableDescription => DropTableDescription(command.Table!),
+            DDLSchema.AddColumn => AddColumn(command.Column!),
+            DDLSchema.AlterColumn => AlterColumn(command.Column!, command.OldColumn),
+            DDLSchema.RenameColumn => RenameColumn(command.Column!, command.NewName!),
+            DDLSchema.DropColumn => DropColumn(command.Column!),
+            DDLSchema.AddColumnDescription => AddColumnDescription(command.Column!),
+            DDLSchema.DropColumnDescription => DropColumnDescription(command.Column!),
+            DDLSchema.CreateIndex => CreateIndex(command.Index!),
+            DDLSchema.DropIndex => DropIndex(command.Index!),
+            DDLSchema.BackupDatabase => BackupDatabase(command.DatabaseName, command.BackupFile),
+            DDLSchema.RestoreDatabase => RestoreDatabase(command.BackupFile!, command.RecoverDir),
             DDLSchema.CompactDatabase => CompactDatabase(),
             _ => throw new NotSupportedException(L.T("This operation is not supported!")),
         };
     }
+
+    /// <summary>获取数据定义语句。兼容入口，内部转发到 <see cref="GetCommandSql"/></summary>
+    /// <param name="schema">数据定义模式</param>
+    /// <param name="values">其它信息</param>
+    /// <returns></returns>
+    public virtual String? GetSchemaSQL(DDLSchema schema, params Object?[] values) => GetCommandSql(DDLCommand.From(schema, values));
+
+    /// <summary>设置数据定义模式。兼容入口，内部转发到 <see cref="ExecuteCommand"/></summary>
+    /// <param name="schema">数据定义模式</param>
+    /// <param name="values">其它信息</param>
+    /// <returns></returns>
+    public virtual Object? SetSchema(DDLSchema schema, params Object?[] values) => ExecuteCommand(DDLCommand.From(schema, values));
 
     /// <summary>字段片段</summary>
     /// <param name="field">字段</param>

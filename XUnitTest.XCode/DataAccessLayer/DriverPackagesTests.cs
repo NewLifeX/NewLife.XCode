@@ -33,8 +33,8 @@ public class DriverPackagesTests
     [Fact(DisplayName = "已注册数据库均能给出驱动包提示")]
     public void AllRegisteredDatabasesCovered()
     {
-        // 这三个提供者自带工厂，不依赖外部 NuGet 驱动
-        var selfContained = new[] { DatabaseType.Network, DatabaseType.TDengine, DatabaseType.InfluxDB };
+        // 这些提供者自带工厂，不依赖外部 NuGet 驱动
+        var selfContained = new[] { DatabaseType.Network, DatabaseType.TDengine, DatabaseType.InfluxDB, DatabaseType.OpenTSDB, DatabaseType.IoTDB, DatabaseType.Prometheus };
         foreach (var type in Enum.GetValues<DatabaseType>())
         {
             if (type is DatabaseType.None || selfContained.Contains(type)) continue;

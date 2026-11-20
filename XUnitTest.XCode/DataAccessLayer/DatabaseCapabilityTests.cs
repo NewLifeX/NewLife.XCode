@@ -252,8 +252,49 @@ public class DatabaseCapabilityTests
             Assert.True(db.Capabilities != DatabaseCapability.None || type == DatabaseType.MongoDB, $"{type} 未声明任何能力");
             if (db.Capabilities.HasFlag(DatabaseCapability.WindowFunctions))
                 Assert.True(db.Capabilities.HasFlag(DatabaseCapability.Sql), $"{type} 声明了窗口函数但不是 SQL 提供者");
+            if (db.Capabilities.HasFlag(DatabaseCapability.WindowFrame))
+                Assert.True(db.Capabilities.HasFlag(DatabaseCapability.WindowFunctions), $"{type} 声明了窗口帧但没有声明窗口函数");
+            if (db.Capabilities.HasFlag(DatabaseCapability.Ddl))
+                Assert.True(db.Capabilities.HasFlag(DatabaseCapability.Sql), $"{type} 声明了 DDL 但不是 SQL 提供者");
+            if (db.Capabilities.HasFlag(DatabaseCapability.Identity))
+                Assert.True(db.Capabilities.HasFlag(DatabaseCapability.Sql), $"{type} 声明了自增但不是 SQL 提供者");
         }
 
         Assert.True(count >= 25, $"仅检测到 {count} 个已注册提供者");
+    }
+
+    [Fact]
+    [System.ComponentModel.Description("未连接服务端的网络数据库也必须关闭迁移并移除 DDL 能力")]
+    public void Network_ProfileWithoutServer_DisablesDdlAndMigration()
+    {
+        var db = DbFactory.Create(DatabaseType.Network);
+        Assert.NotNull(db);
+
+        Assert.Equal(Migration.Off, db.Profile.MaxMigration);
+        Assert.Equal(Migration.Off, db.MaxMigration);
+        Assert.False(db.Capabilities.HasFlag(DatabaseCapability.Ddl));
+        Assert.False(db.Capabilities.HasFlag(DatabaseCapability.DatabaseDdl));
+    }
+
+    [Fact]
+    [System.ComponentModel.Description("能力标志之间保持自洽，Profile 与能力属性来自同一事实源")]
+    public void ProviderCapabilities_AreSelfConsistent()
+    {
+        foreach (DatabaseType type in Enum.GetValues(typeof(DatabaseType)))
+        {
+            var db = DbFactory.Create(type);
+            if (db == null) continue;
+
+            Assert.Equal(db.Profile.Capabilities, db.Capabilities);
+            Assert.Equal(db.Profile.MaxMigration, db.MaxMigration);
+            Assert.True(db.EffectiveMigration <= db.MaxMigration, $"{type} 的有效迁移超过最大迁移");
+
+            if (type == DatabaseType.Network) continue;
+            if (db.MaxMigration == Migration.Off)
+            {
+                Assert.False(db.Capabilities.HasFlag(DatabaseCapability.Ddl), $"{type} 关闭迁移却声明了表级 DDL");
+                Assert.False(db.Capabilities.HasFlag(DatabaseCapability.DatabaseDdl), $"{type} 关闭迁移却声明了库级 DDL");
+            }
+        }
     }
 }

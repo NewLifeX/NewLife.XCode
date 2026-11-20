@@ -39,10 +39,7 @@ internal class NetworkDb : DbBase
     {
         get
         {
-            var server = Server;
-            if (server == null) return base.Profile;
-
-            var profile = server.Profile;
+            var profile = Server?.Profile ?? base.Profile;
             return new DatabaseProfile
             {
                 Model = profile.Model,

@@ -22,7 +22,7 @@ public partial class Entity<TEntity>
         public virtual IEntitySession Session => Meta.Session;
 
         private IEntityPersistence? _persistence;
-        /// <summary>实体持久化。未显式设置时按当前数据库类型选择默认实现</summary>
+        /// <summary>实体持久化。未显式设置时按当前数据库类型选择默认实现；赋空值可在切换连接后重新解析</summary>
         public IEntityPersistence Persistence
         {
             get
@@ -34,7 +34,10 @@ public partial class Entity<TEntity>
                 IDatabase? db = null;
                 try { db = Session.Dal.Db; } catch { }
 
-                return _persistence = EntityPersistenceFactory.Create(this, db);
+                var persistence = EntityPersistenceFactory.Create(this, db);
+
+                // 数据库未知时不做缓存，等真正可用后再按类型解析，避免把 SQL 持久化固化到非 SQL 连接
+                return db == null ? persistence : _persistence = persistence;
             }
             set => _persistence = value;
         }

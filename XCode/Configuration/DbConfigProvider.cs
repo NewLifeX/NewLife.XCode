@@ -105,6 +105,7 @@ public class DbConfigProvider : ConfigProvider
         // 减少日志
         using var showSql = Parameter.Meta.Session.Dal.Session.SetShowSql(false);
 
+        // 分类为空表示该用户的全部参数，此时不能用 FindAllByUserIdAndCategory（它会直接返回空）
         var list = Parameter.FindAllByUserId(UserId).Where(e => e.Category == Category).ToList();
         foreach (var item in list)
         {

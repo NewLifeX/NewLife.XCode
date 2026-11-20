@@ -214,6 +214,11 @@ select * from userx where id=@id
     [Fact]
     public void EntityTestWithMySql()
     {
+        // 确保 MySql 提供者工厂已装载，避免首次通过 DAL 访问时工厂尚未初始化
+        var provider = DbFactory.Create(DatabaseType.MySql);
+        Assert.NotNull(provider);
+        Assert.NotNull(provider.Factory);
+
         DAL.AddConnStr("MySql_member", _mysql_ConnStr, null, "mysql");
 
         Menu2.Meta.ConnName = "MySql_member";

@@ -83,4 +83,55 @@ public class TeradataTests
         var session = db.CreateSession();
         Assert.Throws<NotSupportedException>(() => session.InsertAndGetIdentity("insert into t(a) values(1)"));
     }
+
+    [Fact]
+    public void FormatDateTimeTest()
+    {
+        var db = (DbBase)DbFactory.Create(DatabaseType.Teradata)!;
+
+        var text = db.FormatDateTime(new DateTime(2024, 1, 2, 3, 4, 5));
+        Assert.Equal("TIMESTAMP '2024-01-02 03:04:05'", text);
+    }
+
+    [Fact]
+    public void CreateTableSqlTest()
+    {
+        var db = DbFactory.Create(DatabaseType.Teradata)!;
+
+        var sql = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, CreateTable())!;
+
+        Assert.StartsWith("Create Table", sql);
+        Assert.Contains("TestUser", sql);
+        Assert.Contains("INTEGER", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("VARCHAR(50)", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Primary Key", sql, StringComparison.OrdinalIgnoreCase);
+
+        // Teradata 无法回读自增列，建表不生成 IDENTITY
+        Assert.DoesNotContain("IDENTITY", sql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>构造模型表：主键 + 50 长度字符串字段</summary>
+    private static IDataTable CreateTable()
+    {
+        var table = DAL.CreateTable();
+        table.Name = "TestUser";
+        table.TableName = "TestUser";
+        table.DbType = DatabaseType.Teradata;
+
+        var id = table.CreateColumn();
+        id.Name = "Id";
+        id.ColumnName = "Id";
+        id.DataType = typeof(Int32);
+        id.PrimaryKey = true;
+        table.Columns.Add(id);
+
+        var name = table.CreateColumn();
+        name.Name = "Name";
+        name.ColumnName = "Name";
+        name.DataType = typeof(String);
+        name.Length = 50;
+        table.Columns.Add(name);
+
+        return table;
+    }
 }

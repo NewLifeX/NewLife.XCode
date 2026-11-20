@@ -73,4 +73,45 @@ public class AseTests
         Assert.Equal(DatabaseType.Ase, dal.DbType);
         Assert.Equal("test", dal.Db.DatabaseName);
     }
+
+    [Fact]
+    public void CreateTableSqlTest()
+    {
+        var db = DbFactory.Create(DatabaseType.Ase)!;
+
+        var sql = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, CreateTable())!;
+
+        Assert.StartsWith("Create Table", sql);
+        Assert.Contains("TestUser", sql);
+        Assert.Contains("INTEGER", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("VARCHAR(50)", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("IDENTITY", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Primary Key", sql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>构造模型表：自增主键 + 50 长度字符串字段</summary>
+    private static IDataTable CreateTable()
+    {
+        var table = DAL.CreateTable();
+        table.Name = "TestUser";
+        table.TableName = "TestUser";
+        table.DbType = DatabaseType.Ase;
+
+        var id = table.CreateColumn();
+        id.Name = "Id";
+        id.ColumnName = "Id";
+        id.DataType = typeof(Int32);
+        id.Identity = true;
+        id.PrimaryKey = true;
+        table.Columns.Add(id);
+
+        var name = table.CreateColumn();
+        name.Name = "Name";
+        name.ColumnName = "Name";
+        name.DataType = typeof(String);
+        name.Length = 50;
+        table.Columns.Add(name);
+
+        return table;
+    }
 }

@@ -93,4 +93,43 @@ public class VerticaTests
         var session = db.CreateSession();
         Assert.Throws<NotSupportedException>(() => session.InsertAndGetIdentity("insert into t(a) values(1)"));
     }
+
+    [Fact]
+    public void CreateTableSqlTest()
+    {
+        var db = DbFactory.Create(DatabaseType.Vertica)!;
+
+        var sql = db.CreateMetaData().GetSchemaSQL(DDLSchema.CreateTable, CreateTable())!;
+
+        Assert.StartsWith("Create Table", sql);
+        Assert.Contains("testuser", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("INTEGER", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("VARCHAR(50)", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Primary Key", sql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>构造模型表：主键 + 50 长度字符串字段</summary>
+    private static IDataTable CreateTable()
+    {
+        var table = DAL.CreateTable();
+        table.Name = "TestUser";
+        table.TableName = "TestUser";
+        table.DbType = DatabaseType.Vertica;
+
+        var id = table.CreateColumn();
+        id.Name = "Id";
+        id.ColumnName = "Id";
+        id.DataType = typeof(Int32);
+        id.PrimaryKey = true;
+        table.Columns.Add(id);
+
+        var name = table.CreateColumn();
+        name.Name = "Name";
+        name.ColumnName = "Name";
+        name.DataType = typeof(String);
+        name.Length = 50;
+        table.Columns.Add(name);
+
+        return table;
+    }
 }

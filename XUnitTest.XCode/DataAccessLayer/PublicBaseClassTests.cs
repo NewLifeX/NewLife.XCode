@@ -21,7 +21,12 @@ public class PublicBaseClassTests
         Assert.Same(db, db.Dialect);
         Assert.Equal(db.LongTextLength, db.Dialect.LongTextLength);
         Assert.IsAssignableFrom<IDbSession>(db.CreateSession());
-        Assert.IsAssignableFrom<IMetaData>(db.CreateMetaData());
+        var meta = db.CreateMetaData();
+        Assert.IsAssignableFrom<IMetaData>(meta);
+        Assert.IsAssignableFrom<ISchemaReader>(meta);
+        Assert.IsAssignableFrom<ISchemaMigrator>(meta);
+        Assert.IsAssignableFrom<IDatabaseCreator>(meta);
+        Assert.IsAssignableFrom<IDatabaseMaintenance>(meta);
     }
 
     private sealed class TestDatabase : DbBase

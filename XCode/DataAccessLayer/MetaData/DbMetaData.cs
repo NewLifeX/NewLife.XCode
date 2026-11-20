@@ -9,7 +9,7 @@ using NewLife.Reflection;
 namespace XCode.DataAccessLayer;
 
 /// <summary>数据库元数据</summary>
-public abstract partial class DbMetaData : DisposeBase, IMetaData
+public abstract partial class DbMetaData : DisposeBase, IMetaData, ISchemaReader
 {
     #region 属性
     /// <summary>数据库</summary>

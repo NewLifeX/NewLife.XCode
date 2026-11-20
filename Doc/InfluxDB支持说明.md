@@ -2,7 +2,9 @@
 
 ## 概述
 
-XCode 现已支持 InfluxDB 2.x 时序数据库，提供完整的添删改查（CRUD）功能。InfluxDB 是专为时序数据优化的开源数据库，广泛应用于物联网（IoT）、工业监控、实时分析等场景。
+XCode 现已支持 InfluxDB 2.x 时序数据库，提供批量写入（Line Protocol）和 Flux 查询。InfluxDB 是专为时序数据优化的开源数据库，广泛应用于物联网（IoT）、工业监控、实时分析等场景。
+
+> **能力边界**：InfluxDB 不是关系型数据库。当前支持批量 Insert/Upsert、Flux 查询和 measurement 列表；单行实体 Insert/Update/Delete、自增主键、JOIN、事务和通用 DDL 不在支持范围。实体 ORM 请使用关系型数据库；InfluxDB 适合通过 DAL 原始命令/批量写入使用。
 
 ## 功能特性
 

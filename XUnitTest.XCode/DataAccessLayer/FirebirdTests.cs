@@ -36,6 +36,17 @@ public class FirebirdTests
     }
 
     [Fact]
+    public void WindowFunctionCapabilityTest()
+    {
+        var db = DbFactory.Create(DatabaseType.Firebird);
+        Assert.NotNull(db);
+
+        Assert.True(db.Capabilities.HasFlag(DatabaseCapability.WindowFunctions));
+        // Firebird 3.0 只支持 OVER 分区/排序，不支持 ROWS/RANGE 窗口帧
+        Assert.False(db.Capabilities.HasFlag(DatabaseCapability.WindowFrame));
+    }
+
+    [Fact]
     public void PageSplitTest()
     {
         var db = DbFactory.Create(DatabaseType.Firebird);

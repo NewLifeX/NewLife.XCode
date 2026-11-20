@@ -20,9 +20,11 @@ internal class Firebird : DbBase
     /// <summary>返回数据库类型</summary>
     public override DatabaseType Type => DatabaseType.Firebird;
 
-    /// <summary>获取默认能力。Firebird 支持 IDENTITY 回读</summary>
+    /// <summary>获取默认能力。Firebird 3.0+ 支持 IDENTITY 回读与窗口函数</summary>
     /// <returns>默认能力标志</returns>
-    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities() | DatabaseCapability.Identity;
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        | DatabaseCapability.Identity
+        | DatabaseCapability.WindowFunctions;
 
     /// <summary>默认名称格式。Firebird 未加引号的标识符折叠为大写</summary>
     public override NameFormats DefaultNameFormat => NameFormats.Upper;

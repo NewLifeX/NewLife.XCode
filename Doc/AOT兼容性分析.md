@@ -55,7 +55,7 @@
 | 驱动在线下载/动态装载 | `DriverLoader` | 设计性不支持（`Assembly.LoadFrom`）；静态引用驱动可正常加载，探测失败自动回退 |
 | 运行时反射面 | `StatModel.Fill`、`ClassBuilder`、`TableItem.GetFields`、`EntityFactory.LoadEntities` | 依赖运行时类型成员，无静态类型可泛型化；AOT/裁剪下由应用侧保证保留（`DAL_Mapper.Query<T>`、`DataConversion.CopyProperty<TSource,TTarget>` 已提供泛型入口） |
 | 设计器/ComponentModel 场景 | `EntityBase_Interface` | 主链不依赖；相关成员已声明裁剪语义 |
-| 范围外 | 未注册数据库驱动（Firebird 代码保留但未注册、SqlCe 等）、XCodeTool 开发期工具 | 不纳入 AOT 范围 |
+| 范围外 | 动态加载驱动的数据库（Firebird 通过 DriverLoader 装载 FirebirdSql.Data.FirebirdClient）、SqlCe 等未注册驱动、XCodeTool 开发期工具 | 不纳入 AOT 范围 |
 
 ---
 

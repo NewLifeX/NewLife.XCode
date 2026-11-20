@@ -1,0 +1,189 @@
+name: db-compat
+
+# 新增数据库真库测试（T1 轻量级）。
+# 与 test.yml 解耦：主测试任务只保留 MySQL / PostgreSQL / SQLServer 全量，
+# 本工作流按数据库并行拉起容器，只跑对应提供者的测试组。
+#
+# 首期为 advisory（continue-on-error: true）：任一数据库失败只告警，不阻断发布。
+# 稳定后把对应项改为必备：删除 job 级 continue-on-error，或拆成独立 job。
+#
+# 环境变量约定：XCode_<key> 注入连接串，测试侧由 [LiveDatabaseFact] 识别，无需探测。
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  compat:
+    name: db-compat (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 官方镜像，启动快。连接串与初始化脚本首次运行若与实际镜像不符，按容器日志校正。
+          - name: firebird
+            image: firebird:5.0
+            args: '-e FIREBIRD_ROOT_PASSWORD=masterkey -e FIREBIRD_DATABASE=test.fdb -p 3050:3050'
+            probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/3050"'
+            setup: ''
+            conn: 'Database=/firebird/data/test.fdb;DataSource=127.0.0.1;Port=3050;User=SYSDBA;Password=masterkey;Dialect=3;provider=Firebird'
+            filter: 'FullyQualifiedName~FirebirdTests'
+
+          - name: clickhouse
+            image: clickhouse/clickhouse-server:24.8
+            args: '-p 8123:8123 -p 9000:9000'
+            probe: 'docker exec db clickhouse-client --query "SELECT 1"'
+            setup: ''
+            conn: 'Host=127.0.0.1;Port=8123;Database=default;Username=default;Password=;provider=ClickHouse'
+            filter: 'FullyQualifiedName~ClickHouseTests'
+
+          - name: mongodb
+            image: mongo:7
+            args: '-p 27017:27017'
+            probe: 'docker exec db mongosh --quiet --eval "db.runCommand({ping:1}).ok"'
+            setup: ''
+            conn: 'mongodb://127.0.0.1:27017/test;provider=MongoDB'
+            filter: 'FullyQualifiedName~MongoDBTests'
+
+          - name: oracle
+            image: gvenzl/oracle-free:23-slim
+            args: '-e ORACLE_PASSWORD=oracle -e APP_USER=scott -e APP_USER_PASSWORD=tiger -p 1521:1521'
+            probe: 'docker exec db /opt/oracle/healthcheck.sh'
+            setup: ''
+            conn: 'Data Source=127.0.0.1:1521/FREEPDB1;User Id=scott;Password=tiger;provider=Oracle'
+            filter: 'FullyQualifiedName~OracleTests'
+
+          - name: iris
+            image: intersystemsdc/iris-community
+            args: '-e IRIS_PASSWORD=SYS -p 1972:1972'
+            probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/1972"'
+            setup: ''
+            conn: 'Server=127.0.0.1;Port=1972;User Id=_SYSTEM;Password=SYS;namespace=user;provider=IRIS'
+            filter: 'FullyQualifiedName~IRISTests'
+
+          - name: tdengine
+            image: tdengine/tdengine:3.3.0.0
+            args: '-p 6041:6041'
+            probe: 'docker exec db taos -s "show databases;"'
+            setup: 'docker exec db taos -s "create database if not exists db;"'
+            conn: 'Server=127.0.0.1;Port=6041;Database=db;user=root;password=taosdata;provider=TDengine'
+            filter: 'FullyQualifiedName~TDengineTests'
+
+          - name: influxdb
+            image: influxdb:2.7
+            args: '-p 8086:8086'
+            probe: 'docker exec db influx ping'
+            setup: 'docker exec db influx setup --force --username admin --password password123 --org newlife --bucket test --token newlife-compat-token-0123456789-abcdefghijklmnopqrstuvwxyz'
+            conn: 'Server=http://127.0.0.1:8086;Token=newlife-compat-token-0123456789-abcdefghijklmnopqrstuvwxyz;Organization=newlife;Bucket=test;provider=InfluxDB'
+            filter: 'FullyQualifiedName~InfluxDBTests'
+
+          - name: monetdb
+            image: monetdb/monetdb:11.49.11
+            args: '-p 50000:50000'
+            probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/50000"'
+            setup: ''
+            conn: 'Host=127.0.0.1;Port=50000;Database=demo;User=monetdb;Password=monetdb;provider=MonetDB'
+            filter: 'FullyQualifiedName~MonetDBTests'
+
+          - name: vertica
+            image: vertica/vertica-ce:24.4.0-0
+            args: '-p 5433:5433'
+            probe: 'docker exec db /opt/vertica/bin/vsql -U dbadmin -c "select 1"'
+            setup: ''
+            conn: 'Host=127.0.0.1;Port=5433;Database=VMart;User=dbadmin;Password=;provider=Vertica'
+            filter: 'FullyQualifiedName~VerticaTests'
+
+          - name: trino
+            image: trinodb/trino:466
+            args: '-p 8080:8080'
+            probe: 'docker exec db trino --execute "SELECT 1"'
+            setup: ''
+            conn: 'Host=127.0.0.1;Port=8080;Catalog=tpch;Schema=tiny;User=test;provider=Trino'
+            filter: 'FullyQualifiedName~PrestoTests'
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Setup dotNET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: 10.x
+
+    - name: Start ${{ matrix.name }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        docker run -d --name db ${{ matrix.args }} ${{ matrix.image }}
+        docker ps --filter name=db --format '{{.Image}} {{.Status}}'
+
+    - name: Wait for ${{ matrix.name }}
+      shell: bash
+      # 逐库探测，上限 6 分钟；失败时输出容器日志便于校正镜像参数
+      run: |
+        set -euo pipefail
+        for i in $(seq 1 72); do
+          if ${{ matrix.probe }} >/dev/null 2>&1; then
+            echo "${{ matrix.name }} ready after $i probe(s)"
+            exit 0
+          fi
+          sleep 5
+        done
+        echo "::error::${{ matrix.name }} 未在 6 分钟内就绪"
+        docker logs db 2>&1 | tail -200
+        exit 1
+
+    - name: Setup data ${{ matrix.name }}
+      if: matrix.setup != ''
+      shell: bash
+      run: bash -c "${{ matrix.setup }}"
+
+    - name: Test ${{ matrix.name }}
+      shell: bash
+      env:
+        DB_KEY: ${{ matrix.name }}
+        DB_CONN: ${{ matrix.conn }}
+        DB_FILTER: ${{ matrix.filter }}
+      # XCode 自动把 XCode_<name> 环境变量注册为数据连接，测试侧无需改动
+      run: |
+        set -o pipefail
+        export "XCode_${DB_KEY}=${DB_CONN}"
+        dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release \
+          --filter "$DB_FILTER" \
+          --blame-hang-timeout 10m --blame-hang-dump-type mini \
+          --logger "console;verbosity=detailed" \
+          --logger "trx;LogFileName=db-${DB_KEY}.trx" \
+          --results-directory TestResults
+
+    - name: Dump container logs
+      if: failure()
+      shell: bash
+      run: docker logs db 2>&1 | tail -300 || true
+
+    - name: Summarize Failures
+      if: always()
+      shell: pwsh
+      run: pwsh -NoProfile -File Tools/Scripts/summarize-test-failures.ps1 -Path TestResults
+
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: db-compat-${{ matrix.name }}
+        path: TestResults/**
+        if-no-files-found: ignore
+
+    - name: Stop container
+      if: always()
+      run: docker stop db || true

@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "A MongoDB entitás-megőrzéshez elsődleges kulcs szükséges; adjon meg egyet az entitáson az Update vagy Delete használata előtt."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "A MongoDB entitás-megőrzéshez IMongoDocumentWriter szükséges. Hivatkozzon a MongoDB.Driver csomagra, és az entitások írása előtt rendelje hozzá a MongoEntityPersistence.Writer elemet."
 "MongoDB entity persistence does not support {0}.": "A MongoDB entitás-megőrzés nem támogatja a következőt: {0}."
+"Database is required in connection string.": "A kapcsolati karakterláncban meg kell adni a Database értéket."
+"{0} requires InfluxDB {1}.": "A(z) {0} InfluxDB {1} verziót igényel."
+"{0} request failed: {1}": "A(z) {0} kérés sikertelen: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "Az OpenTSDB legalább egy numerikus mezőt igényel; a(z) [{0}] táblában nincs ilyen."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "Az OpenTSDB metric- és tag-értékei nem tartalmazhatnak szóközt: [{0}]"

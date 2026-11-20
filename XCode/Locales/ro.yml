@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "Persistența entităților MongoDB necesită o cheie primară; definiți una pe entitate înainte de a folosi Update sau Delete."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "Persistența entităților MongoDB necesită un IMongoDocumentWriter. Referiți MongoDB.Driver și atribuiți MongoEntityPersistence.Writer înainte de a scrie entități."
 "MongoDB entity persistence does not support {0}.": "Persistența entităților MongoDB nu acceptă {0}."
+"Database is required in connection string.": "Database este obligatoriu în șirul de conexiune."
+"{0} requires InfluxDB {1}.": "{0} necesită InfluxDB {1}."
+"{0} request failed: {1}": "Cererea {0} a eșuat: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB necesită cel puțin un câmp numeric; tabelul [{0}] nu are niciunul."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "Valorile metric și tag din OpenTSDB nu pot conține spații: [{0}]"

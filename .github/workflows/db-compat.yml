@@ -90,6 +90,14 @@ jobs:
             conn: 'Server=http://127.0.0.1:8086;Token=newlife-compat-token-0123456789-abcdefghijklmnopqrstuvwxyz;Organization=newlife;Bucket=test;provider=InfluxDB'
             filter: 'FullyQualifiedName~InfluxDBTests'
 
+          - name: influxdb1
+            image: influxdb:1.8
+            args: '-e INFLUXDB_DB=test -p 8086:8086'
+            probe: 'docker exec db curl -sf http://127.0.0.1:8086/ping'
+            setup: 'docker exec db influx -execute "CREATE DATABASE test" || true'
+            conn: 'Server=http://127.0.0.1:8086;Database=test;User=root;Password=root;Version=1;provider=InfluxDB'
+            filter: 'FullyQualifiedName~InfluxDBVersionLiveTests'
+
           - name: monetdb
             image: monetdb/monetdb:11.49.11
             args: '-p 50000:50000'

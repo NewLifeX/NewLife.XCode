@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "Persistensi entitas MongoDB memerlukan kunci utama; tentukan satu pada entitas sebelum menggunakan Update atau Delete."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "Persistensi entitas MongoDB memerlukan IMongoDocumentWriter. Rujuk MongoDB.Driver dan tetapkan MongoEntityPersistence.Writer sebelum menulis entitas."
 "MongoDB entity persistence does not support {0}.": "Persistensi entitas MongoDB tidak mendukung {0}."
+"Database is required in connection string.": "Database wajib diisi pada string koneksi."
+"{0} requires InfluxDB {1}.": "{0} memerlukan InfluxDB {1}."
+"{0} request failed: {1}": "Permintaan {0} gagal: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB memerlukan setidaknya satu kolom numerik; tabel [{0}] tidak memilikinya."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "Nilai metric dan tag OpenTSDB tidak boleh mengandung spasi: [{0}]"

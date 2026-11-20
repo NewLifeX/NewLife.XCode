@@ -57,17 +57,16 @@ public class InfluxDBCommand : DbCommand
         if (httpClient == null)
             throw new InvalidOperationException(L.T("HttpClient is not initialized."));
 
-        var baseUrl = conn.DataSource.TrimEnd('/');
-        var url = $"{baseUrl}/api/v2/write?org={conn.Organization}&bucket={conn.Bucket}&precision=ns";
-        
+        var url = conn.GetWriteUrl();
+
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Headers.Add("Authorization", $"Token {conn.Token}");
+        InfluxDBConnection.AddAuth(request, conn.Token, conn.User, conn.Password);
         request.Content = new StringContent(CommandText, System.Text.Encoding.UTF8, "text/plain");
 
-        var response = httpClient.SendAsync(request).Result;
+        var response = httpClient.SendAsync(request).GetAwaiter().GetResult();
         if (!response.IsSuccessStatusCode)
         {
-            var error = response.Content.ReadAsStringAsync().Result;
+            var error = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             throw new Exception(L.T("InfluxDB write failed: {0}", error));
         }
 
@@ -104,31 +103,42 @@ public class InfluxDBCommand : DbCommand
         if (httpClient == null)
             throw new InvalidOperationException(L.T("HttpClient is not initialized."));
 
-        // InfluxDB 查询使用 Flux 语言
-        var baseUrl = conn.DataSource.TrimEnd('/');
-        var url = $"{baseUrl}/api/v2/query?org={conn.Organization}";
-        var fluxQuery = CommandText;
+        conn.EnsureVersion();
 
-        // 确保查询中包含 bucket 信息
-        if (!fluxQuery.Contains("from(bucket:"))
+        var query = CommandText;
+        var language = conn.QueryLanguage;
+        if (language == InfluxQueryLanguage.Auto) language = InfluxDBConnection.GetDefaultQueryLanguage(conn.Version);
+
+        if (language == InfluxQueryLanguage.Flux)
         {
-            fluxQuery = $"from(bucket:\"{conn.Bucket}\") |> {fluxQuery}";
+            if (conn.Version is 1 or 3) throw new NotSupportedException(L.T("{0} requires InfluxDB {1}.", "Flux queries", "2.x"));
+
+            // 确保查询中包含 bucket 信息
+            if (!query.Contains("from(bucket:"))
+            {
+                query = $"from(bucket:\"{conn.Bucket}\") |> {query}";
+            }
+
+            var url = conn.GetQueryUrl(InfluxQueryLanguage.Flux, query);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, url);
+            InfluxDBConnection.AddAuth(request, conn.Token, conn.User, conn.Password);
+            request.Headers.Add("Accept", "application/csv");
+            request.Content = new StringContent(query, System.Text.Encoding.UTF8, "application/vnd.flux");
+
+            var response = httpClient.SendAsync(request).GetAwaiter().GetResult();
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                throw new Exception(L.T("InfluxDB query failed: {0}", error));
+            }
+
+            var csv = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            return new InfluxDBDataReader(csv);
         }
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Headers.Add("Authorization", $"Token {conn.Token}");
-        request.Headers.Add("Accept", "application/csv");
-        request.Content = new StringContent(fluxQuery, System.Text.Encoding.UTF8, "application/vnd.flux");
-
-        var response = httpClient.SendAsync(request).Result;
-        if (!response.IsSuccessStatusCode)
-        {
-            var error = response.Content.ReadAsStringAsync().Result;
-            throw new Exception(L.T("InfluxDB query failed: {0}", error));
-        }
-
-        var csv = response.Content.ReadAsStringAsync().Result;
-        return new InfluxDBDataReader(csv);
+        var table = conn.Query(query, language);
+        return table.CreateDataReader();
     }
     #endregion
 }

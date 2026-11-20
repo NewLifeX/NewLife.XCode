@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "Trvalé ukládání entit MongoDB vyžaduje primární klíč; definujte jej u entity před použitím Update nebo Delete."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "Trvalé ukládání entit MongoDB vyžaduje IMongoDocumentWriter. Přidejte odkaz na MongoDB.Driver a před zápisem entit přiřaďte MongoEntityPersistence.Writer."
 "MongoDB entity persistence does not support {0}.": "Trvalé ukládání entit MongoDB nepodporuje {0}."
+"Database is required in connection string.": "V připojovacím řetězci je vyžadováno Database."
+"{0} requires InfluxDB {1}.": "{0} vyžaduje InfluxDB {1}."
+"{0} request failed: {1}": "Požadavek {0} selhal: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB vyžaduje alespoň jedno číselné pole; tabulka [{0}] žádné nemá."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "Hodnoty metric a tag v OpenTSDB nesmí obsahovat bílé znaky: [{0}]"

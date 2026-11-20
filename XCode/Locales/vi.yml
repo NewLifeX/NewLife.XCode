@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "Lưu trữ thực thể MongoDB cần khóa chính; hãy định nghĩa khóa chính trên thực thể trước khi dùng Update hoặc Delete."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "Lưu trữ thực thể MongoDB cần IMongoDocumentWriter. Hãy tham chiếu MongoDB.Driver và gán MongoEntityPersistence.Writer trước khi ghi thực thể."
 "MongoDB entity persistence does not support {0}.": "Lưu trữ thực thể MongoDB không hỗ trợ {0}."
+"Database is required in connection string.": "Cần có Database trong chuỗi kết nối."
+"{0} requires InfluxDB {1}.": "{0} yêu cầu InfluxDB {1}."
+"{0} request failed: {1}": "Yêu cầu {0} thất bại: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB cần ít nhất một trường số; bảng [{0}] không có trường nào."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "Giá trị metric và tag của OpenTSDB không được chứa khoảng trắng: [{0}]"

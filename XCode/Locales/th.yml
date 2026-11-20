@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "การเก็บเอนทิตีของ MongoDB ต้องมีคีย์หลัก โปรดกำหนดคีย์หลักบนเอนทิตีก่อนใช้ Update หรือ Delete"
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "การเก็บเอนทิตีของ MongoDB ต้องมี IMongoDocumentWriter โปรดอ้างอิง MongoDB.Driver และกำหนดค่า MongoEntityPersistence.Writer ก่อนเขียนเอนทิตี"
 "MongoDB entity persistence does not support {0}.": "การเก็บเอนทิตีของ MongoDB ไม่รองรับ {0}"
+"Database is required in connection string.": "ต้องระบุ Database ในสตริงการเชื่อมต่อ"
+"{0} requires InfluxDB {1}.": "{0} ต้องใช้ InfluxDB {1}"
+"{0} request failed: {1}": "คำขอ {0} ล้มเหลว: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB ต้องมีฟิลด์ตัวเลขอย่างน้อยหนึ่งฟิลด์ แต่ตาราง [{0}] ไม่มีเลย"
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "ค่า metric และ tag ของ OpenTSDB ต้องไม่มีช่องว่าง: [{0}]"

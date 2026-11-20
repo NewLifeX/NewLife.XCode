@@ -2,20 +2,25 @@
 
 ## 概述
 
-XCode 现已支持 InfluxDB 2.x 时序数据库，提供批量写入（Line Protocol）和 Flux 查询。InfluxDB 是专为时序数据优化的开源数据库，广泛应用于物联网（IoT）、工业监控、实时分析等场景。
+XCode 内置 InfluxDB 提供者，支持 **1.x / 2.x / 3.x**，按服务端版本自动选择写入端点与查询语言：
 
-> **能力边界**：InfluxDB 不是关系型数据库。当前支持批量 Insert/Upsert、Flux 查询和 measurement 列表；单行实体 Insert/Update/Delete、自增主键、JOIN、事务和通用 DDL 不在支持范围。实体 ORM 请使用关系型数据库；InfluxDB 适合通过 DAL 原始命令/批量写入使用。
+| 版本 | 写入 | 默认查询语言 | 说明 |
+|:----:|------|-------------|------|
+| 1.x | `/write` | InfluxQL | 用户名/密码认证，database 概念 |
+| 2.x | `/api/v2/write` | Flux | Token + Organization + Bucket |
+| 3.x | `/api/v3/write_lp` | SQL | Token + Database；不再支持 Flux 查询 |
+
+> **能力边界**：InfluxDB 不是关系型数据库。当前支持批量 Insert/Upsert、Flux/InfluxQL/SQL 查询和 measurement 列表；单行实体 Insert/Update/Delete、自增主键、JOIN、事务和通用 DDL 不在支持范围。实体 ORM 请使用关系型数据库；InfluxDB 适合通过 DAL 原始命令/批量写入使用。
 
 ## 功能特性
 
-- ✅ 支持 InfluxDB 2.x HTTP API
-- ✅ 使用 Flux 查询语言进行数据查询
-- ✅ 使用 Line Protocol 格式进行数据写入
-- ✅ 支持 Token 认证
-- ✅ 支持 Organization 和 Bucket 管理
+- ✅ InfluxDB 1.x（InfluxQL）、2.x（Flux）、3.x（SQL/InfluxQL）
+- ✅ Line Protocol 批量写入
+- ✅ `Version=Auto` 通过 `/ping` 自动探测版本，也可显式指定
+- ✅ Token / Basic 认证
 - ✅ 批量数据写入
-- ✅ 自动处理 CSV 格式查询结果
-- ✅ 兼容 .NET Framework 4.5 到 .NET 10
+- ✅ 自动处理 CSV 与 JSON 查询结果
+- ✅ 兼容 .NET Framework 4.5 到 .NET 11
 
 ## 快速开始
 
@@ -28,25 +33,29 @@ dotnet add package NewLife.XCode
 ### 2. 连接字符串配置
 
 ```csharp
-// 方式一：在配置文件中配置
-{
-  "ConnectionStrings": {
-    "InfluxDB": "Server=http://localhost:8086;Token=your-token;Organization=your-org;Bucket=your-bucket"
-  }
-}
-
-// 方式二：代码中配置
+// 2.x（默认按 Token/Organization/Bucket 识别）
 DAL.AddConnStr("InfluxDB", "Server=http://localhost:8086;Token=your-token;Organization=your-org;Bucket=your-bucket", null, "InfluxDB");
+
+// 1.x
+DAL.AddConnStr("InfluxDB1", "Server=http://localhost:8086;Database=telegraf;User=root;Password=root;Version=1", null, "InfluxDB");
+
+// 3.x
+DAL.AddConnStr("InfluxDB3", "Server=http://localhost:8181;Database=sensors;Token=your-token;Version=3", null, "InfluxDB");
 ```
 
 #### 连接字符串参数说明
 
 | 参数 | 必填 | 说明 | 示例 |
 |------|------|------|------|
-| Server | 是 | InfluxDB 服务器地址（包含协议） | `http://localhost:8086` 或 `https://influx.example.com` |
-| Token | 是 | API Token（在 InfluxDB UI 中生成） | `your-influxdb-token` |
-| Organization | 是 | 组织名称或ID | `my-org` |
-| Bucket | 是 | Bucket 名称（相当于数据库） | `my-bucket` |
+| Server | 是 | 服务地址（包含协议） | `http://localhost:8086` |
+| Version | 否 | `Auto`（默认）/ `1` / `2` / `3` | `Version=3` |
+| QueryLanguage | 否 | `Auto` / `Flux` / `InfluxQL` / `SQL` | `QueryLanguage=InfluxQL` |
+| Token | 2.x/3.x | API Token | `your-influxdb-token` |
+| Organization | 2.x | 组织名称或 ID | `my-org` |
+| Bucket / Database | 是 | 1.x database，或 2.x/3.x bucket/database | `my-bucket` |
+| User / Password | 1.x | Basic 认证 | `root` / `root` |
+
+> 未指定 `Version` 时，首次请求会访问 `/ping`（失败时回退 `/health`）探测主版本，并按 server 缓存 10 分钟。
 
 ### 3. 基本使用
 
@@ -71,29 +80,32 @@ var batchData = String.Join("\n", lines);
 dal.Execute(batchData);
 ```
 
-#### 3.2 查询数据（Flux）
+#### 3.2 查询数据（Flux / InfluxQL / SQL）
 
 ```csharp
 var dal = DAL.Create("InfluxDB");
 
-// Flux 查询
+// 2.x Flux（默认）
 var flux = @"
 from(bucket: ""my-bucket"")
   |> range(start: -1h)
   |> filter(fn: (r) => r._measurement == ""temperature"")
-  |> filter(fn: (r) => r.location == ""room1"")
   |> limit(n: 100)
 ";
-
 var dt = dal.Query(flux);
-foreach (var row in dt)
-{
-    var time = row["_time"];
-    var value = row["_value"];
-    var location = row["location"];
-    Console.WriteLine($"Time: {time}, Value: {value}, Location: {location}");
-}
+
+// 1.x / 2.x InfluxQL：QueryLanguage=InfluxQL 或 Version=1
+var dt1 = dal.Query("SELECT * FROM temperature WHERE time > now() - 1h LIMIT 100");
+
+// 3.x SQL：Version=3 默认
+var dt3 = dal.Query("""SELECT * FROM "home" WHERE room = 'Kitchen' LIMIT 100""");
 ```
+
+查询结果：
+
+- Flux 返回带 `#datatype` 注释的 CSV，按字符串列读取；
+- InfluxQL 返回 `results[].series[]`，展开为行式表，并附带 `_measurement` 列；
+- 3.x SQL 使用 JSONL 响应，每行一个对象，列名取字段名。
 
 #### 3.3 获取 Measurements（表）
 
@@ -250,9 +262,9 @@ A: 在 InfluxDB UI 中：
 3. 选择权限范围（读/写特定 Bucket）
 4. 复制生成的 Token
 
-### Q2: 支持 InfluxDB 1.x 吗？
+### Q2: 支持 InfluxDB 1.x 和 3.x 吗？
 
-A: 当前实现主要针对 InfluxDB 2.x。InfluxDB 1.x 使用不同的认证和查询方式（InfluxQL），暂不支持。
+A: 支持。1.x 使用 InfluxQL（`Version=1`），2.x 使用 Flux（默认），3.x 使用 SQL（默认）或 InfluxQL。3.x 已移除 Flux，请勿在 3.x 上指定 `QueryLanguage=Flux`。
 
 ### Q3: 如何优化查询性能？
 

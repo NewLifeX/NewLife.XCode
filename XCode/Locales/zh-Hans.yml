@@ -410,3 +410,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "MongoDB 实体持久化需要主键；请先为实体定义主键，再使用 Update 或 Delete。"
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "MongoDB 实体持久化需要 IMongoDocumentWriter。请引用 MongoDB.Driver，并在写入实体前给 MongoEntityPersistence.Writer 赋值。"
 "MongoDB entity persistence does not support {0}.": "MongoDB 实体持久化不支持{0}。"
+"Database is required in connection string.": "连接字符串中必须提供 Database。"
+"{0} requires InfluxDB {1}.": "{0}需要 InfluxDB {1}。"
+"{0} request failed: {1}": "{0}请求失败：{1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB 需要至少一个数值字段；表[{0}]没有数值字段。"
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "OpenTSDB 的 metric 与 tag 值不能包含空白字符：[{0}]"

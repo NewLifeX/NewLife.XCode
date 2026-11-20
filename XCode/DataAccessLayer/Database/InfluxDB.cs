@@ -49,6 +49,29 @@ class InfluxDB : RemoteDb
 
         return false;
     }
+
+    private Int32 _version;
+
+    /// <summary>获取服务端主版本号。探测一次后缓存</summary>
+    /// <returns></returns>
+    internal Int32 GetVersion()
+    {
+        if (_version > 0) return _version;
+
+        if (OpenConnection() is not InfluxDBConnection conn) return 0;
+
+        return _version = conn.EnsureVersion();
+    }
+
+    /// <summary>执行 InfluxQL 查询。元数据 SQL 在任意版本都使用 InfluxQL</summary>
+    /// <param name="query">查询文本</param>
+    /// <returns>结果表</returns>
+    internal DataTable QueryInfluxQl(String query)
+    {
+        if (OpenConnection() is not InfluxDBConnection conn) throw new InvalidOperationException(L.T("Connection must be open."));
+
+        return conn.QueryInfluxQl(query);
+    }
     #endregion
 
     #region 数据库特性
@@ -281,53 +304,68 @@ class InfluxDBMetaData : RemoteDbMetaData
     #region 架构
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
-        var ss = Database.CreateSession();
         var list = new List<IDataTable>();
+        var hs = new HashSet<String>(names ?? [], StringComparer.OrdinalIgnoreCase);
 
-        var old = ss.ShowSQL;
-        ss.ShowSQL = false;
-        try
+        foreach (var name in GetMeasurementNames())
         {
-            // InfluxDB Flux 查询获取所有 measurement
+            if (name.IsNullOrEmpty() || hs.Count > 0 && !hs.Contains(name)) continue;
+
+            var table = DAL.CreateTable();
+            table.TableName = name;
+            table.DbType = Database.Type;
+
+            // InfluxDB 的 schema 需要通过查询数据来推断
+            // 这里简化处理，不详细查询字段信息
+            #region 字段
+            // 默认添加 time 字段
+            var timeField = table.CreateColumn();
+            timeField.ColumnName = "time";
+            timeField.DataType = typeof(DateTime);
+            timeField.PrimaryKey = true;
+            table.Columns.Add(timeField);
+            #endregion
+
+            // 修正关系数据
+            table.Fix();
+
+            list.Add(table);
+        }
+
+        return list;
+    }
+
+    /// <summary>获取所有 measurement。1.x/3.x 使用 InfluxQL，2.x 使用 Flux</summary>
+    /// <returns></returns>
+    private List<String> GetMeasurementNames()
+    {
+        var list = new List<String>();
+
+        if (Database is not InfluxDB db) return list;
+
+        var version = db.GetVersion();
+        if (version is 0 or 2)
+        {
             var flux = @"
 import ""influxdata/influxdb/schema""
 schema.measurements(bucket: v.bucket)
 ";
-            var dt = ss.Query(flux, null);
-            if (dt.Rows.Count == 0) return [];
-
-            var hs = new HashSet<String>(names ?? [], StringComparer.OrdinalIgnoreCase);
-
-            // 所有表（measurement）
+            var dt = Database.CreateSession().Query(flux, null);
             foreach (var dr in dt)
             {
                 var name = dr["_value"] + "";
-                if (name.IsNullOrEmpty() || hs.Count > 0 && !hs.Contains(name)) continue;
-
-                var table = DAL.CreateTable();
-                table.TableName = name;
-                table.DbType = Database.Type;
-
-                // InfluxDB 的 schema 需要通过查询数据来推断
-                // 这里简化处理，不详细查询字段信息
-                #region 字段
-                // 默认添加 time 字段
-                var timeField = table.CreateColumn();
-                timeField.ColumnName = "time";
-                timeField.DataType = typeof(DateTime);
-                timeField.PrimaryKey = true;
-                table.Columns.Add(timeField);
-                #endregion
-
-                // 修正关系数据
-                table.Fix();
-
-                list.Add(table);
+                if (!name.IsNullOrEmpty()) list.Add(name);
             }
+
+            return list;
         }
-        finally
+
+        var table = db.QueryInfluxQl("SHOW MEASUREMENTS");
+        foreach (DataRow dr in table.Rows)
         {
-            ss.ShowSQL = old;
+            var name = dr["name"] + "";
+            if (name.IsNullOrEmpty()) name = dr["_measurement"] + "";
+            if (!name.IsNullOrEmpty()) list.Add(name);
         }
 
         return list;
@@ -335,25 +373,7 @@ schema.measurements(bucket: v.bucket)
 
     /// <summary>快速取得所有表名</summary>
     /// <returns></returns>
-    public override IList<String> GetTableNames()
-    {
-        var list = new List<String>();
-
-        var flux = @"
-import ""influxdata/influxdb/schema""
-schema.measurements(bucket: v.bucket)
-";
-        var dt = base.Database.CreateSession().Query(flux, null);
-        if (dt.Rows.Count == 0) return list;
-
-        foreach (var dr in dt)
-        {
-            var name = dr["_value"] + "";
-            if (!name.IsNullOrEmpty()) list.Add(name);
-        }
-
-        return list;
-    }
+    public override IList<String> GetTableNames() => GetMeasurementNames();
 
     public override String FieldClause(IDataColumn field, Boolean onlyDefine)
     {
@@ -374,10 +394,27 @@ schema.measurements(bucket: v.bucket)
     {
         if (databaseName.IsNullOrEmpty()) return base.DatabaseExist(databaseName);
 
+        if (Database is not InfluxDB db) return false;
+
+        var version = db.GetVersion();
+
         // InfluxDB 2.x 使用 bucket 概念
-        var flux = @"buckets() |> filter(fn: (r) => r.name == """ + databaseName + @""")";
-        var dt = Database.CreateSession().Query(flux, null);
-        return dt != null && dt.Rows != null && dt.Rows.Count > 0;
+        if (version is 0 or 2)
+        {
+            var flux = @"buckets() |> filter(fn: (r) => r.name == """ + databaseName + @""")";
+            var dt = Database.CreateSession().Query(flux, null);
+            return dt != null && dt.Rows != null && dt.Rows.Count > 0;
+        }
+
+        // 1.x/3.x 使用 SHOW DATABASES
+        var table = db.QueryInfluxQl("SHOW DATABASES");
+        foreach (DataRow dr in table.Rows)
+        {
+            var name = dr["name"] + "";
+            if (name.EqualIgnoreCase(databaseName)) return true;
+        }
+
+        return false;
     }
 
     public override String CreateDatabaseSQL(String dbname, String? file)

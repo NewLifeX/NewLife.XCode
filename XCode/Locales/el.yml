@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "Η διατήρηση οντοτήτων MongoDB απαιτεί πρωτεύον κλειδί· ορίστε ένα στην οντότητα πριν χρησιμοποιήσετε Update ή Delete."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "Η διατήρηση οντοτήτων MongoDB απαιτεί IMongoDocumentWriter. Αναφέρετε το MongoDB.Driver και αντιστοιχίστε το MongoEntityPersistence.Writer πριν γράψετε οντότητες."
 "MongoDB entity persistence does not support {0}.": "Η διατήρηση οντοτήτων MongoDB δεν υποστηρίζει {0}."
+"Database is required in connection string.": "Απαιτείται Database στη συμβολοσειρά σύνδεσης."
+"{0} requires InfluxDB {1}.": "Το {0} απαιτεί InfluxDB {1}."
+"{0} request failed: {1}": "Αποτυχία αιτήματος {0}: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "Το OpenTSDB απαιτεί τουλάχιστον ένα αριθμητικό πεδίο· ο πίνακας [{0}] δεν έχει κανένα."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "Οι τιμές metric και tag του OpenTSDB δεν μπορούν να περιέχουν κενά: [{0}]"

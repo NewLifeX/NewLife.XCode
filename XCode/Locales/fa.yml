@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "ماندگاری موجودیت MongoDB به کلید اصلی نیاز دارد؛ پیش از استفاده از Update یا Delete یکی روی موجودیت تعریف کنید."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "ماندگاری موجودیت MongoDB به IMongoDocumentWriter نیاز دارد. به MongoDB.Driver ارجاع دهید و پیش از نوشتن موجودیت‌ها MongoEntityPersistence.Writer را اختصاص دهید."
 "MongoDB entity persistence does not support {0}.": "ماندگاری موجودیت MongoDB از {0} پشتیبانی نمی‌کند."
+"Database is required in connection string.": "Database در رشته اتصال الزامی است."
+"{0} requires InfluxDB {1}.": "{0} به InfluxDB {1} نیاز دارد."
+"{0} request failed: {1}": "درخواست {0} ناموفق بود: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB حداقل به یک فیلد عددی نیاز دارد؛ جدول [{0}] هیچ فیلد عددی ندارد."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "مقادیر metric و tag در OpenTSDB نباید شامل فاصله باشند: [{0}]"

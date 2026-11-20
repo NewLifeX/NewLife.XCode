@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "MongoDB 엔터티 지속성에는 기본 키가 필요합니다. Update 또는 Delete를 사용하기 전에 엔터티에 기본 키를 정의하십시오."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "MongoDB 엔터티 지속성에는 IMongoDocumentWriter가 필요합니다. MongoDB.Driver를 참조하고 엔터티를 쓰기 전에 MongoEntityPersistence.Writer를 할당하십시오."
 "MongoDB entity persistence does not support {0}.": "MongoDB 엔터티 지속성은 {0}을(를) 지원하지 않습니다."
+"Database is required in connection string.": "연결 문자열에 Database가 필요합니다."
+"{0} requires InfluxDB {1}.": "{0}에는 InfluxDB {1}이(가) 필요합니다."
+"{0} request failed: {1}": "{0} 요청 실패: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB에는 숫자 필드가 하나 이상 필요합니다. 테이블[{0}]에는 숫자 필드가 없습니다."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "OpenTSDB의 metric 및 tag 값에는 공백 문자를 포함할 수 없습니다: [{0}]"

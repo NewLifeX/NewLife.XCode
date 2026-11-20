@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "MongoDB इकाई पर्सिस्टेंस के लिए प्राथमिक कुंजी आवश्यक है; Update या Delete उपयोग करने से पहले इकाई पर एक परिभाषित करें।"
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "MongoDB इकाई पर्सिस्टेंस के लिए IMongoDocumentWriter आवश्यक है। MongoDB.Driver का संदर्भ लें और इकाइयाँ लिखने से पहले MongoEntityPersistence.Writer असाइन करें।"
 "MongoDB entity persistence does not support {0}.": "MongoDB इकाई पर्सिस्टेंस {0} का समर्थन नहीं करता।"
+"Database is required in connection string.": "कनेक्शन स्ट्रिंग में Database आवश्यक है।"
+"{0} requires InfluxDB {1}.": "{0} के लिए InfluxDB {1} आवश्यक है।"
+"{0} request failed: {1}": "{0} अनुरोध विफल: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB के लिए कम से कम एक संख्यात्मक फ़ील्ड आवश्यक है; तालिका [{0}] में कोई नहीं है।"
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "OpenTSDB के metric और tag मानों में रिक्त स्थान नहीं हो सकते: [{0}]"

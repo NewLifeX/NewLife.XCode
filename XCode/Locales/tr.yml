@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "MongoDB varlık kalıcılığı bir birincil anahtar gerektirir; Update veya Delete kullanmadan önce varlıkta bir tane tanımlayın."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "MongoDB varlık kalıcılığı bir IMongoDocumentWriter gerektirir. MongoDB.Driver başvurusu ekleyin ve varlık yazmadan önce MongoEntityPersistence.Writer öğesini atayın."
 "MongoDB entity persistence does not support {0}.": "MongoDB varlık kalıcılığı {0} özelliğini desteklemez."
+"Database is required in connection string.": "Bağlantı dizesinde Database belirtilmelidir."
+"{0} requires InfluxDB {1}.": "{0} için InfluxDB {1} gerekir."
+"{0} request failed: {1}": "{0} isteği başarısız: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB en az bir sayısal alan gerektirir; [{0}] tablosunda hiç yok."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "OpenTSDB metric ve tag değerleri boşluk içeremez: [{0}]"

@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "MongoDB のエンティティ永続化には主キーが必要です。Update または Delete を使う前にエンティティで主キーを定義してください。"
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "MongoDB のエンティティ永続化には IMongoDocumentWriter が必要です。MongoDB.Driver を参照し、エンティティを書き込む前に MongoEntityPersistence.Writer を設定してください。"
 "MongoDB entity persistence does not support {0}.": "MongoDB のエンティティ永続化は{0}をサポートしていません。"
+"Database is required in connection string.": "接続文字列に Database を指定してください。"
+"{0} requires InfluxDB {1}.": "{0}には InfluxDB {1} が必要です。"
+"{0} request failed: {1}": "{0} リクエストが失敗しました: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB には少なくとも 1 つの数値フィールドが必要です。テーブル[{0}]には数値フィールドがありません。"
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "OpenTSDB の metric と tag の値に空白文字を含めることはできません: [{0}]"

@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "Сохранение сущностей MongoDB требует первичного ключа; задайте его в сущности перед использованием Update или Delete."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "Сохранение сущностей MongoDB требует IMongoDocumentWriter. Добавьте ссылку на MongoDB.Driver и назначьте MongoEntityPersistence.Writer перед записью сущностей."
 "MongoDB entity persistence does not support {0}.": "Сохранение сущностей MongoDB не поддерживает {0}."
+"Database is required in connection string.": "В строке подключения необходимо указать Database."
+"{0} requires InfluxDB {1}.": "{0} требует InfluxDB {1}."
+"{0} request failed: {1}": "Ошибка запроса {0}: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB требует хотя бы одно числовое поле; в таблице [{0}] его нет."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "Значения metric и tag в OpenTSDB не могут содержать пробелы: [{0}]"

@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "MongoDB-entitetspersistens kräver en primärnyckel; definiera en på entiteten innan du använder Update eller Delete."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "MongoDB-entitetspersistens kräver en IMongoDocumentWriter. Referera MongoDB.Driver och tilldela MongoEntityPersistence.Writer innan du skriver entiteter."
 "MongoDB entity persistence does not support {0}.": "MongoDB-entitetspersistens stöder inte {0}."
+"Database is required in connection string.": "Database krävs i anslutningssträngen."
+"{0} requires InfluxDB {1}.": "{0} kräver InfluxDB {1}."
+"{0} request failed: {1}": "Begäran {0} misslyckades: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB kräver minst ett numeriskt fält; tabellen [{0}] har inget."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "OpenTSDB metric- och taggvärden får inte innehålla blanksteg: [{0}]"

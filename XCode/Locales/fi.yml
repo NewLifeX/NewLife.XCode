@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "MongoDB-entiteettien pysyvyys vaatii pääavaimen; määritä se entiteettiin ennen Update- tai Delete-toiminnon käyttöä."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "MongoDB-entiteettien pysyvyys vaatii IMongoDocumentWriterin. Viittaa MongoDB.Driveriin ja aseta MongoEntityPersistence.Writer ennen entiteettien kirjoittamista."
 "MongoDB entity persistence does not support {0}.": "MongoDB-entiteettien pysyvyys ei tue toimintoa {0}."
+"Database is required in connection string.": "Database vaaditaan yhteysmerkkijonossa."
+"{0} requires InfluxDB {1}.": "{0} vaatii InfluxDB {1}."
+"{0} request failed: {1}": "Pyyntö {0} epäonnistui: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB vaatii vähintään yhden numeerisen kentän; taulussa [{0}] ei ole yhtään."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "OpenTSDB:n metric- ja tag-arvot eivät voi sisältää välilyöntejä: [{0}]"

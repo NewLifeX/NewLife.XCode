@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "שמירת ישויות MongoDB דורשת מפתח ראשי; הגדר אחד בישות לפני שימוש ב-Update או Delete."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "שמירת ישויות MongoDB דורשת IMongoDocumentWriter. הוסף הפניה ל-MongoDB.Driver והקצה את MongoEntityPersistence.Writer לפני כתיבת ישויות."
 "MongoDB entity persistence does not support {0}.": "שמירת ישויות MongoDB אינה תומכת ב-{0}."
+"Database is required in connection string.": "יש לציין Database במחרוזת החיבור."
+"{0} requires InfluxDB {1}.": "{0} דורש InfluxDB {1}."
+"{0} request failed: {1}": "בקשת {0} נכשלה: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB דורש לפחות שדה מספרי אחד; בטבלה [{0}] אין שדות מספריים."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "ערכי metric ו-tag ב-OpenTSDB אינם יכולים להכיל רווחים: [{0}]"

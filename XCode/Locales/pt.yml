@@ -622,3 +622,8 @@
 "MongoDB entity persistence requires a primary key; define one on the entity before using Update or Delete.": "A persistência de entidades do MongoDB requer uma chave primária; defina uma na entidade antes de usar Update ou Delete."
 "MongoDB entity persistence requires an IMongoDocumentWriter. Reference MongoDB.Driver and assign MongoEntityPersistence.Writer before writing entities.": "A persistência de entidades do MongoDB requer um IMongoDocumentWriter. Referencie MongoDB.Driver e atribua MongoEntityPersistence.Writer antes de gravar entidades."
 "MongoDB entity persistence does not support {0}.": "A persistência de entidades do MongoDB não suporta {0}."
+"Database is required in connection string.": "Database é obrigatório na cadeia de conexão."
+"{0} requires InfluxDB {1}.": "{0} requer InfluxDB {1}."
+"{0} request failed: {1}": "Falha na solicitação de {0}: {1}"
+"OpenTSDB requires at least one numeric field; table [{0}] has none.": "OpenTSDB requer pelo menos um campo numérico; a tabela [{0}] não possui nenhum."
+"OpenTSDB metric and tag values cannot contain whitespace: [{0}]": "Os valores de metric e tag do OpenTSDB não podem conter espaços em branco: [{0}]"

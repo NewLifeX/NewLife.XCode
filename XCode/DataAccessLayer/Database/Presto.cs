@@ -301,6 +301,51 @@ internal sealed class TrinoDbFactory(Type connType, Type cmdType, Type prmType) 
 internal class PrestoSession(IDatabase db) : RemoteDbSession(db)
 {
     #region 基本方法 查询/执行
+    /// <summary>执行查询并装配结果集</summary>
+    /// <remarks>
+    /// NReco 驱动对 varchar 字段返回 ColumnSize=DBNull，DataTable.Load 会据此把 MaxLength 置为 0，
+    /// 导致任何非空字符串都被判为超长。这里先按字段类型建列再加载数据，保持 MaxLength 默认值。
+    /// </remarks>
+    /// <param name="cmd">命令</param>
+    /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "驱动不提供DataAdapter，采用DataReader装配结果集；仅在裁剪下需要DataTable相关成员，数据库访问本身依赖运行时驱动加载，不承诺裁剪后可用")]
+    public override DataSet Query(DbCommand cmd) => Execute(cmd, true, cmd2 =>
+    {
+        var ds = new DataSet();
+
+        using var reader = cmd2.ExecuteReader();
+        do
+        {
+            var table = ReadTable(reader);
+            if (table.Columns.Count > 0) ds.Tables.Add(table);
+        } while (!reader.IsClosed && reader.NextResult());
+
+        return ds;
+    });
+
+    private static DataTable ReadTable(DbDataReader reader)
+    {
+        var table = new DataTable();
+
+        var schema = reader.GetSchemaTable();
+        if (schema != null)
+        {
+            foreach (DataRow row in schema.Rows)
+            {
+                var name = row["ColumnName"] + "";
+                if (name.IsNullOrEmpty()) name = "Column" + table.Columns.Count;
+                while (table.Columns.Contains(name)) name += "_";
+
+                var type = row["DataType"] as Type ?? typeof(String);
+                table.Columns.Add(name, type);
+            }
+        }
+
+        table.Load(reader);
+
+        return table;
+    }
+
     /// <summary>执行插入语句并返回新增行的自动编号。Presto/Trino 没有自增主键</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型</param>
@@ -372,18 +417,89 @@ internal class PrestoMetaData : RemoteDbMetaData
     #region 表信息
     /// <summary>快速取得所有表名</summary>
     /// <returns></returns>
-    public override IList<String> GetTableNames() => OnGetTables(null).Select(e => e.TableName).Where(e => !e.IsNullOrEmpty()).ToList();
+    public override IList<String> GetTableNames()
+    {
+        var where = SqlMetaDataHelper.BuildWhere((Database as PrestoBase)?.SchemaName, null);
+        using var ss = Database.CreateSession();
+        var ds = ss.Query($"select table_name from information_schema.tables{where}", CommandType.Text);
+        if (ds.Tables.Count == 0) return [];
+
+        return ds.Tables[0].Rows.Cast<DataRow>()
+            .Select(e => e["table_name"] + "")
+            .Where(e => !e.IsNullOrEmpty())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
 
     /// <summary>获取所有表</summary>
     /// <param name="names">指定表名</param>
     /// <returns></returns>
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
-        var where = SqlMetaDataHelper.BuildWhere((Database as PrestoBase)?.SchemaName, names);
-        var tables = $"select table_schema, table_name, table_type from information_schema.tables{where} order by table_schema, table_name";
-        var columns = $"select table_schema, table_name, column_name, ordinal_position, data_type, is_nullable, column_default, character_maximum_length, numeric_precision, numeric_scale from information_schema.columns{where} order by table_schema, table_name, ordinal_position";
+        var schema = (Database as PrestoBase)?.SchemaName;
+        var list = new List<IDataTable>();
 
-        return SqlMetaDataHelper.GetTables(Database, tables, columns, GetDataType);
+        // 部分老版 Hive Metastore 不支持一次性列出整库字段（get_table_req），先取表清单，再按表名分批查字段
+        var tableNames = names;
+        if (tableNames == null || tableNames.Length == 0)
+        {
+            var where = SqlMetaDataHelper.BuildWhere(schema, null);
+            using var ss = Database.CreateSession();
+            var ds = ss.Query($"select table_name from information_schema.tables{where}", CommandType.Text);
+            if (ds.Tables.Count == 0) return list;
+
+            tableNames = ds.Tables[0].Rows.Cast<DataRow>()
+                .Select(e => e["table_name"] + "")
+                .Where(e => !e.IsNullOrEmpty())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+        }
+
+        // 分批查询，避免单条 SQL 携带过多表名
+        const Int32 batchSize = 100;
+        for (var i = 0; i < tableNames.Length; i += batchSize)
+        {
+            var batch = tableNames.Skip(i).Take(batchSize).ToArray();
+            if (!TryGetTables(schema, batch, list) && batch.Length > 1)
+            {
+                // 单个坏表（如无法解析的 Hive 视图）会让整批失败，退化为逐表查询并跳过坏表
+                foreach (var name in batch)
+                {
+                    TryGetTables(schema, [name], list);
+                }
+            }
+        }
+
+        list.Sort((x, y) =>
+        {
+            var rs = String.Compare(x.Owner, y.Owner, StringComparison.OrdinalIgnoreCase);
+
+            return rs != 0 ? rs : String.Compare(x.TableName, y.TableName, StringComparison.OrdinalIgnoreCase);
+        });
+
+        return list;
+    }
+
+    private Boolean TryGetTables(String? schema, String[] names, List<IDataTable> list)
+    {
+        try
+        {
+            var where = SqlMetaDataHelper.BuildWhere(schema, names);
+
+            // 部分 Presto 开启 strict mode 后禁止无 limit 的排序，元数据查询不排序，取回后在内存里排
+            var tables = $"select table_schema, table_name, table_type from information_schema.tables{where}";
+            var columns = $"select table_schema, table_name, column_name, ordinal_position, data_type, is_nullable, column_default from information_schema.columns{where}";
+
+            list.AddRange(SqlMetaDataHelper.GetTables(Database, tables, columns, GetDataType));
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            XTrace.WriteLine("Presto metadata query failed for [{0}]: {1}", String.Join(",", names), ex.Message);
+
+            return false;
+        }
     }
     #endregion
 

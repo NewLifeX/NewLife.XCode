@@ -659,16 +659,6 @@ internal class VastBaseMetaData : RemoteDbMetaData
         return base.GetFieldType(field);
     }
 
-    public override String FieldClause(IDataColumn field, Boolean onlyDefine)
-    {
-        var sql = base.FieldClause(field, onlyDefine);
-
-        //// 加上注释
-        //if (!String.IsNullOrEmpty(field.Description)) sql = $"{sql} COMMENT '{field.Description}'";
-
-        return sql;
-    }
-
     protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {
         String? str = null;
@@ -770,12 +760,6 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
         return rawType;
     }
-
-    protected override Boolean IsColumnLengthChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
-        => base.IsColumnLengthChanged(entityColumn, dbColumn, entityDb);
-
-    protected override Boolean IsColumnChanged(IDataColumn entityColumn, IDataColumn dbColumn, IDatabase? entityDb)
-        => base.IsColumnChanged(entityColumn, dbColumn, entityDb);
 
     #region 架构定义
 

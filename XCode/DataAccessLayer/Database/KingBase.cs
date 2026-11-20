@@ -61,8 +61,6 @@ internal class KingBase : RemoteDb
     }
     #endregion
 
-    protected override void OnSetConnectionString(ConnectionStringBuilder builder) => base.OnSetConnectionString(builder);
-
     protected override DbProviderFactory? CreateFactory()
     {
         if (!Provider.IsNullOrEmpty() && Provider.Contains("KingBase"))
@@ -537,11 +535,6 @@ internal class KingBaseMetaData : RemoteDbMetaData
             if (field.DataType == typeof(Int64)) { return "bigserial"; }
         }
         return base.GetFieldType(field);
-    }
-    public override String FieldClause(IDataColumn field, Boolean onlyDefine)
-    {
-        var sql = base.FieldClause(field, onlyDefine);
-        return sql;
     }
     protected override String? GetFieldConstraints(IDataColumn field, Boolean onlyDefine)
     {

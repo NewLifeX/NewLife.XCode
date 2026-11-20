@@ -576,12 +576,6 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     }
 
     /// <inheritdoc/>
-    public override String? AddColumnSQL(IDataColumn field)
-    {
-        return base.AddColumnSQL(field);
-    }
-
-    /// <inheritdoc/>
     public override String? CreateIndexSQL(IDataIndex index) => $"CREATE {(index.Unique ? "UNIQUE " : String.Empty)}INDEX {Database.FormatName(index.Name!)} ON {FormatIndexTable(index.Table)} ({String.Join(",", index.Table.GetColumns(index.Columns).Select(FormatName))})";
 
     /// <inheritdoc/>
@@ -647,9 +641,4 @@ internal class SonnetDBMetaData : RemoteDbMetaData
     public override String? AddColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS {SonnetDB.Quote(field.Description ?? String.Empty)}";
     /// <inheritdoc/>
     public override String? DropColumnDescriptionSQL(IDataColumn field) => $"COMMENT ON COLUMN {FormatName(field.Table)}.{FormatName(field)} IS NULL";
-
-    protected override Boolean PerformSchema(StringBuilder sb, Boolean onlySql, DDLCommand command)
-    {
-        return base.PerformSchema(sb, onlySql, command);
-    }
 }

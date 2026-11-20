@@ -164,14 +164,9 @@ internal class SQLite : FileDbBase
     #endregion
 
     #region 方法
-    /// <summary>打开连接</summary>
-    /// <remarks>
-    /// SQLite 在 Open 时会自动处理 WAL 恢复，无需手动干预。
-    /// WAL 文件存在是正常状态，不代表需要恢复。
-    /// 多进程场景下，WAL 文件可能被其他进程使用，不应擅自执行 checkpoint。
-    /// </remarks>
-    /// <returns></returns>
-    public override DbConnection OpenConnection() => base.OpenConnection();
+    // SQLite 在 Open 时会自动处理 WAL 恢复，无需手动干预。
+    // WAL 文件存在是正常状态，不代表需要恢复。
+    // 多进程场景下，WAL 文件可能被其他进程使用，不应擅自执行 checkpoint。
 
     /// <summary>创建数据库会话</summary>
     /// <returns></returns>

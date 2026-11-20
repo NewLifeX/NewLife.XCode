@@ -539,11 +539,11 @@ public class Field : FieldItem
     /// <returns></returns>
     public static Expression operator !=(Field field, Object? value) => field.NotEqual(value);
 
-    /// <summary>重写一下</summary>
+    /// <summary>重写一下。== 运算符返回 Expression 而非 Boolean，重写仅用于满足编译器约定</summary>
     /// <returns></returns>
     public override Int32 GetHashCode() => base.GetHashCode();
 
-    /// <summary>重写一下</summary>
+    /// <summary>重写一下。== 运算符返回 Expression 而非 Boolean，重写仅用于满足编译器约定</summary>
     /// <param name="obj"></param>
     /// <returns></returns>
     public override Boolean Equals(Object obj) => base.Equals(obj);

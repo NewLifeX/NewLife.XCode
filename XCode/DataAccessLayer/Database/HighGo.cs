@@ -61,7 +61,6 @@ internal class HighGo : RemoteDb
     }
     #endregion
 
-    protected override void OnSetConnectionString(ConnectionStringBuilder builder) => base.OnSetConnectionString(builder);
     protected override DbProviderFactory? CreateFactory()
     {
         if (!Provider.IsNullOrEmpty() && Provider.Contains("HighGo"))

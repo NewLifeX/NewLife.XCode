@@ -93,6 +93,8 @@
     <!-- 直引 Remoting 最新 beta，与 AotSmoke 对齐，避免传递依赖版本落后 -->
     <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1116-beta1043" />
     <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.301-beta0617" />
+    <!-- 直接引用 Presto 驱动，避免真库用例依赖运行时从 PluginServer 下载 -->
+    <PackageReference Include="NReco.PrestoAdo" Version="1.1.0" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.13" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">

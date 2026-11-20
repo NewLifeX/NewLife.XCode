@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Data;
 using System.Linq;
 using NewLife;
+using NewLife.Log;
 using XCode;
 using XCode.DataAccessLayer;
 using Xunit;
@@ -8,10 +10,12 @@ using Xunit;
 namespace XUnitTest.XCode.DataAccessLayer;
 
 /// <summary>Presto/Trino 数据库测试。两者均为联邦查询引擎，无事务、无自增主键、不支持自动建表</summary>
+/// <remarks>Presto 真库用例优先读取环境变量 XCode_presto，其次读取测试目录下的 Config/presto.config，内容为驱动连接串</remarks>
 [Collection("Database")]
 public class PrestoTests
 {
-    private const String DefaultTrinoConnStr = "Host=127.0.0.1;Port=8080;Catalog=tpch;Schema=tiny;User=test";
+    private const String DefaultTrinoConnStr = "Host=localhost;Port=8080;Catalog=tpch;Schema=tiny;User=user";
+    private const String DefaultPrestoConnStr = "Host=localhost;Port=8080;Catalog=hive;Schema=default;User=user";
 
     [LiveDatabaseFact("trino", "trino", 8080)]
     public void TrinoConnectTest()
@@ -70,6 +74,109 @@ public class PrestoTests
         var tb = tables.FirstOrDefault(e => e.TableName.EqualIgnoreCase("nation"));
         Assert.NotNull(tb);
         Assert.True(tb!.Columns.Count > 0);
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoConnectTest()
+    {
+        var connStr = PrestoConnStr();
+        var db = DbFactory.Create(DatabaseType.Presto);
+        Assert.NotNull(db);
+
+        db.ConnectionString = connStr;
+        using var conn = db.OpenConnection();
+        Assert.Equal(ConnectionState.Open, conn.State);
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoSelectOneTest()
+    {
+        var dal = PrestoDal("Presto_Live");
+        Assert.Equal(DatabaseType.Presto, dal.DbType);
+
+        // 只读冒烟：不建表、不写数据
+        var dt = dal.Query("select 1 as n");
+        Assert.NotNull(dt);
+        Assert.Equal(1, dt.Rows.Count);
+        Assert.Equal(1, dt.Rows[0][0].ToInt());
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoServerInfoTest()
+    {
+        var dal = PrestoDal("Presto_Live");
+
+        // system.runtime.nodes 是 Presto 内置运行时表，可验证系统目录访问
+        var dt = dal.Query("select node_version from system.runtime.nodes limit 1");
+        Assert.NotNull(dt);
+        Assert.Equal(1, dt.Rows.Count);
+
+        var version = dt.Rows[0][0] + "";
+        Assert.False(version.IsNullOrEmpty());
+        XTrace.WriteLine("Presto node_version={0}", version);
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoGetTablesTest()
+    {
+        var dal = PrestoDal("Presto_Live");
+
+        // 反向工程走 information_schema，连接串 Schema 有值时只取该模式
+        using var meta = dal.Db.CreateMetaData();
+        var names = meta.GetTableNames();
+        Assert.NotNull(names);
+        XTrace.WriteLine("Presto table names={0}", names.Count);
+
+        var tables = meta.GetTables();
+        Assert.NotNull(tables);
+        XTrace.WriteLine("Presto tables={0}", tables.Count);
+
+        foreach (var item in tables.Take(10))
+        {
+            XTrace.WriteLine("{0}.{1} columns={2}", item.Owner, item.TableName, item.Columns.Count);
+        }
+
+        // 无法解析的坏表（如 Hive 视图）会被跳过，其余表必须带模式和字段信息
+        if (names.Count > 0) Assert.True(tables.Count > 0);
+        Assert.All(tables, e => Assert.False(e.TableName.IsNullOrEmpty()));
+        Assert.All(tables, e => Assert.False(e.Owner.IsNullOrEmpty()));
+
+        var table = tables.FirstOrDefault(e => e.Columns.Count > 0);
+        if (table != null) Assert.All(table.Columns, e => Assert.False(e.ColumnName.IsNullOrEmpty()));
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoQueryTableTest()
+    {
+        var dal = PrestoDal("Presto_Live");
+
+        // SHOW TABLES 只查当前模式，比 information_schema 更少依赖 Metastore 能力
+        var dt = dal.Query("show tables");
+        Assert.NotNull(dt);
+
+        var names = dt.Rows.Select(e => e[0] + "").Where(e => !e.IsNullOrEmpty()).Take(10).ToArray();
+        if (names.Length == 0) return; // 空库时跳过，连接与元数据已由其它用例覆盖
+
+        // 依次尝试前几张表，跳过个别无法读取的坏表；任意一张能读到即视为数据访问正常
+        foreach (var name in names)
+        {
+            var sql = $"select * from {QuoteName(name)} limit 1";
+            try
+            {
+                var table = dal.Query(sql);
+                Assert.NotNull(table);
+                Assert.True(table.Rows.Count <= 1);
+                XTrace.WriteLine("Presto query {0} rows={1}", sql, table.Rows.Count);
+
+                return;
+            }
+            catch (Exception ex)
+            {
+                XTrace.WriteLine("Presto query {0} skipped: {1}", sql, ex.Message);
+            }
+        }
+
+        Assert.True(false, "Presto 无法读取任何一张表，请检查连接串指向的 Catalog/Schema");
     }
 
     [Theory]
@@ -180,7 +287,7 @@ public class PrestoTests
     [Fact]
     public void ConnectionStringTest()
     {
-        DAL.AddConnStr("presto_test", "Host=localhost;Database=hive;Owner=myschema;User=test", null, "Presto");
+        DAL.AddConnStr("presto_test", "Host=localhost;Database=hive;Owner=myschema;User=user", null, "Presto");
         var dal = DAL.Create("presto_test");
         Assert.Equal(DatabaseType.Presto, dal.DbType);
 
@@ -189,7 +296,7 @@ public class PrestoTests
         Assert.Contains("Schema=myschema", connStr, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Port=8080", connStr, StringComparison.OrdinalIgnoreCase);
 
-        DAL.AddConnStr("trino_test", "Host=localhost;Database=hive;Owner=myschema;User=test", null, "Trino");
+        DAL.AddConnStr("trino_test", "Host=localhost;Database=hive;Owner=myschema;User=user", null, "Trino");
         var dal2 = DAL.Create("trino_test");
         Assert.Equal(DatabaseType.Trino, dal2.DbType);
 
@@ -230,4 +337,17 @@ public class PrestoTests
         // 无事务
         Assert.Throws<NotSupportedException>(() => session.BeginTransaction(System.Data.IsolationLevel.ReadCommitted));
     }
+
+    /// <summary>解析 Presto 连接串。优先级：环境变量 XCode_presto → Config/presto.config → 本机默认值</summary>
+    /// <returns></returns>
+    private static String PrestoConnStr() => LiveDatabase.Resolve("presto", "presto", DefaultPrestoConnStr);
+
+    private static DAL PrestoDal(String name)
+    {
+        DAL.AddConnStr(name, PrestoConnStr(), null, "Presto");
+
+        return DAL.Create(name);
+    }
+
+    private static String QuoteName(String? name) => "\"" + (name + "").Replace("\"", "\"\"") + "\"";
 }

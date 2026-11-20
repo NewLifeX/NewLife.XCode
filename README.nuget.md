@@ -25,7 +25,7 @@ Docs: https://newlifex.com/xcode   Community QQ groups: 1600800 / 1600838
 
 ## Supported Databases
 
-XCode reaches every database through a separate ADO.NET driver package. Install the package that matches your database; when a driver is missing, the error message also names the package to add. **30 built-in providers** are supported today — relational, embedded, time-series, columnar, document, federated and cloud data warehouses — plus **19 protocol-compatible aliases** that reuse the MySQL or PostgreSQL provider.
+XCode reaches every database through a separate ADO.NET driver package. Install the package that matches your database; when a driver is missing, the error message also names the package to add. **33 communication-protocol providers** are built in — relational, embedded, time-series, columnar, document, federated and cloud data warehouses — covering **55 databases** in total: 33 dedicated providers plus **22 protocol-compatible databases** that reuse the MySQL, PostgreSQL or Prometheus provider.
 
 | Database | Provider | NuGet driver package | Type |
 | --- | --- | --- | --- |
@@ -63,7 +63,34 @@ XCode reaches every database through a separate ADO.NET driver package. Install 
 | SonnetDB | `SonnetDB` | `SonnetDB` | Embedded / remote |
 | Network | `Network` | Built-in | Virtual |
 
-MySQL- and PostgreSQL-protocol engines reuse those providers through 21 built-in aliases: TiDB, Doris, StarRocks, OceanBase (MySQL mode), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB, QuestDB, GreptimeDB and CrateDB; MariaDB is covered by the MySQL provider. The Access and SqlCe providers are retained but disabled.
+Protocol-compatible databases need no new provider; the provider name in the connection string selects the built-in alias:
+
+| Database | Reused provider | Connection provider alias |
+| --- | --- | --- |
+| MariaDB | `MySql` | `mariadb` |
+| TiDB | `MySql` | `tidb` |
+| StarRocks | `MySql` | `starrocks` |
+| Apache Doris | `MySql` | `doris` |
+| OceanBase (MySQL mode) | `MySql` | `oceanbase` |
+| SingleStore | `MySql` | `singlestore` |
+| PolarDB | `MySql` | `polardb` |
+| TDSQL | `MySql` | `tdsql` |
+| GoldenDB | `MySql` | `goldendb` |
+| GreatDB | `MySql` | `greatdb` |
+| Databend | `MySql` | `databend` |
+| openGauss | `PostgreSQL` | `opengauss` |
+| GaussDB | `PostgreSQL` | `gaussdb` |
+| Greenplum | `PostgreSQL` | `greenplum` |
+| Amazon Redshift | `PostgreSQL` | `redshift` |
+| CockroachDB | `PostgreSQL` | `cockroach` |
+| YugabyteDB | `PostgreSQL` | `yugabyte` |
+| TimescaleDB | `PostgreSQL` | `timescale` |
+| QuestDB | `PostgreSQL` | `questdb` |
+| GreptimeDB | `PostgreSQL` | `greptimedb` |
+| CrateDB | `PostgreSQL` | `cratedb` |
+| VictoriaMetrics | `Prometheus` | `victoriametrics` |
+
+The same catalog is available at runtime through `DatabaseProducts.All`; `DatabaseProducts.ProtocolCount` and `DatabaseProducts.Count` return the two totals. The Access and SqlCe providers are retained but disabled.
 
 ## Quick Start
 
@@ -394,7 +421,7 @@ NewLife is a layered ecosystem of independently versioned open-source projects. 
 | --- | --- | --- |
 | **Foundation** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | Logging, configuration, caching, networking, serialization, scheduling and APM tracing. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Data middleware: single tables at the tens-of-billions scale, automatic sharding, read-write splitting, 30 databases. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Data middleware: single tables at the tens-of-billions scale, automatic sharding, read-write splitting, 55 databases. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | High-performance network library: 1.77M pps / 14.5 Gbps on a single machine (TCP 1KB, 2026-10), 4M long-lived TCP connections. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | Protocol communication and RPC framework for client/server applications and IoT devices. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | Installs .NET applications as OS daemons: Windows services and Linux systemd. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

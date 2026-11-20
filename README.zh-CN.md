@@ -25,7 +25,7 @@
 
 ## 支持的数据库
 
-XCode 通过独立的 ADO.NET 驱动包访问各类数据库。请按所用数据库安装对应 NuGet 包；驱动缺失时，异常信息也会直接给出需要添加的包名。目前支持 **30 种内置提供者**（关系型、嵌入式、时序、列式、文档、联邦查询与云数据仓库），另有 **19 个协议兼容别名**复用 MySQL 或 PostgreSQL 提供者。
+XCode 通过独立的 ADO.NET 驱动包访问各类数据库。请按所用数据库安装对应 NuGet 包；驱动缺失时，异常信息也会直接给出需要添加的包名。目前内置 **33 种通信协议提供者**（关系型、嵌入式、时序、列式、文档、联邦查询与云数据仓库），共支持 **55 种数据库**：33 个专属提供者，加上 **22 个复用 MySQL、PostgreSQL 或 Prometheus 协议的兼容数据库**。
 
 | 数据库 | 提供者 | NuGet 驱动包 | 类型 |
 | --- | --- | --- | --- |
@@ -63,7 +63,34 @@ XCode 通过独立的 ADO.NET 驱动包访问各类数据库。请按所用数�
 | SonnetDB | `SonnetDB` | `SonnetDB` | 嵌入式 / 远程 |
 | Network | `Network` | 内置 | 虚拟 |
 
-MySQL 与 PostgreSQL 协议兼容的数据库无需新增提供者，使用内置别名即可复用对应驱动，共 21 个：TiDB、Doris、StarRocks、OceanBase（MySQL 模式）、SingleStore、PolarDB、TDSQL、GoldenDB、GreatDB、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB、QuestDB、GreptimeDB、CrateDB，MariaDB 由 MySQL 提供者覆盖。Access 与 SqlCe 提供者保留但已停用。
+协议兼容数据库无需新增提供者，连接字符串中的提供者名称会命中内置别名：
+
+| 数据库 | 复用提供者 | 连接提供者别名 |
+| --- | --- | --- |
+| MariaDB | `MySql` | `mariadb` |
+| TiDB | `MySql` | `tidb` |
+| StarRocks | `MySql` | `starrocks` |
+| Apache Doris | `MySql` | `doris` |
+| OceanBase（MySQL 模式） | `MySql` | `oceanbase` |
+| SingleStore | `MySql` | `singlestore` |
+| PolarDB | `MySql` | `polardb` |
+| TDSQL | `MySql` | `tdsql` |
+| GoldenDB | `MySql` | `goldendb` |
+| GreatDB | `MySql` | `greatdb` |
+| Databend | `MySql` | `databend` |
+| openGauss | `PostgreSQL` | `opengauss` |
+| GaussDB | `PostgreSQL` | `gaussdb` |
+| Greenplum | `PostgreSQL` | `greenplum` |
+| Amazon Redshift | `PostgreSQL` | `redshift` |
+| CockroachDB | `PostgreSQL` | `cockroach` |
+| YugabyteDB | `PostgreSQL` | `yugabyte` |
+| TimescaleDB | `PostgreSQL` | `timescale` |
+| QuestDB | `PostgreSQL` | `questdb` |
+| GreptimeDB | `PostgreSQL` | `greptimedb` |
+| CrateDB | `PostgreSQL` | `cratedb` |
+| VictoriaMetrics | `Prometheus` | `victoriametrics` |
+
+运行时可通过 `DatabaseProducts.All` 获取同一份目录，`DatabaseProducts.ProtocolCount` 与 `DatabaseProducts.Count` 分别返回这两个数字。 Access 与 SqlCe 提供者保留但已停用。
 
 ## 快速开始
 
@@ -396,7 +423,7 @@ NewLife 生态按依赖分层，各项目独立版本、独立发版。下面的
 | --- | --- | --- |
 | **基础底座** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | 日志、配置、缓存、网络、序列化、定时调度与 APM 追踪。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | 数据中间件：单表百亿级、自动分表、读写分离，支持 30 种数据库。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | 数据中间件：单表百亿级、自动分表、读写分离，支持 55 种数据库。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | 高性能网络库：单机 177 万 pps、14.5 Gbps（TCP 1KB，2026-10 实测），400 万 Tcp 长连接。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | 协议通信与 RPC 框架，面向 CS 应用与物联网设备。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | 把 .NET 应用安装为操作系统守护进程：Windows 服务与 Linux systemd。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

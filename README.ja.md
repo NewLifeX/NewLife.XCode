@@ -25,7 +25,7 @@
 
 ## 対応データベース
 
-XCode はデータベースごとに個別の ADO.NET ドライバーパッケージを介して接続します。使用するデータベースのパッケージをインストールしてください。ドライバーが見つからない場合、エラーメッセージに追加すべきパッケージ名も表示されます。現在 **30 の組み込みプロバイダー**（リレーショナル、組み込み、時系列、列指向、ドキュメント、フェデレーテッドクエリ、クラウドデータウェアハウス）に加え、MySQL または PostgreSQL プロバイダーを再利用する **19 のプロトコル互換別名**に対応しています。
+XCode はデータベースごとに個別の ADO.NET ドライバーパッケージを介して接続します。使用するデータベースのパッケージをインストールしてください。ドライバーが見つからない場合、エラーメッセージに追加すべきパッケージ名も表示されます。現在 **33 の通信プロトコルプロバイダー**（リレーショナル、組み込み、時系列、列指向、ドキュメント、フェデレーテッドクエリ、クラウドデータウェアハウス）を内蔵し、合計 **55 のデータベース**に対応しています。33 の専用プロバイダーに加え、MySQL、PostgreSQL、Prometheus プロバイダーを再利用する **22 のプロトコル互換データベース**です。
 
 | データベース | プロバイダー | NuGet ドライバーパッケージ | 種類 |
 | --- | --- | --- | --- |
@@ -63,7 +63,34 @@ XCode はデータベースごとに個別の ADO.NET ドライバーパッケ�
 | SonnetDB | `SonnetDB` | `SonnetDB` | 組み込み / リモート |
 | Network | `Network` | 内蔵 | 仮想 |
 
-MySQL / PostgreSQL プロトコル互換のエンジンは、21 の組み込み別名で同じプロバイダーを再利用できます：TiDB、Doris、StarRocks、OceanBase（MySQL モード）、SingleStore、PolarDB、TDSQL、GoldenDB、GreatDB、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB、QuestDB、GreptimeDB、CrateDB。MariaDB は MySQL プロバイダーでカバーされます。Access と SqlCe のプロバイダーは残されていますが無効です。
+プロトコル互換データベースは新しいプロバイダーを必要としません。接続文字列のプロバイダー名が組み込み別名を選択します：
+
+| データベース | 再利用プロバイダー | 接続プロバイダーの別名 |
+| --- | --- | --- |
+| MariaDB | `MySql` | `mariadb` |
+| TiDB | `MySql` | `tidb` |
+| StarRocks | `MySql` | `starrocks` |
+| Apache Doris | `MySql` | `doris` |
+| OceanBase（MySQL モード） | `MySql` | `oceanbase` |
+| SingleStore | `MySql` | `singlestore` |
+| PolarDB | `MySql` | `polardb` |
+| TDSQL | `MySql` | `tdsql` |
+| GoldenDB | `MySql` | `goldendb` |
+| GreatDB | `MySql` | `greatdb` |
+| Databend | `MySql` | `databend` |
+| openGauss | `PostgreSQL` | `opengauss` |
+| GaussDB | `PostgreSQL` | `gaussdb` |
+| Greenplum | `PostgreSQL` | `greenplum` |
+| Amazon Redshift | `PostgreSQL` | `redshift` |
+| CockroachDB | `PostgreSQL` | `cockroach` |
+| YugabyteDB | `PostgreSQL` | `yugabyte` |
+| TimescaleDB | `PostgreSQL` | `timescale` |
+| QuestDB | `PostgreSQL` | `questdb` |
+| GreptimeDB | `PostgreSQL` | `greptimedb` |
+| CrateDB | `PostgreSQL` | `cratedb` |
+| VictoriaMetrics | `Prometheus` | `victoriametrics` |
+
+同じカタログは実行時に `DatabaseProducts.All` から取得でき、`DatabaseProducts.ProtocolCount` と `DatabaseProducts.Count` が 2 つの合計を返します。 Access と SqlCe のプロバイダーは残されていますが無効です。
 
 ## クイックスタート
 
@@ -394,7 +421,7 @@ NewLife は、独立したバージョン管理を行うオープンソースプ
 | --- | --- | --- |
 | **基盤** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | ログ、構成、キャッシュ、ネットワーク、シリアライズ、スケジューリング、APM トレーシング。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | データミドルウェア：単一テーブルで数百億件級、自動シャーディング、読み書き分離、30 種類のデータベースに対応。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | データミドルウェア：単一テーブルで数百億件級、自動シャーディング、読み書き分離、55 種類のデータベースに対応。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | 高性能ネットワークライブラリ：単一マシンで 177 万 pps、14.5 Gbps（TCP 1KB、2026-10 実測）、400 万 Tcp 長接続。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | CS アプリケーションと IoT デバイス向けのプロトコル通信と RPC フレームワーク。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | .NET アプリケーションを OS デーモンとしてインストール：Windows サービスと Linux systemd。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

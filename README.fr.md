@@ -25,7 +25,7 @@ Documentation : https://newlifex.com/xcode   Groupes QQ de la communauté : 1600
 
 ## Bases de données prises en charge
 
-XCode accède à chaque base de données via un package de pilote ADO.NET distinct. Installez le package correspondant à votre base de données ; si le pilote est absent, le message d'erreur indique également le package à ajouter. **30 fournisseurs intégrés** sont pris en charge (relationnels, embarqués, séries temporelles, colonnaires, documentaires, requêtes fédérées et entrepôts de données cloud), ainsi que **19 alias compatibles protocole** qui réutilisent le fournisseur MySQL ou PostgreSQL.
+XCode accède à chaque base de données via un package de pilote ADO.NET distinct. Installez le package correspondant à votre base de données ; si le pilote est absent, le message d'erreur indique également le package à ajouter. **33 fournisseurs de protocoles de communication** sont intégrés (relationnels, embarqués, séries temporelles, colonnaires, documentaires, requêtes fédérées et entrepôts de données cloud) et couvrent **55 bases de données** au total : 33 fournisseurs dédiés plus **22 bases de données compatibles protocole** qui réutilisent le fournisseur MySQL, PostgreSQL ou Prometheus.
 
 | Base de données | Fournisseur | Package NuGet du pilote | Type |
 | --- | --- | --- | --- |
@@ -63,7 +63,34 @@ XCode accède à chaque base de données via un package de pilote ADO.NET distin
 | SonnetDB | `SonnetDB` | `SonnetDB` | Intégrée / distante |
 | Network | `Network` | Intégré | Virtuelle |
 
-Les moteurs compatibles avec le protocole MySQL ou PostgreSQL réutilisent ces fournisseurs via 21 alias intégrés : TiDB, Doris, StarRocks, OceanBase (mode MySQL), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB et QuestDB ; MariaDB est couvert par le fournisseur MySQL. Les fournisseurs Access et SqlCe sont conservés mais désactivés.
+Les bases de données compatibles protocole ne nécessitent pas de nouveau fournisseur ; le nom du fournisseur dans la chaîne de connexion sélectionne l'alias intégré :
+
+| Base de données | Fournisseur réutilisé | Alias de fournisseur de connexion |
+| --- | --- | --- |
+| MariaDB | `MySql` | `mariadb` |
+| TiDB | `MySql` | `tidb` |
+| StarRocks | `MySql` | `starrocks` |
+| Apache Doris | `MySql` | `doris` |
+| OceanBase (mode MySQL) | `MySql` | `oceanbase` |
+| SingleStore | `MySql` | `singlestore` |
+| PolarDB | `MySql` | `polardb` |
+| TDSQL | `MySql` | `tdsql` |
+| GoldenDB | `MySql` | `goldendb` |
+| GreatDB | `MySql` | `greatdb` |
+| Databend | `MySql` | `databend` |
+| openGauss | `PostgreSQL` | `opengauss` |
+| GaussDB | `PostgreSQL` | `gaussdb` |
+| Greenplum | `PostgreSQL` | `greenplum` |
+| Amazon Redshift | `PostgreSQL` | `redshift` |
+| CockroachDB | `PostgreSQL` | `cockroach` |
+| YugabyteDB | `PostgreSQL` | `yugabyte` |
+| TimescaleDB | `PostgreSQL` | `timescale` |
+| QuestDB | `PostgreSQL` | `questdb` |
+| GreptimeDB | `PostgreSQL` | `greptimedb` |
+| CrateDB | `PostgreSQL` | `cratedb` |
+| VictoriaMetrics | `Prometheus` | `victoriametrics` |
+
+Le même catalogue est disponible à l'exécution via `DatabaseProducts.All` ; `DatabaseProducts.ProtocolCount` et `DatabaseProducts.Count` renvoient les deux totaux. Les fournisseurs Access et SqlCe sont conservés mais désactivés.
 
 ## Démarrage rapide
 
@@ -394,7 +421,7 @@ NewLife est un écosystème en couches de projets open source versionnés indép
 | --- | --- | --- |
 | **Fondation** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | Journalisation, configuration, cache, réseau, sérialisation, ordonnancement et traçage APM. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Intergiciel de données : tables uniques à l'échelle de dizaines de milliards, partitionnement automatique, séparation lecture/écriture et 30 bases de données. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Intergiciel de données : tables uniques à l'échelle de dizaines de milliards, partitionnement automatique, séparation lecture/écriture et 55 bases de données. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | Bibliothèque réseau hautes performances : 1,77 M pps / 14,5 Gbps sur une machine (TCP 1KB, 2026-10), 4 M connexions TCP persistantes. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | Communication protocolaire et framework RPC pour applications client/serveur et appareils IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | Installe des applications .NET comme démons système : services Windows et systemd Linux. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

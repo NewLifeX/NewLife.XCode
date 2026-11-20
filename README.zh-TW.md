@@ -27,7 +27,7 @@
 
 ## 支援的資料庫
 
-XCode 透過獨立的 ADO.NET 驅動套件存取各類資料庫。請依所用資料庫安裝對應 NuGet 套件；驅動缺少時，例外訊息也會直接指出需要新增的套件名稱。目前支援 **30 種內建提供者**（關聯式、內嵌、時序、列式、文件、聯邦查詢與雲端資料倉儲），另有 **19 個協定相容別名**沿用 MySQL 或 PostgreSQL 提供者。
+XCode 透過獨立的 ADO.NET 驅動套件存取各類資料庫。請依所用資料庫安裝對應 NuGet 套件；驅動缺少時，例外訊息也會直接指出需要新增的套件名稱。目前內建 **33 種通訊協定提供者**（關聯式、內嵌、時序、列式、文件、聯邦查詢與雲端資料倉儲），共支援 **55 種資料庫**：33 個專屬提供者，加上 **22 個沿用 MySQL、PostgreSQL 或 Prometheus 協定的相容資料庫**。
 
 | 資料庫 | 提供者 | NuGet 驅動套件 | 類型 |
 | --- | --- | --- | --- |
@@ -65,7 +65,34 @@ XCode 透過獨立的 ADO.NET 驅動套件存取各類資料庫。請依所用�
 | SonnetDB | `SonnetDB` | `SonnetDB` | 內嵌 / 遠端 |
 | Network | `Network` | 內建 | 虛擬 |
 
-與 MySQL、PostgreSQL 協議相容的資料庫無需新增提供者，使用內建別名即可沿用對應驅動，共 21 個：TiDB、Doris、StarRocks、OceanBase（MySQL 模式）、SingleStore、PolarDB、TDSQL、GoldenDB、GreatDB、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB、QuestDB、GreptimeDB、CrateDB，MariaDB 由 MySQL 提供者涵蓋。Access 與 SqlCe 提供者保留但已停用。
+協定相容資料庫無需新增提供者，連線字串中的提供者名稱會命中內建別名：
+
+| 資料庫 | 沿用提供者 | 連線提供者別名 |
+| --- | --- | --- |
+| MariaDB | `MySql` | `mariadb` |
+| TiDB | `MySql` | `tidb` |
+| StarRocks | `MySql` | `starrocks` |
+| Apache Doris | `MySql` | `doris` |
+| OceanBase（MySQL 模式） | `MySql` | `oceanbase` |
+| SingleStore | `MySql` | `singlestore` |
+| PolarDB | `MySql` | `polardb` |
+| TDSQL | `MySql` | `tdsql` |
+| GoldenDB | `MySql` | `goldendb` |
+| GreatDB | `MySql` | `greatdb` |
+| Databend | `MySql` | `databend` |
+| openGauss | `PostgreSQL` | `opengauss` |
+| GaussDB | `PostgreSQL` | `gaussdb` |
+| Greenplum | `PostgreSQL` | `greenplum` |
+| Amazon Redshift | `PostgreSQL` | `redshift` |
+| CockroachDB | `PostgreSQL` | `cockroach` |
+| YugabyteDB | `PostgreSQL` | `yugabyte` |
+| TimescaleDB | `PostgreSQL` | `timescale` |
+| QuestDB | `PostgreSQL` | `questdb` |
+| GreptimeDB | `PostgreSQL` | `greptimedb` |
+| CrateDB | `PostgreSQL` | `cratedb` |
+| VictoriaMetrics | `Prometheus` | `victoriametrics` |
+
+執行時可透過 `DatabaseProducts.All` 取得同一份目錄，`DatabaseProducts.ProtocolCount` 與 `DatabaseProducts.Count` 分別傳回這兩個數字。 Access 與 SqlCe 提供者保留但已停用。
 
 ## 快速開始
 
@@ -396,7 +423,7 @@ NewLife 生態依相依性分層，各專案獨立版本、獨立發行。下方
 | --- | --- | --- |
 | **基礎底座** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | 日誌、設定、快取、網路、序列化、排程與 APM 追蹤。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | 資料中介層：單表百億級、自動分表、讀寫分離，支援 30 種資料庫。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | 資料中介層：單表百億級、自動分表、讀寫分離，支援 55 種資料庫。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | 高效能網路庫：單機 177 萬 pps、14.5 Gbps（TCP 1KB，2026-10 實測），400 萬 Tcp 長連線。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | 協定通訊與 RPC 框架，面向 CS 應用程式與物聯網裝置。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | 將 .NET 應用程式安裝為作業系統常駐服務：Windows 服務與 Linux systemd。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

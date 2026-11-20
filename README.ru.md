@@ -25,7 +25,7 @@
 
 ## Поддерживаемые базы данных
 
-XCode обращается к каждой базе данных через отдельный пакет драйвера ADO.NET. Установите пакет для своей базы данных; если драйвер отсутствует, сообщение об ошибке также укажет нужный пакет. Сейчас поддерживается **30 встроенных провайдеров** (реляционные, встраиваемые, временные ряды, колоночные, документные, федеративные запросы и облачные хранилища данных), а также **19 псевдонимов с совместимым протоколом**, которые переиспользуют провайдер MySQL или PostgreSQL.
+XCode обращается к каждой базе данных через отдельный пакет драйвера ADO.NET. Установите пакет для своей базы данных; если драйвер отсутствует, сообщение об ошибке также укажет нужный пакет. Сейчас поддерживается **33 провайдера протоколов связи** (реляционные, встраиваемые, временные ряды, колоночные, документные, федеративные запросы и облачные хранилища данных), которые охватывают **55 баз данных**: 33 выделенных провайдера и **22 базы данных с совместимым протоколом**, использующие провайдер MySQL, PostgreSQL или Prometheus.
 
 | База данных | Провайдер | NuGet-пакет драйвера | Тип |
 | --- | --- | --- | --- |
@@ -63,7 +63,34 @@ XCode обращается к каждой базе данных через от
 | SonnetDB | `SonnetDB` | `SonnetDB` | Встроенная / удалённая |
 | Network | `Network` | Встроенный | Виртуальная |
 
-СУБД, совместимые с протоколом MySQL или PostgreSQL, используют эти провайдеры через 21 встроенных псевдонимов: TiDB, Doris, StarRocks, OceanBase (режим MySQL), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB и QuestDB; MariaDB покрывается провайдером MySQL. Провайдеры Access и SqlCe сохранены, но отключены.
+Базам данных с совместимым протоколом не нужен новый провайдер: имя провайдера в строке подключения выбирает встроенный псевдоним:
+
+| База данных | Используемый провайдер | Псевдоним провайдера в подключении |
+| --- | --- | --- |
+| MariaDB | `MySql` | `mariadb` |
+| TiDB | `MySql` | `tidb` |
+| StarRocks | `MySql` | `starrocks` |
+| Apache Doris | `MySql` | `doris` |
+| OceanBase (режим MySQL) | `MySql` | `oceanbase` |
+| SingleStore | `MySql` | `singlestore` |
+| PolarDB | `MySql` | `polardb` |
+| TDSQL | `MySql` | `tdsql` |
+| GoldenDB | `MySql` | `goldendb` |
+| GreatDB | `MySql` | `greatdb` |
+| Databend | `MySql` | `databend` |
+| openGauss | `PostgreSQL` | `opengauss` |
+| GaussDB | `PostgreSQL` | `gaussdb` |
+| Greenplum | `PostgreSQL` | `greenplum` |
+| Amazon Redshift | `PostgreSQL` | `redshift` |
+| CockroachDB | `PostgreSQL` | `cockroach` |
+| YugabyteDB | `PostgreSQL` | `yugabyte` |
+| TimescaleDB | `PostgreSQL` | `timescale` |
+| QuestDB | `PostgreSQL` | `questdb` |
+| GreptimeDB | `PostgreSQL` | `greptimedb` |
+| CrateDB | `PostgreSQL` | `cratedb` |
+| VictoriaMetrics | `Prometheus` | `victoriametrics` |
+
+Тот же каталог доступен во время выполнения через `DatabaseProducts.All`; `DatabaseProducts.ProtocolCount` и `DatabaseProducts.Count` возвращают обе суммы. Провайдеры Access и SqlCe сохранены, но отключены.
 
 ## Быстрый старт
 
@@ -394,7 +421,7 @@ NewLife — это многоуровневая экосистема незав�
 | --- | --- | --- |
 | **Базовый** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | Логирование, конфигурация, кэширование, сеть, сериализация, планирование и APM-трассировка. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Промежуточное ПО данных: отдельные таблицы масштаба десятков миллиардов строк, автоматическое секционирование, разделение чтения и записи, 30 баз данных. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Промежуточное ПО данных: отдельные таблицы масштаба десятков миллиардов строк, автоматическое секционирование, разделение чтения и записи, 55 баз данных. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | Высокопроизводительная сетевая библиотека: 1,77M pps / 14,5 Гбит/с на машину (TCP 1KB, 2026-10), 4M долгоживущих TCP-соединений. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | Протокольная связь и RPC-фреймворк для клиент-серверных приложений и IoT-устройств. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | Устанавливает .NET-приложения как демоны ОС: службы Windows и systemd в Linux. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

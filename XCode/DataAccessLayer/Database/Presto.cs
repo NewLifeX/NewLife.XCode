@@ -393,7 +393,8 @@ internal class PrestoMetaData : RemoteDbMetaData
         { typeof(Single), ["real"] },
         { typeof(Double), ["double"] },
         { typeof(Decimal), ["decimal({0},{1})", "decimal"] },
-        { typeof(DateTime), ["timestamp(3)", "timestamp with time zone"] },
+        { typeof(DateTime), ["timestamp", "timestamp with time zone", "date"] },
+        { typeof(TimeSpan), ["time", "time with time zone"] },
         { typeof(String), ["varchar"] },
     };
 
@@ -408,9 +409,87 @@ internal class PrestoMetaData : RemoteDbMetaData
         var rawType = field.RawType;
         if (rawType.IsNullOrEmpty()) return null;
 
-        if (rawType.StartsWithIgnoreCase("array(", "map(", "row(", "json")) return typeof(String);
+        var index = rawType.IndexOf('(');
+        var name = (index >= 0 ? rawType[..index] : rawType).Trim();
+        if (name.EqualIgnoreCase("array", "map", "row", "json", "char")) return typeof(String);
 
         return null;
+    }
+
+    /// <summary>修正字段的长度精度。Presto 的 information_schema.columns 不提供长度与精度列，需要从 data_type 解析</summary>
+    /// <param name="column">字段</param>
+    internal static void FixColumn(IDataColumn column)
+    {
+        if (column == null || column.RawType.IsNullOrEmpty()) return;
+
+        var raw = column.RawType.Trim();
+        var index = raw.IndexOf('(');
+        var name = (index >= 0 ? raw[..index] : raw).Trim();
+        var args = index >= 0 ? raw[(index + 1)..] : null;
+        if (args != null)
+        {
+            var end = args.IndexOf(')');
+            if (end >= 0) args = args[..end];
+            args = args.Trim();
+        }
+
+        switch (name.ToLowerInvariant())
+        {
+            // Hive 的 string 映射为无长度 varchar，按长文本处理
+            case "varchar":
+                column.Length = Int32.TryParse(args, out var length) ? length : -1;
+                break;
+            // char 缺省长度为 1
+            case "char":
+                column.Length = Int32.TryParse(args, out length) ? length : 1;
+                break;
+            case "decimal":
+            case "numeric":
+                if (args.IsNullOrEmpty())
+                {
+                    column.Precision = 38;
+                    column.Scale = 0;
+                }
+                else
+                {
+                    var ss = args.Split(',');
+                    if (Int32.TryParse(ss[0].Trim(), out var precision)) column.Precision = precision;
+                    if (ss.Length > 1 && Int32.TryParse(ss[1].Trim(), out var scale)) column.Scale = scale;
+                }
+                break;
+            // 整数与浮点的精度取类型位宽对应的十进制位数，使模型与 XCode 默认值一致
+            case "tinyint":
+                column.Precision = 3;
+                column.Scale = 0;
+                break;
+            case "smallint":
+                column.Precision = 5;
+                column.Scale = 0;
+                break;
+            case "integer":
+                column.Precision = 10;
+                column.Scale = 0;
+                break;
+            case "bigint":
+                column.Precision = 19;
+                column.Scale = 0;
+                break;
+            case "real":
+                column.Precision = 12;
+                column.Scale = 2;
+                break;
+            case "double":
+                column.Precision = 22;
+                column.Scale = 4;
+                break;
+            // 复杂类型统一映射为字符串，按长文本处理
+            case "array":
+            case "map":
+            case "row":
+            case "json":
+                column.Length = -1;
+                break;
+        }
     }
     #endregion
 
@@ -490,7 +569,12 @@ internal class PrestoMetaData : RemoteDbMetaData
             var tables = $"select table_schema, table_name, table_type from information_schema.tables{where}";
             var columns = $"select table_schema, table_name, column_name, ordinal_position, data_type, is_nullable, column_default from information_schema.columns{where}";
 
-            list.AddRange(SqlMetaDataHelper.GetTables(Database, tables, columns, GetDataType));
+            var list2 = SqlMetaDataHelper.GetTables(Database, tables, columns, GetDataType);
+            foreach (var table in list2)
+            {
+                foreach (var column in table.Columns) FixColumn(column);
+            }
+            list.AddRange(list2);
 
             return true;
         }

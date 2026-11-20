@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using NewLife;
 using NewLife.Data;
@@ -17,16 +16,12 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class IRISTests
 {
-    private static String _ConnStr = "Server=127.0.0.1;User Id=_SYSTEM;Password=sys;namespace=user;Port=51783";
+    private const String DefaultConnStr = "Server=127.0.0.1;User Id=_SYSTEM;Password=sys;namespace=user;Port=51783";
 
-    public IRISTests()
-    {
-        var f = "Config\\IRIS.config".GetFullPath();
-        if (File.Exists(f))
-            _ConnStr = File.ReadAllText(f);
-        else
-            File.WriteAllText(f.EnsureDirectory(), _ConnStr);
-    }
+    private static String _ConnStr = DefaultConnStr;
+
+    /// <summary>解析连接串。环境变量 XCode_iris 优先，其次 Config/IRIS.config，均无则写入并使用本机默认值</summary>
+    public IRISTests() => _ConnStr = LiveDatabase.Resolve("iris", "IRIS", DefaultConnStr);
 
     [Fact]
     public void InitTest()
@@ -50,7 +45,7 @@ public class IRISTests
         Assert.NotNull(dp);
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("iris", "IRIS", 1972)]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.IRIS);
@@ -60,7 +55,7 @@ public class IRISTests
         conn.Open();
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("iris", "IRIS", 1972)]
     public void DALTest()
     {
         DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
@@ -77,7 +72,7 @@ public class IRISTests
         Assert.NotEmpty(ver);
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("iris", "IRIS", 1972)]
     public void MetaTest()
     {
         DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
@@ -96,7 +91,7 @@ public class IRISTests
         Assert.NotEmpty(tb.Description);
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("iris", "IRIS", 1972)]
     public void SelectTest()
     {
         DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
@@ -144,7 +139,7 @@ public class IRISTests
         catch (Exception ex) { XTrace.WriteException(ex); }
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("iris", "IRIS", 1972)]
     public void TablePrefixTest()
     {
         DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");
@@ -196,7 +191,7 @@ public class IRISTests
         return split;
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("iris", "IRIS", 1972)]
     public void BatchInsert()
     {
         using var split = CreateForBatch("BatchInsert");
@@ -218,7 +213,7 @@ public class IRISTests
     }
 
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("iris", "IRIS", 1972)]
     public void PositiveAndNegative()
     {
         var connName = GetType().Name;
@@ -245,7 +240,7 @@ public class IRISTests
         Assert.DoesNotContain(table.TableName, tableNames);
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("iris", "IRIS", 1972)]
     public void QuerySqlTest()
     {
         DAL.AddConnStr("Membership", _ConnStr, null, "IRIS");
@@ -274,7 +269,12 @@ public class IRISTests
         //catch (Exception ex) { XTrace.WriteException(ex); }
     }
 
-    [Fact(Skip = "跳过")]
+    /// <summary>校验 IRIS 建表 DDL 的字段类型映射</summary>
+    /// <remarks>
+    /// 保留跳过：用例期望的是早期 PostgreSQL 风格实现（serial 主键、Create Table 不带 If Not Exists），
+    /// 当前 IRIS 方言输出 If Not Exists + AUTO_INCREMENT + DEFAULT CHARSET，期望值已失效，启用前需按当前实现重写断言。
+    /// </remarks>
+    [Fact(Skip = "跳过：期望 DDL 为早期 PostgreSQL 风格实现，与当前 IRIS 方言输出不一致，需重写期望值后再启用")]
     public void CreateTableWithStringLength()
     {
         //var table = User.Meta.Table.DataTable.Clone() as IDataTable;
@@ -328,7 +328,7 @@ public class IRISTests
         Assert.Equal(targetSql, sql, true);
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("iris", "IRIS", 1972)]
     public void BuildDeleteSql()
     {
         DAL.AddConnStr("IRIS", _ConnStr, null, "IRIS");

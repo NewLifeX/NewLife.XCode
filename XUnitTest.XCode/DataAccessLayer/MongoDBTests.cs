@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using NewLife;
 using NewLife.Log;
 using NewLife.UnitTest;
@@ -13,16 +12,13 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
 public class MongoDBTests
 {
-    private static String _ConnStr = "mongodb://localhost:27017/test";
+    private const String DefaultConnStr = "mongodb://127.0.0.1:27017/test";
 
-    public MongoDBTests()
-    {
-        var f = "Config\\mongodb.config".GetFullPath();
-        if (File.Exists(f))
-            _ConnStr = File.ReadAllText(f);
-        else
-            File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
-    }
+    private static String _ConnStr = DefaultConnStr;
+
+    /// <summary>解析连接串。环境变量 XCode_mongodb 优先，其次 Config/mongodb.config，均无则写入并使用本机默认值</summary>
+    /// <remarks>MongoDB 连接串不是 key=value 形式，本地探测无法解析服务地址时按跳过处理，CI 通过环境变量 XCode_mongodb 注入</remarks>
+    public MongoDBTests() => _ConnStr = LiveDatabase.Resolve("mongodb", "mongodb", DefaultConnStr);
 
     [TestOrder(0)]
     [Fact]
@@ -36,7 +32,7 @@ public class MongoDBTests
     }
 
     [TestOrder(10)]
-    [Fact(Skip = "需要 MongoDB 服务")]
+    [LiveDatabaseFact("mongodb", "mongodb", 27017)]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.MongoDB);
@@ -50,7 +46,7 @@ public class MongoDBTests
     }
 
     [TestOrder(20)]
-    [Fact(Skip = "需要 MongoDB 服务")]
+    [LiveDatabaseFact("mongodb", "mongodb", 27017)]
     public void DALTest()
     {
         DAL.AddConnStr("sysMongoDB", _ConnStr, null, "MongoDB");

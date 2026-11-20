@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using NewLife;
 using NewLife.Log;
@@ -19,19 +18,15 @@ namespace XUnitTest.XCode.DataAccessLayer;
 public class TDengineTests
 {
     // HTTP模式默认使用6041端口
-    private static String _ConnStr = "Server=gz01.newlifex.com;Port=6041;Database=db;user=root;password=taosdata";
+    private const String DefaultConnStr = "Server=127.0.0.1;Port=6041;Database=db;user=root;password=taosdata";
 
-    public TDengineTests()
-    {
-        var f = "Config\\td.config".GetFullPath();
-        if (File.Exists(f))
-            _ConnStr = File.ReadAllText(f);
-        else
-            File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
-    }
+    private static String _ConnStr = DefaultConnStr;
+
+    /// <summary>解析连接串。环境变量 XCode_tdengine 优先，其次 Config/td.config，均无则写入并使用本机默认值</summary>
+    public TDengineTests() => _ConnStr = LiveDatabase.Resolve("tdengine", "td", DefaultConnStr);
 
     [TestOrder(0)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void InitTest()
     {
         var db = DbFactory.Create(DatabaseType.TDengine);
@@ -54,7 +49,7 @@ public class TDengineTests
     }
 
     [TestOrder(10)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.TDengine);
@@ -72,7 +67,7 @@ public class TDengineTests
     }
 
     [TestOrder(20)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void DALTest()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -90,7 +85,7 @@ public class TDengineTests
     }
 
     [TestOrder(30)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void CreateDatabase()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -101,7 +96,7 @@ public class TDengineTests
     }
 
     [TestOrder(32)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void CreateDatabase2()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -115,7 +110,7 @@ public class TDengineTests
     }
 
     [TestOrder(34)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void CreateTable()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -127,7 +122,7 @@ public class TDengineTests
     }
 
     [TestOrder(36)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void CreateSuperTable()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -148,8 +143,9 @@ public class TDengineTests
         }
     }
 
+    /// <summary>查询历史数据。保留跳过：断言依赖预置表 t 中 20 条以上历史数据，全新容器不满足</summary>
     [TestOrder(40)]
-    [Fact(Skip = "跳过")]
+    [Fact(Skip = "跳过：断言依赖预置表 t 中 20 条以上历史数据，全新单容器环境不满足，需先造数再启用")]
     public void QueryTest()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -163,7 +159,7 @@ public class TDengineTests
     }
 
     [TestOrder(50)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void InsertTest()
     {
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
@@ -192,7 +188,7 @@ public class TDengineTests
     }
 
     [TestOrder(60)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void MetaTest()
     {
         var connStr = _ConnStr.Replace("Database=sys;", "Database=Membership;");
@@ -244,7 +240,7 @@ public class TDengineTests
     }
 
     [TestOrder(70)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void BatchInsert()
     {
         using var split = CreateForBatch("BatchInsert");
@@ -267,7 +263,7 @@ public class TDengineTests
     }
 
     [TestOrder(80)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("tdengine", "td", 6041)]
     public void PositiveAndNegative()
     {
         var connName = GetType().Name;

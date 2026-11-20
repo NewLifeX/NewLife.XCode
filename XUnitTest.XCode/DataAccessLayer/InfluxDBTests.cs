@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using NewLife;
 using NewLife.Log;
 using NewLife.UnitTest;
@@ -15,19 +14,15 @@ public class InfluxDBTests
 {
     // InfluxDB 2.x 连接字符串格式：
     // Server=http://localhost:8086;Token=your-token;Organization=your-org;Bucket=your-bucket
-    private static String _ConnStr = "Server=http://localhost:8086;Token=your-influxdb-token;Organization=your-org;Bucket=test";
+    private const String DefaultConnStr = "Server=http://localhost:8086;Token=your-influxdb-token;Organization=your-org;Bucket=test";
 
-    public InfluxDBTests()
-    {
-        var f = "Config\\influxdb.config".GetFullPath();
-        if (File.Exists(f))
-            _ConnStr = File.ReadAllText(f);
-        else
-            File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
-    }
+    private static String _ConnStr = DefaultConnStr;
+
+    /// <summary>解析连接串。环境变量 XCode_influxdb 优先（CI 注入带 Token/Org/Bucket 的连接串），其次 Config/influxdb.config</summary>
+    public InfluxDBTests() => _ConnStr = LiveDatabase.Resolve("influxdb", "influxdb", DefaultConnStr);
 
     [TestOrder(0)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("influxdb", "influxdb", 8086)]
     public void InitTest()
     {
         var db = DbFactory.Create(DatabaseType.InfluxDB);
@@ -50,7 +45,7 @@ public class InfluxDBTests
     }
 
     [TestOrder(10)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("influxdb", "influxdb", 8086)]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.InfluxDB);
@@ -69,7 +64,7 @@ public class InfluxDBTests
     }
 
     [TestOrder(20)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("influxdb", "influxdb", 8086)]
     public void DALTest()
     {
         DAL.AddConnStr("sysInfluxDB", _ConnStr, null, "InfluxDB");
@@ -86,7 +81,7 @@ public class InfluxDBTests
     }
 
     [TestOrder(30)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("influxdb", "influxdb", 8086)]
     public void WriteDataTest()
     {
         DAL.AddConnStr("sysInfluxDB", _ConnStr, null, "InfluxDB");
@@ -103,7 +98,7 @@ public class InfluxDBTests
     }
 
     [TestOrder(40)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("influxdb", "influxdb", 8086)]
     public void QueryDataTest()
     {
         DAL.AddConnStr("sysInfluxDB", _ConnStr, null, "InfluxDB");
@@ -125,7 +120,7 @@ from(bucket: ""test"")
     }
 
     [TestOrder(50)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("influxdb", "influxdb", 8086)]
     public void GetTablesTest()
     {
         DAL.AddConnStr("sysInfluxDB", _ConnStr, null, "InfluxDB");
@@ -142,7 +137,7 @@ from(bucket: ""test"")
     }
 
     [TestOrder(60)]
-    [Fact(Skip = "跳过")]
+    [Fact]
     public void SupportTest()
     {
         var db = DbFactory.Create(DatabaseType.InfluxDB);
@@ -154,7 +149,7 @@ from(bucket: ""test"")
     }
 
     [TestOrder(70)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("influxdb", "influxdb", 8086)]
     public void ConnectionStringBuilderTest()
     {
         var conn = new InfluxDBConnection();
@@ -170,7 +165,7 @@ from(bucket: ""test"")
     }
 
     [TestOrder(80)]
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("influxdb", "influxdb", 8086)]
     public void BatchWriteTest()
     {
         DAL.AddConnStr("sysInfluxDB", _ConnStr, null, "InfluxDB");

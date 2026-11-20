@@ -17,16 +17,12 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.DefaultOrderer", "NewLife.UnitTest")]
 public class OracleTests
 {
-    private String _ConnStr = "Data Source=Tcp://127.0.0.1/ORCL;User Id=scott;Password=tiger";
+    private const String DefaultConnStr = "Data Source=Tcp://127.0.0.1/ORCL;User Id=scott;Password=tiger";
 
-    public OracleTests()
-    {
-        var f = "Config\\oracle.config".GetFullPath();
-        if (File.Exists(f))
-            _ConnStr = File.ReadAllText(f);
-        else
-            File.WriteAllText(f, _ConnStr);
-    }
+    private String _ConnStr = DefaultConnStr;
+
+    /// <summary>解析连接串。环境变量 XCode_oracle 优先，其次 Config/oracle.config，均无则写入并使用本机默认值</summary>
+    public OracleTests() => _ConnStr = LiveDatabase.Resolve("oracle", "oracle", DefaultConnStr);
 
     [Fact]
     public void InitTest()
@@ -59,18 +55,19 @@ public class OracleTests
         Assert.NotNull(dp);
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("oracle", "oracle", 1521)]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.Oracle);
         var factory = db.Factory;
 
         var conn = factory.CreateConnection();
-        conn.ConnectionString = "Server=localhost;Port=5236;Database=dameng;user=SYSDBA;password=SYSDBA";
+        conn.ConnectionString = _ConnStr;
         conn.Open();
     }
 
-    [Fact(Skip = "跳过")]
+    /// <summary>达梦连接串语义的用例，不适用于 Oracle 真库，保持跳过</summary>
+    [Fact(Skip = "跳过：断言校验的是达梦连接串（Owner=dameng），不适用于 Oracle 真库")]
     public void DALTest()
     {
         DAL.AddConnStr("Oracle", _ConnStr, null, "Oracle");
@@ -88,7 +85,7 @@ public class OracleTests
         Assert.NotEmpty(ver);
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("oracle", "oracle", 1521)]
     public void MetaTest()
     {
         DAL.AddConnStr("Oracle", _ConnStr, null, "Oracle");
@@ -99,7 +96,7 @@ public class OracleTests
         Assert.True(tables.Count > 0);
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("oracle", "oracle", 1521)]
     public void SelectTest()
     {
         //DAL.AddConnStr("Membership", _ConnStr, null, "Oracle");
@@ -126,7 +123,7 @@ public class OracleTests
         Area.FetchAndSave();
     }
 
-    [Fact(Skip = "跳过")]
+    [LiveDatabaseFact("oracle", "oracle", 1521)]
     public void PositiveAndNegative()
     {
         var connName = GetType().Name;

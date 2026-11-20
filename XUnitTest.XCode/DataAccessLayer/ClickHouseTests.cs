@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using NewLife;
 using NewLife.Log;
 using NewLife.UnitTest;
@@ -13,16 +12,12 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
 public class ClickHouseTests
 {
-    private static String _ConnStr = "Host=localhost;Port=8123;Database=default;Username=default;Password=";
+    private const String DefaultConnStr = "Host=127.0.0.1;Port=8123;Database=default;Username=default;Password=";
 
-    public ClickHouseTests()
-    {
-        var f = "Config\\clickhouse.config".GetFullPath();
-        if (File.Exists(f))
-            _ConnStr = File.ReadAllText(f);
-        else
-            File.WriteAllText(f.EnsureDirectory(true), _ConnStr);
-    }
+    private static String _ConnStr = DefaultConnStr;
+
+    /// <summary>解析连接串。环境变量 XCode_clickhouse 优先，其次 Config/clickhouse.config，均无则写入并使用本机默认值</summary>
+    public ClickHouseTests() => _ConnStr = LiveDatabase.Resolve("clickhouse", "clickhouse", DefaultConnStr);
 
     [TestOrder(0)]
     [Fact]
@@ -40,7 +35,7 @@ public class ClickHouseTests
     }
 
     [TestOrder(10)]
-    [Fact(Skip = "需要 ClickHouse 服务")]
+    [LiveDatabaseFact("clickhouse", "clickhouse", 8123)]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.ClickHouse);
@@ -57,7 +52,7 @@ public class ClickHouseTests
     }
 
     [TestOrder(20)]
-    [Fact(Skip = "需要 ClickHouse 服务")]
+    [LiveDatabaseFact("clickhouse", "clickhouse", 8123)]
     public void DALTest()
     {
         DAL.AddConnStr("sysClickHouse", _ConnStr, null, "ClickHouse");
@@ -74,7 +69,7 @@ public class ClickHouseTests
     }
 
     [TestOrder(30)]
-    [Fact(Skip = "需要 ClickHouse 服务")]
+    [LiveDatabaseFact("clickhouse", "clickhouse", 8123)]
     public void MetaTest()
     {
         DAL.AddConnStr("sysClickHouse", _ConnStr, null, "ClickHouse");

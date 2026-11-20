@@ -137,16 +137,19 @@ internal sealed class MonetDbFactory(Type connType, Type cmdType, Type prmType) 
 {
     /// <summary>创建连接</summary>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("AOT", "IL2067", Justification = "MonetDB 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
     [UnconditionalSuppressMessage("AOT", "IL2077", Justification = "MonetDB 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
     public override DbConnection CreateConnection() => (DbConnection)Activator.CreateInstance(connType)!;
 
     /// <summary>创建命令</summary>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("AOT", "IL2067", Justification = "MonetDB 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
     [UnconditionalSuppressMessage("AOT", "IL2077", Justification = "MonetDB 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
     public override DbCommand CreateCommand() => (DbCommand)Activator.CreateInstance(cmdType)!;
 
     /// <summary>创建参数</summary>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("AOT", "IL2067", Justification = "MonetDB 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
     [UnconditionalSuppressMessage("AOT", "IL2077", Justification = "MonetDB 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
     public override DbParameter CreateParameter() => (DbParameter)Activator.CreateInstance(prmType)!;
 

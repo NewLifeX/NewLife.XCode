@@ -26,8 +26,6 @@ internal class Vertica : RemoteDb
     /// <summary>模式名</summary>
     public String? SchemaName { get; set; }
 
-    /// <summary>批量操作能力。Vertica 无可靠的批量参数绑定</summary>
-    public override BatchCapability BatchCapability => BatchCapability.None;
     #endregion
 
     #region 方法

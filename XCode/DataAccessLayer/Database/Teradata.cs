@@ -24,8 +24,6 @@ internal class Teradata : RemoteDb
     /// <summary>默认名称格式。Teradata 保留创建时的大小写</summary>
     public override NameFormats DefaultNameFormat => NameFormats.None;
 
-    /// <summary>批量操作能力。Teradata 驱动无可靠的批量参数绑定</summary>
-    public override BatchCapability BatchCapability => BatchCapability.None;
     #endregion
 
     #region 方法

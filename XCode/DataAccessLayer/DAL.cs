@@ -763,7 +763,7 @@ public partial class DAL
             using var span = Tracer?.NewSpan($"db:{ConnName}:CheckDatabase", ConnName);
             try
             {
-                switch (Db.Migration)
+                switch (Db.EffectiveMigration)
                 {
                     case Migration.Off:
                         break;
@@ -864,7 +864,7 @@ public partial class DAL
                 FixIndexName(item);
             }
 
-            Db.CreateMetaData().SetTables(Db.Migration, tables);
+            Db.CreateMetaData().SetTables(Db.EffectiveMigration, tables);
         }
         catch (Exception ex)
         {

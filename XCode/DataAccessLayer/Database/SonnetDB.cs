@@ -15,7 +15,13 @@ internal class SonnetDB : RemoteDb
     public override DatabaseType Type => DatabaseType.SonnetDB;
 
     /// <inheritdoc/>
-    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.InsertIgnore | BatchCapability.Upsert | BatchCapability.Replace;
+    /// <summary>获取默认能力。SonnetDB 支持批量写入</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        | DatabaseCapability.BulkInsert
+        | DatabaseCapability.BulkInsertIgnore
+        | DatabaseCapability.BulkUpsert
+        | DatabaseCapability.BulkReplace;
 
     /// <inheritdoc/>
     public override String SystemDatabaseName => String.Empty;

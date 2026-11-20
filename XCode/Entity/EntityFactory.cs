@@ -512,7 +512,7 @@ public static class EntityFactory
             DAL.WriteLog("Initializing database: {0}/{1}, entity classes [{3}]: {2}", connName, dal.DbType, facts.Join(",", e => e.EntityType.Name), facts.Count);
 
             // 反向工程检查
-            if (dal.Db.Migration > Migration.Off)
+            if (dal.Db.EffectiveMigration > Migration.Off)
             {
                 var tables = new List<IDataTable>();
                 foreach (var item in facts)

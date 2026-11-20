@@ -132,7 +132,7 @@ public static class EntityExtension
         var session2 = session ?? fact.Session;
 
         // Oracle/MySql批量插入
-        if (!session2.Dal.BatchCapabilities.HasFlag(BatchCapability.Insert))
+        if (!session2.Dal.Capabilities.HasFlag(DatabaseCapability.BulkInsert))
             return DoAction(array, useTransition, e => e.Insert(), session2);
 
         // 必须顺序处理，因为Valid内可能生成雪花Id，需要确保数据插入的顺序一致
@@ -180,7 +180,7 @@ public static class EntityExtension
 
         // 支持批量Update的数据库（Oracle/MySql NewLife驱动等）直接批量更新
         // BatchUpdate 内部已处理：跳过无脏数据实体、Dirtys 并集取 UpdateColumns，无需在此分组
-        return session.Dal.BatchCapabilities.HasFlag(BatchCapability.Update) && array.Length > 1
+        return session.Dal.Capabilities.HasFlag(DatabaseCapability.BulkUpdate) && array.Length > 1
             ? BatchUpdate(array.Valid(false), null, session)
             : DoAction(array, useTransition, e => e.Update(), session);
     }
@@ -226,12 +226,12 @@ public static class EntityExtension
         session ??= fact.Session;
 
         // Oracle/MySql批量插入
-        var caps = session.Dal.BatchCapabilities;
-        if (array.Length > 1 && (caps.HasFlag(BatchCapability.Insert) || caps.HasFlag(BatchCapability.Update) || caps.HasFlag(BatchCapability.Upsert)))
+        var caps = session.Dal.Capabilities;
+        if (array.Length > 1 && (caps.HasFlag(DatabaseCapability.BulkInsert) || caps.HasFlag(DatabaseCapability.BulkUpdate) || caps.HasFlag(DatabaseCapability.BulkUpsert)))
         {
             // 根据是否来自数据库，拆分为两组
             var (updates, others) = Split(array);
-            if (caps.HasFlag(BatchCapability.Update))
+            if (caps.HasFlag(DatabaseCapability.BulkUpdate))
             {
                 // updates 来自数据库，对应 Update 操作，isNew=false
                 if (valid) updates = updates.Valid(false);
@@ -305,7 +305,7 @@ public static class EntityExtension
             if (updates.Count > 0)
             {
                 // 支持批量Update的数据库（Oracle/MySql NewLife驱动等）直接批量更新
-                if (session.Dal.BatchCapabilities.HasFlag(BatchCapability.Update))
+                if (session.Dal.Capabilities.HasFlag(DatabaseCapability.BulkUpdate))
                     rs += BatchUpdate(updates, option, session);
                 else
                     rs += updates.Update(null, session);

@@ -52,7 +52,17 @@ class InfluxDB : RemoteDb
     #endregion
 
     #region 数据库特性
-    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.Upsert;
+    /// <summary>创建能力配置。InfluxDB 仅支持批量写入和 Flux 查询</summary>
+    /// <returns>能力配置</returns>
+    protected override DatabaseProfile CreateProfile() => new()
+    {
+        Model = DatabaseModel.TimeSeries,
+        QueryLanguage = QueryLanguage.Flux,
+        Capabilities = DatabaseCapability.BulkInsert | DatabaseCapability.BulkUpsert,
+        MaxMigration = Migration.Off,
+        LongTextLength = 65535,
+        ParameterPrefix = "@",
+    };
 
     protected override String ReservedWordsStr => "AND,OR,NOT,FROM,WHERE,SELECT,DELETE,DROP,SHOW,MEASUREMENT,TAG,FIELD,TIME";
 

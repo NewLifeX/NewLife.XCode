@@ -20,23 +20,37 @@ namespace XCode.DataAccessLayer;
  *              FixTable
  */
 
-partial class DbMetaData
+public partial class DbMetaData
 {
     #region 常量
+    /// <summary>数据库架构集合名称常量</summary>
     protected static class _
     {
+        /// <summary>表集合</summary>
         public static readonly String Tables = "Tables";
+        /// <summary>视图集合</summary>
         public static readonly String Views = "Views";
+        /// <summary>索引集合</summary>
         public static readonly String Indexes = "Indexes";
+        /// <summary>索引列集合</summary>
         public static readonly String IndexColumns = "IndexColumns";
+        /// <summary>数据库集合</summary>
         public static readonly String Databases = "Databases";
+        /// <summary>字段集合</summary>
         public static readonly String Columns = "Columns";
+        /// <summary>标识列</summary>
         public static readonly String ID = "ID";
+        /// <summary>字段序号</summary>
         public static readonly String OrdinalPosition = "ORDINAL_POSITION";
+        /// <summary>索引列序号</summary>
         public static readonly String ColumnPosition = "COLUMN_POSITION";
+        /// <summary>表名</summary>
         public static readonly String TalbeName = "table_name";
+        /// <summary>字段名</summary>
         public static readonly String ColumnName = "COLUMN_NAME";
+        /// <summary>索引名</summary>
         public static readonly String IndexName = "INDEX_NAME";
+        /// <summary>主键集合</summary>
         public static readonly String PrimaryKeys = "PrimaryKeys";
     }
     #endregion
@@ -333,6 +347,7 @@ partial class DbMetaData
     /// <summary>类型映射。Net类型映射到数据库多种类型上</summary>
     protected IDictionary<Type, String[]> Types { get; set; } = null!;
 
+    /// <summary>字段类型映射缓存。数据库类型到实体类型的兼容映射</summary>
     protected List<KeyValuePair<Type, Type>>? _FieldTypeMaps;
     /// <summary>字段类型映射（数据库-实体类）</summary>
     protected virtual List<KeyValuePair<Type, Type>> FieldTypeMaps
@@ -396,6 +411,9 @@ partial class DbMetaData
         }
     }
 
+    /// <summary>判断类型是否为需要数组后缀的字段类型</summary>
+    /// <param name="type">字段类型</param>
+    /// <returns>是否为数组字段</returns>
     protected virtual Boolean IsArrayField(Type type)
     {
         return type.IsArray && !Types.ContainsKey(type);

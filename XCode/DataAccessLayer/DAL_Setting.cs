@@ -85,12 +85,16 @@ partial class DAL
     /// <returns></returns>
     public static IDataTable CreateTable() => ObjectContainer.Current.GetService<IDataTable>() ?? throw new InvalidDataException(L.T("IDataTable is not registered."));
 
-    /// <summary>批量操作能力。不同数据库支持不同批量操作</summary>
-    public BatchCapability BatchCapabilities => Db.BatchCapability;
+    /// <summary>数据库能力集合</summary>
+    public DatabaseCapability Capabilities => Db.Capabilities;
+
+    /// <summary>批量操作能力。已合并到 Capabilities，保留该属性用于过渡</summary>
+    [Obsolete("请使用 Capabilities 属性，通过 DatabaseCapability.Bulk* 判断具体批操作支持情况")]
+    public DatabaseCapability BatchCapabilities => Db.Capabilities;
 
     /// <summary>是否支持批操作</summary>
-    [Obsolete("请使用 BatchCapabilities 属性，通过 BatchCapability 枚举判断具体批操作支持情况")]
-    public Boolean SupportBatch => Db.BatchCapability == BatchCapability.Insert;
+    [Obsolete("请使用 Capabilities.HasFlag(DatabaseCapability.BulkInsert)")]
+    public Boolean SupportBatch => Db.Capabilities.HasFlag(DatabaseCapability.BulkInsert);
 
     /// <summary>获取批大小。优先取连接设置，再取全局，默认5000</summary>
     /// <param name="defaultSize">默认批大小</param>

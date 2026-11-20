@@ -16,7 +16,7 @@ namespace XCode.DataAccessLayer;
 /// 数据库类的职责是抽象不同数据库的共同点，理应最小化，保证原汁原味，因此不做缓存等实现。
 /// 对于每一个连接字符串配置，都有一个数据库实例，而不是每个数据库类型一个实例，因为同类型数据库不同版本行为不同。
 /// </remarks>
-abstract class DbBase : DisposeBase, IDatabase
+public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
 {
     #region 构造函数
     static DbBase()
@@ -92,6 +92,9 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
     public virtual DatabaseType Type => DatabaseType.None;
 
+    /// <summary>SQL 方言</summary>
+    public IDbDialect Dialect => this;
+
     /// <summary>提供者工厂</summary>
     private DbProviderFactory? _providerFactory;
     /// <summary>数据库提供者工厂。支持外部修改</summary>
@@ -103,6 +106,9 @@ abstract class DbBase : DisposeBase, IDatabase
 
     private static readonly Dictionary<Type, DbProviderFactory> _factories = [];
     private Boolean _inited;
+    /// <summary>获取数据库提供者工厂。按提供者类型缓存，create=false 时只读取缓存</summary>
+    /// <param name="create">缓存未命中时是否创建工厂</param>
+    /// <returns>提供者工厂；无法创建时返回 null</returns>
     protected DbProviderFactory? GetFactory(Boolean create)
     {
         try
@@ -143,6 +149,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>连接名</summary>
     public String ConnName { get; set; } = null!;
 
+    /// <summary>连接字符串原始值。作为 ConnectionString 属性的后备字段</summary>
     protected internal String _ConnectionString = null!;
     /// <summary>链接字符串</summary>
     public virtual String ConnectionString
@@ -175,6 +182,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>数据库提供者。用于选择驱动</summary>
     public String? Provider { get; set; }
 
+    /// <summary>检查连接字符串是否已配置，未配置时抛出异常</summary>
     protected void CheckConnStr()
     {
         if (ConnectionString.IsNullOrWhiteSpace())
@@ -244,6 +252,7 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>数据库名</summary>
     public String? DatabaseName { get; set; }
 
+    /// <summary>数据库服务器版本缓存。首次访问 ServerVersion 时从连接读取</summary>
     internal protected String? _ServerVersion;
     /// <summary>数据库服务器版本</summary>
     public virtual String ServerVersion
@@ -284,8 +293,67 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <summary>批大小。用于批量操作数据，抽取、删除、备份、恢复</summary>
     public Int32 BatchSize { get; set; }
 
-    /// <summary>批量操作能力。不同数据库支持不同批量操作</summary>
-    public virtual BatchCapability BatchCapability => BatchCapability.None;
+    private DatabaseProfile? _profile;
+    /// <summary>数据库能力配置</summary>
+    public virtual DatabaseProfile Profile => _profile ??= CreateProfile();
+
+    /// <summary>创建能力配置</summary>
+    /// <returns>当前数据库的能力配置</returns>
+    protected virtual DatabaseProfile CreateProfile() => new()
+    {
+        Model = DatabaseModel.Relational,
+        QueryLanguage = QueryLanguage.Sql,
+        Capabilities = GetDefaultCapabilities(),
+        MaxMigration = DefaultMaxMigration,
+        LongTextLength = LongTextLength,
+        ParameterPrefix = ParamPrefix,
+    };
+
+    /// <summary>默认最大迁移模式</summary>
+    protected virtual Migration DefaultMaxMigration => Migration.Full;
+
+    /// <summary>获取默认能力集合</summary>
+    /// <returns>默认能力标志</returns>
+    protected virtual DatabaseCapability GetDefaultCapabilities() =>
+        DatabaseCapability.Sql |
+        DatabaseCapability.Transactions |
+        DatabaseCapability.Ddl |
+        DatabaseCapability.DatabaseDdl |
+        DatabaseCapability.Insert |
+        DatabaseCapability.Update |
+        DatabaseCapability.Delete |
+        DatabaseCapability.Truncate |
+        DatabaseCapability.Parameterization |
+        DatabaseCapability.SchemaDiscovery |
+        DatabaseCapability.Joins |
+        DatabaseCapability.Subqueries |
+        DatabaseCapability.GroupBy |
+        DatabaseCapability.Having |
+        DatabaseCapability.Union;
+
+    /// <summary>能力集合</summary>
+    public DatabaseCapability Capabilities => Profile.Capabilities;
+
+    /// <summary>最大迁移模式</summary>
+    public virtual Migration MaxMigration => Profile.MaxMigration;
+
+    /// <summary>有效迁移模式。用户设置与最大迁移模式取较小者</summary>
+    public Migration EffectiveMigration => (Migration)Math.Min((Int32)Migration, (Int32)MaxMigration);
+
+    /// <summary>判断是否支持指定能力</summary>
+    /// <param name="capability">能力标志</param>
+    /// <returns>是否全部支持</returns>
+    public Boolean Supports(DatabaseCapability capability) => (Capabilities & capability) == capability;
+
+    /// <summary>确保支持指定能力，不支持时抛出异常</summary>
+    /// <param name="capability">能力标志</param>
+    /// <param name="operation">操作名称</param>
+    public void EnsureSupported(DatabaseCapability capability, String operation)
+    {
+        if (Supports(capability)) return;
+
+        throw new NotSupportedException(L.T("Database [{0}] ({1}) does not support {2}. Missing capability: {3}.", ConnName, Type, operation, capability));
+    }
 
     /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
     public Int32 CommandTimeout { get; set; }
@@ -432,6 +500,10 @@ abstract class DbBase : DisposeBase, IDatabase
     #endregion
 
     #region 下载驱动
+    /// <summary>获取驱动下载链接名称。根据当前平台架构与驱动名生成候选文件列表</summary>
+    /// <param name="name">驱动名或程序集名</param>
+    /// <param name="strict">是否严格匹配当前平台架构</param>
+    /// <returns>候选下载名称列表</returns>
     protected static IList<String> GetLinkNames(String name, Boolean strict = false)
     {
         var links = new List<String>();
@@ -1023,6 +1095,7 @@ abstract class DbBase : DisposeBase, IDatabase
         return ParamPrefix + name;
     }
 
+    /// <summary>参数名前缀。不同数据库使用 @、?、: 等前缀</summary>
     internal protected virtual String ParamPrefix => "@";
 
     /// <summary>字符串相加</summary>
@@ -1176,6 +1249,9 @@ abstract class DbBase : DisposeBase, IDatabase
     /// <returns></returns>
     public override String ToString() => $"[{ConnName}] {Type} {ServerVersion}";
 
+    /// <summary>解析文件型数据库的物理路径，展开 |DataDirectory| 等占位符</summary>
+    /// <param name="file">原始文件路径</param>
+    /// <returns>解析后的绝对路径</returns>
     protected static String ResolveFile(String file)
     {
         if (file.IsNullOrEmpty()) return file;

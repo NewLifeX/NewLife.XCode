@@ -21,7 +21,13 @@ internal class Oracle : RemoteDb
     public override DatabaseType Type => DatabaseType.Oracle;
 
     /// <summary>批量操作能力。Oracle支持批量Insert/Update/Upsert（参数绑定数组）</summary>
-    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.Update | BatchCapability.Upsert;
+    /// <summary>获取默认能力。Oracle 支持自增及批量写入</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        | DatabaseCapability.Identity
+        | DatabaseCapability.BulkInsert
+        | DatabaseCapability.BulkUpdate
+        | DatabaseCapability.BulkUpsert;
 
     private Version _minVersion = new("23.26");
     /// <summary>创建工厂</summary>

@@ -42,9 +42,12 @@ public class PrestoTests
         Assert.NotNull(db);
 
         // 不自动建表、不启用参数化、不做批量
-        Assert.Equal(Migration.Off, db.Migration);
+        Assert.Equal(Migration.Off, db.EffectiveMigration);
         Assert.False(db.UseParameter);
-        Assert.Equal(BatchCapability.None, db.BatchCapability);
+        Assert.True(db.Capabilities.HasFlag(DatabaseCapability.Sql));
+        Assert.False(db.Capabilities.HasFlag(DatabaseCapability.Transactions));
+        Assert.False(db.Capabilities.HasFlag(DatabaseCapability.Ddl));
+        Assert.False(db.Capabilities.HasFlag(DatabaseCapability.BulkInsert));
     }
 
     [Theory]

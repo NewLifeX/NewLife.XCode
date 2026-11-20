@@ -273,7 +273,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
 
         // Oracle/MySql批量插入
         var db = Meta.Session.Dal;
-        if (db.BatchCapabilities.HasFlag(BatchCapability.Upsert))
+        if (db.Capabilities.HasFlag(DatabaseCapability.BulkUpsert))
         {
             if (!Valid(isnew ? DataMethod.Insert : DataMethod.Update)) return -1;
 
@@ -392,11 +392,10 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     /// <returns></returns>
     protected virtual Task<Int32> OnDeleteAsync() => Meta.Session.DeleteAsync(this);
 
+    /// <summary>执行操作。Valid后，自动填充雪花Id主键</summary>
 #if NETCOREAPP
     [StackTraceHidden]
 #endif
-
-    /// <summary>执行操作。Valid后，自动填充雪花Id主键</summary>
     private async Task<TResult> DoActionAsync<TResult>(Func<Task<TResult>> func, DataMethod method)
     {
         if (Meta.Table.DataTable.InsertOnly)

@@ -9,7 +9,7 @@ using NewLife.Reflection;
 namespace XCode.DataAccessLayer;
 
 /// <summary>数据库元数据</summary>
-abstract partial class DbMetaData : DisposeBase, IMetaData
+public abstract partial class DbMetaData : DisposeBase, IMetaData
 {
     #region 属性
     /// <summary>数据库</summary>
@@ -159,6 +159,11 @@ abstract partial class DbMetaData : DisposeBase, IMetaData
         return default;
     }
 
+    /// <summary>按指定列值筛选数据表行，返回新的数据表</summary>
+    /// <param name="ds">源数据表</param>
+    /// <param name="name">筛选列名</param>
+    /// <param name="value">筛选值</param>
+    /// <returns>筛选后的数据表</returns>
     protected static DbTable Select(DbTable ds, String name, Object value)
     {
         var list = new List<Object?[]>();
@@ -203,8 +208,15 @@ abstract partial class DbMetaData : DisposeBase, IMetaData
     //    return Database.FormatName(name);
     //}
 
+    /// <summary>格式化表名，考虑表前缀与 Owner</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="formatKeyword">是否格式化关键字</param>
+    /// <returns>格式化后的表名</returns>
     protected String FormatName(IDataTable table, Boolean formatKeyword = true) => Database.FormatName(table, formatKeyword);
 
+    /// <summary>格式化字段名，考虑大小写与关键字</summary>
+    /// <param name="column">数据字段</param>
+    /// <returns>格式化后的字段名</returns>
     protected String FormatName(IDataColumn column) => Database.FormatName(column);
 
     static StringBuilder Append(StringBuilder sb, String separator, String value)

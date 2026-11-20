@@ -20,8 +20,17 @@ internal class MongoDB : RemoteDb
     /// <summary>返回数据库类型</summary>
     public override DatabaseType Type => DatabaseType.MongoDB;
 
-    /// <summary>批量操作能力。MongoDB支持批量Insert</summary>
-    public override BatchCapability BatchCapability => BatchCapability.Insert;
+    /// <summary>创建能力配置。MongoDB 使用原生命令，不提供 SQL/实体 ORM 能力</summary>
+    /// <returns>能力配置</returns>
+    protected override DatabaseProfile CreateProfile() => new()
+    {
+        Model = DatabaseModel.Document,
+        QueryLanguage = QueryLanguage.MongoCommand,
+        Capabilities = DatabaseCapability.None,
+        MaxMigration = Migration.Off,
+        LongTextLength = 4000,
+        ParameterPrefix = "@",
+    };
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>

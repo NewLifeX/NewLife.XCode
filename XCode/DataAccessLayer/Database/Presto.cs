@@ -20,8 +20,25 @@ internal abstract class PrestoBase : RemoteDb
     /// <summary>默认名称格式。Presto/Trino 未加引号的标识符折叠为小写</summary>
     public override NameFormats DefaultNameFormat => NameFormats.Lower;
 
-    /// <summary>批量操作能力。Presto/Trino 无可靠批量语义，逐行执行</summary>
-    public override BatchCapability BatchCapability => BatchCapability.None;
+    /// <summary>创建能力配置。Presto/Trino 为只读分析 + 显式写入，不支持事务与自动建表</summary>
+    /// <returns>能力配置</returns>
+    protected override DatabaseProfile CreateProfile() => new()
+    {
+        Model = DatabaseModel.Federated,
+        QueryLanguage = QueryLanguage.Sql,
+        Capabilities = DatabaseCapability.Sql
+            | DatabaseCapability.Joins
+            | DatabaseCapability.Subqueries
+            | DatabaseCapability.GroupBy
+            | DatabaseCapability.Having
+            | DatabaseCapability.Union
+            | DatabaseCapability.OffsetPaging
+            | DatabaseCapability.LimitPaging
+            | DatabaseCapability.SchemaDiscovery,
+        MaxMigration = Migration.Off,
+        LongTextLength = 4000,
+        ParameterPrefix = "@",
+    };
 
     /// <summary>模式名。对应连接字符串的 Schema</summary>
     public String? SchemaName { get; set; }

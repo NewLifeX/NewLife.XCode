@@ -15,6 +15,11 @@ class TDengine : RemoteDb
     /// <summary>返回数据库类型。</summary>
     public override DatabaseType Type => DatabaseType.TDengine;
 
+    /// <summary>获取默认能力。TDengine 不支持事务与标准 Update</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        & ~(DatabaseCapability.Transactions | DatabaseCapability.Update);
+
     /// <summary>创建工厂</summary>
     /// <returns></returns>
     protected override DbProviderFactory CreateFactory()

@@ -15,9 +15,11 @@ using XCode.Exceptions;
 namespace XCode.DataAccessLayer;
 
 /// <summary>数据库会话基类</summary>
-internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSession
+public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSession
 {
     #region 构造函数
+    /// <summary>实例化数据库会话</summary>
+    /// <param name="db">所属数据库</param>
     protected DbSession(IDatabase db)
     {
         Database = db;
@@ -406,6 +408,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         });
     }
 
+    /// <summary>把数据读取器填充为数据表。子类可重写以支持特殊数据类型</summary>
+    /// <param name="dr">数据读取器</param>
+    /// <returns>填充后的数据表</returns>
     protected virtual DbTable OnFill(DbDataReader dr)
     {
         var dt = new DbTable();
@@ -481,6 +486,12 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <returns></returns>
     public virtual Int32 Execute(DbCommand cmd) => Execute(cmd, false, static cmd2 => cmd2.ExecuteNonQuery());
 
+    /// <summary>执行数据库命令并返回结果，统一处理事务、SQL 日志与异常</summary>
+    /// <typeparam name="T">返回类型</typeparam>
+    /// <param name="cmd">数据库命令</param>
+    /// <param name="query">是否查询操作。查询不打开事务</param>
+    /// <param name="callback">命令执行回调</param>
+    /// <returns>回调结果</returns>
 #if NETCOREAPP
     [StackTraceHidden]
 #endif
@@ -731,6 +742,12 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         });
     }
 
+    /// <summary>异步执行数据库命令并返回结果，统一处理事务、SQL 日志与异常</summary>
+    /// <typeparam name="T">返回类型</typeparam>
+    /// <param name="cmd">数据库命令</param>
+    /// <param name="query">是否查询操作。查询不打开事务</param>
+    /// <param name="callback">命令执行回调</param>
+    /// <returns>回调结果</returns>
 #if NETCOREAPP
     [StackTraceHidden]
 #endif
@@ -824,6 +841,12 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     /// <returns></returns>
     public virtual Int32 Upsert(IDataTable table, IDataColumn[] columns, ICollection<String>? updateColumns, ICollection<String>? addColumns, IEnumerable<IModel> list) => throw new NotSupportedException();
 
+    /// <summary>构建批量插入的字段列表片段</summary>
+    /// <param name="sb">SQL 构建器</param>
+    /// <param name="db">数据库方言</param>
+    /// <param name="action">动作名称，如 Insert</param>
+    /// <param name="table">数据表</param>
+    /// <param name="columns">要插入的字段</param>
     protected virtual void BuildInsert(StringBuilder sb, DbBase db, String action, IDataTable table, IDataColumn[] columns)
     {
         // 字段列表
@@ -837,6 +860,13 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         sb.Append(')');
     }
 
+    /// <summary>构建批量插入的值列表片段</summary>
+    /// <param name="sb">SQL 构建器</param>
+    /// <param name="db">数据库方言</param>
+    /// <param name="action">动作名称，如 Insert</param>
+    /// <param name="table">数据表</param>
+    /// <param name="columns">要插入的字段</param>
+    /// <param name="list">实体列表</param>
     protected virtual void BuildBatchValues(StringBuilder sb, DbBase db, String action, IDataTable table, IDataColumn[] columns, IEnumerable<IModel> list)
     {
         // 优化支持DbTable
@@ -1158,6 +1188,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         }
     }
 
+    /// <summary>获取命令的 SQL 文本，超长时截断，优先使用命令自身的可读字符串</summary>
+    /// <param name="cmd">数据库命令</param>
+    /// <returns>可读 SQL 文本；无法获取时返回 null</returns>
     public String? GetSql(DbCommand cmd)
     {
         var max = (Database as DbBase)!.SQLMaxLength;
@@ -1232,6 +1265,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         catch { return null; }
     }
 
+    /// <summary>输出命令 SQL 日志并返回 SQL 文本</summary>
+    /// <param name="cmd">数据库命令</param>
+    /// <returns>可读 SQL 文本；未开启 SQL 日志时返回 null</returns>
     public String? WriteSQL(DbCommand cmd)
     {
         // 如果页面设定有XCode_SQLList列表，则往列表写入SQL语句
@@ -1273,6 +1309,7 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
     private Stopwatch? _swSql;
     //private static readonly HashSet<String> _trace_sqls = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>开始 SQL 执行计时，用于慢查询日志</summary>
     protected void BeginTrace()
     {
         if ((Database as DbBase)!.TraceSQLTime <= 0) return;
@@ -1285,6 +1322,9 @@ internal abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSes
         _swSql.Start();
     }
 
+    /// <summary>结束 SQL 执行计时，超过阈值时输出慢查询日志</summary>
+    /// <param name="cmd">数据库命令</param>
+    /// <param name="sql">已获取的 SQL 文本，为空时从命令读取</param>
     protected void EndTrace(DbCommand cmd, String? sql = null)
     {
         if (_swSql == null) return;

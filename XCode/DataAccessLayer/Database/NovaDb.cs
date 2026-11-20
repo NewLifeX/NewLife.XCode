@@ -20,7 +20,13 @@ internal class NovaDb : RemoteDb
     public override DatabaseType Type => DatabaseType.NovaDb;
 
     /// <summary>批量操作能力。NovaDb支持批量Insert/InsertIgnore/Replace/Upsert</summary>
-    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.InsertIgnore | BatchCapability.Replace | BatchCapability.Upsert;
+    /// <summary>获取默认能力。NovaDb 支持批量写入</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        | DatabaseCapability.BulkInsert
+        | DatabaseCapability.BulkInsertIgnore
+        | DatabaseCapability.BulkReplace
+        | DatabaseCapability.BulkUpsert;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>

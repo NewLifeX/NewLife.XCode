@@ -19,8 +19,10 @@ internal class ClickHouse : RemoteDb
     /// <summary>返回数据库类型</summary>
     public override DatabaseType Type => DatabaseType.ClickHouse;
 
-    /// <summary>批量操作能力。ClickHouse支持批量Insert</summary>
-    public override BatchCapability BatchCapability => BatchCapability.Insert;
+    /// <summary>获取默认能力。ClickHouse 不支持事务和标准 Update/Delete，批量插入暂未实现</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        & ~(DatabaseCapability.Transactions | DatabaseCapability.Update | DatabaseCapability.Delete);
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>

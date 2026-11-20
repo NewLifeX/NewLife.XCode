@@ -20,8 +20,9 @@ internal class DuckDB : FileDbBase
     /// <summary>返回数据库类型</summary>
     public override DatabaseType Type => DatabaseType.DuckDB;
 
-    /// <summary>批量操作能力。DuckDB支持批量Insert/InsertIgnore/Replace/Upsert</summary>
-    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.InsertIgnore | BatchCapability.Replace | BatchCapability.Upsert;
+    /// <summary>获取默认能力。DuckDB 支持 RETURNING 回读自增</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities() | DatabaseCapability.Identity;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>

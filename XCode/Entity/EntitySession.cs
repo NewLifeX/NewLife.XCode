@@ -286,7 +286,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
 
             var cname = ConnName;
             var tname = TableName;
-            if (Dal.Db.Migration == Migration.Off || IsGenerated)
+            if (Dal.Db.EffectiveMigration == Migration.Off || IsGenerated)
             {
                 _hasCheckModel = true;
                 return TaskEx.CompletedTask;
@@ -307,7 +307,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
             {
                 // 打开了开关，并且设置为true时，使用同步方式检查
                 // 设置为false时，使用异步方式检查，因为上级的意思是不大关心数据库架构
-                if (dal.Db.Migration > Migration.ReadOnly /*|| def != this*/)
+                if (dal.Db.EffectiveMigration > Migration.ReadOnly /*|| def != this*/)
                     CheckTable();
                 else
                     return Task.Factory.StartNew(() =>

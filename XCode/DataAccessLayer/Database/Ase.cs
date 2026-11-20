@@ -23,8 +23,9 @@ internal class Ase : RemoteDb
     /// <summary>默认名称格式。ASE 保留创建时的大小写</summary>
     public override NameFormats DefaultNameFormat => NameFormats.None;
 
-    /// <summary>批量操作能力。ASE 驱动无可靠的批量参数绑定</summary>
-    public override BatchCapability BatchCapability => BatchCapability.None;
+    /// <summary>获取默认能力。SAP ASE 支持 IDENTITY 回读</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities() | DatabaseCapability.Identity;
     #endregion
 
     #region 方法

@@ -54,7 +54,7 @@ namespace XCode.DataAccessLayer;
  *              CheckAndGetDefaultDateTimeNow
  */
 
-internal partial class DbMetaData
+public partial class DbMetaData
 {
     #region 属性
     private String ConnName => Database.ConnName;
@@ -74,6 +74,10 @@ internal partial class DbMetaData
         OnSetTables(tables, mode, set);
     }
 
+    /// <summary>执行表结构检查与迁移</summary>
+    /// <param name="tables">待检查的表模型</param>
+    /// <param name="mode">迁移模式</param>
+    /// <param name="set">XCode 设置</param>
     protected virtual void OnSetTables(IDataTable[] tables, Migration mode, XCodeSetting set)
     {
         var dbExist = CheckDatabase(mode);
@@ -169,6 +173,11 @@ internal partial class DbMetaData
         return tableMode < mode ? tableMode : mode;
     }
 
+    /// <summary>检查单张表的结构差异并生成迁移语句</summary>
+    /// <param name="entitytable">实体表模型</param>
+    /// <param name="dbtable">数据库表模型，表不存在时为 null</param>
+    /// <param name="mode">迁移模式</param>
+    /// <param name="set">XCode 设置</param>
     protected virtual void CheckTable(IDataTable entitytable, IDataTable? dbtable, Migration mode, XCodeSetting set)
     {
         var @readonly = mode <= Migration.ReadOnly;
@@ -580,6 +589,10 @@ internal partial class DbMetaData
         return isChanged;
     }
 
+    /// <summary>判断实体字段与数据库字段的类型是否发生变化</summary>
+    /// <param name="entityColumn">实体字段</param>
+    /// <param name="dbColumn">数据库字段</param>
+    /// <returns>类型是否变化</returns>
     protected virtual Boolean IsColumnTypeChanged(IDataColumn entityColumn, IDataColumn dbColumn)
     {
         var type = entityColumn.DataType;
@@ -606,6 +619,10 @@ internal partial class DbMetaData
         return true;
     }
 
+    /// <summary>通过重建表的方式修改字段结构，适用于不支持直接 ALTER 的数据库</summary>
+    /// <param name="entitytable">实体表模型</param>
+    /// <param name="dbtable">数据库表模型</param>
+    /// <returns>重建表的 SQL 语句</returns>
     protected virtual String RebuildTable(IDataTable entitytable, IDataTable dbtable)
     {
         // 通过重建表的方式修改字段
@@ -739,6 +756,10 @@ internal partial class DbMetaData
         return sb.ToString();
     }
 
+    /// <summary>构建重命名表的 SQL 语句</summary>
+    /// <param name="tableName">原表名</param>
+    /// <param name="tempTableName">新表名</param>
+    /// <returns>重命名 SQL</returns>
     protected virtual String RenameTable(String tableName, String tempTableName) => $"Alter Table {tableName} Rename To {tempTableName}";
 
     /// <summary>
@@ -1076,12 +1097,25 @@ internal partial class DbMetaData
     #endregion
 
     #region 数据定义语句
+    /// <summary>构建创建数据库的 SQL</summary>
+    /// <param name="dbname">数据库名</param>
+    /// <param name="file">数据文件路径，文件型数据库使用</param>
+    /// <returns>创建数据库 SQL</returns>
     public virtual String CreateDatabaseSQL(String dbname, String? file) => $"Create Database {Database.FormatName(dbname)}";
 
+    /// <summary>构建删除数据库的 SQL</summary>
+    /// <param name="dbname">数据库名</param>
+    /// <returns>删除数据库 SQL</returns>
     public virtual String DropDatabaseSQL(String dbname) => $"Drop Database {Database.FormatName(dbname)}";
 
+    /// <summary>构建判断数据库是否存在的 SQL。返回 null 表示走架构发现</summary>
+    /// <param name="dbname">数据库名</param>
+    /// <returns>判断 SQL；无法用 SQL 判断时返回 null</returns>
     public virtual String? DatabaseExistSQL(String dbname) => null;
 
+    /// <summary>构建创建表的 SQL</summary>
+    /// <param name="table">表模型</param>
+    /// <returns>创建表 SQL</returns>
     public virtual String CreateTableSQL(IDataTable table)
     {
         //var fs = new List<IDataColumn>(table.Columns);
@@ -1101,16 +1135,32 @@ internal partial class DbMetaData
         return sb.ToString();
     }
 
+    /// <summary>构建删除表的 SQL</summary>
+    /// <param name="table">表模型</param>
+    /// <returns>删除表 SQL</returns>
     public virtual String DropTableSQL(IDataTable table) => $"Drop Table {FormatName(table)}";
 
     //public virtual String TableExistSQL(IDataTable table) => throw new NotSupportedException("该功能未实现！");
 
+    /// <summary>构建添加表说明的 SQL。返回 null 表示不支持</summary>
+    /// <param name="table">表模型</param>
+    /// <returns>添加表说明 SQL</returns>
     public virtual String? AddTableDescriptionSQL(IDataTable table) => null;
 
+    /// <summary>构建删除表说明的 SQL。返回 null 表示不支持</summary>
+    /// <param name="table">表模型</param>
+    /// <returns>删除表说明 SQL</returns>
     public virtual String? DropTableDescriptionSQL(IDataTable table) => null;
 
+    /// <summary>构建添加字段的 SQL</summary>
+    /// <param name="field">字段模型</param>
+    /// <returns>添加字段 SQL</returns>
     public virtual String? AddColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Add {FieldClause(field, true)}";
 
+    /// <summary>构建修改字段的 SQL</summary>
+    /// <param name="field">新字段模型</param>
+    /// <param name="oldfield">原字段模型，可为 null</param>
+    /// <returns>修改字段 SQL</returns>
     public virtual String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield) => $"Alter Table {FormatName(field.Table)} Alter Column {FieldClause(field, false)}";
 
     /// <summary>重命名字段SQL。仅用于精确命名格式下修正列名大小写</summary>
@@ -1119,12 +1169,24 @@ internal partial class DbMetaData
     /// <returns></returns>
     public virtual String? RenameColumnSQL(IDataColumn field, String newName) => $"Alter Table {FormatName(field.Table)} Rename Column {Database.FormatName(field.ColumnName + "")} To {Database.FormatName(newName)}";
 
+    /// <summary>构建删除字段的 SQL</summary>
+    /// <param name="field">字段模型</param>
+    /// <returns>删除字段 SQL</returns>
     public virtual String? DropColumnSQL(IDataColumn field) => $"Alter Table {FormatName(field.Table)} Drop Column {FormatName(field)}";
 
+    /// <summary>构建添加字段说明的 SQL。返回 null 表示不支持</summary>
+    /// <param name="field">字段模型</param>
+    /// <returns>添加字段说明 SQL</returns>
     public virtual String? AddColumnDescriptionSQL(IDataColumn field) => null;
 
+    /// <summary>构建删除字段说明的 SQL。返回 null 表示不支持</summary>
+    /// <param name="field">字段模型</param>
+    /// <returns>删除字段说明 SQL</returns>
     public virtual String? DropColumnDescriptionSQL(IDataColumn field) => null;
 
+    /// <summary>构建创建索引的 SQL</summary>
+    /// <param name="index">索引模型</param>
+    /// <returns>创建索引 SQL</returns>
     public virtual String? CreateIndexSQL(IDataIndex index)
     {
         var sb = Pool.StringBuilder.Get();
@@ -1140,12 +1202,22 @@ internal partial class DbMetaData
         return sb.Return(true);
     }
 
+    /// <summary>构建删除索引的 SQL</summary>
+    /// <param name="index">索引模型</param>
+    /// <returns>删除索引 SQL</returns>
     public virtual String DropIndexSQL(IDataIndex index) => $"Drop Index {index.Name} On {FormatName(index.Table)}";
 
+    /// <summary>构建收缩数据库的 SQL。返回 null 表示不支持</summary>
+    /// <returns>收缩数据库 SQL</returns>
     public virtual String? CompactDatabaseSQL() => null;
     #endregion
 
     #region 操作
+    /// <summary>备份数据库。基类默认返回 null，表示当前数据库不支持</summary>
+    /// <param name="dbname">数据库名</param>
+    /// <param name="bakfile">备份文件路径</param>
+    /// <param name="compressed">是否压缩</param>
+    /// <returns>备份文件路径；不支持时返回 null</returns>
     public virtual String? Backup(String dbname, String? bakfile, Boolean compressed) => null;
 
     //public virtual Int32 CompactDatabase() => -1;

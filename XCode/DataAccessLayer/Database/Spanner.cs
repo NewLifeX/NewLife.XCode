@@ -23,8 +23,30 @@ internal class Spanner : RemoteDb
     /// <summary>默认名称格式。Spanner 标识符按创建时大小写保存</summary>
     public override NameFormats DefaultNameFormat => NameFormats.None;
 
-    /// <summary>批量操作能力。Spanner 无可靠的批量参数绑定</summary>
-    public override BatchCapability BatchCapability => BatchCapability.None;
+    /// <summary>创建能力配置。Spanner 支持事务与查询，但不支持 XCode 自动建表</summary>
+    /// <returns>能力配置</returns>
+    protected override DatabaseProfile CreateProfile() => new()
+    {
+        Model = DatabaseModel.Relational,
+        QueryLanguage = QueryLanguage.Sql,
+        Capabilities = DatabaseCapability.Sql
+            | DatabaseCapability.Transactions
+            | DatabaseCapability.Insert
+            | DatabaseCapability.Update
+            | DatabaseCapability.Delete
+            | DatabaseCapability.Parameterization
+            | DatabaseCapability.SchemaDiscovery
+            | DatabaseCapability.Joins
+            | DatabaseCapability.Subqueries
+            | DatabaseCapability.GroupBy
+            | DatabaseCapability.Having
+            | DatabaseCapability.Union
+            | DatabaseCapability.OffsetPaging
+            | DatabaseCapability.LimitPaging,
+        MaxMigration = Migration.Off,
+        LongTextLength = 4000,
+        ParameterPrefix = "@",
+    };
     #endregion
 
     #region 构造

@@ -31,6 +31,32 @@ internal class NetworkDb : DbBase
     /// <summary>服务端数据库对象，用于格式化SQL等操作</summary>
     public IDatabase? Server { get; private set; }
 
+    /// <summary>能力配置。网络数据库沿用服务端方言，但不提供本地 DDL</summary>
+    public override DatabaseProfile Profile
+    {
+        get
+        {
+            var server = Server;
+            if (server == null) return base.Profile;
+
+            var profile = server.Profile;
+            return new DatabaseProfile
+            {
+                Model = profile.Model,
+                QueryLanguage = profile.QueryLanguage,
+                Capabilities = profile.Capabilities & ~(DatabaseCapability.Ddl | DatabaseCapability.DatabaseDdl),
+                MaxMigration = Migration.Off,
+                LongTextLength = profile.LongTextLength,
+                ParameterPrefix = profile.ParameterPrefix,
+                MaxIdentifierLength = profile.MaxIdentifierLength,
+                MaxParameters = profile.MaxParameters,
+            };
+        }
+    }
+
+    /// <summary>最大迁移模式。网络数据库不执行本地 DDL</summary>
+    public override Migration MaxMigration => Migration.Off;
+
     /// <summary>创建工厂。网络数据库不使用本地工厂</summary>
     /// <returns></returns>
     protected override DbProviderFactory? CreateFactory() => Server?.Factory;

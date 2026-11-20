@@ -737,29 +737,29 @@ public class MySqlTests
         Assert.Equal("表达式。复杂条件时使用C#表达式，优先于简单值判断", result10);
     }
 
-    [Fact(DisplayName = "MySql连接时BatchCapability包含Insert/InsertIgnore/Replace/Upsert四个基础能力")]
-    public void BatchCapabilityTest()
+    [Fact(DisplayName = "MySql连接时DatabaseCapability包含Insert/InsertIgnore/Replace/Upsert四个基础能力")]
+    public void DatabaseCapabilityTest()
     {
         DAL.AddConnStr("sysMySql_cap", _ConnStr, null, "MySql");
         var dal = DAL.Create("sysMySql_cap");
-        var cap = dal.BatchCapabilities;
+        var cap = dal.Capabilities;
 
-        Assert.True(cap.HasFlag(BatchCapability.Insert));
-        Assert.True(cap.HasFlag(BatchCapability.InsertIgnore));
-        Assert.True(cap.HasFlag(BatchCapability.Replace));
-        Assert.True(cap.HasFlag(BatchCapability.Upsert));
+        Assert.True(cap.HasFlag(DatabaseCapability.BulkInsert));
+        Assert.True(cap.HasFlag(DatabaseCapability.BulkInsertIgnore));
+        Assert.True(cap.HasFlag(DatabaseCapability.BulkReplace));
+        Assert.True(cap.HasFlag(DatabaseCapability.BulkUpsert));
 
         // 若已加载NewLife.MySql驱动则同时含Update
         var db = (dal.Db as MySql)!;
         if (db.IsNewLifeDriver)
         {
-            Assert.True(cap.HasFlag(BatchCapability.Update));
-            XTrace.WriteLine("已加载NewLife.MySql驱动，BatchCapability包含Update");
+            Assert.True(cap.HasFlag(DatabaseCapability.BulkUpdate));
+            XTrace.WriteLine("已加载NewLife.MySql驱动，DatabaseCapability包含Update");
         }
         else
         {
-            Assert.False(cap.HasFlag(BatchCapability.Update));
-            XTrace.WriteLine("使用MySql.Data驱动，BatchCapability不含Update");
+            Assert.False(cap.HasFlag(DatabaseCapability.BulkUpdate));
+            XTrace.WriteLine("使用MySql.Data驱动，DatabaseCapability不含Update");
         }
     }
 
@@ -903,7 +903,7 @@ public class MySqlTests
         var dal = DAL.Create("MySql_Identity");
 
         // 数组参数批量更新是 NewLife.MySql 独有能力，用它间接判断驱动
-        if (!dal.BatchCapabilities.HasFlag(BatchCapability.Update)) return;
+        if (!dal.Capabilities.HasFlag(DatabaseCapability.BulkUpdate)) return;
 
         Assert.Equal("NewLife.MySql.MySqlClientFactory", dal.Db.Factory?.GetType().FullName);
 

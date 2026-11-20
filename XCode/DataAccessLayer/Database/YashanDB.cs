@@ -23,8 +23,6 @@ internal class YashanDB : RemoteDb
     /// <summary>默认名称格式。Oracle 体系未加引号的标识符折叠为大写</summary>
     public override NameFormats DefaultNameFormat => NameFormats.Upper;
 
-    /// <summary>批量操作能力。驱动无可靠的批量参数绑定</summary>
-    public override BatchCapability BatchCapability => BatchCapability.None;
     #endregion
 
     #region 方法

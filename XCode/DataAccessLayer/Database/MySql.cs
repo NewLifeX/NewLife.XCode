@@ -17,15 +17,18 @@ internal class MySql : RemoteDb
     /// <summary>返回数据库类型。</summary>
     public override DatabaseType Type => DatabaseType.MySql;
 
-    /// <summary>批量操作能力。NewLife.MySql驱动支持批量Insert和Update，其它驱动仅支持批量Insert</summary>
-    public override BatchCapability BatchCapability
+    /// <summary>获取默认能力。NewLife.MySql 驱动额外支持批量更新</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities()
     {
-        get
-        {
-            var cap = BatchCapability.Insert | BatchCapability.InsertIgnore | BatchCapability.Replace | BatchCapability.Upsert;
-            if (IsNewLifeDriver) cap |= BatchCapability.Update;
-            return cap;
-        }
+        var cap = base.GetDefaultCapabilities()
+            | DatabaseCapability.Identity
+            | DatabaseCapability.BulkInsert
+            | DatabaseCapability.BulkInsertIgnore
+            | DatabaseCapability.BulkReplace
+            | DatabaseCapability.BulkUpsert;
+        if (IsNewLifeDriver) cap |= DatabaseCapability.BulkUpdate;
+        return cap;
     }
 
     /// <summary>是否NewLife.MySql驱动</summary>

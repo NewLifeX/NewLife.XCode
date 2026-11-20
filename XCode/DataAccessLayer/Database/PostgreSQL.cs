@@ -19,7 +19,12 @@ internal class PostgreSQL : RemoteDb
     public override DatabaseType Type => DatabaseType.PostgreSQL;
 
     /// <summary>批量操作能力。PostgreSQL支持批量Insert/Upsert</summary>
-    public override BatchCapability BatchCapability => BatchCapability.Insert | BatchCapability.Upsert;
+    /// <summary>获取默认能力。PostgreSQL 支持自增及批量写入</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        | DatabaseCapability.Identity
+        | DatabaseCapability.BulkInsert
+        | DatabaseCapability.BulkUpsert;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>

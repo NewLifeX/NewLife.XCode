@@ -200,6 +200,27 @@ internal class FirebirdMetaData : DbMetaData
     #endregion
 
     #region 数据类型
+    /// <summary>获取字段。Firebird 3+ 以 IS_IDENTITY 标识自增列，基类只识别 AUTOINCREMENT</summary>
+    /// <param name="table">表</param>
+    /// <param name="rows">字段元数据行</param>
+    /// <returns></returns>
+    protected override List<IDataColumn> GetFields(IDataTable table, DataRow[] rows)
+    {
+        var list = base.GetFields(table, rows);
+
+        foreach (var dr in rows)
+        {
+            if (!dr.Table.Columns.Contains("IS_IDENTITY") || dr.IsNull("IS_IDENTITY")) continue;
+            if (!(dr["IS_IDENTITY"] + "").EqualIgnoreCase("YES", "TRUE", "1")) continue;
+
+            var name = dr["COLUMN_NAME"] + "";
+            var field = list.FirstOrDefault(e => e.ColumnName.EqualIgnoreCase(name));
+            if (field != null) field.Identity = true;
+        }
+
+        return list;
+    }
+
     /// <summary>数据类型映射。Int16 在前，smallint 反向映射时优先识别为 Int16</summary>
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
     {

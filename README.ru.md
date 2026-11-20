@@ -25,7 +25,7 @@
 
 ## Поддерживаемые базы данных
 
-XCode обращается к каждой базе данных через отдельный пакет драйвера ADO.NET. Установите пакет для своей базы данных; если драйвер отсутствует, сообщение об ошибке также укажет нужный пакет.
+XCode обращается к каждой базе данных через отдельный пакет драйвера ADO.NET. Установите пакет для своей базы данных; если драйвер отсутствует, сообщение об ошибке также укажет нужный пакет. Сейчас поддерживается **30 встроенных провайдеров** (реляционные, встраиваемые, временные ряды, колоночные, документные, федеративные запросы и облачные хранилища данных), а также **19 псевдонимов с совместимым протоколом**, которые переиспользуют провайдер MySQL или PostgreSQL.
 
 | База данных | Провайдер | NuGet-пакет драйвера | Тип |
 | --- | --- | --- | --- |
@@ -60,7 +60,7 @@ XCode обращается к каждой базе данных через от
 | SonnetDB | `SonnetDB` | `SonnetDB` | Встроенная / удалённая |
 | Network | `Network` | Встроенный | Виртуальная |
 
-СУБД, совместимые с протоколом MySQL или PostgreSQL, используют эти провайдеры через встроенные псевдонимы: TiDB, Doris, StarRocks, OceanBase (режим MySQL), SingleStore, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB и TimescaleDB. Провайдеры Access и SqlCe сохранены, но отключены.
+СУБД, совместимые с протоколом MySQL или PostgreSQL, используют эти провайдеры через 19 встроенных псевдонимов: TiDB, Doris, StarRocks, OceanBase (режим MySQL), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB и QuestDB; MariaDB покрывается провайдером MySQL. Провайдеры Access и SqlCe сохранены, но отключены.
 
 ## Быстрый старт
 
@@ -391,7 +391,7 @@ NewLife — это многоуровневая экосистема незав�
 | --- | --- | --- |
 | **Базовый** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | Логирование, конфигурация, кэширование, сеть, сериализация, планирование и APM-трассировка. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Промежуточное ПО данных: отдельные таблицы масштаба десятков миллиардов строк, автоматическое секционирование, разделение чтения и записи, более 10 баз данных. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Промежуточное ПО данных: отдельные таблицы масштаба десятков миллиардов строк, автоматическое секционирование, разделение чтения и записи, 30 баз данных. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | Высокопроизводительная сетевая библиотека: 1,77M pps / 14,5 Гбит/с на машину (TCP 1KB, 2026-10), 4M долгоживущих TCP-соединений. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | Протокольная связь и RPC-фреймворк для клиент-серверных приложений и IoT-устройств. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | Устанавливает .NET-приложения как демоны ОС: службы Windows и systemd в Linux. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

@@ -25,7 +25,7 @@
 
 ## قواعد البيانات المدعومة
 
-يتصل XCode بكل قاعدة بيانات عبر حزمة برنامج تشغيل ADO.NET منفصلة. ثبّت الحزمة المناسبة لقاعدة بياناتك؛ وعند غياب برنامج التشغيل تذكر رسالة الخطأ أيضًا الحزمة المطلوب إضافتها.
+يتصل XCode بكل قاعدة بيانات عبر حزمة برنامج تشغيل ADO.NET منفصلة. ثبّت الحزمة المناسبة لقاعدة بياناتك؛ وعند غياب برنامج التشغيل تذكر رسالة الخطأ أيضًا الحزمة المطلوب إضافتها. يدعم XCode حاليًا **30 مزوّدًا مدمجًا** (علائقية، ومضمّنة، وسلاسل زمنية، وعمودية، ومستندية، واستعلامات اتحادية، ومستودعات بيانات سحابية)، إضافة إلى **19 اسمًا مستعارًا متوافقًا مع البروتوكول** يعيد استخدام مزوّد MySQL أو PostgreSQL.
 
 | قاعدة البيانات | المزوّد | حزمة NuGet للبرنامج | النوع |
 | --- | --- | --- | --- |
@@ -60,7 +60,7 @@
 | SonnetDB | `SonnetDB` | `SonnetDB` | مدمجة / بعيدة |
 | Network | `Network` | مدمج | افتراضية |
 
-تستخدم المحركات المتوافقة مع بروتوكول MySQL أو PostgreSQL هذين المزوّدين عبر أسماء مستعارة مدمجة: TiDB وDoris وStarRocks وOceanBase (وضع MySQL) وSingleStore وDatabend وopenGauss وGaussDB وGreenplum وAmazon Redshift وCockroachDB وYugabyteDB وTimescaleDB. مزوّدا Access وSqlCe محفوظان لكنهما معطّلان.
+تستخدم المحركات المتوافقة مع بروتوكول MySQL أو PostgreSQL هذين المزوّدين عبر 19 اسمًا مستعارًا مدمجًا: TiDB وDoris وStarRocks وOceanBase (وضع MySQL) وSingleStore وPolarDB وTDSQL وGoldenDB وGreatDB وDatabend وopenGauss وGaussDB وGreenplum وAmazon Redshift وCockroachDB وYugabyteDB وTimescaleDB وQuestDB، ويغطي مزوّد MySQL قاعدة MariaDB. مزوّدا Access وSqlCe محفوظان لكنهما معطّلان.
 
 ## البدء السريع
 
@@ -391,7 +391,7 @@ NewLife منظومة متعدّدة الطبقات من مشاريع مفتوح�
 | --- | --- | --- |
 | **الأساس** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | التسجيل والتهيئة والتخزين المؤقت والشبكات والتسلسل والجدولة وتتبّع أداء APM. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | وسيط بيانات: جداول واحدة بمستوى عشرات المليارات من الصفوف، تقسيم تلقائي للجداول، فصل القراءة عن الكتابة، وأكثر من 10 قواعد بيانات. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | وسيط بيانات: جداول واحدة بمستوى عشرات المليارات من الصفوف، تقسيم تلقائي للجداول، فصل القراءة عن الكتابة، و30 قاعدة بيانات. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | مكتبة شبكات عالية الأداء: 1.77 مليون pps / 14.5 Gbps على جهاز واحد (TCP 1KB، 2026-10)، و4 ملايين اتصال TCP طويل الأمد. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | إطار اتصال بروتوكولي وRPC لتطبيقات العميل/الخادم وأجهزة إنترنت الأشياء. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | يثبّت تطبيقات .NET كخدمات حارسة لنظام التشغيل: خدمات Windows وsystemd في Linux. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

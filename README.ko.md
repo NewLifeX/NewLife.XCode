@@ -25,7 +25,7 @@
 
 ## 지원 데이터베이스
 
-XCode는 데이터베이스마다 별도의 ADO.NET 드라이버 패키지로 접속합니다. 사용하는 데이터베이스에 맞는 패키지를 설치하세요. 드라이버가 없으면 오류 메시지에 추가해야 할 패키지 이름도 표시됩니다.
+XCode는 데이터베이스마다 별도의 ADO.NET 드라이버 패키지로 접속합니다. 사용하는 데이터베이스에 맞는 패키지를 설치하세요. 드라이버가 없으면 오류 메시지에 추가해야 할 패키지 이름도 표시됩니다. 현재 **30개의 내장 공급자**(관계형, 임베디드, 시계열, 컬럼형, 문서형, 페더레이션 쿼리, 클라우드 데이터 웨어하우스)와 MySQL 또는 PostgreSQL 공급자를 재사용하는 **19개의 프로토콜 호환 별칭**을 지원합니다.
 
 | 데이터베이스 | 공급자 | NuGet 드라이버 패키지 | 유형 |
 | --- | --- | --- | --- |
@@ -60,7 +60,7 @@ XCode는 데이터베이스마다 별도의 ADO.NET 드라이버 패키지로 �
 | SonnetDB | `SonnetDB` | `SonnetDB` | 임베디드 / 원격 |
 | Network | `Network` | 내장 | 가상 |
 
-MySQL/PostgreSQL 프로토콜 호환 엔진은 내장 별칭으로 해당 공급자를 재사용합니다: TiDB, Doris, StarRocks, OceanBase(MySQL 모드), SingleStore, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB. Access와 SqlCe 공급자는 유지되지만 비활성화되어 있습니다.
+MySQL/PostgreSQL 프로토콜 호환 엔진은 19개의 내장 별칭으로 해당 공급자를 재사용합니다: TiDB, Doris, StarRocks, OceanBase(MySQL 모드), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB, QuestDB. MariaDB는 MySQL 공급자가 처리합니다. Access와 SqlCe 공급자는 유지되지만 비활성화되어 있습니다.
 
 ## 빠른 시작
 
@@ -391,7 +391,7 @@ NewLife는 독립적으로 버전 관리되는 오픈소스 프로젝트의 계�
 | --- | --- | --- |
 | **기반** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | 로깅, 구성, 캐싱, 네트워킹, 직렬화, 스케줄링 및 APM 추적. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | 데이터 미들웨어: 테이블당 수백억 건 규모, 자동 분할 테이블, 읽기/쓰기 분리, 10여 종 데이터베이스 지원. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | 데이터 미들웨어: 테이블당 수백억 건 규모, 자동 분할 테이블, 읽기/쓰기 분리, 30종 데이터베이스 지원. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | 고성능 네트워크 라이브러리: 단일 머신에서 177만 pps / 14.5 Gbps(TCP 1KB, 2026-10), 400만 개 장기 TCP 연결. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | 클라이언트/서버 애플리케이션과 IoT 장치를 위한 프로토콜 통신 및 RPC 프레임워크. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | .NET 애플리케이션을 운영체제 데몬으로 설치: Windows 서비스 및 Linux systemd. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

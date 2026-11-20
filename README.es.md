@@ -23,7 +23,7 @@ Documentación: https://newlifex.com/xcode   Grupos QQ de la comunidad: 1600800 
 
 ## Bases de datos compatibles
 
-XCode accede a cada base de datos mediante un paquete de controlador ADO.NET independiente. Instale el paquete correspondiente a su base de datos; si falta el controlador, el mensaje de error también indica el paquete que debe agregar.
+XCode accede a cada base de datos mediante un paquete de controlador ADO.NET independiente. Instale el paquete correspondiente a su base de datos; si falta el controlador, el mensaje de error también indica el paquete que debe agregar. Actualmente se admiten **30 proveedores integrados** (relacionales, embebidos, de series temporales, columnares, documentales, de consulta federada y almacenes de datos en la nube), además de **19 alias compatibles con protocolo** que reutilizan el proveedor MySQL o PostgreSQL.
 
 | Base de datos | Proveedor | Paquete NuGet del controlador | Tipo |
 | --- | --- | --- | --- |
@@ -58,7 +58,7 @@ XCode accede a cada base de datos mediante un paquete de controlador ADO.NET ind
 | SonnetDB | `SonnetDB` | `SonnetDB` | Integrada / remota |
 | Network | `Network` | Incluido | Virtual |
 
-Los motores compatibles con el protocolo MySQL o PostgreSQL reutilizan esos proveedores mediante alias integrados: TiDB, Doris, StarRocks, OceanBase (modo MySQL), SingleStore, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB y TimescaleDB. Los proveedores Access y SqlCe se conservan pero están deshabilitados.
+Los motores compatibles con el protocolo MySQL o PostgreSQL reutilizan esos proveedores mediante 19 alias integrados: TiDB, Doris, StarRocks, OceanBase (modo MySQL), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB y QuestDB; MariaDB está cubierto por el proveedor MySQL. Los proveedores Access y SqlCe se conservan pero están deshabilitados.
 
 ## Inicio rápido
 
@@ -389,7 +389,7 @@ NewLife es un ecosistema por capas de proyectos de código abierto con versionad
 | --- | --- | --- |
 | **Fundamentos** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | Registro de logs, configuración, caché, red, serialización, programación de tareas y seguimiento APM. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Middleware de datos: tablas individuales con decenas de miles de millones de filas, particionado automático, separación lectura/escritura y más de 10 bases de datos. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Middleware de datos: tablas individuales con decenas de miles de millones de filas, particionado automático, separación lectura/escritura y 30 bases de datos. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | Biblioteca de red de alto rendimiento: 1,77 M pps / 14,5 Gbps en una sola máquina (TCP 1KB, 2026-10), 4 M conexiones TCP persistentes. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | Framework de comunicación por protocolo y RPC para aplicaciones cliente/servidor y dispositivos IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | Instala aplicaciones .NET como demonios del sistema operativo: servicios de Windows y systemd de Linux. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

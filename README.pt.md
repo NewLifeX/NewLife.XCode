@@ -25,7 +25,7 @@ Documentação: https://newlifex.com/xcode   Grupos QQ da comunidade: 1600800 / 
 
 ## Bancos de dados suportados
 
-O XCode acessa cada banco de dados por meio de um pacote de driver ADO.NET separado. Instale o pacote correspondente ao seu banco de dados; quando o driver estiver ausente, a mensagem de erro também indica o pacote a adicionar.
+O XCode acessa cada banco de dados por meio de um pacote de driver ADO.NET separado. Instale o pacote correspondente ao seu banco de dados; quando o driver estiver ausente, a mensagem de erro também indica o pacote a adicionar. Atualmente são suportados **30 provedores integrados** (relacionais, embarcados, séries temporais, colunares, documentais, consulta federada e data warehouses na nuvem), além de **19 aliases compatíveis com protocolo** que reutilizam o provedor MySQL ou PostgreSQL.
 
 | Banco de dados | Provedor | Pacote NuGet do driver | Tipo |
 | --- | --- | --- | --- |
@@ -60,7 +60,7 @@ O XCode acessa cada banco de dados por meio de um pacote de driver ADO.NET separ
 | SonnetDB | `SonnetDB` | `SonnetDB` | Incorporado / remoto |
 | Network | `Network` | Integrado | Virtual |
 
-Os mecanismos compatíveis com o protocolo MySQL ou PostgreSQL reutilizam esses provedores por meio de aliases integrados: TiDB, Doris, StarRocks, OceanBase (modo MySQL), SingleStore, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB e TimescaleDB. Os provedores Access e SqlCe são mantidos, mas estão desabilitados.
+Os mecanismos compatíveis com o protocolo MySQL ou PostgreSQL reutilizam esses provedores por meio de 19 aliases integrados: TiDB, Doris, StarRocks, OceanBase (modo MySQL), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB e QuestDB; o MariaDB é coberto pelo provedor MySQL. Os provedores Access e SqlCe são mantidos, mas estão desabilitados.
 
 ## Início rápido
 
@@ -391,7 +391,7 @@ NewLife é um ecossistema em camadas de projetos open source versionados de form
 | --- | --- | --- |
 | **Base** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | Log, configuração, cache, rede, serialização, agendamento e rastreamento APM. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Middleware de dados: tabelas únicas na escala de dezenas de bilhões de linhas, particionamento automático, separação de leitura e escrita, mais de 10 bancos de dados. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | Middleware de dados: tabelas únicas na escala de dezenas de bilhões de linhas, particionamento automático, separação de leitura e escrita, 30 bancos de dados. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | Biblioteca de rede de alto desempenho: 1,77M pps / 14,5 Gbps em uma máquina (TCP 1KB, 2026-10), 4M de conexões TCP persistentes. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | Framework de comunicação por protocolo e RPC para aplicações cliente/servidor e dispositivos IoT. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | Instala aplicações .NET como daemons do sistema operacional: serviços do Windows e systemd do Linux. | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

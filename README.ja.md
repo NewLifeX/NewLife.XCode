@@ -25,7 +25,7 @@
 
 ## 対応データベース
 
-XCode はデータベースごとに個別の ADO.NET ドライバーパッケージを介して接続します。使用するデータベースのパッケージをインストールしてください。ドライバーが見つからない場合、エラーメッセージに追加すべきパッケージ名も表示されます。
+XCode はデータベースごとに個別の ADO.NET ドライバーパッケージを介して接続します。使用するデータベースのパッケージをインストールしてください。ドライバーが見つからない場合、エラーメッセージに追加すべきパッケージ名も表示されます。現在 **30 の組み込みプロバイダー**（リレーショナル、組み込み、時系列、列指向、ドキュメント、フェデレーテッドクエリ、クラウドデータウェアハウス）に加え、MySQL または PostgreSQL プロバイダーを再利用する **19 のプロトコル互換別名**に対応しています。
 
 | データベース | プロバイダー | NuGet ドライバーパッケージ | 種類 |
 | --- | --- | --- | --- |
@@ -60,7 +60,7 @@ XCode はデータベースごとに個別の ADO.NET ドライバーパッケ�
 | SonnetDB | `SonnetDB` | `SonnetDB` | 組み込み / リモート |
 | Network | `Network` | 内蔵 | 仮想 |
 
-MySQL / PostgreSQL プロトコル互換のエンジンは、組み込みの別名で同じプロバイダーを再利用できます：TiDB、Doris、StarRocks、OceanBase（MySQL モード）、SingleStore、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB。Access と SqlCe のプロバイダーは残されていますが無効です。
+MySQL / PostgreSQL プロトコル互換のエンジンは、19 の組み込み別名で同じプロバイダーを再利用できます：TiDB、Doris、StarRocks、OceanBase（MySQL モード）、SingleStore、PolarDB、TDSQL、GoldenDB、GreatDB、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB、QuestDB。MariaDB は MySQL プロバイダーでカバーされます。Access と SqlCe のプロバイダーは残されていますが無効です。
 
 ## クイックスタート
 
@@ -391,7 +391,7 @@ NewLife は、独立したバージョン管理を行うオープンソースプ
 | --- | --- | --- |
 | **基盤** | | |
 | [NewLife.Core](https://github.com/NewLifeX/X) | ログ、構成、キャッシュ、ネットワーク、シリアライズ、スケジューリング、APM トレーシング。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Core?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Core) |
-| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | データミドルウェア：単一テーブルで数百億件級、自動シャーディング、読み書き分離、10 種類以上のデータベースに対応。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
+| [NewLife.XCode](https://github.com/NewLifeX/NewLife.XCode) | データミドルウェア：単一テーブルで数百億件級、自動シャーディング、読み書き分離、30 種類のデータベースに対応。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.XCode?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.XCode) |
 | [NewLife.Net](https://github.com/NewLifeX/NewLife.Net) | 高性能ネットワークライブラリ：単一マシンで 177 万 pps、14.5 Gbps（TCP 1KB、2026-10 実測）、400 万 Tcp 長接続。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Net?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Net) |
 | [NewLife.Remoting](https://github.com/NewLifeX/NewLife.Remoting) | CS アプリケーションと IoT デバイス向けのプロトコル通信と RPC フレームワーク。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Remoting?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Remoting) |
 | [NewLife.Agent](https://github.com/NewLifeX/NewLife.Agent) | .NET アプリケーションを OS デーモンとしてインストール：Windows サービスと Linux systemd。 | [![NuGet](https://img.shields.io/nuget/dt/NewLife.Agent?style=flat-square&logo=nuget&label=downloads)](https://www.nuget.org/packages/NewLife.Agent) |

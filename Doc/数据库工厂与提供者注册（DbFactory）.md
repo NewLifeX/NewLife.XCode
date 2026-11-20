@@ -44,7 +44,19 @@
 | `IoTDB` | `IoTDB` | Apache IoTDB，内置 REST v2 提供者，只做 DAL 原生 SQL |
 | `Prometheus` | `Prometheus` | 只读 PromQL 查询，兼容 VictoriaMetrics |
 
-> MySQL / PostgreSQL 协议兼容的数据库（TiDB、Doris、StarRocks、openGauss、Redshift 等）通过 `Support` 别名复用对应提供者，详见 [数据库支持矩阵](数据库支持矩阵.md)。
+> MySQL / PostgreSQL / Prometheus 协议兼容的数据库（TiDB、Doris、StarRocks、openGauss、Redshift、VictoriaMetrics 等）通过 `Support` 别名复用对应提供者，详见 [数据库支持矩阵](数据库支持矩阵.md)。
+
+### 1.1 数据库产品目录
+
+`DatabaseType` 只表示通信协议提供者；同一协议可以覆盖多个数据库产品。运行时通过 `DatabaseProducts` 列举全部实际支持的数据库：
+
+```csharp
+foreach (var product in DatabaseProducts.All)
+    Console.WriteLine($"{product.Name} => {product.ProviderName}");
+
+Console.WriteLine(DatabaseProducts.ProtocolCount); // 33 个通信协议提供者
+Console.WriteLine(DatabaseProducts.Count);         // 55 个实际数据库
+```
 
 ---
 

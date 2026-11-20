@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using XCode.DataAccessLayer;
@@ -49,6 +50,32 @@ public class DatabaseProductTests
             .ToArray();
 
         Assert.Equal(aliases.OrderBy(e => e), products.OrderBy(e => e));
+    }
+
+    [Fact(DisplayName = "README 数据库数量与目录一致")]
+    public void ReadmeCountsMatchCatalog()
+    {
+        var root = FindRepositoryRoot();
+        if (root == null) return;
+
+        var text = File.ReadAllText(Path.Combine(root, "README.md"));
+        Assert.Contains($"**{DatabaseProducts.ProtocolCount} communication-protocol providers**", text);
+        Assert.Contains($"**{DatabaseProducts.Count} databases**", text);
+    }
+
+    private static String? FindRepositoryRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "README.md")) &&
+                Directory.Exists(Path.Combine(dir.FullName, "XCode")))
+                return dir.FullName;
+
+            dir = dir.Parent;
+        }
+
+        return null;
     }
 
     [Fact(DisplayName = "协议兼容数据库别名均能被对应提供者识别")]

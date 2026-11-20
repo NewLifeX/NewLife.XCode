@@ -23,13 +23,14 @@ public class EntityPersistenceTests
     }
 
     [Fact]
-    [System.ComponentModel.Description("MongoDB 与 InfluxDB 使用原生持久化适配器")]
+    [System.ComponentModel.Description("MongoDB、InfluxDB 与 OpenTSDB 使用原生持久化适配器")]
     public void NoSqlProviders_UseNativePersistence()
     {
         var factory = Role.Meta.Factory;
 
         Assert.IsType<MongoEntityPersistence>(EntityPersistenceFactory.Create(factory, DbFactory.Create(DatabaseType.MongoDB)!));
         Assert.IsType<InfluxEntityPersistence>(EntityPersistenceFactory.Create(factory, DbFactory.Create(DatabaseType.InfluxDB)!));
+        Assert.IsType<OpenTSDBEntityPersistence>(EntityPersistenceFactory.Create(factory, DbFactory.Create(DatabaseType.OpenTSDB)!));
     }
 
     [Fact]
@@ -93,6 +94,21 @@ public class EntityPersistenceTests
         Assert.Throws<NotSupportedException>(() => persistence.Update(Role.Meta.Session, role));
         Assert.Throws<NotSupportedException>(() => persistence.Delete(Role.Meta.Session, role));
         Assert.Throws<NotSupportedException>(() => persistence.Delete(Role.Meta.Session, "Name='x'"));
+        Assert.Null(persistence.GetSql(Role.Meta.Session, role, System.ComponentModel.DataObjectMethodType.Insert));
+        Assert.Null(persistence.InsertSQL(Role.Meta.Session));
+    }
+
+    [Fact]
+    [System.ComponentModel.Description("OpenTSDB 只支持追加写入，更新与删除明确抛错")]
+    public void OpenTSDBPersistence_RejectsUpdateAndDelete()
+    {
+        var persistence = new OpenTSDBEntityPersistence(Role.Meta.Factory);
+        var role = new Role { Name = "opentsdb_role" };
+
+        Assert.Throws<NotSupportedException>(() => persistence.Update(Role.Meta.Session, role));
+        Assert.Throws<NotSupportedException>(() => persistence.Delete(Role.Meta.Session, role));
+        Assert.Throws<NotSupportedException>(() => persistence.Delete(Role.Meta.Session, "Name='x'"));
+        Assert.Throws<NotSupportedException>(() => persistence.Insert(Role.Meta.Session, new[] { "Name" }, new Object[] { "x" }));
         Assert.Null(persistence.GetSql(Role.Meta.Session, role, System.ComponentModel.DataObjectMethodType.Insert));
         Assert.Null(persistence.InsertSQL(Role.Meta.Session));
     }

@@ -324,20 +324,20 @@ internal class NovaDbMetaData : RemoteDbMetaData
 
     #region 数据类型
 
-    /// <summary>数据类型映射</summary>
+    /// <summary>数据类型映射。前面是 MySQL 兼容名（NovaDb 输入仍接受），后面是 NovaDb 规范名（information_schema 返回的名字）</summary>
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
     {
-        { typeof(Byte[]), new String[] { "BLOB", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "binary({0})", "varbinary({0})" } },
+        { typeof(Byte[]), new String[] { "BLOB", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "binary({0})", "varbinary({0})", "BINARY({0})" } },
         { typeof(Byte), new String[] { "TINYINT", "TINYINT UNSIGNED" } },
         { typeof(Int16), new String[] { "SMALLINT", "SMALLINT UNSIGNED" } },
         { typeof(Int32), new String[] { "INT", "MEDIUMINT", "INT UNSIGNED" } },
-        { typeof(Int64), new String[] { "BIGINT", "BIGINT UNSIGNED" } },
+        { typeof(Int64), new String[] { "BIGINT", "BIGINT UNSIGNED", "LONG" } },
         { typeof(Single), new String[] { "FLOAT" } },
         { typeof(Double), new String[] { "DOUBLE" } },
         { typeof(Decimal), new String[] { "DECIMAL({0}, {1})" } },
         { typeof(DateTime), new String[] { "DATETIME", "DATE", "TIMESTAMP", "TIME" } },
-        { typeof(String), new String[] { "VARCHAR({0})", "LONGTEXT", "TEXT", "CHAR({0})", "NCHAR({0})", "NVARCHAR({0})", "TINYTEXT", "MEDIUMTEXT" } },
-        { typeof(Boolean), new String[] { "TINYINT" } },
+        { typeof(String), new String[] { "VARCHAR({0})", "LONGTEXT", "TEXT", "CHAR({0})", "NCHAR({0})", "NVARCHAR({0})", "TINYTEXT", "MEDIUMTEXT", "STRING({0})" } },
+        { typeof(Boolean), new String[] { "BOOL", "TINYINT" } },
         { typeof(Guid), new String[] { "CHAR(36)" } },
     };
 

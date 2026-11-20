@@ -136,6 +136,8 @@ public class EntityPersistence : IEntityPersistence
     /// <returns></returns>
     public virtual Int32 Insert(IEntitySession session, IEntity entity)
     {
+        session.Dal.Db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Insert, "entity insert");
+
         var factory = Factory;
 
         // 添加数据前，处理Guid
@@ -203,6 +205,8 @@ public class EntityPersistence : IEntityPersistence
         // 没有脏数据，不需要更新
         if (!entity.HasDirty) return 0;
 
+        session.Dal.Db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Update, "entity update");
+
         IDataParameter[]? dps = null;
         var sql = "";
 
@@ -232,6 +236,8 @@ public class EntityPersistence : IEntityPersistence
     /// <returns></returns>
     public virtual Int32 Delete(IEntitySession session, IEntity entity)
     {
+        session.Dal.Db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Delete, "entity delete");
+
         IDataParameter[]? dps = null;
         var sql = SQL(session, entity, DataObjectMethodType.Delete, ref dps);
         if (sql.IsNullOrEmpty()) return 0;
@@ -251,6 +257,8 @@ public class EntityPersistence : IEntityPersistence
     /// <returns></returns>
     public virtual async Task<Int32> InsertAsync(IEntitySession session, IEntity entity)
     {
+        session.Dal.Db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Insert, "entity insert");
+
         var factory = Factory;
 
         // 添加数据前，处理Guid
@@ -301,6 +309,8 @@ public class EntityPersistence : IEntityPersistence
         // 没有脏数据，不需要更新
         if (!entity.HasDirty) return 0;
 
+        session.Dal.Db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Update, "entity update");
+
         IDataParameter[]? dps = null;
         var sql = "";
 
@@ -329,6 +339,8 @@ public class EntityPersistence : IEntityPersistence
     /// <returns></returns>
     public virtual async Task<Int32> DeleteAsync(IEntitySession session, IEntity entity)
     {
+        session.Dal.Db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Delete, "entity delete");
+
         IDataParameter[]? dps = null;
         var sql = SQL(session, entity, DataObjectMethodType.Delete, ref dps);
         if (sql.IsNullOrEmpty()) return 0;
@@ -351,6 +363,8 @@ public class EntityPersistence : IEntityPersistence
         if (names == null) throw new ArgumentNullException(nameof(names), L.T("The property list and value list cannot be empty."));
         if (values == null) throw new ArgumentNullException(nameof(values), L.T("The property list and value list cannot be empty."));
         if (names.Length != values.Length) throw new ArgumentException(L.T("The property list must correspond one-to-one with the value list."));
+
+        session.Dal.Db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Insert, "entity insert");
 
         var factory = Factory;
         var db = session.Dal.Db;
@@ -391,6 +405,8 @@ public class EntityPersistence : IEntityPersistence
     {
         if (setClause.IsNullOrEmpty() || !setClause.Contains("=")) throw new ArgumentException(L.T("Invalid argument."));
 
+        session.Dal.Db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Update, "entity update");
+
         var sql = $"Update {session.FormatedTableName} Set {setClause}";
         if (!String.IsNullOrEmpty(whereClause)) sql += " Where " + whereClause;
 
@@ -418,6 +434,8 @@ public class EntityPersistence : IEntityPersistence
     /// <returns></returns>
     public virtual Int32 Delete(IEntitySession session, String whereClause, Int32 maximumRows = 0)
     {
+        session.Dal.Db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Delete, "entity delete");
+
         var batchSize = session.Dal.GetBatchSize(10_000);
         if (maximumRows <= 0) maximumRows = Int32.MaxValue;
         var set = XCodeSetting.Current;

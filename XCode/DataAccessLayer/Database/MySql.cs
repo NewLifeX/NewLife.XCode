@@ -26,7 +26,9 @@ internal class MySql : RemoteDb
             | DatabaseCapability.BulkInsert
             | DatabaseCapability.BulkInsertIgnore
             | DatabaseCapability.BulkReplace
-            | DatabaseCapability.BulkUpsert;
+            | DatabaseCapability.BulkUpsert
+            | DatabaseCapability.WindowFunctions
+            | DatabaseCapability.WindowFrame;
         if (IsNewLifeDriver) cap |= DatabaseCapability.BulkUpdate;
         return cap;
     }

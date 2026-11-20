@@ -27,7 +27,9 @@ internal class Oracle : RemoteDb
         | DatabaseCapability.Identity
         | DatabaseCapability.BulkInsert
         | DatabaseCapability.BulkUpdate
-        | DatabaseCapability.BulkUpsert;
+        | DatabaseCapability.BulkUpsert
+        | DatabaseCapability.WindowFunctions
+        | DatabaseCapability.WindowFrame;
 
     private Version _minVersion = new("23.26");
     /// <summary>创建工厂</summary>

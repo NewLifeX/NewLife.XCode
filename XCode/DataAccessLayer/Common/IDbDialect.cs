@@ -112,4 +112,9 @@ public interface IDbDialect
     /// <param name="batchSize">批大小</param>
     /// <returns>批量删除 SQL；不支持分批删除时返回 null</returns>
     String? BuildDeleteSql(String tableName, String where, Int32 batchSize);
+
+    /// <summary>渲染窗口函数表达式</summary>
+    /// <param name="expression">窗口表达式</param>
+    /// <returns>SQL 片段</returns>
+    String RenderWindow(WindowExpression expression);
 }

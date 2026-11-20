@@ -23,7 +23,9 @@ internal class SqlServer : RemoteDb
     protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
         | DatabaseCapability.Identity
         | DatabaseCapability.BulkInsert
-        | DatabaseCapability.BulkUpsert;
+        | DatabaseCapability.BulkUpsert
+        | DatabaseCapability.WindowFunctions
+        | DatabaseCapability.WindowFrame;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>

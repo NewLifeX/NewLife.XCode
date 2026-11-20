@@ -21,8 +21,9 @@ internal class ClickHouse : RemoteDb
 
     /// <summary>获取默认能力。ClickHouse 不支持事务和标准 Update/Delete，批量插入暂未实现</summary>
     /// <returns>默认能力标志</returns>
-    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
-        & ~(DatabaseCapability.Transactions | DatabaseCapability.Update | DatabaseCapability.Delete);
+    protected override DatabaseCapability GetDefaultCapabilities() => (base.GetDefaultCapabilities()
+        & ~(DatabaseCapability.Transactions | DatabaseCapability.Update | DatabaseCapability.Delete))
+        | DatabaseCapability.WindowFunctions;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>

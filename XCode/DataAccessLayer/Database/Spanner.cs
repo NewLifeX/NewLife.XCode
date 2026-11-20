@@ -42,7 +42,9 @@ internal class Spanner : RemoteDb
             | DatabaseCapability.Having
             | DatabaseCapability.Union
             | DatabaseCapability.OffsetPaging
-            | DatabaseCapability.LimitPaging,
+            | DatabaseCapability.LimitPaging
+            | DatabaseCapability.WindowFunctions
+            | DatabaseCapability.WindowFrame,
         MaxMigration = Migration.Off,
         LongTextLength = 4000,
         ParameterPrefix = "@",

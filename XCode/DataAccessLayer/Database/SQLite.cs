@@ -27,7 +27,9 @@ internal class SQLite : FileDbBase
         | DatabaseCapability.BulkInsert
         | DatabaseCapability.BulkInsertIgnore
         | DatabaseCapability.BulkReplace
-        | DatabaseCapability.BulkUpsert;
+        | DatabaseCapability.BulkUpsert
+        | DatabaseCapability.WindowFunctions
+        | DatabaseCapability.WindowFrame;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>

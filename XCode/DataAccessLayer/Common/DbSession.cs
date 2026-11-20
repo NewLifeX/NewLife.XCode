@@ -392,7 +392,7 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="builder">查询生成器</param>
     /// <returns>总记录数</returns>
-    public virtual DbTable Query(SelectBuilder builder) => Query(builder.ToString(), builder.Parameters.ToArray());
+    public virtual DbTable Query(SelectBuilder builder) => Query(builder.ToString(Database.Dialect), builder.Parameters.ToArray());
 
     /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="sql">SQL语句</param>
@@ -444,7 +444,7 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="builder">查询生成器</param>
     /// <returns>总记录数</returns>
-    public virtual Int64 QueryCount(SelectBuilder builder) => ExecuteScalar<Int64>(builder.SelectCount().ToString(), CommandType.Text, builder.Parameters.ToArray());
+    public virtual Int64 QueryCount(SelectBuilder builder) => ExecuteScalar<Int64>(builder.SelectCount().ToString(Database.Dialect), CommandType.Text, builder.Parameters.ToArray());
 
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="builder">查询生成器</param>
@@ -452,7 +452,7 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     /// <returns>总记录数</returns>
     public virtual Int64 QueryCount(SelectBuilder builder, Int32 commandTimeout)
     {
-        using var cmd = OnCreateCommand(builder.SelectCount().ToString(), CommandType.Text, builder.Parameters.ToArray());
+        using var cmd = OnCreateCommand(builder.SelectCount().ToString(Database.Dialect), CommandType.Text, builder.Parameters.ToArray());
         if (commandTimeout > 0) cmd.CommandTimeout = commandTimeout;
 
         return Execute(cmd, true, static cmd2 =>
@@ -682,7 +682,7 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     /// <summary>执行SQL查询，返回总记录数</summary>
     /// <param name="builder">查询生成器</param>
     /// <returns>总记录数</returns>
-    public virtual Task<Int64> QueryCountAsync(SelectBuilder builder) => ExecuteScalarAsync<Int64>(builder.SelectCount().ToString(), CommandType.Text, builder.Parameters.ToArray());
+    public virtual Task<Int64> QueryCountAsync(SelectBuilder builder) => ExecuteScalarAsync<Int64>(builder.SelectCount().ToString(Database.Dialect), CommandType.Text, builder.Parameters.ToArray());
 
     /// <summary>快速查询单表记录数，稍有偏差</summary>
     /// <param name="tableName"></param>

@@ -17,6 +17,12 @@ internal class YashanDB : RemoteDb
     /// <summary>返回数据库类型</summary>
     public override DatabaseType Type => DatabaseType.YashanDB;
 
+    /// <summary>获取默认能力。YashanDB 支持窗口函数</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        | DatabaseCapability.WindowFunctions
+        | DatabaseCapability.WindowFrame;
+
     /// <summary>系统数据库名。YashanDB 以用户模式组织，没有可切换的系统库</summary>
     public override String SystemDatabaseName => String.Empty;
 

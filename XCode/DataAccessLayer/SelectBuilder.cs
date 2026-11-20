@@ -43,6 +43,9 @@ public class SelectBuilder
     /// <summary>窗口函数。例如 ROW_NUMBER() OVER(ORDER BY ID) AS RowNum</summary>
     public String? Window { get; set; }
 
+    /// <summary>窗口函数表达式。设置后优先按方言渲染</summary>
+    public WindowExpression? WindowExpression { get; set; }
+
     /// <summary>连接子句。例如 LEFT JOIN [Role] ON [User].[RoleId]=[Role].[Id]</summary>
     public String? Join { get; set; }
 
@@ -147,12 +150,21 @@ $";
     #region 导出SQL
     /// <summary>已重写。获取本Builder所分析的SQL语句</summary>
     /// <returns></returns>
-    public override String ToString()
+    public override String ToString() => ToString(null);
+
+    /// <summary>获取本Builder所分析的SQL语句，按指定方言渲染窗口函数</summary>
+    /// <param name="dialect">SQL 方言；为空时使用标准窗口语法</param>
+    /// <returns></returns>
+    public virtual String ToString(IDbDialect? dialect)
     {
+        var window = Window;
+        if (window.IsNullOrEmpty() && WindowExpression != null)
+            window = dialect != null ? dialect.RenderWindow(WindowExpression) : WindowExpression.Render();
+
         var sb = Pool.StringBuilder.Get();
         sb.Append("Select ");
         sb.Append(Column.IsNullOrEmpty() ? "*" : Column);
-        if (!Window.IsNullOrEmpty()) sb.Append(", " + Window);
+        if (!window.IsNullOrEmpty()) sb.Append(", " + window);
         sb.Append(" From ");
         sb.Append(Table);
         if (!Join.IsNullOrEmpty()) sb.Append(' ').Append(Join);
@@ -182,11 +194,31 @@ $";
         var sb = CloneWithGroupBy("XCode_T0", true);
         sb.Column = "Count(*)";
         sb.OrderBy = null;
+        sb.Window = null;
+        sb.WindowExpression = null;
         return sb;
     }
     #endregion
 
     #region 方法
+    /// <summary>设置窗口函数表达式，并校验数据库能力</summary>
+    /// <param name="expression">窗口表达式</param>
+    /// <param name="database">数据库</param>
+    /// <returns>当前构建器</returns>
+    public SelectBuilder SetWindow(WindowExpression expression, IDatabase database)
+    {
+        if (expression == null) throw new ArgumentNullException(nameof(expression));
+        if (database == null) throw new ArgumentNullException(nameof(database));
+
+        database.EnsureSupported(DatabaseCapability.WindowFunctions, "window function");
+        if (expression.Spec?.Frame != null) database.EnsureSupported(DatabaseCapability.WindowFrame, "window frame");
+
+        WindowExpression = expression;
+        Window = null;
+
+        return this;
+    }
+
     /// <summary>克隆</summary>
     /// <returns></returns>
     public SelectBuilder Clone()
@@ -205,6 +237,7 @@ $";
             Having = Having,
             Limit = Limit,
             Window = Window,
+            WindowExpression = WindowExpression,
             Join = Join,
         };
 

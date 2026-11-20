@@ -214,4 +214,25 @@ public class DatabaseCapabilityTests
         Assert.NotNull(db);
         Assert.Throws<NotSupportedException>(() => db.EnsureSupported(DatabaseCapability.Sql | DatabaseCapability.Insert, "entity insert"));
     }
+
+    [Fact]
+    [System.ComponentModel.Description("SQLite 声明窗口函数与窗口帧能力")]
+    public void SQLite_HasWindowFunctions()
+    {
+        var db = DbFactory.Create(DatabaseType.SQLite);
+        Assert.NotNull(db);
+        Assert.True(db.Capabilities.HasFlag(DatabaseCapability.WindowFunctions));
+        Assert.True(db.Capabilities.HasFlag(DatabaseCapability.WindowFrame));
+    }
+
+    [Theory]
+    [InlineData(DatabaseType.MongoDB)]
+    [InlineData(DatabaseType.InfluxDB)]
+    [System.ComponentModel.Description("非 SQL 提供者不得声明窗口函数能力")]
+    public void NonSqlProvider_DoesNotClaimWindowFunctions(DatabaseType dbType)
+    {
+        var db = DbFactory.Create(dbType);
+        Assert.NotNull(db);
+        Assert.False(db.Capabilities.HasFlag(DatabaseCapability.WindowFunctions));
+    }
 }

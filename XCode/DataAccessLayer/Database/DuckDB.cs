@@ -22,7 +22,10 @@ internal class DuckDB : FileDbBase
 
     /// <summary>获取默认能力。DuckDB 支持 RETURNING 回读自增</summary>
     /// <returns>默认能力标志</returns>
-    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities() | DatabaseCapability.Identity;
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        | DatabaseCapability.Identity
+        | DatabaseCapability.WindowFunctions
+        | DatabaseCapability.WindowFrame;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>

@@ -31,6 +31,9 @@ internal class NetworkDb : DbBase
     /// <summary>服务端数据库对象，用于格式化SQL等操作</summary>
     public IDatabase? Server { get; private set; }
 
+    /// <summary>SQL 方言。优先沿用服务端方言</summary>
+    public override IDbDialect Dialect => Server?.Dialect ?? this;
+
     /// <summary>能力配置。网络数据库沿用服务端方言，但不提供本地 DDL</summary>
     public override DatabaseProfile Profile
     {
@@ -281,7 +284,7 @@ internal class NetworkSession(IDatabase db) : DbSession(db)
     /// <returns>总记录数</returns>
     public override Int64 QueryCount(SelectBuilder builder)
     {
-        var ds = Query(builder.SelectCount().ToString(), builder.Parameters.ToArray());
+        var ds = Query(builder.SelectCount().ToString(Database.Dialect), builder.Parameters.ToArray());
         if (ds?.Rows == null || ds.Rows.Count == 0) return -1;
 
         return ds.Rows[0][0].ToLong();

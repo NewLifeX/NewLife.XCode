@@ -18,6 +18,12 @@ internal class MonetDB : RemoteDb
     /// <summary>返回数据库类型</summary>
     public override DatabaseType Type => DatabaseType.MonetDB;
 
+    /// <summary>获取默认能力。MonetDB 支持窗口函数</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        | DatabaseCapability.WindowFunctions
+        | DatabaseCapability.WindowFrame;
+
     /// <summary>系统数据库名。MonetDB 没有可切换的系统库</summary>
     public override String SystemDatabaseName => String.Empty;
 

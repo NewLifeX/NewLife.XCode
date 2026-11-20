@@ -93,7 +93,7 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
     public virtual DatabaseType Type => DatabaseType.None;
 
     /// <summary>SQL 方言</summary>
-    public IDbDialect Dialect => this;
+    public virtual IDbDialect Dialect => this;
 
     /// <summary>提供者工厂</summary>
     private DbProviderFactory? _providerFactory;
@@ -1103,6 +1103,11 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
     /// <param name="right"></param>
     /// <returns></returns>
     public virtual String StringConcat(String left, String right) => (!left.IsNullOrEmpty() ? left : "\'\'") + "+" + (!right.IsNullOrEmpty() ? right : "\'\'");
+
+    /// <summary>渲染窗口函数表达式</summary>
+    /// <param name="expression">窗口表达式</param>
+    /// <returns>SQL 片段</returns>
+    public virtual String RenderWindow(WindowExpression expression) => expression.Render();
 
     /// <summary>创建参数</summary>
     /// <param name="name">名称</param>

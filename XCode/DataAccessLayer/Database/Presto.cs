@@ -34,7 +34,9 @@ internal abstract class PrestoBase : RemoteDb
             | DatabaseCapability.Union
             | DatabaseCapability.OffsetPaging
             | DatabaseCapability.LimitPaging
-            | DatabaseCapability.SchemaDiscovery,
+            | DatabaseCapability.SchemaDiscovery
+            | DatabaseCapability.WindowFunctions
+            | DatabaseCapability.WindowFrame,
         MaxMigration = Migration.Off,
         LongTextLength = 4000,
         ParameterPrefix = "@",

@@ -2093,6 +2093,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     /// <summary>查找扩展属性。优先精确匹配，忽略大小写存在多个候选时视为歧义</summary>
     /// <param name="name">名称</param>
     /// <returns></returns>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "扩展属性来自实体自身类型，实体随应用一起编译，AOT/裁剪下由应用侧保证其属性保留")]
     private PropertyInfo? FindExtendProperty(String name)
     {
         var type = GetType();

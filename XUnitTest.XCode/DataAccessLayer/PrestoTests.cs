@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using NewLife;
 using XCode;
 using XCode.DataAccessLayer;
 using Xunit;
@@ -9,6 +11,67 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [Collection("Database")]
 public class PrestoTests
 {
+    private const String DefaultTrinoConnStr = "Host=127.0.0.1;Port=8080;Catalog=tpch;Schema=tiny;User=test";
+
+    [LiveDatabaseFact("trino", "trino", 8080)]
+    public void TrinoConnectTest()
+    {
+        var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
+        var db = DbFactory.Create(DatabaseType.Trino);
+        Assert.NotNull(db);
+
+        db.ConnectionString = connStr;
+        using var conn = db.OpenConnection();
+        Assert.NotNull(conn);
+    }
+
+    [LiveDatabaseFact("trino", "trino", 8080)]
+    public void TrinoSelectOneTest()
+    {
+        var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
+        DAL.AddConnStr("Trino_Live", connStr, null, "Trino");
+        var dal = DAL.Create("Trino_Live");
+        Assert.Equal(DatabaseType.Trino, dal.DbType);
+
+        // 只读冒烟：不建表、不写数据
+        var dt = dal.Query("select 1 as n");
+        Assert.NotNull(dt);
+        Assert.Equal(1, dt.Rows.Count);
+        Assert.Equal(1, dt.Rows[0][0].ToInt());
+    }
+
+    [LiveDatabaseFact("trino", "trino", 8080)]
+    public void TrinoNationTest()
+    {
+        var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
+        DAL.AddConnStr("Trino_Live", connStr, null, "Trino");
+        var dal = DAL.Create("Trino_Live");
+
+        // tpch 连接器的 tiny 数据集是 Trino 内置样例，可直接用于联邦只读冒烟
+        var dt = dal.Query("select count(*) from tpch.tiny.nation");
+        Assert.NotNull(dt);
+        Assert.Equal(1, dt.Rows.Count);
+        Assert.True(dt.Rows[0][0].ToInt() > 0);
+    }
+
+    [LiveDatabaseFact("trino", "trino", 8080)]
+    public void TrinoGetTablesTest()
+    {
+        var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
+        DAL.AddConnStr("Trino_Live", connStr, null, "Trino");
+        var dal = DAL.Create("Trino_Live");
+
+        // 反向工程走 information_schema，连接串 Schema=tiny 时只取该模式
+        using var meta = dal.Db.CreateMetaData();
+        var tables = meta.GetTables();
+        Assert.True(tables.Count > 0);
+        Assert.Contains(tables, e => e.TableName.EqualIgnoreCase("nation"));
+
+        var tb = tables.FirstOrDefault(e => e.TableName.EqualIgnoreCase("nation"));
+        Assert.NotNull(tb);
+        Assert.True(tb!.Columns.Count > 0);
+    }
+
     [Theory]
     [InlineData(DatabaseType.Presto)]
     [InlineData(DatabaseType.Trino)]

@@ -194,6 +194,7 @@ public class PrestoTests
     {
         var presto = DbFactory.Create(DatabaseType.Presto);
         Assert.True(presto.Support("Presto"));
+        Assert.True(presto.Support("NewLife.Presto"));
         Assert.True(presto.Support("NReco.PrestoAdo"));
         Assert.False(presto.Support("Trino"));
 

@@ -30,7 +30,7 @@
 | `DuckDB` | `DuckDB` | 嵌入式 OLAP，需 `DuckDB.NET.Data` |
 | `MongoDB` | `MongoDB` | 文档型数据库 |
 | `SonnetDB` | `SonnetDB` | 官方 ADO.NET 驱动 |
-| `Presto` | `Presto` | 联邦查询引擎，需 `NReco.PrestoAdo`；不支持事务与自动建表 |
+| `Presto` | `Presto` | 联邦查询引擎，优先 `NewLife.Presto`，未安装时回退 `NReco.PrestoAdo`；不支持事务与自动建表 |
 | `Trino` | `Trino` | 联邦查询引擎，需 `Trino.Client.ADO`；不支持事务与自动建表 |
 | `Firebird` | `Firebird` | 开源关系型库，需 `FirebirdSql.Data.FirebirdClient` |
 | `Snowflake` | `Snowflake` | 云原生数据仓库，需 `Snowflake.Data` |

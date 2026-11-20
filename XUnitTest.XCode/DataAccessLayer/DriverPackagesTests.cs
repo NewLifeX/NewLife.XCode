@@ -24,6 +24,7 @@ public class DriverPackagesTests
     [Theory]
     [InlineData("Snowflake.Data.dll", "Snowflake.Data")]
     [InlineData("Google.Cloud.Spanner.Data.dll", "Google.Cloud.Spanner.Data")]
+    [InlineData("NewLife.Presto.dll", "NewLife.Presto")]
     [InlineData(@"C:\plugins\Npgsql.dll", "Npgsql")]
     [InlineData("Unknown.Data.dll", null)]
     [DisplayName("按驱动程序集文件名取推荐 NuGet 包")]

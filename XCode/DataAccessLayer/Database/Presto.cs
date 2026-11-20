@@ -183,7 +183,7 @@ internal abstract class PrestoBase : RemoteDb
     #endregion
 }
 
-/// <summary>Presto数据库。使用 NReco.PrestoAdo 驱动</summary>
+/// <summary>Presto数据库。优先使用 NewLife.Presto 驱动，未安装时回退旧驱动</summary>
 internal class Presto : PrestoBase
 {
     #region 属性
@@ -192,9 +192,17 @@ internal class Presto : PrestoBase
     #endregion
 
     #region 方法
-    /// <summary>创建工厂</summary>
+    /// <summary>创建工厂。优先加载 NewLife.Presto，失败时回退旧驱动</summary>
+    /// <remarks>新驱动只做本地加载，避免未安装时触发网络下载；旧驱动保持原有下载逻辑</remarks>
     /// <returns></returns>
-    protected override DbProviderFactory? CreateFactory() => LoadFactory("NReco.PrestoAdo.PrestoDbFactory", "NReco.PrestoAdo.dll");
+    protected override DbProviderFactory? CreateFactory()
+    {
+        var type = DriverLoader.Load("NewLife.Presto.PrestoClientFactory", null, "NewLife.Presto.dll", null);
+        var factory = GetProviderFactory(type);
+        if (factory != null) return factory;
+
+        return LoadFactory("NReco.PrestoAdo.PrestoDbFactory", "NReco.PrestoAdo.dll");
+    }
 
     /// <summary>是否支持该提供者所描述的数据库</summary>
     /// <param name="providerName">提供者</param>
@@ -203,7 +211,7 @@ internal class Presto : PrestoBase
     #endregion
 
     #region 数据库特性
-    /// <summary>设置连接字符串。NReco 驱动使用 Host/Port/Catalog/Schema/User/Password/UseSsl</summary>
+    /// <summary>设置连接字符串。两类驱动均使用 Host/Port/Catalog/Schema/User/Password/UseSsl</summary>
     /// <param name="builder"></param>
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {

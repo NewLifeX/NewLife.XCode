@@ -63,8 +63,20 @@ partial class DAL
     /// <returns></returns>
     public DataSet Select(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
     {
-        var sql = PageSplit(builder, startRowIndex, maximumRows).ToString(Db.Dialect);
-        return QueryWrap(sql, builder, "", (ss, sql, sb, k3) => ss.Query(sql, CommandType.Text, sb.Parameters.ToArray()), nameof(Select));
+        var target = PageSplit(builder, startRowIndex, maximumRows);
+        var sql = target.BuildSql(Db, out var fallback);
+
+        var ds = QueryWrap(sql, builder, "", (ss, sql, sb, k3) => ss.Query(sql, CommandType.Text, sb.Parameters.ToArray()), nameof(Select));
+        if (fallback != null)
+        {
+            var table = new NewLife.Data.DbTable();
+            table.Read(ds.Tables[0]);
+            WindowEvaluator.Apply(fallback, table);
+            ds.Tables.Clear();
+            ds.Tables.Add(table.ToDataTable());
+        }
+
+        return ds;
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
@@ -176,10 +188,15 @@ partial class DAL
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns></returns>
-    public Task<DbTable> QueryAsync(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
+    public async Task<DbTable> QueryAsync(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
     {
-        var sql = PageSplit(builder, startRowIndex, maximumRows).ToString(Db.Dialect);
-        return QueryAsyncWrap(sql, builder, "", (ss, sql, sb, k3) => ss.QueryAsync(sql, sb.Parameters.ToArray()), nameof(QueryAsync));
+        var target = PageSplit(builder, startRowIndex, maximumRows);
+        var sql = target.BuildSql(Db, out var fallback);
+
+        var table = await QueryAsyncWrap(sql, builder, "", (ss, sql, sb, k3) => ss.QueryAsync(sql, sb.Parameters.ToArray()), nameof(QueryAsync)).ConfigureAwait(false);
+        if (fallback != null) WindowEvaluator.Apply(fallback, table);
+
+        return table;
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>

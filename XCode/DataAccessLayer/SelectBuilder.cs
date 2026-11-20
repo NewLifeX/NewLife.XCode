@@ -46,6 +46,9 @@ public class SelectBuilder
     /// <summary>窗口函数表达式。设置后优先按方言渲染</summary>
     public WindowExpression? WindowExpression { get; set; }
 
+    /// <summary>窗口函数降级策略。默认不支持时抛出异常</summary>
+    public WindowFallback WindowFallback { get; set; }
+
     /// <summary>连接子句。例如 LEFT JOIN [Role] ON [User].[RoleId]=[Role].[Id]</summary>
     public String? Join { get; set; }
 
@@ -177,6 +180,39 @@ $";
         return sb.Return(true);
     }
 
+    /// <summary>生成最终 SQL。数据库不支持窗口函数且允许内存回退时，去掉窗口表达式并返回待回退表达式</summary>
+    /// <param name="database">数据库；为空时按标准窗口语法渲染</param>
+    /// <param name="fallback">需要在内存中计算的窗口表达式</param>
+    /// <returns></returns>
+    public virtual String BuildSql(IDatabase? database, out WindowExpression? fallback)
+    {
+        fallback = null;
+        if (WindowExpression == null || database == null) return ToString(database?.Dialect);
+
+        var supported = database.Supports(DatabaseCapability.WindowFunctions);
+        if (supported && WindowExpression.Spec?.Frame != null) supported = database.Supports(DatabaseCapability.WindowFrame);
+
+        if (supported) return ToString(database.Dialect);
+
+        // 不支持时按降级策略处理
+        if (WindowFallback == WindowFallback.InMemory)
+        {
+            fallback = WindowExpression;
+
+            var sb = Clone();
+            sb.WindowFallback = WindowFallback.InMemory;
+            sb.WindowExpression = null;
+            sb.Window = null;
+
+            return sb.ToString(database.Dialect);
+        }
+
+        database.EnsureSupported(DatabaseCapability.WindowFunctions, "window function");
+        if (WindowExpression.Spec?.Frame != null) database.EnsureSupported(DatabaseCapability.WindowFrame, "window frame");
+
+        return ToString(database.Dialect);
+    }
+
     /// <summary>获取记录数的语句</summary>
     /// <returns></returns>
     public virtual SelectBuilder SelectCount()
@@ -205,16 +241,26 @@ $";
     /// <param name="expression">窗口表达式</param>
     /// <param name="database">数据库</param>
     /// <returns>当前构建器</returns>
-    public SelectBuilder SetWindow(WindowExpression expression, IDatabase database)
+    public SelectBuilder SetWindow(WindowExpression expression, IDatabase database) => SetWindow(expression, database, WindowFallback.None);
+
+    /// <summary>设置窗口函数表达式，并按降级策略校验数据库能力</summary>
+    /// <param name="expression">窗口表达式</param>
+    /// <param name="database">数据库</param>
+    /// <param name="fallback">不支持时的降级策略</param>
+    /// <returns>当前构建器</returns>
+    public SelectBuilder SetWindow(WindowExpression expression, IDatabase database, WindowFallback fallback)
     {
         if (expression == null) throw new ArgumentNullException(nameof(expression));
         if (database == null) throw new ArgumentNullException(nameof(database));
 
-        database.EnsureSupported(DatabaseCapability.WindowFunctions, "window function");
-        if (expression.Spec?.Frame != null) database.EnsureSupported(DatabaseCapability.WindowFrame, "window frame");
-
+        WindowFallback = fallback;
         WindowExpression = expression;
         Window = null;
+
+        if (fallback == WindowFallback.InMemory) return this;
+
+        database.EnsureSupported(DatabaseCapability.WindowFunctions, "window function");
+        if (expression.Spec?.Frame != null) database.EnsureSupported(DatabaseCapability.WindowFrame, "window frame");
 
         return this;
     }
@@ -238,6 +284,7 @@ $";
             Limit = Limit,
             Window = Window,
             WindowExpression = WindowExpression,
+            WindowFallback = WindowFallback,
             Join = Join,
         };
 

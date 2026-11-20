@@ -392,7 +392,14 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="builder">查询生成器</param>
     /// <returns>总记录数</returns>
-    public virtual DbTable Query(SelectBuilder builder) => Query(builder.ToString(Database.Dialect), builder.Parameters.ToArray());
+    public virtual DbTable Query(SelectBuilder builder)
+    {
+        var sql = builder.BuildSql(Database, out var fallback);
+        var table = Query(sql, builder.Parameters.ToArray());
+        if (fallback != null) WindowEvaluator.Apply(fallback, table);
+
+        return table;
+    }
 
     /// <summary>执行SQL查询，返回记录集</summary>
     /// <param name="sql">SQL语句</param>

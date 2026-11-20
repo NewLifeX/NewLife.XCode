@@ -220,6 +220,8 @@ public class NameFormatsTests
 
         var ex = Assert.Throws<TargetInvocationException>(() => mi!.Invoke(null, [table]));
         var inner = Assert.IsType<XCodeException>(ex.InnerException);
-        Assert.Contains("大小写", inner.Message);
+        // 消息文本随 UI 文化变化，这里只断言与语言无关的部分
+        Assert.Contains("User", inner.Message);
+        Assert.Contains("Id / ID", inner.Message);
     }
 }

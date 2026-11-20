@@ -17,7 +17,8 @@ public class WindowFallbackIntegrationTests
 
     private static DAL Prepare()
     {
-        var dataDir = "Data\\nova_windowfallback";
+        // 用 Path.Combine 拼路径，保证 Linux/macOS 下同样是目录路径，清理才能生效
+        var dataDir = Path.Combine("Data", "nova_windowfallback");
         var fullDir = dataDir.GetFullPath();
         NovaConnection.DisposeSharedEngines();
         if (Directory.Exists(fullDir)) Directory.Delete(fullDir, true);

@@ -82,7 +82,11 @@ internal static class DriverPackages
     {
         if (assemblyFile.IsNullOrEmpty()) return null;
 
-        var file = Path.GetFileName(assemblyFile);
+        // 驱动路径可能来自其它平台的配置，两种目录分隔符都当作分隔符
+        var index = assemblyFile.LastIndexOfAny(_separators);
+        var file = index >= 0 ? assemblyFile[(index + 1)..] : assemblyFile;
         return _byAssembly.TryGetValue(file, out var package) ? package : null;
     }
+
+    private static readonly Char[] _separators = ['\\', '/'];
 }

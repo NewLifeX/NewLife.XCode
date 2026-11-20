@@ -82,7 +82,10 @@ MS 体系（SqlServer）的分页精髓在于：
 | `KingBase.cs` | 人大金仓 |
 | `HighGo.cs` | 瀚高 |
 | `TDengine.cs` | TDengine |
-| `InfluxDB.cs` | InfluxDB |
+| `InfluxDB.cs` | InfluxDB 1.x/2.x/3.x |
+| `OpenTSDB.cs` | OpenTSDB |
+| `IoTDB.cs` | Apache IoTDB |
+| `Prometheus.cs` | Prometheus / VictoriaMetrics |
 | `Network.cs` | 网络虚拟数据库 |
 
 每个驱动只需重写方言相关方法，不用重复实现连接管理、元数据等通用逻辑。

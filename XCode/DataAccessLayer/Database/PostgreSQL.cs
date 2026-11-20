@@ -75,7 +75,7 @@ internal class PostgreSQL : RemoteDb
     }
 
     /// <summary>PostgreSQL 协议兼容的数据库别名。openGauss/Redshift/Greenplum 等均可直接使用 PostgreSQL 提供者</summary>
-    private static readonly String[] _ProtocolAliases = ["opengauss", "gaussdb", "greenplum", "redshift", "cockroach", "yugabyte", "timescale", "questdb"];
+    private static readonly String[] _ProtocolAliases = ["opengauss", "gaussdb", "greenplum", "redshift", "cockroach", "yugabyte", "timescale", "questdb", "greptimedb", "cratedb"];
 
     #endregion 方法
 

@@ -15,7 +15,7 @@
 🌐 [English](README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
 <!-- lang:end -->
 
-**NewLife.XCode** es un middleware de datos .NET de alto rendimiento centrado en «CRUD + rendimiento extremo + datos masivos». Incluye caché multinivel, modelado y migración automáticos, sharding, consultas fuertemente tipadas y migración entre bases de datos. Es compatible con MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner y muchas más. Los despliegues en producción alcanzan decenas de miles de millones de filas por tabla, y el rendimiento de consulta puede llegar a miles de millones de QPS (con estrategias de caché).
+**NewLife.XCode** es un middleware de datos .NET de alto rendimiento centrado en «CRUD + rendimiento extremo + datos masivos». Incluye caché multinivel, modelado y migración automáticos, sharding, consultas fuertemente tipadas y migración entre bases de datos. Es compatible con MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / OpenTSDB / IoTDB / Prometheus / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner y muchas más. Los despliegues en producción alcanzan decenas de miles de millones de filas por tabla, y el rendimiento de consulta puede llegar a miles de millones de QPS (con estrategias de caché).
 
 Documentación: https://newlifex.com/xcode   Grupos QQ de la comunidad: 1600800 / 1600838
 
@@ -51,6 +51,9 @@ XCode accede a cada base de datos mediante un paquete de controlador ADO.NET ind
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Nube |
 | TDengine | `TDengine` | Incluido | Series temporales |
 | InfluxDB | `InfluxDB` | Incluido | Series temporales |
+| OpenTSDB | `OpenTSDB` | Incluido | Series temporales |
+| IoTDB | `IoTDB` | Incluido | Series temporales |
+| Prometheus | `Prometheus` | Incluido | Series temporales |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Documental |
 | Presto | `Presto` | `NReco.PrestoAdo` | Federada |
 | Trino | `Trino` | `Trino.Data.ADO` | Federada |
@@ -58,7 +61,7 @@ XCode accede a cada base de datos mediante un paquete de controlador ADO.NET ind
 | SonnetDB | `SonnetDB` | `SonnetDB` | Integrada / remota |
 | Network | `Network` | Incluido | Virtual |
 
-Los motores compatibles con el protocolo MySQL o PostgreSQL reutilizan esos proveedores mediante 19 alias integrados: TiDB, Doris, StarRocks, OceanBase (modo MySQL), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB y QuestDB; MariaDB está cubierto por el proveedor MySQL. Los proveedores Access y SqlCe se conservan pero están deshabilitados.
+Los motores compatibles con el protocolo MySQL o PostgreSQL reutilizan esos proveedores mediante 21 alias integrados: TiDB, Doris, StarRocks, OceanBase (modo MySQL), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB y QuestDB; MariaDB está cubierto por el proveedor MySQL. Los proveedores Access y SqlCe se conservan pero están deshabilitados.
 
 ## Inicio rápido
 

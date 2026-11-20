@@ -17,7 +17,7 @@
 
 > ⚠️ Этот перевод может устареть, включая структуру; авторитетной является [версия на английском](README.md).
 
-**NewLife.XCode** — это высокопроизводительное промежуточное ПО для работы с данными в .NET, ориентированное на «CRUD + предельную производительность + огромные объёмы данных». Оно включает многоуровневое кэширование, автоматическое моделирование и миграцию, шардирование, строго типизированные запросы и межбазовую миграцию. Поддерживаются MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner и многие другие. В промышленной эксплуатации достигаются десятки миллиардов строк на таблицу, а пропускная способность запросов может достигать миллиардов QPS (при использовании стратегий кэширования).
+**NewLife.XCode** — это высокопроизводительное промежуточное ПО для работы с данными в .NET, ориентированное на «CRUD + предельную производительность + огромные объёмы данных». Оно включает многоуровневое кэширование, автоматическое моделирование и миграцию, шардирование, строго типизированные запросы и межбазовую миграцию. Поддерживаются MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / OpenTSDB / IoTDB / Prometheus / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner и многие другие. В промышленной эксплуатации достигаются десятки миллиардов строк на таблицу, а пропускная способность запросов может достигать миллиардов QPS (при использовании стратегий кэширования).
 
 Документация: https://newlifex.com/xcode   QQ-группы сообщества: 1600800 / 1600838
 
@@ -53,6 +53,9 @@ XCode обращается к каждой базе данных через от
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Облачная |
 | TDengine | `TDengine` | Встроенный | Временных рядов |
 | InfluxDB | `InfluxDB` | Встроенный | Временных рядов |
+| OpenTSDB | `OpenTSDB` | Встроенный | Временных рядов |
+| IoTDB | `IoTDB` | Встроенный | Временных рядов |
+| Prometheus | `Prometheus` | Встроенный | Временных рядов |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Документная |
 | Presto | `Presto` | `NReco.PrestoAdo` | Федеративная |
 | Trino | `Trino` | `Trino.Data.ADO` | Федеративная |
@@ -60,7 +63,7 @@ XCode обращается к каждой базе данных через от
 | SonnetDB | `SonnetDB` | `SonnetDB` | Встроенная / удалённая |
 | Network | `Network` | Встроенный | Виртуальная |
 
-СУБД, совместимые с протоколом MySQL или PostgreSQL, используют эти провайдеры через 19 встроенных псевдонимов: TiDB, Doris, StarRocks, OceanBase (режим MySQL), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB и QuestDB; MariaDB покрывается провайдером MySQL. Провайдеры Access и SqlCe сохранены, но отключены.
+СУБД, совместимые с протоколом MySQL или PostgreSQL, используют эти провайдеры через 21 встроенных псевдонимов: TiDB, Doris, StarRocks, OceanBase (режим MySQL), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB и QuestDB; MariaDB покрывается провайдером MySQL. Провайдеры Access и SqlCe сохранены, но отключены.
 
 ## Быстрый старт
 

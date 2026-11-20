@@ -17,7 +17,7 @@
 
 > ⚠️ 本翻譯可能落後，包括其結構；以[英文 README](README.md)為準。
 
-高效能 .NET 資料中介層，聚焦「增刪改查 + 極致效能 + 海量資料」，內建多層快取、自動建模/移轉、分表分庫、強型別查詢、跨庫移轉，支援 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner 等。單表生產實踐達百億級，查詢吞吐可達十億級 QPS（搭配快取策略）。
+高效能 .NET 資料中介層，聚焦「增刪改查 + 極致效能 + 海量資料」，內建多層快取、自動建模/移轉、分表分庫、強型別查詢、跨庫移轉，支援 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / OpenTSDB / IoTDB / Prometheus / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner 等。單表生產實踐達百億級，查詢吞吐可達十億級 QPS（搭配快取策略）。
 
 文件：https://newlifex.com/xcode   社群交流 QQ 群：1600800 / 1600838
 
@@ -55,6 +55,9 @@ XCode 透過獨立的 ADO.NET 驅動套件存取各類資料庫。請依所用�
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | 雲端服務 |
 | TDengine | `TDengine` | 內建 | 時序 |
 | InfluxDB | `InfluxDB` | 內建 | 時序 |
+| OpenTSDB | `OpenTSDB` | 內建 | 時序 |
+| IoTDB | `IoTDB` | 內建 | 時序 |
+| Prometheus | `Prometheus` | 內建 | 時序 |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | 文件 |
 | Presto | `Presto` | `NReco.PrestoAdo` | 聯邦查詢 |
 | Trino | `Trino` | `Trino.Data.ADO` | 聯邦查詢 |
@@ -62,7 +65,7 @@ XCode 透過獨立的 ADO.NET 驅動套件存取各類資料庫。請依所用�
 | SonnetDB | `SonnetDB` | `SonnetDB` | 內嵌 / 遠端 |
 | Network | `Network` | 內建 | 虛擬 |
 
-與 MySQL、PostgreSQL 協議相容的資料庫無需新增提供者，使用內建別名即可沿用對應驅動，共 19 個：TiDB、Doris、StarRocks、OceanBase（MySQL 模式）、SingleStore、PolarDB、TDSQL、GoldenDB、GreatDB、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB、QuestDB，MariaDB 由 MySQL 提供者涵蓋。Access 與 SqlCe 提供者保留但已停用。
+與 MySQL、PostgreSQL 協議相容的資料庫無需新增提供者，使用內建別名即可沿用對應驅動，共 21 個：TiDB、Doris、StarRocks、OceanBase（MySQL 模式）、SingleStore、PolarDB、TDSQL、GoldenDB、GreatDB、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB、QuestDB、GreptimeDB、CrateDB，MariaDB 由 MySQL 提供者涵蓋。Access 與 SqlCe 提供者保留但已停用。
 
 ## 快速開始
 

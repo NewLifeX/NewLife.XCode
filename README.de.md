@@ -17,7 +17,7 @@
 
 > ⚠️ Diese Übersetzung kann veraltet sein, einschließlich ihrer Struktur; maßgeblich ist das [englische README](README.md).
 
-**NewLife.XCode** ist eine hochperformante .NET-Daten-Middleware mit dem Fokus auf „CRUD + extreme Performance + massenhafte Daten“. Sie umfasst mehrstufiges Caching, automatische Modellierung/Migration, Sharding, stark typisierte Abfragen und datenbankübergreifende Migration. Unterstützt werden MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner und weitere. In Produktivumgebungen werden zig Milliarden Zeilen pro Tabelle erreicht, und der Abfragedurchsatz kann (mit Caching-Strategien) Milliarden QPS erreichen.
+**NewLife.XCode** ist eine hochperformante .NET-Daten-Middleware mit dem Fokus auf „CRUD + extreme Performance + massenhafte Daten“. Sie umfasst mehrstufiges Caching, automatische Modellierung/Migration, Sharding, stark typisierte Abfragen und datenbankübergreifende Migration. Unterstützt werden MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / OpenTSDB / IoTDB / Prometheus / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner und weitere. In Produktivumgebungen werden zig Milliarden Zeilen pro Tabelle erreicht, und der Abfragedurchsatz kann (mit Caching-Strategien) Milliarden QPS erreichen.
 
 Dokumentation: https://newlifex.com/xcode   Community-QQ-Gruppen: 1600800 / 1600838
 
@@ -53,6 +53,9 @@ XCode greift über ein separates ADO.NET-Treiberpaket auf jede Datenbank zu. Ins
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Cloud |
 | TDengine | `TDengine` | Integriert | Zeitreihen |
 | InfluxDB | `InfluxDB` | Integriert | Zeitreihen |
+| OpenTSDB | `OpenTSDB` | Integriert | Zeitreihen |
+| IoTDB | `IoTDB` | Integriert | Zeitreihen |
+| Prometheus | `Prometheus` | Integriert | Zeitreihen |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Dokument |
 | Presto | `Presto` | `NReco.PrestoAdo` | Föderiert |
 | Trino | `Trino` | `Trino.Data.ADO` | Föderiert |
@@ -60,7 +63,7 @@ XCode greift über ein separates ADO.NET-Treiberpaket auf jede Datenbank zu. Ins
 | SonnetDB | `SonnetDB` | `SonnetDB` | Eingebettet / Remote |
 | Network | `Network` | Integriert | Virtuell |
 
-MySQL- und PostgreSQL-protokollkompatible Engines nutzen diese Anbieter über 19 integrierte Aliase wieder: TiDB, Doris, StarRocks, OceanBase (MySQL-Modus), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB und QuestDB; MariaDB wird vom MySQL-Anbieter abgedeckt. Die Anbieter Access und SqlCe bleiben erhalten, sind aber deaktiviert.
+MySQL- und PostgreSQL-protokollkompatible Engines nutzen diese Anbieter über 21 integrierte Aliase wieder: TiDB, Doris, StarRocks, OceanBase (MySQL-Modus), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB und QuestDB; MariaDB wird vom MySQL-Anbieter abgedeckt. Die Anbieter Access und SqlCe bleiben erhalten, sind aber deaktiviert.
 
 ## Schnellstart
 

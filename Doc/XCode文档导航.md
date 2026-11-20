@@ -204,6 +204,9 @@ Meta.ShardPolicy = new TimeShardPolicy(nameof(Id), Meta.Factory)
 - [ASP.NET Core行为监测迁移指南](/xcode/aspnetcore_runtime_migration)（部分过时）
 - [TDengine时序数据库支持（TDengine）](/xcode/tdengine)
 - [InfluxDB时序数据库支持说明](/xcode/influxdb)
+- [OpenTSDB支持说明](OpenTSDB支持说明.md)
+- [Apache IoTDB支持说明](IoTDB支持说明.md)
+- [Prometheus / VictoriaMetrics支持说明](Prometheus支持说明.md)
 - [MySql客户端驱动NewLife.MySql](https://newlifex.com/xcode/mysql)
 
 ---

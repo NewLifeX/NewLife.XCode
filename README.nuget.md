@@ -17,7 +17,7 @@
 🌐 [简体中文](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.zh-CN.md) | [繁體中文](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.zh-TW.md) | [Español](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.es.md) | [Deutsch](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.de.md) | [日本語](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ja.md) | [Français](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.fr.md) | [Português](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.pt.md) | [Русский](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ru.md) | [한국어](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ko.md) | [العربية](https://github.com/NewLifeX/NewLife.XCode/blob/master/README.ar.md)
 <!-- lang:end -->
 
-**NewLife.XCode** is a high-performance .NET data middleware focused on "CRUD + extreme performance + massive data". It includes multi-level caching, automatic modeling/migration, sharding, strongly-typed queries and cross-database migration. It supports MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner and more; MySQL and PostgreSQL protocol-compatible engines (TiDB / Doris / StarRocks / openGauss / Redshift and others) reuse those providers. Production deployments reach tens of billions of rows per table, and query throughput can reach billions of QPS (with caching strategies).
+**NewLife.XCode** is a high-performance .NET data middleware focused on "CRUD + extreme performance + massive data". It includes multi-level caching, automatic modeling/migration, sharding, strongly-typed queries and cross-database migration. It supports MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / OpenTSDB / IoTDB / Prometheus / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network virtual database / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner and more; MySQL and PostgreSQL protocol-compatible engines (TiDB / Doris / StarRocks / openGauss / Redshift and others) reuse those providers. Production deployments reach tens of billions of rows per table, and query throughput can reach billions of QPS (with caching strategies).
 
 Docs: https://newlifex.com/xcode   Community QQ groups: 1600800 / 1600838
 
@@ -53,6 +53,9 @@ XCode reaches every database through a separate ADO.NET driver package. Install 
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Cloud |
 | TDengine | `TDengine` | Built-in | Time-series |
 | InfluxDB | `InfluxDB` | Built-in | Time-series |
+| OpenTSDB | `OpenTSDB` | Built-in | Time-series |
+| IoTDB | `IoTDB` | Built-in | Time-series |
+| Prometheus | `Prometheus` | Built-in | Time-series |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Document |
 | Presto | `Presto` | `NReco.PrestoAdo` | Federated |
 | Trino | `Trino` | `Trino.Data.ADO` | Federated |
@@ -60,7 +63,7 @@ XCode reaches every database through a separate ADO.NET driver package. Install 
 | SonnetDB | `SonnetDB` | `SonnetDB` | Embedded / remote |
 | Network | `Network` | Built-in | Virtual |
 
-MySQL- and PostgreSQL-protocol engines reuse those providers through 19 built-in aliases: TiDB, Doris, StarRocks, OceanBase (MySQL mode), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB and QuestDB; MariaDB is covered by the MySQL provider. The Access and SqlCe providers are retained but disabled.
+MySQL- and PostgreSQL-protocol engines reuse those providers through 21 built-in aliases: TiDB, Doris, StarRocks, OceanBase (MySQL mode), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB, QuestDB, GreptimeDB and CrateDB; MariaDB is covered by the MySQL provider. The Access and SqlCe providers are retained but disabled.
 
 ## Quick Start
 

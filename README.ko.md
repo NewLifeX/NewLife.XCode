@@ -17,7 +17,7 @@
 
 > ⚠️ 이 번역은 구조를 포함하여 오래되었을 수 있으며, 기준 문서는 [영어 README](README.md)입니다.
 
-**NewLife.XCode**는 "CRUD + 극한 성능 + 대규모 데이터"에 집중한 고성능 .NET 데이터 미들웨어입니다. 다중 레벨 캐싱, 자동 모델링/마이그레이션, 샤딩, 강타입 쿼리 및 데이터베이스 간 마이그레이션을 포함합니다. MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner 등을 지원합니다. 운영 환경에서는 테이블당 수백억 행에 이르며, 쿼리 처리량은 (캐시 전략에 따라) 수십억 QPS에 달할 수 있습니다.
+**NewLife.XCode**는 "CRUD + 극한 성능 + 대규모 데이터"에 집중한 고성능 .NET 데이터 미들웨어입니다. 다중 레벨 캐싱, 자동 모델링/마이그레이션, 샤딩, 강타입 쿼리 및 데이터베이스 간 마이그레이션을 포함합니다. MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / OpenTSDB / IoTDB / Prometheus / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner 등을 지원합니다. 운영 환경에서는 테이블당 수백억 행에 이르며, 쿼리 처리량은 (캐시 전략에 따라) 수십억 QPS에 달할 수 있습니다.
 
 문서: https://newlifex.com/xcode   커뮤니티 QQ 그룹: 1600800 / 1600838
 
@@ -53,6 +53,9 @@ XCode는 데이터베이스마다 별도의 ADO.NET 드라이버 패키지로 �
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | 클라우드 |
 | TDengine | `TDengine` | 내장 | 시계열 |
 | InfluxDB | `InfluxDB` | 내장 | 시계열 |
+| OpenTSDB | `OpenTSDB` | 내장 | 시계열 |
+| IoTDB | `IoTDB` | 내장 | 시계열 |
+| Prometheus | `Prometheus` | 내장 | 시계열 |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | 문서형 |
 | Presto | `Presto` | `NReco.PrestoAdo` | 페더레이션 |
 | Trino | `Trino` | `Trino.Data.ADO` | 페더레이션 |
@@ -60,7 +63,7 @@ XCode는 데이터베이스마다 별도의 ADO.NET 드라이버 패키지로 �
 | SonnetDB | `SonnetDB` | `SonnetDB` | 임베디드 / 원격 |
 | Network | `Network` | 내장 | 가상 |
 
-MySQL/PostgreSQL 프로토콜 호환 엔진은 19개의 내장 별칭으로 해당 공급자를 재사용합니다: TiDB, Doris, StarRocks, OceanBase(MySQL 모드), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB, QuestDB. MariaDB는 MySQL 공급자가 처리합니다. Access와 SqlCe 공급자는 유지되지만 비활성화되어 있습니다.
+MySQL/PostgreSQL 프로토콜 호환 엔진은 21개의 내장 별칭으로 해당 공급자를 재사용합니다: TiDB, Doris, StarRocks, OceanBase(MySQL 모드), SingleStore, PolarDB, TDSQL, GoldenDB, GreatDB, Databend, openGauss, GaussDB, Greenplum, Amazon Redshift, CockroachDB, YugabyteDB, TimescaleDB, QuestDB, GreptimeDB, CrateDB. MariaDB는 MySQL 공급자가 처리합니다. Access와 SqlCe 공급자는 유지되지만 비활성화되어 있습니다.
 
 ## 빠른 시작
 

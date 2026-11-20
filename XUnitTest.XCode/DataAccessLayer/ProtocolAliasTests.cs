@@ -36,6 +36,8 @@ public class ProtocolAliasTests
     [InlineData("YugabyteDB")]
     [InlineData("TimescaleDB")]
     [InlineData("QuestDB")]
+    [InlineData("GreptimeDB")]
+    [InlineData("CrateDB")]
     public void PostgreSqlAliasTest(string provider)
     {
         var db = DbFactory.Create(DatabaseType.PostgreSQL);

@@ -40,6 +40,9 @@
 | `YashanDB` | `YashanDB` | 国产 Oracle 兼容库，需 `Yashandb.Data.YashandbClient` |
 | `MonetDB` | `MonetDB` | 列式关系型库，需 `MonetDb.Mapi`（反射工厂适配） |
 | `Spanner` | `Spanner` | Google Cloud Spanner，需 `Google.Cloud.Spanner.Data`；强制 `Migration=Off` |
+| `OpenTSDB` | `OpenTSDB` | 时序库，内置 HTTP JSON 提供者，只支持追加写 |
+| `IoTDB` | `IoTDB` | Apache IoTDB，内置 REST v2 提供者，只做 DAL 原生 SQL |
+| `Prometheus` | `Prometheus` | 只读 PromQL 查询，兼容 VictoriaMetrics |
 
 > MySQL / PostgreSQL 协议兼容的数据库（TiDB、Doris、StarRocks、openGauss、Redshift 等）通过 `Support` 别名复用对应提供者，详见 [数据库支持矩阵](数据库支持矩阵.md)。
 

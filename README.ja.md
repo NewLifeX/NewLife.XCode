@@ -17,7 +17,7 @@
 
 > ⚠️ この翻訳は構成を含め古くなっている可能性があります。正式な版は[英語版 README](README.md)です。
 
-**NewLife.XCode** は、「CRUD + 極限のパフォーマンス + 大規模データ」に特化した高性能な .NET データミドルウェアです。マルチレベルキャッシュ、自動モデリング/マイグレーション、シャーディング、型付きクエリ、データベース間移行を備えています。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner などに対応しています。本番環境では 1 テーブルあたり数百億行に達し、クエリのスループットは（キャッシュ戦略により）数十億 QPS に達することがあります。
+**NewLife.XCode** は、「CRUD + 極限のパフォーマンス + 大規模データ」に特化した高性能な .NET データミドルウェアです。マルチレベルキャッシュ、自動モデリング/マイグレーション、シャーディング、型付きクエリ、データベース間移行を備えています。MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / OpenTSDB / IoTDB / Prometheus / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner などに対応しています。本番環境では 1 テーブルあたり数百億行に達し、クエリのスループットは（キャッシュ戦略により）数十億 QPS に達することがあります。
 
 ドキュメント：https://newlifex.com/xcode   コミュニティ QQ グループ：1600800 / 1600838
 
@@ -53,6 +53,9 @@ XCode はデータベースごとに個別の ADO.NET ドライバーパッケ�
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | クラウド |
 | TDengine | `TDengine` | 内蔵 | 時系列 |
 | InfluxDB | `InfluxDB` | 内蔵 | 時系列 |
+| OpenTSDB | `OpenTSDB` | 内蔵 | 時系列 |
+| IoTDB | `IoTDB` | 内蔵 | 時系列 |
+| Prometheus | `Prometheus` | 内蔵 | 時系列 |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | ドキュメント |
 | Presto | `Presto` | `NReco.PrestoAdo` | フェデレーテッド |
 | Trino | `Trino` | `Trino.Data.ADO` | フェデレーテッド |
@@ -60,7 +63,7 @@ XCode はデータベースごとに個別の ADO.NET ドライバーパッケ�
 | SonnetDB | `SonnetDB` | `SonnetDB` | 組み込み / リモート |
 | Network | `Network` | 内蔵 | 仮想 |
 
-MySQL / PostgreSQL プロトコル互換のエンジンは、19 の組み込み別名で同じプロバイダーを再利用できます：TiDB、Doris、StarRocks、OceanBase（MySQL モード）、SingleStore、PolarDB、TDSQL、GoldenDB、GreatDB、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB、QuestDB。MariaDB は MySQL プロバイダーでカバーされます。Access と SqlCe のプロバイダーは残されていますが無効です。
+MySQL / PostgreSQL プロトコル互換のエンジンは、21 の組み込み別名で同じプロバイダーを再利用できます：TiDB、Doris、StarRocks、OceanBase（MySQL モード）、SingleStore、PolarDB、TDSQL、GoldenDB、GreatDB、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB、QuestDB、GreptimeDB、CrateDB。MariaDB は MySQL プロバイダーでカバーされます。Access と SqlCe のプロバイダーは残されていますが無効です。
 
 ## クイックスタート
 

@@ -15,7 +15,7 @@
 🌐 [English](README.md) | [繁體中文](README.zh-TW.md) | [Español](README.es.md) | [Deutsch](README.de.md) | [日本語](README.ja.md) | [Français](README.fr.md) | [Português](README.pt.md) | [Русский](README.ru.md) | [한국어](README.ko.md) | [العربية](README.ar.md)
 <!-- lang:end -->
 
-高性能 .NET 数据中间件，聚焦"添删改查 + 极致性能 + 海量数据"，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner 等。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
+高性能 .NET 数据中间件，聚焦"添删改查 + 极致性能 + 海量数据"，内置多级缓存、自动建模/迁移、分表分库、强类型查询、跨库迁移，支持 MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / OpenTSDB / IoTDB / Prometheus / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner 等。单表生产实践达百亿级，查询吞吐可达十亿级 QPS（配合缓存策略）。
 
 文档：https://newlifex.com/xcode   社区交流QQ群：1600800 / 1600838
 
@@ -53,6 +53,9 @@ XCode 通过独立的 ADO.NET 驱动包访问各类数据库。请按所用数�
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | 云服务 |
 | TDengine | `TDengine` | 内置 | 时序 |
 | InfluxDB | `InfluxDB` | 内置 | 时序 |
+| OpenTSDB | `OpenTSDB` | 内置 | 时序 |
+| IoTDB | `IoTDB` | 内置 | 时序 |
+| Prometheus | `Prometheus` | 内置 | 时序 |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | 文档 |
 | Presto | `Presto` | `NReco.PrestoAdo` | 联邦查询 |
 | Trino | `Trino` | `Trino.Data.ADO` | 联邦查询 |
@@ -60,7 +63,7 @@ XCode 通过独立的 ADO.NET 驱动包访问各类数据库。请按所用数�
 | SonnetDB | `SonnetDB` | `SonnetDB` | 嵌入式 / 远程 |
 | Network | `Network` | 内置 | 虚拟 |
 
-MySQL 与 PostgreSQL 协议兼容的数据库无需新增提供者，使用内置别名即可复用对应驱动，共 19 个：TiDB、Doris、StarRocks、OceanBase（MySQL 模式）、SingleStore、PolarDB、TDSQL、GoldenDB、GreatDB、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB、QuestDB，MariaDB 由 MySQL 提供者覆盖。Access 与 SqlCe 提供者保留但已停用。
+MySQL 与 PostgreSQL 协议兼容的数据库无需新增提供者，使用内置别名即可复用对应驱动，共 21 个：TiDB、Doris、StarRocks、OceanBase（MySQL 模式）、SingleStore、PolarDB、TDSQL、GoldenDB、GreatDB、Databend、openGauss、GaussDB、Greenplum、Amazon Redshift、CockroachDB、YugabyteDB、TimescaleDB、QuestDB、GreptimeDB、CrateDB，MariaDB 由 MySQL 提供者覆盖。Access 与 SqlCe 提供者保留但已停用。
 
 ## 快速开始
 

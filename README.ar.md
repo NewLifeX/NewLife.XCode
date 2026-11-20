@@ -17,7 +17,7 @@
 
 > ⚠️ قد تكون هذه الترجمة قديمة، بما في ذلك هيكلها؛ النسخة المعتمدة هي [README بالإنجليزية](README.md).
 
-**NewLife.XCode** هو وسيط بيانات .NET عالي الأداء يركّز على «CRUD + أداء فائق + بيانات ضخمة». يشمل التخزين المؤقت متعدد المستويات، والنمذجة/الترحيل التلقائي، وتجزئة الجداول، والاستعلامات قوية النوع، والترحيل بين قواعد البيانات. يدعم MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner وغيرها. تصل عمليات النشر في بيئات الإنتاج إلى عشرات المليارات من الصفوف لكل جدول، ويمكن أن يبلغ معدل نقل الاستعلامات مليارات QPS (مع استراتيجيات التخزين المؤقت).
+**NewLife.XCode** هو وسيط بيانات .NET عالي الأداء يركّز على «CRUD + أداء فائق + بيانات ضخمة». يشمل التخزين المؤقت متعدد المستويات، والنمذجة/الترحيل التلقائي، وتجزئة الجداول، والاستعلامات قوية النوع، والترحيل بين قواعد البيانات. يدعم MySQL / SQLite / SqlServer / Oracle / PostgreSQL / TDengine / InfluxDB / OpenTSDB / IoTDB / Prometheus / DaMeng / KingBase / HighGo / DB2 / ClickHouse / DuckDB / MongoDB / Hana (SAP HANA) / IRIS (InterSystems) / VastBase / Network / NovaDb / SonnetDB / Presto / Trino / Firebird / Snowflake / Vertica / SAP ASE / Teradata / YashanDB / MonetDB / Google Cloud Spanner وغيرها. تصل عمليات النشر في بيئات الإنتاج إلى عشرات المليارات من الصفوف لكل جدول، ويمكن أن يبلغ معدل نقل الاستعلامات مليارات QPS (مع استراتيجيات التخزين المؤقت).
 
 التوثيق: https://newlifex.com/xcode   مجموعات QQ المجتمعية: 1600800 / 1600838
 
@@ -53,6 +53,9 @@
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | سحابية |
 | TDengine | `TDengine` | مدمج | سلاسل زمنية |
 | InfluxDB | `InfluxDB` | مدمج | سلاسل زمنية |
+| OpenTSDB | `OpenTSDB` | مدمج | سلاسل زمنية |
+| IoTDB | `IoTDB` | مدمج | سلاسل زمنية |
+| Prometheus | `Prometheus` | مدمج | سلاسل زمنية |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | مستندية |
 | Presto | `Presto` | `NReco.PrestoAdo` | اتحادية |
 | Trino | `Trino` | `Trino.Data.ADO` | اتحادية |
@@ -60,7 +63,7 @@
 | SonnetDB | `SonnetDB` | `SonnetDB` | مدمجة / بعيدة |
 | Network | `Network` | مدمج | افتراضية |
 
-تستخدم المحركات المتوافقة مع بروتوكول MySQL أو PostgreSQL هذين المزوّدين عبر 19 اسمًا مستعارًا مدمجًا: TiDB وDoris وStarRocks وOceanBase (وضع MySQL) وSingleStore وPolarDB وTDSQL وGoldenDB وGreatDB وDatabend وopenGauss وGaussDB وGreenplum وAmazon Redshift وCockroachDB وYugabyteDB وTimescaleDB وQuestDB، ويغطي مزوّد MySQL قاعدة MariaDB. مزوّدا Access وSqlCe محفوظان لكنهما معطّلان.
+تستخدم المحركات المتوافقة مع بروتوكول MySQL أو PostgreSQL هذين المزوّدين عبر 21 اسمًا مستعارًا مدمجًا: TiDB وDoris وStarRocks وOceanBase (وضع MySQL) وSingleStore وPolarDB وTDSQL وGoldenDB وGreatDB وDatabend وopenGauss وGaussDB وGreenplum وAmazon Redshift وCockroachDB وYugabyteDB وTimescaleDB وQuestDB، ويغطي مزوّد MySQL قاعدة MariaDB. مزوّدا Access وSqlCe محفوظان لكنهما معطّلان.
 
 ## البدء السريع
 

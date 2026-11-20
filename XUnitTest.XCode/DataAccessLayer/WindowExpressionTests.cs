@@ -55,6 +55,35 @@ public class WindowExpressionTests
     }
 
     [Fact]
+    [System.ComponentModel.Description("NTILE 渲染分桶参数")]
+    public void Ntile_RendersArguments()
+    {
+        var expression = WindowExpression.Ntile(4, "Score DESC", null, "Bucket");
+
+        Assert.Equal("NTILE(4) OVER(ORDER BY Score DESC) AS Bucket", expression.Render());
+    }
+
+    [Fact]
+    [System.ComponentModel.Description("LAG 支持偏移量与默认值")]
+    public void Lag_RendersOffsetAndDefault()
+    {
+        var expression = WindowExpression.Lag("Score", 2, "0", "ID", null, "PrevScore");
+
+        Assert.Equal("LAG(Score, 2, 0) OVER(ORDER BY ID) AS PrevScore", expression.Render());
+    }
+
+    [Fact]
+    [System.ComponentModel.Description("FIRST_VALUE/LAST_VALUE 渲染取值列")]
+    public void FirstLastValue_RendersColumn()
+    {
+        var first = WindowExpression.FirstValue("Score", "ID", null, "FirstScore");
+        var last = WindowExpression.LastValue("Score", "ID", "DeptID", "LastScore");
+
+        Assert.Equal("FIRST_VALUE(Score) OVER(ORDER BY ID) AS FirstScore", first.Render());
+        Assert.Equal("LAST_VALUE(Score) OVER(PARTITION BY DeptID ORDER BY ID) AS LastScore", last.Render());
+    }
+
+    [Fact]
     [System.ComponentModel.Description("窗口帧偏移量不允许为负数")]
     public void WindowFrame_NegativeOffset_Throws()
     {

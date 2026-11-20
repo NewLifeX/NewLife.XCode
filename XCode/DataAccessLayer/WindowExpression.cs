@@ -235,6 +235,105 @@ public sealed class WindowExpression
         };
     }
 
+    /// <summary>创建分桶表达式</summary>
+    /// <param name="buckets">分桶数量</param>
+    /// <param name="orderBy">排序字段</param>
+    /// <param name="partitionBy">分区字段</param>
+    /// <param name="alias">别名</param>
+    /// <returns>窗口表达式</returns>
+    public static WindowExpression Ntile(Int32 buckets, String? orderBy = null, String? partitionBy = null, String? alias = "Ntile")
+    {
+        if (buckets <= 0) throw new ArgumentOutOfRangeException(nameof(buckets), "分桶数量必须大于零");
+
+        return new()
+        {
+            Function = WindowFunctionKind.Ntile,
+            Arguments = buckets.ToString(),
+            Spec = new WindowSpec { OrderBy = orderBy, PartitionBy = partitionBy },
+            Alias = alias,
+        };
+    }
+
+    /// <summary>创建取前一行表达式</summary>
+    /// <param name="column">取值列</param>
+    /// <param name="offset">偏移行数</param>
+    /// <param name="defaultValue">越界默认值</param>
+    /// <param name="orderBy">排序字段</param>
+    /// <param name="partitionBy">分区字段</param>
+    /// <param name="alias">别名</param>
+    /// <returns>窗口表达式</returns>
+    public static WindowExpression Lag(String column, Int32 offset = 1, String? defaultValue = null, String? orderBy = null, String? partitionBy = null, String? alias = "Lag")
+    {
+        if (column.IsNullOrEmpty()) throw new ArgumentNullException(nameof(column));
+
+        return new()
+        {
+            Function = WindowFunctionKind.Lag,
+            Arguments = BuildOffsetArguments(column, offset, defaultValue),
+            Spec = new WindowSpec { OrderBy = orderBy, PartitionBy = partitionBy },
+            Alias = alias,
+        };
+    }
+
+    /// <summary>创建取后一行表达式</summary>
+    /// <param name="column">取值列</param>
+    /// <param name="offset">偏移行数</param>
+    /// <param name="defaultValue">越界默认值</param>
+    /// <param name="orderBy">排序字段</param>
+    /// <param name="partitionBy">分区字段</param>
+    /// <param name="alias">别名</param>
+    /// <returns>窗口表达式</returns>
+    public static WindowExpression Lead(String column, Int32 offset = 1, String? defaultValue = null, String? orderBy = null, String? partitionBy = null, String? alias = "Lead")
+    {
+        if (column.IsNullOrEmpty()) throw new ArgumentNullException(nameof(column));
+
+        return new()
+        {
+            Function = WindowFunctionKind.Lead,
+            Arguments = BuildOffsetArguments(column, offset, defaultValue),
+            Spec = new WindowSpec { OrderBy = orderBy, PartitionBy = partitionBy },
+            Alias = alias,
+        };
+    }
+
+    /// <summary>创建首值表达式</summary>
+    /// <param name="column">取值列</param>
+    /// <param name="orderBy">排序字段</param>
+    /// <param name="partitionBy">分区字段</param>
+    /// <param name="alias">别名</param>
+    /// <returns>窗口表达式</returns>
+    public static WindowExpression FirstValue(String column, String? orderBy = null, String? partitionBy = null, String? alias = "FirstValue")
+    {
+        if (column.IsNullOrEmpty()) throw new ArgumentNullException(nameof(column));
+
+        return new()
+        {
+            Function = WindowFunctionKind.FirstValue,
+            Arguments = column,
+            Spec = new WindowSpec { OrderBy = orderBy, PartitionBy = partitionBy },
+            Alias = alias,
+        };
+    }
+
+    /// <summary>创建末值表达式</summary>
+    /// <param name="column">取值列</param>
+    /// <param name="orderBy">排序字段</param>
+    /// <param name="partitionBy">分区字段</param>
+    /// <param name="alias">别名</param>
+    /// <returns>窗口表达式</returns>
+    public static WindowExpression LastValue(String column, String? orderBy = null, String? partitionBy = null, String? alias = "LastValue")
+    {
+        if (column.IsNullOrEmpty()) throw new ArgumentNullException(nameof(column));
+
+        return new()
+        {
+            Function = WindowFunctionKind.LastValue,
+            Arguments = column,
+            Spec = new WindowSpec { OrderBy = orderBy, PartitionBy = partitionBy },
+            Alias = alias,
+        };
+    }
+
     /// <summary>创建聚合窗口表达式</summary>
     /// <param name="function">聚合函数</param>
     /// <param name="column">聚合列</param>
@@ -256,6 +355,15 @@ public sealed class WindowExpression
             Spec = new WindowSpec { PartitionBy = partitionBy, OrderBy = orderBy, Frame = frame },
             Alias = alias ?? $"{function}_{column}",
         };
+    }
+
+    private static String BuildOffsetArguments(String column, Int32 offset, String? defaultValue)
+    {
+        if (offset < 0) throw new ArgumentOutOfRangeException(nameof(offset), "窗口偏移量不能为负数");
+        if (!defaultValue.IsNullOrEmpty()) return $"{column}, {offset}, {defaultValue}";
+        if (offset != 1) return $"{column}, {offset}";
+
+        return column;
     }
 
     private static String GetFunctionName(WindowFunctionKind function) => function switch

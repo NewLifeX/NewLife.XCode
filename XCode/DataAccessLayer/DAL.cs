@@ -85,7 +85,18 @@ public partial class DAL
     public IDbSession Session => Db.CreateSession();
 
     /// <summary>数据库会话。为异步操作而准备，将来可能移除</summary>
-    public IAsyncDbSession AsyncSession => (Db as DbBase)!.CreateSessionForAsync();
+    public IAsyncDbSession AsyncSession
+    {
+        get
+        {
+            if (Db is DbBase dbBase) return dbBase.CreateSessionForAsync();
+
+            var session = Db.CreateSession();
+            if (session is IAsyncDbSession asyncSession) return asyncSession;
+
+            throw new NotSupportedException(L.T("数据库[{0}]的会话不支持异步操作", Db.Type));
+        }
+    }
 
     private String? _mapTo;
     private String? _mapConnStr;

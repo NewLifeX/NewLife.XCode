@@ -195,6 +195,7 @@ public class DatabaseCapabilityTests
     [InlineData(DatabaseType.Spanner)]
     [InlineData(DatabaseType.MongoDB)]
     [InlineData(DatabaseType.InfluxDB)]
+    [InlineData(DatabaseType.Network)]
     [System.ComponentModel.Description("不支持自动迁移的提供者，最大迁移模式必须为 Off")]
     public void ProviderWithoutDdl_MaxMigrationIsOff(DatabaseType dbType)
     {
@@ -234,5 +235,25 @@ public class DatabaseCapabilityTests
         var db = DbFactory.Create(dbType);
         Assert.NotNull(db);
         Assert.False(db.Capabilities.HasFlag(DatabaseCapability.WindowFunctions));
+    }
+
+    [Fact]
+    [System.ComponentModel.Description("所有已注册提供者都能给出能力配置，且窗口能力只出现在 SQL 提供者上")]
+    public void RegisteredProviders_HaveCapabilityProfile()
+    {
+        var count = 0;
+        foreach (DatabaseType type in Enum.GetValues(typeof(DatabaseType)))
+        {
+            var db = DbFactory.Create(type);
+            if (db == null) continue;
+
+            count++;
+            Assert.NotNull(db.Profile);
+            Assert.True(db.Capabilities != DatabaseCapability.None || type == DatabaseType.MongoDB, $"{type} 未声明任何能力");
+            if (db.Capabilities.HasFlag(DatabaseCapability.WindowFunctions))
+                Assert.True(db.Capabilities.HasFlag(DatabaseCapability.Sql), $"{type} 声明了窗口函数但不是 SQL 提供者");
+        }
+
+        Assert.True(count >= 25, $"仅检测到 {count} 个已注册提供者");
     }
 }

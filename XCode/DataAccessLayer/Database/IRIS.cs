@@ -19,6 +19,12 @@ internal class IRIS : RemoteDb
     /// <summary>返回数据库类型。</summary>
     public override DatabaseType Type => DatabaseType.IRIS;
 
+    /// <summary>获取默认能力。IRIS 支持窗口函数与 ROWS BETWEEN 窗口帧</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        | DatabaseCapability.WindowFunctions
+        | DatabaseCapability.WindowFrame;
+
     /// <summary>创建工厂</summary>
     /// <returns></returns>
     protected override DbProviderFactory? CreateFactory()

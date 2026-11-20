@@ -295,7 +295,55 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
 
     private DatabaseProfile? _profile;
     /// <summary>数据库能力配置</summary>
-    public virtual DatabaseProfile Profile => _profile ??= CreateProfile();
+    /// <remarks>版本相关能力在服务器版本已知后追加，不会为了探测版本而提前建立连接</remarks>
+    public virtual DatabaseProfile Profile
+    {
+        get
+        {
+            var profile = _profile ??= CreateProfile();
+
+            // 版本相关能力。服务器版本未知时保持保守，首次连接成功后再追加
+            var cap = GetVersionedCapabilities();
+            if (cap != DatabaseCapability.None && (profile.Capabilities & cap) != cap) profile.Capabilities |= cap;
+
+            return profile;
+        }
+    }
+
+    /// <summary>按服务器版本解析的附加能力。默认没有</summary>
+    /// <returns>附加能力标志</returns>
+    protected virtual DatabaseCapability GetVersionedCapabilities() => DatabaseCapability.None;
+
+    /// <summary>按最低主版本解析窗口函数能力。版本未知时返回无能力</summary>
+    /// <param name="minMajor">支持窗口函数的最低主版本</param>
+    /// <param name="frameMajor">支持 ROWS/RANGE 窗口帧的最低主版本，0 表示与窗口函数一致</param>
+    /// <returns>窗口能力标志</returns>
+    protected DatabaseCapability GetWindowCapabilities(Int32 minMajor, Int32 frameMajor = 0)
+    {
+        var ver = TryGetServerVersion();
+        if (ver == null || ver.Major < minMajor) return DatabaseCapability.None;
+
+        var cap = DatabaseCapability.WindowFunctions;
+        if (frameMajor <= 0 || ver.Major >= frameMajor) cap |= DatabaseCapability.WindowFrame;
+
+        return cap;
+    }
+
+    /// <summary>尝试解析服务器版本。只读取已缓存的版本号，未连接过时返回空</summary>
+    /// <returns>服务器版本；无法解析时返回空</returns>
+    protected virtual Version? TryGetServerVersion()
+    {
+        var text = _ServerVersion;
+        if (text.IsNullOrEmpty()) return null;
+
+        if (Version.TryParse(text, out var ver)) return ver;
+
+        // 部分数据库把版本混在产品名中，例如 KingbaseES V008R006C008、DBMS Version: 8.1.2.192
+        var match = Regex.Match(text, @"\d+(\.\d+){0,3}");
+        if (match.Success && Version.TryParse(match.Value, out ver)) return ver;
+
+        return null;
+    }
 
     /// <summary>创建能力配置</summary>
     /// <returns>当前数据库的能力配置</returns>
@@ -465,6 +513,20 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
         var conn = factory.CreateConnection();
         conn.ConnectionString = GetConnectionString();
         conn.Open();
+
+        // 顺手记录服务器版本，供能力判定使用，避免为了探测版本再建立一次连接
+        if (_ServerVersion.IsNullOrEmpty())
+        {
+            try
+            {
+                var ver = conn.ServerVersion;
+                if (!ver.IsNullOrEmpty()) _ServerVersion = ver;
+            }
+            catch
+            {
+                // 部分驱动在特定状态下读取版本会抛异常，忽略即可，能力判定保持保守
+            }
+        }
 
         return conn;
     }

@@ -18,6 +18,10 @@ class DB2 : RemoteDb
     /// <summary>返回数据库类型。外部DAL数据库类请使用Other</summary>
     public override DatabaseType Type => DatabaseType.DB2;
 
+    /// <summary>按服务器版本追加能力。DB2 9 及以上支持窗口函数与 ROWS/RANGE 帧</summary>
+    /// <returns>附加能力标志</returns>
+    protected override DatabaseCapability GetVersionedCapabilities() => GetWindowCapabilities(9);
+
     /// <summary>创建工厂</summary>
     /// <returns></returns>
     protected override DbProviderFactory? CreateFactory()

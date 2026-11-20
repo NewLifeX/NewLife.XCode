@@ -27,6 +27,9 @@ using XCode;
 [assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]
 [assembly: PreApplicationStartMethod(typeof(PreApplicationStartCode), "Start")]
 
+// 单元测试可读写内部状态（如服务器版本缓存），用于版本相关能力判定
+[assembly: InternalsVisibleTo("XUnitTest.XCode")]
+
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
 [assembly: Guid("fd577d2c-f8aa-4cc8-a697-d7990c264af3")]
 

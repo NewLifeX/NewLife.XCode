@@ -16,6 +16,12 @@ internal class HighGo : RemoteDb
     /// <summary>模式</summary>
     public String? TableSchema { get; set; }
 
+    /// <summary>获取默认能力。瀚高基于 PostgreSQL，支持窗口函数与 ROWS/RANGE 帧</summary>
+    /// <returns>默认能力标志</returns>
+    protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
+        | DatabaseCapability.WindowFunctions
+        | DatabaseCapability.WindowFrame;
+
     /// <summary>系统数据库名</summary>
     public override String SystemDatabaseName => String.Empty;
 

@@ -189,12 +189,17 @@ public sealed class WindowExpression
     /// <param name="partitionBy">分区字段</param>
     /// <param name="alias">别名</param>
     /// <returns>窗口表达式</returns>
-    public static WindowExpression RowNumber(String? orderBy = null, String? partitionBy = null, String? alias = "RowNum") => new()
+    public static WindowExpression RowNumber(String? orderBy = null, String? partitionBy = null, String? alias = "RowNum")
     {
-        Function = WindowFunctionKind.RowNumber,
-        Spec = new WindowSpec { OrderBy = orderBy, PartitionBy = partitionBy },
-        Alias = alias,
-    };
+        if (orderBy.IsNullOrEmpty()) throw new ArgumentNullException(nameof(orderBy), "ROW_NUMBER 必须指定排序字段");
+
+        return new()
+        {
+            Function = WindowFunctionKind.RowNumber,
+            Spec = new WindowSpec { OrderBy = orderBy, PartitionBy = partitionBy },
+            Alias = alias,
+        };
+    }
 
     /// <summary>创建 RANK 表达式</summary>
     /// <param name="orderBy">排序字段</param>

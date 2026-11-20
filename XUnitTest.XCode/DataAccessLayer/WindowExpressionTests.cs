@@ -48,6 +48,13 @@ public class WindowExpressionTests
     }
 
     [Fact]
+    [System.ComponentModel.Description("ROW_NUMBER 必须指定排序字段")]
+    public void RowNumber_WithoutOrderBy_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => WindowExpression.RowNumber());
+    }
+
+    [Fact]
     [System.ComponentModel.Description("窗口帧偏移量不允许为负数")]
     public void WindowFrame_NegativeOffset_Throws()
     {

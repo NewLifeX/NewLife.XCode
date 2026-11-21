@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using NewLife;
 using NewLife.Log;
+using NewLife.Threading;
 using XCode;
+using XCode.Cache;
 using XCode.DataAccessLayer;
 using Xunit;
 using XUnitTest.XCode.TestEntity;
@@ -159,6 +161,78 @@ public class EntityCountTests
         finally
         {
             Role2.Meta.ConnName = null;
+            TryDelete(dbFile);
+        }
+    }
+
+    [Fact(DisplayName = "阈值0时只走快速计数")]
+    public void Disabled_UsesFastCountOnly()
+    {
+        var setting = XCodeSetting.Current;
+        var oldFloor = setting.FullCountFloor;
+
+        var connName = $"Count_Disabled_{Guid.NewGuid():N}";
+        var dbFile = $"Data\\{connName}.db".GetFullPath();
+        try
+        {
+            Prepare(connName, dbFile, 4);
+
+            setting.FullCountFloor = 0;
+
+            var sqls = new List<String>();
+            DAL.LocalFilter = s => sqls.Add(s);
+
+            var count = Role2.Meta.Count;
+
+            Assert.True(count > 0, String.Join("\n", sqls));
+            Assert.DoesNotContain(sqls, s => s.Contains("Count(*)", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            DAL.LocalFilter = null;
+            Role2.Meta.ConnName = null;
+            setting.FullCountFloor = oldFloor;
+            TryDelete(dbFile);
+        }
+    }
+
+    [Fact(DisplayName = "退避期内不再执行精确计数")]
+    public void NextAllowed_SkipsExactCount()
+    {
+        var connName = $"Count_Backoff_{Guid.NewGuid():N}";
+        var dbFile = $"Data\\{connName}.db".GetFullPath();
+        var key = "";
+        try
+        {
+            Prepare(connName, dbFile, 4);
+
+            // 换一个连接名，得到全新会话并预置该表的退避状态
+            var connName2 = connName + "_2";
+            DAL.AddConnStr(connName2, $"Data Source={dbFile}", null, "SQLite");
+            Role2.Meta.ConnName = connName2;
+
+            key = $"{connName2}_{Role2.Meta.TableName}_{typeof(Role2).Name}";
+            var stat = new CountStat
+            {
+                RowLimit = 1_000_000,
+                InitFloor = XCodeSetting.Current.FullCountFloor,
+                NextAllowed = TimerX.Now.AddHours(1),
+            };
+            DataCache.Current.CountStats[key] = stat;
+
+            var sqls = new List<String>();
+            DAL.LocalFilter = s => sqls.Add(s);
+
+            var count = Role2.Meta.Count;
+
+            Assert.Equal(4, count);
+            Assert.DoesNotContain(sqls, s => s.Contains("Count(*)", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            DAL.LocalFilter = null;
+            Role2.Meta.ConnName = null;
+            if (!key.IsNullOrEmpty()) DataCache.Current.CountStats.Remove(key);
             TryDelete(dbFile);
         }
     }

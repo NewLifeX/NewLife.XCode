@@ -1,6 +1,8 @@
 ﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using NewLife;
+using NewLife.Data;
 using NewLife.Log;
 
 namespace XCode.DataAccessLayer;
@@ -270,6 +272,9 @@ internal class Trino : PrestoBase
 
         // 打开连接时不做额外探测，避免每次建连都多一次 HTTP 往返
         if (builder["TestConnection"].IsNullOrEmpty()) builder["TestConnection"] = "false";
+
+        // 官方 TrinoCommand 在构造时绑定连接，必须先注入最终连接串，否则命令会拿到空的服务地址
+        if (Factory is TrinoDbFactory factory) factory.ConnectionString = builder.ConnectionString;
     }
     #endregion
 }
@@ -277,6 +282,9 @@ internal class Trino : PrestoBase
 /// <summary>Trino 反射工厂。官方驱动未提供 DbProviderFactory</summary>
 internal sealed class TrinoDbFactory(Type connType, Type cmdType, Type prmType) : DbProviderFactory
 {
+    /// <summary>最终连接串。TrinoCommand 在构造时绑定连接，必须带上服务地址</summary>
+    public String? ConnectionString { get; set; }
+
     /// <summary>创建连接</summary>
     /// <returns></returns>
     [UnconditionalSuppressMessage("AOT", "IL2067", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
@@ -289,7 +297,8 @@ internal sealed class TrinoDbFactory(Type connType, Type cmdType, Type prmType) 
     [UnconditionalSuppressMessage("AOT", "IL2077", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
     public override DbCommand CreateCommand()
     {
-        var conn = Activator.CreateInstance(connType);
+        var conn = Activator.CreateInstance(connType)!;
+        if (!ConnectionString.IsNullOrEmpty()) ((DbConnection)conn).ConnectionString = ConnectionString;
 
         return (DbCommand)Activator.CreateInstance(cmdType, conn)!;
     }
@@ -322,11 +331,10 @@ internal class PrestoSession(IDatabase db) : RemoteDbSession(db)
         var ds = new DataSet();
 
         using var reader = cmd2.ExecuteReader();
-        do
-        {
-            var table = ReadTable(reader);
-            if (table.Columns.Count > 0) ds.Tables.Add(table);
-        } while (!reader.IsClosed && reader.NextResult());
+
+        // Presto/Trino 只支持单个结果集，Trino 驱动的 NextResult 会直接抛 NotSupportedException
+        var table = ReadTable(reader);
+        if (table.Columns.Count > 0) ds.Tables.Add(table);
 
         return ds;
     });
@@ -349,7 +357,14 @@ internal class PrestoSession(IDatabase db) : RemoteDbSession(db)
             }
         }
 
-        table.Load(reader);
+        while (reader.Read())
+        {
+            var row = table.NewRow();
+            for (var i = 0; i < table.Columns.Count; i++)
+                row[i] = reader.IsDBNull(i) ? DBNull.Value : reader.GetValue(i);
+
+            table.Rows.Add(row);
+        }
 
         return table;
     }

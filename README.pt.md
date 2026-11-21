@@ -51,7 +51,7 @@ O XCode acessa cada banco de dados por meio de um pacote de driver ADO.NET separ
 | Snowflake | `Snowflake` | `Snowflake.Data` | Data warehouse em nuvem |
 | Teradata | `Teradata` | `Teradata.Client.Provider` | Data warehouse em nuvem |
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Nuvem |
-| TDengine | `TDengine` | Integrado | Séries temporais |
+| TDengine | `TDengine` | NewLife.TDengine | Séries temporais |
 | InfluxDB | `InfluxDB` | Integrado | Séries temporais |
 | OpenTSDB | `OpenTSDB` | Integrado | Séries temporais |
 | IoTDB | `IoTDB` | Integrado | Séries temporais |

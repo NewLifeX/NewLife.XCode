@@ -51,7 +51,7 @@ XCode는 데이터베이스마다 별도의 ADO.NET 드라이버 패키지로 �
 | Snowflake | `Snowflake` | `Snowflake.Data` | 클라우드 데이터 웨어하우스 |
 | Teradata | `Teradata` | `Teradata.Client.Provider` | 클라우드 데이터 웨어하우스 |
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | 클라우드 |
-| TDengine | `TDengine` | 내장 | 시계열 |
+| TDengine | `TDengine` | NewLife.TDengine | 시계열 |
 | InfluxDB | `InfluxDB` | 내장 | 시계열 |
 | OpenTSDB | `OpenTSDB` | 내장 | 시계열 |
 | IoTDB | `IoTDB` | 내장 | 시계열 |

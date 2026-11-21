@@ -51,7 +51,7 @@ XCode 通过独立的 ADO.NET 驱动包访问各类数据库。请按所用数�
 | Snowflake | `Snowflake` | `Snowflake.Data` | 云数据仓库 |
 | Teradata | `Teradata` | `Teradata.Client.Provider` | 云数据仓库 |
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | 云服务 |
-| TDengine | `TDengine` | 内置 | 时序 |
+| TDengine | `TDengine` | NewLife.TDengine | 时序 |
 | InfluxDB | `InfluxDB` | 内置 | 时序 |
 | OpenTSDB | `OpenTSDB` | 内置 | 时序 |
 | IoTDB | `IoTDB` | 内置 | 时序 |

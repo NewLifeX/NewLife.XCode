@@ -51,7 +51,7 @@
 | Snowflake | `Snowflake` | `Snowflake.Data` | مستودع بيانات سحابي |
 | Teradata | `Teradata` | `Teradata.Client.Provider` | مستودع بيانات سحابي |
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | سحابية |
-| TDengine | `TDengine` | مدمج | سلاسل زمنية |
+| TDengine | `TDengine` | NewLife.TDengine | سلاسل زمنية |
 | InfluxDB | `InfluxDB` | مدمج | سلاسل زمنية |
 | OpenTSDB | `OpenTSDB` | مدمج | سلاسل زمنية |
 | IoTDB | `IoTDB` | مدمج | سلاسل زمنية |

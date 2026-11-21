@@ -51,7 +51,7 @@ XCode はデータベースごとに個別の ADO.NET ドライバーパッケ�
 | Snowflake | `Snowflake` | `Snowflake.Data` | クラウド DWH |
 | Teradata | `Teradata` | `Teradata.Client.Provider` | クラウド DWH |
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | クラウド |
-| TDengine | `TDengine` | 内蔵 | 時系列 |
+| TDengine | `TDengine` | NewLife.TDengine | 時系列 |
 | InfluxDB | `InfluxDB` | 内蔵 | 時系列 |
 | OpenTSDB | `OpenTSDB` | 内蔵 | 時系列 |
 | IoTDB | `IoTDB` | 内蔵 | 時系列 |

@@ -51,7 +51,7 @@ XCode reaches every database through a separate ADO.NET driver package. Install 
 | Snowflake | `Snowflake` | `Snowflake.Data` | Cloud DW |
 | Teradata | `Teradata` | `Teradata.Client.Provider` | Cloud DW |
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Cloud |
-| TDengine | `TDengine` | Built-in | Time-series |
+| TDengine | `TDengine` | NewLife.TDengine | Time-series |
 | InfluxDB | `InfluxDB` | Built-in | Time-series |
 | OpenTSDB | `OpenTSDB` | Built-in | Time-series |
 | IoTDB | `IoTDB` | Built-in | Time-series |

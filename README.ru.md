@@ -51,7 +51,7 @@ XCode обращается к каждой базе данных через от
 | Snowflake | `Snowflake` | `Snowflake.Data` | Облачное хранилище данных |
 | Teradata | `Teradata` | `Teradata.Client.Provider` | Облачное хранилище данных |
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Облачная |
-| TDengine | `TDengine` | Встроенный | Временных рядов |
+| TDengine | `TDengine` | NewLife.TDengine | Временных рядов |
 | InfluxDB | `InfluxDB` | Встроенный | Временных рядов |
 | OpenTSDB | `OpenTSDB` | Встроенный | Временных рядов |
 | IoTDB | `IoTDB` | Встроенный | Временных рядов |

@@ -17,7 +17,7 @@
 | `PostgreSQL` | `PostgreSQL` | 需 `Npgsql` |
 | `DaMeng` | `DaMeng` | 达梦数据库 |
 | `DB2` | `DB2` | IBM DB2 |
-| `TDengine` | `TDengine` | TDengine 时序库 |
+| `TDengine` | `TDengine` | TDengine 时序库，需 `NewLife.TDengine`（反射加载） |
 | `KingBase` | `KingBase` | 人大金仓 |
 | `HighGo` | `HighGo` | 瀚高 |
 | `IRIS` | `IRIS` | InterSystems IRIS |

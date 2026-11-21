@@ -2,13 +2,24 @@
 
 XCode 支持 TDengine 时序数据库，采用 HTTP REST API 方式连接，无需安装 native 驱动，具有更好的跨平台兼容性。
 
+驱动已拆分为独立仓库 [NewLife.TDengine](https://github.com/NewLifeX/NewLife.TDengine)，以同名 NuGet 包发布，XCode 运行时按类型名反射加载。未安装时首次访问数据库会直接提示需要添加的包名。
+
+```shell
+dotnet add package NewLife.TDengine
+```
+
 ## 连接字符串
 
-TDengine 使用 HTTP REST API 连接，默认端口为 6041：
+TDengine 驱动按地址协议自动选择传输方式，XCode 的裸地址（不带协议）默认按 REST 处理，端口 6041：
 
 ```csharp
-// 基本连接字符串
+// 基本连接字符串（REST，经 taosAdapter）
 var connStr = "Server=localhost;Port=6041;Database=db;User=root;Password=taosdata";
+
+// 也可以显式指定协议
+// var connStr = "Server=http://localhost:6041;Database=db;User=root;Password=taosdata";
+// var connStr = "Server=ws://localhost:6041;Database=db;User=root;Password=taosdata";
+// var connStr = "Server=tcp://localhost:6030;Database=db;User=root;Password=taosdata"; // 2.x 原生 RPC
 
 // 完整连接字符串示例
 DAL.AddConnStr("td", "Server=192.168.1.100;Port=6041;Database=power;User=root;Password=taosdata", null, "TDengine");
@@ -18,8 +29,8 @@ DAL.AddConnStr("td", "Server=192.168.1.100;Port=6041;Database=power;User=root;Pa
 
 | 参数 | 说明 | 默认值 | 必填 |
 |------|------|--------|------|
-| Server | TDengine 服务器地址 | localhost | 是 |
-| Port | REST API 端口 | 6041 | 否 |
+| Server | TDengine 服务器地址，可带 `http://`、`ws://`、`tcp://` 等协议前缀 | localhost | 是 |
+| Port | 端口。REST/WebSocket 默认 6041，原生 RPC 默认 6030 | 6041 | 否 |
 | Database | 数据库名称 | - | 是 |
 | User | 用户名 | root | 是 |
 | Password | 密码 | taosdata | 是 |
@@ -95,10 +106,11 @@ meter.Insert();
 
 ## 注意事项
 
-1. HTTP 模式默认使用 6041 端口（native 模式使用 6030 端口）
-2. 确保 TDengine 服务器已启用 HTTP 服务（在 taos.cfg 中设置）
-3. HTTP 模式的性能略低于 native 模式，但对大多数应用来说差异可忽略
+1. REST/WebSocket 默认使用 6041 端口（taosAdapter），原生 RPC 默认使用 6030 端口
+2. REST/WebSocket 需要 taosAdapter 处于运行状态
+3. REST 模式的性能略低于原生连接，但对大多数应用来说差异可忽略；大批量读写建议使用 `ws://`
 4. 连接字符串中的 Database 参数对应 TDengine 的数据库名
+5. 驱动需随应用安装（`NewLife.TDengine`），XCode 包本身不携带驱动
 
 ## 从 Native 模式迁移
 
@@ -118,6 +130,7 @@ var connStr = "Server=localhost;Port=6041;Database=db;User=root;Password=taosdat
 
 ## 更多信息
 
+- [NewLife.TDengine 驱动仓库](https://github.com/NewLifeX/NewLife.TDengine)
 - [TDengine 官方文档](https://docs.taosdata.com/)
 - [TDengine REST API 文档](https://docs.taosdata.com/reference/rest-api/)
 - [XCode 使用手册](./XCode使用手册.md)

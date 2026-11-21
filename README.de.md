@@ -51,7 +51,7 @@ XCode greift über ein separates ADO.NET-Treiberpaket auf jede Datenbank zu. Ins
 | Snowflake | `Snowflake` | `Snowflake.Data` | Cloud-Data-Warehouse |
 | Teradata | `Teradata` | `Teradata.Client.Provider` | Cloud-Data-Warehouse |
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Cloud |
-| TDengine | `TDengine` | Integriert | Zeitreihen |
+| TDengine | `TDengine` | NewLife.TDengine | Zeitreihen |
 | InfluxDB | `InfluxDB` | Integriert | Zeitreihen |
 | OpenTSDB | `OpenTSDB` | Integriert | Zeitreihen |
 | IoTDB | `IoTDB` | Integriert | Zeitreihen |

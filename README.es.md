@@ -49,7 +49,7 @@ XCode accede a cada base de datos mediante un paquete de controlador ADO.NET ind
 | Snowflake | `Snowflake` | `Snowflake.Data` | Almacén de datos en la nube |
 | Teradata | `Teradata` | `Teradata.Client.Provider` | Almacén de datos en la nube |
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | Nube |
-| TDengine | `TDengine` | Incluido | Series temporales |
+| TDengine | `TDengine` | NewLife.TDengine | Series temporales |
 | InfluxDB | `InfluxDB` | Incluido | Series temporales |
 | OpenTSDB | `OpenTSDB` | Incluido | Series temporales |
 | IoTDB | `IoTDB` | Incluido | Series temporales |

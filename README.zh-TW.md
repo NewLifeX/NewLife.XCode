@@ -53,7 +53,7 @@ XCode 透過獨立的 ADO.NET 驅動套件存取各類資料庫。請依所用�
 | Snowflake | `Snowflake` | `Snowflake.Data` | 雲端資料倉儲 |
 | Teradata | `Teradata` | `Teradata.Client.Provider` | 雲端資料倉儲 |
 | Google Cloud Spanner | `Spanner` | `Google.Cloud.Spanner.Data` | 雲端服務 |
-| TDengine | `TDengine` | 內建 | 時序 |
+| TDengine | `TDengine` | NewLife.TDengine | 時序 |
 | InfluxDB | `InfluxDB` | 內建 | 時序 |
 | OpenTSDB | `OpenTSDB` | 內建 | 時序 |
 | IoTDB | `IoTDB` | 內建 | 時序 |

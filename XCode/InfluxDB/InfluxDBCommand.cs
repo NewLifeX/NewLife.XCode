@@ -113,8 +113,8 @@ public class InfluxDBCommand : DbCommand
         {
             if (conn.Version is 1 or 3) throw new NotSupportedException(L.T("{0} requires InfluxDB {1}.", "Flux queries", "2.x"));
 
-            // 确保查询中包含 bucket 信息
-            if (!query.Contains("from(bucket:"))
+            // 确保查询中包含 bucket 信息；以 import 开头的 Flux 脚本自带数据源，不能拼接到管道前面
+            if (!query.Contains("from(bucket:") && !query.TrimStart().StartsWithIgnoreCase("import "))
             {
                 query = $"from(bucket:\"{conn.Bucket}\") |> {query}";
             }

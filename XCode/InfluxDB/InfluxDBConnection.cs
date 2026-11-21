@@ -285,7 +285,8 @@ public class InfluxDBConnection : DbConnection
 
         var url = GetQueryUrl(language, query);
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        // InfluxDB 3 的查询端点只接受 GET（POST 需要 JSON 请求体）；Flux 走 POST 且查询文本在请求体中
+        using var request = new HttpRequestMessage(language == InfluxQueryLanguage.Flux ? HttpMethod.Post : HttpMethod.Get, url);
         AddAuth(request, Token, User, Password);
         request.Headers.Add("Accept", "application/json");
 

@@ -63,6 +63,19 @@ class InfluxDB : RemoteDb
         return _version = conn.EnsureVersion();
     }
 
+    /// <summary>获取 Bucket 名称。2.x/3.x 为 bucket，1.x 为 database</summary>
+    /// <returns></returns>
+    internal String GetBucket()
+    {
+        if (ConnectionString.IsNullOrEmpty()) return String.Empty;
+
+        var builder = new ConnectionStringBuilder(ConnectionString);
+        var bucket = builder["Bucket"];
+        if (bucket.IsNullOrEmpty()) bucket = builder["Database"];
+
+        return bucket ?? String.Empty;
+    }
+
     /// <summary>执行 InfluxQL 查询。元数据 SQL 在任意版本都使用 InfluxQL</summary>
     /// <param name="query">查询文本</param>
     /// <returns>结果表</returns>
@@ -346,9 +359,10 @@ class InfluxDBMetaData : RemoteDbMetaData
         var version = db.GetVersion();
         if (version is 0 or 2)
         {
-            var flux = @"
+            var bucket = db.GetBucket();
+            var flux = $@"
 import ""influxdata/influxdb/schema""
-schema.measurements(bucket: v.bucket)
+schema.measurements(bucket: ""{bucket}"")
 ";
             var dt = Database.CreateSession().Query(flux, null);
             foreach (var dr in dt)

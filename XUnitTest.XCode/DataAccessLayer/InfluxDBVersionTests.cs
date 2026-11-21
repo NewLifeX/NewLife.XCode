@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Linq;
 using NewLife;
 using XCode.DataAccessLayer;
@@ -158,5 +159,18 @@ public class InfluxDBVersionTests
         var table = InfluxDBResultParser.Parse(json, InfluxQueryLanguage.Sql);
         Assert.Equal(2, table.Rows.Count);
         Assert.Equal("B", table.Rows[1]["room"]);
+    }
+
+    [Fact]
+    [DisplayName("InfluxDB读取器_CRLF响应_列名不含回车")]
+    public void ReaderCrLfCsvTest()
+    {
+        // Windows 服务端返回 CRLF，列名不能带 \r
+        const String csv = ",result,table,_value\r\n,_result,0,temperature\r\n";
+        var reader = new InfluxDBDataReader(csv);
+
+        Assert.Equal(4, reader.FieldCount);
+        Assert.True(reader.Read());
+        Assert.Equal("temperature", reader["_value"] + "");
     }
 }

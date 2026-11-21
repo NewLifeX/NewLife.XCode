@@ -19,7 +19,7 @@ public class InfluxDBDataReader : DbDataReader
     public InfluxDBDataReader(String csv)
     {
         _csv = csv;
-        var lines = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        var lines = csv.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
         // InfluxDB 返回的 CSV 格式：第一行是注释（以#开头），第二行是列名，第三行开始是数据
         var dataLines = lines.Where(l => !l.StartsWith("#")).ToArray();

@@ -46,6 +46,13 @@ internal class PostgreSQL : RemoteDb
         }
 
         //if (builder.TryGetValue("Database", out var db) && db != db.ToLower()) builder["Database"] = db.ToLower();
+
+        // GreptimeDB/CrateDB 的 PostgreSQL 协议兼容层不支持 Npgsql 默认的 pg_catalog 类型加载与 DISCARD ALL
+        if (Provider.EqualIgnoreCase("GreptimeDB", "CrateDB"))
+        {
+            if (builder["Server Compatibility Mode"].IsNullOrEmpty()) builder["Server Compatibility Mode"] = "NoTypeLoading";
+            if (builder["No Reset On Close"].IsNullOrEmpty()) builder["No Reset On Close"] = "true";
+        }
     }
 
     #endregion 属性

@@ -1,6 +1,10 @@
-﻿using System.Data;
+using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using NewLife;
+using NewLife.Data;
 using NewLife.Log;
 
 namespace XCode.DataAccessLayer;
@@ -71,6 +75,16 @@ internal class MonetDB : RemoteDb
         base.OnSetConnectionString(builder);
 
         if (builder["Port"].IsNullOrEmpty()) builder["Port"] = "50000";
+
+        // MonetDb.Mapi 使用 Username，兼容 XCode 习惯的 User/Uid 写法
+        if (builder["Username"].IsNullOrEmpty())
+        {
+            var user = builder["User"];
+            if (user.IsNullOrEmpty()) user = builder["Uid"];
+            if (!user.IsNullOrEmpty()) builder["Username"] = user;
+        }
+        builder.TryGetAndRemove("User", out _);
+        builder.TryGetAndRemove("Uid", out _);
 
         SchemaName = builder["Schema"];
     }
@@ -162,6 +176,59 @@ internal sealed class MonetDbFactory(Type connType, Type cmdType, Type prmType) 
 internal class MonetDBSession(IDatabase db) : RemoteDbSession(db)
 {
     #region 基本方法 查询/执行
+    /// <summary>执行查询。MonetDb.Mapi 未实现 GetValues，DataTable.Load 会失败，这里手动装配结果集</summary>
+    /// <param name="cmd">命令</param>
+    /// <returns></returns>
+    public override DataSet Query(DbCommand cmd)
+    {
+        return Execute(cmd, true, cmd2 =>
+        {
+            var ds = new DataSet();
+            using var reader = cmd2.ExecuteReader();
+
+            var dt = new DataTable();
+            Fill(reader, dt);
+            if (dt.Columns.Count > 0) ds.Tables.Add(dt);
+
+            return ds;
+        });
+    }
+
+    /// <summary>读取结果集。MonetDb.Mapi 未实现 GetValues，DataTable.Load 会失败，这里逐列读取</summary>
+    /// <param name="dr">数据读取器</param>
+    /// <returns></returns>
+    protected override DbTable OnFill(DbDataReader dr)
+    {
+        var dt = new DataTable();
+        Fill(dr, dt);
+
+        var table = new DbTable();
+        table.Read(dt);
+        return table;
+    }
+
+    private static void Fill(DbDataReader dr, DataTable dt)
+    {
+        var names = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < dr.FieldCount; i++)
+        {
+            var name = dr.GetName(i);
+            if (name.IsNullOrEmpty()) name = "Column" + i;
+            while (!names.Add(name)) name += "_";
+
+            dt.Columns.Add(name, dr.GetFieldType(i));
+        }
+
+        while (dr.Read())
+        {
+            var row = dt.NewRow();
+            for (var i = 0; i < dr.FieldCount; i++)
+                row[i] = dr.IsDBNull(i) ? DBNull.Value : dr.GetValue(i);
+
+            dt.Rows.Add(row);
+        }
+    }
+
     /// <summary>MonetDB 无法回读自增列，进入自增路径时给出明确异常</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型</param>

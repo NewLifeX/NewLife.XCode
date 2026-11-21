@@ -102,11 +102,11 @@ class TDengineResult
     /// <summary>状态</summary>
     public String? status { get; set; }
     
-    /// <summary>列名</summary>
+    /// <summary>列名。TDengine 2.x 返回，3.x 改用 column_meta</summary>
     public List<String>? head { get; set; }
     
-    /// <summary>列类型</summary>
-    public List<String>? column_meta { get; set; }
+    /// <summary>列元数据。每项为 [列名, 类型, 长度]</summary>
+    public List<List<Object>>? column_meta { get; set; }
     
     /// <summary>数据</summary>
     public List<List<Object>>? data { get; set; }
@@ -297,12 +297,28 @@ class TDengine
         
         if (_results.TryGetValue(res.ToInt64(), out var result))
         {
+            // TDengine 3.x 的 DDL/DML 返回单列 affected_rows，rows 字段表示结果行数而非影响行数
+            if (result.column_meta is { Count: > 0 } meta && meta[0].Count > 0 &&
+                "affected_rows".EqualIgnoreCase(meta[0][0] + "") &&
+                result.data is { Count: > 0 } data && data[0].Count > 0)
+                return Convert.ToInt32(data[0][0]);
+
             return result.rows;
         }
         
         return 0;
     }
-    
+
+    /// <summary>获取结果行数</summary>
+    static public Int32 RowCount(IntPtr res)
+    {
+        if (res == IntPtr.Zero) return 0;
+
+        if (_results.TryGetValue(res.ToInt64(), out var result)) return result.data?.Count ?? 0;
+
+        return 0;
+    }
+
     /// <summary>获取字段数量</summary>
     static public Int32 FieldCount(IntPtr res)
     {
@@ -310,7 +326,7 @@ class TDengine
         
         if (_results.TryGetValue(res.ToInt64(), out var result))
         {
-            return result.head?.Count ?? 0;
+            return result.column_meta?.Count ?? result.head?.Count ?? 0;
         }
         
         return 0;
@@ -324,18 +340,19 @@ class TDengine
         
         if (_results.TryGetValue(res.ToInt64(), out var result))
         {
-            if (result.head != null)
+            var count = result.column_meta?.Count ?? result.head?.Count ?? 0;
+            for (var i = 0; i < count; i++)
             {
-                for (var i = 0; i < result.head.Count; i++)
+                var name = result.head != null && i < result.head.Count ? result.head[i] : null;
+                if (name.IsNullOrEmpty() && result.column_meta != null && i < result.column_meta.Count && result.column_meta[i].Count > 0)
+                    name = result.column_meta[i][0] + "";
+
+                metas.Add(new TDengineMeta
                 {
-                    var meta = new TDengineMeta
-                    {
-                        name = result.head[i],
-                        type = GetTypeFromColumnMeta(result, i),
-                        size = GetSizeFromColumnMeta(result, i)
-                    };
-                    metas.Add(meta);
-                }
+                    name = name ?? "Column" + i,
+                    type = GetTypeFromColumnMeta(result, i),
+                    size = GetSizeFromColumnMeta(result, i)
+                });
             }
         }
         
@@ -397,7 +414,8 @@ class TDengine
             return (Byte)TDengineDataType.TSDB_DATA_TYPE_NCHAR;
         }
         
-        var typeStr = result.column_meta[index];
+        var meta = result.column_meta[index];
+        var typeStr = meta.Count > 1 ? meta[1] + "" : null;
         return typeStr?.ToUpper() switch
         {
             "BOOL" => (Byte)TDengineDataType.TSDB_DATA_TYPE_BOOL,
@@ -407,9 +425,9 @@ class TDengine
             "BIGINT" => (Byte)TDengineDataType.TSDB_DATA_TYPE_BIGINT,
             "FLOAT" => (Byte)TDengineDataType.TSDB_DATA_TYPE_FLOAT,
             "DOUBLE" => (Byte)TDengineDataType.TSDB_DATA_TYPE_DOUBLE,
-            "BINARY" => (Byte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
+            "BINARY" or "VARBINARY" => (Byte)TDengineDataType.TSDB_DATA_TYPE_BINARY,
             "TIMESTAMP" => (Byte)TDengineDataType.TSDB_DATA_TYPE_TIMESTAMP,
-            "NCHAR" => (Byte)TDengineDataType.TSDB_DATA_TYPE_NCHAR,
+            "NCHAR" or "VARCHAR" or "JSON" => (Byte)TDengineDataType.TSDB_DATA_TYPE_NCHAR,
             _ => (Byte)TDengineDataType.TSDB_DATA_TYPE_NCHAR,
         };
     }
@@ -417,10 +435,11 @@ class TDengine
     /// <summary>从列元数据获取大小</summary>
     private static Int16 GetSizeFromColumnMeta(TDengineResult result, Int32 index)
     {
-        // HTTP模式下返回的数据不包含精确的字段大小，使用默认值
-        if (result.column_meta == null || index >= result.column_meta.Count)
-            return 256;
-        
+        if (result.column_meta == null || index >= result.column_meta.Count) return 256;
+
+        var meta = result.column_meta[index];
+        if (meta.Count > 2 && Int16.TryParse(meta[2] + "", out var size) && size > 0) return size;
+
         return 256;
     }
     

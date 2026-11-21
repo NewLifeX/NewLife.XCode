@@ -292,6 +292,9 @@ class TDengineMetaData : RemoteDbMetaData
 
             var hs = new HashSet<String>(names ?? [], StringComparer.OrdinalIgnoreCase);
 
+            // TDengine 3.x 的 SHOW TABLES 不再返回 stable_name
+            var hasStable = dt.Columns.Any(e => e.EqualIgnoreCase("stable_name"));
+
             // 所有表
             foreach (var dr in dt)
             {
@@ -300,7 +303,7 @@ class TDengineMetaData : RemoteDbMetaData
 
                 var table = DAL.CreateTable();
                 table.TableName = name;
-                table.Owner = dr["stable_name"] as String;
+                if (hasStable) table.Owner = dr["stable_name"] as String;
                 table.DbType = Database.Type;
 
                 #region 字段
@@ -310,10 +313,11 @@ class TDengineMetaData : RemoteDbMetaData
                 {
                     var field = table.CreateColumn();
 
-                    field.ColumnName = dc["Field"] + "";
-                    field.RawType = dc["Type"] + "";
-                    field.Length = dc["Length"].ToInt();
-                    field.Master = dc["Note"] as String == "TAGS";
+                    // DESCRIBE 的列顺序固定为 field/type/length/note，2.x 与 3.x 仅大小写不同
+                    field.ColumnName = dc[0] + "";
+                    field.RawType = dc[1] + "";
+                    field.Length = dc[2].ToInt();
+                    field.Master = dc[3] as String == "TAGS";
                     field.DataType = GetDataType(field)!;
 
                     field.Fix();
@@ -391,6 +395,31 @@ class TDengineMetaData : RemoteDbMetaData
     //public override String CreateDatabaseSQL(String dbname, String file) => $"Create Database If Not Exists {Database.FormatName(dbname)} KEEP 365 DAYS 10 BLOCKS 6 UPDATE 1;";
 
     public override String DropDatabaseSQL(String dbname) => $"Drop Database If Exists {Database.FormatName(dbname)}";
+
+    /// <summary>建立数据库。TDengine 的 DDL 返回 affected_rows=0，不能按影响行数判断成功</summary>
+    /// <param name="databaseName">数据库名</param>
+    /// <param name="file">数据文件路径</param>
+    /// <returns>是否成功</returns>
+    public override Boolean CreateDatabase(String databaseName, String? file = null)
+    {
+        if (DatabaseExist(databaseName)) return true;
+
+        Database.CreateSession().Execute(CreateDatabaseSQL(databaseName, file));
+
+        return DatabaseExist(databaseName);
+    }
+
+    /// <summary>删除数据库。TDengine 的 DDL 返回 affected_rows=0，不能按影响行数判断成功</summary>
+    /// <param name="databaseName">数据库名</param>
+    /// <returns>是否成功</returns>
+    public override Boolean DropDatabase(String databaseName)
+    {
+        if (!DatabaseExist(databaseName)) return true;
+
+        Database.CreateSession().Execute(DropDatabaseSQL(databaseName));
+
+        return !DatabaseExist(databaseName);
+    }
 
     public override String CreateTableSQL(IDataTable table)
     {

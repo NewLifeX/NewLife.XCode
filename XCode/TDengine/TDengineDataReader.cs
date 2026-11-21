@@ -34,7 +34,7 @@ namespace XCode.TDengine
         public override Boolean IsClosed => _handler == IntPtr.Zero;
 
         /// <summary>影响行数</summary>
-        public override Int32 RecordsAffected => _rows = TD.AffectRows(_handler);
+        public override Int32 RecordsAffected => TD.AffectRows(_handler);
 
         /// <summary>名称读取</summary>
         /// <param name="name"></param>
@@ -56,7 +56,7 @@ namespace XCode.TDengine
 
             _metas = TD.FetchFields(handler);
             _fieldCount = TD.FieldCount(handler);
-            _rows = TD.AffectRows(handler);
+            _rows = TD.RowCount(handler);
         }
 
         /// <summary>销毁</summary>
@@ -87,9 +87,9 @@ namespace XCode.TDengine
             return false;
         }
 
-        /// <summary>下一个结果集</summary>
+        /// <summary>下一个结果集。TDengine HTTP 接口每次只返回一个结果集</summary>
         /// <returns></returns>
-        public override Boolean NextResult() => Read();
+        public override Boolean NextResult() => false;
 
         /// <summary>关闭读取器</summary>
         public override void Close()

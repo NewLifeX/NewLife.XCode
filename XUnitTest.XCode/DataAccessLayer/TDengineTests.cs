@@ -91,7 +91,7 @@ public class TDengineTests
         DAL.AddConnStr("sysTDengine", _ConnStr, null, "TDengine");
         var dal = DAL.Create("sysTDengine");
 
-        var rs = dal.Execute("CREATE DATABASE if not exists power KEEP 365 DAYS 10 BLOCKS 6 UPDATE 1;");
+        var rs = dal.Execute("CREATE DATABASE if not exists power KEEP 365;");
         Assert.Equal(0, rs);
     }
 

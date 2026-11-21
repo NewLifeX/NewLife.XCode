@@ -18,6 +18,7 @@ public class DriverPackagesTests
     [InlineData(DatabaseType.Spanner, "Google.Cloud.Spanner.Data")]
     [InlineData(DatabaseType.YashanDB, "Yashandb.Data.YashandbClient")]
     [InlineData(DatabaseType.MonetDB, "MonetDb.Mapi")]
+    [InlineData(DatabaseType.TDengine, "NewLife.TDengine")]
     [DisplayName("按数据库类型取推荐 NuGet 包")]
     public void GetByType(DatabaseType type, String expected) => Assert.Equal(expected, DriverPackages.Get(type));
 
@@ -25,6 +26,7 @@ public class DriverPackagesTests
     [InlineData("Snowflake.Data.dll", "Snowflake.Data")]
     [InlineData("Google.Cloud.Spanner.Data.dll", "Google.Cloud.Spanner.Data")]
     [InlineData("NewLife.Presto.dll", "NewLife.Presto")]
+    [InlineData("NewLife.TDengine.dll", "NewLife.TDengine")]
     [InlineData(@"C:\plugins\Npgsql.dll", "Npgsql")]
     [InlineData("Unknown.Data.dll", null)]
     [DisplayName("按驱动程序集文件名取推荐 NuGet 包")]
@@ -34,7 +36,7 @@ public class DriverPackagesTests
     public void AllRegisteredDatabasesCovered()
     {
         // 这些提供者自带工厂，不依赖外部 NuGet 驱动
-        var selfContained = new[] { DatabaseType.Network, DatabaseType.TDengine, DatabaseType.InfluxDB, DatabaseType.OpenTSDB, DatabaseType.IoTDB, DatabaseType.Prometheus };
+        var selfContained = new[] { DatabaseType.Network, DatabaseType.InfluxDB, DatabaseType.OpenTSDB, DatabaseType.IoTDB, DatabaseType.Prometheus };
         foreach (var type in Enum.GetValues<DatabaseType>())
         {
             if (type is DatabaseType.None || selfContained.Contains(type)) continue;

@@ -81,6 +81,8 @@ jobs:
             setup: 'docker exec db taos -s "create database if not exists db;"'
             conn: 'Server=127.0.0.1;Port=6041;Database=db;user=root;password=taosdata;provider=TDengine'
             filter: 'FullyQualifiedName~TDengineTests'
+            # 驱动已从 XCode 拆分为独立 NuGet 包，XCode 运行时反射加载；包发布前跳过该库用例
+            package: 'NewLife.TDengine'
 
           - name: influxdb
             image: influxdb:2.7
@@ -157,7 +159,15 @@ jobs:
       shell: bash
       run: bash -c "${{ matrix.setup }}"
 
+    - name: Install driver ${{ matrix.package }}
+      if: matrix.package != ''
+      id: package
+      continue-on-error: true
+      shell: bash
+      run: dotnet add XUnitTest.XCode/XUnitTest.XCode.csproj package ${{ matrix.package }} --prerelease
+
     - name: Test ${{ matrix.name }}
+      if: matrix.package == '' || steps.package.outcome == 'success'
       shell: bash
       env:
         DB_KEY: ${{ matrix.name }}

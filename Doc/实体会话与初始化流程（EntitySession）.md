@@ -85,6 +85,8 @@ private static readonly ConcurrentDictionary<String, EntitySession<TEntity>> _es
 
 > 精确总数仍可用 `Entity.FindCount()` 获取。将 `FullCountFloor` 设为 0 可让所有表只走 FastCount。
 
+> Presto/Trino 可在连接字符串用 `FastCount` 选择快计数来源：`Off`（精确计数）、`Stats`（`SHOW STATS FOR`）、`Iceberg`（`$snapshots` 快照 summary）、`Auto`（默认，Iceberg → Stats → 精确）。该参数只由 XCode 消费，不会传给底层驱动。
+
 ### 4.1 刷新周期
 
 - `_NextCount` 按规模分档：100 万以上 600 秒，10 万以上 300 秒，其它 60 秒。

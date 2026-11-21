@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.Log;
 using XCode;
@@ -337,6 +338,106 @@ public class PrestoTests
 
         // 无事务
         Assert.Throws<NotSupportedException>(() => session.BeginTransaction(System.Data.IsolationLevel.ReadCommitted));
+    }
+
+    [Theory]
+    [InlineData("Off", "Off")]
+    [InlineData("none", "Off")]
+    [InlineData("false", "Off")]
+    [InlineData("Stats", "Stats")]
+    [InlineData("statistics", "Stats")]
+    [InlineData("Iceberg", "Iceberg")]
+    [InlineData("Auto", "Auto")]
+    [InlineData("true", "Auto")]
+    [InlineData("unknown", "Auto")]
+    public void FastCountModeTest(String value, String expected)
+    {
+        var db = DbFactory.Create(DatabaseType.Presto);
+        db.ConnectionString = $"Host=localhost;Port=8080;Catalog=tpch;Schema=tiny;User=test;FastCount={value}";
+
+        var presto = Assert.IsType<Presto>(db);
+        Assert.Equal(expected, presto.FastCount.ToString());
+
+        // FastCount 是 XCode 自身开关，不能传给底层驱动
+        Assert.False(db.ConnectionString.Contains("FastCount", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [LiveDatabaseFact("trino", "trino", 8080)]
+    public async Task TrinoFastCountStatsTest()
+    {
+        var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
+        var builder = new ConnectionStringBuilder(connStr);
+        builder["FastCount"] = "Stats";
+        DAL.AddConnStr("Trino_FastStats", builder.ConnectionString, null, "Trino");
+        var dal = DAL.Create("Trino_FastStats");
+        using var session = (DbSession)dal.Session;
+
+        Assert.Equal(25, session.QueryCountFast("tpch.tiny.nation"));
+        Assert.Equal(25, await session.QueryCountFastAsync("tpch.tiny.nation"));
+    }
+
+    [LiveDatabaseFact("trino", "trino", 8080)]
+    public async Task TrinoFastCountAutoTest()
+    {
+        var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
+        var builder = new ConnectionStringBuilder(connStr);
+        builder["FastCount"] = "Auto";
+        DAL.AddConnStr("Trino_FastAuto", builder.ConnectionString, null, "Trino");
+        var dal = DAL.Create("Trino_FastAuto");
+        using var session = (DbSession)dal.Session;
+
+        // TPCH 不是 Iceberg，Auto 应回退到 SHOW STATS
+        Assert.Equal(25, session.QueryCountFast("tpch.tiny.nation"));
+        Assert.Equal(25, await session.QueryCountFastAsync("tpch.tiny.nation"));
+    }
+
+    [LiveDatabaseFact("trino", "trino", 8080)]
+    public async Task TrinoFastCountIcebergTest()
+    {
+        var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
+        var builder = new ConnectionStringBuilder(connStr);
+        builder["Catalog"] = "memory";
+        builder["Schema"] = "default";
+        builder["FastCount"] = "Iceberg";
+        DAL.AddConnStr("Trino_FastIceberg", builder.ConnectionString, null, "Trino");
+        var dal = DAL.Create("Trino_FastIceberg");
+        using var session = (DbSession)dal.Session;
+
+        // 用 memory 连接器模拟 Iceberg 元数据表，验证 SQL、目录/模式解析与同步/异步取值
+        var table = "ft_" + Guid.NewGuid().ToString("N")[..8];
+        var snapshots = $"memory.default.\"{table}$snapshots\"";
+        var refs = $"memory.default.\"{table}$refs\"";
+        try
+        {
+            session.Execute($"CREATE TABLE {snapshots} (snapshot_id bigint, summary map(varchar, varchar))");
+            session.Execute($"CREATE TABLE {refs} (name varchar, snapshot_id bigint)");
+            session.Execute($"INSERT INTO {snapshots} VALUES (1, MAP(ARRAY['total-records', 'total-delete-files'], ARRAY['7', '0']))");
+            session.Execute($"INSERT INTO {refs} VALUES ('main', 1)");
+
+            Assert.Equal(7, session.QueryCountFast($"\"{table}\""));
+            Assert.Equal(7, await session.QueryCountFastAsync($"\"{table}\""));
+        }
+        finally
+        {
+            try { session.Execute($"DROP TABLE IF EXISTS {snapshots}"); } catch { }
+            try { session.Execute($"DROP TABLE IF EXISTS {refs}"); } catch { }
+        }
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8081)]
+    public async Task PrestoFastCountStatsTest()
+    {
+        var connStr = PrestoConnStr();
+        // 只在 tpch/tiny 数据集上断言，避免依赖其它 catalog 的 nation 表
+        if (!connStr.Contains("Catalog=tpch", StringComparison.OrdinalIgnoreCase) ||
+            !connStr.Contains("Schema=tiny", StringComparison.OrdinalIgnoreCase)) return;
+
+        DAL.AddConnStr("Presto_FastStats", connStr, null, "Presto");
+        var dal = DAL.Create("Presto_FastStats");
+        using var session = (DbSession)dal.Session;
+
+        Assert.Equal(25, session.QueryCountFast("tpch.tiny.nation"));
+        Assert.Equal(25, await session.QueryCountFastAsync("tpch.tiny.nation"));
     }
 
     /// <summary>解析 Presto 连接串。优先级：环境变量 XCode_presto → Config/presto.config → 本机默认值</summary>

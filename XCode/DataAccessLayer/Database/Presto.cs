@@ -7,6 +7,22 @@ using NewLife.Log;
 
 namespace XCode.DataAccessLayer;
 
+/// <summary>快速计数模式</summary>
+internal enum FastCountMode
+{
+    /// <summary>关闭。始终使用精确计数</summary>
+    Off,
+
+    /// <summary>仅使用 SHOW STATS FOR</summary>
+    Stats,
+
+    /// <summary>仅使用 Iceberg 元数据表</summary>
+    Iceberg,
+
+    /// <summary>自动。优先 Iceberg，其次 SHOW STATS，最后精确计数</summary>
+    Auto,
+}
+
 /// <summary>Presto/Trino 数据库基类</summary>
 /// <remarks>
 /// Presto 与 Trino 同源（PrestoSQL 于 2020 年更名 Trino），SQL 方言一致，仅 HTTP 协议头与驱动不同。
@@ -46,6 +62,9 @@ internal abstract class PrestoBase : RemoteDb
 
     /// <summary>模式名。对应连接字符串的 Schema</summary>
     public String? SchemaName { get; set; }
+
+    /// <summary>快速计数模式。连接字符串 FastCount 控制，默认 Auto</summary>
+    public FastCountMode FastCount { get; set; } = FastCountMode.Auto;
     #endregion
 
     #region 构造
@@ -97,7 +116,20 @@ internal abstract class PrestoBase : RemoteDb
         builder.TryGetAndRemove("Initial Catalog", out _);
 
         SchemaName = builder["Schema"];
+
+        // FastCount 是 XCode 行为开关，必须从连接字符串移除，避免旧驱动因未知参数报错
+        FastCount = FastCountMode.Auto;
+        if (builder.TryGetAndRemove(nameof(FastCount), out var fastCount) && !fastCount.IsNullOrEmpty())
+            FastCount = ParseFastCount(fastCount);
     }
+
+    private static FastCountMode ParseFastCount(String value) => value.Trim().ToLowerInvariant() switch
+    {
+        "off" or "none" or "false" or "0" => FastCountMode.Off,
+        "stats" or "statistics" => FastCountMode.Stats,
+        "iceberg" => FastCountMode.Iceberg,
+        _ => FastCountMode.Auto,
+    };
     #endregion
 
     #region 数据库特性
@@ -368,6 +400,221 @@ internal class PrestoSession(IDatabase db) : RemoteDbSession(db)
 
         return table;
     }
+
+    #region 快速计数
+    /// <summary>Iceberg 元数据不可靠（存在 delete 文件），需要精确计数</summary>
+    private const Int64 IcebergUnreliable = -2;
+
+    /// <summary>快速查询单表记录数。按 FastCount 模式选择 Iceberg 元数据或 SHOW STATS，失败返回 -1</summary>
+    /// <param name="tableName">已格式化的表名</param>
+    /// <returns>表行数；无法快速获取时返回 -1，由上层回退精确计数</returns>
+    public override Int64 QueryCountFast(String tableName)
+    {
+        if (String.IsNullOrEmpty(tableName)) return 0;
+
+        var mode = (Database as PrestoBase)?.FastCount ?? FastCountMode.Auto;
+        if (mode == FastCountMode.Off) return -1;
+
+        if (mode is FastCountMode.Auto or FastCountMode.Iceberg)
+        {
+            var count = QueryIcebergCount(tableName);
+            if (count >= 0) return count;
+            if (count == IcebergUnreliable) return -1;
+            if (mode == FastCountMode.Iceberg) return -1;
+        }
+
+        return QueryStatsCount(tableName);
+    }
+
+    /// <summary>快速查询单表记录数。按 FastCount 模式选择 Iceberg 元数据或 SHOW STATS，失败返回 -1</summary>
+    /// <param name="tableName">已格式化的表名</param>
+    /// <returns>表行数；无法快速获取时返回 -1，由上层回退精确计数</returns>
+    public override async Task<Int64> QueryCountFastAsync(String tableName)
+    {
+        if (String.IsNullOrEmpty(tableName)) return 0;
+
+        var mode = (Database as PrestoBase)?.FastCount ?? FastCountMode.Auto;
+        if (mode == FastCountMode.Off) return -1;
+
+        if (mode is FastCountMode.Auto or FastCountMode.Iceberg)
+        {
+            var count = await QueryIcebergCountAsync(tableName).ConfigureAwait(false);
+            if (count >= 0) return count;
+            if (count == IcebergUnreliable) return -1;
+            if (mode == FastCountMode.Iceberg) return -1;
+        }
+
+        return await QueryStatsCountAsync(tableName).ConfigureAwait(false);
+    }
+
+    /// <summary>SHOW STATS FOR 取表级 row_count。连接器没有统计时该值为 NULL</summary>
+    private Int64 QueryStatsCount(String tableName)
+    {
+        try
+        {
+            var ds = Query($"SHOW STATS FOR {tableName}", CommandType.Text);
+            if (ds.Tables.Count == 0) return -1;
+
+            return GetRowCount(ds.Tables[0]);
+        }
+        catch (Exception ex)
+        {
+            if (DAL.Debug) XTrace.Log.Debug("Failed to get fast row count for [{0}] by stats: {1}", tableName, ex.Message);
+            return -1;
+        }
+    }
+
+    private async Task<Int64> QueryStatsCountAsync(String tableName)
+    {
+        try
+        {
+            var dt = await QueryAsync($"SHOW STATS FOR {tableName}", null).ConfigureAwait(false);
+
+            return GetRowCount(dt);
+        }
+        catch (Exception ex)
+        {
+            if (DAL.Debug) XTrace.Log.Debug("Failed to get fast row count for [{0}] by stats: {1}", tableName, ex.Message);
+            return -1;
+        }
+    }
+
+    /// <summary>Iceberg 元数据取当前 main 分支快照的 total-records</summary>
+    private Int64 QueryIcebergCount(String tableName)
+    {
+        var snapshots = GetMetadataTableName(tableName, "$snapshots");
+        var refs = GetMetadataTableName(tableName, "$refs");
+
+        // 有 delete 文件时 total-records 不是最终行数，退回精确计数
+        if (TryQueryIcebergSummary($"SELECT CAST(element_at(s.summary, 'total-records') AS BIGINT), CAST(element_at(s.summary, 'total-delete-files') AS BIGINT) FROM {snapshots} s JOIN {refs} r ON s.snapshot_id = r.snapshot_id WHERE r.name = 'main'", out var count, out var deletes))
+            return deletes > 0 ? IcebergUnreliable : count;
+
+        // 兼容没有 $refs 的旧版本，取最近提交的快照
+        if (TryQueryIcebergSummary($"SELECT CAST(element_at(summary, 'total-records') AS BIGINT), CAST(element_at(summary, 'total-delete-files') AS BIGINT) FROM {snapshots} ORDER BY committed_at DESC LIMIT 1", out count, out deletes))
+            return deletes > 0 ? IcebergUnreliable : count;
+
+        return -1;
+    }
+
+    private async Task<Int64> QueryIcebergCountAsync(String tableName)
+    {
+        var snapshots = GetMetadataTableName(tableName, "$snapshots");
+        var refs = GetMetadataTableName(tableName, "$refs");
+
+        var summary = await TryQueryIcebergSummaryAsync($"SELECT CAST(element_at(s.summary, 'total-records') AS BIGINT), CAST(element_at(s.summary, 'total-delete-files') AS BIGINT) FROM {snapshots} s JOIN {refs} r ON s.snapshot_id = r.snapshot_id WHERE r.name = 'main'").ConfigureAwait(false);
+        if (summary != null) return summary.Deletes > 0 ? IcebergUnreliable : summary.Count;
+
+        summary = await TryQueryIcebergSummaryAsync($"SELECT CAST(element_at(summary, 'total-records') AS BIGINT), CAST(element_at(summary, 'total-delete-files') AS BIGINT) FROM {snapshots} ORDER BY committed_at DESC LIMIT 1").ConfigureAwait(false);
+        if (summary != null) return summary.Deletes > 0 ? IcebergUnreliable : summary.Count;
+
+        return -1;
+    }
+
+    private Boolean TryQueryIcebergSummary(String sql, out Int64 count, out Int64 deletes)
+    {
+        count = -1;
+        deletes = 0;
+        try
+        {
+            var ds = Query(sql, CommandType.Text);
+            if (ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0) return false;
+
+            var row = ds.Tables[0].Rows[0];
+            if (row[0] == null || row[0] == DBNull.Value) return false;
+
+            count = row[0].ToLong();
+            if (ds.Tables[0].Columns.Count > 1 && row[1] != null && row[1] != DBNull.Value) deletes = row[1].ToLong();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            if (DAL.Debug) XTrace.Log.Debug("Failed to get Iceberg row count: {0}", ex.Message);
+            return false;
+        }
+    }
+
+    private async Task<IcebergSummary?> TryQueryIcebergSummaryAsync(String sql)
+    {
+        try
+        {
+            var dt = await QueryAsync(sql, null).ConfigureAwait(false);
+            if (dt.Rows.Count == 0) return null;
+
+            var index = FindColumn(dt.Columns, "total_records");
+            if (index < 0) index = 0;
+
+            var value = dt.Rows[0][index];
+            if (value == null || value == DBNull.Value) return null;
+
+            var deletes = 0L;
+            var deleteIndex = FindColumn(dt.Columns, "delete_files");
+            if (deleteIndex < 0) deleteIndex = 1;
+            if (dt.Rows[0].Length > deleteIndex && dt.Rows[0][deleteIndex] != null && dt.Rows[0][deleteIndex] != DBNull.Value)
+                deletes = dt.Rows[0][deleteIndex].ToLong();
+
+            return new IcebergSummary { Count = value.ToLong(), Deletes = deletes };
+        }
+        catch (Exception ex)
+        {
+            if (DAL.Debug) XTrace.Log.Debug("Failed to get Iceberg row count: {0}", ex.Message);
+            return null;
+        }
+    }
+
+    private static Int64 GetRowCount(DataTable table)
+    {
+        if (table.Rows.Count == 0) return -1;
+
+        var index = FindColumn(table.Columns, "row_count");
+        if (index < 0 && table.Columns.Count > 4) index = 4;
+        if (index < 0) return -1;
+
+        var value = table.Rows[table.Rows.Count - 1][index];
+        return value == null || value == DBNull.Value ? -1 : value.ToLong();
+    }
+
+    private static Int64 GetRowCount(DbTable table)
+    {
+        if (table.Rows.Count == 0) return -1;
+
+        var index = FindColumn(table.Columns, "row_count");
+        if (index < 0 && table.Columns.Length > 4) index = 4;
+        if (index < 0) return -1;
+
+        var value = table.Rows[table.Rows.Count - 1][index];
+        return value == null || value == DBNull.Value ? -1 : value.ToLong();
+    }
+
+    private static Int32 FindColumn(DataColumnCollection columns, String name)
+    {
+        for (var i = 0; i < columns.Count; i++)
+            if (columns[i].ColumnName.EqualIgnoreCase(name)) return i;
+
+        return -1;
+    }
+
+    private static Int32 FindColumn(String[] columns, String name)
+    {
+        for (var i = 0; i < columns.Length; i++)
+            if (columns[i].EqualIgnoreCase(name)) return i;
+
+        return -1;
+    }
+
+    private static String GetMetadataTableName(String tableName, String suffix)
+    {
+        var name = tableName.Trim();
+        if (name.Length > 1 && name[0] == '"' && name[^1] == '"') name = name[1..^1].Replace("\"\"", "\"");
+        return "\"" + name.Replace("\"", "\"\"") + suffix + "\"";
+    }
+
+    private sealed class IcebergSummary
+    {
+        public Int64 Count { get; set; }
+        public Int64 Deletes { get; set; }
+    }
+    #endregion
 
     /// <summary>执行插入语句并返回新增行的自动编号。Presto/Trino 没有自增主键</summary>
     /// <param name="sql">SQL语句</param>

@@ -145,14 +145,22 @@ public static class LiveDatabase
         if (host.IsNullOrEmpty() && dic.TryGetValue("Data Source", out value) && !value.IsNullOrEmpty()) host = value;
         if (host.IsNullOrEmpty() && dic.TryGetValue("DataSource", out value) && !value.IsNullOrEmpty()) host = value;
 
-        // Server 可能带端口，如 127.0.0.1:5433
+        // Server 可能带端口，如 127.0.0.1:5433，也可能是完整 URL，如 http://localhost:9090
         if (!host.IsNullOrEmpty())
         {
-            var p = host.IndexOf(':');
-            if (p > 0 && Int32.TryParse(host[(p + 1)..], out var n))
+            if (host.Contains("://") && Uri.TryCreate(host, UriKind.Absolute, out var uri) && !uri.Host.IsNullOrEmpty())
             {
-                host = host[..p];
-                port = n;
+                host = uri.Host;
+                if (!uri.IsDefaultPort) port = uri.Port;
+            }
+            else
+            {
+                var p = host.IndexOf(':');
+                if (p > 0 && Int32.TryParse(host[(p + 1)..], out var n))
+                {
+                    host = host[..p];
+                    port = n;
+                }
             }
         }
 

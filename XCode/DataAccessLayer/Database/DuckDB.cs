@@ -222,7 +222,47 @@ internal class DuckDBMetaData : FileDbMetaData
 {
     #region 构造函数
 
-    public DuckDBMetaData() { }
+    public DuckDBMetaData() => Types = _DataTypes;
 
     #endregion 构造函数
+
+    #region 数据类型
+
+    /// <summary>数据类型映射。DuckDB 语法接近 PostgreSQL</summary>
+    private static readonly Dictionary<Type, String[]> _DataTypes = new()
+    {
+        { typeof(Boolean), new String[] { "BOOLEAN" } },
+        { typeof(SByte), new String[] { "TINYINT" } },
+        { typeof(Byte), new String[] { "UTINYINT" } },
+        { typeof(Int16), new String[] { "SMALLINT" } },
+        { typeof(UInt16), new String[] { "USMALLINT" } },
+        { typeof(Int32), new String[] { "INTEGER" } },
+        { typeof(UInt32), new String[] { "UINTEGER" } },
+        { typeof(Int64), new String[] { "BIGINT" } },
+        { typeof(UInt64), new String[] { "UBIGINT" } },
+        { typeof(Single), new String[] { "FLOAT" } },
+        { typeof(Double), new String[] { "DOUBLE" } },
+        { typeof(Decimal), new String[] { "DECIMAL" } },
+        { typeof(DateTime), new String[] { "TIMESTAMP" } },
+        { typeof(String), new String[] { "VARCHAR", "BLOB" } },
+        { typeof(Byte[]), new String[] { "BLOB" } },
+        { typeof(Guid), new String[] { "UUID" } },
+    };
+
+    #endregion
+
+    /// <summary>建立数据库。DuckDB 会在首次连接时自行创建库文件，提前创建空文件反而导致文件无效</summary>
+    /// <param name="databaseName">数据库名，忽略</param>
+    /// <param name="file">数据文件路径，忽略</param>
+    /// <returns>是否成功</returns>
+    public override Boolean CreateDatabase(String databaseName, String? file = null)
+    {
+        if (String.IsNullOrEmpty(FileName) || FileName.EqualIgnoreCase(":memory:")) return false;
+
+        // DuckDB 会在首次连接时创建库文件，这里只需保证目录存在
+        var dir = Path.GetDirectoryName(FileName);
+        if (!dir.IsNullOrEmpty()) Directory.CreateDirectory(dir);
+
+        return true;
+    }
 }

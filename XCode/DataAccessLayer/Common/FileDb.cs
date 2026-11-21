@@ -63,6 +63,9 @@ abstract class FileDbSession : DbSession
 
     protected virtual void CreateDatabase()
     {
+        // 内存数据库不需要创建文件
+        if (FileName.IsNullOrEmpty() || FileName.EqualIgnoreCase(":memory:")) return;
+
         if (!File.Exists(FileName)) Database.CreateMetaData().CreateDatabase("");
     }
     #endregion
@@ -95,6 +98,9 @@ abstract class FileDbMetaData : DbMetaData
     public override Boolean CreateDatabase(String databaseName, String? file = null)
     {
         if (String.IsNullOrEmpty(FileName)) return false;
+
+        // 内存数据库无需建文件
+        if (FileName.EqualIgnoreCase(":memory:")) return true;
 
         // 提前创建目录
         var dir = Path.GetDirectoryName(FileName);

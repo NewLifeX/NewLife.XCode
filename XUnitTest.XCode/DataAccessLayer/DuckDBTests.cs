@@ -14,7 +14,7 @@ namespace XUnitTest.XCode.DataAccessLayer;
 [TestCaseOrderer("NewLife.UnitTest.PriorityOrderer", "NewLife.UnitTest")]
 public class DuckDBTests
 {
-    private static String _ConnStr = "Data Source=:memory:";
+    private static String _ConnStr = "Data Source=Data/duckdb_test.duckdb";
 
     public DuckDBTests()
     {
@@ -37,7 +37,7 @@ public class DuckDBTests
     }
 
     [TestOrder(10)]
-    [Fact(Skip = "需要 DuckDB.NET.Data 驱动")]
+    [Fact]
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.DuckDB);
@@ -53,7 +53,7 @@ public class DuckDBTests
     }
 
     [TestOrder(20)]
-    [Fact(Skip = "需要 DuckDB.NET.Data 驱动")]
+    [Fact]
     public void DALTest()
     {
         DAL.AddConnStr("sysDuckDB", _ConnStr, null, "DuckDB");
@@ -68,12 +68,14 @@ public class DuckDBTests
     }
 
     [TestOrder(30)]
-    [Fact(Skip = "需要 DuckDB.NET.Data 驱动")]
+    [Fact]
     public void MetaTest()
     {
         DAL.AddConnStr("sysDuckDB", _ConnStr, null, "DuckDB");
         var dal = DAL.Create("sysDuckDB");
 
+        // 每次运行使用干净的库文件，避免上次遗留
+        dal.Execute("DROP TABLE IF EXISTS test_table");
         dal.Execute("CREATE TABLE test_table (id INTEGER PRIMARY KEY, name VARCHAR)");
         dal.Execute("INSERT INTO test_table VALUES (1, 'hello')");
 

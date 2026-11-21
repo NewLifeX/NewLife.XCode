@@ -84,6 +84,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="ClickHouse.Client" Version="7.14.0" />
+    <PackageReference Include="DuckDB.NET.Data.Full" Version="1.5.6.1" />
     <PackageReference Include="InterSystems.Data.IRISClient" Version="2.6.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
@@ -93,8 +95,12 @@
     <!-- 直引 Remoting 最新 beta，与 AotSmoke 对齐，避免传递依赖版本落后 -->
     <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1116-beta1043" />
     <PackageReference Include="NewLife.UnitTest" Version="1.1.2026.301-beta0617" />
-    <!-- 直接引用 Presto 驱动，避免真库用例依赖运行时从 PluginServer 下载 -->
+    <!-- 直接引用真库驱动，避免真库用例依赖运行时从 PluginServer 下载 -->
     <PackageReference Include="NReco.PrestoAdo" Version="1.1.0" />
+    <PackageReference Include="Trino.Client.ADO" Version="1.0.11" />
+    <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="10.3.4" />
+    <PackageReference Include="MonetDb.Mapi" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.15" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.13" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">

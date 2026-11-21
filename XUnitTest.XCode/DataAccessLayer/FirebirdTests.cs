@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Reflection;
@@ -355,5 +356,16 @@ public class FirebirdTests
         var list = (System.Collections.Generic.List<IDataColumn>)mi!.Invoke(meta, [table, dt.Select()])!;
         Assert.True(list.First(e => e.ColumnName == "Id").Identity);
         Assert.False(list.First(e => e.ColumnName == "Name").Identity);
+    }
+
+    [Fact]
+    [DisplayName("Firebird远程Unix绝对路径_不被解析为本机路径")]
+    public void RemoteUnixDatabasePathTest()
+    {
+        DAL.AddConnStr("Firebird_RemotePath", "Database=/var/lib/firebird/3.0/data/test.fdb;DataSource=127.0.0.1;User=SYSDBA;Password=masterkey", null, "Firebird");
+        var dal = DAL.Create("Firebird_RemotePath");
+
+        Assert.Contains("/var/lib/firebird/3.0/data/test.fdb", dal.Db.ConnectionString);
+        Assert.Equal("/var/lib/firebird/3.0/data/test.fdb", dal.Db.DatabaseName);
     }
 }

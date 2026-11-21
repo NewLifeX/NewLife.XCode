@@ -29,11 +29,13 @@ internal class ClickHouse : RemoteDb
     /// <returns></returns>
     protected override DbProviderFactory? CreateFactory()
     {
-        var type = DriverLoader.Load("ClickHouse.Client.ADO.ClickHouseClientFactory", null, "ClickHouse.Client.dll", null);
+        // 7.x 使用 ClickHouseConnectionFactory，旧版本为 ClickHouseClientFactory
+        var type = DriverLoader.Load("ClickHouse.Client.ADO.ClickHouseConnectionFactory", null, "ClickHouse.Client.dll", null);
+        if (type == null) type = DriverLoader.Load("ClickHouse.Client.ADO.ClickHouseClientFactory", null, "ClickHouse.Client.dll", null);
         var factory = GetProviderFactory(type);
         if (factory != null) return factory;
 
-        return GetProviderFactory(null, "ClickHouse.Client.dll", "ClickHouse.Client.ADO.ClickHouseClientFactory", true, true);
+        return GetProviderFactory(null, "ClickHouse.Client.dll", "ClickHouse.Client.ADO.ClickHouseConnectionFactory", true, true);
     }
 
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)

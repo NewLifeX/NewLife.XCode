@@ -25,6 +25,7 @@ internal static class DriverPackages
         [DatabaseType.DuckDB] = "DuckDB.NET.Data",
         [DatabaseType.MongoDB] = "MongoDB.Driver",
         [DatabaseType.SonnetDB] = "SonnetDB",
+        [DatabaseType.TDengine] = "NewLife.TDengine",
         // 新驱动已支持优先加载；待 NewLife.Presto 首次发布后把包名切换为 NewLife.Presto
         [DatabaseType.Presto] = "NReco.PrestoAdo",
         [DatabaseType.Trino] = "Trino.Data.ADO",
@@ -60,6 +61,7 @@ internal static class DriverPackages
         ["DuckDB.NET.Data.dll"] = "DuckDB.NET.Data",
         ["MongoDB.Driver.dll"] = "MongoDB.Driver",
         ["SonnetDB.Data.dll"] = "SonnetDB",
+        ["NewLife.TDengine.dll"] = "NewLife.TDengine",
         ["NewLife.Presto.dll"] = "NewLife.Presto",
         ["NReco.PrestoAdo.dll"] = "NReco.PrestoAdo",
         ["Trino.Data.ADO.dll"] = "Trino.Data.ADO",

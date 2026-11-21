@@ -5,7 +5,6 @@ using System.Text;
 using NewLife.Collections;
 using NewLife.Data;
 using NewLife.Log;
-using XCode.TDengine;
 
 namespace XCode.DataAccessLayer;
 
@@ -20,12 +19,20 @@ class TDengine : RemoteDb
     protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
         & ~(DatabaseCapability.Transactions | DatabaseCapability.Update);
 
-    /// <summary>创建工厂</summary>
+    /// <summary>创建工厂。TDengine 驱动独立发布为 NewLife.TDengine 包，按类型名反射加载</summary>
     /// <returns></returns>
-    protected override DbProviderFactory CreateFactory()
+    protected override DbProviderFactory? CreateFactory()
     {
-        // HTTP模式不再需要加载native dll
-        return TDengineFactory.Instance;
+        // 只做本地加载（工程引用或 NuGet 包），未安装时直接提示包名，避免运行时联网下载
+        var type = DriverLoader.Load("NewLife.TDengine.Data.TDengineFactory", null, "NewLife.TDengine.dll", null);
+        var factory = GetProviderFactory(type);
+        if (factory == null)
+        {
+            var package = DriverPackages.Get(DatabaseType.TDengine);
+            throw new XCodeException(L.T("Unable to load driver [{0}]; add the NuGet package [{1}] and try again.", "NewLife.TDengine.dll", package));
+        }
+
+        return factory;
     }
 
     const String Server_Key = "Server";
@@ -35,11 +42,20 @@ class TDengine : RemoteDb
         base.OnSetConnectionString(builder);
 
         var key = builder[Server_Key];
-        if (key.EqualIgnoreCase(".", "localhost")) builder[Server_Key] = IPAddress.Loopback.ToString();
-        
-        // HTTP模式默认端口为6041
-        if (builder[Port_Key].IsNullOrEmpty())
-            builder[Port_Key] = "6041";
+        if (key.EqualIgnoreCase(".", "localhost")) key = IPAddress.Loopback.ToString();
+
+        // 独立驱动按 URI scheme 选择传输（http/https 走 REST，ws/wss 走 WebSocket，tcp/udp 走原生 RPC），
+        // 裸地址默认 tcp://6030；XCode 的 TDengine 方言面向 REST 与 taosAdapter，因此裸地址补 http:// 并默认 6041
+        if (!key.IsNullOrEmpty() && !key.Contains("://"))
+        {
+            // IPv6 字面量必须加方括号，否则 http://::1 无法解析
+            if (key.Contains(':') && !key.StartsWith("[")) key = $"[{key}]";
+
+            key = "http://" + key;
+            if (builder[Port_Key].IsNullOrEmpty()) builder[Port_Key] = "6041";
+        }
+
+        if (!key.IsNullOrEmpty()) builder[Server_Key] = key;
     }
     #endregion
 

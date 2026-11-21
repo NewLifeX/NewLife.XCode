@@ -8,7 +8,6 @@ using NewLife.Serialization;
 using NewLife.UnitTest;
 using XCode;
 using XCode.DataAccessLayer;
-using XCode.TDengine;
 using Xunit;
 using XUnitTest.XCode.TestEntity;
 
@@ -53,13 +52,14 @@ public class TDengineTests
     public void ConnectTest()
     {
         var db = DbFactory.Create(DatabaseType.TDengine);
+        db.ConnectionString = _ConnStr.Replace("Server=.;", "Server=localhost;");
         var factory = db.Factory;
 
-        var conn = factory.CreateConnection() as TDengineConnection;
+        using var conn = factory.CreateConnection();
         Assert.NotNull(conn);
 
-        //conn.ConnectionString = "Server=localhost;Port=3306;Database=Membership;Uid=root;Pwd=Pass@word";
-        conn.ConnectionString = _ConnStr.Replace("Server=.;", "Server=localhost;");
+        // 连接串先经 XCode 规范化（裸地址补 http://，REST 默认 6041），再交给驱动
+        conn.ConnectionString = db.ConnectionString;
         conn.Open();
 
         Assert.NotEmpty(conn.ServerVersion);

@@ -81,6 +81,8 @@ public class DataCache
                 data.Counts = new ConcurrentDictionary<String, Int64>(data.Counts ?? new Dictionary<String, Int64>());
             if (data.FieldCache is not ConcurrentDictionary<String, Dictionary<String, String>>)
                 data.FieldCache = new ConcurrentDictionary<String, Dictionary<String, String>>(data.FieldCache ?? new Dictionary<String, Dictionary<String, String>>());
+            if (data.CountStats is not ConcurrentDictionary<String, CountStat>)
+                data.CountStats = new ConcurrentDictionary<String, CountStat>(data.CountStats ?? new Dictionary<String, CountStat>());
         }
 
         if (data == null && create)
@@ -119,6 +121,9 @@ public class DataCache
     #region 总记录数
     /// <summary>每个表总记录数</summary>
     public IDictionary<String, Int64> Counts { get; set; } = new ConcurrentDictionary<String, Int64>();
+
+    /// <summary>每个表的计数学习状态。记录精确计数上限、实测吞吐率与退避时间，跨重启保存</summary>
+    public IDictionary<String, CountStat> CountStats { get; set; } = new ConcurrentDictionary<String, CountStat>();
     #endregion
 
     #region 字段缓存

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Data;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -376,7 +377,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     IEntityCache IEntitySession.Cache => Cache;
     ISingleEntityCache IEntitySession.SingleCache => SingleCache;
 
-    /// <summary>总记录数。10 万以下精确，10 万~100 万后台校准，100 万以上为估算值；需要精确值时使用 FindCount()</summary>
+    /// <summary>总记录数。自适应计数：小表精确，中表按实测吞吐率后台校准，大表估算；需要精确值时使用 FindCount()</summary>
     public Int32 Count
     {
         get
@@ -394,14 +395,19 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
 
     /// <summary>同步精确计数阈值。低于该值时直接 count(*)，不阻塞大表</summary>
     private const Int32 SyncCountLimit = 100_000;
-    /// <summary>计数命令超时秒数</summary>
-    private const Int32 CountCommandTimeout = 5;
+    /// <summary>同步精确计数预算（秒）。预测耗时超过该值的表转到后台</summary>
+    private const Double SyncBudgetSeconds = 1.0;
+    /// <summary>同步精确计数超时秒数</summary>
+    private const Int32 SyncCountTimeout = 5;
+    /// <summary>后台精确计数超时秒数</summary>
+    private const Int32 BackgroundCountTimeout = 15;
     /// <summary>精确计数失败后的退避秒数</summary>
     private const Int32 CountRetrySeconds = 30 * 60;
 
     private Int32 _exactCountRunning;
+    private CountStat? _countStat;
 
-    /// <summary>总记录数。10万以下精确，10万~100万后台校准，100万以上取索引行数并缓存</summary>
+    /// <summary>总记录数。自适应计数：小表精确，中表按实测吞吐率后台校准，大表取索引行数并缓存</summary>
     public Int64 LongCount
     {
         get
@@ -490,19 +496,22 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
         var dal = Dal;
         var floor = XCodeSetting.Current.FullCountFloor;
         if (floor < 0) floor = 0;
-        var syncLimit = Math.Min(SyncCountLimit, floor);
 
         // 视图只能按模板 SQL 精确统计，保持原有行为
         if (DataTable.IsView)
         {
             if (TimerX.Now < _NextFullCount) return count >= 0 ? count : 0;
 
-            return ExecuteExactCount(count);
+            return ExecuteExactCount(count, false);
         }
+
+        // 学习状态记录每张表的精确计数上限；floor 为 0 时关闭精确计数
+        var stat = floor > 0 ? GetCountStat() : null;
+        var refreshLine = stat != null && stat.RowLimit > floor ? stat.RowLimit : floor;
 
         // 先取快速统计值。已缓存且未超过阈值的表交给精确计数或后台校准
         var fast = count;
-        if (count <= 0 || count >= floor || dal.DbType == DatabaseType.SQLite)
+        if (count <= 0 || count >= refreshLine || dal.DbType == DatabaseType.SQLite)
             fast = QueryFastCount();
 
         // 快速统计不可用时，用自增主键区间兜底（SQLite 已经在 QueryFastCount 中使用区间）
@@ -523,21 +532,62 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
         // 数据表频繁写入会重置刷新时间，计数可能被反复计算，调试级别输出以免刷屏
         if (DAL.Debug) XTrace.Log.Debug("{0}.Count fast row count (approximate) [{1}/{2}] value {3:n0}, floor {4:n0}", ThisType.Name, TableName, ConnName, fast, floor);
 
-        // 小表同步精确；中表后台精确；大表只估算
-        if (fast <= syncLimit)
-        {
-            if (TimerX.Now < _NextFullCount) return fast;
+        // 关闭精确计数时只返回估算值
+        if (stat == null) return fast;
 
-            return ExecuteExactCount(fast);
+        var now = TimerX.Now;
+
+        // 学习状态可能被同步与后台计数并发更新，读取时加锁保证一致
+        Boolean allowed;
+        Boolean probe;
+        Int64 rowLimit;
+        Double predict;
+        lock (stat)
+        {
+            allowed = now >= stat.NextAllowed;
+            rowLimit = stat.RowLimit;
+            predict = stat.PredictSeconds(fast);
+            probe = stat.ShouldProbe(now, fast);
         }
 
-        if (fast < floor && TimerX.Now >= _NextFullCount)
-        {
-            _NextFullCount = TimerX.Now.AddSeconds(GetExactRefreshSeconds(fast));
-            ScheduleExactCount();
-        }
+        // 小表同步精确；预测耗时超过同步预算时交给后台，避免阻塞调用方
+        var syncLimit = Math.Min(SyncCountLimit, floor);
+        if (fast <= syncLimit && allowed && predict <= SyncBudgetSeconds)
+            return ExecuteExactCount(fast, false);
+
+        // 中表后台精确；超过自适应上限时只返回估算值。发生过超时的表定期探测一次，避免阈值永久卡死
+        if ((fast <= rowLimit || probe) && allowed && now >= _NextFullCount) ScheduleExactCount(fast);
 
         return fast;
+    }
+
+    /// <summary>获取该表的计数学习状态，首次访问时从配置初始化</summary>
+    /// <returns></returns>
+    private CountStat GetCountStat()
+    {
+        var stat = _countStat;
+        if (stat == null)
+        {
+            var stats = DataCache.Current.CountStats;
+            if (!stats.TryGetValue(CacheKey, out stat))
+            {
+                lock (stats)
+                {
+                    if (!stats.TryGetValue(CacheKey, out stat))
+                    {
+                        stat = new CountStat();
+                        stats[CacheKey] = stat;
+                    }
+                }
+            }
+
+            _countStat = stat;
+        }
+
+        // 配置值变化时按新初始值重置学习状态
+        lock (stat) stat.Init(XCodeSetting.Current.FullCountFloor);
+
+        return stat;
     }
 
     /// <summary>快速获取表行数。失败时返回 -1，由调用方决定是否使用主键区间兜底</summary>
@@ -605,14 +655,15 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
         }
     }
 
-    /// <summary>执行精确计数。失败时保留参考值，并按退避周期重试</summary>
-    /// <param name="reference">失败时保留的估算值</param>
+    /// <summary>执行精确计数，并按实测耗时调整该表的自适应上限</summary>
+    /// <param name="reference">参考估算值，失败或超时时返回</param>
+    /// <param name="background">是否后台执行。后台使用更长的超时预算</param>
     /// <returns></returns>
-    private Int64 ExecuteExactCount(Int64 reference)
+    private Int64 ExecuteExactCount(Int64 reference, Boolean background)
     {
-        var now = TimerX.Now;
-        _NextFullCount = now.AddSeconds(GetExactRefreshSeconds(reference));
+        var timeout = background ? GetBackgroundCountTimeout() : GetSyncCountTimeout();
 
+        var sw = Stopwatch.StartNew();
         try
         {
             var builder = new SelectBuilder
@@ -624,14 +675,25 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
             using var span = Dal.Tracer?.NewSpan($"db:{ConnName}:QueryCountExact:{DAL.TrimTableName(TableName)}", TableName);
             try
             {
-                var count = Dal.SelectCountLong(builder, GetCountTimeout());
+                var count = Dal.SelectCountLong(builder, timeout);
+                sw.Stop();
                 if (span != null) span.Value = count;
 
-                _NextFullCount = now.AddSeconds(GetExactRefreshSeconds(count));
+                // 学习状态更新失败不应影响计数结果
+                try
+                {
+                    OnExactCountSuccess(count, (Int32)sw.ElapsedMilliseconds, timeout);
+                }
+                catch (Exception ex2)
+                {
+                    if (DAL.Debug) DAL.WriteLog("Failed to update count statistics for [{0}]: {1}", TableName, ex2.Message);
+                }
+
                 return count;
             }
             catch (Exception ex)
             {
+                sw.Stop();
                 span?.SetError(ex, null);
                 throw;
             }
@@ -650,15 +712,89 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
                     if (DAL.Debug) DAL.WriteLog("Failed to create table [{0}]: {1}", TableName, ex2.Message);
                 }
 
-                _NextFullCount = now.AddSeconds(60);
+                _NextFullCount = TimerX.Now.AddSeconds(60);
                 return 0;
             }
 
-            _NextFullCount = now.AddSeconds(CountRetrySeconds);
-            DAL.WriteLog("Failed to get exact row count for [{0}], keep {1:n0}: {2}", TableName, reference, ex.Message);
+            try
+            {
+                if (CountStat.IsTimeout(ex, sw.Elapsed, timeout))
+                    OnExactCountTimeout(reference);
+                else
+                    OnExactCountError(reference, ex);
+            }
+            catch (Exception ex2)
+            {
+                if (DAL.Debug) DAL.WriteLog("Failed to update count statistics for [{0}]: {1}", TableName, ex2.Message);
+            }
         }
 
         return reference >= 0 ? reference : 0;
+    }
+
+    /// <summary>记录精确计数成功，按实测吞吐率调整上限</summary>
+    /// <param name="count">精确行数</param>
+    /// <param name="durationMs">实测耗时，单位毫秒</param>
+    /// <param name="timeout">本次超时预算，单位秒</param>
+    private void OnExactCountSuccess(Int64 count, Int32 durationMs, Int32 timeout)
+    {
+        var stat = GetCountStat();
+        Int64 old, limit;
+        Boolean changed;
+        DateTime next;
+        lock (stat)
+        {
+            old = stat.RowLimit;
+            changed = stat.OnSuccess(count, durationMs, timeout, GetExactRefreshSeconds(count), TimerX.Now);
+            limit = stat.RowLimit;
+            next = stat.NextAllowed;
+        }
+        _NextFullCount = next;
+
+        if (changed)
+            DAL.WriteLog("Exact row count for [{0}] took {1}ms, limit adjusted {2:n0} -> {3:n0}, next after {4:yyyy-MM-dd HH:mm}", TableName, durationMs, old, limit, next);
+        else if (DAL.Debug)
+            XTrace.Log.Debug("{0}.Count exact row count took {1}ms, limit {2:n0}", ThisType.Name, durationMs, limit);
+
+        DataCache.Current.SaveAsync();
+    }
+
+    /// <summary>记录精确计数超时，收缩上限并退避一天</summary>
+    /// <param name="reference">超时前的参考行数</param>
+    private void OnExactCountTimeout(Int64 reference)
+    {
+        var stat = GetCountStat();
+        Int64 old, limit;
+        DateTime next;
+        lock (stat)
+        {
+            old = stat.RowLimit;
+            stat.OnTimeout(reference, TimerX.Now);
+            limit = stat.RowLimit;
+            next = stat.NextAllowed;
+        }
+        _NextFullCount = next;
+
+        DAL.WriteLog("Exact row count for [{0}] timed out, keep {1:n0}, limit {2:n0} -> {3:n0}, retry after 24h", TableName, reference, old, limit);
+        DataCache.Current.SaveAsync();
+    }
+
+    /// <summary>记录精确计数失败，保持上限不变，稍后重试</summary>
+    /// <param name="reference">参考估算值</param>
+    /// <param name="ex">异常</param>
+    private void OnExactCountError(Int64 reference, Exception ex)
+    {
+        var stat = GetCountStat();
+        DateTime next;
+        lock (stat)
+        {
+            stat.OnError(TimerX.Now, CountRetrySeconds);
+            next = stat.NextAllowed;
+        }
+        _NextFullCount = next;
+
+        DAL.WriteLog("Failed to get exact row count for [{0}], keep {1:n0}: {2}", TableName, reference, ex.Message);
+        DataCache.Current.SaveAsync();
     }
 
     private Boolean IsTableMissing()
@@ -674,36 +810,62 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     }
 
     /// <summary>后台精确计数</summary>
-    private void ScheduleExactCount()
+    /// <param name="reference">本次决策使用的参考行数，超时时用于收缩上限</param>
+    private void ScheduleExactCount(Int64 reference)
     {
         if (Interlocked.CompareExchange(ref _exactCountRunning, 1, 0) != 0) return;
 
-        Task.Run(() =>
+        // 全局闸门，同一时刻只允许一个精确计数，避免慢库被并发统计压垮
+        if (!CountStat.Gate.Wait(0))
         {
-            try
-            {
-                // 首次访问时可能尚未完成初始化
-                WaitForInitData(3_000);
+            Interlocked.Exchange(ref _exactCountRunning, 0);
+            _NextFullCount = TimerX.Now.AddSeconds(60);
+            return;
+        }
 
-                var count = ExecuteExactCount(_Count);
-                LongCount = count;
-            }
-            catch (Exception ex)
+        // 尝试期间先占位，避免刷新周期内重复调度
+        _NextFullCount = TimerX.Now.AddSeconds(60);
+        try
+        {
+            Task.Run(() =>
             {
-                _NextFullCount = TimerX.Now.AddSeconds(CountRetrySeconds);
-                XTrace.WriteException(ex);
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _exactCountRunning, 0);
-            }
-        });
+                try
+                {
+                    // 首次访问时可能尚未完成初始化
+                    WaitForInitData(3_000);
+
+                    var count = ExecuteExactCount(reference, true);
+                    LongCount = count;
+                }
+                catch (Exception ex)
+                {
+                    XTrace.WriteException(ex);
+                }
+                finally
+                {
+                    CountStat.Gate.Release();
+                    Interlocked.Exchange(ref _exactCountRunning, 0);
+                }
+            });
+        }
+        catch
+        {
+            CountStat.Gate.Release();
+            Interlocked.Exchange(ref _exactCountRunning, 0);
+            throw;
+        }
     }
 
-    private static Int32 GetCountTimeout()
+    private static Int32 GetSyncCountTimeout()
     {
         var timeout = XCodeSetting.Current.CommandTimeout;
-        return timeout > 0 && timeout < CountCommandTimeout ? timeout : CountCommandTimeout;
+        return timeout > 0 && timeout < SyncCountTimeout ? timeout : SyncCountTimeout;
+    }
+
+    private static Int32 GetBackgroundCountTimeout()
+    {
+        var command = XCodeSetting.Current.CommandTimeout;
+        return command > 0 && command < BackgroundCountTimeout ? command : BackgroundCountTimeout;
     }
 
     private static Int32 GetCountRefreshSeconds(Int64 count) => count switch

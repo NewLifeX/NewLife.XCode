@@ -94,8 +94,8 @@ public class XCodeSetting : Config<XCodeSetting>
     [Description("Table and column name case. Default: database decides; None: keep model casing; Upper: uppercase; Lower: lowercase; Underline: underscore")]
     public NameFormats NameFormat { get; set; } = NameFormats.Default;
 
-    /// <summary>全表查行数下限。在获取数据表行数时，先根据索引表进行快速统计。如果快速统计的结果大于该值，则使用快速统计的结果。反之则进行 count(*) 操作获取精确统计。默认100万</summary>
-    [Description("Full count threshold. Row counts are estimated from index statistics first; estimates above this value are used as-is, otherwise count(*) runs for an exact value. Lower it to avoid slow first visits on large tables, raise it for exact counts. Default 1 million")]
+    /// <summary>精确计数初始行数上限。快速统计结果低于该值时才尝试 count(*) 获取精确值，每张表会根据实测耗时自动调整，默认100万。值变化后各表在下次访问时重置学习状态；设为0时只使用快速统计，不执行精确计数</summary>
+    [Description("Initial exact count limit. count(*) runs when the estimated row count is below this value; each table then adapts the limit from measured duration. Changing the value resets learned state on next access. Default 1 million. Set 0 to disable exact counting")]
     public Int32 FullCountFloor { get; set; } = 1_000_000;
     #endregion
 

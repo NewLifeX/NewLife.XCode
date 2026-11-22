@@ -8,6 +8,7 @@ name: db-compat
 # 稳定后把对应项改为必备：删除 job 级 continue-on-error，或拆成独立 job。
 #
 # 环境变量约定：XCode_<key> 注入连接串，测试侧由 [LiveDatabaseFact] 识别，无需探测。
+# Presto 与 TDengine 驱动已在测试项目直接引用 NuGet 包（NewLife.Presto / NewLife.TDengine），不再运行时下载。
 
 on:
   push:
@@ -75,14 +76,12 @@ jobs:
             filter: 'FullyQualifiedName~IRISTests'
 
           - name: tdengine
-            image: tdengine/tdengine:3.3.0.0
+            image: tdengine/tdengine:3.3.6.13
             args: '-p 6041:6041'
             probe: 'docker exec db taos -s "show databases;"'
             setup: 'docker exec db taos -s "create database if not exists db;"'
             conn: 'Server=127.0.0.1;Port=6041;Database=db;user=root;password=taosdata;provider=TDengine'
             filter: 'FullyQualifiedName~TDengineTests'
-            # 驱动已从 XCode 拆分为独立 NuGet 包，XCode 运行时反射加载；包发布前跳过该库用例
-            package: 'NewLife.TDengine'
 
           - name: influxdb
             image: influxdb:2.7
@@ -124,6 +123,87 @@ jobs:
             conn: 'Host=127.0.0.1;Port=8080;Catalog=tpch;Schema=tiny;User=test;provider=Trino'
             filter: 'FullyQualifiedName~PrestoTests'
 
+          # PrestoDB 官方镜像自带 tpch/tpcds 连接器，与 Trino 分开验证新驱动
+          - name: presto
+            image: prestodb/presto:0.300
+            args: '-p 8081:8080'
+            probe: 'docker exec db presto --server http://127.0.0.1:8080 --execute "SELECT 1"'
+            setup: ''
+            conn: 'Host=127.0.0.1;Port=8081;Catalog=tpch;Schema=tiny;User=test;provider=Presto'
+            filter: 'FullyQualifiedName~PrestoTests'
+
+          - name: questdb
+            image: questdb/questdb:10.2.0
+            args: '-p 8812:8812 -p 9000:9000'
+            probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/8812"'
+            setup: ''
+            conn: 'Server=127.0.0.1;Port=8812;Database=qdb;Uid=admin;Pwd=quest;provider=QuestDB'
+            filter: 'FullyQualifiedName~QuestDbLiveTest'
+
+          - name: cratedb
+            image: crate:5.10.4
+            args: '-p 15432:5432 -p 4200:4200'
+            probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/5432"'
+            setup: ''
+            conn: 'Server=127.0.0.1;Port=15432;Database=doc;Uid=crate;Pwd=;provider=CrateDB'
+            filter: 'FullyQualifiedName~CrateDbLiveTest'
+
+          - name: cockroach
+            image: cockroachdb/cockroach:v25.4.21
+            args: '-p 26257:26257 -p 8089:8089'
+            cmd: 'start-single-node --insecure --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8089'
+            probe: 'docker exec db cockroach sql --insecure --host=127.0.0.1:26257 -e "SELECT 1"'
+            setup: 'docker exec db cockroach sql --insecure --host=127.0.0.1:26257 -e "CREATE DATABASE IF NOT EXISTS test"'
+            conn: 'Server=127.0.0.1;Port=26257;Database=test;Uid=root;Pwd=;provider=CockroachDB'
+            filter: 'FullyQualifiedName~CockroachDbLiveTest'
+
+          - name: greptimedb
+            image: greptime/greptimedb:v1.3.1
+            args: '-p 4000:4000 -p 4003:4003'
+            probe: 'curl -sf http://127.0.0.1:4000/health'
+            setup: ''
+            conn: 'Server=127.0.0.1;Port=4003;Database=public;Uid=greptime;Pwd=;provider=GreptimeDB'
+            filter: 'FullyQualifiedName~GreptimeDbLiveTest'
+
+          - name: victoriametrics
+            image: victoriametrics/victoria-metrics:v1.156.0
+            args: '-p 8428:8428'
+            probe: 'curl -sf http://127.0.0.1:8428/health'
+            setup: ''
+            conn: 'Server=http://127.0.0.1:8428;provider=VictoriaMetrics'
+            filter: 'FullyQualifiedName~VictoriaMetricsLiveTest'
+
+          - name: prometheus
+            image: prom/prometheus:v3.16.0
+            args: '-p 9090:9090'
+            probe: 'curl -sf http://127.0.0.1:9090/-/healthy'
+            setup: ''
+            conn: 'Server=http://127.0.0.1:9090;provider=Prometheus'
+            filter: 'FullyQualifiedName~PrometheusTests'
+
+          - name: iotdb
+            image: apache/iotdb:2.0.11-standalone
+            args: '-p 18080:18080'
+            probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/18080"'
+            setup: ''
+            conn: 'Server=http://127.0.0.1:18080;User=root;Password=root;provider=IoTDB'
+            filter: 'FullyQualifiedName~IoTDBTests'
+
+          # InfluxDB 3 Core 默认开启鉴权，setup 阶段创建令牌与测试库后写入 GITHUB_ENV
+          - name: influxdb3
+            image: influxdb:3-core
+            args: '-p 8181:8181'
+            cmd: 'influxdb3 serve --node-id=node0 --object-store=file --data-dir=/var/lib/influxdb3'
+            probe: 'curl -sf http://127.0.0.1:8181/health'
+            setup: |
+              set -euo pipefail
+              docker exec db influxdb3 create token --admin --host http://127.0.0.1:8181 --format json > "$RUNNER_TEMP/influxdb3-token.json"
+              token=$(sed -n 's/.*"token": "\([^"]*\)".*/\1/p' "$RUNNER_TEMP/influxdb3-token.json")
+              docker exec db influxdb3 create database test --host http://127.0.0.1:8181 --token "$token"
+              echo "XCode_influxdb3=Server=http://127.0.0.1:8181;Database=test;Token=$token;Version=3" >> "$GITHUB_ENV"
+            conn: ''
+            filter: 'FullyQualifiedName~InfluxDBVersionLiveTests'
+
     steps:
     - uses: actions/checkout@v7
     - name: Setup dotNET
@@ -135,7 +215,7 @@ jobs:
       shell: bash
       run: |
         set -euo pipefail
-        docker run -d --name db ${{ matrix.args }} ${{ matrix.image }}
+        docker run -d --name db ${{ matrix.args }} ${{ matrix.image }} ${{ matrix.cmd }}
         docker ps --filter name=db --format '{{.Image}} {{.Status}}'
 
     - name: Wait for ${{ matrix.name }}
@@ -157,26 +237,20 @@ jobs:
     - name: Setup data ${{ matrix.name }}
       if: matrix.setup != ''
       shell: bash
-      run: bash -c "${{ matrix.setup }}"
-
-    - name: Install driver ${{ matrix.package }}
-      if: matrix.package != ''
-      id: package
-      continue-on-error: true
-      shell: bash
-      run: dotnet add XUnitTest.XCode/XUnitTest.XCode.csproj package ${{ matrix.package }} --prerelease
+      env:
+        SETUP: ${{ matrix.setup }}
+      run: printf '%s\n' "$SETUP" | bash
 
     - name: Test ${{ matrix.name }}
-      if: matrix.package == '' || steps.package.outcome == 'success'
       shell: bash
       env:
         DB_KEY: ${{ matrix.name }}
         DB_CONN: ${{ matrix.conn }}
         DB_FILTER: ${{ matrix.filter }}
-      # XCode 自动把 XCode_<name> 环境变量注册为数据连接，测试侧无需改动
+      # XCode 自动把 XCode_<name> 环境变量注册为数据连接；conn 为空时使用 setup 写入的变量
       run: |
         set -o pipefail
-        export "XCode_${DB_KEY}=${DB_CONN}"
+        if [ -n "${DB_CONN:-}" ]; then export "XCode_${DB_KEY}=${DB_CONN}"; fi
         dotnet test XUnitTest.XCode/XUnitTest.XCode.csproj -c Release \
           --filter "$DB_FILTER" \
           --blame-hang-timeout 10m --blame-hang-dump-type mini \

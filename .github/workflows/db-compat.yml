@@ -179,16 +179,22 @@ jobs:
             conn: 'Server=http://127.0.0.1:18080;User=root;Password=root'
             filter: 'FullyQualifiedName~IoTDBTests'
 
-          # InfluxDB 3 Core 默认开启鉴权，setup 阶段创建令牌与测试库后写入 GITHUB_ENV
+          # InfluxDB 3 Core 默认开启鉴权，/health 未带令牌返回 401，只能用端口判断就绪；
+          # 令牌与测试库在 setup 阶段创建后写入 GITHUB_ENV
           - name: influxdb3
             image: influxdb:3-core
             args: '-p 8181:8181'
             cmd: 'influxdb3 serve --node-id=node0 --object-store=file --data-dir=/var/lib/influxdb3'
-            probe: 'curl -sf http://127.0.0.1:8181/health'
+            probe: 'bash -c "</dev/tcp/127.0.0.1/8181"'
             setup: |
               set -euo pipefail
-              docker exec db influxdb3 create token --admin --host http://127.0.0.1:8181 --format json > "$RUNNER_TEMP/influxdb3-token.json"
-              token=$(sed -n 's/.*"token": "\([^"]*\)".*/\1/p' "$RUNNER_TEMP/influxdb3-token.json")
+              output=$(docker exec db influxdb3 create token --admin --host http://127.0.0.1:8181 2>&1)
+              token=$(printf '%s' "$output" | grep -oE 'apiv3_[A-Za-z0-9_-]+' | head -n1)
+              if [ -z "$token" ]; then
+                echo "::error::未能从 influxdb3 输出解析管理员令牌"
+                printf '%s\n' "$output"
+                exit 1
+              fi
               docker exec db influxdb3 create database test --host http://127.0.0.1:8181 --token "$token"
               echo "XCode_influxdb3=Server=http://127.0.0.1:8181;Database=test;Token=$token;Version=3" >> "$GITHUB_ENV"
             conn: ''

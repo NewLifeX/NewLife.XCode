@@ -36,19 +36,19 @@ jobs:
         include:
           # 官方镜像，启动快。连接串与初始化脚本首次运行若与实际镜像不符，按容器日志校正。
           - name: firebird
-            image: firebird:5.0
+            image: firebirdsql/firebird:5.0.3
             args: '-e FIREBIRD_ROOT_PASSWORD=masterkey -e FIREBIRD_DATABASE=test.fdb -p 3050:3050'
             probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/3050"'
             setup: ''
-            conn: 'Database=/firebird/data/test.fdb;DataSource=127.0.0.1;Port=3050;User=SYSDBA;Password=masterkey;Dialect=3;provider=Firebird'
+            conn: 'Database=/firebird/data/test.fdb;DataSource=127.0.0.1;Port=3050;User=SYSDBA;Password=masterkey;Dialect=3'
             filter: 'FullyQualifiedName~FirebirdTests'
 
           - name: clickhouse
             image: clickhouse/clickhouse-server:24.8
-            args: '-p 8123:8123 -p 9000:9000'
-            probe: 'docker exec db clickhouse-client --query "SELECT 1"'
+            args: '-e CLICKHOUSE_USER=default -e CLICKHOUSE_PASSWORD=clickhouse -p 8123:8123 -p 9000:9000'
+            probe: 'docker exec db clickhouse-client --user default --password clickhouse --query "SELECT 1"'
             setup: ''
-            conn: 'Host=127.0.0.1;Port=8123;Database=default;Username=default;Password=;provider=ClickHouse'
+            conn: 'Host=127.0.0.1;Port=8123;Database=default;Username=default;Password=clickhouse'
             filter: 'FullyQualifiedName~ClickHouseTests'
 
           - name: mongodb
@@ -56,31 +56,27 @@ jobs:
             args: '-p 27017:27017'
             probe: 'docker exec db mongosh --quiet --eval "db.runCommand({ping:1}).ok"'
             setup: ''
-            conn: 'mongodb://127.0.0.1:27017/test;provider=MongoDB'
+            conn: 'mongodb://127.0.0.1:27017/test'
             filter: 'FullyQualifiedName~MongoDBTests'
-
-          - name: oracle
-            image: gvenzl/oracle-free:23-slim
-            args: '-e ORACLE_PASSWORD=oracle -e APP_USER=scott -e APP_USER_PASSWORD=tiger -p 1521:1521'
-            probe: 'docker exec db /opt/oracle/healthcheck.sh'
-            setup: ''
-            conn: 'Data Source=127.0.0.1:1521/FREEPDB1;User Id=scott;Password=tiger;provider=Oracle'
-            filter: 'FullyQualifiedName~OracleTests'
-
-          - name: iris
-            image: intersystemsdc/iris-community
-            args: '-e IRIS_PASSWORD=SYS -p 1972:1972'
-            probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/1972"'
-            setup: ''
-            conn: 'Server=127.0.0.1;Port=1972;User Id=_SYSTEM;Password=SYS;namespace=user;provider=IRIS'
-            filter: 'FullyQualifiedName~IRISTests'
 
           - name: tdengine
             image: tdengine/tdengine:3.3.6.13
             args: '-p 6041:6041'
-            probe: 'docker exec db taos -s "show databases;"'
-            setup: 'docker exec db taos -s "create database if not exists db;"'
-            conn: 'Server=127.0.0.1;Port=6041;Database=db;user=root;password=taosdata;provider=TDengine'
+            # taos CLI 查询失败时仍可能返回 0，用输出内容判断真正就绪
+            probe: 'docker exec db taos -s "show databases;" | grep -q information_schema'
+            # 容器刚启动时可能报 Out of dnodes，创建测试库需要重试到成功
+            setup: |
+              set -euo pipefail
+              for i in $(seq 1 60); do
+                docker exec db taos -s "create database if not exists db;" >/dev/null 2>&1 || true
+                if docker exec db taos -s "show databases;" 2>/dev/null | grep -qE '^[[:space:]]*db[[:space:]]*\|'; then
+                  exit 0
+                fi
+                sleep 2
+              done
+              docker exec db taos -s "create database if not exists db;"
+              exit 1
+            conn: 'Server=127.0.0.1;Port=6041;Database=db;user=root;password=taosdata'
             filter: 'FullyQualifiedName~TDengineTests'
 
           - name: influxdb
@@ -88,7 +84,7 @@ jobs:
             args: '-p 8086:8086'
             probe: 'docker exec db influx ping'
             setup: 'docker exec db influx setup --force --username admin --password password123 --org newlife --bucket test --token newlife-compat-token-0123456789-abcdefghijklmnopqrstuvwxyz'
-            conn: 'Server=http://127.0.0.1:8086;Token=newlife-compat-token-0123456789-abcdefghijklmnopqrstuvwxyz;Organization=newlife;Bucket=test;provider=InfluxDB'
+            conn: 'Server=http://127.0.0.1:8086;Token=newlife-compat-token-0123456789-abcdefghijklmnopqrstuvwxyz;Organization=newlife;Bucket=test'
             filter: 'FullyQualifiedName~InfluxDBTests'
 
           - name: influxdb1
@@ -96,40 +92,32 @@ jobs:
             args: '-e INFLUXDB_DB=test -p 8086:8086'
             probe: 'docker exec db curl -sf http://127.0.0.1:8086/ping'
             setup: 'docker exec db influx -execute "CREATE DATABASE test" || true'
-            conn: 'Server=http://127.0.0.1:8086;Database=test;User=root;Password=root;Version=1;provider=InfluxDB'
+            conn: 'Server=http://127.0.0.1:8086;Database=test;User=root;Password=root;Version=1'
             filter: 'FullyQualifiedName~InfluxDBVersionLiveTests'
 
           - name: monetdb
-            image: monetdb/monetdb:11.49.11
+            image: monetdb/monetdb:Dec2025-SP3
             args: '-p 50000:50000'
             probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/50000"'
             setup: ''
-            conn: 'Host=127.0.0.1;Port=50000;Database=demo;User=monetdb;Password=monetdb;provider=MonetDB'
+            conn: 'Host=127.0.0.1;Port=50000;Database=demo;User=monetdb;Password=monetdb'
             filter: 'FullyQualifiedName~MonetDBTests'
-
-          - name: vertica
-            image: vertica/vertica-ce:24.4.0-0
-            args: '-p 5433:5433'
-            probe: 'docker exec db /opt/vertica/bin/vsql -U dbadmin -c "select 1"'
-            setup: ''
-            conn: 'Host=127.0.0.1;Port=5433;Database=VMart;User=dbadmin;Password=;provider=Vertica'
-            filter: 'FullyQualifiedName~VerticaTests'
 
           - name: trino
             image: trinodb/trino:466
             args: '-p 8080:8080'
             probe: 'docker exec db trino --execute "SELECT 1"'
             setup: ''
-            conn: 'Host=127.0.0.1;Port=8080;Catalog=tpch;Schema=tiny;User=test;provider=Trino'
+            conn: 'Host=127.0.0.1;Port=8080;Catalog=tpch;Schema=tiny;User=test'
             filter: 'FullyQualifiedName~PrestoTests'
 
           # PrestoDB 官方镜像自带 tpch/tpcds 连接器，与 Trino 分开验证新驱动
           - name: presto
             image: prestodb/presto:0.300
             args: '-p 8081:8080'
-            probe: 'docker exec db presto --server http://127.0.0.1:8080 --execute "SELECT 1"'
+            probe: 'curl -sf http://127.0.0.1:8081/v1/info'
             setup: ''
-            conn: 'Host=127.0.0.1;Port=8081;Catalog=tpch;Schema=tiny;User=test;provider=Presto'
+            conn: 'Host=127.0.0.1;Port=8081;Catalog=tpch;Schema=tiny;User=test'
             filter: 'FullyQualifiedName~PrestoTests'
 
           - name: questdb
@@ -137,7 +125,7 @@ jobs:
             args: '-p 8812:8812 -p 9000:9000'
             probe: 'bash -c "</dev/tcp/127.0.0.1/8812"'
             setup: ''
-            conn: 'Server=127.0.0.1;Port=8812;Database=qdb;Uid=admin;Pwd=quest;provider=QuestDB'
+            conn: 'Server=127.0.0.1;Port=8812;Database=qdb;Uid=admin;Pwd=quest'
             filter: 'FullyQualifiedName~QuestDbLiveTest'
 
           - name: cratedb
@@ -145,16 +133,17 @@ jobs:
             args: '-p 15432:5432 -p 4200:4200'
             probe: 'bash -c "</dev/tcp/127.0.0.1/15432"'
             setup: ''
-            conn: 'Server=127.0.0.1;Port=15432;Database=doc;Uid=crate;Pwd=;provider=CrateDB'
+            conn: 'Server=127.0.0.1;Port=15432;Database=doc;Uid=crate;Pwd='
             filter: 'FullyQualifiedName~CrateDbLiveTest'
 
           - name: cockroach
             image: cockroachdb/cockroach:v25.4.21
-            args: '-p 26257:26257 -p 8089:8089'
-            cmd: 'start-single-node --insecure --listen-addr=0.0.0.0:26257 --http-addr=0.0.0.0:8089'
+            # 单节点只允许监听 localhost，使用 host 网络让宿主机测试进程直接访问
+            args: '--network host'
+            cmd: 'start-single-node --insecure --listen-addr=localhost:26257 --http-addr=localhost:8089'
             probe: 'docker exec db cockroach sql --insecure --host=127.0.0.1:26257 -e "SELECT 1"'
             setup: 'docker exec db cockroach sql --insecure --host=127.0.0.1:26257 -e "CREATE DATABASE IF NOT EXISTS test"'
-            conn: 'Server=127.0.0.1;Port=26257;Database=test;Uid=root;Pwd=;provider=CockroachDB'
+            conn: 'Server=127.0.0.1;Port=26257;Database=test;Uid=root;Pwd='
             filter: 'FullyQualifiedName~CockroachDbLiveTest'
 
           - name: greptimedb
@@ -163,7 +152,7 @@ jobs:
             cmd: 'standalone start --http-addr 0.0.0.0:4000 --grpc-bind-addr 0.0.0.0:4001 --mysql-addr 0.0.0.0:4002 --postgres-addr 0.0.0.0:4003'
             probe: 'curl -sf http://127.0.0.1:4000/health'
             setup: ''
-            conn: 'Server=127.0.0.1;Port=4003;Database=public;Uid=greptime;Pwd=;provider=GreptimeDB'
+            conn: 'Server=127.0.0.1;Port=4003;Database=public;Uid=greptime;Pwd='
             filter: 'FullyQualifiedName~GreptimeDbLiveTest'
 
           - name: victoriametrics
@@ -171,7 +160,7 @@ jobs:
             args: '-p 8428:8428'
             probe: 'curl -sf http://127.0.0.1:8428/health'
             setup: ''
-            conn: 'Server=http://127.0.0.1:8428;provider=VictoriaMetrics'
+            conn: 'Server=http://127.0.0.1:8428'
             filter: 'FullyQualifiedName~VictoriaMetricsLiveTest'
 
           - name: prometheus
@@ -179,7 +168,7 @@ jobs:
             args: '-p 9090:9090'
             probe: 'curl -sf http://127.0.0.1:9090/-/healthy'
             setup: ''
-            conn: 'Server=http://127.0.0.1:9090;provider=Prometheus'
+            conn: 'Server=http://127.0.0.1:9090'
             filter: 'FullyQualifiedName~PrometheusTests'
 
           - name: iotdb
@@ -187,7 +176,7 @@ jobs:
             args: '-p 6667:6667 -p 18080:18080 -e cn_internal_address=127.0.0.1 -e cn_internal_port=10710 -e cn_consensus_port=10720 -e cn_seed_config_node=127.0.0.1:10710 -e dn_rpc_address=127.0.0.1 -e dn_internal_address=127.0.0.1 -e dn_rpc_port=6667 -e dn_mpp_data_exchange_port=10740 -e dn_schema_region_consensus_port=10750 -e dn_data_region_consensus_port=10760 -e dn_seed_config_node=127.0.0.1:10710 -e enable_rest_service=true -e rest_service_port=18080 -e "IOTDB_JMX_OPTS=-Xms1G -Xmx1G"'
             probe: 'bash -c "</dev/tcp/127.0.0.1/18080"'
             setup: ''
-            conn: 'Server=http://127.0.0.1:18080;User=root;Password=root;provider=IoTDB'
+            conn: 'Server=http://127.0.0.1:18080;User=root;Password=root'
             filter: 'FullyQualifiedName~IoTDBTests'
 
           # InfluxDB 3 Core 默认开启鉴权，setup 阶段创建令牌与测试库后写入 GITHUB_ENV

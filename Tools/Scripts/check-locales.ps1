@@ -38,7 +38,15 @@ param(
         '{0}({1},{2})',
         '{0}({1})',
         'Driver file [{0}] SHA-256 is [{1}]; pin it in DriverLoader.KnownHashes to enforce integrity.',
-        '[{0}/{1}] failed to decrypt cached configuration; ignoring {2}: {3}'
+        '[{0}/{1}] failed to decrypt cached configuration; ignoring {2}: {3}',
+        # 内部诊断日志：不面向最终用户，保留英文便于检索与反馈
+        'Presto metadata query failed for [{0}]: {1}',
+        'Failed to get fast row count for [{0}] by stats: {1}',
+        'Failed to get Iceberg row count: {0}',
+        'Failed to update count statistics for [{0}]: {1}',
+        '{0}.Count exact row count took {1}ms, limit {2:n0}',
+        'Exact row count for [{0}] took {1}ms, limit adjusted {2:n0} -> {3:n0}, next after {4:yyyy-MM-dd HH:mm}',
+        'Exact row count for [{0}] timed out, keep {1:n0}, limit {2:n0} -> {3:n0}, retry after 24h'
     )
 )
 

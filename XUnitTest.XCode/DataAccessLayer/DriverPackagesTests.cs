@@ -32,6 +32,23 @@ public class DriverPackagesTests
     [DisplayName("按驱动程序集文件名取推荐 NuGet 包")]
     public void GetByAssembly(String file, String expected) => Assert.Equal(expected, DriverPackages.Get(file));
 
+    [Theory]
+    [InlineData(DatabaseType.Presto, "NewLife.Presto")]
+    [InlineData(DatabaseType.TDengine, "NewLife.TDengine")]
+    [DisplayName("独立驱动包优先于内置回退")]
+    public void FactoryFromPackage(DatabaseType type, String assembly)
+    {
+        var db = DbFactory.Create(type);
+        Assert.NotNull(db);
+
+        // 只创建工厂，不连接服务；包缺失时会回退旧驱动或抛异常，此断言即可暴露
+        db.ConnectionString = type == DatabaseType.Presto ? "Host=localhost" : "Server=localhost";
+
+        var factory = db.Factory;
+        Assert.NotNull(factory);
+        Assert.Equal(assembly, factory!.GetType().Assembly.GetName().Name);
+    }
+
     [Fact(DisplayName = "已注册数据库均能给出驱动包提示")]
     public void AllRegisteredDatabasesCovered()
     {

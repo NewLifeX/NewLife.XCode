@@ -57,7 +57,7 @@ XCode reaches every database through a separate ADO.NET driver package. Install 
 | IoTDB | `IoTDB` | Built-in | Time-series |
 | Prometheus | `Prometheus` | Built-in | Time-series |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Document |
-| Presto | `Presto` | `NReco.PrestoAdo` | Federated |
+| Presto | `Presto` | `NewLife.Presto` | Federated |
 | Trino | `Trino` | `Trino.Data.ADO` | Federated |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | Embedded / network |
 | SonnetDB | `SonnetDB` | `SonnetDB` | Embedded / remote |

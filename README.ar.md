@@ -57,7 +57,7 @@
 | IoTDB | `IoTDB` | مدمج | سلاسل زمنية |
 | Prometheus | `Prometheus` | مدمج | سلاسل زمنية |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | مستندية |
-| Presto | `Presto` | `NReco.PrestoAdo` | اتحادية |
+| Presto | `Presto` | `NewLife.Presto` | اتحادية |
 | Trino | `Trino` | `Trino.Data.ADO` | اتحادية |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | مدمجة / شبكة |
 | SonnetDB | `SonnetDB` | `SonnetDB` | مدمجة / بعيدة |

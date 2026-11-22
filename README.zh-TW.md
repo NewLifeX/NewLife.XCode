@@ -59,7 +59,7 @@ XCode 透過獨立的 ADO.NET 驅動套件存取各類資料庫。請依所用�
 | IoTDB | `IoTDB` | 內建 | 時序 |
 | Prometheus | `Prometheus` | 內建 | 時序 |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | 文件 |
-| Presto | `Presto` | `NReco.PrestoAdo` | 聯邦查詢 |
+| Presto | `Presto` | `NewLife.Presto` | 聯邦查詢 |
 | Trino | `Trino` | `Trino.Data.ADO` | 聯邦查詢 |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | 內嵌 / 網路 |
 | SonnetDB | `SonnetDB` | `SonnetDB` | 內嵌 / 遠端 |

@@ -57,7 +57,7 @@ XCode는 데이터베이스마다 별도의 ADO.NET 드라이버 패키지로 �
 | IoTDB | `IoTDB` | 내장 | 시계열 |
 | Prometheus | `Prometheus` | 내장 | 시계열 |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | 문서형 |
-| Presto | `Presto` | `NReco.PrestoAdo` | 페더레이션 |
+| Presto | `Presto` | `NewLife.Presto` | 페더레이션 |
 | Trino | `Trino` | `Trino.Data.ADO` | 페더레이션 |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | 임베디드 / 네트워크 |
 | SonnetDB | `SonnetDB` | `SonnetDB` | 임베디드 / 원격 |

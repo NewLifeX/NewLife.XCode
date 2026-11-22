@@ -57,7 +57,7 @@ XCode greift über ein separates ADO.NET-Treiberpaket auf jede Datenbank zu. Ins
 | IoTDB | `IoTDB` | Integriert | Zeitreihen |
 | Prometheus | `Prometheus` | Integriert | Zeitreihen |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Dokument |
-| Presto | `Presto` | `NReco.PrestoAdo` | Föderiert |
+| Presto | `Presto` | `NewLife.Presto` | Föderiert |
 | Trino | `Trino` | `Trino.Data.ADO` | Föderiert |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | Eingebettet / Netzwerk |
 | SonnetDB | `SonnetDB` | `SonnetDB` | Eingebettet / Remote |

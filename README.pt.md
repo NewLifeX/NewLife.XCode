@@ -57,7 +57,7 @@ O XCode acessa cada banco de dados por meio de um pacote de driver ADO.NET separ
 | IoTDB | `IoTDB` | Integrado | Séries temporais |
 | Prometheus | `Prometheus` | Integrado | Séries temporais |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Documento |
-| Presto | `Presto` | `NReco.PrestoAdo` | Federado |
+| Presto | `Presto` | `NewLife.Presto` | Federado |
 | Trino | `Trino` | `Trino.Data.ADO` | Federado |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | Incorporado / rede |
 | SonnetDB | `SonnetDB` | `SonnetDB` | Incorporado / remoto |

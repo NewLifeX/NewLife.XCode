@@ -57,7 +57,7 @@ XCode 通过独立的 ADO.NET 驱动包访问各类数据库。请按所用数�
 | IoTDB | `IoTDB` | 内置 | 时序 |
 | Prometheus | `Prometheus` | 内置 | 时序 |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | 文档 |
-| Presto | `Presto` | `NReco.PrestoAdo` | 联邦查询 |
+| Presto | `Presto` | `NewLife.Presto` | 联邦查询 |
 | Trino | `Trino` | `Trino.Data.ADO` | 联邦查询 |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | 嵌入式 / 网络 |
 | SonnetDB | `SonnetDB` | `SonnetDB` | 嵌入式 / 远程 |

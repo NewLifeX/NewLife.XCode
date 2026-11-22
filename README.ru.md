@@ -57,7 +57,7 @@ XCode обращается к каждой базе данных через от
 | IoTDB | `IoTDB` | Встроенный | Временных рядов |
 | Prometheus | `Prometheus` | Встроенный | Временных рядов |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Документная |
-| Presto | `Presto` | `NReco.PrestoAdo` | Федеративная |
+| Presto | `Presto` | `NewLife.Presto` | Федеративная |
 | Trino | `Trino` | `Trino.Data.ADO` | Федеративная |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | Встроенная / сеть |
 | SonnetDB | `SonnetDB` | `SonnetDB` | Встроенная / удалённая |

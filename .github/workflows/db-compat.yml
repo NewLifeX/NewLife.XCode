@@ -188,10 +188,13 @@ jobs:
             probe: 'bash -c "</dev/tcp/127.0.0.1/8181"'
             setup: |
               set -euo pipefail
-              output=$(docker exec db influxdb3 create token --admin --host http://127.0.0.1:8181 2>&1)
+              output=$(docker exec db influxdb3 create token --admin --host http://127.0.0.1:8181 2>&1 || true)
               token=$(printf '%s' "$output" | grep -oE 'apiv3_[A-Za-z0-9_-]+' | head -n1)
               if [ -z "$token" ]; then
-                echo "::error::未能从 influxdb3 输出解析管理员令牌"
+                token=$(docker logs db 2>&1 | grep -oE 'apiv3_[A-Za-z0-9_-]+' | head -n1 || true)
+              fi
+              if [ -z "$token" ]; then
+                echo "::error::未能获取 influxdb3 管理员令牌"
                 printf '%s\n' "$output"
                 exit 1
               fi

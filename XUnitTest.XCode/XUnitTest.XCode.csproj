@@ -98,6 +98,10 @@
     <!-- 直接引用真库驱动，避免真库用例依赖运行时从 PluginServer 下载 -->
     <PackageReference Include="NewLife.Presto" Version="1.0.2026.1122-beta0820" />
     <PackageReference Include="NewLife.TDengine" Version="1.0.2026.1122-beta0844" />
+    <!-- PostgreSQL 协议兼容库（PostgreSQL/GreptimeDB/CrateDB/CockroachDB/QuestDB）真库用例所需 -->
+    <PackageReference Include="Npgsql" Version="8.0.8" />
+    <!-- MongoDB 真库用例所需 -->
+    <PackageReference Include="MongoDB.Driver" Version="3.14.1" />
     <PackageReference Include="NReco.PrestoAdo" Version="1.1.0" />
     <PackageReference Include="Trino.Client.ADO" Version="1.0.11" />
     <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="10.3.4" />

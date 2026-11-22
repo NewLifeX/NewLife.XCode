@@ -135,7 +135,7 @@ jobs:
           - name: questdb
             image: questdb/questdb:10.2.0
             args: '-p 8812:8812 -p 9000:9000'
-            probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/8812"'
+            probe: 'bash -c "</dev/tcp/127.0.0.1/8812"'
             setup: ''
             conn: 'Server=127.0.0.1;Port=8812;Database=qdb;Uid=admin;Pwd=quest;provider=QuestDB'
             filter: 'FullyQualifiedName~QuestDbLiveTest'
@@ -143,7 +143,7 @@ jobs:
           - name: cratedb
             image: crate:5.10.4
             args: '-p 15432:5432 -p 4200:4200'
-            probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/5432"'
+            probe: 'bash -c "</dev/tcp/127.0.0.1/15432"'
             setup: ''
             conn: 'Server=127.0.0.1;Port=15432;Database=doc;Uid=crate;Pwd=;provider=CrateDB'
             filter: 'FullyQualifiedName~CrateDbLiveTest'
@@ -160,6 +160,7 @@ jobs:
           - name: greptimedb
             image: greptime/greptimedb:v1.3.1
             args: '-p 4000:4000 -p 4003:4003'
+            cmd: 'standalone start --http-addr 0.0.0.0:4000 --grpc-bind-addr 0.0.0.0:4001 --mysql-addr 0.0.0.0:4002 --postgres-addr 0.0.0.0:4003'
             probe: 'curl -sf http://127.0.0.1:4000/health'
             setup: ''
             conn: 'Server=127.0.0.1;Port=4003;Database=public;Uid=greptime;Pwd=;provider=GreptimeDB'
@@ -183,8 +184,8 @@ jobs:
 
           - name: iotdb
             image: apache/iotdb:2.0.11-standalone
-            args: '-p 18080:18080'
-            probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/18080"'
+            args: '-p 6667:6667 -p 18080:18080 -e cn_internal_address=127.0.0.1 -e cn_internal_port=10710 -e cn_consensus_port=10720 -e cn_seed_config_node=127.0.0.1:10710 -e dn_rpc_address=127.0.0.1 -e dn_internal_address=127.0.0.1 -e dn_rpc_port=6667 -e dn_mpp_data_exchange_port=10740 -e dn_schema_region_consensus_port=10750 -e dn_data_region_consensus_port=10760 -e dn_seed_config_node=127.0.0.1:10710 -e enable_rest_service=true -e rest_service_port=18080 -e "IOTDB_JMX_OPTS=-Xms1G -Xmx1G"'
+            probe: 'bash -c "</dev/tcp/127.0.0.1/18080"'
             setup: ''
             conn: 'Server=http://127.0.0.1:18080;User=root;Password=root;provider=IoTDB'
             filter: 'FullyQualifiedName~IoTDBTests'

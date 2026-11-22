@@ -293,6 +293,14 @@ class TDengineMetaData : RemoteDbMetaData
     #endregion
 
     #region 架构
+    /// <summary>REST 元数据把 VARCHAR 列返回为字节数组，这里统一按 UTF-8 还原</summary>
+    private static String? ToText(Object? value) => value switch
+    {
+        null => null,
+        Byte[] bytes => Encoding.UTF8.GetString(bytes),
+        _ => value as String ?? value.ToString(),
+    };
+
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
         var ss = Database.CreateSession();
@@ -314,12 +322,12 @@ class TDengineMetaData : RemoteDbMetaData
             // 所有表
             foreach (var dr in dt)
             {
-                var name = dr["table_name"] + "";
+                var name = ToText(dr["table_name"]) + "";
                 if (name.IsNullOrEmpty() || hs.Count > 0 && !hs.Contains(name)) continue;
 
                 var table = DAL.CreateTable();
                 table.TableName = name;
-                if (hasStable) table.Owner = dr["stable_name"] as String;
+                if (hasStable) table.Owner = ToText(dr["stable_name"]) as String;
                 table.DbType = Database.Type;
 
                 #region 字段
@@ -330,10 +338,10 @@ class TDengineMetaData : RemoteDbMetaData
                     var field = table.CreateColumn();
 
                     // DESCRIBE 的列顺序固定为 field/type/length/note，2.x 与 3.x 仅大小写不同
-                    field.ColumnName = dc[0] + "";
-                    field.RawType = dc[1] + "";
+                    field.ColumnName = ToText(dc[0]) + "";
+                    field.RawType = ToText(dc[1]) + "";
                     field.Length = dc[2].ToInt();
-                    field.Master = dc[3] as String == "TAGS";
+                    field.Master = ToText(dc[3]) == "TAGS";
                     field.DataType = GetDataType(field)!;
 
                     field.Fix();
@@ -370,7 +378,7 @@ class TDengineMetaData : RemoteDbMetaData
         // 所有表
         foreach (var dr in dt)
         {
-            var name = dr["table_name"] + "";
+            var name = ToText(dr["table_name"]) + "";
             if (!name.IsNullOrEmpty()) list.Add(name);
         }
 
@@ -404,7 +412,7 @@ class TDengineMetaData : RemoteDbMetaData
         var ss = Database.CreateSession();
         var sql = $"SHOW DATABASES";
         var dt = ss.Query(sql, null);
-        return dt != null && dt.Rows != null && dt.Rows.Any(e => e[0] as String == databaseName);
+        return dt != null && dt.Rows != null && dt.Rows.Any(e => ToText(e[0]) == databaseName);
     }
 
     public override String CreateDatabaseSQL(String dbname, String? file) => $"Create Database If Not Exists {Database.FormatName(dbname)}";

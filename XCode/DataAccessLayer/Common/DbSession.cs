@@ -641,16 +641,16 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     /// <param name="sql">SQL语句</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Task<DbTable> QueryAsync(String sql, IDataParameter[]? ps)
+    public virtual async Task<DbTable> QueryAsync(String sql, IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, CommandType.Text, ps);
-        return ExecuteAsync(cmd, true, async cmd2 =>
+        return await ExecuteAsync(cmd, true, async cmd2 =>
         {
             using var dr = await cmd2.ExecuteReaderAsync().ConfigureAwait(false);
             var dt = new DbTable();
             await dt.ReadAsync(dr).ConfigureAwait(false);
             return dt;
-        });
+        }).ConfigureAwait(false);
     }
 
     /// <summary>执行SQL查询，直接映射为实体列表，跳过DbTable中间层</summary>
@@ -701,10 +701,10 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Task<Int32> ExecuteAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
+    public virtual async Task<Int32> ExecuteAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
-        return ExecuteAsync(cmd, false, cmd2 => cmd2.ExecuteNonQueryAsync());
+        return await ExecuteAsync(cmd, false, cmd2 => cmd2.ExecuteNonQueryAsync()).ConfigureAwait(false);
     }
 
     /// <summary>执行DbCommand，返回受影响的行数</summary>
@@ -717,17 +717,17 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns>新增行的自动编号</returns>
-    public virtual Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
+    public virtual async Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
 
-        return ExecuteAsync(cmd, false, async cmd2 =>
+        return await ExecuteAsync(cmd, false, async cmd2 =>
         {
             var rs = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
             if (rs == null || rs == DBNull.Value) return 0;
 
             return Reflect.ChangeType<Int64>(rs);
-        });
+        }).ConfigureAwait(false);
     }
 
     /// <summary>执行SQL语句，返回结果中的第一行第一列</summary>
@@ -736,17 +736,17 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     /// <param name="type">命令类型，默认SQL文本</param>
     /// <param name="ps">命令参数</param>
     /// <returns></returns>
-    public virtual Task<T?> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
+    public virtual async Task<T?> ExecuteScalarAsync<T>(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
     {
         using var cmd = OnCreateCommand(sql, type, ps);
-        return ExecuteAsync(cmd, true, async cmd2 =>
+        return await ExecuteAsync(cmd, true, async cmd2 =>
         {
             var rs = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
             if (rs == null || rs == DBNull.Value) return default;
             if (rs is T t) return t;
 
             return (T?)Reflect.ChangeType(rs, typeof(T));
-        });
+        }).ConfigureAwait(false);
     }
 
     /// <summary>异步执行数据库命令并返回结果，统一处理事务、SQL 日志与异常</summary>

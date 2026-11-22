@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using NewLife;
 using NewLife.Log;
 using NewLife.UnitTest;
 using XCode;
 using XCode.DataAccessLayer;
+using XCode.Membership;
 using Xunit;
 
 namespace XUnitTest.XCode.DataAccessLayer;
@@ -35,14 +39,46 @@ public class MongoDBTests
     [LiveDatabaseFact("mongodb", "mongodb", 27017)]
     public void ConnectTest()
     {
-        var db = DbFactory.Create(DatabaseType.MongoDB);
+        // MongoDB 是文档数据库，MongoDB.Driver 不提供 ADO.NET 工厂，不能用 OpenConnection 验证；
+        // 这里直接用驱动 ping，既验证服务器可达，也验证驱动已正确引用
+        var client = new MongoClient(_ConnStr);
+        var result = client.GetDatabase("admin").RunCommand<BsonDocument>(new BsonDocument("ping", 1));
+        Assert.Equal(1d, result["ok"].ToDouble());
+    }
 
-        // MongoDB 使用 mongodb:// 连接字符串
-        db.ConnectionString = _ConnStr;
+    [TestOrder(30)]
+    [LiveDatabaseFact("mongodb", "mongodb", 27017)]
+    public void EntityPersistenceTest()
+    {
+        var client = new MongoClient(_ConnStr);
+        var database = client.GetDatabase("xcode_test");
+        database.DropCollection("Role");
 
-        var conn = db.OpenConnection();
-        Assert.NotNull(conn);
-        XTrace.WriteLine("MongoDB connected: {0}", conn.ServerVersion);
+        var persistence = new MongoEntityPersistence(Role.Meta.Factory);
+        var role = new Role { Id = 9527, Name = "mongo_live", IsSystem = true };
+        var collection = database.GetCollection<BsonDocument>("Role");
+
+        MongoEntityPersistence.Writer = new MongoDriverDocumentWriter(database);
+        try
+        {
+            Assert.Equal(1, persistence.Insert(Role.Meta.Session, role));
+
+            var doc = collection.Find(Builders<BsonDocument>.Filter.Eq("Id", 9527)).FirstOrDefault();
+            Assert.NotNull(doc);
+            Assert.Equal("mongo_live", doc!["Name"].AsString);
+
+            role.Name = "mongo_live2";
+            Assert.Equal(1, persistence.Update(Role.Meta.Session, role));
+            doc = collection.Find(Builders<BsonDocument>.Filter.Eq("Id", 9527)).FirstOrDefault();
+            Assert.Equal("mongo_live2", doc!["Name"].AsString);
+
+            Assert.Equal(1, persistence.Delete(Role.Meta.Session, role));
+            Assert.Equal(0, collection.CountDocuments(Builders<BsonDocument>.Filter.Eq("Id", 9527)));
+        }
+        finally
+        {
+            MongoEntityPersistence.Writer = null;
+        }
     }
 
     [TestOrder(20)]
@@ -130,5 +166,43 @@ public class MongoDBTests
 
         var result = db.StringConcat("a", "b");
         Assert.Equal("concat(a,b)", result);
+    }
+
+    /// <summary>用 MongoDB.Driver 实现 XCode 的文档写入器，验证应用侧接入方式</summary>
+    private sealed class MongoDriverDocumentWriter(IMongoDatabase database) : IMongoDocumentWriter
+    {
+        public Int32 Insert(String collection, IDictionary<String, Object?> document)
+        {
+            database.GetCollection<BsonDocument>(collection).InsertOne(ToDocument(document));
+
+            return 1;
+        }
+
+        public Int32 Replace(String collection, String keyName, Object? keyValue, IDictionary<String, Object?> document)
+        {
+            var result = database.GetCollection<BsonDocument>(collection).ReplaceOne(Filter(keyName, keyValue), ToDocument(document));
+
+            return result.MatchedCount > 0 ? 1 : 0;
+        }
+
+        public Int32 Delete(String collection, String keyName, Object? keyValue)
+        {
+            var result = database.GetCollection<BsonDocument>(collection).DeleteOne(Filter(keyName, keyValue));
+
+            return (Int32)result.DeletedCount;
+        }
+
+        private static FilterDefinition<BsonDocument> Filter(String keyName, Object? keyValue) => Builders<BsonDocument>.Filter.Eq(keyName, BsonValue.Create(keyValue));
+
+        private static BsonDocument ToDocument(IDictionary<String, Object?> document)
+        {
+            var doc = new BsonDocument();
+            foreach (var item in document)
+            {
+                doc[item.Key] = BsonValue.Create(item.Value);
+            }
+
+            return doc;
+        }
     }
 }

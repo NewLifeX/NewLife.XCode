@@ -40,7 +40,7 @@ jobs:
             args: '-e FIREBIRD_ROOT_PASSWORD=masterkey -e FIREBIRD_DATABASE=test.fdb -p 3050:3050'
             probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/3050"'
             setup: ''
-            conn: 'Database=/firebird/data/test.fdb;DataSource=127.0.0.1;Port=3050;User=SYSDBA;Password=masterkey;Dialect=3'
+            conn: 'Database=/var/lib/firebird/data/test.fdb;DataSource=127.0.0.1;Port=3050;User=SYSDBA;Password=masterkey;Dialect=3'
             filter: 'FullyQualifiedName~FirebirdTests'
 
           - name: clickhouse
@@ -97,10 +97,11 @@ jobs:
 
           - name: monetdb
             image: monetdb/monetdb:Dec2025-SP3
-            args: '-p 50000:50000'
+            # 未设置 MDB_CREATE_DBS 时会用默认库并要求管理口令，这里显式创建测试库
+            args: '-e MDB_CREATE_DBS=test -e MDB_DB_ADMIN_PASS=monetdb -e MDB_DAEMON_PASS=monetdb -p 50000:50000'
             probe: 'docker exec db bash -c "</dev/tcp/127.0.0.1/50000"'
             setup: ''
-            conn: 'Host=127.0.0.1;Port=50000;Database=demo;User=monetdb;Password=monetdb'
+            conn: 'Host=127.0.0.1;Port=50000;Database=test;User=monetdb;Password=monetdb'
             filter: 'FullyQualifiedName~MonetDBTests'
 
           - name: trino
@@ -179,28 +180,15 @@ jobs:
             conn: 'Server=http://127.0.0.1:18080;User=root;Password=root'
             filter: 'FullyQualifiedName~IoTDBTests'
 
-          # InfluxDB 3 Core 默认开启鉴权，/health 未带令牌返回 401，只能用端口判断就绪；
-          # 令牌与测试库在 setup 阶段创建后写入 GITHUB_ENV
+          # InfluxDB 3 Core 默认开启鉴权，CI 只需要验证 SQL 写入与查询通路，
+          # 因此以 --without-auth 启动，省去令牌下发与注入
           - name: influxdb3
             image: influxdb:3-core
             args: '-p 8181:8181'
-            cmd: 'influxdb3 serve --node-id=node0 --object-store=file --data-dir=/var/lib/influxdb3'
-            probe: 'bash -c "</dev/tcp/127.0.0.1/8181"'
-            setup: |
-              set -euo pipefail
-              output=$(docker exec db influxdb3 create token --admin --host http://127.0.0.1:8181 2>&1 || true)
-              token=$(printf '%s' "$output" | grep -oE 'apiv3_[A-Za-z0-9_-]+' | head -n1)
-              if [ -z "$token" ]; then
-                token=$(docker logs db 2>&1 | grep -oE 'apiv3_[A-Za-z0-9_-]+' | head -n1 || true)
-              fi
-              if [ -z "$token" ]; then
-                echo "::error::未能获取 influxdb3 管理员令牌"
-                printf '%s\n' "$output"
-                exit 1
-              fi
-              docker exec db influxdb3 create database test --host http://127.0.0.1:8181 --token "$token"
-              echo "XCode_influxdb3=Server=http://127.0.0.1:8181;Database=test;Token=$token;Version=3" >> "$GITHUB_ENV"
-            conn: ''
+            cmd: 'influxdb3 serve --node-id=node0 --object-store=file --data-dir=/var/lib/influxdb3 --without-auth'
+            probe: 'curl -sf http://127.0.0.1:8181/health'
+            setup: 'docker exec db influxdb3 create database test --host http://127.0.0.1:8181'
+            conn: 'Server=http://127.0.0.1:8181;Database=test;Version=3'
             filter: 'FullyQualifiedName~InfluxDBVersionLiveTests'
 
     steps:

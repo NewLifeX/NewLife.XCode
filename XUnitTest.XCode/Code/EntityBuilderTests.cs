@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using NewLife.Log;
@@ -549,5 +550,53 @@ public class EntityBuilderTests
             //Assert.Contains("FindByName(String name)", rs);
             //Assert.Contains("FindAllByMail(String mail)", rs);
         }
+    }
+
+    [Fact]
+    [DisplayName("数组字段生成强类型属性与数组转换")]
+    public void ArrayColumn()
+    {
+        var table = DAL.CreateTable();
+        table.Name = "ArrayModel";
+        table.TableName = "ArrayModel";
+        table.DbType = DatabaseType.SQLite;
+
+        var id = table.CreateColumn();
+        id.Name = "Id";
+        id.ColumnName = "Id";
+        id.DataType = typeof(Int32);
+        id.PrimaryKey = true;
+        id.Identity = true;
+        id.Nullable = false;
+        table.Columns.Add(id);
+
+        var tags = table.CreateColumn();
+        tags.Name = "Tags";
+        tags.ColumnName = "Tags";
+        tags.DataType = typeof(String[]);
+        tags.RawType = "array(varchar)";
+        tags.Nullable = true;
+        tags.Length = -1;
+        table.Columns.Add(tags);
+
+        table.Fix();
+
+        var option = new EntityBuilderOption
+        {
+            ConnName = "MyConn",
+            Namespace = "Company.MyName",
+            Nullable = true,
+        };
+        var builder = new EntityBuilder
+        {
+            Table = table,
+            Option = option,
+        };
+
+        builder.Execute();
+
+        var code = builder.ToString();
+        Assert.Contains("public String[] Tags", code);
+        Assert.Contains("_Tags = ValidHelper.ToStringArray(value);", code);
     }
 }

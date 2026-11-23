@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using NewLife;
 using NewLife.Collections;
@@ -116,9 +117,37 @@ public class ModelHelperTests
         Assert.Equal("部门。组织机构，多级树状结构", dep.Description);
     }
 
-    private String ReadTarget(String file, String text, Boolean overwrite = true)
+    [Fact]
+    [DisplayName("数组字段模型 XML 往返")]
+    public void ArrayDataTypeRoundTrip()
     {
-        var target = "";
+        var xml = """
+            <EntityModel>
+              <Tables>
+                <Table Name="ArrayModel" TableName="ArrayModel">
+                  <Columns>
+                    <Column Name="Tags" ColumnName="Tags" DataType="String[]" RawType="array(varchar)" Length="-1" Nullable="True" />
+                  </Columns>
+                </Table>
+              </Tables>
+            </EntityModel>
+            """;
+        var option = new EntityBuilderOption();
+        var atts = new NullableDictionary<String, String>(StringComparer.OrdinalIgnoreCase);
+        var tables = ModelHelper.FromXml(xml, DAL.CreateTable, option, atts);
+
+        Assert.Single(tables);
+        var column = tables[0].Columns[0];
+        Assert.Equal(typeof(String[]), column.DataType);
+        Assert.Equal("array(varchar)", column.RawType);
+
+        var xml2 = ModelHelper.ToXml(tables);
+        Assert.Contains("DataType=\"String[]\"", xml2);
+        Assert.Contains("RawType=\"array(varchar)\"", xml2);
+    }
+
+    private String ReadTarget(String file, String text, Boolean overwrite = true)
+    {        var target = "";
         // 统一转换分隔符，避免 Windows 风格路径在 Linux 等平台失效
         var dir = @"..\..\XUnitTest.XCode\".Replace('\\', Path.DirectorySeparatorChar);
         var file2 = dir.CombinePath(file.Replace('\\', Path.DirectorySeparatorChar));

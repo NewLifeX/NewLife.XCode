@@ -31,7 +31,25 @@ public class PrestoMetaDataTests
     {
         var column = CreateColumn(rawType);
 
-        PrestoMetaData.FixColumn(column);
+        new TestMetaData().FixColumn(column);
+
+        Assert.Equal(length, column.Length);
+    }
+
+    [Theory]
+    [DisplayName("开启数组后按元素类型解析长度")]
+    [InlineData("array(varchar)", -1)]
+    [InlineData("array(varchar(50))", 50)]
+    [InlineData("array(char(10))", 10)]
+    [InlineData("array(integer)", 0)]
+    [InlineData("array(decimal(20,2))", 0)]
+    [InlineData("array(timestamp)", -1)]
+    [InlineData("array(array(integer))", -1)]
+    public void FixArrayLength(String rawType, Int32 length)
+    {
+        var column = CreateColumn(rawType);
+
+        new TestMetaData { EnableArrays = true }.FixColumn(column);
 
         Assert.Equal(length, column.Length);
     }
@@ -51,7 +69,25 @@ public class PrestoMetaDataTests
     {
         var column = CreateColumn(rawType);
 
-        PrestoMetaData.FixColumn(column);
+        new TestMetaData().FixColumn(column);
+
+        Assert.Equal(precision, column.Precision);
+        Assert.Equal(scale, column.Scale);
+    }
+
+    [Theory]
+    [DisplayName("开启数组后按元素类型解析精度")]
+    [InlineData("array(decimal(20,2))", 20, 2)]
+    [InlineData("array(numeric(10, 4))", 10, 4)]
+    [InlineData("array(smallint)", 5, 0)]
+    [InlineData("array(integer)", 10, 0)]
+    [InlineData("array(bigint)", 19, 0)]
+    [InlineData("array(double)", 22, 4)]
+    public void FixArrayPrecision(String rawType, Int32 precision, Int32 scale)
+    {
+        var column = CreateColumn(rawType);
+
+        new TestMetaData { EnableArrays = true }.FixColumn(column);
 
         Assert.Equal(precision, column.Precision);
         Assert.Equal(scale, column.Scale);
@@ -76,6 +112,30 @@ public class PrestoMetaDataTests
         var column = CreateColumn(rawType);
 
         Assert.Equal(type, new TestMetaData().Map(column));
+    }
+
+    [Theory]
+    [DisplayName("开启数组后映射为强类型数组")]
+    [InlineData("array(varchar)", typeof(String[]))]
+    [InlineData("array(char(10))", typeof(String[]))]
+    [InlineData("array(smallint)", typeof(Int16[]))]
+    [InlineData("array(integer)", typeof(Int32[]))]
+    [InlineData("array(bigint)", typeof(Int64[]))]
+    [InlineData("array(double)", typeof(Double[]))]
+    [InlineData("array(decimal(20,2))", typeof(Decimal[]))]
+    [InlineData("array(boolean)", typeof(Boolean[]))]
+    [InlineData("array(timestamp)", typeof(String))]
+    [InlineData("array(real)", typeof(String))]
+    [InlineData("array(varbinary)", typeof(String))]
+    [InlineData("array(array(integer))", typeof(String))]
+    [InlineData("array(map(varchar, integer))", typeof(String))]
+    [InlineData("map(varchar, integer)", typeof(String))]
+    [InlineData("row(a integer)", typeof(String))]
+    public void MapArrayDataType(String rawType, Type type)
+    {
+        var column = CreateColumn(rawType);
+
+        Assert.Equal(type, new TestMetaData { EnableArrays = true }.Map(column));
     }
 
     private sealed class TestMetaData : PrestoMetaData

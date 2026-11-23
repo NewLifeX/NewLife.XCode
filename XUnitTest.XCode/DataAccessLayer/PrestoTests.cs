@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -282,6 +283,27 @@ public class PrestoTests
         Assert.False(db.Capabilities.HasFlag(DatabaseCapability.Transactions));
         Assert.False(db.Capabilities.HasFlag(DatabaseCapability.Ddl));
         Assert.False(db.Capabilities.HasFlag(DatabaseCapability.BulkInsert));
+    }
+
+    [Theory]
+    [DisplayName("Arrays 开关启用数组能力并校验 ComplexTypes")]
+    [InlineData(DatabaseType.Presto)]
+    [InlineData(DatabaseType.Trino)]
+    public void ArraySwitchTest(DatabaseType dbType)
+    {
+        var db = DbFactory.Create(dbType);
+        Assert.NotNull(db);
+
+        db.ConnectionString = "Host=localhost;Port=8080;Catalog=hive;Schema=default;Arrays=On";
+        Assert.True(db.Supports(DatabaseCapability.Array));
+
+        // 显式把 ComplexTypes 设为 String 与 Arrays 冲突，必须尽早失败
+        Assert.Throws<XCodeException>(() => db.ConnectionString = "Host=localhost;Port=8080;Arrays=On;ComplexTypes=String");
+
+        // 数组字段只读，写入格式化阶段直接拒绝
+        var column = DAL.CreateTable().CreateColumn();
+        column.DataType = typeof(String[]);
+        Assert.Throws<NotSupportedException>(() => db.FormatValue(column, new[] { "a" }));
     }
 
     [Theory]

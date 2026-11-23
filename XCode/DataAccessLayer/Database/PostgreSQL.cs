@@ -26,7 +26,8 @@ internal class PostgreSQL : RemoteDb
         | DatabaseCapability.BulkInsert
         | DatabaseCapability.BulkUpsert
         | DatabaseCapability.WindowFunctions
-        | DatabaseCapability.WindowFrame;
+        | DatabaseCapability.WindowFrame
+        | DatabaseCapability.Array;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
@@ -140,7 +141,15 @@ internal class PostgreSQL : RemoteDb
         }
         if (isArrayField)
         {
-            if (value is null) return isNullable ? "NULL" : "'{}'";
+            // 优先使用反向工程拿到的元素类型，保留 varchar(n)、timestamptz 等精度与别名
+            var castType = GetArrayCastType(column, type);
+            var elementType = castType ?? GetArrayElementTypeName(type);
+            fieldType = elementType ?? String.Empty;
+
+            if (value is null || value is DBNull) return isNullable ? "NULL" : FormatEmptyArray(elementType);
+            if (value is String || value is not IEnumerable)
+                throw new NotSupportedException(L.T("Field [{0}] requires an array value.", column?.Name));
+
             var count = 0;
             var builder = Pool.StringBuilder.Get();
             builder.Append("ARRAY[");
@@ -154,8 +163,7 @@ internal class PostgreSQL : RemoteDb
             {
                 builder.Length--;
                 builder.Append("]");
-                //在进行数组运算时，因字符串可能会被映射为多种类型造成方法签名不匹配，所以需要指定类型
-                //这里仅处理了字符串，如果其他类型也出现了类似情况，仅需在 ValueToSQL 中添加对应的类型即可
+                // 显式指定数组类型，避免字符串/整数数组在运算或写入时被推断成不匹配的签名
                 if (!String.IsNullOrWhiteSpace(fieldType))
                 {
                     builder.Append("::").Append(fieldType).Append("[]");
@@ -164,7 +172,7 @@ internal class PostgreSQL : RemoteDb
             else
             {
                 builder.Clear();
-                builder.Append("'{}'");
+                builder.Append(FormatEmptyArray(elementType));
             }
             return builder.Return();
         }
@@ -174,9 +182,49 @@ internal class PostgreSQL : RemoteDb
         }
     }
 
+    /// <summary>取数组转换使用的元素类型，优先使用原始类型</summary>
+    /// <param name="column">字段</param>
+    /// <param name="elementType">元素 CLR 类型</param>
+    /// <returns>元素类型名；未知返回空</returns>
+    private static String? GetArrayCastType(IDataColumn? column, Type? elementType)
+    {
+        var rawType = column?.RawType;
+        if (!rawType.IsNullOrEmpty() && rawType.EndsWith("[]")) rawType = rawType[..^2];
+        if (rawType.IsNullOrEmpty() || rawType.EqualIgnoreCase("ARRAY")) return GetArrayElementTypeName(elementType);
+
+        return rawType;
+    }
+
+    /// <summary>取数组元素对应的 PostgreSQL 类型名</summary>
+    /// <param name="type">元素类型</param>
+    /// <returns>类型名；未知类型返回空</returns>
+    private static String? GetArrayElementTypeName(Type? type) => type switch
+    {
+        _ when type == typeof(String) => "varchar",
+        _ when type == typeof(Int16) => "smallint",
+        _ when type == typeof(Int32) => "integer",
+        _ when type == typeof(Int64) => "bigint",
+        _ when type == typeof(Single) => "real",
+        _ when type == typeof(Double) => "double precision",
+        _ when type == typeof(Decimal) => "numeric",
+        _ when type == typeof(Boolean) => "boolean",
+        _ when type == typeof(DateTime) => "timestamp",
+        _ when type == typeof(TimeSpan) => "time",
+        _ when type == typeof(Guid) => "uuid",
+        _ => null,
+    };
+
+    /// <summary>格式化空数组。带类型转换，避免空数组被推断为 text[]</summary>
+    /// <param name="elementType">元素类型</param>
+    /// <returns>空数组 SQL</returns>
+    private static String FormatEmptyArray(String? elementType) => elementType.IsNullOrEmpty() ? "'{}'" : $"ARRAY[]::{elementType}[]";
+
 
     private String ValueToSQL(Type? type, Boolean isNullable, Object? value, ref String fieldType)
     {
+        // 数组元素需要显式类型，标量调用时该值不影响最终 SQL
+        if (fieldType.IsNullOrWhiteSpace()) fieldType = GetArrayElementTypeName(type) ?? fieldType;
+
         if (type == typeof(String))
         {
             if (String.IsNullOrWhiteSpace(fieldType)) fieldType = "varchar";
@@ -191,6 +239,12 @@ internal class PostgreSQL : RemoteDb
             if (isNullable && (dt <= DateTime.MinValue || dt >= DateTime.MaxValue)) return "null";
 
             return FormatDateTime(dt);
+        }
+        if (type == typeof(TimeSpan))
+        {
+            if (value == null) return isNullable ? "null" : "''";
+
+            return "'" + value + "'";
         }
         if (type == typeof(Boolean))
         {
@@ -324,16 +378,8 @@ internal class PostgreSQL : RemoteDb
 }
 
 /// <summary>PostgreSQL数据库</summary>
-internal class PostgreSQLSession : RemoteDbSession
+internal class PostgreSQLSession(IDatabase db) : RemoteDbSession(db)
 {
-    #region 构造函数
-
-    public PostgreSQLSession(IDatabase db) : base(db)
-    {
-    }
-
-    #endregion 构造函数
-
     #region 快速查询单表记录数
 
     /// <summary>快速查询单表记录数。PostgreSQL通过pg_class.reltuples估算</summary>
@@ -543,15 +589,17 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
     {
         { typeof(Byte[]), new String[] { "bytea" } },
-        { typeof(Boolean), new String[] { "boolean" } },
-        { typeof(Int16), new String[] { "smallint" } },
-        { typeof(Int32), new String[] { "integer" } },
-        { typeof(Int64), new String[] { "bigint" } },
-        { typeof(Single), new String[] { "float" } },
+        { typeof(Boolean), new String[] { "boolean", "bool" } },
+        { typeof(Int16), new String[] { "smallint", "int2" } },
+        { typeof(Int32), new String[] { "integer", "int", "int4" } },
+        { typeof(Int64), new String[] { "bigint", "int8" } },
+        { typeof(Single), new String[] { "float", "real", "float4" } },
         { typeof(Double), new String[] { "float8", "double precision" } },
-        { typeof(Decimal), new String[] { "decimal" } },
-        { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "date" } },
-        { typeof(String), new String[] { "varchar({0})", "character varying", "text" } },
+        { typeof(Decimal), new String[] { "decimal", "numeric" } },
+        { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz", "date" } },
+        { typeof(TimeSpan), new String[] { "time", "time without time zone", "time with time zone", "timetz" } },
+        { typeof(Guid), new String[] { "uuid" } },
+        { typeof(String), new String[] { "varchar({0})", "character varying", "text", "char", "bpchar", "character" } },
     };
 
     protected override String? ArrayTypePostfix => "[]";
@@ -570,6 +618,21 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
         }
         return base.GetDataType(field);
     }
+
+    /// <summary>把 PostgreSQL 数组的 udt_name 还原成 element[] 形式的原始类型</summary>
+    /// <param name="element">元素类型名，如 int8、varchar</param>
+    /// <param name="field">字段，用于取长度</param>
+    /// <returns>数组原始类型，如 int8[]、varchar(50)[]</returns>
+    internal static String FormatArrayType(String element, IDataColumn field)
+    {
+        var name = element;
+        if (field.Length > 0 && name.EqualIgnoreCase("varchar", "bpchar", "char"))
+            name += $"({field.Length})";
+        else if (field.Precision > 0 && name.EqualIgnoreCase("numeric", "decimal"))
+            name += $"({field.Precision},{field.Scale})";
+
+        return name + "[]";
+    }
     #endregion 数据类型
 
     protected override void FixTable(IDataTable table, DataRow dr, IDictionary<String, DataTable?>? data)
@@ -582,6 +645,15 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
 
     protected override void FixField(IDataColumn field, DataRow dr)
     {
+        // PostgreSQL 数组在 information_schema 中 data_type=ARRAY、udt_name=_text，需要还原元素类型
+        if (TryGetDataRowValue(dr, "UDT_NAME", out String? udt) && !udt.IsNullOrEmpty())
+        {
+            if (udt[0] == '_')
+                field.RawType = FormatArrayType(udt[1..], field);
+            else if (field.RawType.EqualIgnoreCase("ARRAY"))
+                field.RawType = FormatArrayType(udt, field);
+        }
+
         // 修正原始类型
         if (TryGetDataRowValue(dr, "COLUMN_TYPE", out String? rawType)) field.RawType = rawType;
 
@@ -740,6 +812,17 @@ internal class PostgreSQLMetaData : RemoteDbMetaData
 
 
     public override String DropColumnDescriptionSQL(IDataColumn field) => $"Comment On Column {FormatName(field.Table)}.{FormatName(field)} is ''";
+
+    /// <summary>修改字段类型。PostgreSQL 使用单独的 TYPE 子句，不能直接复用带约束的字段片段</summary>
+    /// <param name="field">字段</param>
+    /// <param name="oldfield">旧字段</param>
+    /// <returns></returns>
+    public override String? AlterColumnSQL(IDataColumn field, IDataColumn? oldfield)
+    {
+        var typeName = Database.Type == field.Table.DbType && !field.RawType.IsNullOrEmpty() ? field.RawType : GetFieldType(field);
+
+        return $"Alter Table {FormatName(field.Table)} Alter Column {FormatName(field)} Type {typeName}";
+    }
 
     #endregion 架构定义
 

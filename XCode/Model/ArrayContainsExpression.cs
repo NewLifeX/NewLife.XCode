@@ -6,28 +6,17 @@ using XCode.DataAccessLayer;
 namespace XCode;
 
 /// <summary>数组包含表达式。按数据库方言生成 contains() 或 @> ARRAY[...]</summary>
-public class ArrayContainsExpression : Expression
+public class ArrayContainsExpression(FieldItem field, Object value) : Expression
 {
     #region 属性
     /// <summary>字段</summary>
-    public FieldItem Field { get; set; }
+    public FieldItem Field { get; set; } = field;
 
     /// <summary>要包含的元素值</summary>
-    public Object Value { get; set; }
+    public Object Value { get; set; } = value;
 
     /// <summary>是否为空</summary>
     public override Boolean IsEmpty => Field == null;
-    #endregion
-
-    #region 构造
-    /// <summary>构造数组包含表达式</summary>
-    /// <param name="field">数组字段</param>
-    /// <param name="value">元素值</param>
-    public ArrayContainsExpression(FieldItem field, Object value)
-    {
-        Field = field;
-        Value = value;
-    }
     #endregion
 
     #region 输出

@@ -57,7 +57,9 @@ public class InsertBuilder
             sbNames.Separate(",").Append(database.FormatName(field));
             sbValues.Separate(",");
 
-            if (UseParameter)
+            // 数组参数在不同驱动间差异大，统一走方言字面量；其余类型保持参数化
+            var isArray = field.DataType is { IsArray: true } fieldType && fieldType != typeof(Byte[]);
+            if (UseParameter && !isArray)
             {
                 var dp = CreateParameter(database, field, value);
                 dps.Add(dp);

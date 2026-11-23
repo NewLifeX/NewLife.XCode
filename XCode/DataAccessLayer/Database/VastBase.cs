@@ -23,7 +23,8 @@ internal class VastBase : RemoteDb
     /// <returns>默认能力标志</returns>
     protected override DatabaseCapability GetDefaultCapabilities() => base.GetDefaultCapabilities()
         | DatabaseCapability.WindowFunctions
-        | DatabaseCapability.WindowFrame;
+        | DatabaseCapability.WindowFrame
+        | DatabaseCapability.Array;
 
     /// <summary>创建工厂</summary>
     /// <returns></returns>
@@ -143,7 +144,15 @@ internal class VastBase : RemoteDb
         }
         if (isArrayField)
         {
-            if (value is null) return isNullable ? "NULL" : "'{}'";
+            // 优先使用反向工程拿到的元素类型，保留 varchar(n)、timestamptz 等精度与别名
+            var castType = GetArrayCastType(column, type);
+            var elementType = castType ?? GetArrayElementTypeName(type);
+            fieldType = elementType ?? String.Empty;
+
+            if (value is null || value is DBNull) return isNullable ? "NULL" : FormatEmptyArray(elementType);
+            if (value is String || value is not IEnumerable)
+                throw new NotSupportedException(L.T("Field [{0}] requires an array value.", column?.Name));
+
             var count = 0;
             var builder = Pool.StringBuilder.Get();
             builder.Append("ARRAY[");
@@ -157,8 +166,7 @@ internal class VastBase : RemoteDb
             {
                 builder.Length--;
                 builder.Append("]");
-                //在进行数组运算时，因字符串可能会被映射为多种类型造成方法签名不匹配，所以需要指定类型
-                //这里仅处理了字符串，如果其他类型也出现了类似情况，仅需在 ValueToSQL 中添加对应的类型即可
+                // 显式指定数组类型，避免字符串/整数数组在运算或写入时被推断成不匹配的签名
                 if (!String.IsNullOrWhiteSpace(fieldType))
                 {
                     builder.Append("::").Append(fieldType).Append("[]");
@@ -167,7 +175,7 @@ internal class VastBase : RemoteDb
             else
             {
                 builder.Clear();
-                builder.Append("'{}'");
+                builder.Append(FormatEmptyArray(elementType));
             }
             return builder.Return();
         }
@@ -177,9 +185,49 @@ internal class VastBase : RemoteDb
         }
     }
 
+    /// <summary>取数组转换使用的元素类型，优先使用原始类型</summary>
+    /// <param name="column">字段</param>
+    /// <param name="elementType">元素 CLR 类型</param>
+    /// <returns>元素类型名；未知返回空</returns>
+    private static String? GetArrayCastType(IDataColumn? column, Type? elementType)
+    {
+        var rawType = column?.RawType;
+        if (!rawType.IsNullOrEmpty() && rawType.EndsWith("[]")) rawType = rawType[..^2];
+        if (rawType.IsNullOrEmpty() || rawType.EqualIgnoreCase("ARRAY")) return GetArrayElementTypeName(elementType);
+
+        return rawType;
+    }
+
+    /// <summary>取数组元素对应的 PostgreSQL/VastBase 类型名</summary>
+    /// <param name="type">元素类型</param>
+    /// <returns>类型名；未知类型返回空</returns>
+    private static String? GetArrayElementTypeName(Type? type) => type switch
+    {
+        _ when type == typeof(String) => "varchar",
+        _ when type == typeof(Int16) => "smallint",
+        _ when type == typeof(Int32) => "integer",
+        _ when type == typeof(Int64) => "bigint",
+        _ when type == typeof(Single) => "real",
+        _ when type == typeof(Double) => "double precision",
+        _ when type == typeof(Decimal) => "numeric",
+        _ when type == typeof(Boolean) => "boolean",
+        _ when type == typeof(DateTime) => "timestamp",
+        _ when type == typeof(TimeSpan) => "time",
+        _ when type == typeof(Guid) => "uuid",
+        _ => null,
+    };
+
+    /// <summary>格式化空数组。带类型转换，避免空数组被推断为 text[]</summary>
+    /// <param name="elementType">元素类型</param>
+    /// <returns>空数组 SQL</returns>
+    private static String FormatEmptyArray(String? elementType) => elementType.IsNullOrEmpty() ? "'{}'" : $"ARRAY[]::{elementType}[]";
+
 
     private String ValueToSQL(Type? type, Boolean isNullable, Object? value, ref String fieldType)
     {
+        // 数组元素需要显式类型，标量调用时该值不影响最终 SQL
+        if (fieldType.IsNullOrWhiteSpace()) fieldType = GetArrayElementTypeName(type) ?? fieldType;
+
         if (type == typeof(String))
         {
             if (String.IsNullOrWhiteSpace(fieldType)) fieldType = "varchar";
@@ -194,6 +242,12 @@ internal class VastBase : RemoteDb
             if (isNullable && (dt <= DateTime.MinValue || dt >= DateTime.MaxValue)) return "null";
 
             return FormatDateTime(dt);
+        }
+        if (type == typeof(TimeSpan))
+        {
+            if (value == null) return isNullable ? "null" : "''";
+
+            return "'" + value + "'";
         }
         if (type == typeof(Boolean))
         {
@@ -329,16 +383,8 @@ internal class VastBase : RemoteDb
 }
 
 /// <summary>VastBase数据库</summary>
-internal class VastBaseSession : RemoteDbSession
+internal class VastBaseSession(IDatabase db) : RemoteDbSession(db)
 {
-    #region 构造函数
-
-    public VastBaseSession(IDatabase db) : base(db)
-    {
-    }
-
-    #endregion 构造函数
-
     #region 快速查询单表记录数
 
     /// <summary>快速查询单表记录数。VastBase通过pg_class.reltuples估算</summary>
@@ -557,8 +603,10 @@ internal class VastBaseMetaData : RemoteDbMetaData
         { typeof(Single), new String[] { "real", "float4" } },
         { typeof(Double), new String[] { "double precision", "float8" } },
         { typeof(Decimal), new String[] { "numeric", "decimal" } },
-        { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz", "date", "time" } },
-        { typeof(String), new String[] { "varchar({0})", "character varying", "text" } },
+        { typeof(DateTime), new String[] { "timestamp", "timestamp without time zone", "timestamp with time zone", "timestamptz", "date" } },
+        { typeof(TimeSpan), new String[] { "time", "time without time zone", "time with time zone", "timetz" } },
+        { typeof(Guid), new String[] { "uuid" } },
+        { typeof(String), new String[] { "varchar({0})", "character varying", "text", "char", "bpchar", "character" } },
     };
 
     protected override String? ArrayTypePostfix => "[]";
@@ -598,6 +646,15 @@ internal class VastBaseMetaData : RemoteDbMetaData
 
     protected override void FixField(IDataColumn field, DataRow dr)
     {
+        // PostgreSQL/VastBase 数组在 information_schema 中 data_type=ARRAY、udt_name=_text
+        if (TryGetDataRowValue(dr, "UDT_NAME", out String? udt) && !udt.IsNullOrEmpty())
+        {
+            if (udt[0] == '_')
+                field.RawType = PostgreSQLMetaData.FormatArrayType(udt[1..], field);
+            else if (field.RawType.EqualIgnoreCase("ARRAY"))
+                field.RawType = PostgreSQLMetaData.FormatArrayType(udt, field);
+        }
+
         // 修正原始类型
         if (TryGetDataRowValue(dr, "COLUMN_TYPE", out String? rawType)) field.RawType = rawType;
 
@@ -911,6 +968,7 @@ SELECT
     c.column_name,
     c.ordinal_position,
     c.data_type,
+    c.udt_name,
     c.character_maximum_length,
     c.numeric_precision,
     c.numeric_scale,
@@ -1001,6 +1059,16 @@ ORDER BY
                     column.Precision = precision;
                 if (Int32.TryParse(row["numeric_scale"]?.ToString(), out var scale))
                     column.Scale = scale;
+
+                // information_schema 用 ARRAY + udt_name=_text 表示数组，需要还原 element[]
+                var udtName = row["udt_name"]?.ToString();
+                if (!udtName.IsNullOrEmpty())
+                {
+                    if (udtName[0] == '_')
+                        column.RawType = PostgreSQLMetaData.FormatArrayType(udtName[1..], column);
+                    else if (column.RawType.EqualIgnoreCase("ARRAY"))
+                        column.RawType = PostgreSQLMetaData.FormatArrayType(udtName, column);
+                }
 
                 table.Columns.Add(column);
             }

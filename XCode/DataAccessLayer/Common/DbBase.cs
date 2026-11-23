@@ -314,6 +314,9 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
     /// <returns>附加能力标志</returns>
     protected virtual DatabaseCapability GetVersionedCapabilities() => DatabaseCapability.None;
 
+    /// <summary>丢弃已缓存的能力配置，下次访问时重新创建。连接字符串改变行为开关时调用</summary>
+    protected void ResetProfile() => _profile = null;
+
     /// <summary>按最低主版本解析窗口函数能力。版本未知时返回无能力</summary>
     /// <param name="minMajor">支持窗口函数的最低主版本</param>
     /// <param name="frameMajor">支持 ROWS/RANGE 窗口帧的最低主版本，0 表示与窗口函数一致</param>
@@ -400,7 +403,10 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
     {
         if (Supports(capability)) return;
 
-        throw new NotSupportedException(L.T("Database [{0}] ({1}) does not support {2}. Missing capability: {3}.", ConnName, Type, operation, capability));
+        // 只报告真正缺失的能力位，避免把已支持的能力也写进错误信息
+        var missing = capability & ~Capabilities;
+
+        throw new NotSupportedException(L.T("Database [{0}] ({1}) does not support {2}. Missing capability: {3}.", ConnName, Type, operation, missing));
     }
 
     /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
@@ -1255,6 +1261,11 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
                     if (type == typeof(Byte[]))
                     {
                         dp.DbType = DbType.Binary;
+                    }
+                    else if (type.IsArray)
+                    {
+                        // 数组参数交给驱动按运行时类型推断，避免默认 DbType 把数组当字符串
+                        dp.DbType = DbType.Object;
                     }
                     break;
             }

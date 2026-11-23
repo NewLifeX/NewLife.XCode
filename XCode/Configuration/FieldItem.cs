@@ -319,6 +319,18 @@ public class FieldItem
         return CreateLike("{0} Not Like '%{1}%'", value);
     }
 
+    /// <summary>数组包含某个元素。按数据库方言生成 contains() 或 @> ARRAY[...]</summary>
+    /// <param name="value">元素值</param>
+    /// <returns></returns>
+    public Expression ArrayContains(Object value)
+    {
+        if (Type == null || !Type.IsArray || Type == typeof(Byte[]))
+            throw new NotSupportedException(L.T("[{0}] supports only array fields; the current type is {1}.", nameof(ArrayContains), Type?.Name));
+        if (value == null) throw new ArgumentNullException(nameof(value));
+
+        return new ArrayContainsExpression(this, value);
+    }
+
     /// <summary>In操作</summary>
     /// <remarks>空参数不参与表达式操作，不生成该部分SQL拼接。只有一项时转为等于</remarks>
     /// <param name="value">枚举数据，会转化为字符串</param>

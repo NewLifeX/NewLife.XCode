@@ -40,11 +40,9 @@ internal abstract class PrestoBase : RemoteDb
 
     /// <summary>创建能力配置。Presto/Trino 为只读分析 + 显式写入，不支持事务与自动建表</summary>
     /// <returns>能力配置</returns>
-    protected override DatabaseProfile CreateProfile() => new()
+    protected override DatabaseProfile CreateProfile()
     {
-        Model = DatabaseModel.Federated,
-        QueryLanguage = QueryLanguage.Sql,
-        Capabilities = DatabaseCapability.Sql
+        var capabilities = DatabaseCapability.Sql
             | DatabaseCapability.Joins
             | DatabaseCapability.Subqueries
             | DatabaseCapability.GroupBy
@@ -54,18 +52,29 @@ internal abstract class PrestoBase : RemoteDb
             | DatabaseCapability.LimitPaging
             | DatabaseCapability.SchemaDiscovery
             | DatabaseCapability.WindowFunctions
-            | DatabaseCapability.WindowFrame,
-        MaxMigration = Migration.Off,
-        // Presto/Trino 的 varchar 不限定长度，长文本阈值取无穷
-        LongTextLength = Int32.MaxValue,
-        ParameterPrefix = "@",
-    };
+            | DatabaseCapability.WindowFrame;
+        if (EnableArrays) capabilities |= DatabaseCapability.Array;
+
+        return new()
+        {
+            Model = DatabaseModel.Federated,
+            QueryLanguage = QueryLanguage.Sql,
+            Capabilities = capabilities,
+            MaxMigration = Migration.Off,
+            // Presto/Trino 的 varchar 不限定长度，长文本阈值取无穷
+            LongTextLength = Int32.MaxValue,
+            ParameterPrefix = "@",
+        };
+    }
 
     /// <summary>模式名。对应连接字符串的 Schema</summary>
     public String? SchemaName { get; set; }
 
     /// <summary>快速计数模式。连接字符串 FastCount 控制，默认 Auto</summary>
     public FastCountMode FastCount { get; set; } = FastCountMode.Auto;
+
+    /// <summary>是否启用数组强类型。连接字符串 Arrays=On 控制，默认关闭</summary>
+    public Boolean EnableArrays { get; set; }
     #endregion
 
     #region 构造
@@ -86,13 +95,25 @@ internal abstract class PrestoBase : RemoteDb
 
     /// <summary>创建元数据对象</summary>
     /// <returns></returns>
-    protected override IMetaData OnCreateMetaData() => new PrestoMetaData();
+    protected override IMetaData OnCreateMetaData() => new PrestoMetaData { EnableArrays = EnableArrays };
 
     /// <summary>设置连接字符串</summary>
     /// <param name="builder"></param>
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
         base.OnSetConnectionString(builder);
+
+        // 数组强类型是 XCode 行为开关，必须从连接字符串移除，避免驱动因未知参数报错
+        EnableArrays = builder.TryGetAndRemove("Arrays", out var arrays) && arrays.ToBoolean();
+        if (EnableArrays)
+        {
+            // 数组元素来自驱动的结构化解析，String 模式只能拿到 JSON 文本，无法填充强类型属性
+            var complexTypes = builder["ComplexTypes"];
+            if (complexTypes.IsNullOrEmpty())
+                builder["ComplexTypes"] = "Structured";
+            else if (!complexTypes.EqualIgnoreCase("Structured"))
+                throw new XCodeException(L.T("Arrays=On requires ComplexTypes=Structured; the current value is [{0}].", complexTypes));
+        }
 
         // 兼容 XCode 的习惯写法：Database 表示 Catalog，Owner 表示 Schema
         if (builder["Catalog"].IsNullOrEmpty() && !DatabaseName.IsNullOrEmpty()) builder["Catalog"] = DatabaseName;
@@ -165,6 +186,9 @@ internal abstract class PrestoBase : RemoteDb
     /// <returns></returns>
     public override String FormatValue(IDataColumn field, Object? value)
     {
+        if (field?.DataType is { IsArray: true } fieldType && fieldType != typeof(Byte[]))
+            throw new NotSupportedException(L.T("Array fields are read-only; Presto/Trino does not support writing array values."));
+
         if (value != null)
         {
             if (field?.DataType == typeof(Boolean)) return value.ToBoolean() ? "true" : "false";
@@ -179,6 +203,19 @@ internal abstract class PrestoBase : RemoteDb
         }
 
         return base.FormatValue(field!, value);
+    }
+
+    /// <summary>创建参数。数组字段只读，直接拒绝，避免把数组塞到驱动参数里</summary>
+    /// <param name="name">参数名</param>
+    /// <param name="value">参数值</param>
+    /// <param name="field">字段</param>
+    /// <returns>参数对象</returns>
+    public override IDataParameter CreateParameter(String name, Object? value, IDataColumn? field)
+    {
+        if (field?.DataType is { IsArray: true } fieldType && fieldType != typeof(Byte[]))
+            throw new NotSupportedException(L.T("Array fields are read-only; Presto/Trino does not support writing array values."));
+
+        return base.CreateParameter(name, value, field);
     }
 
     /// <summary>格式化时间为SQL字符串。使用 TIMESTAMP 类型化字面量，避免字符串与时间字段比较时的隐式转换差异</summary>
@@ -533,6 +570,104 @@ internal class PrestoSession(IDatabase db) : RemoteDbSession(db)
     }
     #endregion
 
+    #region 数组归一化
+    /// <summary>填充数据表并归一化数组列</summary>
+    /// <param name="dr">数据读取器</param>
+    /// <returns>数据表</returns>
+    protected override DbTable OnFill(DbDataReader dr)
+    {
+        var table = base.OnFill(dr);
+        NormalizeArrays(table, dr);
+
+        return table;
+    }
+
+    /// <summary>执行查询并归一化数组列</summary>
+    /// <param name="sql">SQL语句</param>
+    /// <param name="ps">命令参数</param>
+    /// <returns>数据表</returns>
+    public override async Task<DbTable> QueryAsync(String sql, IDataParameter[]? ps)
+    {
+        using var cmd = OnCreateCommand(sql, CommandType.Text, ps);
+        return await ExecuteAsync(cmd, true, async cmd2 =>
+        {
+            using var dr = await cmd2.ExecuteReaderAsync().ConfigureAwait(false);
+            var table = new DbTable();
+            await table.ReadAsync(dr).ConfigureAwait(false);
+            NormalizeArrays(table, dr);
+
+            return table;
+        }).ConfigureAwait(false);
+    }
+
+    /// <summary>把驱动返回的 Object[] 转为强类型数组，map/row/不支持的元素降级为 JSON 文本</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="dr">数据读取器</param>
+    private void NormalizeArrays(DbTable table, DbDataReader dr)
+    {
+        if (Database is not PrestoBase { EnableArrays: true }) return;
+
+        var dataTypes = new String[dr.FieldCount];
+        for (var i = 0; i < dataTypes.Length; i++) dataTypes[i] = dr.GetDataTypeName(i);
+
+        NormalizeArrays(table, dataTypes);
+    }
+
+    /// <summary>按列原始类型归一化数组列</summary>
+    /// <param name="table">数据表</param>
+    /// <param name="dataTypes">各列原始类型</param>
+    internal static void NormalizeArrays(DbTable table, String[] dataTypes)
+    {
+        var columns = table.Columns;
+        var types = table.Types;
+        if (columns == null || types == null || columns.Length == 0) return;
+
+        for (var i = 0; i < columns.Length && i < types.Length && i < dataTypes.Length; i++)
+        {
+            var rawType = dataTypes[i];
+            if (PrestoArray.TryGetElementType(rawType, out var elementType))
+            {
+                var success = true;
+                foreach (var row in table.Rows)
+                {
+                    if (i >= row.Length)
+                    {
+                        success = false;
+                        break;
+                    }
+                    if (!PrestoArray.TryConvert(row[i], elementType, out var value))
+                    {
+                        success = false;
+                        break;
+                    }
+                    row[i] = value;
+                }
+
+                if (success)
+                {
+                    types[i] = elementType.MakeArrayType();
+                    continue;
+                }
+
+                // 单行解析失败时整列降级为 JSON 文本，保证列类型一致
+                types[i] = typeof(String);
+                foreach (var row in table.Rows)
+                {
+                    if (i < row.Length) row[i] = PrestoArray.ToJson(row[i]);
+                }
+            }
+            else if (PrestoArray.IsComplex(rawType))
+            {
+                types[i] = typeof(String);
+                foreach (var row in table.Rows)
+                {
+                    if (i < row.Length) row[i] = PrestoArray.ToJson(row[i]);
+                }
+            }
+        }
+    }
+    #endregion
+
     /// <summary>执行插入语句并返回新增行的自动编号。Presto/Trino 没有自增主键</summary>
     /// <param name="sql">SQL语句</param>
     /// <param name="type">命令类型</param>
@@ -566,6 +701,14 @@ internal class PrestoMetaData : RemoteDbMetaData
     public PrestoMetaData() => Types = _DataTypes;
     #endregion
 
+    #region 属性
+    /// <summary>是否启用数组强类型</summary>
+    internal Boolean EnableArrays { get; set; }
+
+    /// <summary>是否启用数组。优先使用自身开关，其次回退到数据库连接开关</summary>
+    private Boolean UseArrays => EnableArrays || (Database as PrestoBase)?.EnableArrays == true;
+    #endregion
+
     #region 数据类型
     /// <summary>数据类型映射</summary>
     private static readonly Dictionary<Type, String[]> _DataTypes = new()
@@ -584,7 +727,7 @@ internal class PrestoMetaData : RemoteDbMetaData
         { typeof(String), ["varchar"] },
     };
 
-    /// <summary>获取Net数据类型。复杂类型（array/map/row/json）统一降级为字符串</summary>
+    /// <summary>获取Net数据类型。开启数组时识别一层数组，复杂类型（map/row/json）统一降级为字符串</summary>
     /// <param name="field"></param>
     /// <returns></returns>
     protected override Type? GetDataType(IDataColumn field)
@@ -595,8 +738,9 @@ internal class PrestoMetaData : RemoteDbMetaData
         var rawType = field.RawType;
         if (rawType.IsNullOrEmpty()) return null;
 
-        var index = rawType.IndexOf('(');
-        var name = (index >= 0 ? rawType[..index] : rawType).Trim();
+        if (UseArrays && PrestoArray.TryGetElementType(rawType, out var elementType)) return elementType.MakeArrayType();
+
+        var name = PrestoArray.GetBaseName(rawType);
         if (name.EqualIgnoreCase("array", "map", "row", "json", "char")) return typeof(String);
 
         return null;
@@ -604,11 +748,29 @@ internal class PrestoMetaData : RemoteDbMetaData
 
     /// <summary>修正字段的长度精度。Presto 的 information_schema.columns 不提供长度与精度列，需要从 data_type 解析</summary>
     /// <param name="column">字段</param>
-    internal static void FixColumn(IDataColumn column)
+    internal void FixColumn(IDataColumn column)
     {
         if (column == null || column.RawType.IsNullOrEmpty()) return;
 
         var raw = column.RawType.Trim();
+        if (UseArrays && PrestoArray.TryParseArray(raw, out var element))
+        {
+            if (PrestoArray.TryGetElementType(raw, out var elementType) && elementType != null)
+                FixColumnType(column, element);
+            else
+                column.Length = -1;
+
+            return;
+        }
+
+        FixColumnType(column, raw);
+    }
+
+    /// <summary>按原始类型修正长度与精度</summary>
+    /// <param name="column">字段</param>
+    /// <param name="raw">原始类型</param>
+    private static void FixColumnType(IDataColumn column, String raw)
+    {
         var index = raw.IndexOf('(');
         var name = (index >= 0 ? raw[..index] : raw).Trim();
         var args = index >= 0 ? raw[(index + 1)..] : null;
@@ -653,6 +815,7 @@ internal class PrestoMetaData : RemoteDbMetaData
                 column.Scale = 0;
                 break;
             case "integer":
+            case "int":
                 column.Precision = 10;
                 column.Scale = 0;
                 break;

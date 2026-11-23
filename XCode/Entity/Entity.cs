@@ -2172,10 +2172,14 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         var obj = (Meta.Factory.Create() as TEntity)!;
         foreach (var fi in Meta.Fields)
         {
+            // 数组是可变引用，克隆实体时必须复制内容，避免缓存对象共享数组
+            var value = this[fi.Name];
+            if (value is Array arr) value = arr.Clone();
+
             if (setDirty)
-                obj.SetItem(fi.Name, this[fi.Name]);
+                obj.SetItem(fi.Name, value);
             else
-                obj[fi.Name] = this[fi.Name];
+                obj[fi.Name] = value;
         }
 
         //Extends.CopyTo(obj.Extends);

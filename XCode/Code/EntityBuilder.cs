@@ -1060,7 +1060,13 @@ public class EntityBuilder : ClassBuilder
                     {
                         var method = "To";
                         var typePara = String.Empty;
-                        if (type.Contains("."))
+                        if (column.DataType != null && column.DataType.IsArray && column.DataType != typeof(Byte[]))
+                        {
+                            // 数组走 ValidHelper 的 ToXxxArray，避免拼出 ToString[]Array 这类非法方法名
+                            var elementType = column.DataType.GetElementType();
+                            method = elementType != null ? $"To{elementType.Name}Array" : method + type;
+                        }
+                        else if (type.Contains("."))
                         {
                             // 说明使用了自定义类型，比如：枚举
                             typePara = type;
@@ -1073,8 +1079,6 @@ public class EntityBuilder : ClassBuilder
                         {
                             method += type;
                         }
-                        //if (column.IsArray) method += "Array";
-                        if (column.DataType != null && column.DataType.IsArray) method += "Array";
                         if (typeof(ValidHelper).GetMethod(method, [typeof(Object)]) != null)
                         {
                             if (!String.IsNullOrWhiteSpace(typePara)) method += $"<{typePara}>";

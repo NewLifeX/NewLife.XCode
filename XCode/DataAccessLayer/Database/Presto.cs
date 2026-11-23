@@ -1,5 +1,5 @@
-using System.Collections;
-﻿using System.Data;
+﻿﻿using System.Collections;
+using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
@@ -941,16 +941,18 @@ internal class PrestoMetaData : RemoteDbMetaData
         var list = new List<IDataTable>();
         if (items.Count == 0) return list;
 
+        // 调用方点名要表时，坏表也要尽力补出字段；整库扫描则跳过，避免逐个坏表超时拖慢反向工程
+        var allowFallback = names != null && names.Length > 0;
         if (items.Count == 1)
         {
-            var single = GetTable(items[0].Schema, items[0].Name, items[0].IsView);
+            var single = GetTable(items[0].Schema, items[0].Name, items[0].IsView, allowFallback);
             if (single != null) list.Add(single);
         }
         else
         {
             Parallel.ForEach(items, new ParallelOptions { MaxDegreeOfParallelism = 8 }, item =>
             {
-                var table = GetTable(item.Schema, item.Name, item.IsView);
+                var table = GetTable(item.Schema, item.Name, item.IsView, allowFallback);
                 if (table == null) return;
 
                 lock (list) list.Add(table);
@@ -1011,12 +1013,13 @@ internal class PrestoMetaData : RemoteDbMetaData
         return list;
     }
 
-    /// <summary>读取单张表。DESCRIBE 失败（如坏视图）时回退 information_schema.columns</summary>
+    /// <summary>读取单张表。DESCRIBE 失败（如坏视图）时按需回退 information_schema.columns</summary>
     /// <param name="schema">模式名</param>
     /// <param name="name">表名</param>
     /// <param name="isView">是否视图</param>
-    /// <returns></returns>
-    private IDataTable? GetTable(String schema, String name, Boolean isView)
+    /// <param name="allowFallback">DESCRIBE 抛异常时是否再回退查元数据</param>
+    /// <returns>表模型；读不到字段时返回 null</returns>
+    private IDataTable? GetTable(String schema, String name, Boolean isView, Boolean allowFallback)
     {
         var table = DAL.CreateTable();
         table.TableName = name;
@@ -1024,18 +1027,22 @@ internal class PrestoMetaData : RemoteDbMetaData
         table.IsView = isView;
         table.DbType = Database.Type;
 
-        if (!TryDescribe(table)) TryGetColumns(table);
+        // DESCRIBE 抛异常通常是元数据里坏掉的表（如老版 Metastore 不支持 get_table_req），
+        // 回查 information_schema 往往同样失败，整库扫描时不再重试，省掉一次超时
+        var described = TryDescribe(table);
+        if (described == false || (described == null && allowFallback)) TryGetColumns(table);
 
         table.Fix();
         FixPrimaryKey(table);
 
-        return table;
+        // 读不到字段的表（元数据已损坏的视图等）直接跳过，避免生成空模型
+        return table.Columns.Count > 0 ? table : null;
     }
 
     /// <summary>用 DESCRIBE 读取字段类型、注释与分区标记。一次请求拿全，比元数据扫描快</summary>
     /// <param name="table">表模型</param>
-    /// <returns>是否成功</returns>
-    private Boolean TryDescribe(IDataTable table)
+    /// <returns>是否读到字段；查询异常返回 null</returns>
+    private Boolean? TryDescribe(IDataTable table)
     {
         try
         {
@@ -1081,7 +1088,7 @@ internal class PrestoMetaData : RemoteDbMetaData
         {
             if (DAL.Debug) XTrace.Log.Debug("Failed to describe [{0}]: {1}", table.TableName, ex.Message);
 
-            return false;
+            return null;
         }
     }
 

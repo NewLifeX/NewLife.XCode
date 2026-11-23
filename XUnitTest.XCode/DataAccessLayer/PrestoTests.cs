@@ -671,6 +671,23 @@ public class PrestoTests
     }
 
     [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoMetadataCompletenessTest()
+    {
+        // 反向工程读不到字段的表（元数据损坏的视图等）应被跳过，避免生成空模型
+        var dal = PrestoDal("Presto_Meta");
+
+        using var meta = dal.Db.CreateMetaData();
+        var tables = meta.GetTables();
+        Assert.NotEmpty(tables);
+        Assert.DoesNotContain(tables, e => e.Columns.Count == 0);
+
+        // ds 是分区列时自动生成索引，便于按分区过滤
+        var example = tables.FirstOrDefault(e => e.TableName.EqualIgnoreCase("p_example"));
+        if (example != null)
+            Assert.Contains(example.Indexes, e => e.Columns != null && e.Columns.Any(c => c.EqualIgnoreCase("Ds")));
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
     public void PrestoPrimaryKeyAndPartitionTest()
     {
         var dal = PrestoDal("Presto_Live");

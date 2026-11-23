@@ -58,7 +58,7 @@
 | Prometheus | `Prometheus` | مدمج | سلاسل زمنية |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | مستندية |
 | Presto | `Presto` | `NewLife.Presto` | اتحادية |
-| Trino | `Trino` | `Trino.Data.ADO` | اتحادية |
+| Trino | `Trino` | `NewLife.Presto` | اتحادية |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | مدمجة / شبكة |
 | SonnetDB | `SonnetDB` | `SonnetDB` | مدمجة / بعيدة |
 | Network | `Network` | مدمج | افتراضية |
@@ -488,7 +488,7 @@ dotnet test XUnitTest.XCode -c Release
 
 ### الإصدار
 
-ادفع وسمًا يبدأ بـ `v` (مثل `v2026.1018`) لتشغيل `.github/workflows/publish.yml`. تقوم سير العمل بحزم XCode وXCodeTool وحزم الموفرين (`XCode.MySql`، `XCode.SQLite`، `XCode.SqlServer`، `XCode.Oracle`، `XCode.PostgreSQL`، `XCode.DaMeng`، `XCode.DB2`، `XCode.KingBase`، `XCode.HighGo`) ودفعها إلى NuGet.org وGitHub Packages.
+ادفع وسمًا يبدأ بـ `v` (مثل `v2026.1018`) لتشغيل `.github/workflows/publish.yml`. تقوم سير العمل بحزم XCode وXCodeTool وحزم الموفرين (`XCode.MySql`، `XCode.SQLite`، `XCode.SqlServer`، `XCode.Oracle`، `XCode.PostgreSQL`، `XCode.Presto`، `XCode.TDengine`، `XCode.DaMeng`، `XCode.DB2`، `XCode.KingBase`، `XCode.HighGo`) ودفعها إلى NuGet.org وGitHub Packages.
 
 ### التغذية الراجعة
 

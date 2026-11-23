@@ -533,6 +533,10 @@
 "High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration.": "高效能 .NET 資料中介層（超級ORM），聚焦添刪改查與海量資料，內建多層快取、自動移轉、分表分庫、強型別查詢與跨庫移轉。"
 "XCode Entity Generator": "XCode實體產生工具"
 "Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration.": "XCode 官方命令列工具，基於 Model.xml 產生實體資料類別與業務類別，支援快速建模與持續迭代。"
+"XCode Presto Adapter": "XCode Presto 轉接器"
+"Provides Presto and Trino database driver integration and SQL dialect support for XCode, with automatic modeling migration, cache cooperation and high-performance data access.": "為 XCode 提供 Presto 與 Trino 資料庫驅動程式整合與 SQL 方言支援，支援反向工程、快取協同與高效能資料存取。"
+"XCode TDengine Adapter": "XCode TDengine 轉接器"
+"Provides TDengine database driver integration and SQL dialect support for XCode, with automatic modeling migration, cache cooperation and high-performance data access.": "為 XCode 提供 TDengine 時序資料庫驅動程式整合與 SQL 方言支援，支援自動建模移轉、快取協同與高效能資料存取。"
 
 # 实体分组与补充字段（简体中文源文 → zh-Hant）
 "扩展": "擴充"

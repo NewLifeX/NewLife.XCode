@@ -58,7 +58,7 @@ XCode는 데이터베이스마다 별도의 ADO.NET 드라이버 패키지로 �
 | Prometheus | `Prometheus` | 내장 | 시계열 |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | 문서형 |
 | Presto | `Presto` | `NewLife.Presto` | 페더레이션 |
-| Trino | `Trino` | `Trino.Data.ADO` | 페더레이션 |
+| Trino | `Trino` | `NewLife.Presto` | 페더레이션 |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | 임베디드 / 네트워크 |
 | SonnetDB | `SonnetDB` | `SonnetDB` | 임베디드 / 원격 |
 | Network | `Network` | 내장 | 가상 |
@@ -488,7 +488,7 @@ dotnet test XUnitTest.XCode -c Release
 
 ### 릴리스
 
-`v` 접두사 태그(예: `v2026.1018`)를 푸시하면 `.github/workflows/publish.yml`이 트리거됩니다. 워크플로는 XCode, XCodeTool 및 프로바이더 패키지(`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`)를 패키징하여 NuGet.org와 GitHub Packages에 푸시합니다.
+`v` 접두사 태그(예: `v2026.1018`)를 푸시하면 `.github/workflows/publish.yml`이 트리거됩니다. 워크플로는 XCode, XCodeTool 및 프로바이더 패키지(`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.Presto`, `XCode.TDengine`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`)를 패키징하여 NuGet.org와 GitHub Packages에 푸시합니다.
 
 ### 피드백
 

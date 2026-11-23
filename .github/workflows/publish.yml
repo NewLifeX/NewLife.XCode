@@ -51,7 +51,9 @@ jobs:
           XCode.SqlServer/XCode.SqlServer.csproj \
           XCode.Oracle/XCode.Oracle.csproj \
           XCode.PostgreSQL/XCode.PostgreSQL.csproj \
+          XCode.Presto/XCode.Presto.csproj \
           XCode.SonnetDB/XCode.SonnetDB.csproj \
+          XCode.TDengine/XCode.TDengine.csproj \
           XCode.DaMeng/XCode.DaMeng.csproj \
           XCode.DB2/XCode.DB2.csproj \
           XCode.KingBase/XCode.KingBase.csproj \

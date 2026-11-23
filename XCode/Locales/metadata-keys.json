@@ -1,6 +1,6 @@
 {
   "comment": "允许只出现在部分语言的可选键（实体元数据、程序集标题/描述等）。由 Tools/Scripts/collect-metadata-keys.ps1 生成，缺失时回退源文；XCode 要求清单内全部键覆盖 31 种译文语言。",
-  "updated": "2026-11-19",
+  "updated": "2026-11-23",
   "keys": [
     "Access文件数据库",
     "ClickHouse列式分析数据库",
@@ -19,6 +19,8 @@
     "Oracle数据库",
     "PostgreSQL数据库",
     "Presto数据库",
+    "Provides Presto and Trino database driver integration and SQL dialect support for XCode, with automatic modeling migration, cache cooperation and high-performance data access.",
+    "Provides TDengine database driver integration and SQL dialect support for XCode, with automatic modeling migration, cache cooperation and high-performance data access.",
     "SAP ASE(Sybase)数据库",
     "SQLite数据库",
     "Snowflake数据库",
@@ -31,7 +33,9 @@
     "VastBase数据库",
     "Vertica数据库",
     "XCode Entity Generator",
+    "XCode Presto Adapter",
     "XCode Super ORM Middleware",
+    "XCode TDengine Adapter",
     "YashanDB(崖山)数据库",
     "人大金仓(KingBase)数据库",
     "代码",

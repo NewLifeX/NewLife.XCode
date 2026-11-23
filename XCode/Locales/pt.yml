@@ -531,6 +531,10 @@
 "High-performance .NET data middleware (super ORM) focused on CRUD and massive data, with multi-level caching, automatic migration, sharding, strongly-typed queries and cross-database migration.": "Middleware de dados .NET de alto desempenho (super ORM) focado em CRUD e dados massivos, com cache multinível, migração automática, fragmentação, consultas fortemente tipadas e migração entre bancos de dados."
 "XCode Entity Generator": "Gerador de entidades do XCode"
 "Official XCode command-line tool that generates entity data classes and business classes from Model.xml, supporting rapid modeling and continuous iteration.": "Ferramenta oficial de linha de comando do XCode que gera classes de dados de entidade e classes de negócio a partir de Model.xml, apoiando modelagem rápida e iteração contínua."
+"XCode Presto Adapter": "Adaptador Presto para XCode"
+"Provides Presto and Trino database driver integration and SQL dialect support for XCode, with automatic modeling migration, cache cooperation and high-performance data access.": "Fornece integração dos drivers de banco de dados Presto e Trino e suporte ao dialeto SQL para XCode, com migração automática de modelos, cooperação de cache e acesso de dados de alto desempenho."
+"XCode TDengine Adapter": "Adaptador TDengine para XCode"
+"Provides TDengine database driver integration and SQL dialect support for XCode, with automatic modeling migration, cache cooperation and high-performance data access.": "Fornece integração do driver de banco de dados TDengine e suporte ao dialeto SQL para XCode, com migração automática de modelos, cooperação de cache e acesso de dados de alto desempenho."
 
 # 实体分组与补充字段（简体中文源文 → 葡萄牙语）
 "扩展": "Estendido"

@@ -58,7 +58,7 @@ O XCode acessa cada banco de dados por meio de um pacote de driver ADO.NET separ
 | Prometheus | `Prometheus` | Integrado | Séries temporais |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Documento |
 | Presto | `Presto` | `NewLife.Presto` | Federado |
-| Trino | `Trino` | `Trino.Data.ADO` | Federado |
+| Trino | `Trino` | `NewLife.Presto` | Federado |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | Incorporado / rede |
 | SonnetDB | `SonnetDB` | `SonnetDB` | Incorporado / remoto |
 | Network | `Network` | Integrado | Virtual |
@@ -488,7 +488,7 @@ dotnet test XUnitTest.XCode -c Release
 
 ### Release
 
-Envie uma tag com prefixo `v` (por exemplo `v2026.1018`) para acionar `.github/workflows/publish.yml`. O workflow empacota XCode, XCodeTool e os pacotes de provedores (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) e os envia para NuGet.org e GitHub Packages.
+Envie uma tag com prefixo `v` (por exemplo `v2026.1018`) para acionar `.github/workflows/publish.yml`. O workflow empacota XCode, XCodeTool e os pacotes de provedores (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.Presto`, `XCode.TDengine`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) e os envia para NuGet.org e GitHub Packages.
 
 ### Feedback
 

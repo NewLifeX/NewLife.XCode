@@ -35,9 +35,11 @@
     <Project Path="XCode.MySql/XCode.MySql.csproj" />
     <Project Path="XCode.Oracle/XCode.Oracle.csproj" />
     <Project Path="XCode.PostgreSQL/XCode.PostgreSQL.csproj" />
+    <Project Path="XCode.Presto/XCode.Presto.csproj" />
     <Project Path="XCode.SonnetDB/XCode.SonnetDB.csproj" />
     <Project Path="XCode.SQLite/XCode.SQLite.csproj" />
     <Project Path="XCode.SqlServer/XCode.SqlServer.csproj" />
+    <Project Path="XCode.TDengine/XCode.TDengine.csproj" />
   </Folder>
   <Project Path="AotSmoke/AotSmoke.csproj" />
   <Project Path="Test/Test.csproj" />

@@ -58,7 +58,7 @@ XCode 通过独立的 ADO.NET 驱动包访问各类数据库。请按所用数�
 | Prometheus | `Prometheus` | 内置 | 时序 |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | 文档 |
 | Presto | `Presto` | `NewLife.Presto` | 联邦查询 |
-| Trino | `Trino` | `Trino.Data.ADO` | 联邦查询 |
+| Trino | `Trino` | `NewLife.Presto` | 联邦查询 |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | 嵌入式 / 网络 |
 | SonnetDB | `SonnetDB` | `SonnetDB` | 嵌入式 / 远程 |
 | Network | `Network` | 内置 | 虚拟 |
@@ -490,7 +490,7 @@ dotnet test XUnitTest.XCode -c Release
 
 ### 发版
 
-推送 `v` 前缀 tag（如 `v2026.1018`）触发 `.github/workflows/publish.yml`。工作流打包 XCode、XCodeTool 与各数据库提供者（`XCode.MySql`、`XCode.SQLite`、`XCode.SqlServer`、`XCode.Oracle`、`XCode.PostgreSQL`、`XCode.DaMeng`、`XCode.DB2`、`XCode.KingBase`、`XCode.HighGo`），并推送到 NuGet.org 与 GitHub Packages。
+推送 `v` 前缀 tag（如 `v2026.1018`）触发 `.github/workflows/publish.yml`。工作流打包 XCode、XCodeTool 与各数据库提供者（`XCode.MySql`、`XCode.SQLite`、`XCode.SqlServer`、`XCode.Oracle`、`XCode.PostgreSQL`、`XCode.Presto`、`XCode.TDengine`、`XCode.DaMeng`、`XCode.DB2`、`XCode.KingBase`、`XCode.HighGo`），并推送到 NuGet.org 与 GitHub Packages。
 
 ### 反馈
 

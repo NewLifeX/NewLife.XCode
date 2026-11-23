@@ -58,7 +58,7 @@ XCode greift über ein separates ADO.NET-Treiberpaket auf jede Datenbank zu. Ins
 | Prometheus | `Prometheus` | Integriert | Zeitreihen |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Dokument |
 | Presto | `Presto` | `NewLife.Presto` | Föderiert |
-| Trino | `Trino` | `Trino.Data.ADO` | Föderiert |
+| Trino | `Trino` | `NewLife.Presto` | Föderiert |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | Eingebettet / Netzwerk |
 | SonnetDB | `SonnetDB` | `SonnetDB` | Eingebettet / Remote |
 | Network | `Network` | Integriert | Virtuell |
@@ -488,7 +488,7 @@ dotnet test XUnitTest.XCode -c Release
 
 ### Veröffentlichung
 
-Ein Tag mit Präfix `v` pushen (zum Beispiel `v2026.1018`), um `.github/workflows/publish.yml` auszulösen. Der Workflow packt XCode, XCodeTool und die Provider-Pakete (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) und pusht sie zu NuGet.org und GitHub Packages.
+Ein Tag mit Präfix `v` pushen (zum Beispiel `v2026.1018`), um `.github/workflows/publish.yml` auszulösen. Der Workflow packt XCode, XCodeTool und die Provider-Pakete (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.Presto`, `XCode.TDengine`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) und pusht sie zu NuGet.org und GitHub Packages.
 
 ### Feedback
 

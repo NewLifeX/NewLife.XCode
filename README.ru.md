@@ -58,7 +58,7 @@ XCode обращается к каждой базе данных через от
 | Prometheus | `Prometheus` | Встроенный | Временных рядов |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | Документная |
 | Presto | `Presto` | `NewLife.Presto` | Федеративная |
-| Trino | `Trino` | `Trino.Data.ADO` | Федеративная |
+| Trino | `Trino` | `NewLife.Presto` | Федеративная |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | Встроенная / сеть |
 | SonnetDB | `SonnetDB` | `SonnetDB` | Встроенная / удалённая |
 | Network | `Network` | Встроенный | Виртуальная |
@@ -488,7 +488,7 @@ dotnet test XUnitTest.XCode -c Release
 
 ### Релиз
 
-Отправьте тег с префиксом `v` (например, `v2026.1018`), чтобы запустить `.github/workflows/publish.yml`. Рабочий процесс упаковывает XCode, XCodeTool и пакеты провайдеров (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) и публикует их в NuGet.org и GitHub Packages.
+Отправьте тег с префиксом `v` (например, `v2026.1018`), чтобы запустить `.github/workflows/publish.yml`. Рабочий процесс упаковывает XCode, XCodeTool и пакеты провайдеров (`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.Presto`, `XCode.TDengine`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`) и публикует их в NuGet.org и GitHub Packages.
 
 ### Обратная связь
 

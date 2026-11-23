@@ -58,7 +58,7 @@ XCode はデータベースごとに個別の ADO.NET ドライバーパッケ�
 | Prometheus | `Prometheus` | 内蔵 | 時系列 |
 | MongoDB | `MongoDB` | `MongoDB.Driver` | ドキュメント |
 | Presto | `Presto` | `NewLife.Presto` | フェデレーテッド |
-| Trino | `Trino` | `Trino.Data.ADO` | フェデレーテッド |
+| Trino | `Trino` | `NewLife.Presto` | フェデレーテッド |
 | NovaDb | `NovaDb` | `NewLife.NovaDb` | 組み込み / ネットワーク |
 | SonnetDB | `SonnetDB` | `SonnetDB` | 組み込み / リモート |
 | Network | `Network` | 内蔵 | 仮想 |
@@ -488,7 +488,7 @@ dotnet test XUnitTest.XCode -c Release
 
 ### リリース
 
-`v` プレフィックスのタグ（例：`v2026.1018`）をプッシュすると `.github/workflows/publish.yml` がトリガーされます。ワークフローは XCode、XCodeTool、およびプロバイダーパッケージ（`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`）をパックし、NuGet.org と GitHub Packages にプッシュします。
+`v` プレフィックスのタグ（例：`v2026.1018`）をプッシュすると `.github/workflows/publish.yml` がトリガーされます。ワークフローは XCode、XCodeTool、およびプロバイダーパッケージ（`XCode.MySql`, `XCode.SQLite`, `XCode.SqlServer`, `XCode.Oracle`, `XCode.PostgreSQL`, `XCode.Presto`, `XCode.TDengine`, `XCode.DaMeng`, `XCode.DB2`, `XCode.KingBase`, `XCode.HighGo`）をパックし、NuGet.org と GitHub Packages にプッシュします。
 
 ### フィードバック
 

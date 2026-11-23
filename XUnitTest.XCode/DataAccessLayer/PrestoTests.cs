@@ -286,7 +286,7 @@ public class PrestoTests
     }
 
     [Theory]
-    [DisplayName("Arrays 开关启用数组能力并校验 ComplexTypes")]
+    [DisplayName("Arrays 开关启用数组读取并校验 ComplexTypes")]
     [InlineData(DatabaseType.Presto)]
     [InlineData(DatabaseType.Trino)]
     public void ArraySwitchTest(DatabaseType dbType)
@@ -294,16 +294,43 @@ public class PrestoTests
         var db = DbFactory.Create(dbType);
         Assert.NotNull(db);
 
-        db.ConnectionString = "Host=localhost;Port=8080;Catalog=hive;Schema=default;Arrays=On";
+        // 默认开启数组强类型
+        db.ConnectionString = "Host=localhost;Port=8080;Catalog=hive;Schema=default";
+        Assert.True(((PrestoBase)db).EnableArrays);
         Assert.True(db.Supports(DatabaseCapability.Array));
+
+        // 显式 Arrays=On 与默认一致
+        db.ConnectionString = "Host=localhost;Port=8080;Catalog=hive;Schema=default;Arrays=On";
+        Assert.True(((PrestoBase)db).EnableArrays);
+        Assert.True(db.Supports(DatabaseCapability.Array));
+
+        // Arrays=Off 退回驱动默认的 JSON 文本，能力位随之撤销
+        db.ConnectionString = "Host=localhost;Port=8080;Catalog=hive;Schema=default;Arrays=Off";
+        Assert.False(((PrestoBase)db).EnableArrays);
+        Assert.False(db.Supports(DatabaseCapability.Array));
+
+        // 只声明 ComplexTypes=String 视为调用方要 JSON 文本，自动关闭数组
+        db.ConnectionString = "Host=localhost;Port=8080;Catalog=hive;Schema=default;ComplexTypes=String";
+        Assert.False(((PrestoBase)db).EnableArrays);
+        Assert.False(db.Supports(DatabaseCapability.Array));
 
         // 显式把 ComplexTypes 设为 String 与 Arrays 冲突，必须尽早失败
         Assert.Throws<XCodeException>(() => db.ConnectionString = "Host=localhost;Port=8080;Arrays=On;ComplexTypes=String");
 
-        // 数组字段只读，写入格式化阶段直接拒绝
+        // 数组字段使用方言字面量写入，而不是参数绑定
         var column = DAL.CreateTable().CreateColumn();
         column.DataType = typeof(String[]);
-        Assert.Throws<NotSupportedException>(() => db.FormatValue(column, new[] { "a" }));
+        var sql = db.FormatValue(column, new[] { "a" });
+        Assert.Contains("CAST(ARRAY[", sql);
+        Assert.Contains("array(varchar)", sql);
+
+        // 反向工程的 array(decimal(p,s)) 保留精度
+        var amount = DAL.CreateTable().CreateColumn();
+        amount.DataType = typeof(Decimal[]);
+        amount.RawType = "array(decimal(10,2))";
+        Assert.Contains("array(decimal(10,2))", db.FormatValue(amount, new[] { 1.25m }));
+
+        Assert.Throws<NotSupportedException>(() => db.CreateParameter("p", new[] { "a" }, column));
     }
 
     [Theory]

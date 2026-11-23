@@ -1,6 +1,8 @@
+using System.Collections;
 ﻿using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using NewLife;
 using NewLife.Data;
 using NewLife.Log;
@@ -70,11 +72,14 @@ internal abstract class PrestoBase : RemoteDb
     /// <summary>模式名。对应连接字符串的 Schema</summary>
     public String? SchemaName { get; set; }
 
+    /// <summary>目录名。对应连接字符串的 Catalog</summary>
+    public String? CatalogName { get; set; }
+
     /// <summary>快速计数模式。连接字符串 FastCount 控制，默认 Auto</summary>
     public FastCountMode FastCount { get; set; } = FastCountMode.Auto;
 
-    /// <summary>是否启用数组强类型。连接字符串 Arrays=On 控制，默认关闭</summary>
-    public Boolean EnableArrays { get; set; }
+    /// <summary>是否启用数组强类型。默认开启，连接字符串 Arrays=Off 或 ComplexTypes=String 可关闭</summary>
+    public Boolean EnableArrays { get; set; } = true;
     #endregion
 
     #region 构造
@@ -103,17 +108,25 @@ internal abstract class PrestoBase : RemoteDb
     {
         base.OnSetConnectionString(builder);
 
-        // 数组强类型是 XCode 行为开关，必须从连接字符串移除，避免驱动因未知参数报错
-        EnableArrays = builder.TryGetAndRemove("Arrays", out var arrays) && arrays.ToBoolean();
+        // 数组强类型默认开启。显式 Arrays 优先；显式 ComplexTypes=String 表示调用方要 JSON 文本，据此关闭
+        var complexTypes = builder["ComplexTypes"];
+        var arraysSet = builder.TryGetAndRemove("Arrays", out var arrays) && !arrays.IsNullOrEmpty();
+        if (arraysSet)
+            EnableArrays = arrays.ToBoolean();
+        else
+            EnableArrays = complexTypes.IsNullOrEmpty() || complexTypes.EqualIgnoreCase("Structured");
+
         if (EnableArrays)
         {
             // 数组元素来自驱动的结构化解析，String 模式只能拿到 JSON 文本，无法填充强类型属性
-            var complexTypes = builder["ComplexTypes"];
             if (complexTypes.IsNullOrEmpty())
                 builder["ComplexTypes"] = "Structured";
             else if (!complexTypes.EqualIgnoreCase("Structured"))
                 throw new XCodeException(L.T("Arrays=On requires ComplexTypes=Structured; the current value is [{0}].", complexTypes));
         }
+
+        // 数组开关影响能力位，连接串赋值可能晚于首次读取能力，这里丢弃缓存
+        ResetProfile();
 
         // 兼容 XCode 的习惯写法：Database 表示 Catalog，Owner 表示 Schema
         if (builder["Catalog"].IsNullOrEmpty() && !DatabaseName.IsNullOrEmpty()) builder["Catalog"] = DatabaseName;
@@ -138,6 +151,7 @@ internal abstract class PrestoBase : RemoteDb
         builder.TryGetAndRemove("Initial Catalog", out _);
 
         SchemaName = builder["Schema"];
+        CatalogName = builder["Catalog"];
 
         // FastCount 是 XCode 行为开关，必须从连接字符串移除，避免驱动因未知参数报错
         FastCount = FastCountMode.Auto;
@@ -187,7 +201,7 @@ internal abstract class PrestoBase : RemoteDb
     public override String FormatValue(IDataColumn field, Object? value)
     {
         if (field?.DataType is { IsArray: true } fieldType && fieldType != typeof(Byte[]))
-            throw new NotSupportedException(L.T("Array fields are read-only; Presto/Trino does not support writing array values."));
+            return FormatArrayValue(field, value);
 
         if (value != null)
         {
@@ -205,7 +219,62 @@ internal abstract class PrestoBase : RemoteDb
         return base.FormatValue(field!, value);
     }
 
-    /// <summary>创建参数。数组字段只读，直接拒绝，避免把数组塞到驱动参数里</summary>
+    /// <summary>格式化数组为 Presto/Trino 的 CAST(ARRAY[...] AS array(type)) 字面量</summary>
+    /// <param name="field">字段</param>
+    /// <param name="value">数组值</param>
+    /// <returns>SQL 字面量</returns>
+    private String FormatArrayValue(IDataColumn field, Object? value)
+    {
+        var elementType = field.DataType?.GetElementType();
+        var elementSql = GetArrayElementTypeName(elementType, field);
+        if (elementSql.IsNullOrEmpty())
+            throw new NotSupportedException(L.T("Array element type [{0}] is not supported by Presto/Trino.", elementType?.Name));
+
+        if (value == null || value is DBNull) return field.Nullable ? "null" : $"CAST(ARRAY[] AS array({elementSql}))";
+        if (value is String || value is not IEnumerable) throw new NotSupportedException(L.T("Field [{0}] requires an array value.", field.Name));
+
+        var clone = field.Clone(field.Table);
+        clone.DataType = elementType!;
+        clone.Nullable = field.Nullable;
+
+        var builder = new StringBuilder(64);
+        builder.Append("CAST(ARRAY[");
+        var count = 0;
+        foreach (var item in (IEnumerable)value)
+        {
+            if (count > 0) builder.Append(',');
+            builder.Append(base.FormatValue(clone, item));
+            count++;
+        }
+        builder.Append("] AS array(").Append(elementSql).Append("))");
+
+        return builder.ToString();
+    }
+
+    /// <summary>取数组元素对应的 Presto/Trino 类型名</summary>
+    /// <param name="elementType">元素类型</param>
+    /// <param name="field">字段，用于取 decimal 精度</param>
+    /// <returns>类型名；未知类型返回空</returns>
+    private static String? GetArrayElementTypeName(Type? elementType, IDataColumn field)
+    {
+        // 反向工程拿到的 array(...) 保留原始精度与别名
+        if (!field.RawType.IsNullOrEmpty() && PrestoArray.TryParseArray(field.RawType, out var rawElement) && !rawElement.IsNullOrEmpty())
+            return rawElement;
+
+        return elementType switch
+        {
+            _ when elementType == typeof(String) => "varchar",
+            _ when elementType == typeof(Int16) => "smallint",
+            _ when elementType == typeof(Int32) => "integer",
+            _ when elementType == typeof(Int64) => "bigint",
+            _ when elementType == typeof(Double) => "double",
+            _ when elementType == typeof(Decimal) => field.Precision > 0 ? $"decimal({field.Precision},{field.Scale})" : "decimal(38,18)",
+            _ when elementType == typeof(Boolean) => "boolean",
+            _ => null,
+        };
+    }
+
+    /// <summary>创建参数。数组字段走方言字面量，不使用参数绑定</summary>
     /// <param name="name">参数名</param>
     /// <param name="value">参数值</param>
     /// <param name="field">字段</param>
@@ -213,7 +282,7 @@ internal abstract class PrestoBase : RemoteDb
     public override IDataParameter CreateParameter(String name, Object? value, IDataColumn? field)
     {
         if (field?.DataType is { IsArray: true } fieldType && fieldType != typeof(Byte[]))
-            throw new NotSupportedException(L.T("Array fields are read-only; Presto/Trino does not support writing array values."));
+            throw new NotSupportedException(L.T("Array fields do not support parameter binding; use FormatValue to build an array literal."));
 
         return base.CreateParameter(name, value, field);
     }
@@ -865,37 +934,27 @@ internal class PrestoMetaData : RemoteDbMetaData
     protected override List<IDataTable> OnGetTables(String[]? names)
     {
         var schema = (Database as PrestoBase)?.SchemaName;
+
+        // 表清单一次取回；字段改成逐表 DESCRIBE，一次请求同时带回类型、长度、注释与分区标记。
+        // 整库扫描 information_schema.columns 或 system.jdbc.columns 都要几十秒，逐表 DESCRIBE 并发只要几秒
+        var items = GetTableList(schema, names);
         var list = new List<IDataTable>();
+        if (items.Count == 0) return list;
 
-        // 部分老版 Hive Metastore 不支持一次性列出整库字段（get_table_req），先取表清单，再按表名分批查字段
-        var tableNames = names;
-        if (tableNames == null || tableNames.Length == 0)
+        if (items.Count == 1)
         {
-            var where = SqlMetaDataHelper.BuildWhere(schema, null);
-            using var ss = Database.CreateSession();
-            var ds = ss.Query($"select table_name from information_schema.tables{where}", CommandType.Text);
-            if (ds.Tables.Count == 0) return list;
-
-            tableNames = ds.Tables[0].Rows.Cast<DataRow>()
-                .Select(e => e["table_name"] + "")
-                .Where(e => !e.IsNullOrEmpty())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+            var single = GetTable(items[0].Schema, items[0].Name, items[0].IsView);
+            if (single != null) list.Add(single);
         }
-
-        // 分批查询，避免单条 SQL 携带过多表名
-        const Int32 batchSize = 100;
-        for (var i = 0; i < tableNames.Length; i += batchSize)
+        else
         {
-            var batch = tableNames.Skip(i).Take(batchSize).ToArray();
-            if (!TryGetTables(schema, batch, list) && batch.Length > 1)
+            Parallel.ForEach(items, new ParallelOptions { MaxDegreeOfParallelism = 8 }, item =>
             {
-                // 单个坏表（如无法解析的 Hive 视图）会让整批失败，退化为逐表查询并跳过坏表
-                foreach (var name in batch)
-                {
-                    TryGetTables(schema, [name], list);
-                }
-            }
+                var table = GetTable(item.Schema, item.Name, item.IsView);
+                if (table == null) return;
+
+                lock (list) list.Add(table);
+            });
         }
 
         list.Sort((x, y) =>
@@ -905,61 +964,38 @@ internal class PrestoMetaData : RemoteDbMetaData
             return rs != 0 ? rs : String.Compare(x.TableName, y.TableName, StringComparison.OrdinalIgnoreCase);
         });
 
-        // information_schema 不带注释与分区标记，逐表 DESCRIBE 补齐；单表失败直接跳过，不影响整库反向工程
-        // 大模式下逐表串行耗时过长，这里按线程并行，每个线程复用各自的会话
-        if (list.Count > 1)
-            Parallel.ForEach(list, new ParallelOptions { MaxDegreeOfParallelism = 8 }, LoadExtraInfo);
-        else if (list.Count == 1)
-            LoadExtraInfo(list[0]);
-
         return list;
     }
 
-    /// <summary>通过 DESCRIBE 补齐字段注释与分区信息，并修正主键约定</summary>
-    /// <param name="table">表模型</param>
-    private void LoadExtraInfo(IDataTable table)
+    /// <summary>取表清单。只查 information_schema.tables，耗时与表数量无关</summary>
+    /// <param name="schema">模式名</param>
+    /// <param name="names">指定表名</param>
+    /// <returns></returns>
+    private List<(String Schema, String Name, Boolean IsView)> GetTableList(String? schema, String[]? names)
     {
-        if (table.TableName.IsNullOrEmpty()) return;
+        var list = new List<(String, String, Boolean)>();
 
         try
         {
-            var name = QuoteName(table.Owner) + "." + QuoteName(table.TableName);
+            var where = SqlMetaDataHelper.BuildWhere(schema, names);
             using var ss = Database.CreateSession();
             var old = ss.ShowSQL;
             ss.ShowSQL = false;
             try
             {
-                var ds = ss.Query($"DESCRIBE {name}", CommandType.Text);
-                if (ds.Tables.Count > 0)
+                var ds = ss.Query($"select table_schema, table_name, table_type from information_schema.tables{where}", CommandType.Text);
+                if (ds.Tables.Count == 0) return list;
+
+                var keys = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+                foreach (DataRow dr in ds.Tables[0].Rows)
                 {
-                    var dt = ds.Tables[0];
-                    var ci = FindColumn(dt, "Column", "column_name", "Field");
-                    var mi = FindColumn(dt, "Comment", "comment", "comment_text");
-                    var ei = FindColumn(dt, "Extra", "extra");
-                    if (ci >= 0)
-                    {
-                        var partitions = new List<String>();
-                        foreach (DataRow dr in dt.Rows)
-                        {
-                            var column = dr[ci] + "";
-                            if (column.IsNullOrEmpty()) continue;
+                    var name = dr["table_name"] + "";
+                    if (name.IsNullOrEmpty()) continue;
 
-                            if (mi >= 0)
-                            {
-                                var comment = dr[mi] + "";
-                                if (!comment.IsNullOrEmpty())
-                                {
-                                    var field = table.Columns.FirstOrDefault(e => e.ColumnName.EqualIgnoreCase(column));
-                                    if (field != null && field.Description.IsNullOrEmpty()) field.Description = comment;
-                                }
-                            }
+                    var owner = dr["table_schema"] + "";
+                    if (!keys.Add(owner + "." + name)) continue;
 
-                            // Hive 分区列在 Extra 列标记为 partition key
-                            if (ei >= 0 && (dr[ei] + "").Contains("partition", StringComparison.OrdinalIgnoreCase)) partitions.Add(column);
-                        }
-
-                        AddPartitionIndex(table, partitions);
-                    }
+                    list.Add((owner, name, (dr["table_type"] + "").EqualIgnoreCase("VIEW")));
                 }
             }
             finally
@@ -969,11 +1005,156 @@ internal class PrestoMetaData : RemoteDbMetaData
         }
         catch (Exception ex)
         {
-            if (DAL.Debug) XTrace.Log.Debug("Failed to load extra info for [{0}]: {1}", table.TableName, ex.Message);
+            XTrace.WriteLine("Presto metadata query failed: {0}", ex.Message);
         }
 
-        FixPrimaryKey(table);
+        return list;
     }
+
+    /// <summary>读取单张表。DESCRIBE 失败（如坏视图）时回退 information_schema.columns</summary>
+    /// <param name="schema">模式名</param>
+    /// <param name="name">表名</param>
+    /// <param name="isView">是否视图</param>
+    /// <returns></returns>
+    private IDataTable? GetTable(String schema, String name, Boolean isView)
+    {
+        var table = DAL.CreateTable();
+        table.TableName = name;
+        table.Owner = schema;
+        table.IsView = isView;
+        table.DbType = Database.Type;
+
+        if (!TryDescribe(table)) TryGetColumns(table);
+
+        table.Fix();
+        FixPrimaryKey(table);
+
+        return table;
+    }
+
+    /// <summary>用 DESCRIBE 读取字段类型、注释与分区标记。一次请求拿全，比元数据扫描快</summary>
+    /// <param name="table">表模型</param>
+    /// <returns>是否成功</returns>
+    private Boolean TryDescribe(IDataTable table)
+    {
+        try
+        {
+            var name = QuoteName(table.Owner) + "." + QuoteName(table.TableName);
+            using var ss = Database.CreateSession();
+            var old = ss.ShowSQL;
+            ss.ShowSQL = false;
+            try
+            {
+                var ds = ss.Query($"DESCRIBE {name}", CommandType.Text);
+                if (ds.Tables.Count == 0) return false;
+
+                var dt = ds.Tables[0];
+                var ci = FindColumn(dt, "Column", "column_name", "Field");
+                var ti = FindColumn(dt, "Type", "data_type");
+                var mi = FindColumn(dt, "Comment", "comment", "comment_text");
+                var ei = FindColumn(dt, "Extra", "extra");
+                if (ci < 0 || ti < 0) return false;
+
+                var partitions = new List<String>();
+                foreach (DataRow dr in dt.Rows)
+                {
+                    var column = dr[ci] + "";
+                    if (column.IsNullOrEmpty()) continue;
+
+                    // DESCRIBE 不返回可空信息，Presto 表字段默认允许为空
+                    CreateColumn(table, column, dr[ti] + "", mi >= 0 ? dr[mi] + "" : null);
+
+                    // Hive 分区列在 Extra 列标记为 partition key
+                    if (ei >= 0 && (dr[ei] + "").Contains("partition", StringComparison.OrdinalIgnoreCase)) partitions.Add(column);
+                }
+
+                AddPartitionIndex(table, partitions);
+
+                return table.Columns.Count > 0;
+            }
+            finally
+            {
+                ss.ShowSQL = old;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (DAL.Debug) XTrace.Log.Debug("Failed to describe [{0}]: {1}", table.TableName, ex.Message);
+
+            return false;
+        }
+    }
+
+    /// <summary>回退方案：从 information_schema.columns 读取单表字段。部分坏视图只在这里可用</summary>
+    /// <param name="table">表模型</param>
+    private void TryGetColumns(IDataTable table)
+    {
+        try
+        {
+            var where = $"table_schema = {Escape(table.Owner)} and table_name = {Escape(table.TableName)}";
+            using var ss = Database.CreateSession();
+            var old = ss.ShowSQL;
+            ss.ShowSQL = false;
+            try
+            {
+                var ds = ss.Query($"select column_name, ordinal_position, data_type, is_nullable from information_schema.columns where {where}", CommandType.Text);
+                if (ds.Tables.Count == 0) return;
+
+                var dt = ds.Tables[0];
+                var ci = FindColumn(dt, "column_name", "Column", "Field");
+                var ni = FindColumn(dt, "data_type", "Type");
+                if (ci < 0 || ni < 0) return;
+
+                // 部分方言（如开启 strict mode 的 Presto）不允许在元数据查询中排序，取回后在内存里排
+                var oi = FindColumn(dt, "ordinal_position");
+                var rows = dt.Rows.Cast<DataRow>().ToList();
+                if (oi >= 0) rows.Sort((x, y) => (x[oi] + "").ToInt().CompareTo((y[oi] + "").ToInt()));
+
+                var yi = FindColumn(dt, "is_nullable");
+                foreach (var dr in rows)
+                {
+                    var column = dr[ci] + "";
+                    if (column.IsNullOrEmpty()) continue;
+
+                    CreateColumn(table, column, dr[ni] + "", null, yi >= 0 ? (dr[yi] + "").EqualIgnoreCase("YES") : null);
+                }
+            }
+            finally
+            {
+                ss.ShowSQL = old;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (DAL.Debug) XTrace.Log.Debug("Failed to load columns for [{0}]: {1}", table.TableName, ex.Message);
+        }
+    }
+
+    /// <summary>按 DESCRIBE 风格的类型文本建立字段</summary>
+    /// <param name="table">表模型</param>
+    /// <param name="name">字段物理名</param>
+    /// <param name="rawType">原始类型，如 varchar(50)、array(bigint)</param>
+    /// <param name="comment">注释</param>
+    /// <param name="nullable">是否可空，未知时按可空处理</param>
+    /// <returns></returns>
+    private IDataColumn CreateColumn(IDataTable table, String name, String? rawType, String? comment, Boolean? nullable = null)
+    {
+        var field = table.CreateColumn();
+        field.ColumnName = name;
+        field.RawType = rawType;
+        field.Nullable = nullable ?? true;
+        if (!comment.IsNullOrEmpty()) field.Description = comment;
+
+        field.DataType = GetDataType(field) ?? typeof(String);
+        field.Fix();
+        table.Columns.Add(field);
+        FixColumn(field);
+
+        return field;
+    }
+
+    /// <summary>把字符串包装为 SQL 字符串字面量</summary>
+    private static String Escape(String? value) => "'" + (value + "").Replace("'", "''") + "'";
 
     /// <summary>Hive 不返回主键约束，按约定把首个物理名为 id 的列当作主键，便于实体按主键查询单行</summary>
     /// <param name="table">表模型</param>
@@ -1023,33 +1204,6 @@ internal class PrestoMetaData : RemoteDbMetaData
     }
 
     private static String QuoteName(String? name) => "\"" + (name + "").Replace("\"", "\"\"") + "\"";
-
-    private Boolean TryGetTables(String? schema, String[] names, List<IDataTable> list)
-    {
-        try
-        {
-            var where = SqlMetaDataHelper.BuildWhere(schema, names);
-
-            // 部分 Presto 开启 strict mode 后禁止无 limit 的排序，元数据查询不排序，取回后在内存里排
-            var tables = $"select table_schema, table_name, table_type from information_schema.tables{where}";
-            var columns = $"select table_schema, table_name, column_name, ordinal_position, data_type, is_nullable, column_default from information_schema.columns{where}";
-
-            var list2 = SqlMetaDataHelper.GetTables(Database, tables, columns, GetDataType);
-            foreach (var table in list2)
-            {
-                foreach (var column in table.Columns) FixColumn(column);
-            }
-            list.AddRange(list2);
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            XTrace.WriteLine("Presto metadata query failed for [{0}]: {1}", String.Join(",", names), ex.Message);
-
-            return false;
-        }
-    }
     #endregion
 
     #region 数据定义

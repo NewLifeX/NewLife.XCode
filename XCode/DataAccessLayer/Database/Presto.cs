@@ -56,7 +56,8 @@ internal abstract class PrestoBase : RemoteDb
             | DatabaseCapability.WindowFunctions
             | DatabaseCapability.WindowFrame,
         MaxMigration = Migration.Off,
-        LongTextLength = 4000,
+        // Presto/Trino 的 varchar 不限定长度，长文本阈值取无穷
+        LongTextLength = Int32.MaxValue,
         ParameterPrefix = "@",
     };
 
@@ -73,8 +74,8 @@ internal abstract class PrestoBase : RemoteDb
         // 无自增主键与索引，DDL 依赖连接器属性，不能自动建表
         Migration = DataAccessLayer.Migration.Off;
 
-        // NReco 驱动使用 {name} 字符串替换，官方 Trino 驱动使用 ?，均与 XCode 的 @ 前缀不兼容
-        UseParameter = false;
+        // NewLife.Presto 在客户端把 @name 安全替换为字面量，兼容 XCode 的参数前缀
+        UseParameter = true;
     }
     #endregion
 
@@ -130,6 +131,21 @@ internal abstract class PrestoBase : RemoteDb
         "iceberg" => FastCountMode.Iceberg,
         _ => FastCountMode.Auto,
     };
+
+    /// <summary>加载 NewLife.Presto 驱动工厂。只做本地加载，未安装时提示包名，避免运行时联网下载</summary>
+    /// <returns></returns>
+    internal static DbProviderFactory? LoadPrestoFactory()
+    {
+        var type = DriverLoader.Load("NewLife.Presto.PrestoClientFactory", null, "NewLife.Presto.dll", null);
+        var factory = GetProviderFactory(type);
+        if (factory == null)
+        {
+            var package = DriverPackages.Get(DatabaseType.Presto);
+            throw new XCodeException(L.T("Unable to load driver [{0}]; add the NuGet package [{1}] and try again.", "NewLife.Presto.dll", package));
+        }
+
+        return factory;
+    }
     #endregion
 
     #region 数据库特性
@@ -217,7 +233,7 @@ internal abstract class PrestoBase : RemoteDb
     #endregion
 }
 
-/// <summary>Presto数据库。优先使用 NewLife.Presto 驱动，未安装时回退旧驱动</summary>
+/// <summary>Presto数据库。使用 NewLife.Presto 纯托管驱动</summary>
 internal class Presto : PrestoBase
 {
     #region 属性
@@ -226,17 +242,9 @@ internal class Presto : PrestoBase
     #endregion
 
     #region 方法
-    /// <summary>创建工厂。优先加载 NewLife.Presto，失败时回退旧驱动</summary>
-    /// <remarks>新驱动只做本地加载，避免未安装时触发网络下载；旧驱动保持原有下载逻辑</remarks>
+    /// <summary>创建工厂。驱动独立发布为 NewLife.Presto 包，按类型名反射加载</summary>
     /// <returns></returns>
-    protected override DbProviderFactory? CreateFactory()
-    {
-        var type = DriverLoader.Load("NewLife.Presto.PrestoClientFactory", null, "NewLife.Presto.dll", null);
-        var factory = GetProviderFactory(type);
-        if (factory != null) return factory;
-
-        return LoadFactory("NReco.PrestoAdo.PrestoDbFactory", "NReco.PrestoAdo.dll");
-    }
+    protected override DbProviderFactory? CreateFactory() => LoadPrestoFactory();
 
     /// <summary>是否支持该提供者所描述的数据库</summary>
     /// <param name="providerName">提供者</param>
@@ -245,22 +253,26 @@ internal class Presto : PrestoBase
     #endregion
 
     #region 数据库特性
-    /// <summary>设置连接字符串。两类驱动均使用 Host/Port/Catalog/Schema/User/Password/UseSsl</summary>
+    /// <summary>设置连接字符串。使用 Host/Port/Catalog/Schema/User/Password/UseSsl</summary>
     /// <param name="builder"></param>
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
         base.OnSetConnectionString(builder);
 
+        // 旧驱动使用 TrinoHeaders 开关，新驱动统一用 Protocol
+        if (builder.TryGetAndRemove("TrinoHeaders", out var trinoHeaders) && !trinoHeaders.IsNullOrEmpty() && trinoHeaders.ToBoolean())
+            builder["Protocol"] = "Trino";
+
         if (builder["UseSsl"].IsNullOrEmpty()) builder["UseSsl"] = "false";
         if (builder["Port"].IsNullOrEmpty()) builder["Port"] = "8080";
 
         // 固定使用 Presto 协议头，Trino 请使用 DatabaseType.Trino
-        builder["TrinoHeaders"] = "false";
+        if (builder["Protocol"].IsNullOrEmpty()) builder["Protocol"] = "Presto";
     }
     #endregion
 }
 
-/// <summary>Trino数据库。使用官方 Trino.Data.ADO 驱动</summary>
+/// <summary>Trino数据库。使用 NewLife.Presto 驱动，切换为 Trino 协议头</summary>
 internal class Trino : PrestoBase
 {
     #region 属性
@@ -269,20 +281,9 @@ internal class Trino : PrestoBase
     #endregion
 
     #region 方法
-    /// <summary>创建工厂</summary>
-    /// <remarks>Trino 官方 ADO.NET 客户端没有提供 DbProviderFactory，这里用反射工厂适配</remarks>
+    /// <summary>创建工厂。Presto 与 Trino 共用 NewLife.Presto 驱动</summary>
     /// <returns></returns>
-    protected override DbProviderFactory? CreateFactory()
-    {
-        var connType = DriverLoader.Load("Trino.Data.ADO.Server.TrinoConnection", null, "Trino.Data.ADO.dll", null);
-        if (connType == null) return null;
-
-        var cmdType = DriverLoader.Load("Trino.Data.ADO.Server.TrinoCommand", null, "Trino.Data.ADO.dll", null);
-        var prmType = DriverLoader.Load("Trino.Data.ADO.TrinoParameter", null, "Trino.Data.ADO.dll", null);
-        if (cmdType == null || prmType == null) return null;
-
-        return new TrinoDbFactory(connType, cmdType, prmType);
-    }
+    protected override DbProviderFactory? CreateFactory() => LoadPrestoFactory();
 
     /// <summary>是否支持该提供者所描述的数据库</summary>
     /// <param name="providerName">提供者</param>
@@ -291,116 +292,32 @@ internal class Trino : PrestoBase
     #endregion
 
     #region 数据库特性
-    /// <summary>设置连接字符串。官方驱动使用 Host/Port/Catalog/Schema/User/EnableSSL/Auth</summary>
+    /// <summary>设置连接字符串。新驱动统一使用 UseSsl/Protocol</summary>
     /// <param name="builder"></param>
     protected override void OnSetConnectionString(ConnectionStringBuilder builder)
     {
         base.OnSetConnectionString(builder);
 
-        if (builder["EnableSSL"].IsNullOrEmpty()) builder["EnableSSL"] = "false";
+        // 旧 Trino 驱动使用 EnableSSL，新驱动统一为 UseSsl
+        if (builder["UseSsl"].IsNullOrEmpty() && builder.TryGetAndRemove("EnableSSL", out var enableSsl) && !enableSsl.IsNullOrEmpty())
+            builder["UseSsl"] = enableSsl;
 
-        // 官方驱动默认 443（SSL）；仅在非 SSL 且未指定端口时补 8080
-        if (builder["Port"].IsNullOrEmpty() && !builder["EnableSSL"].ToBoolean()) builder["Port"] = "8080";
+        if (builder["UseSsl"].IsNullOrEmpty()) builder["UseSsl"] = "false";
+        if (builder["Port"].IsNullOrEmpty() && !builder["UseSsl"].ToBoolean()) builder["Port"] = "8080";
+
+        // 切换为 Trino 协议头（X-Trino-*）
+        builder.TryGetAndRemove("TrinoHeaders", out _);
+        builder["Protocol"] = "Trino";
 
         // 打开连接时不做额外探测，避免每次建连都多一次 HTTP 往返
         if (builder["TestConnection"].IsNullOrEmpty()) builder["TestConnection"] = "false";
-
-        // 官方 TrinoCommand 在构造时绑定连接，必须先注入最终连接串，否则命令会拿到空的服务地址
-        if (Factory is TrinoDbFactory factory) factory.ConnectionString = builder.ConnectionString;
     }
     #endregion
-}
-
-/// <summary>Trino 反射工厂。官方驱动未提供 DbProviderFactory</summary>
-internal sealed class TrinoDbFactory(Type connType, Type cmdType, Type prmType) : DbProviderFactory
-{
-    /// <summary>最终连接串。TrinoCommand 在构造时绑定连接，必须带上服务地址</summary>
-    public String? ConnectionString { get; set; }
-
-    /// <summary>创建连接</summary>
-    /// <returns></returns>
-    [UnconditionalSuppressMessage("AOT", "IL2067", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
-    [UnconditionalSuppressMessage("AOT", "IL2077", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
-    public override DbConnection CreateConnection() => (DbConnection)Activator.CreateInstance(connType)!;
-
-    /// <summary>创建命令。TrinoCommand 没有无参构造，先绑定一个临时连接，随后由 XCode 重新赋值</summary>
-    /// <returns></returns>
-    [UnconditionalSuppressMessage("AOT", "IL2067", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
-    [UnconditionalSuppressMessage("AOT", "IL2077", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
-    public override DbCommand CreateCommand()
-    {
-        var conn = Activator.CreateInstance(connType)!;
-        if (!ConnectionString.IsNullOrEmpty()) ((DbConnection)conn).ConnectionString = ConnectionString;
-
-        return (DbCommand)Activator.CreateInstance(cmdType, conn)!;
-    }
-
-    /// <summary>创建参数</summary>
-    /// <returns></returns>
-    [UnconditionalSuppressMessage("AOT", "IL2067", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
-    [UnconditionalSuppressMessage("AOT", "IL2077", Justification = "Trino 驱动类型由 DriverLoader 在运行时解析，AOT 下不支持该动态驱动路径")]
-    public override DbParameter CreateParameter() => (DbParameter)Activator.CreateInstance(prmType)!;
-
-    /// <summary>创建连接字符串生成器</summary>
-    /// <returns></returns>
-    public override DbConnectionStringBuilder CreateConnectionStringBuilder() => new();
 }
 
 /// <summary>Presto/Trino 数据库会话</summary>
 internal class PrestoSession(IDatabase db) : RemoteDbSession(db)
 {
-    #region 基本方法 查询/执行
-    /// <summary>执行查询并装配结果集</summary>
-    /// <remarks>
-    /// NReco 驱动对 varchar 字段返回 ColumnSize=DBNull，DataTable.Load 会据此把 MaxLength 置为 0，
-    /// 导致任何非空字符串都被判为超长。这里先按字段类型建列再加载数据，保持 MaxLength 默认值。
-    /// </remarks>
-    /// <param name="cmd">命令</param>
-    /// <returns></returns>
-    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "驱动不提供DataAdapter，采用DataReader装配结果集；仅在裁剪下需要DataTable相关成员，数据库访问本身依赖运行时驱动加载，不承诺裁剪后可用")]
-    public override DataSet Query(DbCommand cmd) => Execute(cmd, true, cmd2 =>
-    {
-        var ds = new DataSet();
-
-        using var reader = cmd2.ExecuteReader();
-
-        // Presto/Trino 只支持单个结果集，Trino 驱动的 NextResult 会直接抛 NotSupportedException
-        var table = ReadTable(reader);
-        if (table.Columns.Count > 0) ds.Tables.Add(table);
-
-        return ds;
-    });
-
-    private static DataTable ReadTable(DbDataReader reader)
-    {
-        var table = new DataTable();
-
-        var schema = reader.GetSchemaTable();
-        if (schema != null)
-        {
-            foreach (DataRow row in schema.Rows)
-            {
-                var name = row["ColumnName"] + "";
-                if (name.IsNullOrEmpty()) name = "Column" + table.Columns.Count;
-                while (table.Columns.Contains(name)) name += "_";
-
-                var type = row["DataType"] as Type ?? typeof(String);
-                table.Columns.Add(name, type);
-            }
-        }
-
-        while (reader.Read())
-        {
-            var row = table.NewRow();
-            for (var i = 0; i < table.Columns.Count; i++)
-                row[i] = reader.IsDBNull(i) ? DBNull.Value : reader.GetValue(i);
-
-            table.Rows.Add(row);
-        }
-
-        return table;
-    }
-
     #region 快速计数
     /// <summary>Iceberg 元数据不可靠（存在 delete 文件），需要精确计数</summary>
     private const Int64 IcebergUnreliable = -2;
@@ -633,7 +550,6 @@ internal class PrestoSession(IDatabase db) : RemoteDbSession(db)
     /// <exception cref="NotSupportedException">Presto/Trino 不支持自增列</exception>
     public override Task<Int64> InsertAndGetIdentityAsync(String sql, CommandType type = CommandType.Text, params IDataParameter[]? ps)
         => FromException(new NotSupportedException(L.T("Presto/Trino does not support auto-increment columns; use a business key (Guid/snowflake) as the primary key, or set AllowInsertIdentity.")));
-    #endregion
 
     #region 事务
     /// <summary>开始事务。Presto/Trino 没有事务，直接抛出明确异常</summary>

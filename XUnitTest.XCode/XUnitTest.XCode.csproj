@@ -102,8 +102,6 @@
     <PackageReference Include="Npgsql" Version="8.0.8" />
     <!-- MongoDB 真库用例所需 -->
     <PackageReference Include="MongoDB.Driver" Version="3.14.1" />
-    <PackageReference Include="NReco.PrestoAdo" Version="1.1.0" />
-    <PackageReference Include="Trino.Client.ADO" Version="1.0.11" />
     <PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="10.3.4" />
     <PackageReference Include="MonetDb.Mapi" Version="2.3.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.15" />

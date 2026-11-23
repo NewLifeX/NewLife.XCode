@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -180,6 +181,69 @@ public class PrestoTests
         Assert.True(false, "Presto 无法读取任何一张表，请检查连接串指向的 Catalog/Schema");
     }
 
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoParameterTest()
+    {
+        var dal = PrestoDal("Presto_Live");
+
+        // NewLife.Presto 在客户端把 @name 安全替换为字面量，验证参数化查询可用
+        var dt = dal.Query("select @a as a, @b as b, @c as c", new Dictionary<String, Object>
+        {
+            ["a"] = 123,
+            ["b"] = "it's ok",
+            ["c"] = new DateTime(2024, 1, 2, 3, 4, 5),
+        });
+
+        Assert.NotNull(dt);
+        Assert.Equal(1, dt.Rows.Count);
+        Assert.Equal(123, dt.Rows[0][0].ToInt());
+        Assert.Equal("it's ok", dt.Rows[0][1] + "");
+
+        // 单引号必须被转义，否则会拼出非法 SQL
+        var safe = dal.Query("select @s as s", new Dictionary<String, Object> { ["s"] = "a'; drop table t; --" });
+        Assert.Equal("a'; drop table t; --", safe.Rows[0][0] + "");
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public async Task PrestoAsyncQueryTest()
+    {
+        var dal = PrestoDal("Presto_Live");
+
+        var dt = await dal.QueryAsync("select 1 as n, '中文' as s");
+        Assert.NotNull(dt);
+        Assert.Equal(1, dt.Rows.Count);
+        Assert.Equal(1, dt.Rows[0][0].ToInt());
+        Assert.Equal("中文", dt.Rows[0][1] + "");
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoDataSetTest()
+    {
+        var dal = PrestoDal("Presto_Live");
+
+        // DataSet 走驱动的 DataAdapter，验证字符串列不会被判为超长（旧 NReco 驱动的 ColumnSize 问题）
+        var dt = dal.Select("select cast('abc' as varchar) as s, 1 as n");
+        Assert.NotNull(dt);
+        Assert.Equal(1, dt.Tables[0].Rows.Count);
+        Assert.Equal("abc", dt.Tables[0].Rows[0]["s"] + "");
+        Assert.Equal(typeof(String), dt.Tables[0].Columns["s"].DataType);
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoPagingTest()
+    {
+        var dal = PrestoDal("Presto_Live");
+
+        var sql = dal.Db.PageSplit("select nationkey from tpch.tiny.nation", 2, 3, null);
+        Assert.Contains("offset 2", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("limit 3", sql, StringComparison.OrdinalIgnoreCase);
+
+        // tpch 内置数据集不受业务库权限限制，可稳定验证分页与多行读取
+        var dt = dal.Query(sql);
+        Assert.NotNull(dt);
+        Assert.Equal(3, dt.Rows.Count);
+    }
+
     [Theory]
     [InlineData(DatabaseType.Presto)]
     [InlineData(DatabaseType.Trino)]
@@ -196,12 +260,10 @@ public class PrestoTests
         var presto = DbFactory.Create(DatabaseType.Presto);
         Assert.True(presto.Support("Presto"));
         Assert.True(presto.Support("NewLife.Presto"));
-        Assert.True(presto.Support("NReco.PrestoAdo"));
         Assert.False(presto.Support("Trino"));
 
         var trino = DbFactory.Create(DatabaseType.Trino);
         Assert.True(trino.Support("Trino"));
-        Assert.True(trino.Support("Trino.Data.ADO"));
         Assert.False(trino.Support("Presto"));
     }
 
@@ -213,9 +275,9 @@ public class PrestoTests
         var db = DbFactory.Create(dbType);
         Assert.NotNull(db);
 
-        // 不自动建表、不启用参数化、不做批量
+        // 不自动建表、不做批量；NewLife.Presto 支持 @ 参数在客户端安全替换
         Assert.Equal(Migration.Off, db.EffectiveMigration);
-        Assert.False(db.UseParameter);
+        Assert.True(db.UseParameter);
         Assert.True(db.Capabilities.HasFlag(DatabaseCapability.Sql));
         Assert.False(db.Capabilities.HasFlag(DatabaseCapability.Transactions));
         Assert.False(db.Capabilities.HasFlag(DatabaseCapability.Ddl));
@@ -306,7 +368,27 @@ public class PrestoTests
         Assert.Contains("Catalog=hive", connStr2, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Schema=myschema", connStr2, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Port=8080", connStr2, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("EnableSSL=false", connStr2, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("UseSsl=false", connStr2, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Protocol=Trino", connStr2, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ProtocolHeaderTest()
+    {
+        // Presto 与 Trino 共用 NewLife.Presto，仅协议头不同
+        DAL.AddConnStr("presto_protocol", "Host=localhost;Catalog=hive", null, "Presto");
+        DAL.AddConnStr("trino_protocol", "Host=localhost;Catalog=hive", null, "Trino");
+        DAL.AddConnStr("trino_legacy", "Host=localhost;Catalog=hive;EnableSSL=true;TrinoHeaders=true", null, "Trino");
+
+        Assert.Contains("Protocol=Presto", DAL.Create("presto_protocol").Db.ConnectionString, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Protocol=Trino", DAL.Create("trino_protocol").Db.ConnectionString, StringComparison.OrdinalIgnoreCase);
+
+        // 旧写法 EnableSSL/TrinoHeaders 归一化为 UseSsl/Protocol
+        var connStr = DAL.Create("trino_legacy").Db.ConnectionString;
+        Assert.Contains("UseSsl=true", connStr, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Protocol=Trino", connStr, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("EnableSSL", connStr, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("TrinoHeaders", connStr, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -438,6 +520,51 @@ public class PrestoTests
 
         Assert.Equal(25, session.QueryCountFast("tpch.tiny.nation"));
         Assert.Equal(25, await session.QueryCountFastAsync("tpch.tiny.nation"));
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoSelectBuilderTest()
+    {
+        var dal = PrestoDal("Presto_Live");
+
+        // 走 XCode 的查询生成器与分页方言
+        var sb = new SelectBuilder
+        {
+            Column = "nationkey, name",
+            Table = "tpch.tiny.nation",
+            OrderBy = "nationkey",
+        };
+
+        var dt = dal.Query(sb, 0, 5);
+        Assert.NotNull(dt);
+        Assert.Equal(5, dt.Rows.Count);
+        Assert.Equal(0, dt.Rows[0][0].ToInt());
+        Assert.Equal("ALGERIA", dt.Rows[0][1] + "");
+
+        Assert.Equal(25, dal.SelectCount(sb));
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public async Task PrestoFastCountLiveTest()
+    {
+        // tpch 内置数据集始终存在，SHOW STATS 可返回 row_count
+        DAL.AddConnStr("Presto_FastStats", PrestoConnStr() + ";FastCount=Stats", null, "Presto");
+        var dal = DAL.Create("Presto_FastStats");
+        using var session = (DbSession)dal.Session;
+
+        Assert.Equal(25, session.QueryCountFast("tpch.tiny.nation"));
+        Assert.Equal(25, await session.QueryCountFastAsync("tpch.tiny.nation"));
+
+        // 非 Iceberg 表没有 $snapshots 元数据表，Auto 模式应回退到 SHOW STATS
+        DAL.AddConnStr("Presto_FastAuto", PrestoConnStr(), null, "Presto");
+        var dal2 = DAL.Create("Presto_FastAuto");
+        using var session2 = (DbSession)dal2.Session;
+
+        Assert.Equal(25, session2.QueryCountFast("tpch.tiny.nation"));
+
+        // 强制 Iceberg 模式时，非 Iceberg 表取不到行数，返回 -1 交由上层精确计数
+        DAL.AddConnStr("Presto_FastIceberg", PrestoConnStr() + ";FastCount=Iceberg", null, "Presto");
+        Assert.Equal(-1, DAL.Create("Presto_FastIceberg").Session.QueryCountFast("tpch.tiny.nation"));
     }
 
     /// <summary>解析 Presto 连接串。优先级：环境变量 XCode_presto → Config/presto.config → 本机默认值</summary>

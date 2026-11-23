@@ -4,6 +4,11 @@
 
 ### Added
 - 为同步内置抽取器增加可选逐页查询回调，保留默认查询和外部抽取器合同；增加 `NameFormats.Exact` 与兼容 XML 重载，显式保留物理名称大小写。
+- 新增 `XCode.Presto` 与 `XCode.TDengine` 依赖包，分别接入 `NewLife.Presto`、`NewLife.TDengine` 自有驱动；发布工作流同步打包。
+
+### Changed
+- Presto 与 Trino 统一改用 `NewLife.Presto` 驱动（`Trino` 通过 `Protocol=Trino` 切换协议头），移除 `NReco.PrestoAdo` 与 `Trino.Client.ADO` 回退路径；连接串的 `EnableSSL`/`TrinoHeaders` 自动归一化为 `UseSsl`/`Protocol`。
+- Presto/Trino 开启参数化查询：驱动在客户端把 `@name` 绑定为安全字面量，跳过字符串与注释。
 
 ## v12.3.2026.1024 (2026-10-24)
 

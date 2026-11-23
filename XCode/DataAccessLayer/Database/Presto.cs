@@ -118,7 +118,7 @@ internal abstract class PrestoBase : RemoteDb
 
         SchemaName = builder["Schema"];
 
-        // FastCount 是 XCode 行为开关，必须从连接字符串移除，避免旧驱动因未知参数报错
+        // FastCount 是 XCode 行为开关，必须从连接字符串移除，避免驱动因未知参数报错
         FastCount = FastCountMode.Auto;
         if (builder.TryGetAndRemove(nameof(FastCount), out var fastCount) && !fastCount.IsNullOrEmpty())
             FastCount = ParseFastCount(fastCount);
@@ -742,8 +742,124 @@ internal class PrestoMetaData : RemoteDbMetaData
             return rs != 0 ? rs : String.Compare(x.TableName, y.TableName, StringComparison.OrdinalIgnoreCase);
         });
 
+        // information_schema 不带注释与分区标记，逐表 DESCRIBE 补齐；单表失败直接跳过，不影响整库反向工程
+        // 大模式下逐表串行耗时过长，这里按线程并行，每个线程复用各自的会话
+        if (list.Count > 1)
+            Parallel.ForEach(list, new ParallelOptions { MaxDegreeOfParallelism = 8 }, LoadExtraInfo);
+        else if (list.Count == 1)
+            LoadExtraInfo(list[0]);
+
         return list;
     }
+
+    /// <summary>通过 DESCRIBE 补齐字段注释与分区信息，并修正主键约定</summary>
+    /// <param name="table">表模型</param>
+    private void LoadExtraInfo(IDataTable table)
+    {
+        if (table.TableName.IsNullOrEmpty()) return;
+
+        try
+        {
+            var name = QuoteName(table.Owner) + "." + QuoteName(table.TableName);
+            using var ss = Database.CreateSession();
+            var old = ss.ShowSQL;
+            ss.ShowSQL = false;
+            try
+            {
+                var ds = ss.Query($"DESCRIBE {name}", CommandType.Text);
+                if (ds.Tables.Count > 0)
+                {
+                    var dt = ds.Tables[0];
+                    var ci = FindColumn(dt, "Column", "column_name", "Field");
+                    var mi = FindColumn(dt, "Comment", "comment", "comment_text");
+                    var ei = FindColumn(dt, "Extra", "extra");
+                    if (ci >= 0)
+                    {
+                        var partitions = new List<String>();
+                        foreach (DataRow dr in dt.Rows)
+                        {
+                            var column = dr[ci] + "";
+                            if (column.IsNullOrEmpty()) continue;
+
+                            if (mi >= 0)
+                            {
+                                var comment = dr[mi] + "";
+                                if (!comment.IsNullOrEmpty())
+                                {
+                                    var field = table.Columns.FirstOrDefault(e => e.ColumnName.EqualIgnoreCase(column));
+                                    if (field != null && field.Description.IsNullOrEmpty()) field.Description = comment;
+                                }
+                            }
+
+                            // Hive 分区列在 Extra 列标记为 partition key
+                            if (ei >= 0 && (dr[ei] + "").Contains("partition", StringComparison.OrdinalIgnoreCase)) partitions.Add(column);
+                        }
+
+                        AddPartitionIndex(table, partitions);
+                    }
+                }
+            }
+            finally
+            {
+                ss.ShowSQL = old;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (DAL.Debug) XTrace.Log.Debug("Failed to load extra info for [{0}]: {1}", table.TableName, ex.Message);
+        }
+
+        FixPrimaryKey(table);
+    }
+
+    /// <summary>Hive 不返回主键约束，按约定把首个物理名为 id 的列当作主键，便于实体按主键查询单行</summary>
+    /// <param name="table">表模型</param>
+    internal static void FixPrimaryKey(IDataTable table)
+    {
+        if (table.Columns.Any(e => e.PrimaryKey)) return;
+
+        var id = table.Columns.FirstOrDefault(e => e.ColumnName.EqualIgnoreCase("id") || e.Name.EqualIgnoreCase("Id"));
+        if (id != null) id.PrimaryKey = true;
+    }
+
+    /// <summary>为分区列建立普通索引，便于后续生成的实体按分区查询</summary>
+    /// <param name="table">表模型</param>
+    /// <param name="columns">分区列物理名集合</param>
+    internal static void AddPartitionIndex(IDataTable table, IList<String> columns)
+    {
+        if (columns == null || columns.Count == 0) return;
+
+        var names = table.Columns
+            .Where(e => columns.Any(c => c.EqualIgnoreCase(e.ColumnName)))
+            .Select(e => e.Name.IsNullOrEmpty() ? e.ColumnName : e.Name)
+            .ToArray();
+        if (names.Length == 0) return;
+
+        // 已存在同列索引时不重复添加
+        if (table.Indexes.Any(e => e.Columns != null && e.Columns.SequenceEqual(names, StringComparer.OrdinalIgnoreCase))) return;
+
+        var tname = table.Name.IsNullOrEmpty() ? table.TableName : table.Name;
+        var index = table.CreateIndex();
+        index.Columns = names;
+        index.Unique = false;
+        index.Name = "IX_" + tname + "_" + String.Join("_", names);
+        table.Indexes.Add(index);
+    }
+
+    private static Int32 FindColumn(DataTable dt, params String[] names)
+    {
+        foreach (var name in names)
+        {
+            for (var i = 0; i < dt.Columns.Count; i++)
+            {
+                if (dt.Columns[i].ColumnName.EqualIgnoreCase(name)) return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private static String QuoteName(String? name) => "\"" + (name + "").Replace("\"", "\"\"") + "\"";
 
     private Boolean TryGetTables(String? schema, String[] names, List<IDataTable> list)
     {

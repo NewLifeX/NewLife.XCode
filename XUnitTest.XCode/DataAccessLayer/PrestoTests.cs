@@ -545,6 +545,105 @@ public class PrestoTests
     }
 
     [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoCommentsTest()
+    {
+        // information_schema 不带注释，反向工程时自动通过 DESCRIBE 补齐
+        DAL.AddConnStr("Presto_Comments", PrestoConnStr(), null, "Presto");
+        using var meta = DAL.Create("Presto_Comments").Db.CreateMetaData();
+
+        var tables = meta.GetTables();
+        var table = tables.FirstOrDefault(e => e.Columns.Any(c => !c.Description.IsNullOrEmpty()));
+        if (table == null) return; // 当前模式没有带注释的表
+
+        foreach (var column in table.Columns)
+            XTrace.WriteLine("Presto comment {0}.{1} = {2}", table.TableName, column.ColumnName, column.Description);
+    }
+
+    [Fact]
+    public void PrimaryKeyConventionTest()
+    {
+        // Hive 不返回主键约束，约定把首个 id 列当作主键
+        var table = DAL.CreateTable();
+        table.TableName = "test";
+        var name = table.CreateColumn();
+        name.ColumnName = "name";
+        name.DataType = typeof(String);
+        var id = table.CreateColumn();
+        id.ColumnName = "id";
+        id.DataType = typeof(Int64);
+        table.Columns.Add(name);
+        table.Columns.Add(id);
+
+        PrestoMetaData.FixPrimaryKey(table);
+
+        Assert.Single(table.PrimaryKeys);
+        Assert.Equal("id", table.PrimaryKeys[0].ColumnName);
+
+        // 没有 id 列的表不臆造主键
+        var table2 = DAL.CreateTable();
+        table2.TableName = "test2";
+        var code = table2.CreateColumn();
+        code.ColumnName = "code";
+        code.DataType = typeof(String);
+        table2.Columns.Add(code);
+
+        PrestoMetaData.FixPrimaryKey(table2);
+
+        Assert.Empty(table2.PrimaryKeys);
+    }
+
+    [Fact]
+    public void PartitionIndexTest()
+    {
+        var table = DAL.CreateTable();
+        table.Name = "PTest";
+        table.TableName = "p_test";
+        var id = table.CreateColumn();
+        id.Name = "Id";
+        id.ColumnName = "id";
+        id.DataType = typeof(Int64);
+        var ds = table.CreateColumn();
+        ds.Name = "Ds";
+        ds.ColumnName = "ds";
+        ds.DataType = typeof(String);
+        table.Columns.Add(id);
+        table.Columns.Add(ds);
+
+        PrestoMetaData.AddPartitionIndex(table, ["ds"]);
+
+        var index = Assert.Single(table.Indexes);
+        Assert.Equal("IX_PTest_Ds", index.Name);
+        Assert.Equal(["Ds"], index.Columns);
+        Assert.False(index.Unique);
+
+        // 重复添加不会产生第二个索引
+        PrestoMetaData.AddPartitionIndex(table, ["ds"]);
+        Assert.Single(table.Indexes);
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
+    public void PrestoPrimaryKeyAndPartitionTest()
+    {
+        var dal = PrestoDal("Presto_Live");
+
+        using var meta = dal.Db.CreateMetaData();
+        var tables = meta.GetTables();
+
+        // 带 id 列的表应被标记主键
+        var withId = tables.FirstOrDefault(e => e.Columns.Any(c => c.ColumnName.EqualIgnoreCase("id")));
+        if (withId != null)
+        {
+            Assert.Single(withId.PrimaryKeys);
+            Assert.Equal("id", withId.PrimaryKeys[0].ColumnName, ignoreCase: true);
+        }
+
+        // 分区列应生成索引，便于按分区过滤
+        var partitioned = tables.FirstOrDefault(e => e.Indexes.Any(i => i.Columns != null && i.Columns.Length == 1 && (i.Columns[0].EqualIgnoreCase("ds") || i.Columns[0].EqualIgnoreCase("dt"))));
+        if (partitioned != null)
+            XTrace.WriteLine("Presto partition index: {0}.{1}", partitioned.TableName, partitioned.Indexes[0].Name);
+    }
+
+    [LiveDatabaseFact("presto", "presto", 8080)]
     public async Task PrestoFastCountLiveTest()
     {
         // tpch 内置数据集始终存在，SHOW STATS 可返回 row_count

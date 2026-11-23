@@ -43,6 +43,12 @@ internal static class SqlMetaDataHelper
                     if (!dic.TryGetValue(key, out var rows)) dic[key] = rows = [];
                     rows.Add(dr);
                 }
+
+                // 按 ordinal_position 还原字段顺序。部分方言（如开启 strict mode 的 Presto）不允许在元数据查询中排序
+                foreach (var rows in dic.Values)
+                {
+                    if (rows.Count > 1) rows.Sort((x, y) => GetInt32(x, "ordinal_position").CompareTo(GetInt32(y, "ordinal_position")));
+                }
             }
 
             foreach (DataRow dr in dt.Rows)

@@ -24,8 +24,9 @@ public class LocalesCoverageTests
         "he", "hi", "hu", "id", "it", "ms", "nb", "nl", "pl", "ro", "sv", "th", "tr", "uk", "vi",
     ];
 
-    // Cache 在法语、意大利语、荷兰语、北欧语言与印尼语/马来语中本身就是原生写法
-    private static readonly String[] _allowSame = ["{0} format {1}", "Cache"];
+    // Cache 在法语、意大利语、荷兰语、北欧语言与印尼语/马来语中本身就是原生写法；
+    // Database 在丹麦语、意大利语、挪威语与荷兰语中同样是原生写法
+    private static readonly String[] _allowSame = ["{0} format {1}", "Cache", "Database"];
     // 运行期组合键：menu:<类型全名>、entity:<实体全名>、field:<...> 由类型全名拼出，源码中没有字面量
     // 与 Tools/Scripts/check-locales.ps1 保持一致：允许部分语言缺失，缺失时回退源文
     private static readonly String[] _runtimeKeyPrefixes = ["menu:", "entity:", "field:"];

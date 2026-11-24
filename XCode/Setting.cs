@@ -17,34 +17,77 @@ public class Setting : XCodeSetting { }
 [Config("XCode")]
 public class XCodeSetting : Config<XCodeSetting>
 {
-    #region 属性
-    /// <summary>是否启用调试。默认启用</summary>
-    [Description("Debug")]
+    #region 日志
+    /// <summary>调试模式。输出数据库调试日志，包括连接、迁移与结构检查等诊断信息，默认开启</summary>
+    [Category("Logging")]
+    [Description("Debug mode. Writes database debug logs such as connection, migration and schema diagnostics; enabled by default")]
     public Boolean Debug { get; set; } = true;
 
-    /// <summary>是否输出SQL语句，默认启用</summary>
-    [Description("Output SQL. Whether to output SQL statements, enabled by default")]
+    /// <summary>SQL日志。把执行的SQL语句写入日志，默认开启；日志量过大时可在生产环境关闭</summary>
+    [Category("Logging")]
+    [Description("SQL logging. Writes executed SQL statements to the log; enabled by default. Turn it off in production when log volume is too high")]
     public Boolean ShowSQL { get; set; } = true;
 
-    /// <summary>设置SQL输出的单独目录，默认为空，SQL输出到当前日志中。生产环境建议输出到站点外单独的SqlLog目录</summary>
-    [Description("SQL directory. Separate directory for SQL output; empty by default so SQL goes to the current log. In production, use a dedicated SqlLog directory outside the site")]
+    /// <summary>SQL日志目录。SQL日志输出到单独目录，默认空表示写入当前日志。生产环境建议放到站点外的SqlLog目录</summary>
+    [Category("Logging")]
+    [Description("SQL log directory. Writes SQL logs to a separate directory; empty by default so they go to the current log. In production, use a dedicated SqlLog directory outside the site")]
     public String SQLPath { get; set; } = "";
 
-    /// <summary>跟踪SQL执行时间，大于该阀值将输出日志，默认1000毫秒</summary>
-    [Description("SQL execution time. SQL slower than this threshold in milliseconds is logged, default 1000")]
+    /// <summary>慢SQL阈值（毫秒）。执行时间超过该值的SQL写入日志，0表示不记录慢SQL，默认1000</summary>
+    [Category("Logging")]
+    [Description("Slow SQL threshold (ms). SQL statements slower than this are logged; 0 disables slow SQL logging; default 1000")]
     public Int32 TraceSQLTime { get; set; } = 1000;
 
-    /// <summary>SQL最大长度，输出日志时的SQL最大长度，超长截断，默认4096，不截断用0</summary>
-    [Description("Maximum SQL length. SQL longer than this is truncated in logs, default 4096; use 0 to disable truncation")]
+    /// <summary>SQL最大长度（字符）。日志中单条SQL超过该长度将被截断，0表示不截断，默认4096</summary>
+    [Category("Logging")]
+    [Description("Maximum SQL length (chars). SQL longer than this is truncated in logs; 0 disables truncation; default 4096")]
     public Int32 SQLMaxLength { get; set; } = 4096;
+
+    /// <summary>日志脱敏模式。按严格程度递增：Off 原样记录凭据（仅限本地调试），PasswordOnly 只掩口令，Partial 口令全掩、密钥与令牌保留头尾，Full 全部凭据掩码（默认）</summary>
+    [Category("Logging")]
+    [Description("Log masking mode. Increasing strictness: Off (no masking, local debugging only), PasswordOnly (passwords only), Partial (passwords fully masked, keep the head and tail of secrets and tokens), Full (all credentials masked, default)")]
+    public LogMaskModes LogMaskMode { get; set; } = LogMaskModes.Full;
+
+    /// <summary>SQL日志脱敏。按脱敏模式掩码SQL日志与异常中的口令、密钥和令牌，默认开启</summary>
+    [Category("Logging")]
+    [Description("SQL log masking. Masks passwords, secrets and tokens in SQL logs and exceptions according to the masking mode; enabled by default")]
+    public Boolean MaskSqlLog { get; set; } = true;
 
     ///// <summary>连接名映射#，表名映射@，表名映射@，把实体类中的Test2和Test3连接名映射到Test去</summary>
     //[Description("连接映射。连接名映射#，表名映射@，把实体类中的Test2和Test3连接名映射到Test去")]
     //public String ConnMaps { get; set; } = "";
+    #endregion
 
-    /// <summary>参数化添删改查。默认关闭</summary>
-    [Description("Parameterized CRUD. Disabled by default")]
+    #region 数据库
+    /// <summary>参数化增删改查。使用参数化SQL执行增删改，避免拼接SQL带来的注入风险，默认关闭</summary>
+    [Category("Database")]
+    [Description("Parameterized CRUD. Executes insert, update and delete with parameterized SQL to avoid injection risks; disabled by default")]
     public Boolean UseParameter { get; set; }
+
+    /// <summary>命令超时（秒）。SQL命令执行超时时间，0表示不限制，默认0</summary>
+    [Category("Database")]
+    [Description("Command timeout (s). Timeout for SQL command execution; 0 means unlimited; default 0")]
+    public Int32 CommandTimeout { get; set; }
+
+    /// <summary>失败重试次数。命令超时后自动重试的次数，0表示不重试，默认0</summary>
+    [Category("Database")]
+    [Description("Failure retry count. Automatic retries after a command timeout; 0 means no retry; default 0")]
+    public Int32 RetryOnFailure { get; set; }
+
+    /// <summary>精确计数行数上限（行）。快速统计行数低于该值时才执行 count(*) 精确统计；每张表按实测耗时自动调整；0 表示不做精确统计；默认100万。修改后各表在下次访问时重置学习状态</summary>
+    [Category("Database")]
+    [Description("Exact count row limit (rows). Runs count(*) only when the fast row estimate is below this value; each table adapts it from measured duration; 0 disables exact counting; default 1000000. Changing it resets the learned state on next access")]
+    public Int32 FullCountFloor { get; set; } = 1_000_000;
+
+    /// <summary>批大小（行）。抽取、删除、备份、恢复等批量操作每批处理的行数，默认5000</summary>
+    [Category("Database")]
+    [Description("Batch size (rows). Rows per batch for extract, delete, backup and restore; default 5000")]
+    public Int32 BatchSize { get; set; } = 5_000;
+
+    /// <summary>批操作间隙（毫秒）。批量删除等操作在批次之间的暂停时间，默认100</summary>
+    [Category("Database")]
+    [Description("Batch interval (ms). Pause between batches during bulk operations such as batch delete; default 100")]
+    public Int32 BatchInterval { get; set; } = 100;
 
     ///// <summary>SQLite数据库默认目录。没有设置连接字符串的连接默认创建SQLite连接，数据库放在该目录</summary>
     //[Description("SQLite默认目录。没有设置连接字符串的连接默认创建SQLite连接，数据库放在该目录")]
@@ -53,91 +96,69 @@ public class XCodeSetting : Config<XCodeSetting>
     ///// <summary>备份目录。备份数据库时存放的目录</summary>
     //[Description("备份目录。备份数据库时存放的目录")]
     //public String BackupPath { get; set; } = "";
-
-    /// <summary>批大小。用于批量操作数据，抽取、删除、备份、恢复，默认5000</summary>
-    [Description("Batch size. Rows per batch for extract, delete, backup and restore, default 5000")]
-    public Int32 BatchSize { get; set; } = 5_000;
-
-    /// <summary>批操作间隙。用于批量删除数据时的暂停间隙，单位毫秒，默认100</summary>
-    [Description("Batch interval. Pause between batches in milliseconds, default 100")]
-    public Int32 BatchInterval { get; set; } = 100;
-
-    /// <summary>命令超时。查询执行超时时间，默认0秒不限制</summary>
-    [Description("Command timeout. Query timeout in seconds, default 0 (unlimited)")]
-    public Int32 CommandTimeout { get; set; }
-
-    /// <summary>失败重试。执行命令超时后的重试次数，默认0不重试</summary>
-    [Description("Retry on failure. Retries after a command timeout, default 0 (no retry)")]
-    public Int32 RetryOnFailure { get; set; }
-
-    /// <summary>反向工程。Off 关闭；ReadOnly 只读不执行；On 打开，仅新建；Full 完全，修改删除</summary>
-    [Description("Migration. Off: disabled; ReadOnly: check only; On: create only; Full: alter and drop as well")]
-    public Migration Migration { get; set; } = Migration.On;
-
-    /// <summary>检查注释。表注释或字段注释，反向工程，默认打开</summary>  
-    [Description("Check comments. Table and column comments for migrations, enabled by default")]
-    public Boolean CheckComment { get; set; } = true;
-
-    /// <summary>检查删除索引。反向工程，默认打开</summary>  
-    [Description("Check for dropped indexes. Migration check, enabled by default")]
-    public Boolean CheckDeleteIndex { get; set; } = true;
-
-    /// <summary>检查添加索引。反向工程，默认打开</summary>  
-    [Description("Check for new indexes. Migration check, enabled by default")]
-    public Boolean CheckAddIndex { get; set; } = true;
-
-    /// <summary>是否检查索引重复。默认打开</summary>  
-    [Description("Check for duplicate indexes. Enabled by default")]
-    public Boolean CheckDuplicateIndex { get; set; } = true;
-
-    /// <summary></summary>
-    [Description("Table and column name case. Default: database decides; None: keep model casing; Upper: uppercase; Lower: lowercase; Underline: underscore")]
-    public NameFormats NameFormat { get; set; } = NameFormats.Default;
-
-    /// <summary>精确计数初始行数上限。快速统计结果低于该值时才尝试 count(*) 获取精确值，每张表会根据实测耗时自动调整，默认100万。值变化后各表在下次访问时重置学习状态；设为0时只使用快速统计，不执行精确计数</summary>
-    [Description("Initial exact count limit. count(*) runs when the estimated row count is below this value; each table then adapts the limit from measured duration. Changing the value resets learned state on next access. Default 1 million. Set 0 to disable exact counting")]
-    public Int32 FullCountFloor { get; set; } = 1_000_000;
     #endregion
 
-    #region 日志
-    /// <summary>日志脱敏模式。按严格程度递增：Off 关闭、PasswordOnly 仅口令、Partial 部分、Full 完全，默认完全掩码</summary>
-    [Description("Log masking mode, increasing strictness: Off (no masking, local debugging only), PasswordOnly (mask passwords only), Partial (mask passwords fully, keep secret head and tail), Full (mask all credentials, default)")]
-    public LogMaskModes LogMaskMode { get; set; } = LogMaskModes.Full;
+    #region 迁移
+    /// <summary>反向工程模式。Off 关闭；ReadOnly 只检查不执行；On 创建缺失的表和字段；Full 还可以修改和删除；默认 On</summary>
+    [Category("Schema migration")]
+    [Description("Schema migration mode. Off: disabled; ReadOnly: check only; On: create missing tables and columns; Full: also alter and drop; default On")]
+    public Migration Migration { get; set; } = Migration.On;
 
-    /// <summary>SQL日志脱敏。默认true，SQL日志与异常中的口令、密钥、令牌参数按 LogMaskMode 掩码</summary>
-    [Description("SQL log masking. When enabled (default), password, secret and token parameters are masked in SQL logs and exceptions according to LogMaskMode")]
-    public Boolean MaskSqlLog { get; set; } = true;
+    /// <summary>检查注释。迁移时同步表与字段注释，默认开启</summary>
+    [Category("Schema migration")]
+    [Description("Check comments. Synchronizes table and column comments during migration; enabled by default")]
+    public Boolean CheckComment { get; set; } = true;
+
+    /// <summary>检查添加索引。迁移时创建模型中新增的索引，默认开启</summary>
+    [Category("Schema migration")]
+    [Description("Check added indexes. Creates indexes added to the model during migration; enabled by default")]
+    public Boolean CheckAddIndex { get; set; } = true;
+
+    /// <summary>检查删除索引。迁移时删除模型中已移除的索引，默认开启</summary>
+    [Category("Schema migration")]
+    [Description("Check removed indexes. Drops indexes removed from the model during migration; enabled by default")]
+    public Boolean CheckDeleteIndex { get; set; } = true;
+
+    /// <summary>检查索引重复。迁移时清理定义相同但名称不同的索引，默认开启</summary>
+    [Category("Schema migration")]
+    [Description("Check duplicate indexes. Removes indexes with the same definition but different names during migration; enabled by default")]
+    public Boolean CheckDuplicateIndex { get; set; } = true;
+
+    /// <summary>表名与字段名大小写。Default 由数据库决定；None 与模型保持一致；Upper 全大写；Lower 全小写；Underline 下划线分隔</summary>
+    [Category("Schema migration")]
+    [Description("Table and column name case. Default: database decides; None: keep model casing; Upper: uppercase; Lower: lowercase; Underline: underscore-separated")]
+    public NameFormats NameFormat { get; set; } = NameFormats.Default;
     #endregion
 
     #region 缓存
-    /// <summary>数据层缓存。根据sql做缓存，默认0秒</summary>
+    /// <summary>数据层缓存过期（秒）。按SQL缓存查询结果，0表示不缓存，默认0</summary>
     [Category("Cache")]
-    [Description("Data cache. Caches by SQL, default 0 seconds")]
+    [Description("Query cache expiration (s). Caches query results by SQL; 0 disables caching; default 0")]
     public Int32 DataCacheExpire { get; set; }
 
-    /// <summary>实体缓存过期。整表缓存实体列表，默认10秒</summary>
+    /// <summary>实体缓存过期（秒）。整表缓存实体列表，默认10</summary>
     [Category("Cache")]
-    [Description("Entity cache expiration. Caches the whole entity list, default 10 seconds")]
+    [Description("Entity cache expiration (s). Caches the whole entity list; default 10")]
     public Int32 EntityCacheExpire { get; set; } = 10;
 
-    /// <summary>单对象缓存过期。按主键缓存实体，默认10秒</summary>
+    /// <summary>单对象缓存过期（秒）。按主键缓存实体，默认10</summary>
     [Category("Cache")]
-    [Description("Single object cache expiration. Caches entities by primary key, default 10 seconds")]
+    [Description("Single object cache expiration (s). Caches entities by primary key; default 10")]
     public Int32 SingleCacheExpire { get; set; } = 10;
 
-    /// <summary>扩展属性过期。扩展属性Extends缓存，默认10秒</summary>
+    /// <summary>扩展属性过期（秒）。缓存扩展属性Extends，默认10</summary>
     [Category("Cache")]
-    [Description("Extended property expiration. Caches the Extends property, default 10 seconds")]
+    [Description("Extended property expiration (s). Caches the Extends property; default 10")]
     public Int32 ExtendExpire { get; set; } = 10;
 
-    /// <summary>字段缓存过期。缓存表中分类型字段的分组数据，默认3600秒</summary>
+    /// <summary>字段缓存过期（秒）。缓存表中分类型字段的分组数据，默认3600</summary>
     [Category("Cache")]
-    [Description("Field cache expiration. Caches grouped values of category fields, default 3600 seconds")]
+    [Description("Field cache expiration (s). Caches grouped values of category fields; default 3600")]
     public Int32 FieldCacheExpire { get; set; } = 3600;
 
-    /// <summary>缓存统计周期。在日志中定期输出各个缓存的统计数据，用于分析性能问题，单位秒，0表示不输出，默认3600秒</summary>
+    /// <summary>缓存统计周期（秒）。定期在日志中输出各缓存的统计数据，用于分析性能问题，0表示不输出，默认3600</summary>
     [Category("Cache")]
-    [Description("Cache statistics period. Interval in seconds for logging cache statistics, 0 disables, default 3600")]
+    [Description("Cache statistics period (s). Periodically logs statistics of all caches for performance analysis; 0 disables; default 3600")]
     public Int32 CacheStatPeriod { get; set; } = 3600;
     #endregion
 

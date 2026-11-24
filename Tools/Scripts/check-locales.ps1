@@ -19,7 +19,7 @@ param(
     # 要求清单内的元数据键覆盖全部译文语言（不缺、不留英文占位）
     [Switch]$RequireMetadataTranslated,
     # 同形词：目标语言与源文写法一致（简繁同形、中日同形、法/意/荷/北欧语的原生写法）
-    [String[]]$AllowSameValue = @("{0} format {1}", "Cache", "必要", "操作", "成功", "更新者", "管理者", "角色", "角色。主要角色", "描述", "排序", "拼音", "全名", "生日", "修改", "整数", "年", "月", "日", "季度"),
+    [String[]]$AllowSameValue = @("{0} format {1}", "Cache", "Database", "必要", "操作", "成功", "更新者", "管理者", "角色", "角色。主要角色", "描述", "排序", "拼音", "全名", "生日", "修改", "整数", "年", "月", "日", "季度"),
     [Switch]$SkipOrphan,
     [Switch]$SkipMessageCheck,
     [String[]]$AllowMissingMessage = @(

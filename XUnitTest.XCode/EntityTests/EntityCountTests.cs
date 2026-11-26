@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using NewLife;
 using NewLife.Log;
 using NewLife.Threading;
@@ -233,6 +234,98 @@ public class EntityCountTests
             DAL.LocalFilter = null;
             Role2.Meta.ConnName = null;
             if (!key.IsNullOrEmpty()) DataCache.Current.CountStats.Remove(key);
+            TryDelete(dbFile);
+        }
+    }
+
+    [Fact(DisplayName = "整表实体缓存加载后同步行数缓存")]
+    public void CacheLoad_RefreshesCount()
+    {
+        var connName = $"Count_Cache_{Guid.NewGuid():N}";
+        var dbFile = $"Data\\{connName}.db".GetFullPath();
+        try
+        {
+            Prepare(connName, dbFile, 4);
+
+            var sqls = new List<String>();
+            DAL.LocalFilter = s => sqls.Add(s);
+
+            // 整表缓存会执行 Select * From Role2
+            var list = Role2.Meta.Cache.Entities;
+            Assert.Equal(4, list.Count);
+
+            sqls.Clear();
+
+            // 行数应直接取自实体缓存，不再查询数据库
+            var count = Role2.Meta.Session.LongCount;
+            Assert.Equal(4, count);
+            Assert.DoesNotContain(sqls, s => s.Contains("Count(*)", StringComparison.OrdinalIgnoreCase) || s.Contains("MIN(", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            DAL.LocalFilter = null;
+            Role2.Meta.ConnName = null;
+            TryDelete(dbFile);
+        }
+    }
+
+    [Fact(DisplayName = "小表已知行数刷新时跳过主键区间估算")]
+    public void SmallKnownCount_SkipsIdentityRange()
+    {
+        var connName = $"Count_SkipFast_{Guid.NewGuid():N}";
+        var dbFile = $"Data\\{connName}.db".GetFullPath();
+        try
+        {
+            Prepare(connName, dbFile, 4);
+
+            var session = Role2.Meta.Session;
+            Assert.Equal(4, session.LongCount);
+
+            // 模拟计数缓存过期，下一次访问会同步重新计数
+            var type = typeof(EntitySession<Role2>);
+            var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            type.GetField("_Count", flags)!.SetValue(session, -2L);
+            type.GetField("_NextCount", flags)!.SetValue(session, TimerX.Now.AddMinutes(-1));
+
+            var sqls = new List<String>();
+            DAL.LocalFilter = s => sqls.Add(s);
+
+            var count = session.LongCount;
+
+            Assert.Equal(4, count);
+            // 已知小表直接使用缓存值，不应该再查 MIN(Id)/MAX(Id)
+            Assert.DoesNotContain(sqls, s => s.Contains("MIN(", StringComparison.OrdinalIgnoreCase) || s.Contains("MAX(", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            DAL.LocalFilter = null;
+            Role2.Meta.ConnName = null;
+            TryDelete(dbFile);
+        }
+    }
+
+    [Fact(DisplayName = "非整表实体缓存不覆盖行数缓存")]
+    public void FilteredCache_KeepsCount()
+    {
+        var connName = $"Count_Filtered_{Guid.NewGuid():N}";
+        var dbFile = $"Data\\{connName}.db".GetFullPath();
+        try
+        {
+            Prepare(connName, dbFile, 4);
+
+            var count = Role2.Meta.Session.LongCount;
+            Assert.Equal(4, count);
+
+            // 只缓存其中一行，不能把它当成整表行数
+            Role2.Meta.Cache.FillListMethod = () => Role2.FindAll().Take(1).ToList();
+            var list = Role2.Meta.Cache.Entities;
+            Assert.Single(list);
+
+            Assert.Equal(4, Role2.Meta.Session.LongCount);
+        }
+        finally
+        {
+            Role2.Meta.ConnName = null;
             TryDelete(dbFile);
         }
     }

@@ -377,7 +377,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     IEntityCache IEntitySession.Cache => Cache;
     ISingleEntityCache IEntitySession.SingleCache => SingleCache;
 
-    /// <summary>总记录数。自适应计数：小表精确，中表按实测吞吐率后台校准，大表估算；需要精确值时使用 FindCount()</summary>
+    /// <summary>总记录数。自适应计数：小表精确（整表缓存加载后同步，否则 60 秒刷新），中表按实测吞吐率后台校准，大表估算；需要精确值时使用 FindCount()</summary>
     public Int32 Count
     {
         get
@@ -407,7 +407,7 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     private Int32 _exactCountRunning;
     private CountStat? _countStat;
 
-    /// <summary>总记录数。自适应计数：小表精确，中表按实测吞吐率后台校准，大表取索引行数并缓存</summary>
+    /// <summary>总记录数。自适应计数：小表精确（整表缓存加载后同步，否则 60 秒刷新），中表按实测吞吐率后台校准，大表取索引行数并缓存</summary>
     public Int64 LongCount
     {
         get
@@ -477,13 +477,27 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
                 Monitor.Exit(_count_lock);
             }
         }
-        private set
-        {
-            _Count = value;
-            _NextCount = TimerX.Now.AddSeconds(GetCountRefreshSeconds(value));
+        private set => SetCountCore(value, GetCountRefreshSeconds(value));
+    }
 
-            var dc = DataCache.Current;
-            dc.Counts[CacheKey] = value;
+    /// <summary>整表缓存加载得到的行数，小表至少缓存 2 分钟；大表沿用原刷新周期。缓存每次加载都会刷新，这里只作空闲兜底</summary>
+    private const Int32 CacheCountRefreshSeconds = 120;
+
+    /// <summary>使用整表数据行数刷新计数缓存。实体缓存整表加载后调用，避免随后重复查询行数</summary>
+    /// <param name="count">整表行数</param>
+    internal void SetCount(Int64 count) => SetCountCore(count, Math.Max(GetCountRefreshSeconds(count), CacheCountRefreshSeconds));
+
+    private void SetCountCore(Int64 count, Int32 refreshSeconds)
+    {
+        if (count < 0) return;
+
+        _Count = count;
+        _NextCount = TimerX.Now.AddSeconds(refreshSeconds);
+
+        var dc = DataCache.Current;
+        if (!dc.Counts.TryGetValue(CacheKey, out var old) || old != count)
+        {
+            dc.Counts[CacheKey] = count;
             dc.SaveAsync();
         }
     }
@@ -509,9 +523,10 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
         var stat = floor > 0 ? GetCountStat() : null;
         var refreshLine = stat != null && stat.RowLimit > floor ? stat.RowLimit : floor;
 
-        // 先取快速统计值。已缓存且未超过阈值的表交给精确计数或后台校准
+        // 先取快速统计值。已知且未超过阈值的表直接使用缓存值，避免多余的主键区间查询；
+        // 只有行数未知或超过阈值时，才需要重新估算
         var fast = count;
-        if (count <= 0 || count >= refreshLine || dal.DbType == DatabaseType.SQLite)
+        if (count <= 0 || count >= refreshLine)
             fast = QueryFastCount();
 
         // 快速统计不可用时，用自增主键区间兜底（SQLite 已经在 QueryFastCount 中使用区间）

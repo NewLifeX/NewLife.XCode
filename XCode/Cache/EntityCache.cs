@@ -33,8 +33,20 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
     /// <summary>过期时间。单位是秒，默认10秒</summary>
     public Int32 Expire { get; set; }
 
+    private Func<IList<TEntity>> _fillListMethod = Entity<TEntity>.FindAll;
     /// <summary>填充数据的方法</summary>
-    public Func<IList<TEntity>> FillListMethod { get; set; } = Entity<TEntity>.FindAll;
+    public Func<IList<TEntity>> FillListMethod
+    {
+        get => _fillListMethod;
+        set
+        {
+            _fillListMethod = value;
+            IsFullTable = value == (Func<IList<TEntity>>)Entity<TEntity>.FindAll;
+        }
+    }
+
+    /// <summary>是否整表缓存。只有整表缓存才能用实体数量刷新行数缓存</summary>
+    internal Boolean IsFullTable { get; private set; } = true;
 
     /// <summary>是否等待第一次查询。如果不等待，第一次返回空集合。默认true</summary>
     public Boolean WaitFirst { get; set; } = true;
@@ -238,6 +250,10 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
             }
 
             ApplySnapshot(loaded);
+
+            // 整表数据已经在内存里，直接刷新行数缓存，避免随后再查一次 Count
+            if (loaded != null && IsFullTable && !String.IsNullOrEmpty(ConnName) && !String.IsNullOrEmpty(TableName))
+                EntitySession<TEntity>.Create(ConnName, TableName).SetCount(_Entities.Length);
 
             ts = Interlocked.Increment(ref _Times);
             ExpiredTime = TimerX.Now.AddSeconds(Expire);

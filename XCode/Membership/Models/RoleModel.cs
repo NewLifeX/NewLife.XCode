@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -137,31 +137,31 @@ public partial class RoleModel : IModel
             switch (name)
             {
                 case "Id": Id = value.ToInt(); break;
-                case "Name": Name = Convert.ToString(value); break;
+                case "Name": Name = value?.ToString() ?? ""; break;
                 case "Type": Type = (XCode.Membership.RoleTypes)value.ToInt(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "IsSystem": IsSystem = value.ToBoolean(); break;
                 case "TenantId": TenantId = value.ToInt(); break;
                 case "DataScope": DataScope = (XCode.Membership.DataScopes)value.ToInt(); break;
-                case "DataDepartmentIds": DataDepartmentIds = Convert.ToString(value); break;
+                case "DataDepartmentIds": DataDepartmentIds = value?.ToString(); break;
                 case "ViewSensitive": ViewSensitive = value.ToBoolean(); break;
-                case "Permission": Permission = Convert.ToString(value); break;
+                case "Permission": Permission = value?.ToString(); break;
                 case "Sort": Sort = value.ToInt(); break;
                 case "Ex1": Ex1 = value.ToInt(); break;
                 case "Ex2": Ex2 = value.ToInt(); break;
                 case "Ex3": Ex3 = value.ToDouble(); break;
-                case "Ex4": Ex4 = Convert.ToString(value); break;
-                case "Ex5": Ex5 = Convert.ToString(value); break;
-                case "Ex6": Ex6 = Convert.ToString(value); break;
-                case "CreateUser": CreateUser = Convert.ToString(value); break;
+                case "Ex4": Ex4 = value?.ToString(); break;
+                case "Ex5": Ex5 = value?.ToString(); break;
+                case "Ex6": Ex6 = value?.ToString(); break;
+                case "CreateUser": CreateUser = value?.ToString(); break;
                 case "CreateUserId": CreateUserId = value.ToInt(); break;
-                case "CreateIP": CreateIP = Convert.ToString(value); break;
+                case "CreateIP": CreateIP = value?.ToString(); break;
                 case "CreateTime": CreateTime = value.ToDateTime(); break;
-                case "UpdateUser": UpdateUser = Convert.ToString(value); break;
+                case "UpdateUser": UpdateUser = value?.ToString(); break;
                 case "UpdateUserId": UpdateUserId = value.ToInt(); break;
-                case "UpdateIP": UpdateIP = Convert.ToString(value); break;
+                case "UpdateIP": UpdateIP = value?.ToString(); break;
                 case "UpdateTime": UpdateTime = value.ToDateTime(); break;
-                case "Remark": Remark = Convert.ToString(value); break;
+                case "Remark": Remark = value?.ToString(); break;
                 default: this.SetValue(name, value); break;
             }
         }

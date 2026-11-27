@@ -193,14 +193,14 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "DepartmentId": _DepartmentId = value.ToInt(); break;
                 case "RoleId": _RoleId = value.ToInt(); break;
-                case "RoleIds": _RoleIds = Convert.ToString(value); break;
+                case "RoleIds": _RoleIds = value?.ToString(); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString(); break;
                 case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString(); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }

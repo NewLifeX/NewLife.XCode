@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -162,19 +163,19 @@ public partial class ExtendUser2 : IModel
             switch (name)
             {
                 case "Id": Id = value.ToInt(); break;
-                case "Name": Name = Convert.ToString(value); break;
-                case "Password": Password = Convert.ToString(value); break;
-                case "DisplayName": DisplayName = Convert.ToString(value); break;
+                case "Name": Name = value?.ToString() ?? ""; break;
+                case "Password": Password = value?.ToString() ?? ""; break;
+                case "DisplayName": DisplayName = value?.ToString() ?? ""; break;
                 case "Sex": Sex = (XCode.Membership.SexKinds)value.ToInt(); break;
-                case "Mail": Mail = Convert.ToString(value); break;
+                case "Mail": Mail = value?.ToString() ?? ""; break;
                 case "MailVerified": MailVerified = value.ToBoolean(); break;
-                case "Mobile": Mobile = Convert.ToString(value); break;
+                case "Mobile": Mobile = value?.ToString() ?? ""; break;
                 case "MobileVerified": MobileVerified = value.ToBoolean(); break;
-                case "Code": Code = Convert.ToString(value); break;
+                case "Code": Code = value?.ToString() ?? ""; break;
                 case "AreaId": AreaId = value.ToInt(); break;
-                case "Avatar": Avatar = Convert.ToString(value); break;
+                case "Avatar": Avatar = value?.ToString() ?? ""; break;
                 case "RoleId": RoleId = value.ToInt(); break;
-                case "RoleIds": RoleIds = Convert.ToString(value); break;
+                case "RoleIds": RoleIds = value?.ToString() ?? ""; break;
                 case "DepartmentId": DepartmentId = value.ToInt(); break;
                 case "Online": Online = value.ToBoolean(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
@@ -182,17 +183,17 @@ public partial class ExtendUser2 : IModel
                 case "Birthday": Birthday = value.ToDateTime(); break;
                 case "Logins": Logins = value.ToInt(); break;
                 case "LastLogin": LastLogin = value.ToDateTime(); break;
-                case "LastLoginIP": LastLoginIP = Convert.ToString(value); break;
+                case "LastLoginIP": LastLoginIP = value?.ToString() ?? ""; break;
                 case "RegisterTime": RegisterTime = value.ToDateTime(); break;
-                case "RegisterIP": RegisterIP = Convert.ToString(value); break;
+                case "RegisterIP": RegisterIP = value?.ToString() ?? ""; break;
                 case "OnlineTime": OnlineTime = value.ToInt(); break;
                 case "Ex1": Ex1 = value.ToInt(); break;
                 case "Ex2": Ex2 = value.ToInt(); break;
                 case "Ex3": Ex3 = value.ToDouble(); break;
-                case "Ex4": Ex4 = Convert.ToString(value); break;
-                case "Ex5": Ex5 = Convert.ToString(value); break;
-                case "Ex6": Ex6 = Convert.ToString(value); break;
-                case "Remark": Remark = Convert.ToString(value); break;
+                case "Ex4": Ex4 = value?.ToString() ?? ""; break;
+                case "Ex5": Ex5 = value?.ToString() ?? ""; break;
+                case "Ex6": Ex6 = value?.ToString() ?? ""; break;
+                case "Remark": Remark = value?.ToString() ?? ""; break;
                 default: this.SetValue(name, value); break;
             }
         }

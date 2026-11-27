@@ -145,17 +145,17 @@ public partial class Menu3
             switch (name)
             {
                 case "Id": _ID = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "DisplayName": _DisplayName = Convert.ToString(value); break;
-                case "FullName": _FullName = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
+                case "DisplayName": _DisplayName = value?.ToString() ?? ""; break;
+                case "FullName": _FullName = value?.ToString() ?? ""; break;
                 case "ParentId": _ParentID = value.ToInt(); break;
-                case "Url": _Url = Convert.ToString(value); break;
+                case "Url": _Url = value?.ToString() ?? ""; break;
                 case "Sort": _Sort = value.ToInt(); break;
-                case "Icon": _Icon = Convert.ToString(value); break;
+                case "Icon": _Icon = value?.ToString() ?? ""; break;
                 case "Visible": _Visible = value.ToBoolean(); break;
                 case "Necessary": _Necessary = value.ToBoolean(); break;
-                case "Permission": _Permission = Convert.ToString(value); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "Permission": _Permission = value?.ToString() ?? ""; break;
+                case "Remark": _Remark = value?.ToString() ?? ""; break;
                 default: base[name] = value; break;
             }
         }

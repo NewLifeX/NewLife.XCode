@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -70,8 +70,8 @@ public partial class TenantUserModel : IModel
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "DepartmentId": DepartmentId = value.ToInt(); break;
                 case "RoleId": RoleId = value.ToInt(); break;
-                case "RoleIds": RoleIds = Convert.ToString(value); break;
-                case "Remark": Remark = Convert.ToString(value); break;
+                case "RoleIds": RoleIds = value?.ToString(); break;
+                case "Remark": Remark = value?.ToString(); break;
                 default: this.SetValue(name, value); break;
             }
         }

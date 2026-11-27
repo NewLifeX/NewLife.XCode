@@ -182,14 +182,14 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
                 case "UserId": _UserId = value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "RoleId": _RoleId = value.ToInt(); break;
-                case "RoleIds": _RoleIds = Convert.ToString(value); break;
+                case "RoleIds": _RoleIds = value?.ToString(); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString(); break;
                 case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString(); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }
@@ -232,7 +232,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
         if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Id == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
@@ -250,7 +250,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
         if (userId < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.TenantId == tenantId && e.UserId == userId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.TenantId == tenantId && e.UserId == userId);
 
         return Find(_.TenantId == tenantId & _.UserId == userId);
     }
@@ -263,7 +263,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
         if (tenantId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.TenantId == tenantId);
 
         return FindAll(_.TenantId == tenantId);
     }
@@ -276,7 +276,7 @@ public partial class TenantUser : ITenantUser, IEntity<ITenantUser>
         if (userId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserId == userId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.UserId == userId);
 
         return FindAll(_.UserId == userId);
     }

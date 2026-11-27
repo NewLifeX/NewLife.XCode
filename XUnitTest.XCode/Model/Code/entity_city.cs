@@ -202,23 +202,23 @@ public partial class CorePerson
             switch (name)
             {
                 case "PersonID": _PersonID = value.ToInt(); break;
-                case "Pname": _Pname = Convert.ToString(value); break;
+                case "Pname": _Pname = value?.ToString() ?? ""; break;
                 case "Psex": _Psex = value.ToInt(); break;
-                case "CreditNo": _CreditNo = Convert.ToString(value); break;
-                case "Mobile": _Mobile = Convert.ToString(value); break;
+                case "CreditNo": _CreditNo = value?.ToString() ?? ""; break;
+                case "Mobile": _Mobile = value?.ToString(); break;
                 case "BuildID": _BuildID = value.ToInt(); break;
                 case "Build_ID": _Build_ID = value.ToInt(); break;
-                case "UnitNum": _UnitNum = Convert.ToString(value); break;
-                case "HouseNum": _HouseNum = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
+                case "UnitNum": _UnitNum = value?.ToString(); break;
+                case "HouseNum": _HouseNum = value?.ToString(); break;
+                case "CreateUser": _CreateUser = value?.ToString(); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
-                case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString(); break;
+                case "UpdateUser": _UpdateUser = value?.ToString(); break;
                 case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString(); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }

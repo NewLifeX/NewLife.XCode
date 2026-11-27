@@ -39,6 +39,8 @@ public class EntityBuilder : ClassBuilder
     public Int32 MaxCacheCount { get; set; } = 1000;
 
     private Boolean _hasMaxCacheCount;
+    private Boolean _useMaxCacheCount;
+    private Boolean _bizExists;
     #endregion 属性
 
     #region 静态快速
@@ -524,7 +526,11 @@ public class EntityBuilder : ClassBuilder
         {
             // 读取biz文件，识别其中已生成的扩展查询方法，避免在数据类中重复生成
             var codeFile = GetFileName(".Biz.cs", Option.ChineseFileName);
+            _useMaxCacheCount = false;
+            _bizExists = !codeFile.IsNullOrEmpty() && File.Exists(codeFile);
             LoadCodeFile(codeFile);
+            // 业务类不存在时本次会生成缓存字段；已存在但没有字段时保持旧版字面量，避免引用未声明字段
+            _useMaxCacheCount = _hasMaxCacheCount || !_bizExists;
         }
         else
         {
@@ -1078,6 +1084,13 @@ public class EntityBuilder : ClassBuilder
                                 WriteLine("case \"{0}\": _{0} = value.ToDateTime(); break;", column.Name);
                                 break;
 
+                            case "String":
+                                if (Option.Nullable && column.Nullable)
+                                    WriteLine("case \"{0}\": _{0} = value?.ToString(); break;", column.Name);
+                                else
+                                    WriteLine("case \"{0}\": _{0} = value?.ToString() ?? \"\"; break;", column.Name);
+                                break;
+
                             default:
                                 WriteLine("case \"{0}\": _{0} = Convert.To{1}(value); break;", column.Name, type);
                                 break;
@@ -1401,7 +1414,7 @@ public class EntityBuilder : ClassBuilder
     /// <summary>生成静态构造函数</summary>
     protected virtual void BuildCctor()
     {
-        if (!_hasMaxCacheCount && MaxCacheCount > 0)
+        if (!_hasMaxCacheCount && _useMaxCacheCount && MaxCacheCount > 0)
         {
             WriteLine("// 控制最大缓存数量，Find/FindAll查询方法在表行数小于该值时走实体缓存");
             WriteLine("private static Int32 MaxCacheCount = {0};", MaxCacheCount);
@@ -1772,8 +1785,7 @@ public class EntityBuilder : ClassBuilder
             {
                 var History = Table.Name + "History" + " entityHistory = new " + Table.Name + "History();";
                 WriteLine(History);
-                var tablePrimaryKey = Table.PrimaryKeys?.Where(o => o.Name.ToUpper().Contains("ID"));
-                var primaryKey = tablePrimaryKey.Count() > 0 ? tablePrimaryKey.FirstOrDefault()?.Name : "ID";
+                var primaryKey = Table.PrimaryKeys?.FirstOrDefault(o => o.Name.ToUpper().Contains("ID"))?.Name ?? "ID";
                 WriteLine("XCode.Common.DataConversion.CopyProperty(entity, entityHistory);");
                 WriteLine($"entityHistory.{primaryKey} = 0;  ");
                 WriteLine($"entityHistory.{Table.Name}ID = entity.{primaryKey};  ");
@@ -2019,7 +2031,7 @@ public class EntityBuilder : ClassBuilder
             {
                 if (header) WriteLine();
 
-                if (_hasMaxCacheCount)
+                if (_useMaxCacheCount)
                 {
                     WriteLine("// 实体缓存");
                     WriteLine("if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => {0});", wh);
@@ -2136,7 +2148,7 @@ public class EntityBuilder : ClassBuilder
             {
                 if (header) WriteLine();
 
-                if (_hasMaxCacheCount)
+                if (_useMaxCacheCount)
                 {
                     WriteLine("// 实体缓存");
                     WriteLine("if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => {0});", wh);

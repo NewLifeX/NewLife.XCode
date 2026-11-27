@@ -1345,7 +1345,7 @@ public partial class DataScopeTestEntity : Entity<DataScopeTestEntity>, IDataSco
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString(); break;
                 case "UserId": _UserId = value.ToInt(); break;
                 case "DepartmentId": _DepartmentId = value.ToInt(); break;
                 default: base[name] = value; break;
@@ -1408,7 +1408,7 @@ public partial class UserScopeTestEntity : Entity<UserScopeTestEntity>, IUserSco
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString(); break;
                 case "UserId": _UserId = value.ToInt(); break;
                 default: base[name] = value; break;
             }
@@ -1469,7 +1469,7 @@ public partial class DepartmentScopeTestEntity : Entity<DepartmentScopeTestEntit
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString(); break;
                 case "DepartmentId": _DepartmentId = value.ToInt(); break;
                 default: base[name] = value; break;
             }
@@ -1523,7 +1523,7 @@ public partial class NoScopeTestEntity : Entity<NoScopeTestEntity>
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }
@@ -1588,7 +1588,7 @@ public partial class FieldScopeTestEntity : Entity<FieldScopeTestEntity>, IUserS
             {
                 case "Id": _Id = value.ToInt(); break;
                 case "UserId": _UserId = value.ToInt(); break;
-                case "Password": _Password = Convert.ToString(value); break;
+                case "Password": _Password = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }

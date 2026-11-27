@@ -66,10 +66,10 @@ public class MigrationTestEntity : Entity<MigrationTestEntity>
             switch (name)
             {
                 case "Id": _ID = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
                 case "Count": _Count = value.ToInt(); break;
                 case "Weight": _Weight = value.ToInt(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "Remark": _Remark = value?.ToString() ?? ""; break;
                 default: base[name] = value; break;
             }
         }

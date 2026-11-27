@@ -332,32 +332,32 @@ public partial class Menu : IMenu, IEntity<IMenu>
             switch (name)
             {
                 case "ID": _ID = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "DisplayName": _DisplayName = Convert.ToString(value); break;
-                case "FullName": _FullName = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
+                case "DisplayName": _DisplayName = value?.ToString(); break;
+                case "FullName": _FullName = value?.ToString(); break;
                 case "ParentID": _ParentID = value.ToInt(); break;
-                case "Url": _Url = Convert.ToString(value); break;
+                case "Url": _Url = value?.ToString(); break;
                 case "Sort": _Sort = value.ToInt(); break;
-                case "Icon": _Icon = Convert.ToString(value); break;
+                case "Icon": _Icon = value?.ToString(); break;
                 case "Visible": _Visible = value.ToBoolean(); break;
                 case "Necessary": _Necessary = value.ToBoolean(); break;
                 case "NewWindow": _NewWindow = value.ToBoolean(); break;
-                case "Permission": _Permission = Convert.ToString(value); break;
+                case "Permission": _Permission = value?.ToString(); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
                 case "Ex2": _Ex2 = value.ToInt(); break;
                 case "Ex3": _Ex3 = value.ToDouble(); break;
-                case "Ex4": _Ex4 = Convert.ToString(value); break;
-                case "Ex5": _Ex5 = Convert.ToString(value); break;
-                case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
+                case "Ex4": _Ex4 = value?.ToString(); break;
+                case "Ex5": _Ex5 = value?.ToString(); break;
+                case "Ex6": _Ex6 = value?.ToString(); break;
+                case "CreateUser": _CreateUser = value?.ToString(); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
+                case "UpdateUser": _UpdateUser = value?.ToString(); break;
                 case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }
@@ -376,7 +376,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
         if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.ID == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
@@ -394,7 +394,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
         if (name.IsNullOrEmpty()) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
         return Find(_.ParentID == parentId & _.Name == name);
     }
@@ -407,7 +407,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
         if (parentId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.ParentID == parentId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ParentID == parentId);
 
         return FindAll(_.ParentID == parentId);
     }
@@ -420,7 +420,7 @@ public partial class Menu : IMenu, IEntity<IMenu>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.Name == name);
     }

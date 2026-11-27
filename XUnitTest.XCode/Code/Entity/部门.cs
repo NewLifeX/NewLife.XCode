@@ -326,9 +326,9 @@ public partial class Department : IDepartment, IEntity<IDepartment>
             {
                 case "ID": _ID = value.ToInt(); break;
                 case "TenantId": _TenantId = value.ToInt(); break;
-                case "Code": _Code = Convert.ToString(value); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "FullName": _FullName = Convert.ToString(value); break;
+                case "Code": _Code = value?.ToString(); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
+                case "FullName": _FullName = value?.ToString(); break;
                 case "ParentID": _ParentID = value.ToInt(); break;
                 case "Level": _Level = value.ToInt(); break;
                 case "Sort": _Sort = value.ToInt(); break;
@@ -338,18 +338,18 @@ public partial class Department : IDepartment, IEntity<IDepartment>
                 case "Ex1": _Ex1 = value.ToInt(); break;
                 case "Ex2": _Ex2 = value.ToInt(); break;
                 case "Ex3": _Ex3 = value.ToDouble(); break;
-                case "Ex4": _Ex4 = Convert.ToString(value); break;
-                case "Ex5": _Ex5 = Convert.ToString(value); break;
-                case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
+                case "Ex4": _Ex4 = value?.ToString(); break;
+                case "Ex5": _Ex5 = value?.ToString(); break;
+                case "Ex6": _Ex6 = value?.ToString(); break;
+                case "CreateUser": _CreateUser = value?.ToString(); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
+                case "UpdateUser": _UpdateUser = value?.ToString(); break;
                 case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }
@@ -384,7 +384,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.Find(e => e.ID == id);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.ID == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
@@ -404,7 +404,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.TenantId == tenantId && e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.TenantId == tenantId & _.ParentID == parentId & _.Name == name);
     }
@@ -417,7 +417,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.Name == name);
     }
@@ -432,7 +432,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ParentID == parentId && e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.ParentID == parentId & _.Name == name);
     }
@@ -445,7 +445,7 @@ public partial class Department : IDepartment, IEntity<IDepartment>
         if (code == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Code.EqualIgnoreCase(code));
 
         return FindAll(_.Code == code);
     }

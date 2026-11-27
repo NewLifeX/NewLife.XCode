@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -97,21 +97,21 @@ public partial class TenantModel : IModel
             switch (name)
             {
                 case "Id": Id = value.ToInt(); break;
-                case "Code": Code = Convert.ToString(value); break;
-                case "Name": Name = Convert.ToString(value); break;
+                case "Code": Code = value?.ToString(); break;
+                case "Name": Name = value?.ToString() ?? ""; break;
                 case "Type": Type = (XCode.Membership.TenantTypes)value.ToInt(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "Level": Level = value.ToInt(); break;
                 case "ManagerId": ManagerId = value.ToInt(); break;
-                case "RoleIds": RoleIds = Convert.ToString(value); break;
-                case "Logo": Logo = Convert.ToString(value); break;
-                case "Domain": Domain = Convert.ToString(value); break;
+                case "RoleIds": RoleIds = value?.ToString(); break;
+                case "Logo": Logo = value?.ToString(); break;
+                case "Domain": Domain = value?.ToString(); break;
                 case "MaxUsers": MaxUsers = value.ToInt(); break;
                 case "MaxStorage": MaxStorage = value.ToLong(); break;
-                case "DatabaseName": DatabaseName = Convert.ToString(value); break;
-                case "TableName": TableName = Convert.ToString(value); break;
+                case "DatabaseName": DatabaseName = value?.ToString(); break;
+                case "TableName": TableName = value?.ToString(); break;
                 case "Expired": Expired = value.ToDateTime(); break;
-                case "Remark": Remark = Convert.ToString(value); break;
+                case "Remark": Remark = value?.ToString(); break;
                 default: this.SetValue(name, value); break;
             }
         }

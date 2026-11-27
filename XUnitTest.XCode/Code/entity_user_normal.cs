@@ -392,19 +392,19 @@ public partial class User
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "Password": _Password = Convert.ToString(value); break;
-                case "DisplayName": _DisplayName = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
+                case "Password": _Password = value?.ToString(); break;
+                case "DisplayName": _DisplayName = value?.ToString(); break;
                 case "Sex": _Sex = (XCode.Membership.SexKinds)value.ToInt(); break;
-                case "Mail": _Mail = Convert.ToString(value); break;
+                case "Mail": _Mail = value?.ToString(); break;
                 case "MailVerified": _MailVerified = value.ToBoolean(); break;
-                case "Mobile": _Mobile = Convert.ToString(value); break;
+                case "Mobile": _Mobile = value?.ToString(); break;
                 case "MobileVerified": _MobileVerified = value.ToBoolean(); break;
-                case "Code": _Code = Convert.ToString(value); break;
+                case "Code": _Code = value?.ToString(); break;
                 case "AreaId": _AreaId = value.ToInt(); break;
-                case "Avatar": _Avatar = Convert.ToString(value); break;
+                case "Avatar": _Avatar = value?.ToString(); break;
                 case "RoleId": _RoleId = value.ToInt(); break;
-                case "RoleIds": _RoleIds = Convert.ToString(value); break;
+                case "RoleIds": _RoleIds = value?.ToString(); break;
                 case "DepartmentId": _DepartmentId = value.ToInt(); break;
                 case "Online": _Online = value.ToBoolean(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
@@ -412,21 +412,21 @@ public partial class User
                 case "Birthday": _Birthday = value.ToDateTime(); break;
                 case "Logins": _Logins = value.ToInt(); break;
                 case "LastLogin": _LastLogin = value.ToDateTime(); break;
-                case "LastLoginIP": _LastLoginIP = Convert.ToString(value); break;
+                case "LastLoginIP": _LastLoginIP = value?.ToString(); break;
                 case "RegisterTime": _RegisterTime = value.ToDateTime(); break;
-                case "RegisterIP": _RegisterIP = Convert.ToString(value); break;
+                case "RegisterIP": _RegisterIP = value?.ToString(); break;
                 case "OnlineTime": _OnlineTime = value.ToInt(); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
                 case "Ex2": _Ex2 = value.ToInt(); break;
                 case "Ex3": _Ex3 = value.ToDouble(); break;
-                case "Ex4": _Ex4 = Convert.ToString(value); break;
-                case "Ex5": _Ex5 = Convert.ToString(value); break;
-                case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
+                case "Ex4": _Ex4 = value?.ToString(); break;
+                case "Ex5": _Ex5 = value?.ToString(); break;
+                case "Ex6": _Ex6 = value?.ToString(); break;
+                case "UpdateUser": _UpdateUser = value?.ToString() ?? ""; break;
                 case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }

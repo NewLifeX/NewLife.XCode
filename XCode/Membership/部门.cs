@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -338,9 +338,9 @@ public partial class Department : IDepartment, IEntity<IDepartment>
                 case "Id": _Id = value.ToInt(); break;
                 case "TenantId": _TenantId = value.ToInt(); break;
                 case "Type": _Type = (XCode.Membership.DepartmentTypes)value.ToInt(); break;
-                case "Code": _Code = Convert.ToString(value); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "FullName": _FullName = Convert.ToString(value); break;
+                case "Code": _Code = value?.ToString(); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
+                case "FullName": _FullName = value?.ToString(); break;
                 case "ParentId": _ParentId = value.ToInt(); break;
                 case "Level": _Level = value.ToInt(); break;
                 case "Sort": _Sort = value.ToInt(); break;
@@ -350,18 +350,18 @@ public partial class Department : IDepartment, IEntity<IDepartment>
                 case "Ex1": _Ex1 = value.ToInt(); break;
                 case "Ex2": _Ex2 = value.ToInt(); break;
                 case "Ex3": _Ex3 = value.ToDouble(); break;
-                case "Ex4": _Ex4 = Convert.ToString(value); break;
-                case "Ex5": _Ex5 = Convert.ToString(value); break;
-                case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
+                case "Ex4": _Ex4 = value?.ToString(); break;
+                case "Ex5": _Ex5 = value?.ToString(); break;
+                case "Ex6": _Ex6 = value?.ToString(); break;
+                case "CreateUser": _CreateUser = value?.ToString(); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
+                case "UpdateUser": _UpdateUser = value?.ToString(); break;
                 case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }

@@ -420,6 +420,13 @@ public class ClassBuilder
                                 WriteLine("case \"{0}\": {0} = value.ToDateTime(); break;", column.Name);
                                 break;
 
+                            case "String":
+                                if (Option.Nullable && column.Nullable)
+                                    WriteLine("case \"{0}\": {0} = value?.ToString(); break;", column.Name);
+                                else
+                                    WriteLine("case \"{0}\": {0} = value?.ToString() ?? \"\"; break;", column.Name);
+                                break;
+
                             default:
                                 WriteLine("case \"{0}\": {0} = Convert.To{1}(value); break;", column.Name, type);
                                 break;
@@ -561,7 +568,7 @@ public class ClassBuilder
 
     /// <summary>输出结果</summary>
     /// <returns></returns>
-    public override String ToString() => Writer.ToString();
+    public override String ToString() => Writer.ToString() ?? "";
 
     /// <summary>转义写进 XML 注释的文本，避免描述里的换行、尖括号与 &amp; 破坏注释结构</summary>
     /// <param name="text">原始文本</param>

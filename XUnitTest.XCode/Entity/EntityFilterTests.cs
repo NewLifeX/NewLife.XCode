@@ -920,7 +920,7 @@ public partial class FilterTestEntity : Entity<FilterTestEntity>, ITenantScope, 
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString(); break;
                 case "TenantId": _TenantId = value.ToInt(); break;
                 case "UserId": _UserId = value.ToInt(); break;
                 default: base[name] = value; break;

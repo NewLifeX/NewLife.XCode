@@ -137,15 +137,15 @@ public partial class Role2
             switch (name)
             {
                 case "Id": _ID = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
                 case "IsSystem": _IsSystem = value.ToBoolean(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
-                case "Permission": _Permission = Convert.ToString(value); break;
+                case "Remark": _Remark = value?.ToString() ?? ""; break;
+                case "Permission": _Permission = value?.ToString() ?? ""; break;
                 case "CreateUserId": _CreateUserID = value.ToInt(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString() ?? ""; break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "UpdateUserId": _UpdateUserID = value.ToInt(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString() ?? ""; break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
                 default: base[name] = value; break;
             }

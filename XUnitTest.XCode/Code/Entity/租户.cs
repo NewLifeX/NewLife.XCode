@@ -217,22 +217,22 @@ public partial class Tenant : ITenant, IEntity<ITenant>
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Code": _Code = Convert.ToString(value); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Code": _Code = value?.ToString(); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "ManagerId": _ManagerId = value.ToInt(); break;
-                case "RoleIds": _RoleIds = Convert.ToString(value); break;
-                case "Logo": _Logo = Convert.ToString(value); break;
-                case "DatabaseName": _DatabaseName = Convert.ToString(value); break;
-                case "TableName": _TableName = Convert.ToString(value); break;
+                case "RoleIds": _RoleIds = value?.ToString(); break;
+                case "Logo": _Logo = value?.ToString(); break;
+                case "DatabaseName": _DatabaseName = value?.ToString(); break;
+                case "TableName": _TableName = value?.ToString(); break;
                 case "Expired": _Expired = value.ToDateTime(); break;
                 case "CreateUserId": _CreateUserId = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString(); break;
                 case "UpdateUserId": _UpdateUserId = value.ToInt(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString(); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }
@@ -259,7 +259,7 @@ public partial class Tenant : ITenant, IEntity<ITenant>
         if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Id == id);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Id == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
@@ -275,7 +275,7 @@ public partial class Tenant : ITenant, IEntity<ITenant>
         if (code == null) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.Code.EqualIgnoreCase(code));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.Code.EqualIgnoreCase(code));
 
         return Find(_.Code == code);
     }

@@ -188,6 +188,27 @@ public class ClassBuilderTests
     }
 
     [Fact]
+    public void NullableStringSetter()
+    {
+        var option = new BuilderOption
+        {
+            Nullable = true,
+            HasIModel = true,
+        };
+        var builder = new ModelBuilder
+        {
+            Table = _table,
+            Option = option,
+        };
+
+        builder.Execute();
+
+        var rs = builder.ToString();
+        Assert.Contains("case \"Name\": Name = value?.ToString() ?? \"\"; break;", rs);
+        Assert.Contains("case \"Mail\": Mail = value?.ToString(); break;", rs);
+    }
+
+    [Fact]
     public void Save()
     {
         var builder = new ModelBuilder

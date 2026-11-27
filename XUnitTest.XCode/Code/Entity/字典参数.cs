@@ -304,28 +304,28 @@ public partial class Parameter : IParameter, IEntity<IParameter>
             {
                 case "ID": _ID = value.ToInt(); break;
                 case "UserID": _UserID = value.ToInt(); break;
-                case "Category": _Category = Convert.ToString(value); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "Value": _Value = Convert.ToString(value); break;
+                case "Category": _Category = value?.ToString(); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
+                case "Value": _Value = value?.ToString(); break;
                 case "Readonly": _Readonly = value.ToBoolean(); break;
-                case "LongValue": _LongValue = Convert.ToString(value); break;
+                case "LongValue": _LongValue = value?.ToString(); break;
                 case "Kind": _Kind = (XCode.Membership.ParameterKinds)value.ToInt(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
                 case "Ex2": _Ex2 = Convert.ToDecimal(value); break;
                 case "Ex3": _Ex3 = value.ToDouble(); break;
-                case "Ex4": _Ex4 = Convert.ToString(value); break;
-                case "Ex5": _Ex5 = Convert.ToString(value); break;
-                case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
+                case "Ex4": _Ex4 = value?.ToString(); break;
+                case "Ex5": _Ex5 = value?.ToString(); break;
+                case "Ex6": _Ex6 = value?.ToString(); break;
+                case "CreateUser": _CreateUser = value?.ToString(); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
+                case "UpdateUser": _UpdateUser = value?.ToString(); break;
                 case "UpdateUserID": _UpdateUserID = value.ToInt(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }
@@ -352,7 +352,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.ID == id);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.ID == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
@@ -372,7 +372,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         if (name.IsNullOrEmpty()) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.Find(e => e.UserID == userId && e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.UserID == userId && e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));
 
         return Find(_.UserID == userId & _.Category == category & _.Name == name);
     }
@@ -385,7 +385,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         if (userId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserID == userId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.UserID == userId);
 
         return FindAll(_.UserID == userId);
     }
@@ -400,7 +400,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         if (category == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.UserID == userId && e.Category.EqualIgnoreCase(category));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.UserID == userId && e.Category.EqualIgnoreCase(category));
 
         return FindAll(_.UserID == userId & _.Category == category);
     }
@@ -415,7 +415,7 @@ public partial class Parameter : IParameter, IEntity<IParameter>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 1000) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Category.EqualIgnoreCase(category) && e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.Category == category & _.Name == name);
     }

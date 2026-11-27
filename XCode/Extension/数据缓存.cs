@@ -75,7 +75,7 @@ public partial class MyDbCache
             switch (name)
             {
                 case "Name": _Name = Convert.ToString(value); break;
-                case "Value": _Value = Convert.ToString(value); break;
+                case "Value": _Value = value?.ToString(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "ExpiredTime": _ExpiredTime = value.ToDateTime(); break;
                 default: base[name] = value; break;

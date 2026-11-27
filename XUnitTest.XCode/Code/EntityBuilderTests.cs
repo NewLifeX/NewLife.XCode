@@ -65,6 +65,8 @@ public class EntityBuilderTests
 
         var rs = builder.ToString();
         Assert.NotEmpty(rs);
+        Assert.Contains("case \"Mail\": _Mail = value?.ToString(); break;", rs);
+        Assert.Contains("case \"Name\": _Name = value?.ToString() ?? \"\"; break;", rs);
 
         var target = ReadTarget("Code/entity_user_normal.cs", rs);
         Assert.Equal(target.NormalizeNewLine(), rs.NormalizeNewLine());

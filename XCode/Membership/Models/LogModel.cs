@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -105,23 +105,23 @@ public partial class LogModel : IModel
             switch (name)
             {
                 case "Id": Id = value.ToLong(); break;
-                case "Category": Category = Convert.ToString(value); break;
-                case "Action": Action = Convert.ToString(value); break;
+                case "Category": Category = value?.ToString(); break;
+                case "Action": Action = value?.ToString() ?? ""; break;
                 case "LinkId": LinkId = value.ToLong(); break;
                 case "Success": Success = value.ToBoolean(); break;
-                case "UserName": UserName = Convert.ToString(value); break;
+                case "UserName": UserName = value?.ToString(); break;
                 case "Ex1": Ex1 = value.ToInt(); break;
                 case "Ex2": Ex2 = value.ToInt(); break;
                 case "Ex3": Ex3 = value.ToDouble(); break;
-                case "Ex4": Ex4 = Convert.ToString(value); break;
-                case "Ex5": Ex5 = Convert.ToString(value); break;
-                case "Ex6": Ex6 = Convert.ToString(value); break;
-                case "TraceId": TraceId = Convert.ToString(value); break;
-                case "CreateUser": CreateUser = Convert.ToString(value); break;
+                case "Ex4": Ex4 = value?.ToString(); break;
+                case "Ex5": Ex5 = value?.ToString(); break;
+                case "Ex6": Ex6 = value?.ToString(); break;
+                case "TraceId": TraceId = value?.ToString(); break;
+                case "CreateUser": CreateUser = value?.ToString(); break;
                 case "CreateUserId": CreateUserId = value.ToInt(); break;
-                case "CreateIP": CreateIP = Convert.ToString(value); break;
+                case "CreateIP": CreateIP = value?.ToString(); break;
                 case "CreateTime": CreateTime = value.ToDateTime(); break;
-                case "Remark": Remark = Convert.ToString(value); break;
+                case "Remark": Remark = value?.ToString(); break;
                 default: this.SetValue(name, value); break;
             }
         }

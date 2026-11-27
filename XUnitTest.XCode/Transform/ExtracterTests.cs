@@ -57,7 +57,7 @@ public class ExtractTestEntity : Entity<ExtractTestEntity>
             switch (name)
             {
                 case "Id": _ID = value.ToLong(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
                 case "LogTime": _LogTime = value.ToDateTime(); break;
                 default: base[name] = value; break;
             }

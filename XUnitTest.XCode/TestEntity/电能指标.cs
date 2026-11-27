@@ -94,7 +94,7 @@ public partial class PowerMeter
                 case "Current": _Current = Convert.ToSingle(value); break;
                 case "Voltage": _Voltage = value.ToInt(); break;
                 case "Phase": _Phase = Convert.ToSingle(value); break;
-                case "Location": _Location = Convert.ToString(value); break;
+                case "Location": _Location = value?.ToString() ?? ""; break;
                 case "GroupId": _GroupId = value.ToInt(); break;
                 default: base[name] = value; break;
             }

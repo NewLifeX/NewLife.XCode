@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
@@ -105,23 +105,23 @@ public partial class AreaModel : IModel
             switch (name)
             {
                 case "Id": Id = value.ToInt(); break;
-                case "Name": Name = Convert.ToString(value); break;
-                case "FullName": FullName = Convert.ToString(value); break;
+                case "Name": Name = value?.ToString() ?? ""; break;
+                case "FullName": FullName = value?.ToString(); break;
                 case "ParentId": ParentId = value.ToInt(); break;
                 case "Level": Level = value.ToInt(); break;
-                case "Kind": Kind = Convert.ToString(value); break;
-                case "English": English = Convert.ToString(value); break;
-                case "PinYin": PinYin = Convert.ToString(value); break;
-                case "JianPin": JianPin = Convert.ToString(value); break;
-                case "TelCode": TelCode = Convert.ToString(value); break;
-                case "ZipCode": ZipCode = Convert.ToString(value); break;
+                case "Kind": Kind = value?.ToString(); break;
+                case "English": English = value?.ToString(); break;
+                case "PinYin": PinYin = value?.ToString(); break;
+                case "JianPin": JianPin = value?.ToString(); break;
+                case "TelCode": TelCode = value?.ToString(); break;
+                case "ZipCode": ZipCode = value?.ToString(); break;
                 case "Longitude": Longitude = value.ToDouble(); break;
                 case "Latitude": Latitude = value.ToDouble(); break;
-                case "GeoHash": GeoHash = Convert.ToString(value); break;
+                case "GeoHash": GeoHash = value?.ToString(); break;
                 case "Enable": Enable = value.ToBoolean(); break;
                 case "CreateTime": CreateTime = value.ToDateTime(); break;
                 case "UpdateTime": UpdateTime = value.ToDateTime(); break;
-                case "Remark": Remark = Convert.ToString(value); break;
+                case "Remark": Remark = value?.ToString(); break;
                 default: this.SetValue(name, value); break;
             }
         }

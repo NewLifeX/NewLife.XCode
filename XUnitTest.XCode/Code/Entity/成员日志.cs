@@ -247,24 +247,24 @@ public partial class MemberLog : IMemberLog, IEntity<IMemberLog>
             switch (name)
             {
                 case "ID": _ID = value.ToLong(); break;
-                case "Ds": _Ds = Convert.ToString(value); break;
-                case "Category": _Category = Convert.ToString(value); break;
-                case "Action": _Action = Convert.ToString(value); break;
+                case "Ds": _Ds = value?.ToString(); break;
+                case "Category": _Category = value?.ToString(); break;
+                case "Action": _Action = value?.ToString(); break;
                 case "LinkID": _LinkID = value.ToInt(); break;
                 case "Success": _Success = value.ToBoolean(); break;
-                case "UserName": _UserName = Convert.ToString(value); break;
+                case "UserName": _UserName = value?.ToString(); break;
                 case "Ex1": _Ex1 = value.ToInt(); break;
                 case "Ex2": _Ex2 = value.ToInt(); break;
                 case "Ex3": _Ex3 = value.ToDouble(); break;
-                case "Ex4": _Ex4 = Convert.ToString(value); break;
-                case "Ex5": _Ex5 = Convert.ToString(value); break;
-                case "Ex6": _Ex6 = Convert.ToString(value); break;
-                case "TraceId": _TraceId = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
+                case "Ex4": _Ex4 = value?.ToString(); break;
+                case "Ex5": _Ex5 = value?.ToString(); break;
+                case "Ex6": _Ex6 = value?.ToString(); break;
+                case "TraceId": _TraceId = value?.ToString(); break;
+                case "CreateUser": _CreateUser = value?.ToString(); break;
                 case "CreateUserID": _CreateUserID = value.ToInt(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }

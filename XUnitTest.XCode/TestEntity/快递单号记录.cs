@@ -130,15 +130,15 @@ public partial class ExpressLogs
             switch (name)
             {
                 case "Id": _Id = value.ToLong(); break;
-                case "Code": _Code = Convert.ToString(value); break;
-                case "CreateUser": _CreateUser = Convert.ToString(value); break;
+                case "Code": _Code = value?.ToString() ?? ""; break;
+                case "CreateUser": _CreateUser = value?.ToString() ?? ""; break;
                 case "CreateUserId": _CreateUserID = value.ToInt(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
-                case "CreateIP": _CreateIP = Convert.ToString(value); break;
-                case "UpdateUser": _UpdateUser = Convert.ToString(value); break;
+                case "CreateIP": _CreateIP = value?.ToString() ?? ""; break;
+                case "UpdateUser": _UpdateUser = value?.ToString() ?? ""; break;
                 case "UpdateUserId": _UpdateUserID = value.ToInt(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "UpdateIP": _UpdateIP = Convert.ToString(value); break;
+                case "UpdateIP": _UpdateIP = value?.ToString() ?? ""; break;
                 default: base[name] = value; break;
             }
         }

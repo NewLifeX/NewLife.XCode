@@ -108,13 +108,13 @@ namespace XUnitTest.XCode.TestEntity
                 switch (name)
                 {
                     case __.Id : _ID = value.ToInt(); break;
-                    case __.Category : _Category = Convert.ToString(value); break;
-                    case __.Action : _Action = Convert.ToString(value); break;
-                    case __.UserName : _UserName = Convert.ToString(value); break;
+                    case __.Category : _Category = value?.ToString() ?? ""; break;
+                    case __.Action : _Action = value?.ToString() ?? ""; break;
+                    case __.UserName : _UserName = value?.ToString() ?? ""; break;
                     case __.CreateUserId : _CreateUserID = value.ToInt(); break;
-                    case __.CreateIP : _CreateIP = Convert.ToString(value); break;
+                    case __.CreateIP : _CreateIP = value?.ToString() ?? ""; break;
                     case __.CreateTime : _CreateTime = value.ToDateTime(); break;
-                    case __.Remark : _Remark = Convert.ToString(value); break;
+                    case __.Remark : _Remark = value?.ToString() ?? ""; break;
                     default: base[name] = value; break;
                 }
             }

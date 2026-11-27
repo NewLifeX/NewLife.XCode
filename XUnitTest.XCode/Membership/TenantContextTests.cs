@@ -292,7 +292,7 @@ public partial class TenantTestEntity : Entity<TenantTestEntity>, ITenantScope
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString(); break;
                 case "TenantId": _TenantId = value.ToInt(); break;
                 default: base[name] = value; break;
             }
@@ -358,7 +358,7 @@ public partial class NonTenantTestEntity : Entity<NonTenantTestEntity>
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }
@@ -443,7 +443,7 @@ public partial class CustomTenantFieldEntity : Entity<CustomTenantFieldEntity>, 
             switch (name)
             {
                 case "Id": _Id = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString(); break;
                 case "MyTenantId": _MyTenantId = value.ToInt(); break;
                 default: base[name] = value; break;
             }

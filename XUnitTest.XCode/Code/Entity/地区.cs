@@ -234,23 +234,23 @@ public partial class Area : IArea, IEntity<IArea>
             switch (name)
             {
                 case "ID": _ID = value.ToInt(); break;
-                case "Name": _Name = Convert.ToString(value); break;
-                case "FullName": _FullName = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
+                case "FullName": _FullName = value?.ToString(); break;
                 case "ParentID": _ParentID = value.ToInt(); break;
                 case "Level": _Level = value.ToInt(); break;
-                case "Kind": _Kind = Convert.ToString(value); break;
-                case "English": _English = Convert.ToString(value); break;
-                case "PinYin": _PinYin = Convert.ToString(value); break;
-                case "JianPin": _JianPin = Convert.ToString(value); break;
-                case "TelCode": _TelCode = Convert.ToString(value); break;
-                case "ZipCode": _ZipCode = Convert.ToString(value); break;
+                case "Kind": _Kind = value?.ToString(); break;
+                case "English": _English = value?.ToString(); break;
+                case "PinYin": _PinYin = value?.ToString(); break;
+                case "JianPin": _JianPin = value?.ToString(); break;
+                case "TelCode": _TelCode = value?.ToString(); break;
+                case "ZipCode": _ZipCode = value?.ToString(); break;
                 case "Longitude": _Longitude = value.ToDouble(); break;
                 case "Latitude": _Latitude = value.ToDouble(); break;
-                case "GeoHash": _GeoHash = Convert.ToString(value); break;
+                case "GeoHash": _GeoHash = value?.ToString(); break;
                 case "Enable": _Enable = value.ToBoolean(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "UpdateTime": _UpdateTime = value.ToDateTime(); break;
-                case "Remark": _Remark = Convert.ToString(value); break;
+                case "Remark": _Remark = value?.ToString(); break;
                 default: base[name] = value; break;
             }
         }
@@ -269,7 +269,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (id < 0) return null;
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.Find(e => e.ID == id);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.Find(e => e.ID == id);
 
         // 单对象缓存
         return Meta.SingleCache[id];
@@ -285,7 +285,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (parentId < 0) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.ParentID == parentId);
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.ParentID == parentId);
 
         return FindAll(_.ParentID == parentId);
     }
@@ -298,7 +298,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (name.IsNullOrEmpty()) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.Name.EqualIgnoreCase(name));
 
         return FindAll(_.Name == name);
     }
@@ -311,7 +311,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (pinYin == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.PinYin.EqualIgnoreCase(pinYin));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.PinYin.EqualIgnoreCase(pinYin));
 
         return FindAll(_.PinYin == pinYin);
     }
@@ -324,7 +324,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (jianPin == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.JianPin.EqualIgnoreCase(jianPin));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.JianPin.EqualIgnoreCase(jianPin));
 
         return FindAll(_.JianPin == jianPin);
     }
@@ -337,7 +337,7 @@ public partial class Area : IArea, IEntity<IArea>
         if (geoHash == null) return [];
 
         // 实体缓存
-        if (Meta.Session.Count < 10000) return Meta.Cache.FindAll(e => e.GeoHash.EqualIgnoreCase(geoHash));
+        if (Meta.Session.Count < MaxCacheCount) return Meta.Cache.FindAll(e => e.GeoHash.EqualIgnoreCase(geoHash));
 
         return FindAll(_.GeoHash == geoHash);
     }

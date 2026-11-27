@@ -292,8 +292,8 @@ public class EntityBuilder : ClassBuilder
     /// <returns>XCode版本号，如果未找到则返回null</returns>
     /// <remarks>
     /// 从指定路径开始，向上查找最多 maxLevels 层目录中的 csproj 文件。
-    /// 找到后解析其中 PackageReference 引用的 NewLife.XCode 版本号。
-    /// 用于自动判断是否需要升级模块名称（Module -> Interceptor）。
+    /// 依次解析项目自身的 PackageReference、项目引用链（含间接引用）以及 NuGet 还原产物中的 NewLife.XCode 版本号。
+    /// 用于自动判断是否需要升级模块名称（Module -> Filter）。
     /// </remarks>
     public static String? DetectXCodeVersion(String startPath, Int32 maxLevels = 5)
     {
@@ -302,13 +302,16 @@ public class EntityBuilder : ClassBuilder
         var dir = new DirectoryInfo(startPath);
         if (!dir.Exists) return null;
 
+        // 已访问项目，避免项目引用成环
+        var visited = new HashSet<String>(StringComparer.OrdinalIgnoreCase);
+
         // 向上查找csproj文件，最多查找maxLevels层
         for (var i = 0; i < maxLevels && dir != null; i++)
         {
             var csprojFiles = dir.GetFiles("*.csproj", SearchOption.TopDirectoryOnly);
             foreach (var csprojFile in csprojFiles)
             {
-                var version = ParseXCodeVersionFromCsproj(csprojFile.FullName);
+                var version = ParseXCodeVersionFromCsproj(csprojFile.FullName, visited, 0);
                 if (!version.IsNullOrEmpty()) return version;
             }
 
@@ -320,13 +323,20 @@ public class EntityBuilder : ClassBuilder
 
     /// <summary>从csproj文件中解析XCode版本号</summary>
     /// <param name="csprojPath">csproj文件路径</param>
+    /// <param name="visited">已访问项目集合，避免循环引用</param>
+    /// <param name="depth">项目引用递归深度</param>
     /// <returns>XCode版本号，如果未找到则返回null</returns>
-    private static String? ParseXCodeVersionFromCsproj(String csprojPath)
+    private static String? ParseXCodeVersionFromCsproj(String csprojPath, HashSet<String> visited, Int32 depth)
     {
+        if (depth > 8 || csprojPath.IsNullOrEmpty()) return null;
+
         try
         {
+            csprojPath = Path.GetFullPath(csprojPath);
+            if (!visited.Add(csprojPath)) return null;
+
             var xml = File.ReadAllText(csprojPath);
-            
+
             // 查找 <PackageReference Include="NewLife.XCode" Version="..." />
             var match = Regex.Match(xml, @"<PackageReference\s+Include\s*=\s*[""']NewLife\.XCode[""']\s+Version\s*=\s*[""']([^""']+)[""']");
             if (match.Success) return match.Groups[1].Value;
@@ -334,6 +344,31 @@ public class EntityBuilder : ClassBuilder
             // 查找 <PackageReference Include="NewLife.XCode"><Version>...</Version></PackageReference>
             match = Regex.Match(xml, @"<PackageReference\s+Include\s*=\s*[""']NewLife\.XCode[""']\s*>\s*<Version>([^<]+)</Version>", RegexOptions.Singleline);
             if (match.Success) return match.Groups[1].Value;
+
+            var dir = Path.GetDirectoryName(csprojPath);
+            if (dir.IsNullOrEmpty()) return null;
+
+            // 项目引用可能层层传递，如 CubeDemo -> NewLife.Cube -> NewLife.XCode
+            foreach (Match item in Regex.Matches(xml, @"<ProjectReference\s+Include\s*=\s*[""']([^""']+)[""']"))
+            {
+                var path = item.Groups[1].Value;
+                if (path.IsNullOrEmpty()) continue;
+
+                var fullPath = Path.GetFullPath(Path.Combine(dir, path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar)));
+                if (!File.Exists(fullPath)) continue;
+
+                var version = ParseXCodeVersionFromCsproj(fullPath, visited, depth + 1);
+                if (!version.IsNullOrEmpty()) return version;
+            }
+
+            // 包引用可能经由其它包传递，读取NuGet还原产物中的实际版本
+            var assets = Path.Combine(dir, "obj", "project.assets.json");
+            if (File.Exists(assets))
+            {
+                var json = File.ReadAllText(assets);
+                match = Regex.Match(json, @"""NewLife\.XCode/([^""]+)""", RegexOptions.IgnoreCase);
+                if (match.Success) return match.Groups[1].Value;
+            }
 
             return null;
         }
@@ -670,22 +705,23 @@ public class EntityBuilder : ClassBuilder
         var content = File.ReadAllText(fileName);
         var oldContent = content;
 
-        // Module 时代与拦截器时代统一升级为过滤器
-        content = Regex.Replace(content, @"\b(Time|User|IP|Trace)(Module|Interceptor)\b", "$1Filter");
-        content = Regex.Replace(content, @"\bTenantModule\b", "TenantFilter");
-        content = Regex.Replace(content, @"\bTenantInterceptor\b", "TenantFilter");
-        content = Regex.Replace(content, @"\bDataScopeInterceptor\b", "DataScopeFilter");
+        // Module 时代与拦截器时代统一升级为过滤器；使用 ASCII 边界，兼容中文注释中紧邻的旧类名
+        content = Regex.Replace(content, @"(?<![A-Za-z0-9_])(Time|User|IP|Trace)(Module|Interceptor)(?![A-Za-z0-9_])", "$1Filter");
+        content = Regex.Replace(content, @"(?<![A-Za-z0-9_])Tenant(Module|Interceptor)(?![A-Za-z0-9_])", "TenantFilter");
+        content = Regex.Replace(content, @"(?<![A-Za-z0-9_])DataScopeInterceptor(?![A-Za-z0-9_])", "DataScopeFilter");
 
         // 集合统一使用 Meta.Filters
-        content = Regex.Replace(content, @"\bMeta\.Modules\b", "Meta.Filters");
-        content = Regex.Replace(content, @"\bMeta\.Interceptors\b", "Meta.Filters");
+        content = Regex.Replace(content, @"(?<![A-Za-z0-9_])Meta\.(Modules|Interceptors)(?![A-Za-z0-9_])", "Meta.Filters");
 
         // 过滤器统一使用 Add 注册
         content = Regex.Replace(content, @"\.AddFilter<", ".Add<");
         content = Regex.Replace(content, @"\.AddFilter\(", ".Add(");
 
         // 替换类型名 EntityModules 为 EntityFilters
-        content = Regex.Replace(content, @"\bEntityModules\b", "EntityFilters");
+        content = Regex.Replace(content, @"(?<![A-Za-z0-9_])EntityModules(?![A-Za-z0-9_])", "EntityFilters");
+
+        // 租户接口统一使用 ITenantScope
+        content = Regex.Replace(content, @"(?<![A-Za-z0-9_])ITenantSource(?![A-Za-z0-9_])", "ITenantScope");
 
         // 如果内容有变化，保存文件
         if (content != oldContent)

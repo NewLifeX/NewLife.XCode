@@ -431,21 +431,26 @@ public class EntityBuilderTests
         try
         {
             File.WriteAllText(file, """
-static Order()
+public partial class Order : Entity<Order>, ITenantSource
 {
-    Meta.Modules.Add<TenantModule>();
-    Meta.Modules.Add<TimeModule>();
-    Meta.Modules.Add<UserModule>();
-    Meta.Modules.Add<IPModule>();
-    Meta.Modules.Add<TraceModule>();
-    Meta.Interceptors.Add<TenantInterceptor>();
-    Meta.Interceptors.Add(new TenantInterceptor());
-    Meta.Interceptors.Add<DataScopeInterceptor>();
-    Meta.Interceptors.Add(new DataScopeInterceptor());
-    Meta.Interceptors.Add<TimeInterceptor>();
-    Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
-    Meta.Interceptors.Add<IPInterceptor>();
-    Meta.Interceptors.Add<TraceInterceptor>();
+    static Order()
+    {
+        // 过滤器 UserModule、TimeModule、IPModule
+        // 处理当前已登录用户信息，可以由UserModule过滤器代劳
+        Meta.Modules.Add<TenantModule>();
+        Meta.Modules.Add<TimeModule>();
+        Meta.Modules.Add<UserModule>();
+        Meta.Modules.Add<IPModule>();
+        Meta.Modules.Add<TraceModule>();
+        Meta.Interceptors.Add<TenantInterceptor>();
+        Meta.Interceptors.Add(new TenantInterceptor());
+        Meta.Interceptors.Add<DataScopeInterceptor>();
+        Meta.Interceptors.Add(new DataScopeInterceptor());
+        Meta.Interceptors.Add<TimeInterceptor>();
+        Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
+        Meta.Interceptors.Add<IPInterceptor>();
+        Meta.Interceptors.Add<TraceInterceptor>();
+    }
 }
 """);
 
@@ -461,14 +466,91 @@ static Order()
             Assert.Contains("Meta.Filters.Add(new TenantFilter());", text);
             Assert.Contains("Meta.Filters.Add<DataScopeFilter>();", text);
             Assert.Contains("Meta.Filters.Add(new DataScopeFilter());", text);
+            Assert.Contains("public partial class Order : Entity<Order>, ITenantScope", text);
+            Assert.Contains("// 过滤器 UserFilter、TimeFilter、IPFilter", text);
+            Assert.Contains("可以由UserFilter过滤器代劳", text);
             Assert.DoesNotContain("Meta.Modules", text);
             Assert.DoesNotContain("Meta.Interceptors", text);
             Assert.DoesNotContain("Module>", text);
             Assert.DoesNotContain("Interceptor>", text);
+            Assert.DoesNotContain("ITenantSource", text);
         }
         finally
         {
             File.Delete(file);
+        }
+    }
+
+    [Fact(DisplayName = "检测XCode版本_沿项目引用链查找")]
+    public void DetectXCodeVersion_FollowsProjectReference()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "xcode-detect-" + Guid.NewGuid().ToString("N"));
+        var appDir = Path.Combine(root, "App");
+        var libDir = Path.Combine(root, "Lib");
+        var entityDir = Path.Combine(appDir, "Areas", "School", "Models", "Entity");
+        try
+        {
+            Directory.CreateDirectory(entityDir);
+            Directory.CreateDirectory(libDir);
+            File.WriteAllText(Path.Combine(appDir, "App.csproj"), """
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Lib\Lib.csproj" />
+  </ItemGroup>
+</Project>
+""");
+            File.WriteAllText(Path.Combine(libDir, "Lib.csproj"), """
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="NewLife.XCode" Version="12.3.2026.1127-beta0723" />
+  </ItemGroup>
+</Project>
+""");
+
+            var version = EntityBuilder.DetectXCodeVersion(entityDir, 5);
+
+            Assert.Equal("12.3.2026.1127-beta0723", version);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+        }
+    }
+
+    [Fact(DisplayName = "检测XCode版本_读取NuGet还原产物")]
+    public void DetectXCodeVersion_ReadsNuGetAssets()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "xcode-detect-" + Guid.NewGuid().ToString("N"));
+        var appDir = Path.Combine(root, "App");
+        var entityDir = Path.Combine(appDir, "Areas", "School", "Models", "Entity");
+        try
+        {
+            Directory.CreateDirectory(entityDir);
+            Directory.CreateDirectory(Path.Combine(appDir, "obj"));
+            File.WriteAllText(Path.Combine(appDir, "App.csproj"), """
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="NewLife.Cube" Version="6.15.2026.1022" />
+  </ItemGroup>
+</Project>
+""");
+            File.WriteAllText(Path.Combine(appDir, "obj", "project.assets.json"), """
+{
+  "version": 3,
+  "libraries": {
+    "NewLife.Core/12.0.2026.1125-beta0539": { "type": "package" },
+    "NewLife.XCode/12.3.2026.1127-beta0723": { "type": "package" }
+  }
+}
+""");
+
+            var version = EntityBuilder.DetectXCodeVersion(entityDir, 5);
+
+            Assert.Equal("12.3.2026.1127-beta0723", version);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
         }
     }
 

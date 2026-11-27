@@ -277,15 +277,17 @@ UserInfo.FindById(user.Id)?.Delete();
 </details>
 
 <details>
-<summary><b>数据权限与多租户</b>（5 项）</summary>
+<summary><b>数据权限与多租户</b>（7 项）</summary>
 
 | 能力 | 主要特点 |
 | --- | --- |
 | 数据权限（Data Scope） | 行级数据访问控制，支持"全部 / 本部门及下级 / 本部门 / 仅本人 / 自定义"五种范围。 |
-| 权限接线 | `DataScopeContext` + `DataScopeInterceptor` 自动完成查询过滤、新增默认归属、修改删除校验。 |
+| 权限接线 | `DataScopeContext` + `DataScopeFilter` 自动完成查询过滤、新增默认归属、修改删除校验；`DataScopeInterceptor` 作为兼容别名映射到过滤器管道。 |
 | 实体接入 | 实体实现 `IUserScope` / `IDepartmentScope` / `IDataScope` 即可接入；部门管理者自动纳入可见范围，本人数据始终可访问。 |
-| 多租户 | 实体实现 `ITenantScope` 后，`TenantInterceptor` 自动在查询时附加租户过滤、写入时校验/补充租户标识；EntityBuilder 为含 `TenantId` 列的业务类自动实现 `ITenantScope`。 |
-| 详细用法 | 见 `Doc/数据权限.md`、`Doc/权限管理.md`。 |
+| 多租户 | 实体实现 `ITenantScope` 后，`TenantFilter` 自动在查询时附加租户过滤、写入时校验/补充租户标识，并覆盖批量与条件写；缓存读取按租户/数据权限再过滤一次；`TenantInterceptor` 作为兼容别名映射到过滤器管道；EntityBuilder 为含 `TenantId` 列的业务类自动实现 `ITenantScope`。 |
+| 操作过滤器 | `IEntityFilter` + `EntityContext`（v12.4）为单条、批量与查询操作提供前后置拦截，支持 `Order` 优先级、`EntityFilterScope` 显式绕过、条件写过滤。 |
+| 插件边界 | 核心保留 CRUD、缓存、分片与批量编排；`IEntityFilter`（实体）、`IDbCommandFilter`（命令）和 `IDatabase`（提供者）作为明确的扩展契约。 |
+| 详细用法 | 见 `Doc/实体过滤器（IEntityFilter）.md`、`Doc/插件化架构.md`、`Doc/数据权限.md`、`Doc/权限管理.md`。 |
 
 </details>
 

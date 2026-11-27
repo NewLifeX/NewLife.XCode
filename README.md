@@ -273,15 +273,17 @@ Designed for read-heavy, write-light workloads:
 </details>
 
 <details>
-<summary><b>Data Scope &amp; Multi-Tenancy</b> (5)</summary>
+<summary><b>Data Scope &amp; Multi-Tenancy</b> (7)</summary>
 
 | Capability | Key Characteristics |
 | --- | --- |
 | Data scope | Row-level data access control supporting five scopes: "All / Department and sub-departments / Department / Self only / Custom". |
-| Scope wiring | `DataScopeContext` + `DataScopeInterceptor` automatically apply query filters, default ownership on insert, and validation on update/delete. |
+| Scope wiring | `DataScopeContext` + `DataScopeFilter` apply query filters, default ownership on insert, and validation on update/delete; the `DataScopeInterceptor` compatibility alias maps to the filter pipeline. |
 | Entity opt-in | Entities implement `IUserScope` / `IDepartmentScope` / `IDataScope`; department managers are automatically included in the visible scope, and one's own data is always accessible. |
-| Multi-tenancy | After an entity implements `ITenantScope`, `TenantInterceptor` automatically appends tenant filters on queries and validates/fills the tenant identifier on writes; EntityBuilder automatically implements `ITenantScope` for business classes that contain a `TenantId` column. |
-| Details | See `Doc/数据权限.md` and `Doc/权限管理.md` for details. |
+| Multi-tenancy | After an entity implements `ITenantScope`, `TenantFilter` appends tenant filters on queries, validates/fills the tenant identifier on writes, and covers batch and condition writes; cache reads bypass filters; the `TenantInterceptor` compatibility alias maps to the filter pipeline, and EntityBuilder automatically implements `ITenantScope` for business classes that contain a `TenantId` column. |
+| Operation filters | `IEntityFilter` + `EntityContext` (v12.4) provide before/after interception for single, batch and query operations, with `Order` priority, `EntityFilterScope` bypass and conditional write filtering. |
+| Plugin boundary | Core keeps CRUD, caching, sharding and batch orchestration; `IEntityFilter` (entity), `IDbCommandFilter` (command) and `IDatabase` (provider) are explicit extension contracts. |
+| Details | See `Doc/实体过滤器（IEntityFilter）.md`, `Doc/插件化架构.md`, `Doc/数据权限.md` and `Doc/权限管理.md` for details. |
 
 </details>
 

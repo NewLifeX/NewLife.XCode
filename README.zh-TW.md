@@ -277,15 +277,17 @@ UserInfo.FindById(user.Id)?.Delete();
 </details>
 
 <details>
-<summary><b>資料權限與多租用戶</b>（5 項）</summary>
+<summary><b>資料權限與多租用戶</b>（7 項）</summary>
 
 | 能力 | 主要特點 |
 | --- | --- |
 | 資料權限（Data Scope） | 資料列級資料存取控制，支援「全部 / 本部門及下級 / 本部門 / 僅本人 / 自訂」五種範圍。 |
-| 權限接線 | `DataScopeContext` + `DataScopeInterceptor` 自動完成查詢篩選、新增預設歸屬、修改刪除驗證。 |
+| 權限接線 | `DataScopeContext` + `DataScopeFilter` 自動完成查詢篩選、新增預設歸屬、修改刪除驗證；`DataScopeInterceptor` 作為相容別名對應到過濾器管道。 |
 | 實體接入 | 實體實作 `IUserScope` / `IDepartmentScope` / `IDataScope` 即可接入；部門管理者自動納入可見範圍，本人資料始終可存取。 |
-| 多租用戶 | 實體實作 `ITenantScope` 後，`TenantInterceptor` 自動在查詢時附加租用戶篩選、寫入時驗證/補充租用戶識別碼；EntityBuilder 為含 `TenantId` 欄位的業務類別自動實作 `ITenantScope`。 |
-| 詳細用法 | 見 `Doc/数据权限.md`、`Doc/权限管理.md`。 |
+| 多租用戶 | 實體實作 `ITenantScope` 後，`TenantFilter` 自動在查詢時附加租用戶篩選、寫入時驗證/補充租用戶識別碼，並覆蓋批次與條件寫入；快取讀取繞過過濾器；`TenantInterceptor` 作為相容別名對應到過濾器管道；EntityBuilder 為含 `TenantId` 欄位的業務類別自動實作 `ITenantScope`。 |
+| 操作過濾器 | `IEntityFilter` + `EntityContext`（v12.4）為單筆、批次與查詢操作提供前後置攔截，支援 `Order` 優先級、`EntityFilterScope` 顯式繞過、條件寫入過濾。 |
+| 外掛邊界 | 核心保留 CRUD、快取、分片與批次編排；`IEntityFilter`（實體）、`IDbCommandFilter`（命令）和 `IDatabase`（提供者）作為明確的擴充契約。 |
+| 詳細用法 | 見 `Doc/实体过滤器（IEntityFilter）.md`、`Doc/插件化架构.md`、`Doc/数据权限.md`、`Doc/权限管理.md`。 |
 
 </details>
 

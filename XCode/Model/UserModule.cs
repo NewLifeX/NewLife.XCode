@@ -2,8 +2,8 @@
 
 namespace XCode;
 
-/// <summary>用户拦截器。自动填充创建人和更新人信息</summary>
-public class UserInterceptor : EntityInterceptor
+/// <summary>用户过滤器。自动填充创建人和更新人信息</summary>
+public class UserFilter : EntityFilter
 {
     #region 静态引用
     /// <summary>字段名</summary>
@@ -33,11 +33,11 @@ public class UserInterceptor : EntityInterceptor
 
     #region 构造函数
     /// <summary>实例化</summary>
-    public UserInterceptor() { }
+    public UserFilter() { }
 
     /// <summary>实例化</summary>
     /// <param name="provider"></param>
-    public UserInterceptor(IManageProvider provider) => Provider = provider;
+    public UserFilter(IManageProvider provider) => Provider = provider;
     #endregion
 
     /// <summary>初始化。检查是否匹配</summary>
@@ -61,22 +61,28 @@ public class UserInterceptor : EntityInterceptor
         return false;
     }
 
-    /// <summary>创建实体对象</summary>
-    /// <param name="entity"></param>
-    /// <param name="forEdit"></param>
-    protected override void OnCreate(IEntity entity, Boolean forEdit)
+    /// <summary>操作执行前填充用户字段</summary>
+    /// <param name="context">操作上下文</param>
+    public override void OnExecuting(EntityContext context)
     {
-        if (forEdit) OnValid(entity, DataMethod.Insert);
+        if (context.Action == DataMethod.Create)
+        {
+            if (context.ForEdit && context.Entity != null) Fill(context.Entity, DataMethod.Insert);
+            return;
+        }
+
+        if (context.Action is not (DataMethod.Insert or DataMethod.Update)) return;
+
+        foreach (var entity in GetEntities(context))
+        {
+            if (context.Action == DataMethod.Update && !entity.HasDirty) continue;
+
+            Fill(entity, context.Action);
+        }
     }
 
-    /// <summary>验证数据，自动加上创建和更新的信息</summary>
-    /// <param name="entity"></param>
-    /// <param name="method"></param>
-    protected override Boolean OnValid(IEntity entity, DataMethod method)
+    private void Fill(IEntity entity, DataMethod method)
     {
-        if (method == DataMethod.Delete) return true;
-        if (method == DataMethod.Update && !entity.HasDirty) return true;
-
         var fs = GetFields(entity.GetType());
 
         // 当前登录用户
@@ -97,13 +103,13 @@ public class UserInterceptor : EntityInterceptor
             switch (method)
             {
                 case DataMethod.Insert:
-                    SetItem(fs, entity, __.CreateUserID, user.ID);
+                    SetItem(fs, entity, __.CreateUserID, user.Id);
                     SetItem(fs, entity, __.CreateUser, user + "");
-                    SetItem(fs, entity, __.UpdateUserID, user.ID);
+                    SetItem(fs, entity, __.UpdateUserID, user.Id);
                     SetItem(fs, entity, __.UpdateUser, user + "");
                     break;
                 case DataMethod.Update:
-                    SetNoDirtyItem(fs, entity, __.UpdateUserID, user.ID);
+                    SetNoDirtyItem(fs, entity, __.UpdateUserID, user.Id);
                     SetNoDirtyItem(fs, entity, __.UpdateUser, user + "");
                     break;
             }
@@ -114,19 +120,17 @@ public class UserInterceptor : EntityInterceptor
             SetNoDirtyItem(fs, entity, __.UpdateUserID, 0);
             SetNoDirtyItem(fs, entity, __.UpdateUser, "");
         }
-
-        return true;
     }
 }
 
-/// <summary>用户模型。旧版名称，建议使用 UserInterceptor</summary>
-[Obsolete("请使用 UserInterceptor")]
-public class UserModule : UserInterceptor
+/// <summary>用户拦截器。兼容旧类名，实际实现见 <see cref="UserFilter"/></summary>
+[Obsolete("请使用 UserFilter；运行 xcode 可自动迁移")]
+public class UserInterceptor : UserFilter
 {
     /// <summary>实例化</summary>
-    public UserModule() { }
+    public UserInterceptor() { }
 
     /// <summary>实例化</summary>
     /// <param name="provider"></param>
-    public UserModule(IManageProvider provider) : base(provider) { }
+    public UserInterceptor(IManageProvider provider) : base(provider) { }
 }

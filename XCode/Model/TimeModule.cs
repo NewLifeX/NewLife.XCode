@@ -1,9 +1,9 @@
-﻿using NewLife.Threading;
+using NewLife.Threading;
 
 namespace XCode;
 
-/// <summary>时间拦截器。自动填充创建时间和更新时间</summary>
-public class TimeInterceptor : EntityInterceptor
+/// <summary>时间过滤器。自动填充创建时间和更新时间</summary>
+public class TimeFilter : EntityFilter
 {
     #region 静态引用
     /// <summary>字段名</summary>
@@ -32,22 +32,28 @@ public class TimeInterceptor : EntityInterceptor
         return false;
     }
 
-    /// <summary>创建实体对象</summary>
-    /// <param name="entity"></param>
-    /// <param name="forEdit"></param>
-    protected override void OnCreate(IEntity entity, Boolean forEdit)
+    /// <summary>操作执行前填充时间字段</summary>
+    /// <param name="context">操作上下文</param>
+    public override void OnExecuting(EntityContext context)
     {
-        if (forEdit) OnValid(entity, DataMethod.Insert);
+        if (context.Action == DataMethod.Create)
+        {
+            if (context.ForEdit && context.Entity != null) Fill(context.Entity, DataMethod.Insert);
+            return;
+        }
+
+        if (context.Action is not (DataMethod.Insert or DataMethod.Update)) return;
+
+        foreach (var entity in GetEntities(context))
+        {
+            if (context.Action == DataMethod.Update && !entity.HasDirty) continue;
+
+            Fill(entity, context.Action);
+        }
     }
 
-    /// <summary>验证数据，自动加上创建和更新的信息</summary>
-    /// <param name="entity"></param>
-    /// <param name="method"></param>
-    protected override Boolean OnValid(IEntity entity, DataMethod method)
+    private void Fill(IEntity entity, DataMethod method)
     {
-        if (method == DataMethod.Delete) return true;
-        if (method == DataMethod.Update && !entity.HasDirty) return true;
-
         var fs = GetFields(entity.GetType());
 
         switch (method)
@@ -57,19 +63,12 @@ public class TimeInterceptor : EntityInterceptor
                 SetItem(fs, entity, __.UpdateTime, TimerX.Now);
                 break;
             case DataMethod.Update:
-                // 不管新建还是更新，都改变更新时间
                 SetNoDirtyItem(fs, entity, __.UpdateTime, TimerX.Now);
                 break;
-            case DataMethod.Delete:
-                break;
-            default:
-                break;
         }
-
-        return true;
     }
 }
 
-/// <summary>时间模型。旧版名称，建议使用 TimeInterceptor</summary>
-[Obsolete("请使用 TimeInterceptor")]
-public class TimeModule : TimeInterceptor { }
+/// <summary>时间拦截器。兼容旧类名，实际实现见 <see cref="TimeFilter"/></summary>
+[Obsolete("请使用 TimeFilter；运行 xcode 可自动迁移")]
+public class TimeInterceptor : TimeFilter { }

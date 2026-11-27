@@ -2,12 +2,8 @@
 
 namespace XCode;
 
-/// <summary>链路追踪过滤器</summary>
-[Obsolete("请使用 TraceInterceptor")]
-public class TraceModule : TraceInterceptor { }
-
 /// <summary>链路追踪过滤器。自动给TraceId赋值</summary>
-public class TraceInterceptor : EntityInterceptor
+public class TraceFilter : EntityFilter
 {
     #region 静态引用
     /// <summary>字段名</summary>
@@ -40,14 +36,22 @@ public class TraceInterceptor : EntityInterceptor
         return false;
     }
 
-    /// <summary>验证数据，自动加上创建和更新的信息</summary>
-    /// <param name="entity"></param>
-    /// <param name="method"></param>
-    protected override Boolean OnValid(IEntity entity, DataMethod method)
+    /// <summary>操作执行前填充TraceId</summary>
+    /// <param name="context">操作上下文</param>
+    public override void OnExecuting(EntityContext context)
     {
-        if (method == DataMethod.Delete) return true;
-        if (method == DataMethod.Update && !entity.HasDirty) return true;
+        if (context.Action is not (DataMethod.Insert or DataMethod.Update)) return;
 
+        foreach (var entity in GetEntities(context))
+        {
+            if (context.Action == DataMethod.Update && !entity.HasDirty) continue;
+
+            Fill(entity);
+        }
+    }
+
+    private void Fill(IEntity entity)
+    {
         var traceId = DefaultSpan.Current?.TraceId;
         if (!traceId.IsNullOrEmpty() && traceId.Length < 50)
         {
@@ -80,7 +84,9 @@ public class TraceInterceptor : EntityInterceptor
 
             SetNoDirtyItem(fs, entity, __.TraceId, traceId);
         }
-
-        return true;
     }
 }
+
+/// <summary>链路追踪拦截器。兼容旧类名，实际实现见 <see cref="TraceFilter"/></summary>
+[Obsolete("请使用 TraceFilter；运行 xcode 可自动迁移")]
+public class TraceInterceptor : TraceFilter { }

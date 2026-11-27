@@ -319,17 +319,15 @@ public partial class Entity<TEntity>
         }
         #endregion
 
-        #region 拦截器
-        //private static EntityInterceptors _Interceptors = new(typeof(TEntity));
-#pragma warning disable CS0618 // 类型或成员已过时
-        private static EntityModules _Interceptors = new(typeof(TEntity));
-#pragma warning restore CS0618 // 类型或成员已过时
-        /// <summary>实体拦截器集合</summary>
-        public static EntityInterceptors Interceptors => _Interceptors;
+        #region 过滤器
+        private static EntityFilters _Filters = new(typeof(TEntity));
 
-        /// <summary>实体模块集合。旧版名称，建议使用 Interceptors</summary>
-        [Obsolete("请使用 Interceptors")]
-        public static EntityModules Modules => _Interceptors;
+        /// <summary>实体过滤器集合。在添删改查前后执行，用于租户隔离、数据权限、审计等横切逻辑</summary>
+        public static EntityFilters Filters => _Filters;
+
+        /// <summary>旧版名称。等价于 <see cref="Filters"/>，保留用于兼容旧代码</summary>
+        [Obsolete("请使用 Filters")]
+        public static EntityFilters Interceptors => _Filters;
         #endregion
     }
 }

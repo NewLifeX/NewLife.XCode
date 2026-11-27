@@ -4,6 +4,8 @@ using System.Net.Http;
 
 namespace XCode.InfluxDB;
 
+#pragma warning disable CS8765 // 基类 setter 允许 null，自动属性无法分别标注 getter/setter 可空性
+
 /// <summary>InfluxDB命令</summary>
 public class InfluxDBCommand : DbCommand
 {
@@ -142,3 +144,5 @@ public class InfluxDBCommand : DbCommand
     }
     #endregion
 }
+
+#pragma warning restore CS8765

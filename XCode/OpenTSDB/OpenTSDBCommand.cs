@@ -5,6 +5,8 @@ using NewLife.Serialization;
 
 namespace XCode.OpenTSDB;
 
+#pragma warning disable CS8765 // 基类 setter 允许 null，自动属性无法分别标注 getter/setter 可空性
+
 /// <summary>OpenTSDB命令</summary>
 /// <remarks>
 /// 写入：CommandText 为 JSON 数组，POST /api/put。
@@ -286,3 +288,5 @@ public class OpenTSDBParameterCollection : DbParameterCollection
     /// <param name="value">参数</param>
     protected override void SetParameter(Int32 index, DbParameter value) => _parameters[index] = (OpenTSDBParameter)value;
 }
+
+#pragma warning restore CS8765

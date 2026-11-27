@@ -6,6 +6,8 @@ using XCode.DataAccessLayer;
 
 namespace XCode.Prometheus;
 
+#pragma warning disable CS8765 // 基类 setter 允许 null，自动属性无法分别标注 getter/setter 可空性
+
 /// <summary>Prometheus 查询模式</summary>
 public enum PrometheusQueryMode
 {
@@ -237,3 +239,5 @@ public class PrometheusConnection : DbConnection
 public class PrometheusConnectionStringBuilder : DbConnectionStringBuilder
 {
 }
+
+#pragma warning restore CS8765

@@ -5,6 +5,8 @@ using NewLife.Serialization;
 
 namespace XCode.IoTDB;
 
+#pragma warning disable CS8765 // 基类 setter 允许 null，自动属性无法分别标注 getter/setter 可空性
+
 /// <summary>IoTDB命令。CommandText 为 IoTDB SQL，原样转发 REST v2</summary>
 public class IoTDBCommand : DbCommand
 {
@@ -269,3 +271,5 @@ public class IoTDBParameterCollection : DbParameterCollection
     /// <param name="value">参数</param>
     protected override void SetParameter(Int32 index, DbParameter value) => _parameters[index] = (IoTDBParameter)value;
 }
+
+#pragma warning restore CS8765

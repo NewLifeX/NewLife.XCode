@@ -7,6 +7,8 @@ using XCode.DataAccessLayer;
 
 namespace XCode.InfluxDB;
 
+#pragma warning disable CS8765 // 基类 setter 允许 null，自动属性无法分别标注 getter/setter 可空性
+
 /// <summary>InfluxDB查询语言</summary>
 public enum InfluxQueryLanguage
 {
@@ -441,3 +443,5 @@ public class InfluxDBConnection : DbConnection
 public class InfluxDBConnectionStringBuilder : DbConnectionStringBuilder
 {
 }
+
+#pragma warning restore CS8765

@@ -4,6 +4,8 @@ using System.Data.Common;
 
 namespace XCode.InfluxDB;
 
+#pragma warning disable CS8765 // 基类 setter 允许 null，自动属性无法分别标注 getter/setter 可空性
+
 /// <summary>InfluxDB参数</summary>
 public class InfluxDBParameter : DbParameter
 {
@@ -175,3 +177,5 @@ public class InfluxDBParameterCollection : DbParameterCollection
     /// <param name="value">参数</param>
     protected override void SetParameter(Int32 index, DbParameter value) => _parameters[index] = (InfluxDBParameter)value;
 }
+
+#pragma warning restore CS8765

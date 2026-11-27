@@ -6,6 +6,8 @@ using XCode.DataAccessLayer;
 
 namespace XCode.OpenTSDB;
 
+#pragma warning disable CS8765 // 基类 setter 允许 null，自动属性无法分别标注 getter/setter 可空性
+
 /// <summary>OpenTSDB连接</summary>
 /// <remarks>
 /// OpenTSDB 基于 HBase，提供 HTTP JSON 接口。连接字符串示例：
@@ -184,3 +186,5 @@ public class OpenTSDBConnection : DbConnection
 public class OpenTSDBConnectionStringBuilder : DbConnectionStringBuilder
 {
 }
+
+#pragma warning restore CS8765

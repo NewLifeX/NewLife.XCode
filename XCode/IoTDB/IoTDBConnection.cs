@@ -7,6 +7,8 @@ using XCode.DataAccessLayer;
 
 namespace XCode.IoTDB;
 
+#pragma warning disable CS8765 // 基类 setter 允许 null，自动属性无法分别标注 getter/setter 可空性
+
 /// <summary>Apache IoTDB 连接</summary>
 /// <remarks>
 /// 使用 IoTDB REST v2 接口，连接字符串示例：
@@ -174,3 +176,5 @@ public class IoTDBConnection : DbConnection
 public class IoTDBConnectionStringBuilder : DbConnectionStringBuilder
 {
 }
+
+#pragma warning restore CS8765

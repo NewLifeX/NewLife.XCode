@@ -163,7 +163,7 @@ public class StatModel
     /// <summary>相等</summary>
     /// <param name="obj"></param>
     /// <returns></returns>
-    public override Boolean Equals(Object obj)
+    public override Boolean Equals(Object? obj)
     {
         if (ReferenceEquals(this, obj)) return true;
         if (obj == null) return false;

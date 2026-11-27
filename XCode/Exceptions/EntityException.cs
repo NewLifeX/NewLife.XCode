@@ -27,7 +27,7 @@ namespace XCode
 
         /// <summary>初始化</summary>
         /// <param name="innerException"></param>
-        public EntityException(Exception innerException) : base((innerException?.Message), innerException) { }
+        public EntityException(Exception innerException) : base(innerException.Message, innerException) { }
         #endregion
     }
 }

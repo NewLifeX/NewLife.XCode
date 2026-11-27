@@ -2352,7 +2352,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         if (entity != null) return entity;
 
         // 加锁，避免同一个key并发新增
-        lock (KeyedLocker<TEntity>.SharedLock(key!.ToString()))
+        lock (KeyedLocker<TEntity>.SharedLock(key!.ToString()!))
         {
             // 打开事务，提升可靠性也避免读写分离造成数据不一致
             using var trans = Meta.CreateTrans();
@@ -2402,7 +2402,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         if (entity != null) return entity;
 
         // 加锁，避免同一个key并发新增
-        lock (KeyedLocker<TEntity>.SharedLock(key!.ToString()))
+        lock (KeyedLocker<TEntity>.SharedLock(key!.ToString()!))
         {
             // 打开事务，提升可靠性也避免读写分离造成数据不一致
             using var trans = Meta.CreateTrans();

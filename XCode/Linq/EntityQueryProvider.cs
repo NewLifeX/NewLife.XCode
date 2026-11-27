@@ -104,7 +104,7 @@ public class EntityQueryProvider : IQueryProvider
             var elementType = typeof(TResult).GenericTypeArguments.FirstOrDefault();
             if (elementType != null)
             {
-                var typedList = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType));
+                var typedList = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(elementType))!;
                 foreach (var item in enumerable)
                 {
                     typedList.Add(item);

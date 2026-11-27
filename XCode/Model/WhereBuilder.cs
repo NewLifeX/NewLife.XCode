@@ -24,10 +24,10 @@ public class WhereBuilder
     public String? Expression { get; set; }
 
     /// <summary>数据源。{$name}访问</summary>
-    public IDictionary<String, Object> Data { get; set; }
+    public IDictionary<String, Object>? Data { get; set; }
 
     /// <summary>第二数据源。{#name}访问</summary>
-    public IDictionary<String, Object> Data2 { get; set; }
+    public IDictionary<String, Object>? Data2 { get; set; }
     #endregion
 
     #region 构造
@@ -114,7 +114,7 @@ public class WhereBuilder
         throw new XCodeException("Unable to parse expression [{0}].", exp);
     }
 
-    private Object GetValue(String exp)
+    private Object? GetValue(String exp)
     {
         if (exp.IsNullOrEmpty()) return null;
 
@@ -181,7 +181,7 @@ public class WhereBuilder
             return true;
         }
 
-        return EvalParse(Expression, entity);
+        return EvalParse(exp, entity);
     }
 
     /// <summary>递归分解表达式</summary>
@@ -257,7 +257,7 @@ public class WhereBuilder
     #endregion
 
     #region 辅助
-    private Model Parse(String exp, String[] seps)
+    private Model? Parse(String exp, String[] seps)
     {
         foreach (var item in seps)
         {
@@ -267,7 +267,7 @@ public class WhereBuilder
                 var name = exp[..p].Trim();
                 var value = exp[(p + item.Length)..].Trim();
 
-                if (Factory.Table.FindByName(name) is not FieldItem fi) throw new XCodeException("Field [{0}] in expression [{1}] was not recognized; entity class [{2}] does not contain this field.", name, exp, Factory.EntityType.FullName);
+                if (Factory!.Table.FindByName(name) is not FieldItem fi) throw new XCodeException("Field [{0}] in expression [{1}] was not recognized; entity class [{2}] does not contain this field.", name, exp, Factory.EntityType.FullName);
 
                 var val = GetValue(value);
 
@@ -286,9 +286,9 @@ public class WhereBuilder
 
     class Model
     {
-        public String Action { get; set; }
-        public Object Value { get; set; }
-        public FieldItem Field { get; set; }
+        public String Action { get; set; } = null!;
+        public Object? Value { get; set; }
+        public FieldItem Field { get; set; } = null!;
     }
     #endregion
 }

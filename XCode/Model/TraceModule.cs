@@ -64,11 +64,11 @@ public class TraceFilter : EntityFilter
                 var ss = old?.Split(',').ToList();
                 if (ss != null && ss.Count > 0 && !ss.Contains(traceId))
                 {
-                    ss.Add(traceId);
+                    ss.Add(traceId!);
 
                     // 最大长度
                     var fi = fs.FirstOrDefault(e => e.Name.EqualIgnoreCase(__.TraceId));
-                    var len = fi.Length > 0 ? fi.Length : 50;
+                    var len = fi is { Length: > 0 } ? fi.Length : 50;
 
                     // 倒序取最后若干项
                     var rs = ss.Join(",");

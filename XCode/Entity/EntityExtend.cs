@@ -40,18 +40,18 @@ public class EntityExtend
             dic = _cache = new Dictionary<String, CacheItem>(StringComparer.OrdinalIgnoreCase);
         }
 
-        CacheItem ci;
+        CacheItem? ci;
         try
         {
             // 比较小几率出现多线程问题
-            if (dic.TryGetValue(key, out ci) && (func == null || !ci.Expired)) return ci.Value.ChangeType<T>();
+            if (dic.TryGetValue(key, out ci) && ci != null && (func == null || !ci.Expired)) return ci.Value.ChangeType<T>();
         }
         catch { }
 
         lock (dic)
         {
             // 只有指定func时才使用过期
-            if (dic.TryGetValue(key, out ci) && (func == null || !ci.Expired)) return ci.Value.ChangeType<T>();
+            if (dic.TryGetValue(key, out ci) && ci != null && (func == null || !ci.Expired)) return ci.Value.ChangeType<T>();
 
             if (func == null) return default;
 

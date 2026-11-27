@@ -149,31 +149,31 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
         return atts;
     }
 
-    String ICustomTypeDescriptor.GetClassName() => GetType().FullName;
+    String ICustomTypeDescriptor.GetClassName() => GetType().FullName ?? GetType().Name;
 
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "ICustomTypeDescriptor 属性描述符路径依赖运行时反射，裁剪/AOT 下可能不可用")]
-    String ICustomTypeDescriptor.GetComponentName() => TypeDescriptor.GetComponentName(this, true);
+    String ICustomTypeDescriptor.GetComponentName() => TypeDescriptor.GetComponentName(this, true) ?? GetType().Name;
 
     [RequiresUnreferencedCode("ICustomTypeDescriptor 属性描述符路径依赖运行时反射，裁剪/AOT 下可能不可用")]
-    TypeConverter ICustomTypeDescriptor.GetConverter() => TypeDescriptor.GetConverter(this, true);
+    TypeConverter ICustomTypeDescriptor.GetConverter() => TypeDescriptor.GetConverter(this, true)!;
 
     [RequiresUnreferencedCode("ICustomTypeDescriptor 属性描述符路径依赖运行时反射，裁剪/AOT 下可能不可用")]
-    EventDescriptor ICustomTypeDescriptor.GetDefaultEvent() => TypeDescriptor.GetDefaultEvent(this, true);
+    EventDescriptor ICustomTypeDescriptor.GetDefaultEvent() => TypeDescriptor.GetDefaultEvent(this, true)!;
 
     [RequiresUnreferencedCode("ICustomTypeDescriptor 属性描述符路径依赖运行时反射，裁剪/AOT 下可能不可用")]
-    PropertyDescriptor ICustomTypeDescriptor.GetDefaultProperty() => TypeDescriptor.GetDefaultProperty(this, true);
+    PropertyDescriptor ICustomTypeDescriptor.GetDefaultProperty() => TypeDescriptor.GetDefaultProperty(this, true)!;
 
     [RequiresUnreferencedCode("ICustomTypeDescriptor 属性描述符路径依赖运行时反射，裁剪/AOT 下可能不可用")]
-    Object ICustomTypeDescriptor.GetEditor(Type editorBaseType) => TypeDescriptor.GetEditor(this, editorBaseType, true);
+    Object ICustomTypeDescriptor.GetEditor(Type editorBaseType) => TypeDescriptor.GetEditor(this, editorBaseType, true)!;
 
     [RequiresUnreferencedCode("ICustomTypeDescriptor 属性描述符路径依赖运行时反射，裁剪/AOT 下可能不可用")]
-    EventDescriptorCollection ICustomTypeDescriptor.GetEvents(Attribute[] attributes) => TypeDescriptor.GetEvents(this, attributes, true);
+    EventDescriptorCollection ICustomTypeDescriptor.GetEvents(Attribute[]? attributes) => TypeDescriptor.GetEvents(this, attributes, true);
 
     [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "ICustomTypeDescriptor 属性描述符路径依赖运行时反射，裁剪/AOT 下可能不可用")]
     EventDescriptorCollection ICustomTypeDescriptor.GetEvents() => TypeDescriptor.GetEvents(this, true);
 
     [RequiresUnreferencedCode("ICustomTypeDescriptor 属性描述符路径依赖运行时反射，裁剪/AOT 下可能不可用")]
-    PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[] attributes)
+    PropertyDescriptorCollection ICustomTypeDescriptor.GetProperties(Attribute[]? attributes)
     {
         return Fix(GetType(), TypeDescriptor.GetProperties(this, attributes, true));
     }
@@ -184,7 +184,7 @@ public partial class EntityBase : ICustomTypeDescriptor/*, IEditableObject*/, IN
         return Fix(GetType(), TypeDescriptor.GetProperties(this, true));
     }
 
-    Object ICustomTypeDescriptor.GetPropertyOwner(PropertyDescriptor pd) => this;
+    Object ICustomTypeDescriptor.GetPropertyOwner(PropertyDescriptor? pd) => this;
 
     [RequiresUnreferencedCode("ICustomTypeDescriptor 属性描述符路径依赖运行时反射，裁剪/AOT 下可能不可用")]
     [UnconditionalSuppressMessage("Trimming", "IL2067", Justification = "componentType 为运行时实体类型，显示名修复属可选增强，AOT 下由应用侧保证实体类型成员保留")]

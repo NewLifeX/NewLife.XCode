@@ -74,7 +74,7 @@ public partial class MyDbCache
         {
             switch (name)
             {
-                case "Name": _Name = Convert.ToString(value); break;
+                case "Name": _Name = value?.ToString() ?? ""; break;
                 case "Value": _Value = value?.ToString(); break;
                 case "CreateTime": _CreateTime = value.ToDateTime(); break;
                 case "ExpiredTime": _ExpiredTime = value.ToDateTime(); break;
@@ -106,7 +106,7 @@ public partial class MyDbCache
         /// <summary>过期时间</summary>
         public static readonly Field ExpiredTime = FindByName("ExpiredTime");
 
-        static Field FindByName(String name) => Meta.Table.FindByName(name);
+        static Field FindByName(String name) => Meta.Table.FindByName(name)!;
     }
 
     /// <summary>取得数据缓存字段名称的快捷方式</summary>

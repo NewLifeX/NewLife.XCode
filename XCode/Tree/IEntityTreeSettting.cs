@@ -42,7 +42,7 @@ public class EntityTreeSetting<[DynamicallyAccessedMembers(DynamicallyAccessedMe
     #region 设置型属性
     private String? _Key;
     /// <summary>关联键名称，一般是主键，如ID</summary>
-    public virtual String Key { get { return _Key ??= Factory.Unique.Name; } set { _Key = value; } }
+    public virtual String Key { get { return _Key ??= Factory.Unique!.Name; } set { _Key = value; } }
 
     private String? _Parent;
     /// <summary>关联父键名，一般是Parent加主键，如ParentID</summary>
@@ -100,7 +100,7 @@ public class EntityTreeSetting<[DynamicallyAccessedMembers(DynamicallyAccessedMe
 
             return _Name = Factory.FieldNames.Contains("Name", StringComparer.OrdinalIgnoreCase)
                 ? "Name"
-                : Factory.Fields.Where(f => !f.IsIdentity).FirstOrDefault().Name;
+                : Factory.Fields.Where(f => !f.IsIdentity).FirstOrDefault()?.Name ?? "";
         }
         set { _Name = value; }
     }
@@ -109,7 +109,7 @@ public class EntityTreeSetting<[DynamicallyAccessedMembers(DynamicallyAccessedMe
     /// <summary>文本键名</summary>
     public virtual String Text
     {
-        get => _Text ??= Factory.FieldNames.Where(f => f.EqualIgnoreCase("Text", "Display", "DisplayName")).FirstOrDefault();
+        get => _Text ??= Factory.FieldNames.Where(f => f.EqualIgnoreCase("Text", "Display", "DisplayName")).FirstOrDefault() ?? "";
         set => _Text = value;
     }
 

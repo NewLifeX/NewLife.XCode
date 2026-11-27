@@ -7,7 +7,7 @@ namespace XCode.Model;
 /// <remarks>
 /// 送入一批主键，然后逐个查询使用
 /// </remarks>
-public class BatchFinder<TKey, TEntity> where TEntity : Entity<TEntity>, new()
+public class BatchFinder<TKey, TEntity> where TKey : notnull where TEntity : Entity<TEntity>, new()
 {
     #region 属性
     /// <summary>实体工厂</summary>
@@ -66,7 +66,7 @@ public class BatchFinder<TKey, TEntity> where TEntity : Entity<TEntity>, new()
         if (key is String str && str.IsNullOrEmpty()) return null;
         if (!_Keys.Contains(key)) throw new ArgumentOutOfRangeException(nameof(key), key, "error");
 
-        var uk = Factory.Table.FindByName(Factory.Unique) ?? throw new ArgumentNullException(nameof(Factory.Unique), L.T("There is no unique primary key."));
+        var uk = Factory.Table.FindByName(Factory.Unique?.Name ?? "") ?? throw new ArgumentNullException(nameof(Factory.Unique), L.T("There is no unique primary key."));
 
         // 向前查询
         while (_index < _Keys.Count)

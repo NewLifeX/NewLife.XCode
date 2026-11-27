@@ -108,7 +108,7 @@ public class SingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAcce
         }
     }
 
-    private void CheckExpire(Object state)
+    private void CheckExpire(Object? state)
     {
         var es = Entities;
         if (es == null || es.IsEmpty) return;
@@ -260,7 +260,7 @@ public class SingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAcce
     /// <returns></returns>
     public TEntity? this[TKey key] { get => GetItem(Entities, key); set => Add(key, value); }
 
-    private TEntity? GetItem<TKey2>(ConcurrentDictionary<TKey2, CacheItem> dic, TKey2 key)
+    private TEntity? GetItem<TKey2>(ConcurrentDictionary<TKey2, CacheItem> dic, TKey2 key) where TKey2 : notnull
     {
         // 为空的key，直接返回null，不进行缓存查找
         if (key == null) return null;

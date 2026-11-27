@@ -49,12 +49,12 @@ public static class EntityExtension
         foreach (var item in list2)
         {
             var k = item[key.Name];
-            if (!dic.Contains(k))
+            if (!dic.Contains(k!))
             {
                 if (!valueField.IsNullOrEmpty())
-                    dic.Add(k, item[valueField]);
+                    dic.Add(k!, item[valueField]);
                 else
-                    dic.Add(k, item);
+                    dic.Add(k!, item);
             }
         }
 
@@ -1522,7 +1522,7 @@ public static class EntityExtension
         {
             if (entity == null) continue;
 
-            csv.WriteLine(fields.Select(e => entity[e]));
+            csv.WriteLine(fields!.Select(e => entity[e]));
 
             count++;
         }
@@ -1633,7 +1633,7 @@ public static class EntityExtension
         var names = csv.ReadLine();
         if (names == null || names.Length == 0) yield break;
 
-        var fields = new FieldItem[names.Length];
+        var fields = new FieldItem?[names.Length];
         for (var i = 0; i < names.Length; i++)
         {
             fields[i] = factory.Fields.FirstOrDefault(e => names[i].EqualIgnoreCase(e.Name, e.DisplayName, e.ColumnName));

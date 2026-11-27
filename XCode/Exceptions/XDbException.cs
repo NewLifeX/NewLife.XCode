@@ -8,24 +8,24 @@ namespace XCode.Exceptions
     public class XDbException : XCodeException
     {
         /// <summary>数据库</summary>
-        public IDatabase Database { get; }
+        public IDatabase? Database { get; }
 
         #region 构造
         /// <summary>初始化</summary>
         /// <param name="db"></param>
-        public XDbException(IDatabase db) { Database = db; }
+        public XDbException(IDatabase? db) { Database = db; }
 
         /// <summary>初始化</summary>
         /// <param name="db"></param>
         /// <param name="message"></param>
-        public XDbException(IDatabase db, String message) : base(message) { Database = db; }
+        public XDbException(IDatabase? db, String message) : base(message) { Database = db; }
 
         /// <summary>初始化</summary>
         /// <param name="db"></param>
         /// <param name="message"></param>
         /// <param name="innerException"></param>
-        public XDbException(IDatabase db, String message, Exception innerException)
-            : base(message + (db != null ? "[DB:" + db.ConnName + "/" + db.Type.ToString() + "]" : null), innerException)
+        public XDbException(IDatabase? db, String message, Exception innerException)
+            : base(message + (db != null ? "[DB:" + db.ConnName + "/" + db.Type.ToString() + "]" : ""), innerException)
         {
             Database = db;
         }
@@ -33,8 +33,8 @@ namespace XCode.Exceptions
         /// <summary>初始化</summary>
         /// <param name="db"></param>
         /// <param name="innerException"></param>
-        public XDbException(IDatabase db, Exception innerException)
-            : base((innerException?.Message) + (db != null ? "[DB:" + db.ConnName + "/" + db.Type.ToString() + "]" : null), innerException)
+        public XDbException(IDatabase? db, Exception innerException)
+            : base(innerException.Message + (db != null ? "[DB:" + db.ConnName + "/" + db.Type.ToString() + "]" : ""), innerException)
         {
             Database = db;
         }

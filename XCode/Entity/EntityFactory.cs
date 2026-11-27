@@ -232,7 +232,7 @@ public static class EntityFactory
         foreach (var type in typeof(IEntity).GetAllSubclasses())
         {
             // 实体类的基类必须是泛型，避免多级继承导致误判
-            if (!type.BaseType.IsGenericType) continue;
+            if (type.BaseType?.IsGenericType != true) continue;
 
             var ti = CreateTableItem(type);
             var name = ti.ConnName;
@@ -330,7 +330,7 @@ public static class EntityFactory
             DAL.WriteLog("Initializing entity classes and data tables for all database connections");
 
             // 加载所有实体类
-            var types = typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType.IsGenericType).ToList();
+            var types = typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType?.IsGenericType == true).ToList();
             var connNames = new List<String>();
             foreach (var type in types)
             {
@@ -397,7 +397,7 @@ public static class EntityFactory
             var ts = new List<Task>();
 
             // 加载所有实体类
-            var types = typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType.IsGenericType).ToList();
+            var types = typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType?.IsGenericType == true).ToList();
             var connNames = new List<String>();
             foreach (var type in types)
             {
@@ -492,7 +492,7 @@ public static class EntityFactory
         try
         {
             // 加载所有实体类
-            types ??= typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType.IsGenericType).ToList();
+            types ??= typeof(IEntity).GetAllSubclasses().Where(e => e.BaseType?.IsGenericType == true).ToList();
 
             // 初始化工厂
             var facts = new List<IEntityFactory>();

@@ -126,7 +126,7 @@ public abstract class CacheBase : DisposeBase
     private static readonly ConcurrentDictionary<String, Action> _dic = new();
     private static Boolean _NextShow;
 
-    private static void ShowCacheStat(Object state)
+    private static void ShowCacheStat(Object? state)
     {
         if (!_NextShow) return;
 

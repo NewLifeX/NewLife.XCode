@@ -286,7 +286,7 @@ public partial class Entity<TEntity>
                 targets ??= factory.FindAll();
 
                 // 主键字典
-                var pkDict = uk == null ? null : targets.ToDictionary(e => e[uk.Name]);
+                var pkDict = uk == null ? null : targets.ToDictionary(e => e[uk.Name]!);
 
                 // 唯一索引
                 var map = new Dictionary<String, IEntity>();
@@ -311,7 +311,7 @@ public partial class Entity<TEntity>
                     // 使用主键匹配，如果想指定使用唯一索引匹配，调用前清空主键值
                     else if (uk != null && !Helper.IsNullKey(model[uk.Name], uk.Type))
                     {
-                        pkDict?.TryGetValue(model[uk.Name], out old);
+                        pkDict?.TryGetValue(model[uk.Name]!, out old);
                     }
                     else if (idxFields != null)
                     {
@@ -569,7 +569,7 @@ public partial class Entity<TEntity>
                     if (TableName.StartsWith("#"))
                     {
                         var type = EntityType;
-                        st.ParseEmbedded(type.Assembly, type.Namespace, TableName.TrimStart('#') + ".sql");
+                        st.ParseEmbedded(type.Assembly, type.Namespace + "", TableName.TrimStart('#') + ".sql");
                     }
 
                     _Template = st;

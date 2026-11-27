@@ -41,7 +41,7 @@ namespace XCode.Extension
         /// <summary>根据名称查找</summary>
         /// <param name="name">名称</param>
         /// <returns>实体对象</returns>
-        public static MyDbCache FindByName(String name)
+        public static MyDbCache? FindByName(String name)
         {
             if (name.IsNullOrEmpty()) return null;
 

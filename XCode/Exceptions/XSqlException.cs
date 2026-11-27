@@ -66,12 +66,16 @@ public class XSqlException : XDbSessionException
     /// <summary>从序列化信息中读取Sql</summary>
     /// <param name="info"></param>
     /// <param name="context"></param>
+#pragma warning disable CS0672 // 基类序列化钩子在 .NET 8+ 已过时，保留重写以兼容旧框架
     public override void GetObjectData(SerializationInfo info, StreamingContext context)
     {
+#pragma warning disable SYSLIB0051
         base.GetObjectData(info, context);
+#pragma warning restore SYSLIB0051
         //info.AddValue("sql", Sql);
         // 必须明确指定类型，否则可能因为Sql==null，而导致内部当作Object写入
         info.AddValue("sql", Sql, typeof(String));
     }
+#pragma warning restore CS0672
     #endregion
 }

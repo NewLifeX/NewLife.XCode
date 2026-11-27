@@ -778,7 +778,7 @@ public class EntityPersistence : IEntityPersistence
 
         // 标识列作为删除关键字
         var exp = GetPrimaryCondition(entity);
-        var ps = !db.UseParameter ? null : new Dictionary<String, Object>();
+        var ps = !db.UseParameter ? null : new Dictionary<String, Object?>();
         var def = exp?.GetString(db, ps);
         if (def.IsNullOrEmpty()) return null;
 
@@ -838,7 +838,7 @@ public class EntityPersistence : IEntityPersistence
         value = old;
 
         // 计算累加数据
-        switch (cur.GetType().GetTypeCode())
+        switch (cur!.GetType().GetTypeCode())
         {
             case TypeCode.Char:
             case TypeCode.Byte:
@@ -861,7 +861,7 @@ public class EntityPersistence : IEntityPersistence
                 break;
             case TypeCode.Single:
                 {
-                    var v = (Single)cur - (Single)old;
+                    var v = (Single)cur - (Single)old!;
                     if (v < 0)
                     {
                         v = -v;
@@ -872,7 +872,7 @@ public class EntityPersistence : IEntityPersistence
                 break;
             case TypeCode.Double:
                 {
-                    var v = (Double)cur - (Double)old;
+                    var v = (Double)cur - (Double)old!;
                     if (v < 0)
                     {
                         v = -v;
@@ -883,7 +883,7 @@ public class EntityPersistence : IEntityPersistence
                 break;
             case TypeCode.Decimal:
                 {
-                    var v = (Decimal)cur - (Decimal)old;
+                    var v = (Decimal)cur - (Decimal)old!;
                     if (v < 0)
                     {
                         v = -v;

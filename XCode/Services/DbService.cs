@@ -96,7 +96,7 @@ public class DbService
         var ps = ConvertToDictionary(parameters);
         var dps = ps != null ? dal.Db.CreateParameters(ps) : null;
 
-        return dal.Execute(sql, System.Data.CommandType.Text, dps);
+        return dal.Execute(sql, System.Data.CommandType.Text, dps ?? []);
     }
 
     /// <summary>执行插入语句并返回新增行的自动编号</summary>
@@ -112,7 +112,7 @@ public class DbService
         var ps = ConvertToDictionary(parameters);
         var dps = ps != null ? dal.Db.CreateParameters(ps) : null;
 
-        return dal.InsertAndGetIdentity(sql, System.Data.CommandType.Text, dps);
+        return dal.InsertAndGetIdentity(sql, System.Data.CommandType.Text, dps ?? []);
     }
 
     /// <summary>快速查询单表记录数</summary>

@@ -8,24 +8,24 @@ namespace XCode.Exceptions
     public class XDbSessionException : XDbException
     {
         /// <summary>数据库会话</summary>
-        public IDbSession Session { get; }
+        public IDbSession? Session { get; }
 
         #region 构造
         /// <summary>初始化</summary>
         /// <param name="session"></param>
-        public XDbSessionException(IDbSession session) : base(session?.Database) { Session = session; }
+        public XDbSessionException(IDbSession? session) : base(session?.Database) { Session = session; }
 
         /// <summary>初始化</summary>
         /// <param name="session"></param>
         /// <param name="message"></param>
-        public XDbSessionException(IDbSession session, String message) : base(session?.Database, message) { Session = session; }
+        public XDbSessionException(IDbSession? session, String message) : base(session?.Database, message) { Session = session; }
 
         /// <summary>初始化</summary>
         /// <param name="session"></param>
         /// <param name="message"></param>
         /// <param name="innerException"></param>
-        public XDbSessionException(IDbSession session, String message, Exception innerException)
-            : base(session.Database, message, innerException)
+        public XDbSessionException(IDbSession? session, String message, Exception innerException)
+            : base(session?.Database, message, innerException)
         {
             Session = session;
         }
@@ -33,8 +33,8 @@ namespace XCode.Exceptions
         /// <summary>初始化</summary>
         /// <param name="session"></param>
         /// <param name="innerException"></param>
-        public XDbSessionException(IDbSession session, Exception innerException)
-            : base(session.Database, innerException)
+        public XDbSessionException(IDbSession? session, Exception innerException)
+            : base(session?.Database, innerException)
         {
             Session = session;
         }

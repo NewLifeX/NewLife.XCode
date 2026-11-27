@@ -269,7 +269,7 @@ public class DbCache : Cache
     private TimerX? _clearTimer;
 
     /// <summary>移除过期的缓存项</summary>
-    void RemoveNotAlive(Object state)
+    void RemoveNotAlive(Object? state)
     {
         // 这里先计算，性能很重要
         var now = TimerX.Now;

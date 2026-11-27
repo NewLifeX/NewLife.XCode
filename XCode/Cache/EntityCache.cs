@@ -186,9 +186,9 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
     public TEntity Find(Predicate<TEntity> match)
     {
         var list = Entities;
-        if (list is List<TEntity> list2) return list2.Find(match);
+        if (list is List<TEntity> list2) return list2.Find(match)!;
 
-        return list.FirstOrDefault(e => match(e));
+        return list.FirstOrDefault(e => match(e))!;
     }
 
     /// <summary>检索与指定谓词定义的条件匹配的所有元素。</summary>
@@ -270,6 +270,9 @@ public class EntityCache<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTy
 
         try
         {
+            // 实体缓存保存整表原始数据，加载期间抑制过滤器；缓存读取本身不过滤，需要按租户/数据权限裁剪时请直接查库
+            using var scope = EntityFilterScope.SuppressAll();
+
             return Invoke<Object, IList<TEntity>>(s => FillListMethod(), null!);
         }
         catch (Exception ex)

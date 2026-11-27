@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -959,13 +959,32 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns></returns>
-    public virtual DbTable Query(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
+    public virtual DbTable Query(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows) => Query(builder, startRowIndex, maximumRows, DataMethod.FindAll);
+
+    /// <summary>执行SQL查询，返回记录集</summary>
+    /// <param name="builder">SQL语句</param>
+    /// <param name="startRowIndex">开始行，0表示第一行</param>
+    /// <param name="maximumRows">最大返回行数，0表示所有行</param>
+    /// <param name="action">查询操作来源</param>
+    /// <returns></returns>
+    public virtual DbTable Query(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows, DataMethod action)
     {
         InitData();
 
-        FixBuilder(builder);
+        var factory = Factory;
+        var filters = factory.Filters;
 
-        return Dal.Query(builder, startRowIndex, maximumRows);
+        var context = new EntityContext();
+        context.Prepare(action, factory, this);
+        context.Builder = builder;
+        filters.Execute(context, c =>
+        {
+            var b = c.Builder ?? builder;
+            FixBuilder(b);
+            c.Result = Dal.Query(b, startRowIndex, maximumRows);
+        });
+
+        return context.Result as DbTable ?? new DbTable();
     }
 
     /// <summary>执行SQL查询，返回记录集</summary>
@@ -975,7 +994,20 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     {
         InitData();
 
-        return Dal.Query(sql);
+        var factory = Factory;
+        var filters = factory.Filters;
+
+        var context = new EntityContext();
+        context.Prepare(DataMethod.FindSQL, factory, this);
+        context.Sql = sql;
+        filters.Execute(context, c =>
+        {
+            var sql2 = c.Sql ?? sql;
+            c.Result = Dal.Query(sql2);
+            c.Sql = sql2;
+        });
+
+        return context.Result as DbTable ?? new DbTable();
     }
 
     /// <summary>查询记录数</summary>
@@ -985,9 +1017,20 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     {
         InitData();
 
-        FixBuilder(builder);
+        var factory = Factory;
+        var filters = factory.Filters;
 
-        return Dal.SelectCount(builder);
+        var context = new EntityContext();
+        context.Prepare(DataMethod.FindCount, factory, this);
+        context.Builder = builder;
+        filters.Execute(context, c =>
+        {
+            var b = c.Builder ?? builder;
+            FixBuilder(b);
+            c.Result = Dal.SelectCount(b);
+        });
+
+        return context.Result is Int32 count ? count : context.AffectedRows;
     }
 
     /// <summary>查询记录数</summary>
@@ -997,7 +1040,19 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     {
         InitData();
 
-        return Dal.SelectCount(sql, CommandType.Text);
+        var factory = Factory;
+        var filters = factory.Filters;
+
+        var context = new EntityContext();
+        context.Prepare(DataMethod.FindCount, factory, this);
+        context.Sql = sql;
+        filters.Execute(context, c =>
+        {
+            var sql2 = c.Sql ?? sql;
+            c.Result = Dal.SelectCount(sql2, CommandType.Text);
+        });
+
+        return context.Result is Int32 count ? count : context.AffectedRows;
     }
 
     private void FixBuilder(SelectBuilder builder)
@@ -1041,21 +1096,55 @@ public class EntitySession<[DynamicallyAccessedMembers(DynamicallyAccessedMember
     /// <param name="startRowIndex">开始行，0表示第一行</param>
     /// <param name="maximumRows">最大返回行数，0表示所有行</param>
     /// <returns></returns>
-    public virtual Task<DbTable> QueryAsync(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows)
+    public virtual Task<DbTable> QueryAsync(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows) => QueryAsync(builder, startRowIndex, maximumRows, DataMethod.FindAll);
+
+    /// <summary>执行SQL查询，返回记录集</summary>
+    /// <param name="builder">SQL语句</param>
+    /// <param name="startRowIndex">开始行，0表示第一行</param>
+    /// <param name="maximumRows">最大返回行数，0表示所有行</param>
+    /// <param name="action">查询操作来源</param>
+    /// <returns></returns>
+    public virtual async Task<DbTable> QueryAsync(SelectBuilder builder, Int64 startRowIndex, Int64 maximumRows, DataMethod action)
     {
         InitData();
 
-        return Dal.QueryAsync(builder, startRowIndex, maximumRows);
+        var factory = Factory;
+        var filters = factory.Filters;
+
+        var context = new EntityContext();
+        context.Prepare(action, factory, this);
+        context.Builder = builder;
+        await filters.ExecuteAsync(context, async c =>
+        {
+            var b = c.Builder ?? builder;
+            FixBuilder(b);
+            c.Result = await Dal.QueryAsync(b, startRowIndex, maximumRows).ConfigureAwait(false);
+        }).ConfigureAwait(false);
+
+        return context.Result as DbTable ?? new DbTable();
     }
 
     /// <summary>查询记录数</summary>
     /// <param name="builder">查询生成器</param>
     /// <returns>记录数</returns>
-    public virtual Task<Int64> QueryCountAsync(SelectBuilder builder)
+    public virtual async Task<Int64> QueryCountAsync(SelectBuilder builder)
     {
         InitData();
 
-        return Dal.SelectCountAsync(builder);
+        var factory = Factory;
+        var filters = factory.Filters;
+
+        var context = new EntityContext();
+        context.Prepare(DataMethod.FindCount, factory, this);
+        context.Builder = builder;
+        await filters.ExecuteAsync(context, async c =>
+        {
+            var b = c.Builder ?? builder;
+            FixBuilder(b);
+            c.Result = await Dal.SelectCountAsync(b).ConfigureAwait(false);
+        }).ConfigureAwait(false);
+
+        return context.Result is Int64 count ? count : context.Result is Int32 count2 ? count2 : context.AffectedRows;
     }
 
     /// <summary>执行</summary>

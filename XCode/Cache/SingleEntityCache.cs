@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -315,6 +315,7 @@ public class SingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAcce
         {
             // 开始更新数据，然后加入缓存
             var mkey = (TKey)(Object)key!;
+            using var scope = EntityFilterScope.SuppressAll();
             var entity = Invoke(FindKeyMethod, mkey);
             if (entity == null) return null;
 
@@ -335,6 +336,7 @@ public class SingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAcce
         try
         {
             // 开始更新数据，然后加入缓存
+            using var scope = EntityFilterScope.SuppressAll();
             var entity = Invoke(FindSlaveKeyMethod!, key + "");
             if (entity == null) return null;
 
@@ -399,6 +401,7 @@ public class SingleEntityCache<TKey, [DynamicallyAccessedMembers(DynamicallyAcce
         try
         {
             // 更新过期缓存，在原连接名表名里面获取
+            using var scope = EntityFilterScope.SuppressAll();
             var entity = Invoke(FindKeyMethod, item.Key);
             if (entity != null)
                 item.SetEntity(entity, Expire);

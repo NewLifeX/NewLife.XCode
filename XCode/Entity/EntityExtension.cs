@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
@@ -123,44 +123,63 @@ public static class EntityExtension
     /// <returns></returns>
     public static Int32 Insert<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
-        // 避免列表内实体对象为空
         var array = list.AsArray();
-        var entity = array.FirstOrDefault(e => e != null);
-        if (entity == null) return 0;
+        if (array.Length == 0) return 0;
 
-        var fact = entity.GetType().AsFactory();
-        var session2 = session ?? fact.Session;
-
-        // Oracle/MySql批量插入
-        if (!session2.Dal.Capabilities.HasFlag(DatabaseCapability.BulkInsert))
-            return DoAction(array, useTransition, e => e.Insert(), session2);
-
-        // 必须顺序处理，因为Valid内可能生成雪花Id，需要确保数据插入的顺序一致
-        var list3 = new List<T>(array.Length);
-        foreach (var item in array)
+        Int32 Core(T[] source)
         {
-            if (item is EntityBase entity2 && entity2.Valid(DataMethod.Insert))
-                list3.Add(item);
+            // 避免列表内实体对象为空
+            var entity = source.FirstOrDefault(e => e != null);
+            if (entity == null) return 0;
+
+            var fact = entity.GetType().AsFactory();
+            var session2 = session ?? fact.Session;
+
+            // Oracle/MySql批量插入
+            if (!session2.Dal.Capabilities.HasFlag(DatabaseCapability.BulkInsert))
+                return DoAction(source, useTransition, e => e.Insert(), session2);
+
+            // 必须顺序处理，因为Valid内可能生成雪花Id，需要确保数据插入的顺序一致
+            var list3 = new List<T>(source.Length);
+            foreach (var item in source)
+            {
+                if (item is EntityBase entity2 && entity2.Valid(DataMethod.Insert))
+                    list3.Add(item);
+            }
+
+            // 如果未指定会话，需要支持自动分表，并且需要考虑实体列表可能落入不同库表
+            if (session != null || fact.ShardPolicy == null) return BatchInsert(list3, option: null, session2);
+
+            //DefaultSpan.Current?.AppendTag($"ShardPolicy: {fact.ShardPolicy.Field}");
+
+            // 提前计算分表，按库表名分组
+            var dic = list3.GroupBy(e =>
+            {
+                var shard = fact.ShardPolicy.Shard(e);
+                return fact.GetSession(shard?.ConnName ?? session2.ConnName, shard?.TableName ?? session2.TableName);
+            });
+            // 按库表分组执行批量插入
+            var rs = 0;
+            foreach (var item in dic)
+            {
+                rs += BatchInsert(item, option: null, item.Key);
+            }
+            return rs;
         }
 
-        // 如果未指定会话，需要支持自动分表，并且需要考虑实体列表可能落入不同库表
-        if (session != null || fact.ShardPolicy == null) return BatchInsert(list3, option: null, session2);
+        var entity0 = array.FirstOrDefault(e => e != null);
+        if (entity0 == null) return 0;
 
-        //DefaultSpan.Current?.AppendTag($"ShardPolicy: {fact.ShardPolicy.Field}");
-
-        // 提前计算分表，按库表名分组
-        var dic = list3.GroupBy(e =>
+        var fact0 = entity0.GetType().AsFactory();
+        var context = CreateContext(DataMethod.Insert, fact0, session ?? fact0.Session);
+        context.Entities = array.Where(e => e != null).Cast<IEntity>().ToList();
+        fact0.Filters.Execute(context, c =>
         {
-            var shard = fact.ShardPolicy.Shard(e);
-            return fact.GetSession(shard?.ConnName ?? session2.ConnName, shard?.TableName ?? session2.TableName);
+            using var scope = EntityPipeline.NestedAction();
+            c.AffectedRows = Core(c.Entities!.Cast<T>().ToArray());
         });
-        // 按库表分组执行批量插入
-        var rs = 0;
-        foreach (var item in dic)
-        {
-            rs += BatchInsert(item, option: null, item.Key);
-        }
-        return rs;
+
+        return context.AffectedRows;
     }
 
     /// <summary>把整个集合更新到数据库</summary>
@@ -170,19 +189,38 @@ public static class EntityExtension
     /// <returns></returns>
     public static Int32 Update<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
-        // 避免列表内实体对象为空
         var array = list.AsArray();
-        var entity = array.FirstOrDefault(e => e != null);
-        if (entity == null) return 0;
+        if (array.Length == 0) return 0;
 
-        var fact = entity.GetType().AsFactory();
-        session ??= fact.Session;
+        Int32 Core(T[] source)
+        {
+            // 避免列表内实体对象为空
+            var entity = source.FirstOrDefault(e => e != null);
+            if (entity == null) return 0;
 
-        // 支持批量Update的数据库（Oracle/MySql NewLife驱动等）直接批量更新
-        // BatchUpdate 内部已处理：跳过无脏数据实体、Dirtys 并集取 UpdateColumns，无需在此分组
-        return session.Dal.Capabilities.HasFlag(DatabaseCapability.BulkUpdate) && array.Length > 1
-            ? BatchUpdate(array.Valid(false), null, session)
-            : DoAction(array, useTransition, e => e.Update(), session);
+            var fact = entity.GetType().AsFactory();
+            var session2 = session ?? fact.Session;
+
+            // 支持批量Update的数据库（Oracle/MySql NewLife驱动等）直接批量更新
+            // BatchUpdate 内部已处理：跳过无脏数据实体、Dirtys 并集取 UpdateColumns，无需在此分组
+            return session2.Dal.Capabilities.HasFlag(DatabaseCapability.BulkUpdate) && source.Length > 1
+                ? BatchUpdate(source.Valid(false), null, session2)
+                : DoAction(source, useTransition, e => e.Update(), session2);
+        }
+
+        var entity0 = array.FirstOrDefault(e => e != null);
+        if (entity0 == null) return 0;
+
+        var fact0 = entity0.GetType().AsFactory();
+        var context = CreateContext(DataMethod.Update, fact0, session ?? fact0.Session);
+        context.Entities = array.Where(e => e != null).Cast<IEntity>().ToList();
+        fact0.Filters.Execute(context, c =>
+        {
+            using var scope = EntityPipeline.NestedAction();
+            c.AffectedRows = Core(c.Entities!.Cast<T>().ToArray());
+        });
+
+        return context.AffectedRows;
     }
 
     /// <summary>把整个保存更新到数据库</summary>
@@ -216,41 +254,60 @@ public static class EntityExtension
        * 3，new, Upsert()
        */
 
-        // 避免列表内实体对象为空
         var array = list.AsArray();
-        var entity = array.FirstOrDefault(e => e != null);
-        if (entity == null) return 0;
+        if (array.Length == 0) return 0;
 
-        var rs = 0;
-        var fact = entity.GetType().AsFactory();
-        session ??= fact.Session;
-
-        // Oracle/MySql批量插入
-        var caps = session.Dal.Capabilities;
-        if (array.Length > 1 && (caps.HasFlag(DatabaseCapability.BulkInsert) || caps.HasFlag(DatabaseCapability.BulkUpdate) || caps.HasFlag(DatabaseCapability.BulkUpsert)))
+        Int32 Core(T[] source)
         {
-            // 根据是否来自数据库，拆分为两组
-            var (updates, others) = Split(array);
-            if (caps.HasFlag(DatabaseCapability.BulkUpdate))
+            // 避免列表内实体对象为空
+            var entity = source.FirstOrDefault(e => e != null);
+            if (entity == null) return 0;
+
+            var rs = 0;
+            var fact = entity.GetType().AsFactory();
+            var session2 = session ?? fact.Session;
+
+            // Oracle/MySql批量插入
+            var caps = session2.Dal.Capabilities;
+            if (source.Length > 1 && (caps.HasFlag(DatabaseCapability.BulkInsert) || caps.HasFlag(DatabaseCapability.BulkUpdate) || caps.HasFlag(DatabaseCapability.BulkUpsert)))
             {
-                // updates 来自数据库，对应 Update 操作，isNew=false
-                if (valid) updates = updates.Valid(false);
-                rs += BatchUpdate(updates, null, session);
-                array = [];
-            }
-            else
-            {
-                array = updates.ToArray();
+                // 根据是否来自数据库，拆分为两组
+                var (updates, others) = Split(source);
+                if (caps.HasFlag(DatabaseCapability.BulkUpdate))
+                {
+                    // updates 来自数据库，对应 Update 操作，isNew=false
+                    if (valid) updates = updates.Valid(false);
+                    rs += BatchUpdate(updates, null, session2);
+                    source = [];
+                }
+                else
+                {
+                    source = updates.ToArray();
+                }
+
+                if (valid) others = others.Valid(true);
+                rs += BatchSave(session2, others, null);
             }
 
-            if (valid) others = others.Valid(true);
-            rs += BatchSave(session, others, null);
+            if (valid)
+                return rs + DoAction(source, useTransition, e => e.Save(), session2);
+            else
+                return rs + DoAction(source, useTransition, e => e.SaveWithoutValid(), session2);
         }
 
-        if (valid)
-            return rs + DoAction(array, useTransition, e => e.Save(), session);
-        else
-            return rs + DoAction(array, useTransition, e => e.SaveWithoutValid(), session);
+        var entity0 = array.FirstOrDefault(e => e != null);
+        if (entity0 == null) return 0;
+
+        var fact0 = entity0.GetType().AsFactory();
+        var context = CreateContext(DataMethod.Upsert, fact0, session ?? fact0.Session);
+        context.Entities = array.Where(e => e != null).Cast<IEntity>().ToList();
+        fact0.Filters.Execute(context, c =>
+        {
+            using var scope = EntityPipeline.NestedAction();
+            c.AffectedRows = Core(c.Entities!.Cast<T>().ToArray());
+        });
+
+        return context.AffectedRows;
     }
 
     /// <summary>拆分为来自数据库的更新和其它的Upsert</summary>
@@ -324,51 +381,70 @@ public static class EntityExtension
     /// <returns></returns>
     public static Int32 Delete<T>(this IEnumerable<T> list, Boolean? useTransition = null, IEntitySession? session = null) where T : IEntity
     {
-        // 避免列表内实体对象为空
         var array = list.AsArray();
-        var entity = array.FirstOrDefault(e => e != null);
-        if (entity == null) return 0;
+        if (array.Length == 0) return 0;
 
-        var fact = entity.GetType().AsFactory();
-        session ??= fact.Session;
-
-        // 单一主键，采用批量操作
-        var pks = fact.Table.PrimaryKeys;
-        if (pks != null && pks.Length == 1 && array.Length > 1)
+        Int32 Core(T[] source)
         {
-            var pk = pks[0];
-            var count = 0;
-            var rs = 0;
-            var ks = new List<Object>();
-            var sql = $"Delete From {session.FormatedTableName} Where ";
-            foreach (var item in array)
+            // 避免列表内实体对象为空
+            var entity = source.FirstOrDefault(e => e != null);
+            if (entity == null) return 0;
+
+            var fact = entity.GetType().AsFactory();
+            var session2 = session ?? fact.Session;
+
+            // 单一主键，采用批量操作
+            var pks = fact.Table.PrimaryKeys;
+            if (pks != null && pks.Length == 1 && source.Length > 1)
             {
-                if (item == null) continue;
-
-                var val = item[pk.Name];
-                if (val == null) continue;
-
-                ks.Add(val);
-                count++;
-
-                // 分批执行
-                if (count >= 1000)
+                var pk = pks[0];
+                var count = 0;
+                var rs = 0;
+                var ks = new List<Object>();
+                var sql = $"Delete From {session2.FormatedTableName} Where ";
+                foreach (var item in source)
                 {
-                    rs += session.Execute(sql + pk.In(ks));
+                    if (item == null) continue;
 
-                    ks.Clear();
-                    count = 0;
+                    var val = item[pk.Name];
+                    if (val == null) continue;
+
+                    ks.Add(val);
+                    count++;
+
+                    // 分批执行
+                    if (count >= 1000)
+                    {
+                        rs += session2.Execute(sql + pk.In(ks));
+
+                        ks.Clear();
+                        count = 0;
+                    }
                 }
-            }
-            if (count > 0)
-            {
-                rs += session.Execute(sql + pk.In(ks));
+                if (count > 0)
+                {
+                    rs += session2.Execute(sql + pk.In(ks));
+                }
+
+                return rs;
             }
 
-            return rs;
+            return DoAction(source, useTransition, e => e.Delete(), session2);
         }
 
-        return DoAction(array, useTransition, e => e.Delete(), session);
+        var entity0 = array.FirstOrDefault(e => e != null);
+        if (entity0 == null) return 0;
+
+        var fact0 = entity0.GetType().AsFactory();
+        var context = CreateContext(DataMethod.Delete, fact0, session ?? fact0.Session);
+        context.Entities = array.Where(e => e != null).Cast<IEntity>().ToList();
+        fact0.Filters.Execute(context, c =>
+        {
+            using var scope = EntityPipeline.NestedAction();
+            c.AffectedRows = Core(c.Entities!.Cast<T>().ToArray());
+        });
+
+        return context.AffectedRows;
     }
 
     private static Int32 DoAction<T>(this IEnumerable<T> list, Boolean? useTransition, Func<T, Int32> func, IEntitySession session) where T : IEntity
@@ -434,7 +510,6 @@ public static class EntityExtension
         if (entity == null) return rs;
 
         var fact = entity.GetType().AsFactory();
-        var modules = fact.Interceptors;
 
         // 验证对象
         foreach (IEntity item in array)
@@ -497,6 +572,33 @@ public static class EntityExtension
         return BatchInsert(list, option, session);
     }
 
+    /// <summary>执行批量过滤器管道。内部调用原始批量实现，避免内层单条操作重复进入过滤器</summary>
+    private static Int32 ExecuteBatch<T>(IEnumerable<T> list, DataMethod action, Func<IEnumerable<T>, IEntitySession, Int32> core, IEntitySession? session) where T : IEntity
+    {
+        var array = list.RemoveNull();
+        if (array.Count == 0) return 0;
+
+        var fact = array[0].GetType().AsFactory();
+        var session2 = session ?? fact.Session;
+        var context = CreateContext(action, fact, session2);
+        context.Entities = array.Cast<IEntity>().ToList();
+        fact.Filters.Execute(context, c =>
+        {
+            using var scope = EntityPipeline.NestedAction();
+            c.AffectedRows = core(c.Entities!.Cast<T>(), session2);
+        });
+
+        return context.AffectedRows;
+    }
+
+    private static EntityContext CreateContext(DataMethod action, IEntityFactory factory, IEntitySession session)
+    {
+        var context = new EntityContext();
+        context.Prepare(action, factory, session);
+
+        return context;
+    }
+
     /// <summary>批量插入</summary>
     /// <typeparam name="T">实体类型</typeparam>
     /// <param name="list">实体列表</param>
@@ -507,6 +609,9 @@ public static class EntityExtension
     /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
     /// </returns>
     public static Int32 BatchInsert<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
+        => ExecuteBatch(list, DataMethod.Insert, (source, session2) => BatchInsertCore(source, option, session2), session);
+
+    private static Int32 BatchInsertCore<T>(IEnumerable<T> list, BatchOption? option, IEntitySession? session) where T : IEntity
     {
         var list2 = list.RemoveNull();
         if (list2.Count == 0) return 0;
@@ -579,6 +684,9 @@ public static class EntityExtension
     /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
     /// </returns>
     public static Int32 BatchInsertIgnore<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
+        => ExecuteBatch(list, DataMethod.Insert, (source, session2) => BatchInsertIgnoreCore(source, option, session2), session);
+
+    private static Int32 BatchInsertIgnoreCore<T>(IEnumerable<T> list, BatchOption? option, IEntitySession? session) where T : IEntity
     {
         var list2 = list.RemoveNull();
         if (list2.Count == 0) return 0;
@@ -651,6 +759,9 @@ public static class EntityExtension
     /// MySQL：当批量插入操作中有一条记录无法正常写入，则本次写入的所有数据都不会被写入（可以理解为自带事务）
     /// </returns>
     public static Int32 BatchReplace<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
+        => ExecuteBatch(list, DataMethod.Replace, (source, session2) => BatchReplaceCore(source, option, session2), session);
+
+    private static Int32 BatchReplaceCore<T>(IEnumerable<T> list, BatchOption? option, IEntitySession? session) where T : IEntity
     {
         var list2 = list.RemoveNull();
         if (list2.Count == 0) return 0;
@@ -729,6 +840,9 @@ public static class EntityExtension
     /// <param name="session">指定会话，分表分库时必用</param>
     /// <returns></returns>
     public static Int32 BatchUpdate<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
+        => ExecuteBatch(list, DataMethod.Update, (source, session2) => BatchUpdateCore(source, option, session2), session);
+
+    private static Int32 BatchUpdateCore<T>(IEnumerable<T> list, BatchOption? option, IEntitySession? session) where T : IEntity
     {
         var list2 = list.RemoveNull();
         if (list2.Count == 0) return 0;
@@ -892,6 +1006,9 @@ public static class EntityExtension
     /// Oracle返回值：无论是插入还是更新返回的都始终为-1
     /// </returns>
     public static Int32 BatchUpsert<T>(this IEnumerable<T> list, BatchOption? option = null, IEntitySession? session = null) where T : IEntity
+        => ExecuteBatch(list, DataMethod.Upsert, (source, session2) => BatchUpsertCore(source, option, session2), session);
+
+    private static Int32 BatchUpsertCore<T>(IEnumerable<T> list, BatchOption? option, IEntitySession? session) where T : IEntity
     {
         var list2 = list.RemoveNull();
         if (list2.Count == 0) return 0;
@@ -1073,6 +1190,21 @@ public static class EntityExtension
     /// 简单来说：如果Insert 成功则返回1，如果需要执行的是update 则返回2，
     /// </returns>
     public static Int32 Upsert(this IEntity entity, BatchOption? option = null, IEntitySession? session = null)
+    {
+        var fact = entity.GetType().AsFactory();
+        var session2 = session ?? fact.Session;
+        var context = CreateContext(DataMethod.Upsert, fact, session2);
+        context.Entity = entity;
+        fact.Filters.Execute(context, c =>
+        {
+            using var scope = EntityPipeline.NestedAction();
+            c.AffectedRows = UpsertCore(entity, option, session2);
+        });
+
+        return context.AffectedRows;
+    }
+
+    private static Int32 UpsertCore(IEntity entity, BatchOption? option, IEntitySession? session)
     {
         option ??= new BatchOption();
 

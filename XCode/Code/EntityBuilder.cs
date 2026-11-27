@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.RegularExpressions;
 using NewLife.Collections;
 using NewLife.Log;
@@ -601,7 +601,7 @@ public class EntityBuilder : ClassBuilder
 
             name = $"{name}<{ClassName}>";
 
-            // 多租户业务类实现租户作用域接口，便于 TenantInterceptor 生效
+            // 多租户业务类实现租户作用域接口，便于 TenantFilter 生效
             if (Table.Columns.Any(e => e.Name.EqualIgnoreCase("TenantId")) && !hasTenantScope)
                 name += ", ITenantScope";
         }
@@ -660,7 +660,7 @@ public class EntityBuilder : ClassBuilder
         return base.Save(ext, overwrite, chineseFileName); ;
     }
 
-    /// <summary>升级旧的模块类名为新的拦截器类名</summary>
+    /// <summary>升级旧版模块/拦截器类名为最新的过滤器类名</summary>
     /// <param name="fileName">文件路径</param>
     /// <returns>是否进行了替换</returns>
     protected virtual Boolean UpgradeModuleNames(String fileName)
@@ -670,18 +670,22 @@ public class EntityBuilder : ClassBuilder
         var content = File.ReadAllText(fileName);
         var oldContent = content;
 
-        // 使用正则表达式替换旧的模块类名为新的拦截器类名，\b 确保只匹配完整单词
-        content = Regex.Replace(content, @"\bTimeModule\b", "TimeInterceptor");
-        content = Regex.Replace(content, @"\bUserModule\b", "UserInterceptor");
-        content = Regex.Replace(content, @"\bIPModule\b", "IPInterceptor");
-        content = Regex.Replace(content, @"\bTraceModule\b", "TraceInterceptor");
-        content = Regex.Replace(content, @"\bTenantModule\b", "TenantInterceptor");
+        // Module 时代与拦截器时代统一升级为过滤器
+        content = Regex.Replace(content, @"\b(Time|User|IP|Trace)(Module|Interceptor)\b", "$1Filter");
+        content = Regex.Replace(content, @"\bTenantModule\b", "TenantFilter");
+        content = Regex.Replace(content, @"\bTenantInterceptor\b", "TenantFilter");
+        content = Regex.Replace(content, @"\bDataScopeInterceptor\b", "DataScopeFilter");
 
-        // 替换 Meta.Modules 为 Meta.Interceptors
-        content = Regex.Replace(content, @"\bMeta\.Modules\b", "Meta.Interceptors");
+        // 集合统一使用 Meta.Filters
+        content = Regex.Replace(content, @"\bMeta\.Modules\b", "Meta.Filters");
+        content = Regex.Replace(content, @"\bMeta\.Interceptors\b", "Meta.Filters");
 
-        // 替换类型名 EntityModules 为 EntityInterceptors
-        content = Regex.Replace(content, @"\bEntityModules\b", "EntityInterceptors");
+        // 过滤器统一使用 Add 注册
+        content = Regex.Replace(content, @"\.AddFilter<", ".Add<");
+        content = Regex.Replace(content, @"\.AddFilter\(", ".Add(");
+
+        // 替换类型名 EntityModules 为 EntityFilters
+        content = Regex.Replace(content, @"\bEntityModules\b", "EntityFilters");
 
         // 如果内容有变化，保存文件
         if (content != oldContent)
@@ -1396,17 +1400,17 @@ public class EntityBuilder : ClassBuilder
 
             var ns = new HashSet<String>(Table.Columns.Select(e => e.Name), StringComparer.OrdinalIgnoreCase);
             WriteLine();
-            WriteLine("// 拦截器 UserInterceptor、TimeInterceptor、IPInterceptor");
+            WriteLine("// 过滤器 UserFilter、TimeFilter、IPFilter");
             if (ns.Contains("CreateUserID") || ns.Contains("CreateUser") || ns.Contains("UpdateUserID") || ns.Contains("UpdateUser"))
-                WriteLine("Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });");
+                WriteLine("Meta.Filters.Add(new UserFilter { AllowEmpty = false });");
             if (ns.Contains("CreateTime") || ns.Contains("UpdateTime"))
-                WriteLine("Meta.Interceptors.Add<TimeInterceptor>();");
+                WriteLine("Meta.Filters.Add<TimeFilter>();");
             if (ns.Contains("CreateIP") || ns.Contains("UpdateIP"))
-                WriteLine("Meta.Interceptors.Add(new IPInterceptor { AllowEmpty = false });");
+                WriteLine("Meta.Filters.Add(new IPFilter { AllowEmpty = false });");
             if (ns.Contains("TraceId"))
-                WriteLine("Meta.Interceptors.Add<TraceInterceptor>();");
+                WriteLine("Meta.Filters.Add<TraceFilter>();");
             if (ns.Contains("TenantId"))
-                WriteLine("Meta.Interceptors.Add<TenantInterceptor>();");
+                WriteLine("Meta.Filters.Add<TenantFilter>();");
 
             if (!Table.InsertOnly && !Table.Name.EndsWith("Log") && !Table.Name.EndsWith("History") && !Table.Name.EndsWith("Record"))
             {

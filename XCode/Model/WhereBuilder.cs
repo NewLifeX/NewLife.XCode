@@ -148,7 +148,7 @@ public class WhereBuilder
 
                 for (var i = 1; i < ss.Length; i++)
                 {
-                    value = value.GetValue(ss[i]);
+                    value = value!.GetValue(ss[i]);
                 }
 
                 return value;

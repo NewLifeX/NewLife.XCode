@@ -194,6 +194,9 @@ public class ClassBuilder
     /// <summary>生成头部</summary>
     protected virtual void OnExecuting()
     {
+        // 未启用可空选项时，生成文件显式关闭可空检查，避免被启用可空上下文的宿主项目误报
+        if (!Option.Nullable) WriteLine("#nullable disable");
+
         // 引用命名空间
         var us = Option.Usings;
         //if (Option.HasIModel)

@@ -20,7 +20,7 @@ public class PrestoArrayTests
     [InlineData("array(map(varchar, integer))", null)]
     [InlineData("map(varchar, integer)", null)]
     [InlineData("varchar", null)]
-    public void TryParseArray(String rawType, String elementType)
+    public void TryParseArray(String rawType, String? elementType)
     {
         var result = PrestoArray.TryParseArray(rawType, out var element);
 

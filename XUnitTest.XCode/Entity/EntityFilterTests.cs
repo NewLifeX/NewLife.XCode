@@ -552,7 +552,7 @@ public class EntityFilterTests : IDisposable
 
         Assert.Single(list);
         Assert.Equal(1, list[0].TenantId);
-        Assert.Equal(1, FilterTestEntity.FindAll().Count);
+        Assert.Single(FilterTestEntity.FindAll());
 
         // 跨租户上下文可见自己的数据，缓存未被污染
         TenantContext.Current = new TenantContext { TenantId = 2 };

@@ -109,7 +109,7 @@ public class FirebirdTests
         // Firebird 不支持无 FROM 的 SELECT 1，改查系统表
         var dt = dal.Query("select 1 as n from rdb$database");
         Assert.NotNull(dt);
-        Assert.Equal(1, dt.Rows.Count);
+        Assert.Single(dt.Rows);
         Assert.Equal(1, dt.Rows[0][0].ToInt());
     }
 
@@ -138,7 +138,7 @@ public class FirebirdTests
             // 新增
             Assert.Equal(1, dal.Execute("insert into xcfb_user (name) values ('firebird-a')"));
             var dt = dal.Query("select id, name from xcfb_user where name = 'firebird-a'");
-            Assert.Equal(1, dt.Rows.Count);
+            Assert.Single(dt.Rows);
             Assert.True(dt.Rows[0][0].ToInt() > 0);
             Assert.Equal("firebird-a", dt.Rows[0][1] + "");
 

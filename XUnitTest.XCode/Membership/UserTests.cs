@@ -13,6 +13,18 @@ namespace XUnitTest.XCode.Membership;
 public class UserTests
 {
     [Fact]
+    public void IndexerStringNullability()
+    {
+        var user = new User();
+
+        user["Mail"] = null;
+        Assert.Null(user.Mail);
+
+        user["Name"] = null;
+        Assert.Equal("", user.Name);
+    }
+
+    [Fact]
     public void TestRoleIds()
     {
         var user = new User

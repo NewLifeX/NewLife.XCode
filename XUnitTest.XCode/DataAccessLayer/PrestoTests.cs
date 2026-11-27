@@ -44,7 +44,7 @@ public class PrestoTests
         // 只读冒烟：不建表、不写数据
         var dt = dal.Query("select 1 as n");
         Assert.NotNull(dt);
-        Assert.Equal(1, dt.Rows.Count);
+        Assert.Single(dt.Rows);
         Assert.Equal(1, dt.Rows[0][0].ToInt());
     }
 
@@ -58,7 +58,7 @@ public class PrestoTests
         // tpch 连接器的 tiny 数据集是 Trino 内置样例，可直接用于联邦只读冒烟
         var dt = dal.Query("select count(*) from tpch.tiny.nation");
         Assert.NotNull(dt);
-        Assert.Equal(1, dt.Rows.Count);
+        Assert.Single(dt.Rows);
         Assert.True(dt.Rows[0][0].ToInt() > 0);
     }
 
@@ -101,7 +101,7 @@ public class PrestoTests
         // 只读冒烟：不建表、不写数据
         var dt = dal.Query("select 1 as n");
         Assert.NotNull(dt);
-        Assert.Equal(1, dt.Rows.Count);
+        Assert.Single(dt.Rows);
         Assert.Equal(1, dt.Rows[0][0].ToInt());
     }
 
@@ -113,7 +113,7 @@ public class PrestoTests
         // system.runtime.nodes 是 Presto 内置运行时表，可验证系统目录访问
         var dt = dal.Query("select node_version from system.runtime.nodes limit 1");
         Assert.NotNull(dt);
-        Assert.Equal(1, dt.Rows.Count);
+        Assert.Single(dt.Rows);
 
         var version = dt.Rows[0][0] + "";
         Assert.False(version.IsNullOrEmpty());
@@ -180,7 +180,7 @@ public class PrestoTests
             }
         }
 
-        Assert.True(false, "Presto 无法读取任何一张表，请检查连接串指向的 Catalog/Schema");
+        Assert.Fail("Presto 无法读取任何一张表，请检查连接串指向的 Catalog/Schema");
     }
 
     [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
@@ -197,7 +197,7 @@ public class PrestoTests
         });
 
         Assert.NotNull(dt);
-        Assert.Equal(1, dt.Rows.Count);
+        Assert.Single(dt.Rows);
         Assert.Equal(123, dt.Rows[0][0].ToInt());
         Assert.Equal("it's ok", dt.Rows[0][1] + "");
 
@@ -213,7 +213,7 @@ public class PrestoTests
 
         var dt = await dal.QueryAsync("select 1 as n, '中文' as s");
         Assert.NotNull(dt);
-        Assert.Equal(1, dt.Rows.Count);
+        Assert.Single(dt.Rows);
         Assert.Equal(1, dt.Rows[0][0].ToInt());
         Assert.Equal("中文", dt.Rows[0][1] + "");
     }

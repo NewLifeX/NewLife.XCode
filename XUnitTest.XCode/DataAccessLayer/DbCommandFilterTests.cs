@@ -163,7 +163,7 @@ public class DbCommandFilterTests : IDisposable
 
         var session = (DbSession)DAL.Create(_connName).Session;
 
-        Assert.Equal(4, await session.ExecuteScalarAsync<Int32>("Select 1").ConfigureAwait(false));
+        Assert.Equal(4, await session.ExecuteScalarAsync<Int32>("Select 1"));
     }
 
     private class DelegateDbCommandFilter : DbCommandFilter

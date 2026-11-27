@@ -15,6 +15,7 @@
     <AssemblyVersion>$(VersionPrefix).$([System.DateTime]::Now.ToString(`yyyy.MMdd`))</AssemblyVersion>
     <OutputPath>..\Bin</OutputPath>
     <LangVersion>latest</LangVersion>
+    <Nullable>annotations</Nullable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>xcode</ToolCommandName>
     <NoWarn>1701;1702;NU5104;NETSDK1138;CS7035</NoWarn>

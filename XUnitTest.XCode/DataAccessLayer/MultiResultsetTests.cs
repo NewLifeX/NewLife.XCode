@@ -52,7 +52,7 @@ public class MultiResultsetTests
 
         var ds = dal.Select("Select Name From MultiRsTest Where Id=1");
 
-        Assert.Equal(1, ds.Tables.Count);
+        Assert.Single(ds.Tables);
         Assert.Equal(1, ds.Tables[0].Rows.Count);
         Assert.Equal("one", ds.Tables[0].Rows[0][0]);
     }

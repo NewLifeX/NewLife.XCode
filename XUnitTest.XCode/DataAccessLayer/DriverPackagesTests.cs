@@ -30,7 +30,7 @@ public class DriverPackagesTests
     [InlineData(@"C:\plugins\Npgsql.dll", "Npgsql")]
     [InlineData("Unknown.Data.dll", null)]
     [DisplayName("按驱动程序集文件名取推荐 NuGet 包")]
-    public void GetByAssembly(String file, String expected) => Assert.Equal(expected, DriverPackages.Get(file));
+    public void GetByAssembly(String file, String? expected) => Assert.Equal(expected, DriverPackages.Get(file));
 
     [Theory]
     [InlineData(DatabaseType.Presto, "NewLife.Presto")]

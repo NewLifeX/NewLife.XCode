@@ -52,7 +52,7 @@ public class Program
         //    //"Microsoft-Diagnostics-DiagnosticSource",
         //});
 
-        var set2 = XCode.Setting.Current;
+        var set2 = XCodeSetting.Current;
         set2.Debug = true;
 #endif
         while (true)
@@ -260,8 +260,6 @@ public class Program
 
     private static void Test16()
     {
-        var f = "财务数据库.zip";
-        var f2 = "财务数据库/凭证库.table";
         var f3 = "cw.zip";
         var dal = DAL.Create("caiwu");
 

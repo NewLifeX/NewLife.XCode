@@ -82,7 +82,9 @@ public class CompatAliasTests
     public void OldNameAliasIsIgnoredBySerialization(Type type, String oldName, String newName)
     {
         var pi = type.GetProperty(oldName, BindingFlags.Public | BindingFlags.Instance)!;
+        var pn = type.GetProperty(newName, BindingFlags.Public | BindingFlags.Instance);
 
+        Assert.NotNull(pn);
         Assert.NotNull(pi.GetCustomAttribute<XmlIgnoreAttribute>());
         Assert.NotNull(pi.GetCustomAttribute<IgnoreDataMemberAttribute>());
         Assert.NotNull(pi.GetCustomAttribute<ScriptIgnoreAttribute>());

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using NewLife;
 using NewLife.NovaDb.Client;
 using XCode.DataAccessLayer;
@@ -119,11 +120,11 @@ public class WindowFallbackIntegrationTests
 
     [Fact]
     [System.ComponentModel.Description("异步查询同样应用内存回退")]
-    public void QueryAsync_InMemoryRank()
+    public async Task QueryAsync_InMemoryRank()
     {
         var dal = Prepare();
 
-        var table = dal.QueryAsync(CreateBuilder(), 0, 0).GetAwaiter().GetResult();
+        var table = await dal.QueryAsync(CreateBuilder(), 0, 0);
 
         var idx = table.GetColumn("Rank");
         Assert.True(idx >= 0);

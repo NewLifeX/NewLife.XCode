@@ -4,6 +4,10 @@
     <OutputPath>..\Bin\UnitTest</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- 测试代码大量使用可空注解，仅启用注解上下文，避免为存量代码引入成片的可空告警 -->
+    <Nullable>annotations</Nullable>
+    <!-- XCode.HighGo 仅提供 net451 驱动，测试项目引用的兼容回退警告 -->
+    <NoWarn>$(NoWarn);NU1702</NoWarn>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\Doc\newlife.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>

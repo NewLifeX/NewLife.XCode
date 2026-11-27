@@ -11,7 +11,7 @@ namespace XUnitTest.XCode.Entity;
 public class EntityQueueTests
 {
     [Fact(DisplayName = "实体队列并发入队与摘取不丢失实体")]
-    public void Drain_ConcurrentAdd_KeepsAllEntities()
+    public async Task Drain_ConcurrentAdd_KeepsAllEntities()
     {
         var ss = Entity<User>.Meta.Session;
         using var queue = new ProbeQueue(ss);
@@ -42,7 +42,7 @@ public class EntityQueueTests
         });
 
         Volatile.Write(ref running, false);
-        consumer.Wait();
+        await consumer;
 
         // 收尾：把剩下的全部摘出来
         drained += queue.Drain().Count;

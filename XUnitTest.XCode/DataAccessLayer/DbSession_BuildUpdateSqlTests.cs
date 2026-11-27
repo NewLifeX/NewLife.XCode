@@ -25,7 +25,7 @@ public class DbSession_BuildUpdateSqlTests
     /// <returns></returns>
     private static IDataTable BuildTable(String tableName, params (String name, Boolean pk, Boolean identity)[] cols)
     {
-        var table = ObjectContainer.Current.Resolve<IDataTable>();
+        var table = ObjectContainer.Current.GetService<IDataTable>();
         table.Name = tableName;
         table.TableName = tableName;
         foreach (var (name, pk, identity) in cols)

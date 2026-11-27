@@ -16,7 +16,6 @@ public class DbBaseTests
     [InlineData("Name", "name")]
     [InlineData("NickName", "nick_name")]
     [InlineData("Id", "id")]
-    [InlineData("Id", "id")]
     [InlineData("id", "id")]
     [InlineData("ProductID", "product_id")]
     [InlineData("CreateIP", "create_ip")]
@@ -26,7 +25,7 @@ public class DbBaseTests
     [InlineData("LastLoginIP", "last_login_ip")]
     public void FormatUnderlineName(String name, String result)
     {
-        var table = ObjectContainer.Current.Resolve<IDataTable>();
+        var table = ObjectContainer.Current.GetService<IDataTable>();
         table.Name = name;
         table.TableName = name;
 
@@ -40,7 +39,7 @@ public class DbBaseTests
     [Fact]
     public void FormatUnderlineName2()
     {
-        var table = ObjectContainer.Current.Resolve<IDataTable>();
+        var table = ObjectContainer.Current.GetService<IDataTable>();
         table.Name = "OAuthConfig";
         table.TableName = "OAuthConfig";
 

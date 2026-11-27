@@ -65,7 +65,7 @@ public class FieldCacheTests : IDisposable
     }
 
     [Fact(DisplayName = "FieldCache_并发FindAllName_结果一致且单次查询")]
-    public void FindAllName_Concurrent_Consistent()
+    public async Task FindAllName_Concurrent_Consistent()
     {
         // 准备测试数据：Admin/User/Guest 各 2/1/2 条
         var names = new[] { "Admin", "User", "Guest", "Admin", "Guest" };
@@ -99,7 +99,7 @@ public class FieldCacheTests : IDisposable
             tasks[idx] = Task.Run(() => dicts[idx] = fc.FindAllName());
         }
 
-        Task.WaitAll(tasks);
+        await Task.WhenAll(tasks);
 
         // 所有线程都返回非空结果且内容一致
         Assert.Equal(n, dicts.Count);

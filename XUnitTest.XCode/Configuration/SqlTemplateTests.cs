@@ -183,7 +183,7 @@ select * from userx where id=@id
         Assert.Null(st.Name);
         Assert.Null(st.Sql);
 
-        Assert.Equal(0, st.Sqls.Count);
+        Assert.Empty(st.Sqls);
     }
 
     [TestOrder(60)]

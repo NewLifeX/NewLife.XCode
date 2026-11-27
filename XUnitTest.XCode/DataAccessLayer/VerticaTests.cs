@@ -102,7 +102,7 @@ public class VerticaTests
 
         var dt = dal.Query("select 1 as n");
         Assert.NotNull(dt);
-        Assert.Equal(1, dt.Rows.Count);
+        Assert.Single(dt.Rows);
         Assert.Equal(1, dt.Rows[0][0].ToInt());
     }
 
@@ -131,7 +131,7 @@ public class VerticaTests
             // 新增。Vertica 无法回读自增，显式指定主键
             Assert.Equal(1, dal.Execute("insert into xcvertica_user (id, name) values (1, 'vertica-a')"));
             var dt = dal.Query("select id, name from xcvertica_user where id = 1");
-            Assert.Equal(1, dt.Rows.Count);
+            Assert.Single(dt.Rows);
             Assert.Equal(1, dt.Rows[0][0].ToInt());
             Assert.Equal("vertica-a", dt.Rows[0][1] + "");
 

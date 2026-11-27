@@ -177,7 +177,7 @@ namespace XUnitTest.XCode.Caching
         }
 
         [Fact(DisplayName = "刷新期间新增实体不被旧快照覆盖")]
-        public void Add_DuringRefresh_NotLost()
+        public async Task Add_DuringRefresh_NotLost()
         {
             var entities = new List<Role>
             {
@@ -220,7 +220,7 @@ namespace XUnitTest.XCode.Caching
             cache.Add(added);
 
             proceed.Set();
-            Assert.True(task.Wait(5000), "刷新未按预期完成");
+            await task.WaitAsync(TimeSpan.FromSeconds(5));
 
             // 旧快照不包含新增实体，刷新完成后仍须保留
             var list2 = cache.Entities;
@@ -228,7 +228,7 @@ namespace XUnitTest.XCode.Caching
         }
 
         [Fact(DisplayName = "刷新期间更新缓存内实体不被旧快照覆盖")]
-        public void Update_DuringRefresh_NotLost()
+        public async Task Update_DuringRefresh_NotLost()
         {
             var entities = new List<Role>
             {
@@ -274,7 +274,7 @@ namespace XUnitTest.XCode.Caching
             cache.Update(target);
 
             proceed.Set();
-            Assert.True(task.Wait(5000), "刷新未按预期完成");
+            await task.WaitAsync(TimeSpan.FromSeconds(5));
 
             // 读库旧快照是旧值，回放后必须是新值
             var list2 = cache.Entities;
@@ -282,7 +282,7 @@ namespace XUnitTest.XCode.Caching
         }
 
         [Fact(DisplayName = "刷新期间删除实体不被旧快照复活")]
-        public void Remove_DuringRefresh_NotLost()
+        public async Task Remove_DuringRefresh_NotLost()
         {
             var entities = new List<Role>
             {
@@ -326,7 +326,7 @@ namespace XUnitTest.XCode.Caching
             cache.Remove(target);
 
             proceed.Set();
-            Assert.True(task.Wait(5000), "刷新未按预期完成");
+            await task.WaitAsync(TimeSpan.FromSeconds(5));
 
             // 读库旧快照仍含该行，回放后不得复活
             var list2 = cache.Entities;
@@ -335,7 +335,7 @@ namespace XUnitTest.XCode.Caching
         }
 
         [Fact(DisplayName = "刷新期间新增已存在于新快照的实体不重复")]
-        public void Add_DuringRefresh_NotDuplicated()
+        public async Task Add_DuringRefresh_NotDuplicated()
         {
             var entities = new List<Role>
             {
@@ -377,7 +377,7 @@ namespace XUnitTest.XCode.Caching
             cache.Add(added);
 
             proceed.Set();
-            Assert.True(task.Wait(5000), "刷新未按预期完成");
+            await task.WaitAsync(TimeSpan.FromSeconds(5));
 
             // 回放新增时必须按键去重，不能出现两条
             var list2 = cache.Entities;

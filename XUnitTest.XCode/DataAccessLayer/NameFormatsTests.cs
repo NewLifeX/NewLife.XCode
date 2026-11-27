@@ -126,7 +126,10 @@ public class NameFormatsTests
     public void AliasIndexerHandlesCaseDifferences()
     {
         var user = new User { Id = 5 };
+        // 兼容别名属性仍需可用
+#pragma warning disable CS0618
         Assert.Equal(5, user.ID);
+#pragma warning restore CS0618
 
         // 精确大小写走别名属性
         Assert.Equal(5, user["ID"]);

@@ -87,7 +87,7 @@ public class MonetDBTests
 
         var dt = dal.Query("select 1 as n");
         Assert.NotNull(dt);
-        Assert.Equal(1, dt.Rows.Count);
+        Assert.Single(dt.Rows);
         Assert.Equal(1, dt.Rows[0][0].ToInt());
     }
 
@@ -116,7 +116,7 @@ public class MonetDBTests
             // 新增。MonetDB 无法回读自增，显式指定主键；驱动不返回受影响行数，固定为 0
             Assert.Equal(0, dal.Execute("insert into xcmonet_user (id, name) values (1, 'monetdb-a')"));
             var dt = dal.Query("select id, name from xcmonet_user where id = 1");
-            Assert.Equal(1, dt.Rows.Count);
+            Assert.Single(dt.Rows);
             Assert.Equal(1, dt.Rows[0][0].ToInt());
             Assert.Equal("monetdb-a", dt.Rows[0][1] + "");
 

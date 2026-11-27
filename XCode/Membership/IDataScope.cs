@@ -98,7 +98,7 @@ public static class FieldScopeHelper
         else
         {
             // 没有上下文时，使用实体自身的判断逻辑
-            var userId = ManageProvider.Provider?.Current?.ID ?? 0;
+            var userId = ManageProvider.Provider?.Current?.Id ?? 0;
             canView = fieldScope.CanViewSensitiveFields(userId);
         }
 

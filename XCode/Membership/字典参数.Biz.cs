@@ -257,7 +257,7 @@ public partial class Parameter : Entity<Parameter>
         {
             case TypeCode.Boolean:
                 Kind = ParameterKinds.Boolean;
-                SetValueInternal(value.ToString().ToLower());
+                SetValueInternal(value.ToString()!.ToLower());
                 break;
             case TypeCode.SByte:
             case TypeCode.Byte:
@@ -325,7 +325,7 @@ public partial class Parameter : Entity<Parameter>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>
     /// <returns></returns>
-    public IDictionary<TKey, TValue> GetHash<TKey, TValue>()
+    public IDictionary<TKey, TValue> GetHash<TKey, TValue>() where TKey : notnull
     {
         var str = Value?.Trim();
         if (str.IsNullOrEmpty()) str = LongValue?.Trim();

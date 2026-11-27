@@ -260,7 +260,7 @@ public partial interface ITenantUser
     IRole[] Roles { get; }
 
     /// <summary>角色名</summary>
-    String RoleName { get; }
+    String? RoleName { get; }
 
     /// <summary>用户是否拥有当前菜单的指定权限</summary>
     /// <param name="menu">指定菜单</param>

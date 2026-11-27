@@ -114,7 +114,7 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
         }
 
         // 管理者
-        if (method == DataMethod.Insert && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
+        if (method == DataMethod.Insert && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.Id ?? 0;
 
         if (!base.Valid(method)) return false;
 

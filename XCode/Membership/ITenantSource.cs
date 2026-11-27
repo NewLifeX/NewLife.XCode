@@ -38,12 +38,12 @@ public class TenantContext
     #endregion
 
 #if NET45
-    private static readonly ThreadLocal<TenantContext> _Current = new();
+    private static readonly ThreadLocal<TenantContext?> _Current = new();
 #else
-    private static readonly AsyncLocal<TenantContext> _Current = new();
+    private static readonly AsyncLocal<TenantContext?> _Current = new();
 #endif
     /// <summary>当前租户上下文</summary>
-    public static TenantContext Current { get => _Current.Value; set => _Current.Value = value; }
+    public static TenantContext? Current { get => _Current.Value; set => _Current.Value = value; }
 
     /// <summary>当前租户标识。无效时返回0</summary>
     public static Int32 CurrentId => Current?.TenantId ?? 0;

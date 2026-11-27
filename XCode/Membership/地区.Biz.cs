@@ -539,7 +539,7 @@ public partial class Area : Entity<Area>
             var ipr = NetHelper.IpResolver;
             if (ipr != null)
             {
-                _GetIp = ipr.GetType().GetMethod("GetAddress", [typeof(String)]).As<Func<String, (String, String)>>(ipr);
+                _GetIp = ipr.GetType().GetMethod("GetAddress", [typeof(String)])?.As<Func<String, (String, String)>>(ipr);
 
                 _initGetIp = true;
             }

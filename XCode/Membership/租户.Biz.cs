@@ -36,7 +36,7 @@ public partial class Tenant : Entity<Tenant>, ITenantScope
         if (Code.IsNullOrEmpty()) throw new ArgumentNullException(__.Code, L.T("{0} cannot be empty!", _.Code.DisplayName));
 
         // 管理者
-        if (method == DataMethod.Insert && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.ID ?? 0;
+        if (method == DataMethod.Insert && ManagerId == 0) ManagerId = ManageProvider.Provider?.Current?.Id ?? 0;
 
         return base.Valid(method);
     }

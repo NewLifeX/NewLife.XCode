@@ -118,12 +118,12 @@ public abstract class ManageProvider : IManageProvider
     public static IMenuFactory? Menu => GetFactory<IMenu>() as IMenuFactory;
 
 #if NET45
-    private static readonly ThreadLocal<String> _UserHost = new();
+    private static readonly ThreadLocal<String?> _UserHost = new();
 #else
-    private static readonly AsyncLocal<String> _UserHost = new();
+    private static readonly AsyncLocal<String?> _UserHost = new();
 #endif
     /// <summary>用户主机</summary>
-    public static String UserHost { get => _UserHost.Value; set => _UserHost.Value = value; }
+    public static String? UserHost { get => _UserHost.Value; set => _UserHost.Value = value; }
 
 #if NET45
     private static readonly ThreadLocal<IMenu?> _CurrentMenu = new();
@@ -146,9 +146,9 @@ public abstract class ManageProvider : IManageProvider
     public virtual IList<ITenantUser> GetTenants()
     {
         var user = Current;
-        if (user == null || user.ID == 0) return [];
+        if (user == null || user.Id == 0) return [];
 
-        var list = TenantUser.FindAllByUserId(user.ID);
+        var list = TenantUser.FindAllByUserId(user.Id);
 
         return list.Where(e => e.Enable).Cast<ITenantUser>().ToList();
     }
@@ -343,12 +343,12 @@ public abstract class ManageProvider : IManageProvider
     /// <summary>获取服务</summary>
     /// <typeparam name="TService"></typeparam>
     /// <returns></returns>
-    public TService GetService<TService>() => (TService)GetService(typeof(TService));
+    public TService GetService<TService>() => (TService)GetService(typeof(TService))!;
 
     /// <summary>获取服务</summary>
     /// <param name="serviceType"></param>
     /// <returns></returns>
-    public virtual Object GetService(Type serviceType) => null;
+    public virtual Object? GetService(Type serviceType) => null;
     #endregion
 
     #region 实体类扩展
@@ -375,7 +375,7 @@ public abstract class ManageProvider : IManageProvider
     {
         InitFactories();
 
-        _factories[typeof(TIEntity)] = factory;
+        _factories![typeof(TIEntity)] = factory;
     }
 
     /// <summary>根据实体类接口获取实体工厂</summary>
@@ -385,9 +385,9 @@ public abstract class ManageProvider : IManageProvider
     {
         InitFactories();
 
-        return _factories[typeof(TIEntity)];
+        return _factories![typeof(TIEntity)];
     }
 
-    internal static T Get<T>() => (T)GetFactory<T>()?.Default;
+    internal static T Get<T>() => (T)GetFactory<T>().Default!;
     #endregion
 }

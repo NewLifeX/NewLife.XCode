@@ -16,7 +16,7 @@ public static class EmptyHtmlHelper
     /// <summary>判断 HTML 是否语义为空。仅含空段落、换行、空白等无内容标签时视为空；含图片、音视频等嵌入内容的不算空</summary>
     /// <param name="html">HTML 字符串</param>
     /// <returns>是否语义为空</returns>
-    public static Boolean IsEmptyHtml(String html)
+    public static Boolean IsEmptyHtml(String? html)
     {
         if (html.IsNullOrEmpty()) return false;
 

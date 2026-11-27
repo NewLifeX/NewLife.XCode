@@ -315,7 +315,7 @@ public partial class Role : LogEntity<Role>, IRole, ITenantScope
     /// <param name="key">关键字</param>
     /// <param name="page">分页参数信息</param>
     /// <returns>实体列表</returns>
-    public static IList<Role> Search(DateTime start, DateTime end, String key, PageParameter page)
+    public new static IList<Role> Search(DateTime start, DateTime end, String key, PageParameter page)
     {
         var exp = new WhereExpression();
         if (!key.IsNullOrWhiteSpace()) exp &= _.Name.Contains(key) | _.Remark.Contains(key);

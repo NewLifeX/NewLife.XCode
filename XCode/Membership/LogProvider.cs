@@ -74,7 +74,7 @@ public class LogProvider
             var user = prv?.Current;
             if (user != null)
             {
-                if (log.CreateUserId == 0) log.CreateUserId = user.ID;
+                if (log.CreateUserId == 0) log.CreateUserId = user.Id;
                 if (log.UserName.IsNullOrEmpty()) log.UserName = user + "";
             }
         }
@@ -172,7 +172,7 @@ public class LogProvider
         var name = "";
         if (entity is IManageUser user)
         {
-            userid = user.ID;
+            userid = user.Id;
             name = user + "";
         }
 
@@ -238,7 +238,7 @@ public class LogProvider
                     else if (v2 is IList list)
                         v2 = list.Join(",");
 
-                    sb.Separate(",").AppendFormat("{0}={1} -> {2}", L.T(fi.DisplayName), v1, v2);
+                    sb.Separate(",").AppendFormat("{0}={1} -> {2}", L.T(fi.DisplayName ?? fi.Name), v1, v2);
                 }
             }
         }
@@ -264,7 +264,7 @@ public class LogProvider
                 else if (v is IList list)
                     v = list.Join(",");
 
-                var label = fi.PrimaryKey ? fi.Name : L.T(fi.DisplayName);
+                var label = fi.PrimaryKey ? fi.Name : L.T(fi.DisplayName ?? fi.Name);
                 sb.Separate(",").AppendFormat("{0}={1}", label, v);
             }
         }
@@ -302,7 +302,7 @@ public class LogProvider
             // 从参数里提取用户对象
             var user = args.FirstOrDefault(e => e is IManageUser) as IManageUser;
 
-            Provider?.WriteLog(Category!, act, true, msg, user?.ID ?? 0, user + "");
+            Provider?.WriteLog(Category!, act, true, msg, user?.Id ?? 0, user + "");
         }
     }
     #endregion
@@ -312,6 +312,6 @@ public class LogProvider
     public static LogProvider Provider { get; set; } = new LogProvider();
 
     /// <summary>当前用户提供者</summary>
-    public IManageProvider Provider2 { get; set; }
+    public IManageProvider? Provider2 { get; set; }
     #endregion
 }

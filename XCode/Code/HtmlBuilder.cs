@@ -169,7 +169,7 @@ public class HtmlBuilder : ClassBuilder
         {
             WriteLine("<td>{0}</td>", column.ColumnName);
             WriteLine("<td>{0}</td>", column.DisplayName);
-            WriteLine("<td>{0}</td>", column.RawType ?? column.DataType?.FullName.TrimPrefix("System."));
+            WriteLine("<td>{0}</td>", column.RawType ?? column.DataType?.FullName?.TrimPrefix("System."));
 
             if (column.Length > 0)
                 WriteLine("<td>{0}</td>", column.Length);

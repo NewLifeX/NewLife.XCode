@@ -96,7 +96,7 @@ public class SqlTemplate
 
         Name = Path.GetFileNameWithoutExtension(name);
 
-        return Parse(assembly.GetManifestResourceStream(res));
+        return Parse(assembly.GetManifestResourceStream(res)!);
     }
 
     /// <summary>获取指定数据库的Sql，如果未指定，则返回默认</summary>

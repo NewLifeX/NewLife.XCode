@@ -327,9 +327,9 @@ public partial class DAL
             {
                 foreach (XmlNode item in nodes)
                 {
-                    var name = item.Attributes["name"]?.Value;
-                    var connstr = item.Attributes["connectionString"]?.Value;
-                    var provider = item.Attributes["providerName"]?.Value;
+                    var name = item.Attributes?["name"]?.Value;
+                    var connstr = item.Attributes?["connectionString"]?.Value;
+                    var provider = item.Attributes?["providerName"]?.Value;
                     if (name.IsNullOrEmpty() || connstr.IsNullOrWhiteSpace()) continue;
 
                     var type = DbFactory.GetProviderType(connstr, provider);
@@ -561,7 +561,7 @@ public partial class DAL
         return true;
     }
 
-    private static void DoGetConfig(Object state)
+    private static void DoGetConfig(Object? state)
     {
         foreach (var item in _conns)
         {

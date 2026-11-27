@@ -107,7 +107,7 @@ public partial class DbMetaData
             if (mode > Migration.ReadOnly)
             {
                 WriteLog("Creating database: {0}", ConnName);
-                CreateDatabase(Database.DatabaseName);
+                CreateDatabase(Database.DatabaseName + "");
 
                 dbExist = true;
             }
@@ -317,7 +317,7 @@ public partial class DbMetaData
             // 对于修改列，只读或者只创建，都只要sql
             if (IsColumnTypeChanged(item, dbf))
             {
-                WriteLog("The type of field [{0}.{1}] needs to change from database type [{2}] to entity type [{3}], RawType={4}", entitytable.Name, item.Name, dbf.DataType?.Name, item.DataType?.FullName.TrimPrefix("System."), dbf.RawType);
+                WriteLog("The type of field [{0}.{1}] needs to change from database type [{2}] to entity type [{3}], RawType={4}", entitytable.Name, item.Name, dbf.DataType?.Name, item.DataType?.FullName?.TrimPrefix("System."), dbf.RawType);
                 PerformSchema(sb, @readonly || onlyCreate, DDLCommand.AlterColumn(item, dbf));
             }
             else if (IsColumnLengthChanged(item, dbf, entityDb))

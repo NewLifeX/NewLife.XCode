@@ -58,7 +58,7 @@ public static partial class ValidHelper
     /// </summary>
     public static String ToString(Object? value)
     {
-        return Convert.ToString(value);
+        return Convert.ToString(value) ?? "";
     }
 
     /// <summary>

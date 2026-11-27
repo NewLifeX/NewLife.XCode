@@ -466,9 +466,9 @@ internal class SqlServer : RemoteDb
 
             // 为了兼容旧版本实体类
             if (field != null && field.RawType.StartsWithIgnoreCase("n"))
-                return "N'" + value.ToString().Replace("'", "''") + "'";
+                return "N'" + value.ToString()!.Replace("'", "''") + "'";
             else
-                return "'" + value.ToString().Replace("'", "''") + "'";
+                return "'" + value.ToString()!.Replace("'", "''") + "'";
         }
         else if (type == typeof(DateTime))
         {
@@ -832,7 +832,7 @@ internal class SqlServerSession : RemoteDbSession
 
             //if (_init == null)
             //{
-            using var adapter = factory.CreateDataAdapter();
+            using var adapter = factory.CreateDataAdapter()!;
             var type = adapter.GetType();
 
             _add = type.GetMethodEx("AddToBatch");
@@ -850,12 +850,12 @@ internal class SqlServerSession : RemoteDbSession
             if (_init == null || _add == null || _exe == null || _clear == null)
                 throw new InvalidOperationException(L.T("The current database does not support batch operations!"));
 
-            var cmd = _factory.CreateCommand();
+            var cmd = _factory.CreateCommand()!;
             cmd.Connection = connection;
             // 批量执行以InsertCommand的超时为准（InitializeBatching会复制其CommandTimeout到批命令），不能沿用驱动默认30秒
             if (_commandTimeout > 0) cmd.CommandTimeout = _commandTimeout;
 
-            var adapter = _factory.CreateDataAdapter();
+            var adapter = _factory.CreateDataAdapter()!;
             adapter.InsertCommand = cmd;
             //adapter.Invoke("InitializeBatching");
             _init.As<Action>(adapter)!();
@@ -1443,7 +1443,7 @@ internal class SqlServerMetaData : RemoteDbMetaData
             }
             else
             {
-                recoverDir = Path.GetDirectoryName(dt.Rows[0][0].ToString());
+                recoverDir = Path.GetDirectoryName(dt.Rows[0][0].ToString() ?? "") ?? "";
             }
         }
 

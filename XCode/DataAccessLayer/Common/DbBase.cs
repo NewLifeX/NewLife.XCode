@@ -516,7 +516,7 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
         var factory = Factory;
         if (factory == null) throw CreateDriverMissingException();
 
-        var conn = factory.CreateConnection();
+        var conn = factory.CreateConnection() ?? throw CreateDriverMissingException();
         conn.ConnectionString = GetConnectionString();
         conn.Open();
 
@@ -554,7 +554,7 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
         var factory = Factory;
         if (factory == null) throw CreateDriverMissingException();
 
-        var conn = factory.CreateConnection();
+        var conn = factory.CreateConnection() ?? throw CreateDriverMissingException();
         conn.ConnectionString = GetConnectionString();
         await conn.OpenAsync().ConfigureAwait(false);
 
@@ -732,7 +732,7 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
         if (type == null) return null;
 
         var asm = type.Assembly;
-        if (DAL.Debug) DAL.WriteLog("[{2}] driver {0} version v{1}", asm.Location, asm.GetName().Version, type.FullName.TrimSuffix("Client", "Factory"));
+        if (DAL.Debug) DAL.WriteLog("[{2}] driver {0} version v{1}", asm.Location, asm.GetName().Version, type.FullName?.TrimSuffix("Client", "Factory"));
 
         DbProviderFactory? factory = null;
         try
@@ -1073,7 +1073,7 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
             type = value.GetType();
 
         // 如果类型是Nullable的，则获取对应的类型
-        type = Nullable.GetUnderlyingType(type) ?? type;
+        type = Nullable.GetUnderlyingType(type!) ?? type;
 
         if (type == typeof(String))
         {
@@ -1081,7 +1081,7 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
             //!!! 为SQL格式化数值时，如果字符串是Empty，将不再格式化为null
             //if (String.IsNullOrEmpty(value.ToString()) && isNullable) return "null";
 
-            return "'" + value.ToString().Replace('\0', ' ').Replace("'", "''") + "'";
+            return "'" + value.ToString()!.Replace('\0', ' ').Replace("'", "''") + "'";
         }
         else if (type == typeof(DateTime))
         {
@@ -1124,7 +1124,7 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
         if (type != null) value = value.ChangeType(type);
         if (value == null) return isNullable ? "null" : "";
 
-        return value.ToString();
+        return value.ToString() ?? "";
     }
 
     private static readonly Char[] _likeKeys = ['\'', '%', '_'];
@@ -1193,7 +1193,7 @@ public abstract class DbBase : DisposeBase, IDatabase, IDbDialect
     {
         if (value == null && type == null) throw new ArgumentNullException(nameof(value));
 
-        var dp = Factory.CreateParameter();
+        var dp = Factory.CreateParameter()!;
         dp.ParameterName = FormatParameterName(name);
         dp.SourceColumn = name;
         dp.Direction = ParameterDirection.Input;

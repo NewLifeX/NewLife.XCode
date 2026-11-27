@@ -321,7 +321,7 @@ public class DbConfigProvider : ConfigProvider
 
     /// <summary>定时刷新配置</summary>
     /// <param name="state"></param>
-    protected void DoRefresh(Object state)
+    protected void DoRefresh(Object? state)
     {
         using var showSql = Parameter.Meta.Session.Dal.Session.SetShowSql(false);
 

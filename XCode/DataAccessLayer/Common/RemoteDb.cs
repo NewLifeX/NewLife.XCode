@@ -24,7 +24,7 @@ abstract class RemoteDb : DbBase
 
             if (String.IsNullOrEmpty(connStr)) return String.Empty;
 
-            var ocsb = Factory.CreateConnectionStringBuilder();
+            var ocsb = Factory.CreateConnectionStringBuilder()!;
             ocsb.ConnectionString = connStr;
 
             if (ocsb.ContainsKey("User ID"))
@@ -215,12 +215,12 @@ abstract class RemoteDbSession : DbSession
         if (!dbname.IsNullOrEmpty() && !dbname.EqualIgnoreCase(sysdbname) && !sysdbname.IsNullOrEmpty())
         {
             Log?.Info("Switching to the system database [{0}]", sysdbname);
-            using var conn = Database.Factory.CreateConnection();
+            using var conn = Database.Factory.CreateConnection()!;
             try
             {
                 //conn.ConnectionString = Database.ConnectionString;
 
-                OpenDatabase(conn, Database.ConnectionString, sysdbname);
+                OpenDatabase(conn, Database.ConnectionString + "", sysdbname);
 
                 return callback(this, conn);
             }
@@ -296,7 +296,7 @@ abstract class RemoteDbMetaData : DbMetaData
             ss.WriteSQL(sql);
             return ss.ProcessWithSystem((s, c) =>
             {
-                using var cmd = Database.Factory.CreateCommand();
+                using var cmd = Database.Factory.CreateCommand()!;
                 cmd.Connection = c;
                 cmd.CommandText = sql;
 

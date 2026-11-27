@@ -435,7 +435,7 @@ public partial class DbMetaData
 
         //处理数组
         var isArrayField = IsArrayField(type);
-        if (isArrayField) type = type.GetElementType();
+        if (isArrayField) type = type.GetElementType()!;
 
         // 处理枚举
         if (type.IsEnum)
@@ -460,7 +460,7 @@ public partial class DbMetaData
         var typeName = ns.FirstOrDefault();
         // 大文本选第二个类型
         if (ns.Length > 1 && type == typeof(String) && (field.Length <= 0 || field.Length >= Database.LongTextLength)) typeName = ns[1];
-        if (typeName.Contains("{0}"))
+        if (typeName?.Contains("{0}") == true)
         {
             if (typeName.Contains("{1}"))
                 typeName = String.Format(typeName, field.Precision, field.Scale);

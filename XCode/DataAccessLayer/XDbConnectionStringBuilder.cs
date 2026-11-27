@@ -20,7 +20,12 @@ public class ConnectionStringBuilder(String connStr)
     /// <param name="key"></param>
     /// <param name="value">数值</param>
     /// <returns></returns>
-    public Boolean TryGetValue(String key, out String value) => _dic.TryGetValue(key, out value);
+    public Boolean TryGetValue(String key, out String value)
+    {
+        var found = _dic.TryGetValue(key, out var v);
+        value = v ?? String.Empty;
+        return found;
+    }
 
     /// <summary>获取并删除连接字符串中的项</summary>
     /// <param name="key"></param>
@@ -30,10 +35,11 @@ public class ConnectionStringBuilder(String connStr)
     {
         value = String.Empty;
 
-        if (_dic == null || !_dic.TryGetValue(key, out value)) return false;
+        if (!_dic.TryGetValue(key, out var v)) return false;
 
         _dic.Remove(key);
 
+        value = v ?? String.Empty;
         return true;
     }
 

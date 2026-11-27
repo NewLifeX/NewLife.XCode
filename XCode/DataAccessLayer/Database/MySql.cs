@@ -179,7 +179,7 @@ internal class MySql : RemoteDb
             if (value == null)
                 return field.Nullable ? "null" : "''";
 
-            return "'" + value.ToString()
+            return "'" + value.ToString()!
                 .Replace("\\", "\\\\")//反斜杠需要这样才能插入到数据库
                 .Replace("'", @"\'") + "'";
         }
@@ -320,7 +320,7 @@ internal class MySqlSession : RemoteDbSession
     {
         tableName = tableName.Trim().Trim('`', '`').Trim();
 
-        var db = Database.DatabaseName;
+        var db = Database.DatabaseName + "";
         var sql = $"select table_rows from information_schema.tables where table_schema='{db.Replace("'", "''")}' and table_name='{tableName.Replace("'", "''")}'";
         return ExecuteScalar<Int64>(sql);
     }
@@ -329,7 +329,7 @@ internal class MySqlSession : RemoteDbSession
     {
         tableName = tableName.Trim().Trim('`', '`').Trim();
 
-        var db = Database.DatabaseName;
+        var db = Database.DatabaseName + "";
         var sql = $"select table_rows from information_schema.tables where table_schema='{db.Replace("'", "''")}' and table_name='{tableName.Replace("'", "''")}'";
         return ExecuteScalarAsync<Int64>(sql);
     }

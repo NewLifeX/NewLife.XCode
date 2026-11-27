@@ -154,7 +154,7 @@ internal class SQLite : FileDbBase
             try
             {
                 // 清空连接池
-                var type = factory.CreateConnection().GetType();
+                var type = factory.CreateConnection()!.GetType();
                 type.Invoke("ClearAllPools");
             }
             catch (ObjectDisposedException) { }
@@ -747,8 +747,8 @@ internal class SQLiteMetaData : FileDbMetaData
         foreach (var row in ds.Rows)
         {
             var field = table.CreateColumn();
-            field.ColumnName = row[1]!.ToString().Replace(" ", "");
-            field.RawType = row[2]!.ToString().Replace(" ", "");//去除所有空格
+            field.ColumnName = row[1]!.ToString()!.Replace(" ", "");
+            field.RawType = row[2]!.ToString()!.Replace(" ", "");//去除所有空格
             field.Nullable = row[3].ToInt() != 1;
             field.DefaultValue = row[4] as String;
             field.PrimaryKey = row[5].ToInt() == 1;
@@ -876,7 +876,7 @@ internal class SQLiteMetaData : FileDbMetaData
         // 删除已有文件
         if (File.Exists(bf)) File.Delete(bf);
 
-        using (var conn = Database.Factory.CreateConnection())
+        using (var conn = Database.Factory.CreateConnection()!)
         using (var conn2 = Database.OpenConnection())
         {
             conn.ConnectionString = $"Data Source={bf}";

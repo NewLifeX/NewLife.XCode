@@ -135,7 +135,7 @@ internal class VastBase : RemoteDb
         }
         var fieldType = String.Empty;
         // 如果类型是Nullable的，则获取对应的类型
-        type = Nullable.GetUnderlyingType(type) ?? type;
+        type = Nullable.GetUnderlyingType(type!) ?? type;
         //如果是数组，就取数组的元素类型
         if (IsArrayField(type))
         {
@@ -232,7 +232,7 @@ internal class VastBase : RemoteDb
         {
             if (String.IsNullOrWhiteSpace(fieldType)) fieldType = "varchar";
             if (value is null) return isNullable ? "null" : "''";
-            return "'" + value.ToString().Replace("'", "''") + "'";
+            return "'" + value.ToString()!.Replace("'", "''") + "'";
         }
         if (type == typeof(DateTime))
         {
@@ -275,7 +275,7 @@ internal class VastBase : RemoteDb
         if (type != null) value = value.ChangeType(type);
         if (value == null) return isNullable ? "null" : "";
 
-        return value.ToString();
+        return value.ToString() ?? "";
     }
 
     /// <summary>长文本长度</summary>

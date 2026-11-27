@@ -101,7 +101,7 @@ public class MapProvider
         var list = fact.Session.Count < 1000 && Membership.TenantContext.CurrentId == 0 ? fact.FindAllWithCache() : fact.FindAll(where, null, null, 0, 100);
 
         //return list.Where(e => e[key] != null).ToDictionary(e => e[key], e => e[mst] + "");
-        return list.Where(e => e[key] != null).ToDictionary(e => e[key]!, e => e.ToString());//用ToString()可以显示更多信息 2023-08-11
+        return list.Where(e => e[key] != null).ToDictionary(e => e[key]!, e => e.ToString() ?? "");//用ToString()可以显示更多信息 2023-08-11
     }
     #endregion
 }

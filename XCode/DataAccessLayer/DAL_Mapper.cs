@@ -95,7 +95,7 @@ public partial class DAL
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public T QuerySingle<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param = null) => Query<T>(sql, param).FirstOrDefault();
+    public T? QuerySingle<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param = null) => Query<T>(sql, param).FirstOrDefault();
 
     /// <summary>查询Sql并映射为结果集</summary>
     /// <typeparam name="T">实体类</typeparam>
@@ -124,13 +124,13 @@ public partial class DAL
     /// <param name="sql">Sql语句</param>
     /// <param name="param">参数对象</param>
     /// <returns></returns>
-    public async Task<T> QuerySingleAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param = null) => (await QueryAsync<T>(sql, param).ConfigureAwait(false)).FirstOrDefault();
+    public async Task<T?> QuerySingleAsync<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.PublicFields)] T>(String sql, Object? param = null) => (await QueryAsync<T>(sql, param).ConfigureAwait(false)).FirstOrDefault();
 
     private static Boolean IsValueTuple(Type type)
     {
         if (type is not null && type.IsValueType)
         {
-            return type.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal);
+            return type.FullName?.StartsWith("System.ValueTuple`", StringComparison.Ordinal) == true;
         }
         return false;
     }

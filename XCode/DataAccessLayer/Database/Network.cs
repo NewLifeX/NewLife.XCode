@@ -412,11 +412,13 @@ internal class DataParameter : IDataParameter
     /// <summary>是否可空</summary>
     public Boolean IsNullable => true;
 
+#pragma warning disable CS8767 // 接口 setter 允许 null，自动属性无法分别标注 getter/setter 可空性
     /// <summary>参数名</summary>
     public String ParameterName { get; set; } = "";
 
     /// <summary>源列名</summary>
     public String SourceColumn { get; set; } = "";
+#pragma warning restore CS8767
 
     /// <summary>源数据行版本</summary>
     public DataRowVersion SourceVersion { get; set; } = DataRowVersion.Current;

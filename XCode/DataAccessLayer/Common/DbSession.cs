@@ -1098,18 +1098,18 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
                 break;
             case TypeCode.Single:
                 {
-                    var v = (Single)cur - (Single)old;
+                    var v = (Single)cur - (Single)old!;
                     diff = Single.IsNaN(v) ? (Single)0 : v;
                 }
                 break;
             case TypeCode.Double:
                 {
-                    var v = (Double)cur - (Double)old;
+                    var v = (Double)cur - (Double)old!;
                     diff = Double.IsNaN(v) ? 0.0 : v;
                 }
                 break;
             case TypeCode.Decimal:
-                diff = (Decimal)cur - (Decimal)old;
+                diff = (Decimal)cur - (Decimal)old!;
                 break;
             default:
                 diff = cur;
@@ -1289,7 +1289,7 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
                     else if (v is DateTime dt)
                         sv = dt.ToFullString();
                     else if (v is IList list && list.Count > 0)
-                        sv = $"{list[0].GetType().Name}[{list.Count}]";
+                        sv = $"{list[0]?.GetType().Name}[{list.Count}]";
                     else
                         sv = v + "";
                     sb.AppendFormat("{0}={1}", name, sv);

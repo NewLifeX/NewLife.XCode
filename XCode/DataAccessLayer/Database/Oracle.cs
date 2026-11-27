@@ -203,9 +203,9 @@ internal class Oracle : RemoteDb
             if (value == null) return isNullable ? "null" : "''";
 
             if (field.RawType.StartsWithIgnoreCase("n"))
-                return "N'" + value.ToString().Replace("'", "''") + "'";
+                return "N'" + value.ToString()!.Replace("'", "''") + "'";
             else
-                return "'" + value.ToString().Replace("'", "''") + "'";
+                return "'" + value.ToString()!.Replace("'", "''") + "'";
         }
 
         return base.FormatValue(field, value);
@@ -250,7 +250,7 @@ internal class Oracle : RemoteDb
                 value = value.ToBoolean() ? 1 : 0;
 
             //type = typeof(Int32);
-            var dp2 = Factory.CreateParameter();
+            var dp2 = Factory.CreateParameter()!;
             dp2.ParameterName = FormatParameterName(name);
             dp2.Direction = ParameterDirection.Input;
             dp2.DbType = DbType.Int32;

@@ -178,8 +178,9 @@ public class TableItem
     private TableItem(Type type)
     {
         EntityType = type;
-        _Table = type.GetCustomAttribute<BindTableAttribute>(true);
-        if (_Table == null) throw new ArgumentOutOfRangeException(nameof(type), L.T("Type {0} does not have the [{1}] attribute!", type, typeof(BindTableAttribute).Name));
+        var table = type.GetCustomAttribute<BindTableAttribute>(true);
+        if (table == null) throw new ArgumentOutOfRangeException(nameof(type), L.T("Type {0} does not have the [{1}] attribute!", type, typeof(BindTableAttribute).Name));
+        _Table = table;
 
         _Indexes = type.GetCustomAttributes<BindIndexAttribute>(true).ToArray();
         //_Relations = type.GetCustomAttributes<BindRelationAttribute>(true).ToArray();
@@ -198,7 +199,7 @@ public class TableItem
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
 
-        var key = type.FullName;
+        var key = type.FullName ?? type.Name;
         if (_cache.TryGetValue(key, out var tableItem)) return tableItem;
 
         // 不能给没有BindTableAttribute特性的类型创建TableItem，否则可能会在InitFields中抛出异常

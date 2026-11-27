@@ -558,7 +558,7 @@ public class Field : FieldItem
     /// <summary>重写一下。== 运算符返回 Expression 而非 Boolean，重写仅用于满足编译器约定</summary>
     /// <param name="obj"></param>
     /// <returns></returns>
-    public override Boolean Equals(Object obj) => base.Equals(obj);
+    public override Boolean Equals(Object? obj) => base.Equals(obj);
 
     #region 类型转换
     /// <summary>类型转换</summary>

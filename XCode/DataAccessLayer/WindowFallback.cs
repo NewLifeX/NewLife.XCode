@@ -528,11 +528,11 @@ public static class WindowEvaluator
         table.Types = newTypes;
 
         var rows = table.Rows;
-        var newRows = new List<Object[]>(rows.Count);
+        var newRows = new List<Object?[]>(rows.Count);
         for (var i = 0; i < rows.Count; i++)
         {
             var row = rows[i];
-            var newRow = new Object[width];
+            var newRow = new Object?[width];
             Array.Copy(row, newRow, Math.Min(row.Length, width));
             newRow[index] = i < values.Length ? values[i] : null;
             newRows.Add(newRow);

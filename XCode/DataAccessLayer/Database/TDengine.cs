@@ -113,7 +113,7 @@ class TDengine : RemoteDb
             if (value == null)
                 return field.Nullable ? "null" : "''";
 
-            return "'" + value.ToString()
+            return "'" + value.ToString()!
                 .Replace("\\", "\\\\")//反斜杠需要这样才能插入到数据库
                 .Replace("'", @"\'") + "'";
         }

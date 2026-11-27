@@ -132,7 +132,7 @@ internal class PostgreSQL : RemoteDb
         }
         var fieldType = String.Empty;
         // 如果类型是Nullable的，则获取对应的类型
-        type = Nullable.GetUnderlyingType(type) ?? type;
+        type = Nullable.GetUnderlyingType(type!) ?? type;
         //如果是数组，就取数组的元素类型
         if (IsArrayField(type))
         {
@@ -229,7 +229,7 @@ internal class PostgreSQL : RemoteDb
         {
             if (String.IsNullOrWhiteSpace(fieldType)) fieldType = "varchar";
             if (value is null) return isNullable ? "null" : "''";
-            return "'" + value.ToString().Replace("'", "''") + "'";
+            return "'" + value.ToString()!.Replace("'", "''") + "'";
         }
         if (type == typeof(DateTime))
         {
@@ -272,7 +272,7 @@ internal class PostgreSQL : RemoteDb
         if (type != null) value = value.ChangeType(type);
         if (value == null) return isNullable ? "null" : "";
 
-        return value.ToString();
+        return value.ToString() ?? "";
     }
 
     /// <summary>长文本长度</summary>
@@ -906,7 +906,7 @@ order by
                 var set = new HashSet<String>();
                 foreach (DataRow dr in dt.Rows)
                 {
-                    set.Add(Convert.ToString(dr[0]));
+                    set.Add(Convert.ToString(dr[0]) ?? "");
                 }
                 if (set.Count > 0)
                 {

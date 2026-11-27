@@ -110,7 +110,7 @@ class XTable : IDataTable, ICloneable//, IXmlSerializable
 
     /// <summary>主字段。主字段作为业务主要字段，代表当前数据行意义</summary>
     [XmlIgnore, IgnoreDataMember]
-    public IDataColumn Master => Columns.FirstOrDefault(e => e.Master) ?? Columns.FirstOrDefault(e => e.PrimaryKey);
+    public IDataColumn? Master => Columns.FirstOrDefault(e => e.Master) ?? Columns.FirstOrDefault(e => e.PrimaryKey);
 
     /// <summary>主键集合。可以是空集合，但不能为null。</summary>
     [XmlIgnore, IgnoreDataMember]

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
@@ -493,7 +493,7 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     /// <returns></returns>
     public virtual Int32 Execute(DbCommand cmd) => Execute(cmd, false, static cmd2 => cmd2.ExecuteNonQuery());
 
-    /// <summary>执行数据库命令并返回结果，统一处理事务、SQL 日志与异常</summary>
+    /// <summary>执行数据库命令并返回结果，统一处理过滤器、事务、SQL 日志与异常</summary>
     /// <typeparam name="T">返回类型</typeparam>
     /// <param name="cmd">数据库命令</param>
     /// <param name="query">是否查询操作。查询不打开事务</param>
@@ -503,6 +503,29 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
     [StackTraceHidden]
 #endif
     public virtual T Execute<T>(DbCommand cmd, Boolean query, Func<DbCommand, T> callback)
+    {
+        // 未注册过滤器时，管道直接执行真实命令
+        var context = new DbCommandContext
+        {
+            Session = this,
+            Command = cmd,
+            IsQuery = query,
+        };
+        DbCommandFilters.Execute(context, c => c.Result = ExecuteCore(c.Command, query, callback));
+
+        return GetFilterResult<T>(context);
+    }
+
+    private static T GetFilterResult<T>(DbCommandContext context)
+    {
+        if (context.Result is T result) return result;
+
+        if (typeof(T) == typeof(Int32)) return (T)(Object)context.AffectedRows;
+
+        return default!;
+    }
+
+    private T ExecuteCore<T>(DbCommand cmd, Boolean query, Func<DbCommand, T> callback)
     {
         Transaction?.Check(cmd, !query);
 
@@ -749,7 +772,7 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
         }).ConfigureAwait(false);
     }
 
-    /// <summary>异步执行数据库命令并返回结果，统一处理事务、SQL 日志与异常</summary>
+    /// <summary>异步执行数据库命令并返回结果，统一处理过滤器、事务、SQL 日志与异常</summary>
     /// <typeparam name="T">返回类型</typeparam>
     /// <param name="cmd">数据库命令</param>
     /// <param name="query">是否查询操作。查询不打开事务</param>
@@ -758,7 +781,21 @@ public abstract partial class DbSession : DisposeBase, IDbSession, IAsyncDbSessi
 #if NETCOREAPP
     [StackTraceHidden]
 #endif
-    public virtual Task<T> ExecuteAsync<T>(DbCommand cmd, Boolean query, Func<DbCommand, Task<T>> callback)
+    public virtual async Task<T> ExecuteAsync<T>(DbCommand cmd, Boolean query, Func<DbCommand, Task<T>> callback)
+    {
+        // 未注册过滤器时，管道直接执行真实命令
+        var context = new DbCommandContext
+        {
+            Session = this,
+            Command = cmd,
+            IsQuery = query,
+        };
+        await DbCommandFilters.ExecuteAsync(context, async c => c.Result = await ExecuteCoreAsync(c.Command, query, callback).ConfigureAwait(false)).ConfigureAwait(false);
+
+        return GetFilterResult<T>(context);
+    }
+
+    private Task<T> ExecuteCoreAsync<T>(DbCommand cmd, Boolean query, Func<DbCommand, Task<T>> callback)
     {
         Transaction?.Check(cmd, !query);
 

@@ -55,6 +55,27 @@ public static class DbFactory
     /// <param name="dbType"></param>
     public static void Register<T>(DatabaseType dbType) where T : IDatabase, new() => _dbs[dbType] = new T();
 
+    /// <summary>注册数据库提供者实例。外部程序集可通过该入口接入自定义数据库</summary>
+    /// <param name="db">数据库提供者</param>
+    public static void Register(IDatabase db)
+    {
+        if (db == null) throw new ArgumentNullException(nameof(db));
+
+        _dbs[db.Type] = db;
+    }
+
+    /// <summary>注册数据库提供者类型。外部程序集可通过该入口接入自定义数据库</summary>
+    /// <param name="type">数据库提供者类型，必须实现 <see cref="IDatabase"/> 且具有无参构造函数</param>
+    public static void Register(Type type)
+    {
+        if (type == null) throw new ArgumentNullException(nameof(type));
+        if (!typeof(IDatabase).IsAssignableFrom(type)) throw new ArgumentException($"Type [{type.FullName}] does not implement {nameof(IDatabase)}.", nameof(type));
+
+        if (type.CreateInstance() is not IDatabase db) throw new ArgumentException($"Unable to create database provider [{type.FullName}].", nameof(type));
+
+        Register(db);
+    }
+
     /// <summary>根据数据库类型创建提供者</summary>
     /// <param name="dbType"></param>
     /// <returns></returns>

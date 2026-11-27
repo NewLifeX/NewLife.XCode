@@ -53,6 +53,19 @@ public class DatabaseTypeTests
     }
 
     [Fact]
+    public void Register_Type_And_Instance()
+    {
+        var db = new SQLite();
+        DbFactory.Register(db);
+        Assert.NotNull(DbFactory.Create(DatabaseType.SQLite));
+
+        DbFactory.Register(typeof(SQLite));
+        Assert.NotNull(DbFactory.Create(DatabaseType.SQLite));
+
+        Assert.Throws<ArgumentException>(() => DbFactory.Register(typeof(String)));
+    }
+
+    [Fact]
     public void ClickHouse_TypeCheck()
     {
         var db = DbFactory.Create(DatabaseType.ClickHouse);

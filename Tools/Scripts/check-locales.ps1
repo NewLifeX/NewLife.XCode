@@ -40,7 +40,9 @@ param(
         'Driver file [{0}] SHA-256 is [{1}]; pin it in DriverLoader.KnownHashes to enforce integrity.',
         '[{0}/{1}] failed to decrypt cached configuration; ignoring {2}: {3}',
         # 内部诊断日志：不面向最终用户，保留英文便于检索与反馈
-        'Presto metadata query failed for [{0}]: {1}',
+        'Presto metadata query failed: {0}',
+        'Failed to describe [{0}]: {1}',
+        'Failed to load columns for [{0}]: {1}',
         'Failed to get fast row count for [{0}] by stats: {1}',
         'Failed to get Iceberg row count: {0}',
         'Failed to update count statistics for [{0}]: {1}',

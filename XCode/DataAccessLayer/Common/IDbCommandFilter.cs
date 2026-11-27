@@ -421,7 +421,7 @@ public static class DbCommandFilterScope
     internal static IDisposable Enter()
     {
         var old = _depth.Value;
-        if (old >= MaxDepth) throw new XCodeException($"Database filter recursion depth exceeds {MaxDepth}.");
+        if (old >= MaxDepth) throw new XCodeException(L.T("Database filter recursion depth exceeds {0}.", MaxDepth));
 
         _depth.Value = old + 1;
 

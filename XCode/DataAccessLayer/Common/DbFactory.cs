@@ -69,9 +69,9 @@ public static class DbFactory
     public static void Register(Type type)
     {
         if (type == null) throw new ArgumentNullException(nameof(type));
-        if (!typeof(IDatabase).IsAssignableFrom(type)) throw new ArgumentException($"Type [{type.FullName}] does not implement {nameof(IDatabase)}.", nameof(type));
+        if (!typeof(IDatabase).IsAssignableFrom(type)) throw new ArgumentException(L.T("Type [{0}] does not implement [{1}].", type.FullName, nameof(IDatabase)), nameof(type));
 
-        if (type.CreateInstance() is not IDatabase db) throw new ArgumentException($"Unable to create database provider [{type.FullName}].", nameof(type));
+        if (type.CreateInstance() is not IDatabase db) throw new ArgumentException(L.T("Unable to create database provider [{0}].", type.FullName), nameof(type));
 
         Register(db);
     }

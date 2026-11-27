@@ -107,7 +107,7 @@ public class EntityFilters(Type? entityType)
                 Add(new LegacyEntityFilter(interceptor));
                 break;
             default:
-                throw new XCodeException($"Type [{typeof(T).FullName}] must implement {nameof(IEntityFilter)} or {nameof(IEntityInterceptor)}.");
+                throw new XCodeException(L.T("Type [{0}] must implement [{1}] or [{2}].", typeof(T).FullName, nameof(IEntityFilter), nameof(IEntityInterceptor)));
         }
     }
 
@@ -452,7 +452,7 @@ internal static class EntityPipeline
     public static IDisposable Enter()
     {
         var old = _depth.Value;
-        if (old >= MaxDepth) throw new XCodeException($"Entity filter recursion depth exceeds {MaxDepth}.");
+        if (old >= MaxDepth) throw new XCodeException(L.T("Entity filter recursion depth exceeds {0}.", MaxDepth));
 
         _depth.Value = old + 1;
 

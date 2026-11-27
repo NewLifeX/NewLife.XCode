@@ -17,10 +17,10 @@ public partial class Tenant : Entity<Tenant>, ITenantScope
         //df.Add(nameof(CreateUserId));
 
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Interceptors.Add<UserInterceptor>();
-        Meta.Interceptors.Add<TimeInterceptor>();
-        Meta.Interceptors.Add<IPInterceptor>();
-        Meta.Interceptors.Add<TenantInterceptor>();
+        Meta.Filters.Add<UserFilter>();
+        Meta.Filters.Add<TimeFilter>();
+        Meta.Filters.Add<IPFilter>();
+        Meta.Filters.Add<TenantFilter>();
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>

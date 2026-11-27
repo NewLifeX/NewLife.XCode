@@ -75,11 +75,11 @@ public partial class Department : Entity<Department>, ITenantScope, IDepartmentS
         //df.Add(__.ParentId);
 
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
-        Meta.Interceptors.Add<TimeInterceptor>();
-        Meta.Interceptors.Add<IPInterceptor>();
-        Meta.Interceptors.Add<TenantInterceptor>();
-        Meta.Interceptors.Add<DataScopeInterceptor>();
+        Meta.Filters.Add(new UserFilter { AllowEmpty = false });
+        Meta.Filters.Add<TimeFilter>();
+        Meta.Filters.Add<IPFilter>();
+        Meta.Filters.Add<TenantFilter>();
+        Meta.Filters.Add<DataScopeFilter>();
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>

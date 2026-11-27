@@ -51,11 +51,11 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
         Meta.Table.DataTable.InsertOnly = true;
         //Meta.Factory.FullInsert = false;
 
-        Meta.Interceptors.Add<TimeInterceptor>();
-        Meta.Interceptors.Add<UserInterceptor>();
-        Meta.Interceptors.Add<IPInterceptor>();
-        Meta.Interceptors.Add<TraceInterceptor>();
-        Meta.Interceptors.Add<DataScopeInterceptor>();
+        Meta.Filters.Add<TimeFilter>();
+        Meta.Filters.Add<UserFilter>();
+        Meta.Filters.Add<IPFilter>();
+        Meta.Filters.Add<TraceFilter>();
+        Meta.Filters.Add<DataScopeFilter>();
 
 #if !DEBUG
         // 关闭SQL日志
@@ -346,6 +346,9 @@ public partial class Log : Entity<Log>, IUserScope, IDataScopeFieldProvider
         var snow = Meta.Factory.Snow;
         Expression exp = snow != null ? _.Id < snow.GetId(date) : _.CreateTime < date;
         exp &= _.CreateUserId == 0;
+
+        // 系统维护清理，显式绕过数据权限过滤器
+        using var scope = EntityFilterScope.SuppressAll();
 
         try
         {

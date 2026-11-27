@@ -10,7 +10,7 @@ namespace XCode.Membership;
 /// <remarks>
 /// 存储当前用户的数据权限范围，在查询时可用于构建过滤条件。
 /// <para>使用方式：在请求开始时设置 DataScopeContext.Current，后续查询自动应用数据权限过滤</para>
-/// <para>配合 DataScopeModule 实现实体增删改的权限校验</para>
+/// <para>配合 DataScopeFilter 实现实体增删改的权限校验</para>
 /// </remarks>
 public class DataScopeContext
 {
@@ -592,7 +592,7 @@ public static class DataScopeHelper
     /// <summary>获取用户字段</summary>
     /// <param name="factory">实体工厂</param>
     /// <returns>用户字段</returns>
-    private static FieldItem? GetUserField(IEntityFactory factory)
+    public static FieldItem? GetUserField(IEntityFactory factory)
     {
         // 尝试从实体实例获取自定义字段名
         var entity = factory.Create();
@@ -609,7 +609,7 @@ public static class DataScopeHelper
     /// <summary>获取部门字段</summary>
     /// <param name="factory">实体工厂</param>
     /// <returns>部门字段</returns>
-    private static FieldItem? GetDepartmentField(IEntityFactory factory)
+    public static FieldItem? GetDepartmentField(IEntityFactory factory)
     {
         // 尝试从实体实例获取自定义字段名
         var entity = factory.Create();

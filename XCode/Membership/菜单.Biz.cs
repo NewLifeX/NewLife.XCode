@@ -59,9 +59,9 @@ public partial class Menu : EntityTree<Menu>, IMenu
 
         //ObjectContainer.Current.AutoRegister<IMenuFactory, MenuFactory>();
 
-        Meta.Interceptors.Add<UserInterceptor>();
-        Meta.Interceptors.Add<TimeInterceptor>();
-        Meta.Interceptors.Add<IPInterceptor>();
+        Meta.Filters.Add<UserFilter>();
+        Meta.Filters.Add<TimeFilter>();
+        Meta.Filters.Add<IPFilter>();
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>

@@ -38,10 +38,10 @@ public partial class User : LogEntity<User>, IUser, IAuthUser, IIdentity, IDataS
         sc.FindSlaveKeyMethod = k => Find(__.Name, k);
         sc.GetSlaveKeyMethod = e => e.Name;
 
-        Meta.Interceptors.Add<UserInterceptor>();
-        Meta.Interceptors.Add<TimeInterceptor>();
-        Meta.Interceptors.Add<IPInterceptor>();
-        Meta.Interceptors.Add<DataScopeInterceptor>();
+        Meta.Filters.Add<UserFilter>();
+        Meta.Filters.Add<TimeFilter>();
+        Meta.Filters.Add<IPFilter>();
+        Meta.Filters.Add<DataScopeFilter>();
     }
 
     /// <summary>首次连接数据库时初始化数据，仅用于实体类重载，用户不应该调用该方法</summary>

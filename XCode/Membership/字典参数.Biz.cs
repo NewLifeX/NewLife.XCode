@@ -76,9 +76,9 @@ public partial class Parameter : Entity<Parameter>
         //df.Add(__.Kind);
 
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Interceptors.Add<UserInterceptor>();
-        Meta.Interceptors.Add<TimeInterceptor>();
-        Meta.Interceptors.Add<IPInterceptor>();
+        Meta.Filters.Add<UserFilter>();
+        Meta.Filters.Add<TimeFilter>();
+        Meta.Filters.Add<IPFilter>();
     }
     #endregion
 

@@ -17,10 +17,10 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
         //df.Add(nameof(TenantId));
 
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Interceptors.Add<UserInterceptor>();
-        Meta.Interceptors.Add<TimeInterceptor>();
-        Meta.Interceptors.Add<IPInterceptor>();
-        Meta.Interceptors.Add<TenantInterceptor>();
+        Meta.Filters.Add<UserFilter>();
+        Meta.Filters.Add<TimeFilter>();
+        Meta.Filters.Add<IPFilter>();
+        Meta.Filters.Add<TenantFilter>();
     }
 
     /// <summary>验证并修补数据，返回验证结果，或者通过抛出异常的方式提示验证失败。</summary>
@@ -177,7 +177,11 @@ public partial class TenantUser : Entity<TenantUser>, ITenantScope
     /// <summary>根据用户删除租户关系</summary>
     /// <param name="userId">用户</param>
     /// <returns>影响行数</returns>
-    public static Int32 DeleteByUserId(Int32 userId) => Delete(_.UserId == userId);
+    public static Int32 DeleteByUserId(Int32 userId)
+    {
+        var list = FindAll(_.UserId == userId);
+        return list.Count == 0 ? 0 : list.Delete();
+    }
 
     /// <summary>根据用户统计租户关系数量</summary>
     /// <param name="userId">用户</param>

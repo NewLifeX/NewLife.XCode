@@ -1,4 +1,4 @@
-﻿using XCode.Configuration;
+using XCode.Configuration;
 using System.Diagnostics.CodeAnalysis;
 
 namespace XCode.Membership;
@@ -121,86 +121,6 @@ public static class TenantSourceHelper
     }
 }
 
-/// <summary>租户拦截器</summary>
-[Obsolete("请使用 TenantInterceptor")]
-public class TenantModule : TenantInterceptor { }
-
-/// <summary>租户拦截器。添加修改时自动设置租户标识</summary>
-public class TenantInterceptor : EntityInterceptor
-{
-    /// <summary>初始化。检查是否匹配</summary>
-    /// <param name="entityType">实体类型</param>
-    /// <returns>是否匹配</returns>
-    protected override Boolean OnInit(Type entityType) => typeof(ITenantScope).IsAssignableFrom(entityType);
-
-    /// <summary>创建实体对象</summary>
-    /// <param name="entity">实体对象</param>
-    /// <param name="forEdit">是否用于编辑</param>
-    protected override void OnCreate(IEntity entity, Boolean forEdit)
-    {
-        var ctx = TenantContext.Current;
-        if (ctx != null && entity is ITenantScope tenant)
-        {
-            tenant.TenantId = ctx.TenantId;
-        }
-    }
-
-    /// <summary>验证数据，自动加上创建和更新的信息</summary>
-    /// <param name="entity">实体对象</param>
-    /// <param name="method">数据操作方法</param>
-    protected override Boolean OnValid(IEntity entity, DataMethod method)
-    {
-        if (entity is not ITenantScope tenant) return true;
-
-        var ctx = TenantContext.Current;
-        if (ctx == null || ctx.TenantId == 0) return true;
-
-        try
-        {
-            // 只能操作本租户数据
-            switch (method)
-            {
-                case DataMethod.Insert:
-                    // 新增：强制设置租户
-                    if (tenant.TenantId == 0)
-                        tenant.TenantId = ctx.TenantId;
-                    else if (tenant.TenantId != ctx.TenantId)
-                        throw new InvalidOperationException(L.T("Cannot create data for another tenant [{0}].", tenant.TenantId));
-                    break;
-
-                case DataMethod.Update:
-                    // 更新：校验租户归属
-                    if (!entity.HasDirty) return true;
-                    if (tenant.TenantId != ctx.TenantId)
-                        throw new InvalidOperationException(L.T("Cannot modify data of another tenant [{0}].", tenant.TenantId));
-                    break;
-
-                case DataMethod.Delete:
-                    // 删除：校验租户归属
-                    if (tenant.TenantId != ctx.TenantId)
-                        throw new InvalidOperationException(L.T("Cannot delete data of another tenant [{0}].", tenant.TenantId));
-                    break;
-            }
-        }
-        catch (InvalidOperationException ex)
-        {
-            // 失败时记录审计日志
-            LogProvider.Provider.WriteLog(entity.GetType(), method + "", false, ex.Message);
-        }
-
-        return true;
-    }
-
-    /// <summary>查询时自动附加租户过滤条件，无需在业务代码中手动调用 ApplyTenant</summary>
-    /// <param name="factory">实体工厂</param>
-    /// <param name="where">查询条件表达式</param>
-    /// <param name="action">查询操作来源</param>
-    /// <returns>修改后的查询条件，已合并租户过滤</returns>
-    protected override XCode.Expression? OnQuery(IEntityFactory factory, XCode.Expression? where, QueryAction action)
-    {
-        // 转为 WhereExpression 以便应用租户过滤。where 可能为 null 或普通 Expression，需显式包装
-        var exp = where as WhereExpression ?? new WhereExpression(where, Operator.Space, null);
-
-        return exp.ApplyTenant(factory);
-    }
-}
+/// <summary>租户拦截器。兼容旧类名，实际实现见 <see cref="TenantFilter"/></summary>
+[Obsolete("请使用 TenantFilter；运行 xcode 可自动迁移")]
+public class TenantInterceptor : TenantFilter { }

@@ -11,7 +11,9 @@
 | `void Valid(Boolean isNew)` | Insert/Update；`isNew=true` 表示新增 | 旧版，仍支持 |
 | `Boolean Valid(DataMethod method)` | Insert/Update/Delete；返回 `false` 阻止操作 | ✅ 推荐重写 |
 
-框架调用顺序：`Valid(DataMethod)` → 内部调用 `Valid(Boolean)`（Insert/Update）→ 检查字符串字段长度 → 调用拦截器链 `Interceptors.Valid()`
+框架调用顺序：过滤器前置 `OnExecuting` → `Valid(DataMethod)` → 内部调用 `Valid(Boolean)`（Insert/Update）→ 检查字符串字段长度 → 雪花 Id → 持久化 → 过滤器后置 `OnExecuted`。
+
+`Valid(DataMethod)` 只做业务与字段校验，不再调用拦截器链；旧拦截器已适配为过滤器，统一由操作管道执行，避免在过滤器内部再次触发过滤器。不再提供 `ValidData` 等第三个公开重载。
 
 ---
 
@@ -46,7 +48,7 @@ public override Boolean Valid(DataMethod method)
         UpdateTime = DateTime.Now;
     }
 
-    return base.Valid(method);   // 调用基类：拦截器链 + 字符串长度检查
+    return base.Valid(method);   // 调用基类：字符串长度检查 + 雪花Id
 }
 ```
 
@@ -131,22 +133,24 @@ list.Insert();
 ```
 InsertAsync / Insert / Update / Delete 调用
   ↓
-ValidOperate(method)
-  ├─ Valid(DataMethod)      ← 用户重写，业务校验
-  │    └─ Valid(Boolean)     ← 旧版兼容调用
-  ├─ 字符串字段长度检查       ← 基类自动
-  └─ Interceptors.Valid()    ← 拦截器链（TimeModule/UserModule 等）
+过滤器前置 OnExecuting（含旧拦截器适配的 Valid）
   ↓
-AutoFillSnowIdPrimaryKey()   ← 主键自动生成
+Valid(DataMethod)         ← 用户重写，业务校验
+  ├─ Valid(Boolean)        ← 旧版兼容调用
+  └─ 字符串字段长度检查     ← 基类自动
+  ↓
+AutoFillSnowIdPrimaryKey() ← 主键自动生成
   ↓
 执行 SQL (OnInsert/OnUpdate/OnDelete)
+  ↓
+过滤器后置 OnExecuted
 ```
 
 ---
 
 ## 关联阅读
 
-- `/xcode/entity_interceptor`（拦截器在 Valid 之后运行）
+- `/xcode/entity_interceptor`（拦截器在 Valid 之前运行）
 - `/xcode/additional_fields`（累加字段在 Update 时计算差值）
 - `/xcode/dirty_collection`（HasDirty 与脏数据）
 - `/xcode/initdata_detail`（InitData 与 Valid 的调用时序不同）

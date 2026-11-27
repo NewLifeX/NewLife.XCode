@@ -2,6 +2,8 @@
 
 `EntityCache<TEntity>` 是“整表级缓存”，适合字典表、参数表、枚举表等“读多写少 + 行数较小”的实体。
 
+> 启用 [实体操作过滤器（IEntityFilter）](实体过滤器（IEntityFilter）.md) 时：缓存加载阶段抑制过滤器，保证缓存保存整表原始数据；`FindAllWithCache/FindByKeyWithCache/FindBySlaveWithCache` 读取时执行过滤器后置阶段，按租户/数据权限裁剪结果。直接访问 `Meta.Cache.Entities` 等内部成员仍不过滤，业务代码请使用这三个方法。
+
 ## 1）核心机制
 
 `Meta.Cache.Entities` 首次访问会加载整表，之后在内存集合上做 `Find/FindAll`。

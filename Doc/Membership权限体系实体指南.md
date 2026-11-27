@@ -40,14 +40,14 @@ Tenant（租户）
 | `Enable` | 是否启用 |
 | `Logins` | 累计登录次数（AdditionalField 累加） |
 
-### 内置拦截器
+### 内置过滤器
 
-静态构造函数中自动注册：
+静态构造函数中自动注册（`Add` 继续可用，内部进入过滤器管道）：
 
 ```csharp
-Meta.Interceptors.Add<UserInterceptor>();
-Meta.Interceptors.Add<TimeInterceptor>();
-Meta.Interceptors.Add<IPInterceptor>();
+Meta.Filters.Add<UserFilter>();
+Meta.Filters.Add<TimeFilter>();
+Meta.Filters.Add<IPFilter>();
 ```
 
 ### 初始化数据
@@ -171,7 +171,7 @@ var menus = User.Current?.GetMenus();
 
 ### 多租户隔离
 
-通过 `TenantInterceptor` 实现自动数据隔离：
+通过 `TenantFilter` 实现自动数据隔离（旧 `TenantInterceptor` 是其空壳子类，注册效果相同）：
 - 查询时追加 `TenantId=xxx` 条件
 - 写入时自动填充 `TenantId`
 
@@ -263,5 +263,5 @@ LogProvider.Provider.WriteLog(typeof(User), "登录", true, "管理员登录成�
 
 - **初始化数据不触发**：确保至少一次调用 `InitData`（首次建表时自动触发），或手动调用 `User.Meta.Session.InitData()`。
 - **管理员无法登录**：执行 `Role.CheckRole()` 修复菜单权限。
-- **多租户数据混用**：检查 `TenantInterceptor` 是否正确注册，以及请求链路中 `TenantContext.Current` 是否按租户设置。
+- **多租户数据混用**：检查 `TenantFilter` 是否正确注册（旧 `TenantInterceptor` 与它等价），以及请求链路中 `TenantContext.Current` 是否按租户设置。
 - **字典参数改了不生效**：`Parameter` 默认启用实体缓存，可调用 `Parameter.Meta.Cache.Clear()` 强制刷新。

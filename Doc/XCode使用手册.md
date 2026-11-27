@@ -617,29 +617,30 @@ XCode 内置了多个实体拦截器：
 
 | 拦截器 | 功能 |
 |--------|------|
-| `UserInterceptor` | 自动填充 CreateUser/UpdateUser |
-| `TimeInterceptor` | 自动填充 CreateTime/UpdateTime |
-| `IPInterceptor` | 自动填充 CreateIP/UpdateIP |
-| `TraceInterceptor` | 自动填充 TraceId |
+| `UserFilter`（旧 `UserInterceptor`） | 自动填充 CreateUser/UpdateUser |
+| `TimeFilter`（旧 `TimeInterceptor`） | 自动填充 CreateTime/UpdateTime |
+| `IPFilter`（旧 `IPInterceptor`） | 自动填充 CreateIP/UpdateIP |
+| `TraceFilter`（旧 `TraceInterceptor`） | 自动填充 TraceId |
 
-### 8.2 自定义拦截器
+### 8.2 自定义过滤器
 
 ```csharp
-public class MyInterceptor : EntityInterceptor
+public class MyFilter : EntityFilter
 {
-    protected override Boolean OnValid(IEntity entity, DataMethod method)
+    public override void OnExecuting(EntityContext context)
     {
-        if (method == DataMethod.Insert)
+        if (context.Action == DataMethod.Insert)
         {
             // 新增前处理
         }
-        return base.OnValid(entity, method);
     }
 }
 
-// 注册拦截器
-User.Meta.Interceptors.Add<MyInterceptor>();
+// 注册过滤器（Add 兼容过滤器与旧拦截器，泛型按类型自动分派）
+User.Meta.Filters.Add<MyFilter>();
 ```
+
+> 旧的 `IEntityInterceptor` 接口已标记过时；`EntityInterceptor` 基类仍可用，并在内部适配到过滤器管道。
 
 ---
 

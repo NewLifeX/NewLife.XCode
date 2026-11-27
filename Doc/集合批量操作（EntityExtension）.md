@@ -28,7 +28,7 @@ for (var i = 0; i < 1000; i++)
 list.Insert();    // 数据库支持批量时自动走 BatchInsert
 ```
 
-- 写入前每条都会调用 `Valid(DataMethod.Insert)`（含拦截器链）
+- 写入前每条都会调用 `Valid(DataMethod.Insert)` 做业务校验；过滤器在整批开始前执行一次，上下文通过 `Entities` 提供整批数据
 - 若存在 `ShardPolicy`，会自动按分片分组后分别批量插入
 
 ### 2.2 Update
@@ -68,7 +68,7 @@ old.Delete();
 
 ## 3. 底层批量原语
 
-底层批量方法直接向数据库发送多行 VALUES 或 MERGE 语句，性能最高，但**不触发实体拦截器**（`TimeInterceptor`、`UserInterceptor` 等不会自动填充字段），需要调用方自行确保数据完整性。
+底层批量方法直接向数据库发送多行 VALUES 或 MERGE 语句，性能最高，但**不触发旧版实体拦截器**（`TimeInterceptor`、`UserInterceptor` 等不会自动填充字段），需要调用方自行确保数据完整性。新版 [实体操作过滤器（IEntityFilter）](实体过滤器（IEntityFilter）.md) 会在每批调用时触发一次，可通过 `Entities` 统一填充或校验。
 
 ### 3.1 BatchInsert
 
@@ -175,7 +175,7 @@ var dps = entity.CreateParameter(session);
 
 ## 7. 常见问题
 
-- **批量插入后拦截器字段未填充**：批量原语不触发拦截器，请在调用 `BatchInsert` 前手动调用 `list.Valid(true)` 或逐条调用 `Valid(DataMethod.Insert)`。
+- **批量插入后拦截器字段未填充**：旧版拦截器不触发，请在调用 `BatchInsert` 前手动调用 `list.Valid(true)` 或逐条调用 `Valid(DataMethod.Insert)`；使用新版 `IEntityFilter` 时可在 `OnExecuting` 中遍历 `context.Entities` 自动填充。
 - **分表场景需要指定 session**：跨分片批量操作时，传入目标 `IEntitySession` 避免路由到默认表。
 - **Save 大量混合数据很慢**：`IsFromDatabase` 判断依赖内存标记，若实体来源混乱可改用 `BatchUpsert` 并提供唯一索引让数据库判断冲突。
 - **useTransition 何时为 true**：SQLite 单机场景下逐条操作前后加事务能显著提升速度；其他数据库批量操作自带原子性，不需要额外事务。

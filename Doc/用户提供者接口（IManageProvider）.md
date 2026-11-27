@@ -155,5 +155,5 @@ ManageProvider.Provider = new AppManageProvider();
 ## 6. 关联阅读
 
 - `/xcode/membership_guide`（Membership 全套实体体系）
-- `/xcode/data_scope`（DataScopeInterceptor 中通过 Provider 获取当前用户）
+- `/xcode/data_scope`（DataScopeFilter 中通过 Provider 获取当前用户）
 - `/xcode/membership_rbac`（用户、角色、菜单 RBAC 完整介绍）

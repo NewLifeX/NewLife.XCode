@@ -47,14 +47,17 @@ XCode 的代码生成由 `XCodeTool` 驱动，核心生成器在 `XCode.Code` �
 - `Meta.Cache`
 - `Meta.SingleCache` 从键配置
 
-### 自动拦截器
+### 自动过滤器配置
 
-根据字段名自动生成拦截器配置：
-- `UserInterceptor`
-- `TimeInterceptor`
-- `IPInterceptor`
-- `TraceInterceptor`
-- `TenantInterceptor`
+根据字段名自动生成过滤器/拦截器配置：
+
+- `UserFilter`
+- `TimeFilter`
+- `IPFilter`
+- `TraceFilter`
+- `TenantFilter`（含 `TenantId` 字段时注册）
+
+> 生成代码统一使用 `Meta.Filters.Add<T>()`；含 `TenantId` 的业务类生成 `Meta.Filters.Add<TenantFilter>()`。旧 `TimeInterceptor/UserInterceptor/IPInterceptor/TraceInterceptor` 与 `TenantInterceptor/DataScopeInterceptor` 只保留 `[Obsolete]` 空壳，代码生成器会把 Module 时代、拦截器时代的注册统一迁移到 `Meta.Filters`。
 
 ### 自动分片策略
 
@@ -74,16 +77,19 @@ XCode 的代码生成由 `XCodeTool` 驱动，核心生成器在 `XCode.Code` �
 
 这是“让旧模型自动升级”的关键环节。
 
-## 5）版本感知升级（Module -> Interceptor）
+## 5）版本感知升级（Module/Interceptor -> Filter）
 
 `EntityBuilder` 会检测引用的 `NewLife.XCode` 版本：
 
 - 版本 `>= 11.23.2026.127-beta0417` 时启用升级
-- 将旧类名：`TimeModule/UserModule/IPModule/TraceModule`
-- 升级为：`TimeInterceptor/UserInterceptor/IPInterceptor/TraceInterceptor`
-- 同时升级 `Meta.Modules -> Meta.Interceptors`
+- `TimeModule/UserModule/IPModule/TraceModule` -> `TimeFilter/UserFilter/IPFilter/TraceFilter`
+- `TimeInterceptor/UserInterceptor/IPInterceptor/TraceInterceptor` -> `TimeFilter/UserFilter/IPFilter/TraceFilter`
+- `TenantModule/TenantInterceptor` -> `TenantFilter`
+- `DataScopeInterceptor` -> `DataScopeFilter`
+- `Meta.Modules`、`Meta.Interceptors` -> `Meta.Filters`
+- 旧安全注册 `Add<TenantFilter>` / `Add<DataScopeFilter>` -> `Add<...>`；旧 `AddFilter<...>` -> `Add<...>`
 
-避免老模板在新版本编译失败。
+这样 Module 时代和拦截器时代的实体静态构造函数都能被生成器迁移到最新结构。
 
 ## 6）XCodeTool 的扫描与执行行为
 

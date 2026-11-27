@@ -1,17 +1,19 @@
-# 内置实体拦截器（Time/User/IP/Trace）
+# 内置实体过滤器（Time/User/IP/Trace）
 
-XCode 提供 4 个开箱即用的 `EntityInterceptor` 实现，通过**字段名约定**自动识别激活，无需手动赋值即可完成创建时间、操作者、来源 IP、链路追踪 ID 的填充。
+XCode 提供 4 个开箱即用的 `EntityFilter` 实现，通过**字段名约定**自动识别激活，无需手动赋值即可完成创建时间、操作者、来源 IP、链路追踪 ID 的填充。
+
+> 自 v12.4 起，这些内置项统一进入 `IEntityFilter` 管道。推荐直接注册过滤器：`Meta.Filters.Add<TimeFilter>()`；同名 `*Interceptor` 空壳类已标记 `[Obsolete]`，只为旧实体静态构造函数保留编译兼容，运行一次 `xcode` 即可迁移。
 
 ---
 
 ## 1. 一览
 
-| 拦截器类 | 旧名（已弃用） | 自动填充字段 | 填充时机 |
+| 过滤器类 | 兼容壳类（过时） | 自动填充字段 | 填充时机 |
 |---------|--------------|-------------|---------|
-| `TimeInterceptor` | `TimeModule` | `CreateTime` / `UpdateTime` | Insert / Update |
-| `UserInterceptor` | `UserModule` | `CreateUserID` / `CreateUser` / `UpdateUserID` / `UpdateUser` | Insert / Update |
-| `IPInterceptor` | `IPModule` | `CreateIP` / `UpdateIP` | Insert / Update |
-| `TraceInterceptor` | `TraceModule` | `TraceId` | Insert / Update |
+| `TimeFilter` | `TimeInterceptor` | `CreateTime` / `UpdateTime` | Insert / Update |
+| `UserFilter` | `UserInterceptor` | `CreateUserID` / `CreateUser` / `UpdateUserID` / `UpdateUser` | Insert / Update |
+| `IPFilter` | `IPInterceptor` | `CreateIP` / `UpdateIP` | Insert / Update |
+| `TraceFilter` | `TraceInterceptor` | `TraceId` | Insert / Update |
 
 ---
 
@@ -22,27 +24,27 @@ XCode 提供 4 个开箱即用的 `EntityInterceptor` 实现，通过**字段名
 ```csharp
 static Order()
 {
-    Meta.Interceptors.Add<TimeInterceptor>();
-    Meta.Interceptors.Add<UserInterceptor>();
-    Meta.Interceptors.Add<IPInterceptor>();
-    Meta.Interceptors.Add<TraceInterceptor>();
+    Meta.Filters.Add<TimeFilter>();
+    Meta.Filters.Add<UserFilter>();
+    Meta.Filters.Add<IPFilter>();
+    Meta.Filters.Add<TraceFilter>();
 }
 ```
 
 或在应用启动时全局注册，一次覆盖所有实体：
 
 ```csharp
-EntityInterceptors.Global.Add<TimeInterceptor>();
-EntityInterceptors.Global.Add<UserInterceptor>();
-EntityInterceptors.Global.Add<IPInterceptor>();
-EntityInterceptors.Global.Add<TraceInterceptor>();
+EntityFilters.Global.Add<TimeFilter>();
+EntityFilters.Global.Add<UserFilter>();
+EntityFilters.Global.Add<IPFilter>();
+EntityFilters.Global.Add<TraceFilter>();
 ```
 
-> 每个拦截器的 `Init` 方法会自动检查当前实体是否含有对应字段，不含则跳过，不影响无关实体。
+> 每个过滤器的 `Init` 方法会自动检查当前实体是否含有对应字段，不含则跳过，不影响无关实体。
 
 ---
 
-## 3. TimeInterceptor / TimeModule（时间自动填充）
+## 3. TimeFilter（时间自动填充）
 
 **匹配字段**（`DateTime` 类型，字段名匹配任意一个即激活）：
 - `CreateTime`：Insert 时写入当前时间
@@ -55,7 +57,7 @@ EntityInterceptors.Global.Add<TraceInterceptor>();
 
 ---
 
-## 4. UserInterceptor / UserModule（操作者自动填充）
+## 4. UserFilter（操作者自动填充）
 
 **匹配字段**（字段名匹配任意一个即激活）：
 - `CreateUserID` / `CreateUser`：Insert 时填充
@@ -71,12 +73,12 @@ EntityInterceptors.Global.Add<TraceInterceptor>();
 自定义用户提供者：
 
 ```csharp
-Meta.Interceptors.Add(new UserInterceptor(myProvider));
+Meta.Filters.Add(new UserFilter(myProvider));
 ```
 
 ---
 
-## 5. IPInterceptor / IPModule（来源 IP 自动填充）
+## 5. IPFilter（来源 IP 自动填充）
 
 **匹配字段**（`String` 类型，字段名匹配即激活）：
 - `CreateIP`：Insert 时填充当前请求 IP
@@ -91,7 +93,7 @@ Meta.Interceptors.Add(new UserInterceptor(myProvider));
 
 ---
 
-## 6. TraceInterceptor / TraceModule（链路追踪 ID）
+## 6. TraceFilter（链路追踪 ID）
 
 **匹配字段**（`String` 类型，字段名为 `TraceId`）：
 - Insert 和 Update 时填充 `DefaultSpan.Current?.TraceId`
@@ -99,7 +101,7 @@ Meta.Interceptors.Add(new UserInterceptor(myProvider));
 **AllowMerge 模式**（默认 `false`）：
 
 ```csharp
-Meta.Interceptors.Add(new TraceInterceptor { AllowMerge = true });
+Meta.Filters.Add(new TraceFilter { AllowMerge = true });
 ```
 
 `AllowMerge=true` 时，同一记录被多个不同 Trace 修改，所有 TraceId 以逗号连接存储，便于在 APM 看板中还原完整调用链。字段长度不足时，自动删除最旧的 TraceId。
@@ -108,7 +110,7 @@ Meta.Interceptors.Add(new TraceInterceptor { AllowMerge = true });
 
 ## 7. 字段命名约定对照
 
-只要实体表含有以下字段名（不区分大小写），拦截器即自动激活：
+只要实体表含有以下字段名（不区分大小写），过滤器即自动激活：
 
 ```
 CreateTime    UpdateTime
@@ -124,6 +126,6 @@ TraceId
 
 ## 8. 关联阅读
 
-- `/xcode/entity_interceptor`（拦截器框架原理）
+- `/xcode/entity_interceptor`（旧拦截器兼容说明）
 - `/xcode/data_scope`（数据权限拦截器）
 - `/xcode/membership_guide`（ManageProvider 提供者接口）

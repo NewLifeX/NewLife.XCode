@@ -74,7 +74,7 @@ public abstract partial class EntityBase : IEntity, IModel, IExtend, ICloneable
     public abstract Boolean SaveAsync(Int32 msDelay = 0);
 
     /// <summary>验证数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <remarks>建议重写者调用基类的实现，因为基类根据数据字段的唯一索引进行数据验证。</remarks>
+    /// <remarks>历史钩子，通常由 <see cref="Valid(DataMethod)"/> 在 Insert/Update 时调用；新代码优先重写 <see cref="Valid(DataMethod)"/>。</remarks>
     /// <param name="isNew">是否新数据</param>
     public abstract void Valid(Boolean isNew);
 

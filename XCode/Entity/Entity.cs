@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -54,7 +54,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         // Activator.CreateInstance()有缓存功能，而泛型的那个没有
         //return Activator.CreateInstance(typeof(TEntity)) as TEntity;
         //var entity = typeof(TEntity).CreateInstance() as TEntity;
-        Meta.Interceptors.Create(entity, forEdit);
+        Meta.Filters.CreateFilter(entity, forEdit);
 
         return entity;
     }
@@ -227,22 +227,33 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             }
         }
 
-        if (_enableValid)
+        return (TResult)(Object)ExecuteFilter(method, c =>
         {
-            var rt = Valid(method);
+            if (_enableValid && !Valid(method)) return 0;
 
-            // 没有更新任何数据
-            if (!rt) return (TResult)(Object)0;
-        }
+            AutoFillSnowIdPrimaryKey();
 
-        AutoFillSnowIdPrimaryKey();
+            // 自动分库分表；切换会话后同步给后置过滤器
+            using var split = Meta.InShard ? null : Meta.CreateShard((this as TEntity)!);
+            if (split != null) c.Session = Meta.Session;
 
-        if (Meta.InShard) return func();
+            return Convert.ToInt32(func());
+        });
+    }
 
-        // 自动分库分表
-        using var split = Meta.CreateShard((this as TEntity)!);
+    /// <summary>在过滤器管道中执行写入操作，返回影响行数</summary>
+    /// <param name="method">操作类型</param>
+    /// <param name="action">真实写入操作</param>
+    /// <returns></returns>
+    private Int32 ExecuteFilter(DataMethod method, Func<EntityContext, Int32> action)
+    {
+        var context = new EntityContext();
+        context.Prepare(method, Meta.Factory, Meta.Session);
+        context.Entity = this;
 
-        return func();
+        Meta.Filters.Execute(context, c => c.AffectedRows = action(c));
+
+        return context.AffectedRows;
     }
 
     /// <summary>保存。Insert/Update/Upsert</summary>
@@ -253,14 +264,17 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     /// 3，new, Upsert()
     /// </remarks>
     /// <returns></returns>
-    public override Int32 Save()
+    public override Int32 Save() => SaveCore();
+
+    private Int32 SaveCore()
     {
         // 来自数据库直接Update
         if (IsFromDatabase) return Update();
 
         // 优先使用自增字段判断
         var fi = Meta.Table.Identity;
-        if (fi != null) return Convert.ToInt64(this[fi.Name]) > 0 ? Update() : Insert();
+        if (fi != null)
+            return Convert.ToInt64(this[fi.Name]) > 0 ? Update() : Insert();
 
         /*
          * 慈母手中线，游子身上衣。
@@ -273,7 +287,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
 
         // Oracle/MySql批量插入
         var db = Meta.Session.Dal;
-        if (db.Capabilities.HasFlag(DatabaseCapability.BulkUpsert))
+        if (!Meta.Filters.HasFiltersFor(Meta.ThisType) && db.Capabilities.HasFlag(DatabaseCapability.BulkUpsert))
         {
             if (!Valid(isnew ? DataMethod.Insert : DataMethod.Update)) return -1;
 
@@ -289,12 +303,14 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
 
     /// <summary>不需要验证的保存，不执行Valid，一般用于快速导入数据</summary>
     /// <returns></returns>
-    public override Int32 SaveWithoutValid()
+    public override Int32 SaveWithoutValid() => SaveWithoutValidCore();
+
+    private Int32 SaveWithoutValidCore()
     {
         _enableValid = false;
         try
         {
-            return Save();
+            return SaveCore();
         }
         finally
         {
@@ -409,29 +425,42 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             }
         }
 
-        if (_enableValid)
+        var rs = await ExecuteFilterAsync(method, async c =>
         {
-            var rt = Valid(method);
+            if (_enableValid && !Valid(method)) return 0;
 
-            // 没有更新任何数据
-            if (!rt) return (TResult)(Object)0;
-        }
+            AutoFillSnowIdPrimaryKey();
 
-        AutoFillSnowIdPrimaryKey();
+            // 自动分库分表；切换会话后同步给后置过滤器
+            using var split = Meta.InShard ? null : Meta.CreateShard((this as TEntity)!);
+            if (split != null) c.Session = Meta.Session;
 
-        if (Meta.InShard) return await func().ConfigureAwait(false);
+            return Convert.ToInt32(await func().ConfigureAwait(false));
+        }).ConfigureAwait(false);
 
-        // 自动分库分表
-        using var split = Meta.CreateShard((this as TEntity)!);
+        return (TResult)(Object)rs;
+    }
 
-        return await func().ConfigureAwait(false);
+    /// <summary>在过滤器管道中执行异步写入操作，返回影响行数</summary>
+    /// <param name="method">操作类型</param>
+    /// <param name="action">真实写入操作</param>
+    /// <returns></returns>
+    private async Task<Int32> ExecuteFilterAsync(DataMethod method, Func<EntityContext, Task<Int32>> action)
+    {
+        var context = new EntityContext();
+        context.Prepare(method, Meta.Factory, Meta.Session);
+        context.Entity = this;
+
+        await Meta.Filters.ExecuteAsync(context, async c => c.AffectedRows = await action(c).ConfigureAwait(false)).ConfigureAwait(false);
+
+        return context.AffectedRows;
     }
 
     [NonSerialized]
     private Boolean _enableValid = true;
 
     /// <summary>验证并修补数据，通过抛出异常的方式提示验证失败。</summary>
-    /// <remarks>建议重写者调用基类的实现，因为基类自动生成雪花Id、填充创建更新信息以及验证字符串字段是否超长。</remarks>
+    /// <remarks>历史钩子，通常由 <see cref="Valid(DataMethod)"/> 在 Insert/Update 时调用；新代码优先重写 <see cref="Valid(DataMethod)"/>。</remarks>
     /// <param name="isNew">是否新数据</param>
     public override void Valid(Boolean isNew)
     {
@@ -453,6 +482,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     }
 
     /// <summary>验证数据，支持添删改，通过返回值表示验证失败。基类实现字符串字段长度检查</summary>
+    /// <remarks>业务与字段校验在这里完成；过滤器校验只在直接调用本方法时补跑一次，增删改查管道内部已经执行过，不会重复。</remarks>
     /// <param name="method"></param>
     /// <returns></returns>
     public override Boolean Valid(DataMethod method)
@@ -491,8 +521,8 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             }
         }
 
-        var rs = Meta.Interceptors.Valid(this, method);
-        if (!rs) return false;
+        // 直接调用 Valid 时补跑过滤器校验（租户/数据权限）；管道内部已经执行过，避免重复
+        if (!EntityPipeline.InPipeline && !Meta.Filters.Valid(this, method)) return false;
 
         //!!! 自动填充雪花Id，用户可能直接调用Valid
         AutoFillSnowIdPrimaryKey();
@@ -695,9 +725,6 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         var db = session.Dal.Db;
         var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
 
-        // 调用模块的 Query 方法，附加数据过滤条件
-        where = Meta.Interceptors.Query(Meta.Factory, where, QueryAction.Find);
-
         var wh = where?.GetString(db, ps);
 
         var builder = new SelectBuilder
@@ -714,7 +741,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         // 提取参数
         builder = FixParam(builder, ps);
 
-        var list = LoadData(session.Query(builder, 0, 0));
+        var list = LoadData(session.Query(builder, 0, 0, DataMethod.Find));
         //var list = session.Query(builder, 0, 0, LoadData);
         if (list == null || list.Count <= 0) return null;
 
@@ -727,8 +754,8 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         }
 
         var entity = list[0];
-        // 通过模块过滤判断是否有权访问
-        return Meta.Interceptors.Filter(entity) ? entity : null;
+        // 查询条件已在查询管道处理，这里再执行结果过滤，兼容按实体逐条判断的数据权限
+        return Meta.Filters.FilterEntity(entity) as TEntity;
     }
 
     /// <summary>根据条件查找单个实体</summary>
@@ -907,7 +934,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         var session = Meta.Session;
         var needOrderByID = startRowIndex > 0 || maximumRows > 0;
 
-        var builder = CreateBuilder(where, order, selects, needOrderByID, QueryAction.FindAll);
+        var builder = CreateBuilder(where, order, selects, needOrderByID, DataMethod.FindAll);
         var list = LoadData(session.Query(builder, startRowIndex, maximumRows));
 
         // 如果正在使用单对象缓存，则批量进入
@@ -938,15 +965,12 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         // 如下优化，避免了每次都调用Meta.Count而导致形成一次查询，虽然这次查询时间损耗不大
         // 但是绝大多数查询，都不需要进行类似的海量数据优化，显然，这个startRowIndex将会挡住99%以上的浪费
         Int64 count;
-        if (startRowIndex > 500_000 && (count = session.LongCount) > 1_000_000)
+        // 倒序深分页依赖整表行数；有过滤器时过滤后的行数不同，不能使用该优化，改走普通分页
+        if (startRowIndex > 500_000 && !Meta.Filters.HasFiltersFor(Meta.ThisType) && (count = session.LongCount) > 1_000_000)
         {
             // 估算值可能因删除产生空洞而偏大，但这里绝不能改用 FindCount 精确计数：
             // 千万级表每次深分页 COUNT(*) 都会全表扫描，超时会让整页查询直接失败，宁可容忍个别页错位
 
-            //// 计算本次查询的结果行数
-            //var wh = where?.GetString(null);
-            // 数据量巨大，每次都查总记录数很不划算，还不如用一个不太准的数据
-            //if (!wh.IsNullOrEmpty()) count = FindCount(where, order, selects, startRowIndex, maximumRows);
             // 游标在中间偏后
             if (startRowIndex * 2 > count)
             {
@@ -1011,7 +1035,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
                     if (max <= 0) return [];
 
                     var start = (Int32)(count - (startRowIndex + maximumRows));
-                    var builder2 = CreateBuilder(where, order2, selects, QueryAction.FindAll);
+                    var builder2 = CreateBuilder(where, order2, selects, DataMethod.FindAll);
                     var list = LoadData(session.Query(builder2, start, max));
                     if (list.Count <= 0) return list;
 
@@ -1030,7 +1054,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0)
         {
-            var builder = CreateBuilder(where, order, selects, QueryAction.FindAll);
+            var builder = CreateBuilder(where, order, selects, DataMethod.FindAll);
             var list2 = LoadData(session.Query(builder, startRowIndex, maximumRows));
 
             // 如果正在使用单对象缓存，则批量进入
@@ -1044,7 +1068,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             using var span = DAL.GlobalTracer?.NewSpan($"db:{ss.ConnName}:{ss.TableName}:AutoShard", "Automatic paged query", shards.Length);
 
             // 先生成查询语句
-            var builder = CreateBuilder(where, order, selects, QueryAction.FindAll);
+            var builder = CreateBuilder(where, order, selects, DataMethod.FindAll);
             if (order.IsNullOrEmpty()) order = builder.OrderBy;
 
             // 根据分页字段排序分页表
@@ -1154,7 +1178,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             Int64 rows;
 
             // 如果总记录数超过10万，为了提高性能，返回快速查找且带有缓存的总记录数
-            if (where.IsEmpty && session.LongCount > 100_000)
+            if (where.IsEmpty && !Meta.Filters.HasFiltersFor(Meta.ThisType) && session.LongCount > 100_000)
                 rows = session.LongCount;
             else
                 rows = FindCount(where, null, selects, 0, 0);
@@ -1247,37 +1271,21 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
 
     #region 缓存查询
     /// <summary>查找所有缓存。没有数据时返回空集合而不是null</summary>
-    /// <remarks>缓存层包含所有数据，此方法会通过模块过滤后返回当前上下文可见的数据</remarks>
+    /// <remarks>
+    /// 缓存保存整表原始数据，加载时抑制过滤器；读取时执行过滤器后置阶段，按租户/数据权限裁剪结果。
+    /// </remarks>
     /// <returns></returns>
-    public static IList<TEntity> FindAllWithCache() => Meta.Interceptors.Filter(Meta.Session.Cache.Entities);
+    public static IList<TEntity> FindAllWithCache() => Meta.Filters.FilterList(Meta.Session.Cache.Entities);
 
-    /// <summary>根据主键从单对象缓存查找。会经过模块过滤，返回当前上下文可见的数据</summary>
+    /// <summary>根据主键从单对象缓存查找，读取时按租户/数据权限判断是否可见</summary>
     /// <param name="key">主键值</param>
     /// <returns></returns>
-    public static TEntity? FindByKeyWithCache(Object key)
-    {
-        if (key == null) return null;
+    public static TEntity? FindByKeyWithCache(Object key) => key == null ? null : Meta.Filters.FilterEntity(Meta.SingleCache[key]);
 
-        var entity = Meta.SingleCache[key];
-        if (entity == null) return null;
-
-        // 通过模块过滤判断是否有权访问
-        return Meta.Interceptors.Filter(entity) ? entity : null;
-    }
-
-    /// <summary>根据从键从单对象缓存查找。会经过模块过滤，返回当前上下文可见的数据</summary>
+    /// <summary>根据从键从单对象缓存查找，读取时按租户/数据权限判断是否可见</summary>
     /// <param name="slaveKey">从键值</param>
     /// <returns></returns>
-    public static TEntity? FindBySlaveWithCache(String slaveKey)
-    {
-        if (slaveKey.IsNullOrEmpty()) return null;
-
-        var entity = Meta.SingleCache.GetItemWithSlaveKey(slaveKey) as TEntity;
-        if (entity == null) return null;
-
-        // 通过模块过滤判断是否有权访问
-        return Meta.Interceptors.Filter(entity) ? entity : null;
-    }
+    public static TEntity? FindBySlaveWithCache(String slaveKey) => slaveKey.IsNullOrEmpty() ? null : Meta.Filters.FilterEntity(Meta.SingleCache.GetItemWithSlaveKey(slaveKey) as TEntity);
     #endregion
 
     #region 异步查询
@@ -1321,15 +1329,12 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         // 如下优化，避免了每次都调用Meta.Count而导致形成一次查询，虽然这次查询时间损耗不大
         // 但是绝大多数查询，都不需要进行类似的海量数据优化，显然，这个startRowIndex将会挡住99%以上的浪费
         Int64 count;
-        if (startRowIndex > 500_000 && (count = session.LongCount) > 1_000_000)
+        // 倒序深分页依赖整表行数；有过滤器时过滤后的行数不同，不能使用该优化，改走普通分页
+        if (startRowIndex > 500_000 && !Meta.Filters.HasFiltersFor(Meta.ThisType) && (count = session.LongCount) > 1_000_000)
         {
             // 估算值可能因删除产生空洞而偏大，但这里绝不能改用 FindCount 精确计数：
             // 千万级表每次深分页 COUNT(*) 都会全表扫描，超时会让整页查询直接失败，宁可容忍个别页错位
 
-            //// 计算本次查询的结果行数
-            //var wh = where?.GetString(null);
-            // 数据量巨大，每次都查总记录数很不划算，还不如用一个不太准的数据
-            //if (!wh.IsNullOrEmpty()) count = FindCount(where, order, selects, startRowIndex, maximumRows);
             // 游标在中间偏后
             if (startRowIndex * 2 > count)
             {
@@ -1394,7 +1399,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
                     if (max <= 0) return [];
 
                     var start = (Int32)(count - (startRowIndex + maximumRows));
-                    var builder2 = CreateBuilder(where, order2, selects, QueryAction.FindAll);
+                    var builder2 = CreateBuilder(where, order2, selects, DataMethod.FindAll);
                     var list = LoadData(await session.QueryAsync(builder2, start, max).ConfigureAwait(false));
                     if (list.Count <= 0) return list;
 
@@ -1413,7 +1418,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0)
         {
-            var builder = CreateBuilder(where, order, selects, QueryAction.FindAll);
+            var builder = CreateBuilder(where, order, selects, DataMethod.FindAll);
             var list2 = LoadData(await session.QueryAsync(builder, startRowIndex, maximumRows).ConfigureAwait(false));
 
             // 如果正在使用单对象缓存，则批量进入
@@ -1443,7 +1448,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
                 // 分表查询
                 session = EntitySession<TEntity>.Create(connName, tableName);
 
-                var builder = CreateBuilder(where, order, selects, QueryAction.FindAll);
+                var builder = CreateBuilder(where, order, selects, DataMethod.FindAll);
                 builder.Table = session.FormatedTableName;
                 var list2 = LoadData(await session.QueryAsync(builder, row, max).ConfigureAwait(false));
                 if (list2.Count > 0) rs.AddRange(list2);
@@ -1490,7 +1495,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
             Int64 rows;
 
             // 如果总记录数超过10万，为了提高性能，返回快速查找且带有缓存的总记录数
-            if (where.IsEmpty && session.LongCount > 100_000)
+            if (where.IsEmpty && !Meta.Filters.HasFiltersFor(Meta.ThisType) && session.LongCount > 100_000)
                 rows = session.LongCount;
             else
                 rows = await FindCountAsync(where, null, selects, 0, 0).ConfigureAwait(false);
@@ -1540,9 +1545,6 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         var session = Meta.Session;
         var db = session.Dal.Db;
         var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
-
-        // 调用模块的 Query 方法，附加数据过滤条件
-        where = Meta.Interceptors.Query(Meta.Factory, where, QueryAction.FindCount);
 
         var wh = where?.GetString(db, ps);
 
@@ -1607,18 +1609,6 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         //// 如果总记录数超过10万，为了提高性能，返回快速查找且带有缓存的总记录数
         //if (String.IsNullOrEmpty(where) && session.LongCount > 100000) return session.Count;
 
-        // 调用模块的 Query 方法，附加数据过滤条件
-        var exp = Meta.Interceptors.Query(Meta.Factory, null, QueryAction.FindCount);
-        if (exp != null && !exp.IsEmpty)
-        {
-            var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
-            var extraWhere = exp.GetString(db, ps);
-            if (!extraWhere.IsNullOrEmpty())
-            {
-                where = where.IsNullOrEmpty() ? extraWhere : $"({where}) And ({extraWhere})";
-            }
-        }
-
         var sb = new SelectBuilder
         {
             Table = session.FormatedTableName,
@@ -1643,9 +1633,6 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         var session = Meta.Session;
         var db = session.Dal.Db;
         var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
-
-        // 调用模块的 Query 方法，附加数据过滤条件
-        where = Meta.Interceptors.Query(Meta.Factory, where, QueryAction.FindCount);
 
         var wh = where?.GetString(db, ps);
 
@@ -1701,8 +1688,19 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     public static SelectBuilder FindSQL(String? where, String? order, String? selects, Int32 startRowIndex = 0, Int32 maximumRows = 0)
     {
         var needOrderByID = startRowIndex > 0 || maximumRows > 0;
-        var builder = CreateBuilder(where, order, selects, needOrderByID, QueryAction.FindSQL);
+        var builder = CreateBuilder(where, order, selects, needOrderByID, DataMethod.FindSQL);
+        builder = ApplyQueryFilter(builder, DataMethod.FindSQL);
         return Meta.Session.Dal.PageSplit(builder, startRowIndex, maximumRows);
+    }
+
+    private static SelectBuilder ApplyQueryFilter(SelectBuilder builder, DataMethod action)
+    {
+        var context = new EntityContext();
+        context.Prepare(action, Meta.Factory, Meta.Session);
+        context.Builder = builder;
+        Meta.Filters.Execute(context, static _ => { });
+
+        return context.Builder ?? builder;
     }
 
     /// <summary>获取查询唯一键的SQL。比如Select ID From Table</summary>
@@ -1816,42 +1814,98 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     /// <param name="values">更新值列表</param>
     /// <returns>返回受影响的行数</returns>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public static Int32 Insert(String[] names, Object[] values) => Persistence.Insert(Meta.Session, names, values);
+    public static Int32 Insert(String[] names, Object[] values)
+    {
+        return Persistence.Insert(Meta.Session, names, values);
+    }
 
     /// <summary>更新一批实体数据</summary>
     /// <param name="setClause">要更新的项和数据，按原文拼入SQL，调用方负责转义</param>
-    /// <param name="whereClause">指定要更新的实体</param>
+    /// <param name="whereClause">指定要更新的实体，会经过过滤器追加租户/数据权限条件</param>
     /// <returns></returns>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public static Int32 Update(String setClause, String whereClause) => Persistence.Update(Meta.Session, setClause, whereClause);
+    public static Int32 Update(String setClause, String whereClause)
+    {
+        whereClause = ApplyConditionFilter(whereClause, DataMethod.Update) ?? String.Empty;
 
-    /// <summary>更新一批实体数据</summary>
+        return Persistence.Update(Meta.Session, setClause, whereClause);
+    }
+
+    /// <summary>更新一批实体数据。按属性名/值直接执行，不经过过滤器</summary>
     /// <param name="setNames">更新属性列表</param>
     /// <param name="setValues">更新值列表</param>
     /// <param name="whereNames">条件属性列表</param>
     /// <param name="whereValues">条件值列表</param>
     /// <returns>返回受影响的行数</returns>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public static Int32 Update(String[] setNames, Object[] setValues, String[] whereNames, Object[] whereValues) => Persistence.Update(Meta.Session, setNames, setValues, whereNames, whereValues);
+    public static Int32 Update(String[] setNames, Object[] setValues, String[] whereNames, Object[] whereValues)
+    {
+        return Persistence.Update(Meta.Session, setNames, setValues, whereNames, whereValues);
+    }
 
     /// <summary>从数据库中删除指定条件的实体对象。</summary>
-    /// <param name="whereClause">限制条件</param>
+    /// <param name="whereClause">限制条件，会经过过滤器追加租户/数据权限条件</param>
     /// <returns></returns>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public static Int32 Delete(String whereClause) => Persistence.Delete(Meta.Session, whereClause);
+    public static Int32 Delete(String whereClause)
+    {
+        whereClause = ApplyConditionFilter(whereClause, DataMethod.Delete) ?? String.Empty;
+
+        return Persistence.Delete(Meta.Session, whereClause);
+    }
 
     /// <summary>从数据库中删除指定属性列表和值列表所限定的实体对象。</summary>
     /// <param name="names">属性列表</param>
     /// <param name="values">值列表</param>
     /// <returns></returns>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
-    public static Int32 Delete(String[] names, Object[] values) => Persistence.Delete(Meta.Session, names, values);
+    public static Int32 Delete(String[] names, Object[] values)
+    {
+        return Persistence.Delete(Meta.Session, names, values);
+    }
 
     /// <summary>从数据库中删除指定条件表达式的实体对象，支持分表。</summary>
     /// <param name="where">条件表达式</param>
     /// <returns></returns>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     public static Int32 Delete(Expression? where) => Delete(where, 0);
+
+    /// <summary>把过滤器应用到条件字符串上，用于条件删除和条件更新</summary>
+    /// <param name="whereClause">原始条件</param>
+    /// <param name="method">操作类型</param>
+    /// <returns>过滤后的条件</returns>
+    private static String? ApplyConditionFilter(String? whereClause, DataMethod method)
+    {
+        if (whereClause == null) return null;
+
+        var session = Meta.Session;
+        var builder = new SelectBuilder
+        {
+            Table = session.FormatedTableName,
+            Where = whereClause
+        };
+        var context = new EntityContext();
+        context.Prepare(method, Meta.Factory, session);
+        context.Builder = builder;
+
+        // 无过滤器或批量内部操作时，管道直接执行空操作
+        Meta.Filters.Execute(context, static _ => { });
+
+        return builder.Where;
+    }
+
+    /// <summary>把过滤器应用到条件表达式的 where 上，用于条件删除等没有实体的写入</summary>
+    /// <param name="where">原始条件</param>
+    /// <param name="method">操作类型</param>
+    /// <returns>过滤后的条件</returns>
+    private static Expression? ApplyConditionFilter(Expression? where, DataMethod method)
+    {
+        if (where == null || where.IsEmpty) return where;
+
+        var s = where.GetString(Meta.Session.Dal.Db, null);
+        var sql = ApplyConditionFilter(s, method);
+        return sql.IsNullOrEmpty() ? null : new Expression(sql);
+    }
 
     /// <summary>从数据库中删除指定条件表达式的实体对象，支持分表。</summary>
     /// <param name="where">条件表达式</param>
@@ -1862,15 +1916,17 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     {
         if (where == null || where.IsEmpty) return 0;
 
+        where = ApplyConditionFilter(where, DataMethod.Delete);
+        if (where == null || where.IsEmpty) return 0;
+
         var session = Meta.Session;
 
         // 自动分表
-        var shards = Meta.InShard || where == null ? null : Meta.ShardPolicy?.Shards(where);
+        var shards = Meta.InShard ? null : Meta.ShardPolicy?.Shards(where);
         if (shards == null || shards.Length == 0)
         {
             // Persistence.Delete仅接收SQL条件，不接收参数，使用数据库方言格式化值。
-            var db = session.Dal.Db;
-            var whereClause = where?.GetString(db, null) ?? String.Empty;
+            var whereClause = where.GetString(session.Dal.Db, null) ?? String.Empty;
 
             return Persistence.Delete(session, whereClause, maximumRows);
         }
@@ -1883,7 +1939,7 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
                 var tableName = shard.TableName ?? session.TableName;
 
                 var shardSession = EntitySession<TEntity>.Create(connName, tableName);
-                count += Persistence.Delete(shardSession, where?.ToString() ?? String.Empty, maximumRows);
+                count += Persistence.Delete(shardSession, where.ToString() ?? String.Empty, maximumRows);
             }
             return count;
         }
@@ -1902,16 +1958,13 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
     /// <param name="where">条件</param>
     /// <param name="order">排序</param>
     /// <param name="selects">选择列</param>
-    /// <param name="action">查询操作来源</param>
+    /// <param name="action">操作类型</param>
     /// <returns></returns>
-    public static SelectBuilder CreateBuilder(Expression? where, String? order, String? selects, QueryAction action)
+    public static SelectBuilder CreateBuilder(Expression? where, String? order, String? selects, DataMethod action)
     {
         var session = Meta.Session;
         var db = session.Dal.Db;
         var ps = db.UseParameter ? new Dictionary<String, Object?>() : null;
-
-        // 调用模块的 Query 方法，附加数据过滤条件
-        where = Meta.Interceptors.Query(Meta.Factory, where, action);
 
         var wh = where?.GetString(db, ps);
         var builder = CreateBuilder(wh, order, selects, true, 0);
@@ -1921,20 +1974,11 @@ public partial class Entity<[DynamicallyAccessedMembers(DynamicallyAccessedMembe
         return builder;
     }
 
-    private static SelectBuilder CreateBuilder(String? where, String? order, String? selects, Boolean needOrderByID, QueryAction action)
+    private static SelectBuilder CreateBuilder(String? where, String? order, String? selects, Boolean needOrderByID, DataMethod action)
     {
         var factory = Meta.Factory;
         var session = Meta.Session;
         var db = session.Dal.Db;
-
-        // 调用模块的 Query 方法，附加数据过滤条件（仅字符串where时需要额外调用）
-        if (!where.IsNullOrEmpty() && action > 0)
-        {
-            var exp = new Expression(where);
-            exp = Meta.Interceptors.Query(factory, exp, action);
-            if (exp != null && !exp.IsEmpty)
-                where = exp.GetString(db, null);
-        }
 
         var builder = new SelectBuilder
         {

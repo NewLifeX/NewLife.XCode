@@ -13,14 +13,15 @@ using Xunit;
 namespace XUnitTest.XCode.DataAccessLayer;
 
 /// <summary>Presto/Trino 数据库测试。两者均为联邦查询引擎，无事务、无自增主键、不支持自动建表</summary>
-/// <remarks>Presto 真库用例优先读取环境变量 XCode_presto，其次读取测试目录下的 Config/presto.config，内容为驱动连接串</remarks>
+/// <remarks>Presto 真库用例优先读取环境变量 XCode_presto，其次读取测试目录下的 Config/presto.config，内容为驱动连接串。
+/// 本地探测按 /v1/info 的 nodeVersion 确认服务身份，避免 8080 端口被其它 Web 服务占用时误跑真库用例</remarks>
 [Collection("Database")]
 public class PrestoTests
 {
     private const String DefaultTrinoConnStr = "Host=localhost;Port=8080;Catalog=tpch;Schema=tiny;User=user";
     private const String DefaultPrestoConnStr = "Host=localhost;Port=8080;Catalog=hive;Schema=default;User=user";
 
-    [LiveDatabaseFact("trino", "trino", 8080)]
+    [LiveDatabaseFact("trino", "trino", 8080, "/v1/info", "nodeVersion")]
     public void TrinoConnectTest()
     {
         var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
@@ -32,7 +33,7 @@ public class PrestoTests
         Assert.NotNull(conn);
     }
 
-    [LiveDatabaseFact("trino", "trino", 8080)]
+    [LiveDatabaseFact("trino", "trino", 8080, "/v1/info", "nodeVersion")]
     public void TrinoSelectOneTest()
     {
         var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
@@ -47,7 +48,7 @@ public class PrestoTests
         Assert.Equal(1, dt.Rows[0][0].ToInt());
     }
 
-    [LiveDatabaseFact("trino", "trino", 8080)]
+    [LiveDatabaseFact("trino", "trino", 8080, "/v1/info", "nodeVersion")]
     public void TrinoNationTest()
     {
         var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
@@ -61,7 +62,7 @@ public class PrestoTests
         Assert.True(dt.Rows[0][0].ToInt() > 0);
     }
 
-    [LiveDatabaseFact("trino", "trino", 8080)]
+    [LiveDatabaseFact("trino", "trino", 8080, "/v1/info", "nodeVersion")]
     public void TrinoGetTablesTest()
     {
         var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
@@ -79,7 +80,7 @@ public class PrestoTests
         Assert.True(tb!.Columns.Count > 0);
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoConnectTest()
     {
         var connStr = PrestoConnStr();
@@ -91,7 +92,7 @@ public class PrestoTests
         Assert.Equal(ConnectionState.Open, conn.State);
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoSelectOneTest()
     {
         var dal = PrestoDal("Presto_Live");
@@ -104,7 +105,7 @@ public class PrestoTests
         Assert.Equal(1, dt.Rows[0][0].ToInt());
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoServerInfoTest()
     {
         var dal = PrestoDal("Presto_Live");
@@ -119,7 +120,7 @@ public class PrestoTests
         XTrace.WriteLine("Presto node_version={0}", version);
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoGetTablesTest()
     {
         var dal = PrestoDal("Presto_Live");
@@ -148,7 +149,7 @@ public class PrestoTests
         if (table != null) Assert.All(table.Columns, e => Assert.False(e.ColumnName.IsNullOrEmpty()));
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoQueryTableTest()
     {
         var dal = PrestoDal("Presto_Live");
@@ -182,7 +183,7 @@ public class PrestoTests
         Assert.True(false, "Presto 无法读取任何一张表，请检查连接串指向的 Catalog/Schema");
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoParameterTest()
     {
         var dal = PrestoDal("Presto_Live");
@@ -205,7 +206,7 @@ public class PrestoTests
         Assert.Equal("a'; drop table t; --", safe.Rows[0][0] + "");
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public async Task PrestoAsyncQueryTest()
     {
         var dal = PrestoDal("Presto_Live");
@@ -217,7 +218,7 @@ public class PrestoTests
         Assert.Equal("中文", dt.Rows[0][1] + "");
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoDataSetTest()
     {
         var dal = PrestoDal("Presto_Live");
@@ -230,7 +231,7 @@ public class PrestoTests
         Assert.Equal(typeof(String), dt.Tables[0].Columns["s"].DataType);
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoPagingTest()
     {
         var dal = PrestoDal("Presto_Live");
@@ -493,7 +494,7 @@ public class PrestoTests
         Assert.False(db.ConnectionString.Contains("FastCount", StringComparison.OrdinalIgnoreCase));
     }
 
-    [LiveDatabaseFact("trino", "trino", 8080)]
+    [LiveDatabaseFact("trino", "trino", 8080, "/v1/info", "nodeVersion")]
     public async Task TrinoFastCountStatsTest()
     {
         var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
@@ -507,7 +508,7 @@ public class PrestoTests
         Assert.Equal(25, await session.QueryCountFastAsync("tpch.tiny.nation"));
     }
 
-    [LiveDatabaseFact("trino", "trino", 8080)]
+    [LiveDatabaseFact("trino", "trino", 8080, "/v1/info", "nodeVersion")]
     public async Task TrinoFastCountAutoTest()
     {
         var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
@@ -522,7 +523,7 @@ public class PrestoTests
         Assert.Equal(25, await session.QueryCountFastAsync("tpch.tiny.nation"));
     }
 
-    [LiveDatabaseFact("trino", "trino", 8080)]
+    [LiveDatabaseFact("trino", "trino", 8080, "/v1/info", "nodeVersion")]
     public async Task TrinoFastCountIcebergTest()
     {
         var connStr = LiveDatabase.Resolve("trino", "trino", DefaultTrinoConnStr);
@@ -555,7 +556,7 @@ public class PrestoTests
         }
     }
 
-    [LiveDatabaseFact("presto", "presto", 8081)]
+    [LiveDatabaseFact("presto", "presto", 8081, "/v1/info", "nodeVersion")]
     public async Task PrestoFastCountStatsTest()
     {
         var connStr = PrestoConnStr();
@@ -571,7 +572,7 @@ public class PrestoTests
         Assert.Equal(25, await session.QueryCountFastAsync("tpch.tiny.nation"));
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoSelectBuilderTest()
     {
         var dal = PrestoDal("Presto_Live");
@@ -593,7 +594,7 @@ public class PrestoTests
         Assert.Equal(25, dal.SelectCount(sb));
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoCommentsTest()
     {
         // information_schema 不带注释，反向工程时自动通过 DESCRIBE 补齐
@@ -670,7 +671,7 @@ public class PrestoTests
         Assert.Single(table.Indexes);
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoMetadataCompletenessTest()
     {
         // 反向工程读不到字段的表（元数据损坏的视图等）应被跳过，避免生成空模型
@@ -687,7 +688,7 @@ public class PrestoTests
             Assert.Contains(example.Indexes, e => e.Columns != null && e.Columns.Any(c => c.EqualIgnoreCase("Ds")));
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public void PrestoPrimaryKeyAndPartitionTest()
     {
         var dal = PrestoDal("Presto_Live");
@@ -709,7 +710,7 @@ public class PrestoTests
             XTrace.WriteLine("Presto partition index: {0}.{1}", partitioned.TableName, partitioned.Indexes[0].Name);
     }
 
-    [LiveDatabaseFact("presto", "presto", 8080)]
+    [LiveDatabaseFact("presto", "presto", 8080, "/v1/info", "nodeVersion")]
     public async Task PrestoFastCountLiveTest()
     {
         // tpch 内置数据集始终存在，SHOW STATS 可返回 row_count

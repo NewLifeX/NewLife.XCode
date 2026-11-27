@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Net.Sockets;
 using NewLife;
 using Xunit;
@@ -26,35 +27,47 @@ public class LiveDatabaseFactAttribute : FactAttribute
     /// <summary>服务默认端口，用于本地探测</summary>
     public Int32 DefaultPort { get; }
 
+    /// <summary>HTTP 探测路径。非空时按 HTTP 响应确认服务身份，避免端口被其它服务占用时误判</summary>
+    public String? HttpPath { get; }
+
+    /// <summary>HTTP 探测要求响应正文包含的关键字</summary>
+    public String? HttpKeyword { get; }
+
     /// <summary>实例化</summary>
     /// <param name="key">数据库键，如 clickhouse</param>
     /// <param name="configName">配置文件名称，默认与 key 相同</param>
     /// <param name="defaultPort">服务默认端口，0 表示无法探测</param>
-    public LiveDatabaseFactAttribute(String key, String? configName = null, Int32 defaultPort = 0)
+    /// <param name="httpPath">HTTP 探测路径，如 Presto/Trino 的 /v1/info</param>
+    /// <param name="httpKeyword">HTTP 探测要求响应正文包含的关键字，可为空</param>
+    public LiveDatabaseFactAttribute(String key, String? configName = null, Int32 defaultPort = 0, String? httpPath = null, String? httpKeyword = null)
     {
         Key = key;
         ConfigName = configName.IsNullOrEmpty() ? key : configName;
         DefaultPort = defaultPort;
+        HttpPath = httpPath;
+        HttpKeyword = httpKeyword;
 
-        var skip = GetProbe(key, ConfigName, defaultPort).Value;
+        var skip = GetProbe(key, ConfigName, defaultPort, httpPath, httpKeyword).Value;
         if (!skip.IsNullOrEmpty()) Skip = skip;
     }
 
-    private static Lazy<String?> GetProbe(String key, String configName, Int32 defaultPort)
+    private static Lazy<String?> GetProbe(String key, String configName, Int32 defaultPort, String? httpPath, String? httpKeyword)
     {
+        // 缓存键包含探测参数：同一数据库键可能按不同端口或 HTTP 路径探测
+        var cacheKey = $"{key}|{configName}|{defaultPort}|{httpPath}|{httpKeyword}";
         lock (_probes)
         {
-            if (!_probes.TryGetValue(key, out var lazy))
+            if (!_probes.TryGetValue(cacheKey, out var lazy))
             {
-                lazy = new Lazy<String?>(() => Probe(key, configName, defaultPort), true);
-                _probes[key] = lazy;
+                lazy = new Lazy<String?>(() => Probe(key, configName, defaultPort, httpPath, httpKeyword), true);
+                _probes[cacheKey] = lazy;
             }
 
             return lazy;
         }
     }
 
-    private static String? Probe(String key, String configName, Int32 defaultPort)
+    private static String? Probe(String key, String configName, Int32 defaultPort, String? httpPath, String? httpKeyword)
     {
         // CI 显式给出连接串时，直接执行，由用例本身暴露真实问题
         if (!Environment.GetEnvironmentVariable($"XCode_{key}").IsNullOrEmpty()) return null;
@@ -72,7 +85,10 @@ public class LiveDatabaseFactAttribute : FactAttribute
                     return $"{key} 连接串缺少 Server，跳过真库用例";
             }
 
-            if (!LiveDatabase.CanConnect(host, port))
+            var online = httpPath.IsNullOrEmpty()
+                ? LiveDatabase.CanConnect(host, port)
+                : LiveDatabase.CanConnectHttp(host, port, httpPath!, httpKeyword);
+            if (!online)
                 return $"{key} 服务不可达（{host}:{port}），跳过真库用例；可通过环境变量 XCode_{key} 指定连接串";
 
             return null;
@@ -198,6 +214,32 @@ public static class LiveDatabase
         {
             using var client = new TcpClient();
             return client.ConnectAsync(host, port).Wait(2000) && client.Connected;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>探测 HTTP 服务是否为目标数据库。端口可能被其它服务占用，需要按响应确认身份</summary>
+    /// <param name="host">服务地址</param>
+    /// <param name="port">服务端口</param>
+    /// <param name="path">探测路径，如 Presto/Trino 的 /v1/info</param>
+    /// <param name="keyword">响应正文必须包含的关键字，为空表示只要求响应成功</param>
+    /// <returns></returns>
+    public static Boolean CanConnectHttp(String host, Int32 port, String path, String? keyword)
+    {
+        if (!CanConnect(host, port)) return false;
+
+        try
+        {
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+            using var response = client.GetAsync(new UriBuilder("http", host, port, path).Uri).GetAwaiter().GetResult();
+            if (!response.IsSuccessStatusCode) return false;
+            if (keyword.IsNullOrEmpty()) return true;
+
+            var text = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            return text.Contains(keyword!, StringComparison.OrdinalIgnoreCase);
         }
         catch
         {

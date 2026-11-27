@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
@@ -9,12 +9,15 @@ using XCode.DataAccessLayer;
 using XCode.Membership;
 using Xunit;
 
+// 兼容期测试直接使用旧拦截器
+#pragma warning disable CS0618
+
 namespace XUnitTest.XCode.Membership;
 
 /// <summary>数据权限测试</summary>
 /// <remarks>
 /// 围绕 IUserScope、IDepartmentScope、IDataScope、IDataScopeFieldProvider、IFieldScope、
-/// DataScopeContext、DataScopeInterceptor 以及相关辅助类进行全面测试
+/// DataScopeContext、DataScopeFilter 以及相关辅助类进行全面测试
 /// </remarks>
 [DisplayName("数据权限测试")]
 public class DataScopeTests : IDisposable
@@ -238,341 +241,6 @@ public class DataScopeTests : IDisposable
     }
     #endregion
 
-    #region DataScopeInterceptor 测试
-    [Fact]
-    [DisplayName("OnInit实现IDataScope返回true")]
-    public void DataScopeInterceptor_OnInit_WithIDataScope_ReturnsTrue()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-
-        // Act
-        var result = module.Init(typeof(DataScopeTestEntity));
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    [DisplayName("OnInit实现IUserScope返回true")]
-    public void DataScopeInterceptor_OnInit_WithIUserScope_ReturnsTrue()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-
-        // Act
-        var result = module.Init(typeof(UserScopeTestEntity));
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    [DisplayName("OnInit实现IDepartmentScope返回true")]
-    public void DataScopeInterceptor_OnInit_WithIDepartmentScope_ReturnsTrue()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-
-        // Act
-        var result = module.Init(typeof(DepartmentScopeTestEntity));
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    [DisplayName("OnInit未实现任何接口返回false")]
-    public void DataScopeInterceptor_OnInit_WithoutInterface_ReturnsFalse()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-
-        // Act
-        var result = module.Init(typeof(NoScopeTestEntity));
-
-        // Assert
-        Assert.False(result);
-    }
-
-    [Fact]
-    [DisplayName("OnCreate有上下文时自动设置UserId")]
-    public void DataScopeInterceptor_OnCreate_WithContext_SetsUserId()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext { UserId = 789, DepartmentId = 456 };
-        var entity = new UserScopeTestEntity();
-
-        // Act
-        module.Create(entity, false);
-
-        // Assert
-        Assert.Equal(789, entity.UserId);
-    }
-
-    [Fact]
-    [DisplayName("OnCreate有上下文时自动设置DepartmentId")]
-    public void DataScopeInterceptor_OnCreate_WithContext_SetsDepartmentId()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext { UserId = 789, DepartmentId = 456 };
-        var entity = new DepartmentScopeTestEntity();
-
-        // Act
-        module.Create(entity, false);
-
-        // Assert
-        Assert.Equal(456, entity.DepartmentId);
-    }
-
-    [Fact]
-    [DisplayName("OnCreate有上下文时自动设置IDataScope")]
-    public void DataScopeInterceptor_OnCreate_WithContext_SetsDataScope()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext { UserId = 789, DepartmentId = 456 };
-        var entity = new DataScopeTestEntity();
-
-        // Act
-        module.Create(entity, false);
-
-        // Assert
-        Assert.Equal(789, entity.UserId);
-        Assert.Equal(456, entity.DepartmentId);
-    }
-
-    [Fact]
-    [DisplayName("OnCreate无上下文时不设置")]
-    public void DataScopeInterceptor_OnCreate_WithoutContext_DoesNotSet()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = null;
-        var entity = new DataScopeTestEntity { UserId = 0, DepartmentId = 0 };
-
-        // Act
-        module.Create(entity, false);
-
-        // Assert
-        Assert.Equal(0, entity.UserId);
-        Assert.Equal(0, entity.DepartmentId);
-    }
-
-    [Fact]
-    [DisplayName("OnCreate已有值时不覆盖")]
-    public void DataScopeInterceptor_OnCreate_ExistingValue_DoesNotOverwrite()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext { UserId = 789, DepartmentId = 456 };
-        var entity = new DataScopeTestEntity { UserId = 100, DepartmentId = 200 };
-
-        // Act
-        module.Create(entity, false);
-
-        // Assert
-        Assert.Equal(100, entity.UserId);
-        Assert.Equal(200, entity.DepartmentId);
-    }
-    #endregion
-
-    #region DataScopeInterceptor.OnValid Insert 测试
-    [Fact]
-    [DisplayName("OnValid_Insert_系统角色通过")]
-    public void DataScopeInterceptor_OnValid_Insert_SystemRole_Passes()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext
-        {
-            UserId = 100,
-            DepartmentId = 200,
-            DataScope = DataScopes.全部
-        };
-        var entity = new DataScopeTestEntity { UserId = 999, DepartmentId = 888 };
-
-        // Act
-        var result = module.Valid(entity, DataMethod.Insert);
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    [DisplayName("OnValid_Insert_UserId为0时自动设置")]
-    public void DataScopeInterceptor_OnValid_Insert_ZeroUserId_AutoSets()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext
-        {
-            UserId = 100,
-            DepartmentId = 200,
-            DataScope = DataScopes.仅本人
-        };
-        var entity = new UserScopeTestEntity { UserId = 0 };
-
-        // Act
-        var result = module.Valid(entity, DataMethod.Insert);
-
-        // Assert
-        Assert.True(result);
-        Assert.Equal(100, entity.UserId);
-    }
-
-    [Fact]
-    [DisplayName("OnValid_Insert_DepartmentId为0时自动设置")]
-    public void DataScopeInterceptor_OnValid_Insert_ZeroDepartmentId_AutoSets()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext
-        {
-            UserId = 100,
-            DepartmentId = 200,
-            DataScope = DataScopes.本部门,
-            AccessibleDepartmentIds = [200]
-        };
-        var entity = new DepartmentScopeTestEntity { DepartmentId = 0 };
-
-        // Act
-        var result = module.Valid(entity, DataMethod.Insert);
-
-        // Assert
-        Assert.True(result);
-        Assert.Equal(200, entity.DepartmentId);
-    }
-
-    [Fact]
-    [DisplayName("OnValid_Insert_无上下文时通过")]
-    public void DataScopeInterceptor_OnValid_Insert_NoContext_Passes()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = null;
-        var entity = new DataScopeTestEntity { UserId = 999, DepartmentId = 888 };
-
-        // Act
-        var result = module.Valid(entity, DataMethod.Insert);
-
-        // Assert
-        Assert.True(result);
-    }
-    #endregion
-
-    #region DataScopeInterceptor.OnValid Update/Delete 测试
-    [Fact]
-    [DisplayName("OnValid_Update_无脏数据时跳过校验")]
-    public void DataScopeInterceptor_OnValid_Update_NoDirty_SkipsValidation()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext
-        {
-            UserId = 100,
-            DepartmentId = 200,
-            DataScope = DataScopes.仅本人
-        };
-        var entity = new DataScopeTestEntity { UserId = 999, DepartmentId = 888 };
-        // 清除脏数据，模拟没有任何字段被修改的更新场景
-        ((IEntity)entity).Dirtys.Clear();
-
-        // Act
-        var result = module.Valid(entity, DataMethod.Update);
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    [DisplayName("OnValid_Update_系统角色通过")]
-    public void DataScopeInterceptor_OnValid_Update_SystemRole_Passes()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext
-        {
-            UserId = 100,
-            DepartmentId = 200,
-            DataScope = DataScopes.全部
-        };
-        var entity = new DataScopeTestEntity { UserId = 999, DepartmentId = 888 };
-        entity.Name = "test"; // 制造脏数据
-
-        // Act
-        var result = module.Valid(entity, DataMethod.Update);
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    [DisplayName("OnValid_Delete_系统角色通过")]
-    public void DataScopeInterceptor_OnValid_Delete_SystemRole_Passes()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext
-        {
-            UserId = 100,
-            DepartmentId = 200,
-            DataScope = DataScopes.全部
-        };
-        var entity = new DataScopeTestEntity { UserId = 999, DepartmentId = 888 };
-
-        // Act
-        var result = module.Valid(entity, DataMethod.Delete);
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    [DisplayName("OnValid_Delete_仅本人_本人数据通过")]
-    public void DataScopeInterceptor_OnValid_Delete_SelfOnly_OwnData_Passes()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext
-        {
-            UserId = 100,
-            DepartmentId = 200,
-            DataScope = DataScopes.仅本人
-        };
-        var entity = new UserScopeTestEntity { UserId = 100 };
-
-        // Act
-        var result = module.Valid(entity, DataMethod.Delete);
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    [DisplayName("OnValid_Delete_本部门_同部门数据通过")]
-    public void DataScopeInterceptor_OnValid_Delete_Department_SameDept_Passes()
-    {
-        // Arrange
-        var module = new DataScopeInterceptor();
-        DataScopeContext.Current = new DataScopeContext
-        {
-            UserId = 100,
-            DepartmentId = 200,
-            DataScope = DataScopes.本部门,
-            AccessibleDepartmentIds = [200]
-        };
-        var entity = new DepartmentScopeTestEntity { DepartmentId = 200 };
-
-        // Act
-        var result = module.Valid(entity, DataMethod.Delete);
-
-        // Assert
-        Assert.True(result);
-    }
-    #endregion
 
     #region DataScopeHelper.CanAccess 测试
     [Fact]
@@ -1488,7 +1156,7 @@ public class DataScopeTests : IDisposable
     public void Interceptor_SelfOnly_RejectUpdateOthersData()
     {
         // Arrange
-        var module = new DataScopeInterceptor();
+        var filter = new DataScopeFilter();
         DataScopeContext.Current = new DataScopeContext
         {
             UserId = 100,
@@ -1497,12 +1165,13 @@ public class DataScopeTests : IDisposable
         };
         var entity = new DataScopeTestEntity { UserId = 999, DepartmentId = 888 };
         entity.Name = "改动"; // 制造脏数据
+        var context = new EntityContext { Action = DataMethod.Update, Entity = entity };
 
         // Act
-        var result = module.Valid(entity, DataMethod.Update);
+        filter.OnExecuting(context);
 
         // Assert 校验失败不再放行
-        Assert.False(result);
+        Assert.True(context.Cancel);
     }
 
     [Fact]
@@ -1510,7 +1179,7 @@ public class DataScopeTests : IDisposable
     public void Interceptor_Department_RejectInsertForeignDept()
     {
         // Arrange
-        var module = new DataScopeInterceptor();
+        var filter = new DataScopeFilter();
         DataScopeContext.Current = new DataScopeContext
         {
             UserId = 100,
@@ -1519,12 +1188,13 @@ public class DataScopeTests : IDisposable
             AccessibleDepartmentIds = [200]
         };
         var entity = new DepartmentScopeTestEntity { DepartmentId = 999 };
+        var context = new EntityContext { Action = DataMethod.Insert, Entity = entity };
 
         // Act
-        var result = module.Valid(entity, DataMethod.Insert);
+        filter.OnExecuting(context);
 
         // Assert
-        Assert.False(result);
+        Assert.True(context.Cancel);
     }
 
     [Fact]

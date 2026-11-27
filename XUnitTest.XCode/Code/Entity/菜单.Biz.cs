@@ -38,10 +38,10 @@ public partial class Menu : Entity<Menu>
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(ParentID));
 
-        // 拦截器 UserInterceptor、TimeInterceptor、IPInterceptor
-        Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
-        Meta.Interceptors.Add<TimeInterceptor>();
-        Meta.Interceptors.Add(new IPInterceptor { AllowEmpty = false });
+        // 过滤器 UserFilter、TimeFilter、IPFilter
+        Meta.Filters.Add(new UserFilter { AllowEmpty = false });
+        Meta.Filters.Add<TimeFilter>();
+        Meta.Filters.Add(new IPFilter { AllowEmpty = false });
 
         // 实体缓存
         // var ec = Meta.Cache;

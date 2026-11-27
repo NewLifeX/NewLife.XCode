@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -408,7 +408,7 @@ public class EntityBuilderTests
         var code = builder.ToString();
 
         Assert.Contains("public partial class Role : Entity<Role>, ITenantScope", code);
-        Assert.Contains("Meta.Interceptors.Add<TenantInterceptor>();", code);
+        Assert.Contains("Meta.Filters.Add<TenantFilter>();", code);
 
         table = _tables.First(e => e.Name == "Tenant");
         builder = new EntityBuilder
@@ -422,6 +422,59 @@ public class EntityBuilderTests
         code = builder.ToString();
 
         Assert.DoesNotContain("public partial class Tenant : Entity<Tenant>, ITenantScope", code);
+    }
+
+    [Fact]
+    public void UpgradeModuleNames_MigratesToFilters()
+    {
+        var file = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(file, """
+static Order()
+{
+    Meta.Modules.Add<TenantModule>();
+    Meta.Modules.Add<TimeModule>();
+    Meta.Modules.Add<UserModule>();
+    Meta.Modules.Add<IPModule>();
+    Meta.Modules.Add<TraceModule>();
+    Meta.Interceptors.Add<TenantInterceptor>();
+    Meta.Interceptors.Add(new TenantInterceptor());
+    Meta.Interceptors.Add<DataScopeInterceptor>();
+    Meta.Interceptors.Add(new DataScopeInterceptor());
+    Meta.Interceptors.Add<TimeInterceptor>();
+    Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
+    Meta.Interceptors.Add<IPInterceptor>();
+    Meta.Interceptors.Add<TraceInterceptor>();
+}
+""");
+
+            var builder = new UpgradeEntityBuilder();
+            Assert.True(builder.Upgrade(file));
+
+            var text = File.ReadAllText(file);
+            Assert.Contains("Meta.Filters.Add<TenantFilter>();", text);
+            Assert.Contains("Meta.Filters.Add<TimeFilter>();", text);
+            Assert.Contains("Meta.Filters.Add(new UserFilter { AllowEmpty = false });", text);
+            Assert.Contains("Meta.Filters.Add<IPFilter>();", text);
+            Assert.Contains("Meta.Filters.Add<TraceFilter>();", text);
+            Assert.Contains("Meta.Filters.Add(new TenantFilter());", text);
+            Assert.Contains("Meta.Filters.Add<DataScopeFilter>();", text);
+            Assert.Contains("Meta.Filters.Add(new DataScopeFilter());", text);
+            Assert.DoesNotContain("Meta.Modules", text);
+            Assert.DoesNotContain("Meta.Interceptors", text);
+            Assert.DoesNotContain("Module>", text);
+            Assert.DoesNotContain("Interceptor>", text);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    private class UpgradeEntityBuilder : EntityBuilder
+    {
+        public Boolean Upgrade(String file) => UpgradeModuleNames(file);
     }
 
     [Fact]

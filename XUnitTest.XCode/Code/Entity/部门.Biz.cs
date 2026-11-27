@@ -38,11 +38,11 @@ public partial class Department : Entity<Department>, ITenantScope
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(TenantId));
 
-        // 拦截器 UserInterceptor、TimeInterceptor、IPInterceptor
-        Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
-        Meta.Interceptors.Add<TimeInterceptor>();
-        Meta.Interceptors.Add(new IPInterceptor { AllowEmpty = false });
-        Meta.Interceptors.Add<TenantInterceptor>();
+        // 过滤器 UserFilter、TimeFilter、IPFilter
+        Meta.Filters.Add(new UserFilter { AllowEmpty = false });
+        Meta.Filters.Add<TimeFilter>();
+        Meta.Filters.Add(new IPFilter { AllowEmpty = false });
+        Meta.Filters.Add<TenantFilter>();
 
         // 实体缓存
         // var ec = Meta.Cache;

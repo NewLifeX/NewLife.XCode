@@ -114,12 +114,13 @@ public class ShardTests
 
         // 全新环境下相邻分表可能不存在，先写入一条昨天分表记录，确保后续查询生成完整的分表SQL
         var today = DateTime.Now;
-        new Log2
+        var probe = new Log2
         {
             Id = Log2.Meta.Factory.Snow.NewId(today.AddHours(-24)),
             Action = "分表",
             Category = Rand.NextString(8),
-        }.Insert();
+        };
+        probe.Insert();
 
         // 拦截Sql，仅为了断言，非业务代码
         var sqls = new List<String>();
@@ -155,6 +156,9 @@ public class ShardTests
         Assert.StartsWith($"[test_{time.AddHours(-24):yyyy}] Select * From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^3]);
         Assert.StartsWith($"[test_{time.AddHours(-24):yyyy}] Select Count(*) From Log2_{time.AddHours(-24):yyyyMMdd} Where", sqls[^2]);
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-00):yyyyMMdd} Where", sqls[^1]);
+
+        // 清理探测记录，避免历史分表数据逐次累积后撑满分页，导致查询不再展开下一张分表
+        probe.Delete();
 
         // 恢复现场，避免影响其它测试用例
         Log2.Meta.ShardPolicy = null;

@@ -1,6 +1,7 @@
 using System;
 using NewLife;
 using NewLife.Security;
+using XCode;
 using XCode.Membership;
 using Xunit;
 
@@ -38,8 +39,11 @@ public class EmptyHtmlHelperTests
         var user2 = User.FindByKey(user.Id);
         Assert.True(user2.Remark.IsNullOrEmpty());
 
-        // 绕过实体直接写库制造脏值，再通过更新触发清理
-        User.Update($"Remark='<p><br></p>'", $"Id={user.Id}");
+        // 绕过实体直接写库制造脏值，再通过更新触发清理；此处为测试直接 SQL 条件写
+        using (EntityFilterScope.SuppressAll())
+        {
+            User.Update($"Remark='<p><br></p>'", $"Id={user.Id}");
+        }
         user2 = User.FindByKey(user.Id);
         Assert.Equal("<p><br></p>", user2.Remark);
 

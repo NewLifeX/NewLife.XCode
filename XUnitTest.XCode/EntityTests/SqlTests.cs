@@ -137,20 +137,24 @@ public class SqlTests
 
         try
         {
-            // 值中的 And 是普通数据，不能被替换成逗号
-            var value = "data:image/png;base64,AAAndBBAndCC";
-            Assert.Equal(1, User.Update([nameof(User.Remark)], [value], [nameof(User.Id)], [user.Id]));
-            Assert.Equal(value, User.FindByKey(user.Id)!.Remark);
+            // 直接 SQL 条件写绕过过滤器，测试只验证 SQL 拼接
+            using (EntityFilterScope.SuppressAll())
+            {
+                // 值中的 And 是普通数据，不能被替换成逗号
+                var value = "data:image/png;base64,AAAndBBAndCC";
+                Assert.Equal(1, User.Update([nameof(User.Remark)], [value], [nameof(User.Id)], [user.Id]));
+                Assert.Equal(value, User.FindByKey(user.Id)!.Remark);
 
-            // 值中的 or 同样是普通数据，不能触发参数异常
-            value = "data:image/png;base64,AA or BB";
-            Assert.Equal(1, User.Update([nameof(User.Remark)], [value], [nameof(User.Id)], [user.Id]));
-            Assert.Equal(value, User.FindByKey(user.Id)!.Remark);
+                // 值中的 or 同样是普通数据，不能触发参数异常
+                value = "data:image/png;base64,AA or BB";
+                Assert.Equal(1, User.Update([nameof(User.Remark)], [value], [nameof(User.Id)], [user.Id]));
+                Assert.Equal(value, User.FindByKey(user.Id)!.Remark);
 
-            // 原始子句路径同样按原文执行
-            value = "AAAndBB or CC";
-            Assert.Equal(1, User.Update($"Remark='{value}'", $"Id={user.Id}"));
-            Assert.Equal(value, User.FindByKey(user.Id)!.Remark);
+                // 原始子句路径同样按原文执行
+                value = "AAAndBB or CC";
+                Assert.Equal(1, User.Update($"Remark='{value}'", $"Id={user.Id}"));
+                Assert.Equal(value, User.FindByKey(user.Id)!.Remark);
+            }
         }
         finally
         {
@@ -301,12 +305,13 @@ public class SqlTests
 
         // 全新环境下相邻分表可能不存在，先写入一条昨天分表记录，确保后续查询生成完整的分表SQL
         var today = DateTime.Now;
-        new Log2
+        var probe = new Log2
         {
             Id = Log2.Meta.Factory.Snow.NewId(today.AddHours(-24)),
             Action = "分表",
             Category = Rand.NextString(8),
-        }.Insert();
+        };
+        probe.Insert();
 
         // 拦截Sql，仅为了断言，非业务代码
         var sqls = new List<String>();
@@ -343,6 +348,10 @@ public class SqlTests
         Assert.StartsWith($"[test_{time:yyyy}] Select * From Log2_{time.AddHours(-00):yyyyMMdd} Where", sqls[^1]);
 
         // logs.Delete();
+
+        // 清理探测记录，避免历史分表数据逐次累积后撑满分页，导致查询不再展开下一张分表
+        probe.Delete();
+
         // 恢复现场，避免影响其它测试用例
         Log2.Meta.ShardPolicy = null;
     }

@@ -38,8 +38,8 @@ public partial class Area : Entity<Area>
         //var df = Meta.Factory.AdditionalFields;
         //df.Add(nameof(ParentID));
 
-        // 拦截器 UserInterceptor、TimeInterceptor、IPInterceptor
-        Meta.Interceptors.Add<TimeInterceptor>();
+        // 过滤器 UserFilter、TimeFilter、IPFilter
+        Meta.Filters.Add<TimeFilter>();
 
         // 实体缓存
         // var ec = Meta.Cache;

@@ -43,9 +43,9 @@ public partial class ExpressLogs : Entity<ExpressLogs>
         };
 
         // 过滤器 UserModule、TimeModule、IPModule
-        Meta.Interceptors.Add(new UserInterceptor { AllowEmpty = false });
-        Meta.Interceptors.Add<TimeInterceptor>();
-        Meta.Interceptors.Add(new IPInterceptor { AllowEmpty = false });
+        Meta.Filters.Add(new UserFilter { AllowEmpty = false });
+        Meta.Filters.Add<TimeFilter>();
+        Meta.Filters.Add(new IPFilter { AllowEmpty = false });
 
         // 实体缓存
         // var ec = Meta.Cache;

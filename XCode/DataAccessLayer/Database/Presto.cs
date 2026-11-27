@@ -714,7 +714,7 @@ internal class PrestoSession(IDatabase db) : RemoteDbSession(db)
 
                 if (success)
                 {
-                    types[i] = elementType.MakeArrayType();
+                    types[i] = PrestoArray.GetArrayType(elementType);
                     continue;
                 }
 
@@ -807,7 +807,7 @@ internal class PrestoMetaData : RemoteDbMetaData
         var rawType = field.RawType;
         if (rawType.IsNullOrEmpty()) return null;
 
-        if (UseArrays && PrestoArray.TryGetElementType(rawType, out var elementType)) return elementType.MakeArrayType();
+        if (UseArrays && PrestoArray.TryGetElementType(rawType, out var elementType)) return PrestoArray.GetArrayType(elementType);
 
         var name = PrestoArray.GetBaseName(rawType);
         if (name.EqualIgnoreCase("array", "map", "row", "json", "char")) return typeof(String);

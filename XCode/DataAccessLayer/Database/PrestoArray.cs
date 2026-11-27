@@ -27,6 +27,18 @@ internal static class PrestoArray
         ["numeric"] = typeof(Decimal),
         ["boolean"] = typeof(Boolean),
     };
+
+    /// <summary>元素类型到数组类型的静态映射。AOT 下 Type.MakeArrayType 需要动态代码，白名单类型直接映射</summary>
+    private static readonly Dictionary<Type, Type> _arrayTypes = new()
+    {
+        [typeof(String)] = typeof(String[]),
+        [typeof(Int16)] = typeof(Int16[]),
+        [typeof(Int32)] = typeof(Int32[]),
+        [typeof(Int64)] = typeof(Int64[]),
+        [typeof(Double)] = typeof(Double[]),
+        [typeof(Decimal)] = typeof(Decimal[]),
+        [typeof(Boolean)] = typeof(Boolean[]),
+    };
     #endregion
 
     #region 类型解析
@@ -71,6 +83,11 @@ internal static class PrestoArray
         return true;
     }
 
+    /// <summary>获取元素类型对应的数组类型</summary>
+    /// <param name="elementType">元素类型，必须来自 <see cref="TryGetElementType"/> 的元素类型白名单</param>
+    /// <returns>数组类型</returns>
+    public static Type GetArrayType(Type elementType) => _arrayTypes[elementType];
+
     /// <summary>是否复杂类型（array/map/row）</summary>
     /// <param name="rawType">原始类型</param>
     /// <returns>复杂类型返回 true</returns>
@@ -106,7 +123,7 @@ internal static class PrestoArray
     {
         result = value;
         if (value == null || value == DBNull.Value) return true;
-        if (value.GetType() == elementType.MakeArrayType()) return true;
+        if (_arrayTypes.TryGetValue(elementType, out var arrayType) && value.GetType() == arrayType) return true;
 
         // 驱动解析失败时会回退原始 JSON 文本，这里再尝试一次
         if (value is String text)

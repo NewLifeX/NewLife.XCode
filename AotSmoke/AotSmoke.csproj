@@ -16,11 +16,11 @@
     <!-- NovaDb 作为嵌入式真库验证对象（阶段 5：实体 CRUD/缓存覆盖） -->
     <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.1122-beta0918" />
     <!-- NovaDb 传递依赖的 Remoting 需与 Core 同步；直接引用锁定版本，避免传递依赖版本落后 -->
-    <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1116-beta1043" />
+    <PackageReference Include="NewLife.Remoting" Version="4.0.2026.1122-beta1417" />
     <!-- SQLite 嵌入式真库验证对象：AOT 路线为 Microsoft.Data.Sqlite（SQLitePCLRaw 原生库），System.Data.SQLite 为混合编译不支持 AOT -->
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <!-- MySQL 真库验证对象：NewLife.MySql 为 XCode.MySql 适配包默认驱动（1.5 起官方支持 NativeAOT），MySql.Data 为官方连接器对照 -->
-    <PackageReference Include="NewLife.MySql" Version="1.5.2026.1122-beta0740" />
+    <PackageReference Include="NewLife.MySql" Version="1.5.2026.1126-beta0156" />
     <PackageReference Include="MySql.Data" Version="26.7.0" />
     <!-- SqlServer 真库验证对象（与 XCode.SqlServer 适配包同版本）：连接串来自环境变量 XCode_sqlserver，未设置时跳过该场景 -->
     <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />

@@ -85,7 +85,7 @@ public class StatModelTests
     #endregion
 
     #region ToString
-    [Fact(DisplayName = "ToString_All返回全局")]
+    [Fact(DisplayName = "ToString_All返回全部")]
     public void ToString_All_ReturnsGlobal()
     {
         var model = new StatModel { Level = StatLevels.All, Time = DateTime.Now };
@@ -100,7 +100,7 @@ public class StatModelTests
         try
         {
             Localization.Culture = CultureInfo.GetCultureInfo("zh-Hans");
-            Assert.Equal("全局", model.ToString());
+            Assert.Equal("全部", model.ToString());
         }
         finally
         {

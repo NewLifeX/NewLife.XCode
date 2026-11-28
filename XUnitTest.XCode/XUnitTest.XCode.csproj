@@ -93,7 +93,7 @@
     <PackageReference Include="InterSystems.Data.IRISClient" Version="2.6.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
-    <PackageReference Include="NewLife.Core" Version="12.0.2026.1125-beta0539" />
+    <PackageReference Include="NewLife.Core" Version="12.0.2026.1128-beta0257" />
     <PackageReference Include="NewLife.IP" Version="2.6.2026.1024" />
     <PackageReference Include="NewLife.NovaDb" Version="1.0.2026.1122-beta0918" />
     <!-- 直引 Remoting 最新 beta，与 AotSmoke 对齐，避免传递依赖版本落后 -->

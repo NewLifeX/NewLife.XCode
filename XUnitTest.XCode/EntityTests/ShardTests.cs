@@ -114,6 +114,7 @@ public class ShardTests
 
         // 全新环境下相邻分表可能不存在，先写入一条昨天分表记录，确保后续查询生成完整的分表SQL
         var today = DateTime.Now;
+        ShardTestHelper.ClearShard(shard, today.AddHours(-24));
         var probe = new Log2
         {
             Id = Log2.Meta.Factory.Snow.NewId(today.AddHours(-24)),
